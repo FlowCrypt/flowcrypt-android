@@ -10,14 +10,18 @@ import android.text.TextUtils;
 
 import com.flowcrypt.email.api.retrofit.ApiHelper;
 import com.flowcrypt.email.api.retrofit.ApiService;
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.NodeException;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -83,9 +87,8 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
     boolean isAllInfoReceived = true;
     List<PgpContact> pgpContacts = new ArrayList<>();
     try {
-      Js js = new Js(getContext(), null);
       for (String email : emails) {
-        if (js.str_is_email_valid(email)) {
+        if (GeneralUtil.isEmailValid(email)) {
           if (email != null) {
             email = email.toLowerCase();
           }
@@ -99,7 +102,7 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
 
           try {
             if (!localPgpContact.getHasPgp()) {
-              PgpContact remotePgpContact = getPgpContactInfoFromServer(email, js);
+              PgpContact remotePgpContact = getPgpContactInfoFromServer(email);
               if (remotePgpContact != null) {
                 contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
                 localPgpContact = remotePgpContact;
@@ -126,29 +129,27 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
    * Get information about {@link PgpContact} from the remote server.
    *
    * @param email Used to generate a request to the server.
-   * @param js    Used to create a {@link PgpContact} object from the information which
-   *              received from the server.
    * @return {@link PgpContact}
    * @throws IOException
    */
   @Nullable
-  private PgpContact getPgpContactInfoFromServer(String email, Js js) throws IOException {
+  private PgpContact getPgpContactInfoFromServer(String email) throws IOException, NodeException {
     LookUpEmailResponse response = getLookUpEmailResponse(email);
 
     if (response != null) {
       if (!TextUtils.isEmpty(response.getPubKey())) {
-        String client;
-        if (response.getPubKey() == null) {
-          client = null;
-        } else {
-          client = response.hasCryptup() ? ContactsDaoSource.CLIENT_FLOWCRYPT : ContactsDaoSource.CLIENT_PGP;
+        String client = response.hasCryptup() ? ContactsDaoSource.CLIENT_FLOWCRYPT : ContactsDaoSource.CLIENT_PGP;
+        List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(response.getPubKey());
+        if (!CollectionUtils.isEmpty(details)) {
+          PgpContact pgpContact = details.get(0).getPrimaryPgpContact();
+          pgpContact.setAttested(response.isAttested());
+          pgpContact.setClient(client);
+          return pgpContact;
         }
-
-        return new PgpContact(js, email, null, response.getPubKey(), client, response.isAttested());
-      } else {
-        return new PgpContact(js, email, null, null, null, false);
       }
-    } else return null;
+    }
+
+    return null;
   }
 
   /**

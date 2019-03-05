@@ -25,6 +25,7 @@ import com.flowcrypt.email.node.TestData;
 
 import java.util.Arrays;
 
+import androidx.annotation.WorkerThread;
 import androidx.lifecycle.LiveData;
 import retrofit2.Response;
 
@@ -32,10 +33,16 @@ import retrofit2.Response;
  * @author DenBond7
  */
 public class RequestsManager {
+  private static RequestsManager ourInstance = new RequestsManager();
   private SingleLiveEvent<NodeResponseWrapper> data;
   private NodeRetrofitHelper retrofitHelper;
 
-  public RequestsManager(NodeSecret nodeSecret) {
+  public static RequestsManager getInstance() {
+    return ourInstance;
+  }
+
+  @WorkerThread
+  public void init(NodeSecret nodeSecret) {
     this.data = new SingleLiveEvent<>();
     this.retrofitHelper = NodeRetrofitHelper.getInstance();
     this.retrofitHelper.init(nodeSecret);
@@ -107,10 +114,10 @@ public class RequestsManager {
 
       } catch (Exception e) {
         e.printStackTrace();
-        return new NodeResponseWrapper<>(nodeRequestWrapper.getRequestCode(), e, (BaseNodeResult) null);
+        return NodeResponseWrapper.exception(nodeRequestWrapper.getRequestCode(), e);
       }
 
-      return new NodeResponseWrapper<>(nodeRequestWrapper.getRequestCode(), null, baseNodeResult);
+      return NodeResponseWrapper.success(nodeRequestWrapper.getRequestCode(), baseNodeResult);
     }
 
     @Override

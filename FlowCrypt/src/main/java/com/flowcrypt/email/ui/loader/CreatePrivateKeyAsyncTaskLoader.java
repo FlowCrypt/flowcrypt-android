@@ -14,10 +14,12 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
 import com.flowcrypt.email.api.retrofit.ApiHelper;
 import com.flowcrypt.email.api.retrofit.ApiService;
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
@@ -33,6 +35,7 @@ import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAc
 import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction;
 import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.google.android.gms.common.util.CollectionUtils;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListSendAsResponse;
 import com.google.api.services.gmail.model.SendAs;
@@ -95,12 +98,15 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
         return new LoaderResult(null, new NullPointerException("The generated private key is null!"));
       }
 
-      KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
+      KeyStoreCryptoManager manager = new KeyStoreCryptoManager(getContext());
 
-      KeyDetails keyDetails = new KeyDetails(null, pgpKey.armor(), KeyDetails.Type.NEW, true,
-          pgpKey.getPrimaryUserId());
+      List<NodeKeyDetails> nodeKeyDetailsList = NodeCallsExecutor.parseKeys(pgpKey.armor());
+      if (CollectionUtils.isEmpty(nodeKeyDetailsList) || nodeKeyDetailsList.size() != 1) {
+        throw new IllegalStateException("Parse keys error");
+      }
 
-      KeysDao keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails, pgpKey, passphrase);
+      NodeKeyDetails nodeKeyDetails = nodeKeyDetailsList.get(0);
+      KeysDao keysDao = KeysDao.generateKeysDao(manager, KeyDetails.Type.NEW, nodeKeyDetails, passphrase);
 
       Uri uri = new KeysDaoSource().addRow(getContext(), keysDao);
 

@@ -13,7 +13,7 @@ package com.flowcrypt.email.util.exception;
  * Time: 6:34 PM
  * E-mail: DenBond7@gmail.com
  */
-public class NodeEncryptException extends FlowCryptException {
+public class NodeEncryptException extends NodeException {
   public NodeEncryptException(String message) {
     super(message);
   }

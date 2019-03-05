@@ -22,6 +22,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.KeyImportModel;
 import com.flowcrypt.email.model.results.LoaderResult;
@@ -68,12 +69,11 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
 
   public static final String KEY_EXTRA_TITLE
       = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", BaseImportKeyActivity.class);
-
+  private static final String WRONG_STRUCTURE_ERROR = "Cannot parse key: could not determine pgpType";
   private static final int REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 10;
   private static final int REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 11;
 
   protected ClipboardManager clipboardManager;
-  protected ArrayList<KeyDetails> keyDetailsList;
   protected KeyImportModel keyImportModel;
   protected CheckClipboardToFindKeyService checkClipboardToFindKeyService;
 
@@ -104,7 +104,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     }
   };
 
-  public abstract void onKeyValidated(KeyDetails.Type type);
+  public abstract void onKeyFound(KeyDetails.Type type, ArrayList<NodeKeyDetails> keyDetailsList);
 
   public abstract boolean isPrivateKeyMode();
 
@@ -155,8 +155,6 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     }
 
     clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-    keyDetailsList = new ArrayList<>();
-
     initViews();
 
     if (keyImportModel != null) {
@@ -247,7 +245,6 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
     switch (v.getId()) {
       case R.id.buttonLoadFromFile:
         dismissSnackBar();
-        keyDetailsList.clear();
 
         boolean isPermissionGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
             == PackageManager.PERMISSION_GRANTED;
@@ -266,7 +263,6 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
 
       case R.id.buttonLoadFromClipboard:
         dismissSnackBar();
-        keyDetailsList.clear();
 
         if (clipboardManager.hasPrimaryClip()) {
           ClipData clipData = clipboardManager.getPrimaryClip();
@@ -330,10 +326,10 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
       case R.id.loader_id_validate_key_from_file:
         isCheckingPrivateKeyNow = false;
         UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-        keyDetailsList = (ArrayList<KeyDetails>) result;
+        ArrayList<NodeKeyDetails> keysFromFile = (ArrayList<NodeKeyDetails>) result;
 
-        if (!keyDetailsList.isEmpty()) {
-          onKeyValidated(KeyDetails.Type.FILE);
+        if (!keysFromFile.isEmpty()) {
+          onKeyFound(KeyDetails.Type.FILE, keysFromFile);
         } else {
           showInfoSnackbar(getRootView(), getString(R.string.file_has_wrong_pgp_structure,
               isPrivateKeyMode() ? getString(R.string.private_) : getString(R.string.public_)));
@@ -343,9 +339,9 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
       case R.id.loader_id_validate_key_from_clipboard:
         isCheckingPrivateKeyNow = false;
         UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-        keyDetailsList = (ArrayList<KeyDetails>) result;
-        if (!keyDetailsList.isEmpty()) {
-          onKeyValidated(KeyDetails.Type.CLIPBOARD);
+        ArrayList<NodeKeyDetails> keysFromClipboard = (ArrayList<NodeKeyDetails>) result;
+        if (!keysFromClipboard.isEmpty()) {
+          onKeyFound(KeyDetails.Type.CLIPBOARD, keysFromClipboard);
         } else {
           showInfoSnackbar(getRootView(), getString(R.string.clipboard_has_wrong_structure,
               isPrivateKeyMode() ? getString(R.string.private_) : getString(R.string.public_)));
@@ -369,6 +365,18 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
 
         if (e instanceof FileNotFoundException) {
           errorMsg = getString(R.string.file_not_found);
+        }
+
+        if (WRONG_STRUCTURE_ERROR.equals(errorMsg)) {
+          String mode = isPrivateKeyMode() ? getString(R.string.private_) : getString(R.string.public_);
+          switch (loaderId) {
+            case R.id.loader_id_validate_key_from_file:
+              errorMsg = getString(R.string.file_has_wrong_pgp_structure, mode);
+              break;
+            case R.id.loader_id_validate_key_from_clipboard:
+              errorMsg = getString(R.string.clipboard_has_wrong_structure, mode);
+              break;
+          }
         }
 
         showInfoSnackbar(getRootView(), errorMsg);

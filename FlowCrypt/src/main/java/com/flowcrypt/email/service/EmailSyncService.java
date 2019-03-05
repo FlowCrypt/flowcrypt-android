@@ -34,6 +34,7 @@ import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil;
 import com.flowcrypt.email.api.email.sync.EmailSyncManager;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.api.email.sync.SyncListener;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
@@ -247,7 +248,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
   }
 
   @Override
-  public void onPrivateKeysFound(AccountDao account, List<String> keys, String ownerKey, int requestCode) {
+  public void onPrivateKeysFound(AccountDao account, List<NodeKeyDetails> keys, String ownerKey, int requestCode) {
     try {
       sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, keys);
     } catch (RemoteException e) {

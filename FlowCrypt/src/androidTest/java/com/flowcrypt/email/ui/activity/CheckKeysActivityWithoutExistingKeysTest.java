@@ -8,9 +8,9 @@ package com.flowcrypt.email.ui.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Parcelable;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
@@ -57,25 +57,20 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
     @Override
     protected Intent getActivityIntent() {
       Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-      Intent result = new Intent(targetContext, CheckKeysActivity.class);
-      ArrayList<KeyDetails> privateKeys = new ArrayList<>();
       try {
-        KeyDetails keyDetails = new KeyDetails(null, TestGeneralUtil.readFileFromAssetsAsString
-            (InstrumentationRegistry.getInstrumentation().getContext(), "pgp/default@denbond7.com_sec.asc"),
-            KeyDetails.Type.EMAIL, true, null);
-        privateKeys.add(keyDetails);
+        ArrayList<NodeKeyDetails> privateKeys = TestGeneralUtil.getKeyDetailsListFromAssets(
+            new String[]{"node/default@denbond7.com_sec.json"});
+        return CheckKeysActivity.newIntent(targetContext,
+            privateKeys,
+            KeyDetails.Type.EMAIL,
+            targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
+                privateKeys.size(), privateKeys.size()),
+            targetContext.getString(R.string.continue_),
+            targetContext.getString(R.string.use_another_account));
       } catch (IOException e) {
         e.printStackTrace();
+        throw new IllegalStateException("Wrong initialization");
       }
-      result.putExtra(CheckKeysActivity.KEY_EXTRA_PRIVATE_KEYS, privateKeys);
-      result.putExtra(CheckKeysActivity.KEY_EXTRA_SUB_TITLE,
-          targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key, 1, 1));
-      result.putExtra(CheckKeysActivity.KEY_EXTRA_POSITIVE_BUTTON_TITLE,
-          targetContext.getString(R.string.continue_));
-      result.putExtra(CheckKeysActivity.KEY_EXTRA_NEUTRAL_BUTTON_TITLE, (Parcelable) null);
-      result.putExtra(CheckKeysActivity.KEY_EXTRA_NEGATIVE_BUTTON_TITLE,
-          targetContext.getString(R.string.use_another_account));
-      return result;
     }
   };
 
@@ -83,6 +78,11 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(activityTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
 
   @Test
   public void testShowMsgEmptyWarning() {
@@ -102,7 +102,7 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
   }
 
   @Test
-  public void testUseCorrectPassPhrase() throws Exception {
+  public void testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
         .perform(typeText("android"), closeSoftKeyboard());
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
@@ -110,13 +110,13 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
   }
 
   @Test
-  public void testCheckClickButtonNeutral() throws Exception {
+  public void testCheckClickButtonNeutral() {
     Espresso.closeSoftKeyboard();
     onView(withId(R.id.buttonNeutralAction)).check(matches(not(isDisplayed())));
   }
 
   @Test
-  public void testCheckClickButtonNegative() throws Exception {
+  public void testCheckClickButtonNegative() {
     Espresso.closeSoftKeyboard();
     onView(withId(R.id.buttonNegativeAction)).check(matches(isDisplayed())).perform(scrollTo(), click());
     assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_NEGATIVE));

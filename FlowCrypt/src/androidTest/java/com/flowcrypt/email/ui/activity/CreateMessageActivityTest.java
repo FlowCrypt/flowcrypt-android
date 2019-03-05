@@ -111,6 +111,11 @@ public class CreateMessageActivityTest extends BaseTest {
     TestGeneralUtil.deleteFiles(Arrays.asList(atts));
   }
 
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
+
   public Intent getIntent() {
     return CreateMessageActivity.generateIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(), null,
         MessageEncryptionType.ENCRYPTED);

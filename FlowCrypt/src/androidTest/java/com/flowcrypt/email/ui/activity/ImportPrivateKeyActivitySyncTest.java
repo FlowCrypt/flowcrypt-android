@@ -41,6 +41,7 @@ import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 import androidx.test.rule.GrantPermissionRule;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -114,6 +115,11 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
     files.add(fileWithPrivateKey);
     files.add(fileWithoutPrivateKey);
     TestGeneralUtil.deleteFiles(files);
+  }
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return intentsTestRule;
   }
 
   @Before

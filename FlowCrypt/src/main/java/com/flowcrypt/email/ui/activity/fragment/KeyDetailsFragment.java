@@ -22,11 +22,8 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.js.PgpKeyInfo;
-import com.flowcrypt.email.js.UiJsManager;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -39,6 +36,7 @@ import org.apache.commons.io.FilenameUtils;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -53,18 +51,16 @@ import androidx.fragment.app.Fragment;
  * E-mail: DenBond7@gmail.com
  */
 public class KeyDetailsFragment extends BaseFragment implements View.OnClickListener {
-  private static final String KEY_LONG_ID = GeneralUtil.generateUniqueExtraKey("KEY_LONG_ID", KeyDetailsFragment.class);
+  private static final String KEY_NODE_KEY_DETAILS = GeneralUtil.generateUniqueExtraKey("KEY_NODE_KEY_DETAILS",
+      KeyDetailsFragment.class);
   private static final int REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1;
 
-  private String longId;
-  private PgpKey pgpKeyPr;
-  private PgpKey pgpKeyPub;
-  private Js js;
+  private NodeKeyDetails details;
 
-  public static KeyDetailsFragment newInstance(String longId) {
+  public static KeyDetailsFragment newInstance(NodeKeyDetails details) {
     KeyDetailsFragment keyDetailsFragment = new KeyDetailsFragment();
     Bundle args = new Bundle();
-    args.putString(KEY_LONG_ID, longId);
+    args.putParcelable(KEY_NODE_KEY_DETAILS, details);
     keyDetailsFragment.setArguments(args);
     return keyDetailsFragment;
   }
@@ -75,18 +71,10 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
 
     Bundle args = getArguments();
     if (args != null) {
-      longId = args.getString(KEY_LONG_ID);
+      details = args.getParcelable(KEY_NODE_KEY_DETAILS);
     }
 
-    if (!TextUtils.isEmpty(longId)) {
-      js = UiJsManager.getInstance(getContext()).getJs();
-
-      PgpKeyInfo keyInfo = js.getStorageConnector().getPgpPrivateKey(longId);
-      if (keyInfo != null) {
-        pgpKeyPr = js.crypto_key_read(keyInfo.getPrivate());
-        pgpKeyPub = pgpKeyPr.toPublic();
-      }
-    } else {
+    if (details == null) {
       getFragmentManager().popBackStack();
     }
   }
@@ -132,18 +120,14 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
   public void onClick(View v) {
     switch (v.getId()) {
       case R.id.btnShowPubKey:
-        if (pgpKeyPub != null) {
-          InfoDialogFragment dialogFragment = InfoDialogFragment.newInstance("", pgpKeyPub.armor());
-          dialogFragment.show(getFragmentManager(), InfoDialogFragment.class.getSimpleName());
-        }
+        InfoDialogFragment dialogFragment = InfoDialogFragment.newInstance("", details.getPublicKey());
+        dialogFragment.show(getFragmentManager(), InfoDialogFragment.class.getSimpleName());
         break;
 
       case R.id.btnCopyToClipboard:
-        if (pgpKeyPub != null) {
-          ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-          clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", pgpKeyPub.armor()));
-          Toast.makeText(getContext(), getString(R.string.copied), Toast.LENGTH_SHORT).show();
-        }
+        ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", details.getPublicKey()));
+        Toast.makeText(getContext(), getString(R.string.copied), Toast.LENGTH_SHORT).show();
         break;
 
       case R.id.btnSaveToFile:
@@ -159,7 +143,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
 
   private void saveKey(Intent data) {
     try {
-      GeneralUtil.writeFileFromStringToUri(getContext(), data.getData(), pgpKeyPub.armor());
+      GeneralUtil.writeFileFromStringToUri(getContext(), data.getData(), details.getPublicKey());
       String fileName = GeneralUtil.getFileNameFromUri(getContext(), data.getData());
 
       if (!TextUtils.isEmpty(fileName)) {
@@ -196,29 +180,29 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
   }
 
   private void initViews(View view) {
-    TextView textViewKeyWords = view.findViewById(R.id.textViewKeyWords);
-    TextView textViewFingerprint = view.findViewById(R.id.textViewFingerprint);
-    TextView textViewLongId = view.findViewById(R.id.textViewLongId);
-    TextView textViewDate = view.findViewById(R.id.textViewDate);
-    TextView textViewUsers = view.findViewById(R.id.textViewUsers);
+    List<PgpContact> pgpContacts = details.getPgpContacts();
+    ArrayList<String> emails = new ArrayList<>();
 
-    if (pgpKeyPub != null) {
-      PgpContact[] pgpContacts = pgpKeyPub.getUserIds();
-      ArrayList<String> emails = new ArrayList<>();
-
-      for (PgpContact pgpContact : pgpContacts) {
-        emails.add(pgpContact.getEmail());
-      }
-
-      UIUtil.setHtmlTextToTextView(getString(R.string.template_key_words,
-          js.mnemonic(pgpKeyPub.getLongid())), textViewKeyWords);
-      UIUtil.setHtmlTextToTextView(getString(R.string.template_fingerprint,
-          GeneralUtil.doSectionsInText(" ", pgpKeyPub.getFingerprint(), 4)), textViewFingerprint);
-      textViewLongId.setText(getString(R.string.template_longid, pgpKeyPub.getLongid()));
-      textViewDate.setText(getString(R.string.template_date, DateFormat.getMediumDateFormat(getContext()).format(
-          new Date(pgpKeyPub.getCreated()))));
-      textViewUsers.setText(getString(R.string.template_users, TextUtils.join(", ", emails)));
+    for (PgpContact pgpContact : pgpContacts) {
+      emails.add(pgpContact.getEmail());
     }
+
+    TextView textViewKeyWords = view.findViewById(R.id.textViewKeyWords);
+    UIUtil.setHtmlTextToTextView(getString(R.string.template_key_words, details.getKeywords()), textViewKeyWords);
+
+    TextView textViewFingerprint = view.findViewById(R.id.textViewFingerprint);
+    UIUtil.setHtmlTextToTextView(getString(R.string.template_fingerprint,
+        GeneralUtil.doSectionsInText(" ", details.getFingerprint(), 4)), textViewFingerprint);
+
+    TextView textViewLongId = view.findViewById(R.id.textViewLongId);
+    textViewLongId.setText(getString(R.string.template_longid, details.getLongId()));
+
+    TextView textViewDate = view.findViewById(R.id.textViewDate);
+    textViewDate.setText(getString(R.string.template_date,
+        DateFormat.getMediumDateFormat(getContext()).format(new Date(details.getCreated()))));
+
+    TextView textViewUsers = view.findViewById(R.id.textViewUsers);
+    textViewUsers.setText(getString(R.string.template_users, TextUtils.join(", ", emails)));
 
     initButtons(view);
   }
@@ -245,7 +229,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
     intent.addCategory(Intent.CATEGORY_OPENABLE);
     intent.setType(Constants.MIME_TYPE_PGP_KEY);
-    intent.putExtra(Intent.EXTRA_TITLE, pgpKeyPub.genFileName());
+    intent.putExtra(Intent.EXTRA_TITLE, "0x" + details.getLongId());
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_KEY);
   }
 }

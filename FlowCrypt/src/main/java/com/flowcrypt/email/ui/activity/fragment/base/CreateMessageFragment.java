@@ -147,9 +147,9 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private ViewGroup layoutAtts;
   private EditText editTextFrom;
   private Spinner spinnerFrom;
-  private PgpContactsNachoTextView editTextRecipientsTo;
-  private PgpContactsNachoTextView editTextRecipientsCc;
-  private PgpContactsNachoTextView editTextRecipientsBcc;
+  private PgpContactsNachoTextView recipientsTo;
+  private PgpContactsNachoTextView recipientsCc;
+  private PgpContactsNachoTextView recipientsBcc;
   private EditText editTextEmailSubject;
   private EditText editTextEmailMsg;
   private TextInputLayout textInputLayoutMsg;
@@ -306,9 +306,9 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
               PgpContact pgpContact = data.getParcelableExtra(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT);
 
               if (pgpContact != null) {
-                removePgpContact(pgpContact, editTextRecipientsTo, pgpContactsTo);
-                removePgpContact(pgpContact, editTextRecipientsCc, pgpContactsCc);
-                removePgpContact(pgpContact, editTextRecipientsBcc, pgpContactsBcc);
+                removePgpContact(pgpContact, recipientsTo, pgpContactsTo);
+                removePgpContact(pgpContact, recipientsCc, pgpContactsCc);
+                removePgpContact(pgpContact, recipientsBcc, pgpContactsBcc);
               }
             }
             break;
@@ -439,22 +439,19 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         pgpContactsTo.clear();
         progressBarTo.setVisibility(View.VISIBLE);
         isUpdateToCompleted = false;
-        return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(),
-            getValidEmails(editTextRecipientsTo.getChipAndTokenValues()));
+        return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(), recipientsTo.getChipAndTokenValues());
 
       case R.id.loader_id_update_info_about_pgp_contacts_cc:
         pgpContactsCc.clear();
         progressBarCc.setVisibility(View.VISIBLE);
         isUpdateCcCompleted = false;
-        return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(),
-            getValidEmails(editTextRecipientsCc.getChipAndTokenValues()));
+        return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(), recipientsCc.getChipAndTokenValues());
 
       case R.id.loader_id_update_info_about_pgp_contacts_bcc:
         pgpContactsBcc.clear();
         progressBarBcc.setVisibility(View.VISIBLE);
         isUpdateBccCompleted = false;
-        return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(),
-            getValidEmails(editTextRecipientsBcc.getChipAndTokenValues()));
+        return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(), recipientsBcc.getChipAndTokenValues());
 
       case R.id.loader_id_load_email_aliases:
         return new LoadGmailAliasesLoader(getContext(), account);
@@ -473,7 +470,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         pgpContactsTo = getInfoAboutPgpContacts((UpdateInfoAboutPgpContactsResult) result, progressBarTo, R.string.to);
 
         if (pgpContactsTo != null && !pgpContactsTo.isEmpty()) {
-          updateChips(editTextRecipientsTo, pgpContactsTo);
+          updateChips(recipientsTo, pgpContactsTo);
         }
         break;
 
@@ -482,7 +479,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         pgpContactsCc = getInfoAboutPgpContacts((UpdateInfoAboutPgpContactsResult) result, progressBarCc, R.string.cc);
 
         if (pgpContactsCc != null && !pgpContactsCc.isEmpty()) {
-          updateChips(editTextRecipientsCc, pgpContactsCc);
+          updateChips(recipientsCc, pgpContactsCc);
         }
         break;
 
@@ -492,7 +489,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
             progressBarBcc, R.string.bcc);
 
         if (pgpContactsBcc != null && !pgpContactsBcc.isEmpty()) {
-          updateChips(editTextRecipientsBcc, pgpContactsBcc);
+          updateChips(recipientsBcc, pgpContactsBcc);
         }
         break;
 
@@ -592,12 +589,12 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       case R.id.editTextEmailMessage:
         if (hasFocus) {
           boolean isExpandButtonNeeded = false;
-          if (TextUtils.isEmpty(editTextRecipientsCc.getText())) {
+          if (TextUtils.isEmpty(recipientsCc.getText())) {
             layoutCc.setVisibility(View.GONE);
             isExpandButtonNeeded = true;
           }
 
-          if (TextUtils.isEmpty(editTextRecipientsBcc.getText())) {
+          if (TextUtils.isEmpty(recipientsBcc.getText())) {
             layoutBcc.setVisibility(View.GONE);
             isExpandButtonNeeded = true;
           }
@@ -653,7 +650,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
         progressBarAndButtonLayout.setLayoutParams(layoutParams);
         v.setVisibility(View.GONE);
-        editTextRecipientsCc.requestFocus();
+        recipientsCc.requestFocus();
         break;
     }
   }
@@ -668,9 +665,9 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       switch (messageEncryptionType) {
         case ENCRYPTED:
           emailMassageHint = getString(R.string.prompt_compose_security_email);
-          editTextRecipientsTo.getOnFocusChangeListener().onFocusChange(editTextRecipientsTo, false);
-          editTextRecipientsCc.getOnFocusChangeListener().onFocusChange(editTextRecipientsCc, false);
-          editTextRecipientsBcc.getOnFocusChangeListener().onFocusChange(editTextRecipientsBcc, false);
+          recipientsTo.getOnFocusChangeListener().onFocusChange(recipientsTo, false);
+          recipientsCc.getOnFocusChangeListener().onFocusChange(recipientsCc, false);
+          recipientsBcc.getOnFocusChangeListener().onFocusChange(recipientsBcc, false);
           fromAddrs.setUseKeysInfo(true);
 
           int colorGray = UIUtil.getColor(getContext(), R.color.gray);
@@ -795,14 +792,14 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     if (layoutCc.getVisibility() == View.VISIBLE) {
       LoaderManager.getInstance(this).restartLoader(R.id.loader_id_update_info_about_pgp_contacts_cc, null, this);
     } else {
-      editTextRecipientsCc.setText((CharSequence) null);
+      recipientsCc.setText((CharSequence) null);
       pgpContactsCc.clear();
     }
 
     if (layoutBcc.getVisibility() == View.VISIBLE) {
       LoaderManager.getInstance(this).restartLoader(R.id.loader_id_update_info_about_pgp_contacts_bcc, null, this);
     } else {
-      editTextRecipientsBcc.setText((CharSequence) null);
+      recipientsBcc.setText((CharSequence) null);
       pgpContactsBcc.clear();
     }
   }
@@ -923,22 +920,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   }
 
   /**
-   * Remove not valid emails from the recipients list.
-   *
-   * @param emails The input list of recipients.
-   * @return The list of valid emails.
-   */
-  private List<String> getValidEmails(List<String> emails) {
-    List<String> validEmails = new ArrayList<>();
-    for (String email : emails) {
-      if (js.str_is_email_valid(email)) {
-        validEmails.add(email);
-      }
-    }
-    return validEmails;
-  }
-
-  /**
    * Generate an outgoing message info from entered information by user.
    *
    * @return <tt>OutgoingMessageInfo</tt> Return a created OutgoingMessageInfo object which
@@ -961,19 +942,19 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     }
 
     if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-      pgpContactsTo = contactsDaoSource.getPgpContacts(getContext(), editTextRecipientsTo.getChipValues());
-      pgpContactsCc = contactsDaoSource.getPgpContacts(getContext(), editTextRecipientsCc.getChipValues());
-      pgpContactsBcc = contactsDaoSource.getPgpContacts(getContext(), editTextRecipientsBcc.getChipValues());
+      pgpContactsTo = contactsDaoSource.getPgpContacts(getContext(), recipientsTo.getChipValues());
+      pgpContactsCc = contactsDaoSource.getPgpContacts(getContext(), recipientsCc.getChipValues());
+      pgpContactsBcc = contactsDaoSource.getPgpContacts(getContext(), recipientsBcc.getChipValues());
     } else {
-      for (String s : editTextRecipientsTo.getChipValues()) {
+      for (String s : recipientsTo.getChipValues()) {
         pgpContactsTo.add(new PgpContact(s, null));
       }
 
-      for (String s : editTextRecipientsCc.getChipValues()) {
+      for (String s : recipientsCc.getChipValues()) {
         pgpContactsCc.add(new PgpContact(s, null));
       }
 
-      for (String s : editTextRecipientsBcc.getChipValues()) {
+      for (String s : recipientsBcc.getChipValues()) {
         pgpContactsBcc.add(new PgpContact(s, null));
       }
     }
@@ -1050,38 +1031,38 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    * @return <tt>Boolean</tt> true if all information is correct, false otherwise.
    */
   private boolean isDataCorrect() {
-    editTextRecipientsTo.chipifyAllUnterminatedTokens();
-    editTextRecipientsCc.chipifyAllUnterminatedTokens();
-    editTextRecipientsBcc.chipifyAllUnterminatedTokens();
+    recipientsTo.chipifyAllUnterminatedTokens();
+    recipientsCc.chipifyAllUnterminatedTokens();
+    recipientsBcc.chipifyAllUnterminatedTokens();
 
     if (!fromAddrs.isEnabled(spinnerFrom.getSelectedItemPosition())) {
-      showInfoSnackbar(editTextRecipientsTo, getString(R.string.no_key_available));
+      showInfoSnackbar(recipientsTo, getString(R.string.no_key_available));
       return false;
     }
 
-    if (TextUtils.isEmpty(editTextRecipientsTo.getText().toString())) {
-      showInfoSnackbar(editTextRecipientsTo, getString(R.string.text_must_not_be_empty,
+    if (TextUtils.isEmpty(recipientsTo.getText().toString())) {
+      showInfoSnackbar(recipientsTo, getString(R.string.text_must_not_be_empty,
           getString(R.string.prompt_recipients_to)));
-      editTextRecipientsTo.requestFocus();
+      recipientsTo.requestFocus();
       return false;
     }
 
-    boolean hasNotValidEmail = hasNotValidEmail(editTextRecipientsTo) || hasNotValidEmail(editTextRecipientsCc)
-        || hasNotValidEmail(editTextRecipientsBcc);
+    boolean hasNotValidEmail = hasNotValidEmail(recipientsTo) || hasNotValidEmail(recipientsCc)
+        || hasNotValidEmail(recipientsBcc);
 
     if (!hasNotValidEmail) {
       if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-        if (!TextUtils.isEmpty(editTextRecipientsTo.getText()) && pgpContactsTo.isEmpty()) {
+        if (!TextUtils.isEmpty(recipientsTo.getText()) && pgpContactsTo.isEmpty()) {
           showUpdateContactsSnackBar(R.id.loader_id_update_info_about_pgp_contacts_to);
           return false;
         }
 
-        if (!TextUtils.isEmpty(editTextRecipientsCc.getText()) && pgpContactsCc.isEmpty()) {
+        if (!TextUtils.isEmpty(recipientsCc.getText()) && pgpContactsCc.isEmpty()) {
           showUpdateContactsSnackBar(R.id.loader_id_update_info_about_pgp_contacts_cc);
           return false;
         }
 
-        if (!TextUtils.isEmpty(editTextRecipientsBcc.getText()) && pgpContactsBcc.isEmpty()) {
+        if (!TextUtils.isEmpty(recipientsBcc.getText()) && pgpContactsBcc.isEmpty()) {
           showUpdateContactsSnackBar(R.id.loader_id_update_info_about_pgp_contacts_bcc);
           return false;
         }
@@ -1184,13 +1165,13 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     layoutBcc = view.findViewById(R.id.layoutBcc);
     progressBarAndButtonLayout = view.findViewById(R.id.progressBarAndButtonLayout);
 
-    editTextRecipientsTo = view.findViewById(R.id.editTextRecipientTo);
-    editTextRecipientsCc = view.findViewById(R.id.editTextRecipientCc);
-    editTextRecipientsBcc = view.findViewById(R.id.editTextRecipientBcc);
+    recipientsTo = view.findViewById(R.id.editTextRecipientTo);
+    recipientsCc = view.findViewById(R.id.editTextRecipientCc);
+    recipientsBcc = view.findViewById(R.id.editTextRecipientBcc);
 
-    initChipsView(editTextRecipientsTo);
-    initChipsView(editTextRecipientsCc);
-    initChipsView(editTextRecipientsBcc);
+    initChipsView(recipientsTo);
+    initChipsView(recipientsCc);
+    initChipsView(recipientsBcc);
 
     spinnerFrom = view.findViewById(R.id.spinnerFrom);
     spinnerFrom.setOnItemSelectedListener(this);
@@ -1232,8 +1213,8 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     } else {
       if (msgInfo != null) {
         updateViewsFromIncomingMsgInfo();
-        editTextRecipientsTo.chipifyAllUnterminatedTokens();
-        editTextRecipientsCc.chipifyAllUnterminatedTokens();
+        recipientsTo.chipifyAllUnterminatedTokens();
+        recipientsCc.chipifyAllUnterminatedTokens();
         editTextEmailSubject.setText(prepareReplySubject(msgInfo.getSubject()));
       }
 
@@ -1244,15 +1225,15 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   }
 
   private void updateViewsFromExtraActionInfo() {
-    setupPgpFromExtraActionInfo(editTextRecipientsTo, extraActionInfo.getToAddresses());
-    setupPgpFromExtraActionInfo(editTextRecipientsCc, extraActionInfo.getCcAddresses());
-    setupPgpFromExtraActionInfo(editTextRecipientsBcc, extraActionInfo.getBccAddresses());
+    setupPgpFromExtraActionInfo(recipientsTo, extraActionInfo.getToAddresses());
+    setupPgpFromExtraActionInfo(recipientsCc, extraActionInfo.getCcAddresses());
+    setupPgpFromExtraActionInfo(recipientsBcc, extraActionInfo.getBccAddresses());
 
     editTextEmailSubject.setText(extraActionInfo.getSubject());
     editTextEmailMsg.setText(extraActionInfo.getBody());
 
-    if (TextUtils.isEmpty(editTextRecipientsTo.getText())) {
-      editTextRecipientsTo.requestFocus();
+    if (TextUtils.isEmpty(recipientsTo.getText())) {
+      recipientsTo.requestFocus();
       return;
     }
 
@@ -1265,9 +1246,9 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   }
 
   private void updateViewsFromServiceInfo() {
-    editTextRecipientsTo.setFocusable(serviceInfo.isToFieldEditable());
-    editTextRecipientsTo.setFocusableInTouchMode(serviceInfo.isToFieldEditable());
-    //todo-denbond7 Need to add a similar option for editTextRecipientsCc and editTextRecipientsBcc
+    recipientsTo.setFocusable(serviceInfo.isToFieldEditable());
+    recipientsTo.setFocusableInTouchMode(serviceInfo.isToFieldEditable());
+    //todo-denbond7 Need to add a similar option for recipientsCc and recipientsBcc
 
     editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditable());
     editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditable());
@@ -1343,14 +1324,14 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
   private void updateViewsIfReplyAllMode() {
     if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
-      editTextRecipientsTo.setText(prepareRecipients(msgInfo.getTo()));
+      recipientsTo.setText(prepareRecipients(msgInfo.getTo()));
 
       if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
         layoutCc.setVisibility(View.VISIBLE);
-        editTextRecipientsCc.append(prepareRecipients(msgInfo.getCc()));
+        recipientsCc.append(prepareRecipients(msgInfo.getCc()));
       }
     } else {
-      editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
+      recipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
 
       Set<String> ccSet = new HashSet<>();
 
@@ -1376,11 +1357,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
       if (!ccSet.isEmpty()) {
         layoutCc.setVisibility(View.VISIBLE);
-        editTextRecipientsCc.append(prepareRecipients(new ArrayList<>(ccSet)));
+        recipientsCc.append(prepareRecipients(new ArrayList<>(ccSet)));
       }
     }
 
-    if (!TextUtils.isEmpty(editTextRecipientsTo.getText()) || !TextUtils.isEmpty(editTextRecipientsCc.getText())) {
+    if (!TextUtils.isEmpty(recipientsTo.getText()) || !TextUtils.isEmpty(recipientsCc.getText())) {
       editTextEmailMsg.requestFocus();
     }
   }
@@ -1390,18 +1371,18 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       switch (folderType) {
         case SENT:
         case OUTBOX:
-          editTextRecipientsTo.setText(prepareRecipients(msgInfo.getTo()));
+          recipientsTo.setText(prepareRecipients(msgInfo.getTo()));
           break;
 
         default:
-          editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
+          recipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
           break;
       }
     } else {
-      editTextRecipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
+      recipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
     }
 
-    if (!TextUtils.isEmpty(editTextRecipientsTo.getText())) {
+    if (!TextUtils.isEmpty(recipientsTo.getText())) {
       editTextEmailMsg.requestFocus();
     }
   }
@@ -1507,7 +1488,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private boolean hasNotValidEmail(PgpContactsNachoTextView pgpContactsNachoTextView) {
     List<String> emails = pgpContactsNachoTextView.getChipAndTokenValues();
     for (String email : emails) {
-      if (!js.str_is_email_valid(email)) {
+      if (!GeneralUtil.isEmailValid(email)) {
         showInfoSnackbar(pgpContactsNachoTextView, getString(R.string.error_some_email_is_not_valid, email));
         pgpContactsNachoTextView.requestFocus();
         return true;

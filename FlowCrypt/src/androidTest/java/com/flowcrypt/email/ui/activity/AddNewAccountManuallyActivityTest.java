@@ -60,32 +60,38 @@ import static org.hamcrest.Matchers.startsWith;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class AddNewAccountManuallyActivityTest extends BaseTest {
-
   private static final String IMAP_SERVER_PREFIX = "imap.";
   private static final String SMTP_SERVER_PREFIX = "smtp.";
+
+  private ActivityTestRule activityTestRule = new ActivityTestRule<>(AddNewAccountManuallyActivity.class);
 
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
-      .around(new ActivityTestRule<>(AddNewAccountManuallyActivity.class));
+      .around(activityTestRule);
 
   private AuthCredentials authCreds;
 
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
+
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     this.authCreds = AuthCredentialsManager.getDefaultWithBackupAuthCreds();
     IdlingPolicies.setMasterPolicyTimeout(60, TimeUnit.SECONDS);
   }
 
   @Test
-  public void testAllCredsCorrect() throws Exception {
+  public void testAllCredsCorrect() {
     fillAllFields();
     onView(withId(R.id.buttonTryToConnect)).perform(scrollTo(), click());
     onView(withId(R.id.textViewTitle)).check(matches(isDisplayed()));
   }
 
   @Test
-  public void testShowSnackBarIfFieldEmpty() throws Exception {
+  public void testShowSnackBarIfFieldEmpty() {
     checkIsFieldEmptyWork(R.id.editTextEmail, R.string.e_mail);
     checkIsFieldEmptyWork(R.id.editTextUserName, R.string.username);
     checkIsFieldEmptyWork(R.id.editTextPassword, R.string.password);
@@ -106,14 +112,14 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
   }
 
   @Test
-  public void testIsPasswordFieldsAlwaysEmptyAtStart() throws Exception {
+  public void testIsPasswordFieldsAlwaysEmptyAtStart() {
     onView(withId(R.id.editTextPassword)).check(matches(withText(isEmptyString())));
     onView(withId(R.id.checkBoxRequireSignInForSmtp)).perform(scrollTo(), click());
     onView(withId(R.id.editTextSmtpPassword)).check(matches(withText(isEmptyString())));
   }
 
   @Test
-  public void testChangingImapPortWhenSelectSpinnerItem() throws Exception {
+  public void testChangingImapPortWhenSelectSpinnerItem() {
     checkSecurityTypeOpt(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
         SecurityType.Option.STARTLS, String.valueOf(JavaEmailConstants.DEFAULT_IMAP_PORT));
     checkSecurityTypeOpt(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
@@ -123,7 +129,7 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
   }
 
   @Test
-  public void testChangingSmtpPortWhenSelectSpinnerItem() throws Exception {
+  public void testChangingSmtpPortWhenSelectSpinnerItem() {
     checkSecurityTypeOpt(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
         SecurityType.Option.STARTLS, String.valueOf(JavaEmailConstants.STARTTLS_SMTP_PORT));
     checkSecurityTypeOpt(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
@@ -178,7 +184,7 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
     String userName = authCreds.getEmail().substring(0,
         authCreds.getEmail().indexOf(TestConstants.COMMERCIAL_AT_SYMBOL));
     String host = authCreds.getEmail().substring(authCreds.getEmail().indexOf(TestConstants
-        .COMMERCIAL_AT_SYMBOL) + 1, authCreds.getEmail().length());
+        .COMMERCIAL_AT_SYMBOL) + 1);
 
     String[] incorrectEmailAddresses = {"default",
         "default@",
@@ -202,7 +208,7 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
   }
 
   @Test
-  public void testWrongFormatOfEmailAddress() throws Exception {
+  public void testWrongFormatOfEmailAddress() {
     fillAllFields();
 
     String[] invalidEmailAddresses = {

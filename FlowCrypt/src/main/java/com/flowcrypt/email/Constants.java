@@ -45,6 +45,7 @@ public class Constants {
    * The MIME type of PGP keys.
    */
   public static final String MIME_TYPE_PGP_KEY = "application/pgp-keys";
+  public static final String MIME_TYPE_BINARY_DATA = "application/octet-stream";
   public static final String MIME_TYPE_RFC822 = "message/rfc822";
 
   /**
@@ -70,6 +71,7 @@ public class Constants {
       "preferences_key_security_change_pass_phrase";
   public static final String PREFERENCES_KEY_LAST_OUTBOX_UID = "preferences_key_last_outbox_uid";
   public static final String PREFERENCES_KEY_LAST_ATT_ORDER_ID = "preferences_key_last_att_order_id";
+  public static final String PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED = "preferences_key_is_check_keys_needed";
 
   /**
    * The max total size off all attachment which can be send via the app.

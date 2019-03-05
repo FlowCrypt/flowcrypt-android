@@ -20,7 +20,6 @@ import com.eclipsesource.v8.V8Value;
 import com.eclipsesource.v8.utils.typedarrays.ArrayBuffer;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.js.Attachment;
-import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.MimeMessage;
 import com.flowcrypt.email.js.PasswordStrength;
 import com.flowcrypt.email.js.PgpContact;
@@ -67,10 +66,6 @@ public class Js { // Create one object per thread and use them separately. Not t
 
   public StorageConnectorInterface getStorageConnector() {
     return storage;
-  }
-
-  public Boolean str_is_email_valid(String email) {
-    return (Boolean) this.call(Boolean.class, p("str", "is_email_valid"), new V8Array(v8).push(email));
   }
 
   public PgpContact str_parse_email(String email) {
@@ -131,12 +126,6 @@ public class Js { // Create one object per thread and use them separately. Not t
     return new ProcessedMime((V8Object) cb_last_value[0], this);
   }
 
-  public MessageBlock[] crypto_armor_detect_blocks(String text) {
-    V8Array blocks = ((V8Array) this.call(Object.class, p("crypto", "armor", "detect_blocks"),
-        new V8Array(v8).push(text)));
-    return MessageBlock.arrayFromV8Array(blocks);
-  }
-
   public String crypto_key_normalize(String armored_key) {
     try {
       return (String) this.call(str, p("crypto", "key", "normalize"), new V8Array(v8).push(armored_key));
@@ -145,21 +134,12 @@ public class Js { // Create one object per thread and use them separately. Not t
     }
   }
 
-  public PgpKey crypto_key_read(String armored_key) {
-    return new PgpKey((V8Object) this.call(Object.class, p("crypto", "key", "read"), new V8Array(v8)
-        .push(armored_key)), this);
-  }
-
   public PgpKey crypto_key_create(PgpContact[] user_ids, int num_bits, String pass_phrase) {
     V8Array args = new V8Array(v8).push(PgpContact.arrayAsV8UserIds(v8, user_ids)).push(num_bits).push(pass_phrase)
         .push(cb_catch);
     this.call(void.class, p("crypto", "key", "create"), args);
-    return crypto_key_read((String) cb_last_value[0]);
-  }
-
-  public V8Object crypto_key_decrypt(PgpKey private_key, String passphrase) {
-    return (V8Object) this.call(Object.class, p("crypto", "key", "decrypt"), new V8Array(v8)
-        .push(private_key.getV8Object()).push(passphrase));
+    return new PgpKey((V8Object) this.call(Object.class, p("crypto", "key", "read"), new V8Array(v8)
+        .push((String) cb_last_value[0])), this);
   }
 
   public String crypto_key_fingerprint(PgpKey k) {
@@ -176,22 +156,6 @@ public class Js { // Create one object per thread and use them separately. Not t
 
   public String mnemonic(String longid) {
     return (String) this.call(str, v8, p("mnemonic"), new V8Array(v8).push(longid));
-  }
-
-  public String crypto_message_encrypt(String pubkeys[], String text) {
-    V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push(text).push(NULL)
-        .push(true).push(cb_catch);
-    this.call(void.class, p("crypto", "message", "encrypt"), params);
-    return ((V8Object) cb_last_value[0]).get("data").toString();
-  }
-
-  public byte[] crypto_message_encrypt(String pubkeys[], byte[] content, String filename) {
-    V8Array params = new V8Array(v8).push(this.array(pubkeys)).push(NULL).push(NULL).push(uint8(content))
-        .push(filename).push(false).push(cb_catch);
-    this.call(void.class, p("crypto", "message", "encrypt"), params);
-    V8Object packets = (V8Object) ((V8Object) ((V8Object) cb_last_value[0]).get("message")).get("packets");
-    V8TypedArray data = (V8TypedArray) packets.executeObjectFunction("write", new V8Array(v8));
-    return data.getBytes(0, data.length());
   }
 
   public PgpDecrypted crypto_message_decrypt(String data, String password) {
@@ -224,44 +188,6 @@ public class Js { // Create one object per thread and use them separately. Not t
   public PasswordStrength crypto_password_estimate_strength(double zxcvbn_guesses) {
     return new PasswordStrength((V8Object) this.call(Object.class, p("crypto", "password", "estimate_strength"),
         new V8Array(v8).push(zxcvbn_guesses)));
-  }
-
-  public String api_gmail_query_backups(String email) {
-    return (String) this.call(str, p("api", "gmail", "query", "backups"), new V8Array(v8).push(email));
-  }
-
-  /**
-   * Check that the key has valid structure.
-   *
-   * @param armoredPrivateKey The armored private key.
-   * @param isPrivateKey      true if this key must be private, otherwise false.
-   * @return true if private key has valid structure, otherwise false.
-   */
-  public boolean is_valid_key(String armoredPrivateKey, boolean isPrivateKey) {
-    String normalizedArmoredKey = crypto_key_normalize(armoredPrivateKey);
-    PgpKey pgpKey = crypto_key_read(normalizedArmoredKey);
-    return !TextUtils.isEmpty(pgpKey.getLongid())
-        && !TextUtils.isEmpty(pgpKey.getFingerprint())
-        && pgpKey.getPrimaryUserId() != null
-        && (isPrivateKey ? pgpKey.isPrivate() : !pgpKey.isPrivate());
-  }
-
-  /**
-   * Check that the key has valid structure.
-   *
-   * @param pgpKey The {@link PgpKey} object.
-   * @return true if private key has valid structure, otherwise false.
-   */
-  public boolean is_valid_key(PgpKey pgpKey, boolean isPrivateKey) {
-    return !TextUtils.isEmpty(pgpKey.getLongid())
-        && !TextUtils.isEmpty(pgpKey.getFingerprint())
-        && pgpKey.getPrimaryUserId() != null
-        && (isPrivateKey ? pgpKey.isPrivate() : !pgpKey.isPrivate());
-  }
-
-  public Attachment file_attachment(byte[] content, String name, String type) {
-    return new Attachment((V8Object) this.call(V8Object.class, p("file", "attachment"), new V8Array(v8)
-        .push(name).push(type).push(uint8(content))));
   }
 
   private static String read(InputStream inputStream) throws IOException {
@@ -301,14 +227,6 @@ public class Js { // Create one object per thread and use them separately. Not t
     } else {
       return obj.executeObjectFunction(path[path.length - 1], args);
     }
-  }
-
-  private V8Array array(String a[]) {
-    V8Array v8arr = new V8Array(v8);
-    for (String v : a) {
-      v8arr.push(v);
-    }
-    return v8arr;
   }
 
   private String[] p(String... js) {

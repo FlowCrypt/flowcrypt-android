@@ -36,15 +36,11 @@ public class MimeMessage extends MeaningfulV8ObjectContainer {
   }
 
   public String getStringHeader(String headerName) {
-    return this.getAttributeAsString(getHeaders(), headerName);
-  }
-
-  public long getTimeHeader(String name) {
-    return js.time_to_utc_timestamp(getStringHeader(name));
+    return getAttributeAsString(getHeaders(), headerName);
   }
 
   public MimeAddress[] getAddressHeader(String headerName) {
-    V8Array addresses = this.getAttributeAsArray(getHeaders(), headerName);
+    V8Array addresses = getAttributeAsArray(getHeaders(), headerName);
     MimeAddress[] results = new MimeAddress[addresses.length()];
     for (Integer i = 0; i < addresses.length(); i++) {
       results[i] = new MimeAddress(addresses.getObject(i));

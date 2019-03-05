@@ -13,8 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
@@ -50,35 +49,16 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIB
 public class GeneralUtil {
   /**
    * Checking for an Internet connection.
+   * See https://developer.android.com/training/monitoring-device-state/connectivity-monitoring#DetermineConnection.
+   * Because {@link NetworkInfo#isConnectedOrConnecting()} is deprecated we will use {@link NetworkInfo#isConnected()}
    *
    * @param context Interface to global information about an application environment.
    * @return <tt>boolean</tt> true - a connection available, false if otherwise.
    */
   public static boolean isConnected(Context context) {
-    final ConnectivityManager connectivityManager = (ConnectivityManager) context.
-        getSystemService(Context.CONNECTIVITY_SERVICE);
-
-    if (connectivityManager == null) {
-      return false;
-    }
-
-    Network network = connectivityManager.getActiveNetwork();
-
-    if (network == null) {
-      return false;
-    }
-
-    NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
-
-    if (capabilities == null) {
-      return false;
-    } else {
-      //Indicates that this network should be able to reach the internet.
-      boolean hasInternet = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-      //Indicates that Internet connectivity on this network was successfully detected.
-      boolean isValidated = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
-      return hasInternet && isValidated;
-    }
+    ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+    return activeNetwork != null && activeNetwork.isConnected();
   }
 
   /**

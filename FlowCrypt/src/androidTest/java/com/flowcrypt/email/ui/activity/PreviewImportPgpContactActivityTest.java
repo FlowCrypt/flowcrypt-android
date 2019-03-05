@@ -13,6 +13,7 @@ import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.util.TestGeneralUtil;
+import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,12 +30,10 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.not;
 
 /**
  * @author Denis Bondarenko
@@ -45,7 +44,7 @@ import static org.hamcrest.Matchers.not;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class PreviewImportPgpContactActivityTest extends BaseTest {
-  private ActivityTestRule testRule =
+  private ActivityTestRule activityTestRule =
       new ActivityTestRule<PreviewImportPgpContactActivity>(PreviewImportPgpContactActivity.class, false, false) {
       };
 
@@ -53,11 +52,16 @@ public class PreviewImportPgpContactActivityTest extends BaseTest {
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
-      .around(testRule);
+      .around(activityTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
 
   @Test
   public void testShowHelpScreen() {
-    testRule.launchActivity(PreviewImportPgpContactActivity.newIntent(
+    activityTestRule.launchActivity(PreviewImportPgpContactActivity.newIntent(
         InstrumentationRegistry.getInstrumentation().getTargetContext(), getSinglePublicKeyForUnsavedContact()));
     testHelpScreen();
   }
@@ -67,7 +71,7 @@ public class PreviewImportPgpContactActivityTest extends BaseTest {
     PgpContact pgpContact = new PgpContact("default@denbond7.com", null,
         getSinglePublicKeyForUnsavedContact(), true, null, false, null, null, null, 0);
     new ContactsDaoSource().addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), pgpContact);
-    testRule.launchActivity(PreviewImportPgpContactActivity.newIntent(
+    activityTestRule.launchActivity(PreviewImportPgpContactActivity.newIntent(
         InstrumentationRegistry.getInstrumentation().getTargetContext(), getSinglePublicKeyForUnsavedContact()));
     onView(withId(R.id.recyclerViewContacts)).check(new RecyclerViewItemCountAssertion(1));
     onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
@@ -77,27 +81,24 @@ public class PreviewImportPgpContactActivityTest extends BaseTest {
 
   @Test
   public void testIsDisplayedLabelAlreadyImported() {
-    testRule.launchActivity(PreviewImportPgpContactActivity.newIntent(
+    activityTestRule.launchActivity(PreviewImportPgpContactActivity.newIntent(
         InstrumentationRegistry.getInstrumentation().getTargetContext(), getSinglePublicKeyForUnsavedContact()));
     onView(withId(R.id.recyclerViewContacts)).check(new RecyclerViewItemCountAssertion(1));
   }
 
   @Test
   public void testSaveButtonForSingleContact() {
-    testRule.launchActivity(PreviewImportPgpContactActivity.newIntent(
+    activityTestRule.launchActivity(PreviewImportPgpContactActivity.newIntent(
         InstrumentationRegistry.getInstrumentation().getTargetContext(), getSinglePublicKeyForUnsavedContact()));
     onView(withId(R.id.recyclerViewContacts)).check(new RecyclerViewItemCountAssertion(1));
-    onView(withId(R.id.buttonSaveContact)).check(matches(isDisplayed())).perform(click());
-    onView(withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
-        .already_imported)))
-        .check(matches(isDisplayed()));
-    onView(withId(R.id.buttonSaveContact)).check(matches(not(isDisplayed())));
-    onView(withId(R.id.textViewAlreadyImported)).check(matches(isDisplayed()));
+    onView(withId(R.id.recyclerViewContacts)).perform(RecyclerViewActions.actionOnItemAtPosition(0,
+        new ClickOnViewInRecyclerViewItem(R.id.buttonSaveContact)));
+    checkIsToastDisplayed(activityTestRule.getActivity(), getResString(R.string.contact_successfully_saved));
   }
 
   @Test
   public void testIsImportAllButtonDisplayed() {
-    testRule.launchActivity(PreviewImportPgpContactActivity.newIntent(
+    activityTestRule.launchActivity(PreviewImportPgpContactActivity.newIntent(
         InstrumentationRegistry.getInstrumentation().getTargetContext(), get10PublicKeysForUnsavedContacts()));
     onView(withId(R.id.buttonImportAll)).check(matches(isDisplayed()));
   }
@@ -106,7 +107,7 @@ public class PreviewImportPgpContactActivityTest extends BaseTest {
   public void testLoadLotOfContacts() {
     int countOfKeys = 10;
 
-    testRule.launchActivity(PreviewImportPgpContactActivity.newIntent(
+    activityTestRule.launchActivity(PreviewImportPgpContactActivity.newIntent(
         InstrumentationRegistry.getInstrumentation().getTargetContext(), get10PublicKeysForUnsavedContacts()));
     onView(withId(R.id.recyclerViewContacts)).check(new RecyclerViewItemCountAssertion(countOfKeys))
         .perform(RecyclerViewActions.scrollToPosition(countOfKeys - 1));

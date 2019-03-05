@@ -31,8 +31,10 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
 
   private LinkedList<PgpKeyInfo> pgpKeyInfoList;
   private LinkedList<String> passphrases;
+  private List<OnRefreshListener> onRefreshListeners;
 
   public SecurityStorageConnector(Context context) {
+    this.onRefreshListeners = new ArrayList<>();
     init(context);
   }
 
@@ -90,6 +92,22 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
   @Override
   public void refresh(Context context) {
     init(context);
+
+    for (OnRefreshListener onRefreshListener : onRefreshListeners) {
+      onRefreshListener.onRefresh();
+    }
+  }
+
+  public void attachOnRefreshListener(OnRefreshListener onRefreshListener) {
+    if (onRefreshListener != null) {
+      this.onRefreshListeners.add(onRefreshListener);
+    }
+  }
+
+  public void removeOnRefreshListener(OnRefreshListener onRefreshListener) {
+    if (onRefreshListener != null) {
+      this.onRefreshListeners.remove(onRefreshListener);
+    }
   }
 
   private void init(Context context) {
@@ -105,5 +123,9 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
     }
+  }
+
+  public interface OnRefreshListener {
+    void onRefresh();
   }
 }

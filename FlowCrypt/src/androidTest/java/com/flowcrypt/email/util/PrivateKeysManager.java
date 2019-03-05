@@ -6,18 +6,17 @@
 package com.flowcrypt.email.util;
 
 import android.content.Context;
-import android.text.TextUtils;
 
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.model.PrivateKeySourceType;
 
 import org.apache.commons.io.IOUtils;
 
-import java.util.UUID;
+import java.util.List;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -37,33 +36,23 @@ public class PrivateKeysManager {
 
   public static void addTempPrivateKey() throws Exception {
     String armoredPrivateKey = IOUtils.toString(InstrumentationRegistry.getInstrumentation().getContext().getAssets()
-        .open
-        ("pgp/temp-sec.asc"), "UTF-8");
+        .open("pgp/temp-sec.asc"), "UTF-8");
     Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-    Js js = new Js(appContext, null);
-    String normalizedArmoredKey = js.crypto_key_normalize(armoredPrivateKey);
+    List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(armoredPrivateKey);
 
-    PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
+    NodeKeyDetails nodeKeyDetails = details.get(0);
+
     KeysDao keysDao = new KeysDao();
-    keysDao.setLongId(pgpKey.getLongid());
+    keysDao.setLongId(nodeKeyDetails.getLongId());
     keysDao.setPrivateKeySourceType(PrivateKeySourceType.NEW);
 
-    String randomVector;
-
-    if (TextUtils.isEmpty(pgpKey.getLongid())) {
-      randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(
-          UUID.randomUUID().toString().substring(0,
-              KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC));
-    } else {
-      randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString
-          (pgpKey.getLongid());
-    }
+    String randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(nodeKeyDetails.getLongId());
 
     KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(appContext);
 
-    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(pgpKey.armor(), randomVector);
+    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(nodeKeyDetails.getPrivateKey(), randomVector);
     keysDao.setPrivateKey(encryptedPrivateKey);
-    keysDao.setPublicKey(pgpKey.toPublic().armor());
+    keysDao.setPublicKey(nodeKeyDetails.getPublicKey());
 
     String encryptedPassphrase = keyStoreCryptoManager.encrypt(TEMP_PASSPHRASE, randomVector);
     keysDao.setPassphrase(encryptedPassphrase);

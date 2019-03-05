@@ -7,6 +7,7 @@ package com.flowcrypt.email.model.messages;
 
 import android.os.Parcel;
 
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.js.PgpContact;
 
 /**
@@ -32,40 +33,28 @@ public class MessagePartPgpPublicKey extends MessagePart {
           return new MessagePartPgpPublicKey[size];
         }
       };
-  private String keyWords;
-  private String fingerprint;
-  private String keyOwner;
-  private String longId;
-  private PgpContact pgpContact;
 
-  public MessagePartPgpPublicKey(String pubkey, String longId, String keyWords, String fingerprint, String keyOwner,
-                                 PgpContact pgpContact) {
-    super(MessagePartType.PGP_PUBLIC_KEY, pubkey);
-    this.longId = longId;
-    this.keyWords = keyWords;
-    this.fingerprint = fingerprint;
-    this.keyOwner = keyOwner;
-    this.pgpContact = pgpContact;
+  private NodeKeyDetails nodeKeyDetails;
+  private PgpContact existingPgpContact;
+
+  public MessagePartPgpPublicKey(NodeKeyDetails nodeKeyDetails, PgpContact existingPgpContact) {
+    super(MessagePartType.PGP_PUBLIC_KEY, nodeKeyDetails.getPublicKey());
+    this.nodeKeyDetails = nodeKeyDetails;
+    this.existingPgpContact = existingPgpContact;
   }
 
   protected MessagePartPgpPublicKey(Parcel in) {
     super(in);
     this.msgPartType = MessagePartType.PGP_PUBLIC_KEY;
-    this.keyWords = in.readString();
-    this.fingerprint = in.readString();
-    this.keyOwner = in.readString();
-    this.longId = in.readString();
-    this.pgpContact = in.readParcelable(PgpContact.class.getClassLoader());
+    this.nodeKeyDetails = in.readParcelable(NodeKeyDetails.class.getClassLoader());
+    this.existingPgpContact = in.readParcelable(PgpContact.class.getClassLoader());
   }
 
   @Override
   public String toString() {
     return "MessagePartPgpPublicKey{" +
-        "keyWords='" + keyWords + '\'' +
-        ", fingerprint='" + fingerprint + '\'' +
-        ", keyOwner='" + keyOwner + '\'' +
-        ", longId='" + longId + '\'' +
-        ", pgpContact=" + pgpContact +
+        "nodeKeyDetails=" + nodeKeyDetails +
+        ", existingPgpContact=" + existingPgpContact +
         "} " + super.toString();
   }
 
@@ -77,42 +66,15 @@ public class MessagePartPgpPublicKey extends MessagePart {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     super.writeToParcel(dest, flags);
-    dest.writeString(this.keyWords);
-    dest.writeString(this.fingerprint);
-    dest.writeString(this.keyOwner);
-    dest.writeString(this.longId);
-    dest.writeParcelable(this.pgpContact, flags);
+    dest.writeParcelable(this.nodeKeyDetails, flags);
+    dest.writeParcelable(this.existingPgpContact, flags);
   }
 
-  public String getKeyWords() {
-    return keyWords;
+  public PgpContact getExistingPgpContact() {
+    return existingPgpContact;
   }
 
-  public String getFingerprint() {
-    return fingerprint;
-  }
-
-  public String getKeyOwner() {
-    return keyOwner;
-  }
-
-  public PgpContact getPgpContact() {
-    return pgpContact;
-  }
-
-  public void setPgpContact(PgpContact pgpContact) {
-    this.pgpContact = pgpContact;
-  }
-
-  public boolean hasPgpContact() {
-    return pgpContact != null;
-  }
-
-  public boolean isPgpContactUpdateEnabled() {
-    return pgpContact != null && pgpContact.getLongid() != null && !pgpContact.getLongid().equals(longId);
-  }
-
-  public String getLongId() {
-    return longId;
+  public NodeKeyDetails getNodeKeyDetails() {
+    return nodeKeyDetails;
   }
 }

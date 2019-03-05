@@ -86,6 +86,11 @@ public class ShareIntentsTest extends BaseTest {
     TestGeneralUtil.deleteFiles(Arrays.asList(atts));
   }
 
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
+
   @Test
   public void testEmptyUri() {
     activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(), null));

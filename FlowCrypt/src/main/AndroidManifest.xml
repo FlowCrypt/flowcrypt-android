@@ -31,9 +31,9 @@
         <!-- Activities -->
 
         <activity
-            android:name=".ui.activity.SplashActivity"
+            android:name=".ui.activity.LauncherActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.Launcher">
+            android:theme="@style/AppTheme.NoActionBar.Launcher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -41,6 +41,10 @@
                 <category android:name="android.intent.category.APP_EMAIL" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.activity.SignInActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.activity.EmailManagerActivity"
@@ -286,6 +290,8 @@
         <receiver android:name=".broadcastreceivers.MarkMessagesAsOldBroadcastReceiver" />
 
         <receiver android:name=".broadcastreceivers.CorruptedStorageBroadcastReceiver" />
+
+        <receiver android:name=".broadcastreceivers.UpdateStorageConnectorBroadcastReceiver" />
     </application>
 
 </manifest>

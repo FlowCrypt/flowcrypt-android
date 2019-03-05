@@ -10,21 +10,26 @@ import android.database.Cursor;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.Constants;
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.js.PasswordStrength;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException;
 import com.flowcrypt.email.util.exception.NoKeyAvailableException;
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException;
+import com.flowcrypt.email.util.exception.NodeException;
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException;
+import com.google.android.gms.common.util.CollectionUtils;
 import com.nulabinc.zxcvbn.Zxcvbn;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -109,19 +114,20 @@ public class SecurityUtils {
   /**
    * Generate a private keys backup for the given account.
    *
-   * @param context       Interface to global information about an application environment.
-   * @param js            An instance of {@link Js}
-   * @param account       The given account
-   * @param checkWeakPass true if need to check is a pass phrase is too weak.
+   * @param context Interface to global information about an application environment.
+   * @param js      An instance of {@link Js}
+   * @param account The given account
    * @return A string which includes private keys
    */
-  public static String genPrivateKeysBackup(Context context, Js js, AccountDao account, boolean checkWeakPass)
-      throws PrivateKeyStrengthException, DifferentPassPhrasesException, NoPrivateKeysAvailableException {
+  public static String genPrivateKeysBackup(Context context, Js js, AccountDao account)
+      throws PrivateKeyStrengthException, DifferentPassPhrasesException,
+      NoPrivateKeysAvailableException, IOException, NodeException {
     StringBuilder builder = new StringBuilder();
     Zxcvbn zxcvbn = new Zxcvbn();
     String email = account.getEmail();
     List<String> longIdsByEmail = new UserIdEmailsKeysDaoSource().getLongIdsByEmail(context, email);
     String[] longids = longIdsByEmail.toArray(new String[0]);
+    js.getStorageConnector().refresh(context);
     PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys(longids);
 
     if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
@@ -148,7 +154,7 @@ public class SecurityUtils {
       PasswordStrength passwordStrength = js.crypto_password_estimate_strength(
           zxcvbn.measure(passPhrase, js.crypto_password_weak_words()).getGuesses());
 
-      if (passwordStrength != null && checkWeakPass) {
+      if (passwordStrength != null) {
         switch (passwordStrength.getWord()) {
           case Constants.PASSWORD_QUALITY_WEAK:
           case Constants.PASSWORD_QUALITY_POOR:
@@ -156,9 +162,19 @@ public class SecurityUtils {
         }
       }
 
-      PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
-      pgpKey.encrypt(passPhrase);
-      builder.append(i > 0 ? "\n" + pgpKey.armor() : pgpKey.armor());
+      List<NodeKeyDetails> nodeKeyDetailsList = NodeCallsExecutor.parseKeys(pgpKeyInfo.getPrivate());
+      NodeKeyDetails keyDetails = nodeKeyDetailsList.get(0);
+
+      String encryptedKey;
+
+      if (keyDetails.isDecrypted()) {
+        EncryptKeyResult encryptKeyResult = NodeCallsExecutor.encryptKey(pgpKeyInfo.getPrivate(), passPhrase);
+        encryptedKey = encryptKeyResult.getEncryptedKey();
+      } else {
+        encryptedKey = keyDetails.getPrivateKey();
+      }
+
+      builder.append(i > 0 ? "\n" + encryptedKey : encryptedKey);
     }
 
     return builder.toString();
@@ -176,7 +192,8 @@ public class SecurityUtils {
    * @throws NoKeyAvailableException
    */
   public static String[] getRecipientsPubKeys(Context context, Js js, PgpContact[] pgpContacts, AccountDao account,
-                                              String senderEmail) throws NoKeyAvailableException {
+                                              String senderEmail) throws NoKeyAvailableException, IOException,
+      NodeException {
     ArrayList<String> publicKeys = new ArrayList<>();
     for (PgpContact pgpContact : pgpContacts) {
       if (!TextUtils.isEmpty(pgpContact.getPubkey())) {
@@ -200,7 +217,7 @@ public class SecurityUtils {
    * @throws NoKeyAvailableException
    */
   public static String getSenderPublicKey(Context context, Js js, AccountDao account, String senderEmail) throws
-      NoKeyAvailableException {
+      NoKeyAvailableException, IOException, NodeException {
     UserIdEmailsKeysDaoSource userIdEmailsKeysDaoSource = new UserIdEmailsKeysDaoSource();
     List<String> longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(context, senderEmail);
 
@@ -217,10 +234,16 @@ public class SecurityUtils {
 
     PgpKeyInfo pgpKeyInfo = js.getStorageConnector().getPgpPrivateKey(longIds.get(0));
     if (pgpKeyInfo != null) {
-      PgpKey pgpKey = js.crypto_key_read(pgpKeyInfo.getPrivate());
-      if (pgpKey != null) {
-        return pgpKey.toPublic().armor();
+      List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(pgpKeyInfo.getPrivate());
+      if (CollectionUtils.isEmpty(details)) {
+        throw new IllegalStateException("There are no details about the given private key");
       }
+
+      if (details.size() > 1) {
+        throw new IllegalStateException("A wrong private key");
+      }
+
+      return details.get(0).getPublicKey();
     }
 
     throw new IllegalArgumentException("Internal error: PgpKeyInfo is null!");

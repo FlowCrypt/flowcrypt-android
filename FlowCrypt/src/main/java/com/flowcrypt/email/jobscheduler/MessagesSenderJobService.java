@@ -588,7 +588,7 @@ public class MessagesSenderJobService extends JobService {
      */
     @Override
     public String getContentType() {
-      return TextUtils.isEmpty(att.getType()) ? "application/octet-stream" : att.getType();
+      return TextUtils.isEmpty(att.getType()) ? Constants.MIME_TYPE_BINARY_DATA : att.getType();
     }
 
     @Override

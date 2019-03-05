@@ -33,12 +33,10 @@
     <dimen name="default_text_size_very_small">10sp</dimen>
 
     <dimen name="margin_top_main_screen_button">32dp</dimen>
-    <dimen name="margin_top_main_screen_button_sign_via_gmail">60dp</dimen>
     <dimen name="text_size_logo_crypt">48sp</dimen>
     <dimen name="drawable_padding_main_screen_sign_button">24dp</dimen>
     <dimen name="padding_left_main_screen_sign_button">24dp</dimen>
     <dimen name="padding_right_main_screen_sign_button">60dp</dimen>
-    <dimen name="nav_header_vertical_spacing">16dp</dimen>
     <dimen name="nav_header_height">160dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="margin_top_message_subject">16dp</dimen>
@@ -49,17 +47,13 @@
     <dimen name="padding_guideline_setup_screen">32dp</dimen>
     <dimen name="margin_top_key_password">60dp</dimen>
     <dimen name="margin_top_load_account">32dp</dimen>
-    <dimen name="margin_top_loading_account">32dp</dimen>
     <dimen name="margin_top_button_select_another_account">24dp</dimen>
-    <dimen name="height_silver_line">1dp</dimen>
     <dimen name="size_of_small_progressbar">16dp</dimen>
     <dimen name="margin_top_first_button">96dp</dimen>
     <dimen name="margin_between_buttons">32dp</dimen>
     <dimen name="user_photo_size">48dp</dimen>
-    <dimen name="margin_top_splash_icon">68dp</dimen>
     <dimen name="layout_height_attachment_item">48dp</dimen>
     <dimen name="layout_width_attachment_item">320dp</dimen>
-    <dimen name="min_height_layout_message_parts">400dp</dimen>
     <dimen name="first_button_padding">48dp</dimen>
     <dimen name="layout_height_sub_header">48dp</dimen>
     <dimen name="margin_top_password_layout">48dp</dimen>
@@ -73,9 +67,7 @@
     <dimen name="layout_height_message_item">72dp</dimen>
     <dimen name="gone_margin_right_attachment_icon">34dp</dimen>
     <dimen name="layout_height_action_button">72dp</dimen>
-    <dimen name="size_small_image_button">24dp</dimen>
     <dimen name="drop_down_vertical_offset_spinner_from">56dp</dimen>
     <dimen name="drop_down_size">32dp</dimen>
     <dimen name="padding_recipients_to">48dp</dimen>
-    <dimen name="layout_width_encrypted_indicator">8dp</dimen>
 </resources>

@@ -10,6 +10,8 @@ import android.text.TextUtils;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.JsListener;
 import com.flowcrypt.email.js.MessageBlock;
@@ -17,7 +19,6 @@ import com.flowcrypt.email.js.MimeAddress;
 import com.flowcrypt.email.js.MimeMessage;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpDecrypted;
-import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.ProcessedMime;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.messages.MessagePart;
@@ -26,7 +27,10 @@ import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.messages.MessagePartSignedMessage;
 import com.flowcrypt.email.model.messages.MessagePartText;
 import com.flowcrypt.email.model.messages.MessagePartType;
+import com.flowcrypt.email.util.exception.NodeException;
+import com.google.android.gms.common.util.CollectionUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -157,19 +161,19 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
             break;
 
           case MessageBlock.TYPE_PGP_PUBLIC_KEY:
-            String publicKey = messageBlock.getContent();
-            String fingerprint = js.crypto_key_fingerprint(js.crypto_key_read(publicKey));
-            String longId = js.crypto_key_longid(fingerprint);
-            String keywords = js.mnemonic(longId);
-            PgpKey pgpKey = js.crypto_key_read(publicKey);
-            String keyOwner = pgpKey.getPrimaryUserId().getEmail();
+            try {
+              List<NodeKeyDetails> nodeKeyDetails = NodeCallsExecutor.parseKeys(messageBlock.getContent());
+              if (!CollectionUtils.isEmpty(nodeKeyDetails)) {
+                NodeKeyDetails keyDetails = nodeKeyDetails.get(0);
+                String keyOwner = keyDetails.getPrimaryPgpContact().getEmail();
+                PgpContact pgpContact = new ContactsDaoSource().getPgpContact(context, keyOwner);
+                MessagePartPgpPublicKey part = new MessagePartPgpPublicKey(keyDetails, pgpContact);
+                msgParts.add(part);
+              }
+            } catch (IOException | NodeException e) {
+              e.printStackTrace();
+            }
 
-            PgpContact pgpContact = new ContactsDaoSource().getPgpContact(context, keyOwner);
-
-            MessagePartPgpPublicKey msgPartPgpPublicKey = new MessagePartPgpPublicKey(publicKey, longId, keywords,
-                fingerprint, keyOwner, pgpContact);
-
-            msgParts.add(msgPartPgpPublicKey);
             break;
 
           case MessageBlock.TYPE_PGP_SIGNED_MESSAGE:

@@ -21,14 +21,15 @@ import android.os.RemoteException;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.KeyImportModel;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.google.android.gms.common.util.CollectionUtils;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 import androidx.annotation.Nullable;
 
@@ -73,7 +74,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
     handlerThread.start();
 
     serviceWorkerLooper = handlerThread.getLooper();
-    serviceWorkerHandler = new ServiceWorkerHandler(serviceWorkerLooper, this);
+    serviceWorkerHandler = new ServiceWorkerHandler(serviceWorkerLooper);
 
     checkClipboard();
   }
@@ -170,53 +171,33 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
    */
   private static final class ServiceWorkerHandler extends Handler {
     static final int MESSAGE_WHAT = 1;
-    private final WeakReference<CheckClipboardToFindKeyService> weakRef;
-    private Js js;
 
-    ServiceWorkerHandler(Looper looper, CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
+    ServiceWorkerHandler(Looper looper) {
       super(looper);
-      this.weakRef = new WeakReference<>(checkClipboardToFindKeyService);
     }
 
     @Override
     public void handleMessage(Message msg) {
       switch (msg.what) {
         case MESSAGE_WHAT:
-          if (js == null) {
-            try {
-              if (weakRef.get() != null) {
-                js = new Js(weakRef.get(), null);
-              }
-            } catch (IOException e) {
-              e.printStackTrace();
-              ExceptionUtil.handleError(e);
+          String clipboardText = (String) msg.obj;
+          try {
+            List<NodeKeyDetails> nodeKeyDetails = NodeCallsExecutor.parseKeys(clipboardText);
+            if (!CollectionUtils.isEmpty(nodeKeyDetails)) {
+              sendReply(msg);
             }
-          }
-
-          if (js != null) {
-            sendReply(msg);
+          } catch (Exception e) {
+            e.printStackTrace();
           }
           break;
       }
     }
 
     private void sendReply(Message msg) {
-      String clipboardText = (String) msg.obj;
-
       try {
-        String normalizedArmoredKey = js.crypto_key_normalize(clipboardText);
-        PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-
-        if (weakRef.get() != null && js.is_valid_key(pgpKey, weakRef.get().isPrivateKeyMode)) {
-          try {
-            Messenger messenger = msg.replyTo;
-            messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT, clipboardText));
-          } catch (RemoteException e) {
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
-          }
-        }
-      } catch (Exception e) {
+        Messenger messenger = msg.replyTo;
+        messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT, msg.obj));
+      } catch (RemoteException e) {
         e.printStackTrace();
         ExceptionUtil.handleError(e);
       }

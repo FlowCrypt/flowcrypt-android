@@ -63,4 +63,6 @@
     <item name="progress_id_thread_is_cancalled_and_done" type="id" />
     <item name="progress_id_thread_is_done" type="id" />
     <item name="progress_id_thread_is_cancalled" type="id" />
+
+    <item name="live_data_id_fetch_keys" type="id" />
 </resources>

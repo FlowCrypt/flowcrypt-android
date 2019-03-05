@@ -81,7 +81,8 @@ public final class Node {
           } else {
             nodeSecret = new NodeSecret(context.getFilesDir().getAbsolutePath(), certs);
           }
-          requestsManager = new RequestsManager(nodeSecret);
+          requestsManager = RequestsManager.getInstance();
+          requestsManager.init(nodeSecret);
           start(context.getAssets(), nodeSecret);
           waitUntilReady();
           liveData.postValue(true);

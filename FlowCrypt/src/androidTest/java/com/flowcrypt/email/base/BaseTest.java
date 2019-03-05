@@ -16,15 +16,23 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.SecurityType;
+import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.runner.RunWith;
 
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.test.espresso.IdlingRegistry;
 import androidx.test.espresso.matcher.BoundedMatcher;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -46,8 +54,11 @@ import static org.hamcrest.Matchers.not;
  * Time: 16:37
  * E-mail: DenBond7@gmail.com
  */
+@RunWith(AndroidJUnit4.class)
+public abstract class BaseTest {
 
-public class BaseTest {
+  public abstract ActivityTestRule getActivityTestRule();
+
   /**
    * Match the {@link SecurityType.Option}.
    *
@@ -128,6 +139,28 @@ public class BaseTest {
   }
 
   /**
+   * Match is {@link RecyclerView} empty.
+   */
+  public static <T> Matcher<T> matchEmptyRecyclerView() {
+    return new BaseMatcher<T>() {
+      @Override
+      public boolean matches(Object item) {
+        if (item instanceof RecyclerView) {
+          RecyclerView recyclerView = (RecyclerView) item;
+          return recyclerView.getAdapter() == null || recyclerView.getAdapter().getItemCount() == 0;
+        } else {
+          return false;
+        }
+      }
+
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("List is not empty");
+      }
+    };
+  }
+
+  /**
    * Match the list size.
    *
    * @param listSize An incoming list size.
@@ -149,6 +182,52 @@ public class BaseTest {
         description.appendText("The size of the list is not equal = " + listSize);
       }
     };
+  }
+
+  /**
+   * Match the list size.
+   *
+   * @param listSize An incoming list size.
+   */
+  public static <T> Matcher<T> matchRecyclerViewSize(final int listSize) {
+    return new BaseMatcher<T>() {
+      @Override
+      public boolean matches(Object item) {
+        if (item instanceof RecyclerView) {
+          RecyclerView recyclerView = (RecyclerView) item;
+          return recyclerView.getAdapter() == null || recyclerView.getAdapter().getItemCount() == listSize;
+        } else {
+          return false;
+        }
+      }
+
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("The size of the list is not equal = " + listSize);
+      }
+    };
+  }
+
+  @Before
+  public void registerNodeIdling() {
+    ActivityTestRule activityTestRule = getActivityTestRule();
+    if (activityTestRule != null) {
+      Activity activity = activityTestRule.getActivity();
+      if (activity instanceof BaseActivity) {
+        IdlingRegistry.getInstance().register(((BaseActivity) activity).getNodeIdlingResource());
+      }
+    }
+  }
+
+  @After
+  public void unregisterNodeIdling() {
+    ActivityTestRule activityTestRule = getActivityTestRule();
+    if (activityTestRule != null) {
+      Activity activity = activityTestRule.getActivity();
+      if (activity instanceof BaseActivity) {
+        IdlingRegistry.getInstance().unregister(((BaseActivity) activity).getNodeIdlingResource());
+      }
+    }
   }
 
   /**
@@ -204,5 +283,9 @@ public class BaseTest {
         }
       }
     });
+  }
+
+  protected String getResString(int resId) {
+    return InstrumentationRegistry.getInstrumentation().getTargetContext().getString(resId);
   }
 }

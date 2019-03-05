@@ -94,7 +94,8 @@ public class Action implements Parcelable {
     BACKUP_PRIVATE_KEY_TO_INBOX("backup_private_key_to_inbox"),
     REGISTER_USER_PUBLIC_KEY("register_user_public_key"),
     SEND_WELCOME_TEST_EMAIL("send_welcome_test_email"),
-    FILL_USER_ID_EMAILS_KEYS_TABLE("fill_user_id_emails_keys_table");
+    FILL_USER_ID_EMAILS_KEYS_TABLE("fill_user_id_emails_keys_table"),
+    ENCRYPT_PRIVATE_KEYS("encrypt_private_keys");
 
     private String value;
 

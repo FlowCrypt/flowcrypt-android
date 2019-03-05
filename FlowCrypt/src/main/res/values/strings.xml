@@ -11,7 +11,6 @@
     <string name="prompt_recipients_to">Add recipients (To)</string>
     <string name="prompt_recipients_cc">Add recipients (Cc)</string>
     <string name="prompt_recipients_bcc">Add recipients (Bcc)</string>
-    <string name="prompt_recipients">Recipients</string>
     <string name="prompt_subject">Subject</string>
     <string name="prompt_compose_security_email">Compose secure message</string>
     <string name="prompt_compose_standard_email">Compose standard message</string>
@@ -21,16 +20,10 @@
     <string name="error_some_email_is_not_valid">Error: invalid email \"%1$s\"</string>
     <string name="internet_connection_is_not_available">Error: no internet</string>
     <string name="unknown_error">Unknown error</string>
-    <string name="message_was_sent">Your message was sent</string>
-    <string name="application_crashed">Application has crashed. You can send a report to the developer.</string>
-    <string name="title_activity_splash">SplashActivity</string>
     <string name="action_settings">Settings</string>
-    <string name="signed_in_fmt">We received access for %1$s</string>
-    <string name="access_denied">Access denied</string>
     <string name="privacy">Privacy</string>
     <string name="terms">Terms</string>
     <string name="security">Security</string>
-    <string name="crypt">crypt</string>
     <string name="connect_your_email_account_to_start_sending_encrypted_messages">Connect your email account\n to send encrypted messages</string>
     <string name="continue_with_gmail">Continue with Gmail</string>
     <string name="loading">loading</string>
@@ -47,18 +40,12 @@
     </plurals>
     <string name="enter_your_pass_phrase">Enter your pass phrase</string>
     <string name="load_account">Load Account</string>
-    <string name="loading_account">Loading account</string>
     <string name="no_backups_found">No backups found on this account</string>
-    <string name="refresh">Refresh</string>
     <string name="passphrase_must_be_non_empty">Pass phrase cannot be empty</string>
     <string name="your_message_must_be_non_empty">Message should not be empty</string>
     <string name="password_is_incorrect">Incorrect pass phrase, please try again</string>
     <string name="use_another_account">Use another account</string>
     <string name="reply_all">Reply All</string>
-    <string name="lock">Lock</string>
-    <string name="something_wrong_with_receiving_message">Error: could not receive message</string>
-    <string name="title_activity_test">TestActivity</string>
-    <string name="title_activity_login">Sign in</string>
     <string name="please_wait_while_message_will_be_sent">Sending message, please wait</string>
     <string name="please_wait_while_information_about_contacts_will_be_updated">Loading information about contacts, please wait</string>
     <string name="create_a_new_key">Create a new key</string>
@@ -79,8 +66,8 @@
     <string name="sources">Sources</string>
     <string name="the_contact_was_deleted">Contact \"%1$s\" deleted</string>
     <string name="the_key_already_added">Key already added, skipping</string>
-    <string name="help_feedback_or_question">Help, feedback or question</string>
-    <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">I usually reply within an hour. Except when I sleep. (Tom)</string>
+    <string name="help_feedback_or_question">Help, feedback, question</string>
+    <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Thank you for trying FlowCrypt! We\'re here to help.</string>
     <string name="your_message">Your message</string>
     <string name="back">Back</string>
     <string name="you_already_sent_this_message">You already sent this message</string>
@@ -96,7 +83,6 @@
     <string name="backup_as_email_hint">This will back up private key(s) in your Email Inbox. The security depends on
         the strength of your pass phrase, which should be very long and hard to guess. Best option for most users.</string>
     <string name="backups_found_message">Backups found: %1$d.\n\n Your account is backed up correctly in your Email Inbox.</string>
-    <string name="key_successfully_saved">Key successfully saved</string>
     <string name="your_key_backup">Your FlowCrypt Backup</string>
     <string name="backed_up_successfully">Backed up successfully</string>
     <string name="backup_was_not_sent">Error backing up, please try again</string>
@@ -111,7 +97,6 @@
     <string name="move_to_inbox">Move to Inbox</string>
     <string name="error_occurred_while_deleting_message">Error occurred while deleting the message</string>
     <string name="error_occurred_while_archiving_message">Error occurred while archiving the message</string>
-    <string name="error_occurred_while_sending_message">Error occurred while sending the message</string>
     <string name="sending_message_must_not_be_empty">Message should not be empty</string>
     <string name="there_was_syncing_problem">There was a syncing problem</string>
     <string name="info_about_some_contacts_not_received">Could not get information about some %1$s contacts</string>
@@ -127,16 +112,18 @@
     <string name="hide_the_public_key">Hide the Public Key</string>
     <string name="save_contact">Save contact</string>
     <string name="update_contact">Update contact</string>
+    <string name="replace_contact">Replace Contact</string>
     <string name="contact_successfully_saved">Contact saved</string>
-    <string name="error_occurred_while_saving_contact">Error occurred while saving the contact</string>
     <string name="contact_successfully_updated">Contact updated</string>
+    <string name="contact_successfully_replaced">Contact replaced</string>
+    <string name="error_occurred_while_saving_contact">Error occurred while saving the contact</string>
     <string name="error_occurred_while_updating_contact">Error occurred while updating the contact</string>
+    <string name="error_occurred_while_replacing_contact">Error occurred while replacing the contact</string>
     <string name="import_private_key">Import Private Key</string>
     <string name="load_from_a_file">Load from a file</string>
     <string name="load_from_clipboard">Load from clipboard</string>
     <string name="choose_another_key">Choose another key</string>
     <string name="continue_">Continue</string>
-    <string name="template_check_key_name">[%1$s]</string>
     <string name="can_not_read_this_private_key">Cannot read this private key</string>
     <string name="info">Info</string>
     <string name="hint">Hint</string>
@@ -221,14 +208,12 @@
         and forgot to add you as a receiver. Please ask them to send a new message.</string>
     <string name="decrypt_error_current_key_cannot_message">You current key cannot open this message. If you
         have any other keys available, you should import them  now.</string>
-    <string name="diagnostic_info">Diagnostic info</string>
     <string name="email_does_not_available_in_this_folder">Message not found, it may have been moved to another folder.</string>
     <string name="from">From</string>
     <string name="google_api_is_not_available">Error: Google API is not available</string>
-    <string name="show_original_message">Show the original message</string>
-    <string name="hide_original_message">Hide the original message</string>
+    <string name="show_original_message">Show original message</string>
+    <string name="hide_original_message">Hide original message</string>
     <string name="import_missing_key">Import missing key</string>
-    <string name="security_settings_were_not_implemented_yet">Security Settings were not implemented yet, stay tuned.</string>
     <string name="loading_backups">Loading backups</string>
     <string name="submitted_can_receive_encrypted_email">Submitted, can receive encrypted email.</string>
     <string name="no_public_key_recorded">No public key recorded. Your contacts may not know that you are using
@@ -245,7 +230,6 @@
         send me a new encrypted message.\n\nThank you</string>
     <string name="please_select_key">Please select a key</string>
     <string name="select_key">Select a key</string>
-    <string name="your_public_key_will_be_appended">Your public key will be appended to the reply message</string>
     <string name="less_secure_login_is_not_allowed">Less secure login is not allowed on your Gmail account. Switching to secure login.</string>
     <string name="error_occurred_try_again_later">An error occurred. Please try again later.</string>
     <string name="progress_message">%1$d\%% %2$s</string>
@@ -275,22 +259,11 @@
     <string name="password_quality_weak">weak</string>
     <string name="repeat_passphrase_hint">Please repeat it one more time. Make sure to note the pass phrase down.</string>
     <string name="pass_phrases_do_not_match">The two pass phrases do not match, please try again.</string>
-    <string name="password_recommendation">
-        <![CDATA[<p>Choose a VERY long passphrase. For example, combine uncommon words like this:</p>
-  <font color="#088447">unconventional blueberry unlike any other<br/>
-semi automated shiseido mask<br/>
-icelanders prefer real sauna</font>
-  <p>Combinations like that are memorable, easy to type and the most secure.</p>
-  <p>In contrast, pass phrases like <font color="#AA4444">@ut0m4t3d</font>, <font color="#AA4444">Honey167!</font> or <font color="#AA4444">lA45pf8$d</font> are a poor choice when it comes to security. Because they are so short, on a fleet of 10,000 ordinary computers, these <b>can be guessed in 7 seconds</b>.</p>
-  <p>To read more, see <a href="https://blogs.dropbox.com/tech/2012/04/zxcvbn-realistic-password-strength-estimation/" target="_blank">zxcvbn article</a> by Dropbox.</p>]]>
-        </string>
     <string name="you_are_all_set">You\'re all set!</string>
     <string name="you_can_send_and_receive_encrypted_emails">From now on, you can send and receive encrypted emails on
         this email account.</string>
     <string name="please_wait_while_key_will_be_created">Creating a key, please wait</string>
-    <string name="copy">Copy</string>
     <string name="not_private_key">This is not a private key</string>
-    <string name="cannot_import_these_private_keys">Can\'t import these private keys</string>
     <string name="gmail_user_recoverable_auth_exception">Cannot open inbox.\n Did you recently change email security
         settings?</string>
     <string name="get_access_to_gmail">Get access to Gmail</string>
@@ -301,15 +274,14 @@ icelanders prefer real sauna</font>
         <item quantity="one">%1$d of %2$d keys successfully imported. There is 1 key left. Try a different pass phrase to unlock all keys.</item>
         <item quantity="other">%1$d of %2$d keys successfully imported. There are %3$d key left. Try a different pass phrase to unlock all keys.</item>
     </plurals>
-    <string name="cannot_send_attachment_without_read_permission">The attachment cannot be sent without the read external
-        storage permission</string>
+    <string name="cannot_send_attachment_without_read_permission">Permission to read external storage is needed to send the attachment.</string>
     <string name="hint_when_found_keys_in_email">FlowCrypt found one or more backups of your account key(s).\n\nKey backups are encrypted for your protection. This makes them useless without your pass phrase.\n\nPlease enter pass phrase(s) that you used when the backup was made.</string>
     <string name="forward">Forward</string>
     <string name="forward_encrypted">Forward\nEncrypted</string>
     <string name="reply_encrypted">Reply\nEncrypted</string>
     <string name="reply_all_encrypted">Reply All\nEncrypted</string>
     <string name="forward_template">\n\n---------- Forwarded message ----------\nFrom: %1$s\nDate: %2$s\nSubject: %3$s\nTo: %4$s\n</string>
-    <string name="cannot_forward_html_emails">Cannot forward HTML emails</string>
+    <string name="cannot_forward_html_emails">Cannot forward HTML emails yet</string>
     <string name="cannot_forward_encrypted_attachments">Encrypted attachments are not forwarded. Please attach the files if you want them included.</string>
     <string name="to">To</string>
     <string name="cc">Cc</string>
@@ -329,7 +301,6 @@ icelanders prefer real sauna</font>
     <string name="no_public_key_found">No public key found</string>
     <string name="already_imported">Already imported</string>
     <string name="success">Success</string>
-    <string name="key_is_empty">The key is empty</string>
     <string name="parsing_public_keys">Parsing public keys</string>
     <string name="importing_public_keys">Importing public keys</string>
     <string name="device_not_supported_key_store_error">Your device is currently not supported: KeystoreService not available.</string>
@@ -366,15 +337,13 @@ icelanders prefer real sauna</font>
     <string name="select_only_one_key">Select a source that stores only one key</string>
     <string name="yes">yes</string>
     <string name="no">no</string>
-    <string name="message_cache_will_be_reloaded">%1$s. The cache will be reloaded</string>
     <string name="can_not_delete_sent_message">Cannot delete sent message</string>
     <string name="no_connection_message_will_be_sent_later">Offline. The message will be sent later</string>
     <string name="me">me</string>
     <string name="sending">Sending&#8230;</string>
     <string name="queued">Queued</string>
     <string name="cache_error">Can\'t send message: cache problem</string>
-    <string name="corrupted">Corrupted</string>
-    <string name="can_not_delete_sending_message">Sorry. We can\'t delete a message which is sending now</string>
+    <string name="can_not_delete_sending_message">You can\'t delete a message which is now being sent</string>
     <string name="preparing">Preparing&#8230;</string>
     <string name="gmail_imap_disabled_error" translatable="false">[ALERT] Your account is not enabled for IMAP use. Please visit your Gmail
         settings page and enable your account for IMAP access. (Failure)</string>
@@ -425,4 +394,7 @@ icelanders prefer real sauna</font>
     <string name="attachment_not_found">The attachment not found</string>
     <string name="please_use_another_app_to_choose_file">Please use another app to choose a file</string>
     <string name="file_not_found">File not found</string>
+    <string name="no_pub_keys">There are no public keys</string>
+    <string name="could_not_decrypt_message_due_to_error">Could not decrypt this message due to error:\n\n %1$s </string>
+    <string name="logo">Logo</string>
 </resources>

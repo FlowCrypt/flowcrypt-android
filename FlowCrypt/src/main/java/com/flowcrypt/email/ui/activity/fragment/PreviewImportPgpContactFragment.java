@@ -21,11 +21,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.MessageBlock;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.PublicKeyInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
@@ -33,6 +32,7 @@ import com.flowcrypt.email.ui.adapter.ImportPgpContactsRecyclerViewAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -54,6 +54,7 @@ import androidx.recyclerview.widget.RecyclerView;
  * Time: 14:15
  * E-mail: DenBond7@gmail.com
  */
+//todo-DenBond7 it would be great to improve this fragment
 public class PreviewImportPgpContactFragment extends BaseFragment implements View.OnClickListener {
   private static final String KEY_EXTRA_PUBLIC_KEY_STRING = GeneralUtil.generateUniqueExtraKey
       ("KEY_EXTRA_PUBLIC_KEY_STRING", PreviewImportPgpContactFragment.class);
@@ -251,12 +252,10 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
 
     private LoaderResult parseKeys(String armoredKeys) {
       try {
-        Js js = new Js(weakRef.get().getContext(), null);
-        String normalizedArmoredKey = js.crypto_key_normalize(armoredKeys);
-        PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
+        List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(armoredKeys);
 
-        if (js.is_valid_key(pgpKey, false)) {
-          return new LoaderResult(parsePublicKeysInfo(js, armoredKeys), null);
+        if (!CollectionUtils.isEmpty(details)) {
+          return new LoaderResult(parsePublicKeysInfo(details), null);
         } else {
           if (weakRef.get() != null) {
             return new LoaderResult(null, new IllegalArgumentException(
@@ -275,32 +274,21 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
       }
     }
 
-    private List<PublicKeyInfo> parsePublicKeysInfo(Js js, @NonNull String armoredKeys) {
+    private List<PublicKeyInfo> parsePublicKeysInfo(List<NodeKeyDetails> details) {
       List<PublicKeyInfo> publicKeyInfoList = new ArrayList<>();
 
-      if (TextUtils.isEmpty(armoredKeys)) {
-        return publicKeyInfoList;
-      }
-
       Set<String> emails = new HashSet<>();
-      MessageBlock[] msgBlocks = js.crypto_armor_detect_blocks(armoredKeys);
 
-      int blocksCount = msgBlocks.length;
+      int blocksCount = details.size();
       float progress;
       float lastProgress = 0;
 
-      for (int i = 0; i < msgBlocks.length; i++) {
-        MessageBlock messageBlock = msgBlocks[i];
-        if (messageBlock != null && messageBlock.getType() != null) {
-          switch (messageBlock.getType()) {
-            case MessageBlock.TYPE_PGP_PUBLIC_KEY:
-              PublicKeyInfo publicKeyInfo = getPublicKeyInfo(js, emails, messageBlock);
+      for (int i = 0; i < blocksCount; i++) {
+        NodeKeyDetails nodeKeyDetails = details.get(i);
+        PublicKeyInfo publicKeyInfo = getPublicKeyInfo(nodeKeyDetails, emails);
 
-              if (publicKeyInfo != null) {
-                publicKeyInfoList.add(publicKeyInfo);
-              }
-              break;
-          }
+        if (publicKeyInfo != null) {
+          publicKeyInfoList.add(publicKeyInfo);
         }
 
         progress = i * 100f / blocksCount;
@@ -315,13 +303,11 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
       return publicKeyInfoList;
     }
 
-    private PublicKeyInfo getPublicKeyInfo(Js js, Set<String> emails, MessageBlock messageBlock) {
-      String content = messageBlock.getContent();
-      String fingerprint = js.crypto_key_fingerprint(js.crypto_key_read(content));
-      String longId = js.crypto_key_longid(fingerprint);
-      String keyWords = js.mnemonic(longId);
-      PgpKey pgpKey = js.crypto_key_read(content);
-      String keyOwner = pgpKey.getPrimaryUserId().getEmail();
+    private PublicKeyInfo getPublicKeyInfo(NodeKeyDetails nodeKeyDetails, Set<String> emails) {
+      String fingerprint = nodeKeyDetails.getFingerprint();
+      String longId = nodeKeyDetails.getLongId();
+      String keyWords = nodeKeyDetails.getKeywords();
+      String keyOwner = nodeKeyDetails.getPrimaryPgpContact().getEmail();
 
       if (keyOwner != null) {
         keyOwner = keyOwner.toLowerCase();
@@ -334,7 +320,7 @@ public class PreviewImportPgpContactFragment extends BaseFragment implements Vie
 
         if (weakRef.get() != null) {
           PgpContact contact = new ContactsDaoSource().getPgpContact(weakRef.get().getContext(), keyOwner);
-          return new PublicKeyInfo(keyWords, fingerprint, keyOwner, longId, contact, content);
+          return new PublicKeyInfo(keyWords, fingerprint, keyOwner, longId, contact, nodeKeyDetails.getPublicKey());
         }
       }
       return null;

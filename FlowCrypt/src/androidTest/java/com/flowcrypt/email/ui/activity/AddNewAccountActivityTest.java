@@ -23,6 +23,7 @@ import org.junit.runner.RunWith;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -45,11 +46,18 @@ import static org.hamcrest.Matchers.not;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class AddNewAccountActivityTest extends BaseTest {
+  private ActivityTestRule activityTestRule = new IntentsTestRule<>(AddNewAccountActivity.class);
+
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
-      .around(new IntentsTestRule<>(AddNewAccountActivity.class));
+      .around(activityTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
 
   @Before
   public void stubAllExternalIntents() {

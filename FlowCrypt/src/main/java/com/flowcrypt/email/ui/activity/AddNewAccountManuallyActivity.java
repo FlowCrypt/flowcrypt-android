@@ -25,6 +25,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.gmail.GmailConstants;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.KeyDetails;
@@ -37,6 +38,7 @@ import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.google.android.gms.common.util.CollectionUtils;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -240,7 +242,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   public void afterTextChanged(Editable editable) {
     if (GeneralUtil.isEmailValid(editable)) {
       String email = editable.toString();
-      String mainDomain = email.substring(email.indexOf('@') + 1, email.length());
+      String mainDomain = email.substring(email.indexOf('@') + 1);
       editTextImapServer.setText(getString(R.string.template_imap_server, mainDomain));
       editTextSmtpServer.setText(getString(R.string.template_smtp_server, mainDomain));
       editTextUserName.setText(email.substring(0, email.indexOf('@')));
@@ -294,8 +296,8 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
         break;
 
       case R.id.loader_id_load_private_key_backups_from_email:
-        ArrayList<KeyDetails> keyDetailsList = (ArrayList<KeyDetails>) result;
-        if (keyDetailsList.isEmpty()) {
+        ArrayList<NodeKeyDetails> keyDetailsList = (ArrayList<NodeKeyDetails>) result;
+        if (CollectionUtils.isEmpty(keyDetailsList)) {
           AccountDao account = new AccountDao(authCreds.getEmail(), null, authCreds.getUsername(), null, null, null,
               authCreds, false);
           startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
@@ -305,7 +307,7 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
           String bottomTitle = getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList.size(), keyDetailsList.size());
           String neutralBtnTitle = SecurityUtils.hasBackup(this) ? getString(R.string.use_existing_keys) : null;
-          Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, bottomTitle,
+          Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.EMAIL, bottomTitle,
               getString(R.string.continue_), neutralBtnTitle, getString(R.string.use_another_account));
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL);
         }

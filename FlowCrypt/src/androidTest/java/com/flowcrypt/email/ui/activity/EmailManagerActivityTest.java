@@ -42,6 +42,7 @@ import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
@@ -97,6 +98,11 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
           INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT))
       .around(intentsTestRule);
 
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return intentsTestRule;
+  }
+
   @Before
   public void registerIdlingResource() {
     IdlingRegistry.getInstance().register(((EmailManagerActivity) intentsTestRule.getActivity())
@@ -144,7 +150,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
   public void testShowSplashActivityAfterLogout() {
     clickLogOut();
     clickLogOut();
-    intended(hasComponent(SplashActivity.class.getName()));
+    intended(hasComponent(SignInActivity.class.getName()));
   }
 
   @Test

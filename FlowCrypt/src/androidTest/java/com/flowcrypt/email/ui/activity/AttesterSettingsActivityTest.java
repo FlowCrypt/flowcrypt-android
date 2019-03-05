@@ -36,11 +36,18 @@ import static org.hamcrest.Matchers.not;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class AttesterSettingsActivityTest extends BaseTest {
+  private ActivityTestRule activityTestRule = new ActivityTestRule<>(AttesterSettingsActivity.class);
+
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
-      .around(new ActivityTestRule<>(AttesterSettingsActivity.class));
+      .around(activityTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
 
   @Test
   public void testKeysExistOnAttester() {

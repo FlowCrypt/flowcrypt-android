@@ -28,7 +28,7 @@ import static org.hamcrest.Matchers.not;
  * Time: 11:11
  * E-mail: DenBond7@gmail.com
  */
-public class BaseEmailListActivityTest extends BaseTest {
+public abstract class BaseEmailListActivityTest extends BaseTest {
 
   protected void testDownloadAllMsgs(int messageCount) {
     onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));

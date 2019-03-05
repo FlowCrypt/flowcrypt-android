@@ -29,6 +29,7 @@ import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -57,23 +58,27 @@ public class KeysSettingsActivityTest extends BaseTest {
       .around(new AddPrivateKeyToDatabaseRule())
       .around(intentsTestRule);
 
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return intentsTestRule;
+  }
+
   @Test
   public void testAddNewKeys() throws Throwable {
     intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        ImportPrivateKeyActivity
-        .class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
+        ImportPrivateKeyActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
 
     TestGeneralUtil.saveKeyToDatabase(TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry
-        .getInstrumentation()
-        .getContext(), "pgp/ben@flowcrypt.com-sec.asc"), TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
+            .getInstrumentation().getContext(), "pgp/ben@flowcrypt.com-sec.asc"),
+        TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
 
     onView(withId(R.id.floatActionButtonAddKey)).check(matches(isDisplayed())).perform(click());
-    onView(withId(R.id.listViewKeys)).check(matches(isDisplayed())).check(matches(matchListSize(2)));
+    onView(withId(R.id.recyclerViewKeys)).check(matches(isDisplayed())).check(matches(matchRecyclerViewSize(2)));
   }
 
   @Test
   public void testKeyExists() {
-    onView(withId(R.id.listViewKeys)).check(matches(not(matchEmptyList()))).check(matches(isDisplayed()));
+    onView(withId(R.id.recyclerViewKeys)).check(matches(not(matchEmptyRecyclerView()))).check(matches(isDisplayed()));
     onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
   }
 }

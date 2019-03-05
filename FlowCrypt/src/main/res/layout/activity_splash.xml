@@ -3,19 +3,32 @@
   ~ Contributors: DenBond7
   -->
 
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.flowcrypt.email.ui.activity.SplashActivity">
+    tools:context="com.flowcrypt.email.ui.activity.SignInActivity">
 
     <include
         android:id="@+id/signInView"
-        layout="@layout/content_splash" />
+        layout="@layout/content_splash"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <include
-        android:id="@+id/splashView"
-        layout="@layout/splash_after_auth"
-        android:visibility="gone" />
+        android:id="@+id/progressView"
+        layout="@layout/fullscreen_loading"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

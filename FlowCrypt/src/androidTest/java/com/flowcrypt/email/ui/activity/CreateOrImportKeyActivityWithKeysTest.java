@@ -13,12 +13,10 @@ import android.content.Intent;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
 import com.flowcrypt.email.util.AccountDaoManager;
-import com.flowcrypt.email.util.GeneralUtil;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,6 +28,7 @@ import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -52,20 +51,13 @@ import static org.hamcrest.Matchers.allOf;
 @LargeTest
 @RunWith(AndroidJUnit4.class)
 public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
-  private static final String KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON =
-      GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON",
-          CreateOrImportKeyActivity.class);
 
   private IntentsTestRule activityTestRule =
       new IntentsTestRule<CreateOrImportKeyActivity>(CreateOrImportKeyActivity.class) {
         @Override
         protected Intent getActivityIntent() {
           Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-          AccountDao account = AccountDaoManager.getDefaultAccountDao();
-          Intent result = new Intent(targetContext, CreateOrImportKeyActivity.class);
-          result.putExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO, account);
-          result.putExtra(KEY_IS_SHOW_USE_ANOTHER_ACCOUNT_BUTTON, true);
-          return result;
+          return CreateOrImportKeyActivity.newIntent(targetContext, AccountDaoManager.getDefaultAccountDao(), true);
         }
       };
 
@@ -74,6 +66,11 @@ public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
       .outerRule(new ClearAppSettingsRule())
       .around(new AddPrivateKeyToDatabaseRule())
       .around(activityTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
 
   @Test
   public void testClickOnButtonCreateNewKey() {

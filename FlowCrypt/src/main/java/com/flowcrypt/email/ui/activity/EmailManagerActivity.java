@@ -639,7 +639,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
       runEmailManagerActivity(EmailManagerActivity.this);
     } else {
       stopService(new Intent(this, EmailSyncService.class));
-      Intent intent = new Intent(this, SplashActivity.class);
+      Intent intent = new Intent(this, SignInActivity.class);
       intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
       startActivity(intent);
       finish();

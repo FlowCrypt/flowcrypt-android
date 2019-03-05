@@ -65,6 +65,11 @@ public class HtmlViewFromAssetsRawActivityTest extends BaseTest {
     onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar)))).check(matches(isDisplayed()));
   }
 
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
+
   private void startActivity(String title) {
     Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     Intent intent = new Intent(targetContext, HtmlViewFromAssetsRawActivity.class);

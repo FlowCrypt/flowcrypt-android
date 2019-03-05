@@ -181,17 +181,15 @@ android {
     }
 
     task copyReleaseApks(type: Copy) {
-        applicationVariants.all { variant ->
-            if (variant.buildType.buildType == buildTypes.release) {
-                variant.outputs.each { output ->
-                    from("$output.outputFile.parent") {
-                        include '**/*release*.apk'
-                    }
-                }
-            }
+        from("$buildDir") {
+            include '**/*release*.apk'
         }
+
         includeEmptyDirs = false
         into '../release'
+        eachFile { file ->
+            file.path = file.name
+        }
     }
 
     afterEvaluate {

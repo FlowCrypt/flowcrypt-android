@@ -7,6 +7,7 @@ package com.flowcrypt.email.util.google.gson;
 
 import com.flowcrypt.email.service.actionqueue.actions.Action;
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction;
+import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction;
 import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTableAction;
 import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction;
 import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction;
@@ -48,6 +49,9 @@ public class ActionJsonDeserializer implements JsonDeserializer<Action> {
 
       case FILL_USER_ID_EMAILS_KEYS_TABLE:
         return context.deserialize(json, FillUserIdEmailsKeysTableAction.class);
+
+      case ENCRYPT_PRIVATE_KEYS:
+        return context.deserialize(json, EncryptPrivateKeysIfNeededAction.class);
 
       default:
         throw new IllegalArgumentException("Unknown action type");

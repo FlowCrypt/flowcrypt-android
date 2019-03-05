@@ -242,6 +242,10 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
     if (!CollectionUtils.isEmpty(msgInfo.getAtts())) {
       for (AttachmentInfo att : msgInfo.getAtts()) {
+        if (TextUtils.isEmpty(att.getType())) {
+          att.setType(Constants.MIME_TYPE_BINARY_DATA);
+        }
+
         try {
           Uri origFileUri = att.getUri();
           InputStream inputStream = null;
@@ -299,6 +303,10 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
 
     if (!CollectionUtils.isEmpty(msgInfo.getForwardedAtts())) {
       for (AttachmentInfo att : msgInfo.getForwardedAtts()) {
+        if (TextUtils.isEmpty(att.getType())) {
+          att.setType(Constants.MIME_TYPE_BINARY_DATA);
+        }
+
         if (msgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
           AttachmentInfo encryptedAtt = new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX, att);
           encryptedAtt.setName(encryptedAtt.getName() + Constants.PGP_FILE_EXT);

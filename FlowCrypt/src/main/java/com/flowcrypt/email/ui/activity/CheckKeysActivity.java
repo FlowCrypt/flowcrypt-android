@@ -16,10 +16,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.StorageConnectorInterface;
 import com.flowcrypt.email.js.UiJsManager;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
@@ -66,6 +66,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
   public static final String KEY_EXTRA_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
       "KEY_EXTRA_PRIVATE_KEYS", CheckKeysActivity.class);
+  public static final String KEY_EXTRA_TYPE = GeneralUtil.generateUniqueExtraKey(
+      "KEY_EXTRA_TYPE", CheckKeysActivity.class);
   public static final String KEY_EXTRA_SUB_TITLE = GeneralUtil.generateUniqueExtraKey(
       "KEY_EXTRA_SUB_TITLE", CheckKeysActivity.class);
   public static final String KEY_EXTRA_POSITIVE_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey(
@@ -77,8 +79,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
   public static final String KEY_EXTRA_IS_EXTRA_IMPORT_OPTION = GeneralUtil.generateUniqueExtraKey(
       "KEY_EXTRA_IS_EXTRA_IMPORT_OPTION", CheckKeysActivity.class);
 
-  private ArrayList<KeyDetails> keyDetailsList;
-  private Map<KeyDetails, String> keyDetailsAndLongIdsMap;
+  private ArrayList<NodeKeyDetails> keyDetailsList;
+  private Map<NodeKeyDetails, String> keyDetailsAndLongIdsMap;
 
   private EditText editTextKeyPassword;
   private TextView textViewSubTitle;
@@ -89,23 +91,26 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
   private String neutralBtnTitle;
   private String negativeBtnTitle;
   private int uniqueKeysCount;
+  private KeyDetails.Type type;
 
-  public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys, String bottomTitle,
-                                 String positiveBtnTitle, String negativeBtnTitle) {
-    return newIntent(context, privateKeys, bottomTitle, positiveBtnTitle, null, negativeBtnTitle, false);
+  public static Intent newIntent(Context context, ArrayList<NodeKeyDetails> privateKeys, KeyDetails.Type type,
+                                 String bottomTitle, String positiveBtnTitle, String negativeBtnTitle) {
+    return newIntent(context, privateKeys, type, bottomTitle, positiveBtnTitle, null, negativeBtnTitle, false);
   }
 
-  public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys, String bottomTitle,
-                                 String positiveBtnTitle, String neutralBtnTitle, String negativeBtnTitle) {
-    return newIntent(context, privateKeys, bottomTitle, positiveBtnTitle, neutralBtnTitle,
-        negativeBtnTitle, false);
+  public static Intent newIntent(Context context, ArrayList<NodeKeyDetails> privateKeys, KeyDetails.Type type,
+                                 String bottomTitle, String positiveBtnTitle, String neutralBtnTitle,
+                                 String negativeBtnTitle) {
+    return newIntent(context, privateKeys, type, bottomTitle, positiveBtnTitle, neutralBtnTitle, negativeBtnTitle,
+        false);
   }
 
-  public static Intent newIntent(Context context, ArrayList<KeyDetails> privateKeys, String subTitle,
-                                 String positiveBtnTitle, String neutralBtnTitle, String negativeBtnTitle,
-                                 boolean isExtraImportOpt) {
+  public static Intent newIntent(Context context, ArrayList<NodeKeyDetails> privateKeys, KeyDetails.Type type,
+                                 String subTitle, String positiveBtnTitle, String neutralBtnTitle,
+                                 String negativeBtnTitle, boolean isExtraImportOpt) {
     Intent intent = new Intent(context, CheckKeysActivity.class);
     intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys);
+    intent.putExtra(KEY_EXTRA_TYPE, type);
     intent.putExtra(KEY_EXTRA_SUB_TITLE, subTitle);
     intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveBtnTitle);
     intent.putExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE, neutralBtnTitle);
@@ -153,7 +158,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
               setResult(Activity.RESULT_OK);
               finish();
             } else {
-              Map<KeyDetails, String> map = prepareMapFromKeyDetailsList(keyDetailsList);
+              Map<NodeKeyDetails, String> map = prepareMapFromKeyDetailsList(keyDetailsList);
               int remainingKeyCount = getUniqueKeysLongIdsCount(map);
 
               this.subTitle = getResources().getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
@@ -231,7 +236,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
       case R.id.loader_id_encrypt_and_save_private_keys_infos:
         progressBar.setVisibility(View.VISIBLE);
         String passphrase = editTextKeyPassword.getText().toString();
-        return new EncryptAndSavePrivateKeysAsyncTaskLoader(this, keyDetailsList, passphrase);
+        return new EncryptAndSavePrivateKeysAsyncTaskLoader(this, keyDetailsList, type, passphrase);
 
       default:
         return new Loader<>(this);
@@ -265,12 +270,12 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
     switch (loaderId) {
       case R.id.loader_id_encrypt_and_save_private_keys_infos:
         progressBar.setVisibility(View.GONE);
-        ArrayList<KeyDetails> savedKeyDetailsList = (ArrayList<KeyDetails>) result;
+        ArrayList<NodeKeyDetails> savedKeyDetailsList = (ArrayList<NodeKeyDetails>) result;
         if (savedKeyDetailsList != null && !savedKeyDetailsList.isEmpty()) {
           UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
           restartJsService();
 
-          Map<KeyDetails, String> map = prepareMapFromKeyDetailsList(savedKeyDetailsList);
+          Map<NodeKeyDetails, String> map = prepareMapFromKeyDetailsList(savedKeyDetailsList);
           keyDetailsList.removeAll(generateMatchedKeyDetailsList(map));
           if (keyDetailsList.isEmpty()) {
             setResult(Activity.RESULT_OK);
@@ -278,7 +283,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
           } else {
             initButton(R.id.buttonNeutralAction, View.VISIBLE, getString(R.string.skip_remaining_backups));
             editTextKeyPassword.setText(null);
-            Map<KeyDetails, String> mapOfRemainingBackups = prepareMapFromKeyDetailsList(keyDetailsList);
+            Map<NodeKeyDetails, String> mapOfRemainingBackups = prepareMapFromKeyDetailsList(keyDetailsList);
             int remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups);
 
             textViewSubTitle.setText(getResources().getQuantityString(
@@ -295,6 +300,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
   private void getExtras() {
     this.keyDetailsList = getIntent().getParcelableArrayListExtra(KEY_EXTRA_PRIVATE_KEYS);
+    this.type = (KeyDetails.Type) getIntent().getSerializableExtra(KEY_EXTRA_TYPE);
     this.subTitle = getIntent().getStringExtra(KEY_EXTRA_SUB_TITLE);
     this.positiveBtnTitle = getIntent().getStringExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE);
     this.neutralBtnTitle = getIntent().getStringExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE);
@@ -316,7 +322,6 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
     if (findViewById(R.id.imageButtonHint) != null) {
       View imageButtonHint = findViewById(R.id.imageButtonHint);
-      KeyDetails.Type type = keyDetailsList.get(0).getBornType();
       if (keyDetailsList != null && !keyDetailsList.isEmpty() && type == KeyDetails.Type.EMAIL) {
         imageButtonHint.setVisibility(View.VISIBLE);
         imageButtonHint.setOnClickListener(this);
@@ -359,9 +364,9 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
 
     for (String longId : longIds) {
       if (connector.getPgpPrivateKey(longId) != null) {
-        for (Iterator<Map.Entry<KeyDetails, String>> iterator = keyDetailsAndLongIdsMap.entrySet().iterator();
+        for (Iterator<Map.Entry<NodeKeyDetails, String>> iterator = keyDetailsAndLongIdsMap.entrySet().iterator();
              iterator.hasNext(); ) {
-          Map.Entry<KeyDetails, String> entry = iterator.next();
+          Map.Entry<NodeKeyDetails, String> entry = iterator.next();
           if (longId.equals(entry.getValue())) {
             iterator.remove();
           }
@@ -373,51 +378,49 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
   /**
    * Get a count of unique longIds.
    *
-   * @param mapOfKeyDetailsAndLongIds An input map of {@link KeyDetails}.
+   * @param mapOfKeyDetailsAndLongIds An input map of {@link NodeKeyDetails}.
    * @return A count of unique longIds.
    */
-  private int getUniqueKeysLongIdsCount(Map<KeyDetails, String> mapOfKeyDetailsAndLongIds) {
+  private int getUniqueKeysLongIdsCount(Map<NodeKeyDetails, String> mapOfKeyDetailsAndLongIds) {
     return new HashSet<>(mapOfKeyDetailsAndLongIds.values()).size();
   }
 
   /**
    * Get a set of unique longIds.
    *
-   * @param mapOfKeyDetailsAndLongIds An input map of {@link KeyDetails}.
+   * @param mapOfKeyDetailsAndLongIds An input map of {@link NodeKeyDetails}.
    * @return A list of unique longIds.
    */
-  private Set<String> getUniqueKeysLongIds(Map<KeyDetails, String> mapOfKeyDetailsAndLongIds) {
+  private Set<String> getUniqueKeysLongIds(Map<NodeKeyDetails, String> mapOfKeyDetailsAndLongIds) {
     return new HashSet<>(mapOfKeyDetailsAndLongIds.values());
   }
 
   /**
-   * Generate a map of incoming list of {@link KeyDetails} objects where values will be a {@link PgpKey} longId.
+   * Generate a map of incoming list of {@link NodeKeyDetails} objects where values will be a {@link PgpKey} longId.
    *
-   * @param privateKeyDetailsList An incoming list of {@link KeyDetails} objects.
+   * @param privateKeyDetailsList An incoming list of {@link NodeKeyDetails} objects.
    * @return A generated map.
    */
-  private Map<KeyDetails, String> prepareMapFromKeyDetailsList(ArrayList<KeyDetails> privateKeyDetailsList) {
-    Js js = UiJsManager.getInstance(this).getJs();
-    Map<KeyDetails, String> keyDetailsStringMap = new HashMap<>();
+  private Map<NodeKeyDetails, String> prepareMapFromKeyDetailsList(ArrayList<NodeKeyDetails> privateKeyDetailsList) {
+    Map<NodeKeyDetails, String> keyDetailsStringMap = new HashMap<>();
 
-    for (KeyDetails keyDetails : privateKeyDetailsList) {
-      String normalizedArmoredKey = js.crypto_key_normalize(keyDetails.getValue());
-      PgpKey pgpKey = js.crypto_key_read(normalizedArmoredKey);
-      keyDetailsStringMap.put(keyDetails, pgpKey.getLongid());
+    for (NodeKeyDetails keyDetails : privateKeyDetailsList) {
+      keyDetailsStringMap.put(keyDetails, keyDetails.getLongId());
     }
     return keyDetailsStringMap;
   }
 
   /**
-   * Generate a matched list of the existing keys. It will contain all {@link KeyDetails} which has a right longId.
+   * Generate a matched list of the existing keys. It will contain all {@link NodeKeyDetails} which has a right longId.
    *
-   * @param mapOfSavedKeyDetailsAndLongIds An incoming map of {@link KeyDetails} objects.
+   * @param mapOfSavedKeyDetailsAndLongIds An incoming map of {@link NodeKeyDetails} objects.
    * @return A matched list.
    */
-  private ArrayList<KeyDetails> generateMatchedKeyDetailsList(Map<KeyDetails, String> mapOfSavedKeyDetailsAndLongIds) {
-    ArrayList<KeyDetails> matchedKeyDetails = new ArrayList<>();
-    for (Map.Entry<KeyDetails, String> entry : mapOfSavedKeyDetailsAndLongIds.entrySet()) {
-      for (Map.Entry<KeyDetails, String> innerEntry : keyDetailsAndLongIdsMap.entrySet()) {
+  private ArrayList<NodeKeyDetails> generateMatchedKeyDetailsList(Map<NodeKeyDetails,
+      String> mapOfSavedKeyDetailsAndLongIds) {
+    ArrayList<NodeKeyDetails> matchedKeyDetails = new ArrayList<>();
+    for (Map.Entry<NodeKeyDetails, String> entry : mapOfSavedKeyDetailsAndLongIds.entrySet()) {
+      for (Map.Entry<NodeKeyDetails, String> innerEntry : keyDetailsAndLongIdsMap.entrySet()) {
         if (innerEntry.getValue().equals(entry.getValue())) {
           matchedKeyDetails.add(innerEntry.getKey());
         }

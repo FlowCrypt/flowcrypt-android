@@ -24,6 +24,7 @@ import androidx.test.espresso.IdlingRegistry;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -53,14 +54,19 @@ public class SearchBackupsInEmailActivityTest extends BaseTest {
       .around(new AddPrivateKeyToDatabaseRule())
       .around(activityTestRule);
 
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
+
   @Before
-  public void registerIdling() {
+  public void registerNodeIdling() {
     IdlingRegistry.getInstance().register(((SearchBackupsInEmailActivity) activityTestRule.getActivity())
         .getCountingIdlingResource());
   }
 
   @After
-  public void unregisterIdling() {
+  public void unregisterNodeIdling() {
     IdlingRegistry.getInstance().unregister(((SearchBackupsInEmailActivity) activityTestRule.getActivity())
         .getCountingIdlingResource());
   }

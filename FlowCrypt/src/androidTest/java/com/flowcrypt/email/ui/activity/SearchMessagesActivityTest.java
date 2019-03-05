@@ -33,6 +33,7 @@ import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.clearText;
@@ -78,6 +79,11 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
       .around(new AddAccountToDatabaseRule())
       .around(new UpdateAccountRule(AccountDaoManager.getDefaultAccountDao(), generateContentValues()))
       .around(intentsTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return intentsTestRule;
+  }
 
   @Before
   public void registerIdlingResource() {

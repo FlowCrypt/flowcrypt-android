@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.util.AccountDaoManager;
 
@@ -46,8 +47,7 @@ import static org.hamcrest.Matchers.startsWith;
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class CreatePrivateKeyActivityTest {
-
+public class CreatePrivateKeyActivityTest extends BaseTest {
   private static final String WEAK_PASSWORD = "weak";
   private static final String POOR_PASSWORD = "weak, perfect, great";
   private static final String REASONABLE_PASSWORD = "weak, poor, reasonable";
@@ -55,10 +55,8 @@ public class CreatePrivateKeyActivityTest {
   private static final String GREAT_PASSWORD = "weak, poor, great, good";
   private static final String PERFECT_PASSWORD = "unconventional blueberry unlike any other";
 
-  @Rule
-  public TestRule ruleChain = RuleChain
-      .outerRule(new ClearAppSettingsRule())
-      .around(new ActivityTestRule<CreatePrivateKeyActivity>(CreatePrivateKeyActivity.class) {
+  private ActivityTestRule activityTestRule =
+      new ActivityTestRule<CreatePrivateKeyActivity>(CreatePrivateKeyActivity.class) {
         @Override
         protected Intent getActivityIntent() {
           Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -67,7 +65,17 @@ public class CreatePrivateKeyActivityTest {
               AccountDaoManager.getDefaultAccountDao());
           return result;
         }
-      });
+      };
+
+  @Rule
+  public TestRule ruleChain = RuleChain
+      .outerRule(new ClearAppSettingsRule())
+      .around(activityTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
 
   @Test
   public void testShowDialogWithPasswordRecommendation() {

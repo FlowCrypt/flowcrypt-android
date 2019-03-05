@@ -10,7 +10,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.ui.activity.SplashActivity;
+import com.flowcrypt.email.ui.activity.SignInActivity;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -49,14 +49,20 @@ public abstract class SignInWithStandardAuthTest extends BaseTest {
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
-      .around(new ActivityTestRule<>(SplashActivity.class));
-
+      .around(new ActivityTestRule<>(SignInActivity.class));
   protected AuthCredentials authCreds;
+  private ActivityTestRule activityTestRule = new ActivityTestRule<>(SignInActivity.class);
 
   abstract AuthCredentials getAuthCreds();
 
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
+
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     this.authCreds = getAuthCreds();
   }
 
