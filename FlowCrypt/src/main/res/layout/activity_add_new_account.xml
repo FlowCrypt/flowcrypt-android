@@ -26,7 +26,7 @@
 
         <include
             android:id="@+id/progressView"
-            layout="@layout/splash_after_auth"
+            layout="@layout/fullscreen_loading"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"

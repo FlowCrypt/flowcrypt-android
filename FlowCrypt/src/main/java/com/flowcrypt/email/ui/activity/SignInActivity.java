@@ -13,27 +13,19 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Toast;
 
-import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
 import com.flowcrypt.email.database.provider.FlowcryptContract;
-import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService;
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
 import com.flowcrypt.email.service.EmailSyncService;
-import com.flowcrypt.email.service.JsBackgroundService;
-import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction;
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
-import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.api.Auth;
@@ -46,7 +38,6 @@ import java.util.ArrayList;
 import androidx.annotation.NonNull;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.Loader;
-import androidx.preference.PreferenceManager;
 
 /**
  * This {@link Activity} shows a screen where a user can to sign in to his account.
@@ -62,40 +53,14 @@ public class SignInActivity extends BaseSignInActivity implements LoaderManager.
   private static final int REQUEST_CODE_CREATE_OR_IMPORT_KEY = 102;
 
   private View signInView;
-  private View splashView;
   private View progressView;
 
-  private AccountDao account;
   private boolean isStartCheckKeysActivityEnabled;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
-    setTheme(R.style.AppTheme_NoActionBar);
     super.onCreate(savedInstanceState);
-    PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false);
-
-    JsBackgroundService.start(this);
-    ForwardedAttachmentsDownloaderJobService.schedule(getApplicationContext());
-    MessagesSenderJobService.schedule(getApplicationContext());
-
     initViews();
-
-    account = new AccountDaoSource().getActiveAccountInformation(this);
-    if (account != null && isNodeReady()) {
-      showEmailManagerActivity();
-    }
-  }
-
-  @Override
-  protected void onNodeStateChanged(boolean isReady) {
-    super.onNodeStateChanged(isReady);
-    progressView.setVisibility(View.GONE);
-    if (account != null) {
-      splashView.setVisibility(View.VISIBLE);
-      showEmailManagerActivity();
-    } else {
-      signInView.setVisibility(View.VISIBLE);
-    }
   }
 
   @Override
@@ -133,7 +98,7 @@ public class SignInActivity extends BaseSignInActivity implements LoaderManager.
           case Activity.RESULT_CANCELED:
           case CheckKeysActivity.RESULT_NEGATIVE:
             this.sign = null;
-            UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
+            UIUtil.exchangeViewVisibility(this, false, progressView, signInView);
             break;
         }
         break;
@@ -147,7 +112,7 @@ public class SignInActivity extends BaseSignInActivity implements LoaderManager.
           case Activity.RESULT_CANCELED:
           case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
             this.sign = null;
-            UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
+            UIUtil.exchangeViewVisibility(this, false, progressView, signInView);
             break;
         }
         break;
@@ -172,7 +137,6 @@ public class SignInActivity extends BaseSignInActivity implements LoaderManager.
             break;
 
           case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
-            this.account = null;
             if (data != null) {
               AccountDao accountDao = data.getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO);
               clearInfoAboutOldAccount(accountDao);
@@ -218,7 +182,7 @@ public class SignInActivity extends BaseSignInActivity implements LoaderManager.
         isStartCheckKeysActivityEnabled = true;
 
         AccountDao account = null;
-        UIUtil.exchangeViewVisibility(this, true, splashView, signInView);
+        UIUtil.exchangeViewVisibility(this, true, progressView, signInView);
         if (sign != null) {
           account = new AccountDao(sign.getEmail(), AccountDao.ACCOUNT_TYPE_GOOGLE);
         }
@@ -253,7 +217,7 @@ public class SignInActivity extends BaseSignInActivity implements LoaderManager.
             startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL);
           }
         } else if (loaderResult.getException() != null) {
-          UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
+          UIUtil.exchangeViewVisibility(this, false, progressView, signInView);
           UIUtil.showInfoSnackbar(getRootView(), loaderResult.getException().getMessage());
         }
         break;
@@ -263,23 +227,6 @@ public class SignInActivity extends BaseSignInActivity implements LoaderManager.
   @Override
   public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
 
-  }
-
-  private void showEmailManagerActivity() {
-    if (SecurityUtils.hasBackup(this)) {
-      if (BuildConfig.VERSION_CODE <= 72) {
-        boolean isCheckKeysNeeded = SharedPreferencesHelper.getBoolean(PreferenceManager
-            .getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, true);
-
-        if (isCheckKeysNeeded) {
-          new ActionQueueDaoSource().addAction(this, new EncryptPrivateKeysIfNeededAction(account.getEmail()));
-        }
-      }
-
-      EmailSyncService.startEmailSyncService(this);
-      EmailManagerActivity.runEmailManagerActivity(this);
-      finish();
-    }
   }
 
   private void addNewAccount(AuthCredentials authCreds) throws Exception {
@@ -331,7 +278,7 @@ public class SignInActivity extends BaseSignInActivity implements LoaderManager.
       if (!TextUtils.isEmpty(signInResult.getStatus().getStatusMessage())) {
         UIUtil.showInfoSnackbar(signInView, signInResult.getStatus().getStatusMessage());
       }
-      UIUtil.exchangeViewVisibility(this, false, splashView, signInView);
+      UIUtil.exchangeViewVisibility(this, false, progressView, signInView);
     }
   }
 
@@ -362,9 +309,8 @@ public class SignInActivity extends BaseSignInActivity implements LoaderManager.
    * In this method we init all used views.
    */
   private void initViews() {
-    progressView = findViewById(R.id.progressView);
     signInView = findViewById(R.id.signInView);
-    splashView = findViewById(R.id.splashView);
+    progressView = findViewById(R.id.progressView);
 
     if (findViewById(R.id.buttonSignInWithGmail) != null) {
       findViewById(R.id.buttonSignInWithGmail).setOnClickListener(this);

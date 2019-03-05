@@ -31,7 +31,7 @@
         <!-- Activities -->
 
         <activity
-            android:name=".ui.activity.SignInActivity"
+            android:name=".ui.activity.LauncherActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Launcher">
             <intent-filter>
@@ -41,6 +41,10 @@
                 <category android:name="android.intent.category.APP_EMAIL" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.activity.SignInActivity"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".ui.activity.EmailManagerActivity"

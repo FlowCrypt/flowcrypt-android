@@ -13,24 +13,23 @@
         android:id="@+id/imageViewAppLogo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:contentDescription="@string/logo"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:srcCompat="@mipmap/logo_flowcrypt"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="0dp"
-        app:layout_constraintVertical_bias="0.367" />
-    <!--app:layout_constraintVertical_bias="0.405"-->
+        app:layout_constraintVertical_bias="0.367"
+        app:srcCompat="@mipmap/logo_flowcrypt" />
+
     <TextView
         android:id="@+id/textViewLoading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/default_margin_huge"
-        android:text="@string/loading"
-        android:textSize="@dimen/default_text_size_big"
-        android:textColor="@color/dark"
         android:fontFamily="sans-serif-light"
+        android:text="@string/loading"
+        android:textColor="@color/dark"
+        android:textSize="@dimen/default_text_size_big"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageViewAppLogo" />
