@@ -31,7 +31,7 @@
         <!-- Activities -->
 
         <activity
-            android:name=".ui.activity.SplashActivity"
+            android:name=".ui.activity.SignInActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Launcher">
             <intent-filter>

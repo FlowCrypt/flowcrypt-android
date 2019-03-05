@@ -39,7 +39,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.not;
 
 /**
- * A test for {@link SplashActivity}
+ * A test for {@link SignInActivity}
  *
  * @author Denis Bondarenko
  * Date: 13.02.2018
@@ -48,8 +48,8 @@ import static org.hamcrest.Matchers.not;
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-public class SplashActivityTest extends BaseTest {
-  private IntentsTestRule intentsTestRule = new IntentsTestRule<>(SplashActivity.class);
+public class SignInActivityTest extends BaseTest {
+  private IntentsTestRule intentsTestRule = new IntentsTestRule<>(SignInActivity.class);
 
   @Rule
   public TestRule ruleChain = RuleChain

@@ -150,7 +150,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
   public void testShowSplashActivityAfterLogout() {
     clickLogOut();
     clickLogOut();
-    intended(hasComponent(SplashActivity.class.getName()));
+    intended(hasComponent(SignInActivity.class.getName()));
   }
 
   @Test

@@ -49,14 +49,14 @@ import androidx.loader.content.Loader;
 import androidx.preference.PreferenceManager;
 
 /**
- * The launcher Activity.
+ * This {@link Activity} shows a screen where a user can to sign in to his account.
  *
  * @author DenBond7
  * Date: 26.14.2017
  * Time: 14:50
  * E-mail: DenBond7@gmail.com
  */
-public class SplashActivity extends BaseSignInActivity implements LoaderManager.LoaderCallbacks<LoaderResult> {
+public class SignInActivity extends BaseSignInActivity implements LoaderManager.LoaderCallbacks<LoaderResult> {
 
   private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL = 101;
   private static final int REQUEST_CODE_CREATE_OR_IMPORT_KEY = 102;
