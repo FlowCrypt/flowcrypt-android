@@ -7,6 +7,9 @@ package com.flowcrypt.email.js;
 
 import android.content.Context;
 
+import androidx.annotation.Keep;
+
+@Keep
 public interface StorageConnectorInterface {
 
   PgpContact findPgpContact(String longid);

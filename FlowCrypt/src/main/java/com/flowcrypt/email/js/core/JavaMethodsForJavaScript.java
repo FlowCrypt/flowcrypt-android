@@ -24,12 +24,15 @@ import java.security.spec.RSAPrivateKeySpec;
 
 import javax.crypto.Cipher;
 
+import androidx.annotation.Keep;
+
 /**
  * @author Denis Bondarenko
  * Date: 12/4/18
  * Time: 3:30 PM
  * E-mail: DenBond7@gmail.com
  */
+@Keep
 public class JavaMethodsForJavaScript {
 
   private final StorageConnectorInterface storage;
