@@ -217,6 +217,7 @@ dependencies {
 
     testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
+    testImplementation 'com.eclipsesource.j2v8:j2v8_linux_x86_64:4.8.0'
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 

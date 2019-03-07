@@ -60,6 +60,18 @@ public class Js { // Create one object per thread and use them separately. Not t
     this.storage = storage;
     this.v8 = V8.createV8Runtime();
     bindJavaMethods();
+    tool = loadJavascriptCode(context);
+    bindCallbackCatcher();
+  }
+
+  /**
+   * It can be used for testing purposes only.
+   */
+  public Js() throws IOException {
+    this.v8 = V8.createV8Runtime();
+    this.storage = null;
+    this.context = null;
+    bindJavaMethods();
     tool = loadJavascriptCode();
     bindCallbackCatcher();
   }
@@ -253,7 +265,7 @@ public class Js { // Create one object per thread and use them separately. Not t
     v8.registerJavaMethod(m, "rsa_decrypt", "$_HOST_rsa_decrypt", args(str, str, arr));
   }
 
-  private V8Object loadJavascriptCode() throws IOException {
+  private V8Object loadJavascriptCode(Context context) throws IOException {
     v8.executeScript("var engine_host_version = 'Android " + BuildConfig.VERSION_NAME.split("_")[0] + "';");
     v8.executeScript(read(context.getAssets().open("js/window.js")));
     v8.executeScript(read(context.getAssets().open("js/openpgp.js")));
@@ -268,6 +280,27 @@ public class Js { // Create one object per thread and use them separately. Not t
     v8.executeScript(read(context.getAssets().open("js/global.js")));
     v8.executeScript(read(context.getAssets().open("js/common.js")));
     return v8.getObject("window").getObject("tool");
+  }
+
+  private V8Object loadJavascriptCode() throws IOException {
+    v8.executeScript("var engine_host_version = 'Android " + BuildConfig.VERSION_NAME.split("_")[0] + "';");
+    v8.executeScript(read("js/window.js"));
+    v8.executeScript(read("js/openpgp.js"));
+    v8.executeScript(read("js/emailjs/punycode.js"));
+    v8.executeScript(read("js/emailjs/emailjs-stringencoding.js"));
+    v8.executeScript(read("js/emailjs/emailjs-addressparser.js"));
+    v8.executeScript(read("js/emailjs/emailjs-mime-codec.js"));
+    v8.executeScript(read("js/emailjs/emailjs-mime-parser.js"));
+    v8.executeScript(read("js/emailjs/emailjs-mime-types.js"));
+    v8.executeScript(read("js/emailjs/emailjs-mime-builder.js"));
+    v8.executeScript(read("js/mnemonic.js"));
+    v8.executeScript(read("js/global.js"));
+    v8.executeScript(read("js/common.js"));
+    return v8.getObject("window").getObject("tool");
+  }
+
+  private String read(String path) throws IOException {
+    return IOUtils.toString(getClass().getClassLoader().getResourceAsStream(path), StandardCharsets.UTF_8);
   }
 
   private void bindCallbackCatcher() {
