@@ -328,15 +328,15 @@ public class TestData {
   }
 
   public static PgpKeyInfo[] eccPrvKeyInfo() {
-    return new PgpKeyInfo[]{new PgpKeyInfo(ECC_PRV_KEY, "063635B3E33EB14C")};
+    return new PgpKeyInfo[]{new PgpKeyInfo("063635B3E33EB14C", ECC_PRV_KEY, ECC_PUB_KEY)};
   }
 
   public static PgpKeyInfo[] rsa2048PrvKeyInfo() {
-    return new PgpKeyInfo[]{new PgpKeyInfo(RSA_2048_PRV_KEY, "3A30F4CC0A9A8F10")};
+    return new PgpKeyInfo[]{new PgpKeyInfo("3A30F4CC0A9A8F10", RSA_2048_PRV_KEY, RSA_2048_PUB_KEY)};
   }
 
   public static PgpKeyInfo[] rsa4096PrvKeyInfo() {
-    return new PgpKeyInfo[]{new PgpKeyInfo(RSA_4096_PRV_KEY, "7C307E6F2092962D")};
+    return new PgpKeyInfo[]{new PgpKeyInfo("7C307E6F2092962D", RSA_4096_PRV_KEY, RSA_4096_PUB_KEY)};
   }
 
   public static String[] getMixedPubKeys() {
@@ -344,7 +344,8 @@ public class TestData {
   }
 
   public static PgpKeyInfo[] getMixedPrvKeys() {
-    return new PgpKeyInfo[]{new PgpKeyInfo(ECC_PRV_KEY, "063635B3E33EB14C"), new PgpKeyInfo(RSA_2048_PRV_KEY,
-        "3A30F4CC0A9A8F10"), new PgpKeyInfo(RSA_4096_PRV_KEY, "7C307E6F2092962D")};
+    return new PgpKeyInfo[]{new PgpKeyInfo("063635B3E33EB14C", ECC_PRV_KEY, ECC_PUB_KEY)
+        , new PgpKeyInfo("3A30F4CC0A9A8F10", RSA_2048_PRV_KEY, RSA_2048_PUB_KEY)
+        , new PgpKeyInfo("7C307E6F2092962D", RSA_4096_PRV_KEY, RSA_4096_PUB_KEY)};
   }
 }

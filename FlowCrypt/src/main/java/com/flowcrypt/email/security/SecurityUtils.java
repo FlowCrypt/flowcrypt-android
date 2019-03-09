@@ -59,15 +59,16 @@ public class SecurityUtils {
     if (cursor != null && cursor.moveToFirst()) {
       do {
         String longId = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_LONG_ID));
+        String pubKey = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_PUBLIC_KEY));
 
         String randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(longId);
 
-        String privateKey = keyStoreCryptoManager.decrypt(cursor.getString(
+        String prvKey = keyStoreCryptoManager.decrypt(cursor.getString(
             cursor.getColumnIndex(KeysDaoSource.COL_PRIVATE_KEY)), randomVector);
         String passphrase = keyStoreCryptoManager.decrypt(cursor.getString(
             cursor.getColumnIndex(KeysDaoSource.COL_PASSPHRASE)), randomVector);
 
-        PgpKeyInfo pgpKeyInfo = new PgpKeyInfo(privateKey, longId);
+        PgpKeyInfo pgpKeyInfo = new PgpKeyInfo(longId, prvKey, pubKey);
         PrivateKeyInfo privateKeyInfo = new PrivateKeyInfo(pgpKeyInfo, passphrase);
 
         privateKeysInfo.add(privateKeyInfo);
