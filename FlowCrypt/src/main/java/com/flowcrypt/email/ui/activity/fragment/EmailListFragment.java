@@ -296,28 +296,17 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
       emptyView.setVisibility(View.GONE);
 
       if (GeneralUtil.isConnected(getContext())) {
-        if (localFolder != null) {
-          if (adapter.getCount() > 0) {
-            swipeRefreshLayout.setRefreshing(true);
-            refreshMsgs();
-          } else {
-            swipeRefreshLayout.setRefreshing(false);
-
-            if (adapter.getCount() == 0) {
-              UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-            }
-
-            loadNextMsgs(-1);
-          }
+        if (adapter.getCount() > 0) {
+          swipeRefreshLayout.setRefreshing(true);
+          refreshMsgs();
         } else {
           swipeRefreshLayout.setRefreshing(false);
 
           if (adapter.getCount() == 0) {
-            textViewStatusInfo.setText(R.string.server_unavailable);
-            UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
+            UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
           }
 
-          showFiledLoadLabelsHint();
+          loadNextMsgs(-1);
         }
       } else {
         swipeRefreshLayout.setRefreshing(false);
@@ -656,8 +645,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
           public void onClick(View v) {
             setSupportActionBarTitle(getString(R.string.loading));
             UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-            ((BaseSyncActivity) getActivity()).updateLabels(R.id
-                .syns_request_code_update_label_active, false);
+            ((BaseSyncActivity) getActivity()).updateLabels(R.id.syns_request_code_update_label_active, false);
           }
         });
   }
@@ -719,8 +707,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
       UIUtil.exchangeViewVisibility(getContext(), false, progressView, listView);
     } else {
-      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(
-          listener.getCurrentFolder().getFullName())) {
+      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFullName())) {
         isFetchMesgsNeeded = true;
       }
 
@@ -804,8 +791,8 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         if (deletedRows > 0) {
           Toast.makeText(getContext(), R.string.message_was_deleted, Toast.LENGTH_SHORT).show();
         } else {
-          ExceptionUtil.handleError(new ManualHandledException("Can't delete an outgoing messages which has some " +
-              "errors."));
+          ExceptionUtil.handleError(
+              new ManualHandledException("Can't delete outgoing messages which have some errors."));
         }
       }
     });
