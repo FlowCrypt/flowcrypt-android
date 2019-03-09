@@ -29,6 +29,7 @@ import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.ArrayList;
 
@@ -307,7 +308,11 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void onArchiveMsgClicked() {
     isBackEnabled = false;
     FoldersManager foldersManager = FoldersManager.fromDatabase(this, details.getEmail());
-    moveMsg(R.id.syns_request_archive_message, localFolder, foldersManager.getFolderArchive(), details.getUid());
+    LocalFolder archive = foldersManager.getFolderArchive();
+    if (archive == null) {
+      ExceptionUtil.handleError(new IllegalArgumentException("Folder 'All Mail' not found"));
+    }
+    moveMsg(R.id.syns_request_archive_message, localFolder, archive, details.getUid());
   }
 
   @Override
@@ -334,7 +339,11 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       finish();
     } else {
       FoldersManager foldersManager = FoldersManager.fromDatabase(this, details.getEmail());
-      moveMsg(R.id.syns_request_delete_message, localFolder, foldersManager.getFolderTrash(), details.getUid());
+      LocalFolder trash = foldersManager.getFolderTrash();
+      if (trash == null) {
+        ExceptionUtil.handleError(new IllegalArgumentException("Folder 'Trash' not found"));
+      }
+      moveMsg(R.id.syns_request_delete_message, localFolder, trash, details.getUid());
     }
   }
 
@@ -342,8 +351,11 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void onMoveMsgToInboxClicked() {
     isBackEnabled = false;
     FoldersManager foldersManager = FoldersManager.fromDatabase(this, details.getEmail());
-    LocalFolder desFolder = foldersManager.getFolderInbox();
-    moveMsg(R.id.syns_request_move_message_to_inbox, localFolder, desFolder, details.getUid());
+    LocalFolder folderInbox = foldersManager.getFolderInbox();
+    if (folderInbox == null) {
+      ExceptionUtil.handleError(new IllegalArgumentException("Folder 'Inbox' not found"));
+    }
+    moveMsg(R.id.syns_request_move_message_to_inbox, localFolder, folderInbox, details.getUid());
   }
 
   private void messageNotAvailableInFolder() {
