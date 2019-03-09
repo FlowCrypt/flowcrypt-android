@@ -479,7 +479,12 @@ public class EmailSyncService extends BaseService implements SyncListener {
     for (Folder folder : folders) {
       try {
         IMAPFolder imapFolder = (IMAPFolder) folder;
-        foldersManager.addFolder(imapFolder, folder.getName());
+        String alias = folder.getName();
+        if (TextUtils.isEmpty(alias)) {
+          ExceptionUtil.handleError(new IllegalArgumentException("No alias for folder: " + folder.getFullName()));
+        } else {
+          foldersManager.addFolder(imapFolder, folder.getName());
+        }
       } catch (MessagingException e) {
         e.printStackTrace();
         ExceptionUtil.handleError(e);
@@ -613,6 +618,11 @@ public class EmailSyncService extends BaseService implements SyncListener {
       throws MessagingException, IOException {
     String email = account.getEmail();
     String folderAlias = localFolder.getFolderAlias();
+
+    if (TextUtils.isEmpty(folderAlias)) {
+      ExceptionUtil.handleError(new IllegalArgumentException("No alias for folder: " + localFolder.getFullName() +
+          ", provider = " + account.getEmail().substring(account.getAccountType().indexOf("@"))));
+    }
 
     AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
     ArrayList<ContentValues> contentValuesList = new ArrayList<>();
