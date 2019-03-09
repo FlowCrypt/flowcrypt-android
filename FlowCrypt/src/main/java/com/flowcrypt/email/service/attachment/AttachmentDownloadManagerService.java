@@ -39,6 +39,7 @@ import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.FlowCryptLimitException;
 import com.google.android.gms.common.util.CollectionUtils;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -637,12 +638,12 @@ public class AttachmentDownloadManagerService extends Service {
      * {@link Constants#MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED} we throw an exception. This is only for files
      * with the "pgp" extension.
      */
-    private void checkFileSize() {
+    private void checkFileSize() throws FlowCryptLimitException {
       if ("pgp".equalsIgnoreCase(FilenameUtils.getExtension(att.getName()))) {
         if (att.getEncodedSize() > Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED) {
           String errorMsg = context.getString(R.string.template_warning_max_attachments_size_for_decryption,
               FileUtils.byteCountToDisplaySize(Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED));
-          throw new IllegalArgumentException(errorMsg);
+          throw new FlowCryptLimitException(errorMsg);
         }
       }
     }
