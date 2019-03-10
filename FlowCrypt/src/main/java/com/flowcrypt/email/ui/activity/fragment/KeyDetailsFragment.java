@@ -145,12 +145,16 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
     try {
       GeneralUtil.writeFileFromStringToUri(getContext(), data.getData(), details.getPublicKey());
       String fileName = GeneralUtil.getFileNameFromUri(getContext(), data.getData());
+      String newFileName = null;
 
       if (!TextUtils.isEmpty(fileName)) {
-        fileName = FilenameUtils.removeExtension(fileName) + ".asc";
+        newFileName = FilenameUtils.removeExtension(fileName) + ".asc";
       }
 
-      DocumentsContract.renameDocument(getContext().getContentResolver(), data.getData(), fileName);
+      if (!fileName.equals(newFileName)) {
+        DocumentsContract.renameDocument(getContext().getContentResolver(), data.getData(), fileName);
+      }
+
       Toast.makeText(getContext(), getString(R.string.saved), Toast.LENGTH_SHORT).show();
     } catch (Exception e) {
       e.printStackTrace();

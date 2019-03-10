@@ -58,16 +58,19 @@ public class TestGeneralUtil {
   }
 
   public static void saveKeyToDatabase(String privetKey, String passphrase, KeyDetails.Type type) throws Throwable {
+    List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(privetKey);
+    NodeKeyDetails nodeKeyDetails = details.get(0);
+
+    saveKeyToDatabase(nodeKeyDetails, passphrase, type);
+  }
+
+  public static void saveKeyToDatabase(NodeKeyDetails nodeKeyDetails, String passphrase, KeyDetails.Type type) throws Throwable {
     KeysDaoSource keysDaoSource = new KeysDaoSource();
-    KeyDetails keyDetails = new KeyDetails(privetKey, type);
     KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(InstrumentationRegistry.getInstrumentation()
         .getTargetContext());
 
-    List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(keyDetails.getValue());
-    NodeKeyDetails nodeKeyDetails = details.get(0);
-
     keysDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetails.getBornType(), nodeKeyDetails, passphrase));
+        KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase));
 
     new UserIdEmailsKeysDaoSource().addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         nodeKeyDetails.getLongId(), nodeKeyDetails.getPrimaryPgpContact().getEmail());

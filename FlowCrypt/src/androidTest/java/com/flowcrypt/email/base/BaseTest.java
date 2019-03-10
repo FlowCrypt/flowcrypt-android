@@ -10,6 +10,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
+import android.text.Html;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -23,6 +24,7 @@ import com.google.android.material.snackbar.Snackbar;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -43,6 +45,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
@@ -275,8 +278,7 @@ public abstract class BaseTest {
   protected void addTextToClipboard(final String label, final String text) throws Throwable {
     runOnUiThread(new Runnable() {
       public void run() {
-        ClipboardManager clipboard = (ClipboardManager) InstrumentationRegistry.getInstrumentation().getTargetContext()
-            .getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager clipboard = (ClipboardManager) getAppContext().getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText(label, text);
         if (clipboard != null) {
           clipboard.setPrimaryClip(clip);
@@ -285,7 +287,29 @@ public abstract class BaseTest {
     });
   }
 
+  protected void checkClipboardText(final CharSequence text) {
+    ClipboardManager clipboardManager = (ClipboardManager) getAppContext().getSystemService(Context.CLIPBOARD_SERVICE);
+    CharSequence clipboardText = null;
+    if (clipboardManager.getPrimaryClip() != null && clipboardManager.getPrimaryClip().getItemCount() > 0) {
+      ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
+      clipboardText = item.getText();
+    }
+    assertThat(clipboardText, Matchers.<CharSequence>hasToString(text.toString()));
+  }
+
   protected String getResString(int resId) {
-    return InstrumentationRegistry.getInstrumentation().getTargetContext().getString(resId);
+    return getAppContext().getString(resId);
+  }
+
+  protected String getHtmlString(String html) {
+    return Html.fromHtml(html).toString();
+  }
+
+  protected String getResString(int resId, Object... formatArgs) {
+    return getAppContext().getString(resId, formatArgs);
+  }
+
+  protected Context getAppContext() {
+    return InstrumentationRegistry.getInstrumentation().getTargetContext();
   }
 }

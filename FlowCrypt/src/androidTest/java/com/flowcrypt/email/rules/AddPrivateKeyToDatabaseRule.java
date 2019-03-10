@@ -6,8 +6,11 @@
 package com.flowcrypt.email.rules;
 
 import com.flowcrypt.email.TestConstants;
+import com.flowcrypt.email.api.retrofit.node.NodeGson;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.util.TestGeneralUtil;
+import com.google.gson.Gson;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -26,6 +29,7 @@ public class AddPrivateKeyToDatabaseRule implements TestRule {
   private String keyPath;
   private String passphrase;
   private KeyDetails.Type keyDetailsType;
+  private NodeKeyDetails nodeKeyDetails;
 
   public AddPrivateKeyToDatabaseRule(String keyPath, String passphrase, KeyDetails.Type keyDetailsType) {
     this.keyPath = keyPath;
@@ -34,7 +38,7 @@ public class AddPrivateKeyToDatabaseRule implements TestRule {
   }
 
   public AddPrivateKeyToDatabaseRule() {
-    this.keyPath = "pgp/default@denbond7.com_strong_password-sec.key";
+    this.keyPath = "node/default@denbond7.com_strong_password-sec.json";
     this.passphrase = TestConstants.DEFAULT_STRONG_PASSWORD;
     this.keyDetailsType = KeyDetails.Type.EMAIL;
   }
@@ -44,10 +48,16 @@ public class AddPrivateKeyToDatabaseRule implements TestRule {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        TestGeneralUtil.saveKeyToDatabase(TestGeneralUtil.readFileFromAssetsAsString
-            (InstrumentationRegistry.getInstrumentation().getContext(), keyPath), passphrase, keyDetailsType);
+        Gson gson = NodeGson.getInstance().getGson();
+        nodeKeyDetails = gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString
+            (InstrumentationRegistry.getInstrumentation().getContext(), keyPath), NodeKeyDetails.class);
+        TestGeneralUtil.saveKeyToDatabase(nodeKeyDetails, passphrase, keyDetailsType);
         base.evaluate();
       }
     };
+  }
+
+  public NodeKeyDetails getNodeKeyDetails() {
+    return nodeKeyDetails;
   }
 }
