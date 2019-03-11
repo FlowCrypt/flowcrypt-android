@@ -59,7 +59,7 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
       Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
       try {
         ArrayList<NodeKeyDetails> privateKeys = TestGeneralUtil.getKeyDetailsListFromAssets(
-            new String[]{"node/default@denbond7.com_sec.json"});
+            new String[]{"node/default@denbond7.com_fisrtKey_prv_default.json"});
         return CheckKeysActivity.newIntent(targetContext,
             privateKeys,
             KeyDetails.Type.EMAIL,

@@ -9,6 +9,7 @@ import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.api.retrofit.node.NodeGson;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.model.KeyDetails;
+import com.flowcrypt.email.util.PrivateKeysManager;
 import com.flowcrypt.email.util.TestGeneralUtil;
 import com.google.gson.Gson;
 
@@ -38,7 +39,7 @@ public class AddPrivateKeyToDatabaseRule implements TestRule {
   }
 
   public AddPrivateKeyToDatabaseRule() {
-    this.keyPath = "node/default@denbond7.com_strong_password-sec.json";
+    this.keyPath = "node/default@denbond7.com_fisrtKey_prv_strong.json";
     this.passphrase = TestConstants.DEFAULT_STRONG_PASSWORD;
     this.keyDetailsType = KeyDetails.Type.EMAIL;
   }
@@ -51,7 +52,7 @@ public class AddPrivateKeyToDatabaseRule implements TestRule {
         Gson gson = NodeGson.getInstance().getGson();
         nodeKeyDetails = gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString
             (InstrumentationRegistry.getInstrumentation().getContext(), keyPath), NodeKeyDetails.class);
-        TestGeneralUtil.saveKeyToDatabase(nodeKeyDetails, passphrase, keyDetailsType);
+        PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, passphrase, keyDetailsType);
         base.evaluate();
       }
     };

@@ -1,0 +1,26 @@
+{
+  "algo": {
+    "algorithm": "rsa_encrypt_sign",
+    "algorithmId": 1,
+    "bits": 2048
+  },
+  "created": 1552307451,
+  "ids": [
+    {
+      "fingerprint": "67C991729C0A03BE29F5C94F1A470A1147D30743",
+      "keywords": "BOTTOM DEBATE LOUNGE MORAL CORN CHRONIC",
+      "longid": "1A470A1147D30743",
+      "shortid": "47D30743"
+    },
+    {
+      "fingerprint": "7B39297ED180950C0E2CF88E01C18566E48ADC40",
+      "keywords": "ACHIEVE AROUND FLUID SIMPLE PUNCH AMOUNT",
+      "longid": "01C18566E48ADC40",
+      "shortid": "E48ADC40"
+    }
+  ],
+  "public": "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\nVersion: FlowCrypt 0.7.3 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxsBNBFyGVPsBB/9vAOo+W+fA9jNJ1Qf+7aT/U5ZxDBIM9PKEIaueJ9n92tkS\r\nrx169v+HLTNczCFxU60ZlccY/WKMZn67CNWABUWjMSKNxg0TfDuDZkntkpd7\r\nBnWyBTTM1Pd8Bncdk7Ux3dlLVOhBSa2jbgwfYAZ2pdY/8cGp91Rw4oz0h+Kj\r\nSq9FqF4RBNYSVUy8jiwGUHb/BElDHwruJLbDcpzXtzDNtIzmxKAv9nyg+tH1\r\nuBXTdcEwWPTdFZExgx2FV+qMgKJQhI0sDnG3Rp8fgtnN4a9JwoJcty9kr3nU\r\noVyk4wkv/yOq6n43Lad93iTpnD4OEHksQxlt+BP5fnrosXvYKYUN7uZ/ABEB\r\nAAHNK1NlY29uZCB3aXRoIGRlZiBwYXNzIDxkZWZhdWx0QGRlbmJvbmQ3LmNv\r\nbT7CwH8EEAEIACkFAlyGVQAGCwkHCAMCCRAaRwoRR9MHQwQVCAoCAxYCAQIZ\r\nAQIbAwIeAQAKCRAaRwoRR9MHQ4fwB/4hyTXKoWcD87A4xQS6sB09pqMGV4s+\r\nQLq+ViHJsH0wSxF243/K/5wN/2oXCfPFbhwd11LdqcJ5mJsE6o56A4P74H5q\r\nVADz5iHY67y40Nbf+ws1WaSHNq9+PDxPo8dthfcjhFyzZ9IkhTs5ieCOJgxM\r\ntR0xpP/m9bWmFAkLaMWWyqnjouDVgJJcF5I6xCNJ2ID3gdEMlUOn+m1glRix\r\nFp6wMir4G6dIi4nuMNUIAtM68Pye178cdVwOJ2Y5WyQFZ9bjiuOKfd1vGfeq\r\nBwot56dne3nKUdiDxnL99FTlyT9JYIoPPYYrd2TlUfYr/SzeYyrLEQCK+Wd3\r\nZvkopMhbbyEbzsBNBFyGVP4BCACOOkDhPvsT75roJP5gq9/A4ZsNfKDH57cB\r\nDntpRK2AlBXNJ1JHZKAo0PqBzWj3jTfTSrIs25MpqagVJkBx4gcs54XTZwu3\r\nUGnZGSgQQTCOt2FTc2dFHue0FbKtqQZfIVkbX/M+eWv691ommMWF9Pw8lwc3\r\nYVXgTnHIODljfa0crzDOjAxdgHIeTc2+xvwliKQPJKHml9h+cohTLZs9jSFd\r\nAbYlKJhhdVKwVxzmjptas6HzzjgYMdGnuDPIq4T0vkGToDTWFJqJTVoBqhp3\r\nludpPaj0M4FXVZvuT4m0Mx5i4WAB6suHYeWXr89m/LtXIMG/NTfrWuzttRJ4\r\ngeb5wlUNABEBAAHCwGkEGAEIABMFAlyGVQEJEBpHChFH0wdDAhsMAAoJEBpH\r\nChFH0wdDU7UH/RVFzrL16OLS7m9AQ1WOeh8H4N3Zepbckp7G6RNvGZ9vA9mi\r\nOrR1nEYNqzeQL3bALXwLjsFtlF1jobL43+3daCAFPufXWIguZxUveMpn+b30\r\nejCyrxpsgkcDyazMJTPudVojavxkidivxrjMzNR0wqh1C3QIY+ZymKTtRrqy\r\nmhqJmwVebKVKkqN2ew49qx2cYUcD9/rd31UJduRUhy6yBANVdBljL1b8OL1A\r\nrtS3h4u0NnOdhrqpD+epxm0uyD96aJ5uITYwZ5m2D8DOI2VX0l7Reu4VB/0o\r\nmZduLN3LAPSe0xCTWRCpgfvaA1HEA8FG4KdxF7UumkdRBw/9tSJjg8w\u003d\r\n\u003dhgqa\r\n-----END PGP PUBLIC KEY BLOCK-----\r\n",
+  "users": [
+    "Second with def pass \u003cdefault@denbond7.com\u003e"
+  ]
+}

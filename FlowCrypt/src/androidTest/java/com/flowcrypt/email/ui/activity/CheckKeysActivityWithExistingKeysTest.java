@@ -59,7 +59,7 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
       Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
       try {
         ArrayList<NodeKeyDetails> privateKeys = TestGeneralUtil.getKeyDetailsListFromAssets(
-            new String[]{"node/default@denbond7.com_sec.json"});
+            new String[]{"node/default@denbond7.com_fisrtKey_prv_default.json"});
         return CheckKeysActivity.newIntent(targetContext,
             privateKeys,
             KeyDetails.Type.EMAIL,
@@ -78,7 +78,7 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
-      .around(new AddPrivateKeyToDatabaseRule("node/not_attester_user@denbond7.com-sec.json", TestConstants
+      .around(new AddPrivateKeyToDatabaseRule("node/not_attester_user@denbond7.com_prv_default.json", TestConstants
           .DEFAULT_PASSWORD, KeyDetails.Type.EMAIL))
       .around(activityTestRule);
 

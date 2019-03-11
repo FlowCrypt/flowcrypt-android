@@ -26,7 +26,7 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.TestGeneralUtil;
+import com.flowcrypt.email.util.PrivateKeysManager;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -93,9 +93,10 @@ public class KeysSettingsActivityTest extends BaseTest {
     intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         ImportPrivateKeyActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
 
-    TestGeneralUtil.saveKeyToDatabase(TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry
-            .getInstrumentation().getContext(), "pgp/ben@flowcrypt.com-sec.asc"),
-        TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
+    NodeKeyDetails nodeKeyDetails =
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_secondKey_prv_default.json");
+
+    PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
 
     onView(withId(R.id.floatActionButtonAddKey)).check(matches(isDisplayed())).perform(click());
     onView(withId(R.id.recyclerViewKeys)).check(matches(isDisplayed())).check(matches(matchRecyclerViewSize(2)));
@@ -152,7 +153,7 @@ public class KeysSettingsActivityTest extends BaseTest {
 
     onView(withId(R.id.textViewDate)).check(matches(withText(
         getHtmlString(getResString(R.string.template_date,
-            DateFormat.getMediumDateFormat(getAppContext()).format(new Date(details.getCreated())))))));
+            DateFormat.getMediumDateFormat(getTargetContext()).format(new Date(details.getCreated())))))));
 
     List<PgpContact> pgpContacts = details.getPgpContacts();
     ArrayList<String> emails = new ArrayList<>();
@@ -178,7 +179,7 @@ public class KeysSettingsActivityTest extends BaseTest {
     }
 
     Intent resultData = new Intent();
-    resultData.setData(FileProvider.getUriForFile(getAppContext(), Constants.FILE_PROVIDER_AUTHORITY, file));
+    resultData.setData(FileProvider.getUriForFile(getTargetContext(), Constants.FILE_PROVIDER_AUTHORITY, file));
 
     intending(allOf(hasAction(Intent.ACTION_CREATE_DOCUMENT),
         hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),

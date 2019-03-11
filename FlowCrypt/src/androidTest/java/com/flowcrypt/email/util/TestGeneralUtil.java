@@ -8,16 +8,9 @@ package com.flowcrypt.email.util;
 import android.content.Context;
 import android.os.Environment;
 
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.node.NodeGson;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
-import com.flowcrypt.email.database.dao.KeysDao;
-import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.UiJsManager;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.google.gson.Gson;
 
 import org.apache.commons.io.IOUtils;
@@ -30,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
-import androidx.test.internal.runner.junit4.statement.UiThreadStatement;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
@@ -55,36 +47,6 @@ public class TestGeneralUtil {
 
   public static String readFileFromAssetsAsString(Context context, String filePath) throws IOException {
     return IOUtils.toString(context.getAssets().open(filePath), "UTF-8");
-  }
-
-  public static void saveKeyToDatabase(String privetKey, String passphrase, KeyDetails.Type type) throws Throwable {
-    List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(privetKey);
-    NodeKeyDetails nodeKeyDetails = details.get(0);
-
-    saveKeyToDatabase(nodeKeyDetails, passphrase, type);
-  }
-
-  public static void saveKeyToDatabase(NodeKeyDetails nodeKeyDetails, String passphrase, KeyDetails.Type type) throws Throwable {
-    KeysDaoSource keysDaoSource = new KeysDaoSource();
-    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(InstrumentationRegistry.getInstrumentation()
-        .getTargetContext());
-
-    keysDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase));
-
-    new UserIdEmailsKeysDaoSource().addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        nodeKeyDetails.getLongId(), nodeKeyDetails.getPrimaryPgpContact().getEmail());
-
-    UiThreadStatement.runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        UiJsManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
-            .getJs()
-            .getStorageConnector()
-            .refresh(InstrumentationRegistry.getInstrumentation().getTargetContext());
-      }
-    });
-    Thread.sleep(1000);// Added timeout for a better sync between threads.
   }
 
   public static void deleteFiles(List<File> files) {

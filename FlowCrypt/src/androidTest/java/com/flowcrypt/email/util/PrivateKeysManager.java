@@ -5,19 +5,20 @@
 
 package com.flowcrypt.email.util;
 
-import android.content.Context;
-
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.node.NodeGson;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
+import com.flowcrypt.email.js.UiJsManager;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.security.model.PrivateKeySourceType;
+import com.google.gson.Gson;
 
-import org.apache.commons.io.IOUtils;
+import java.io.IOException;
 
-import java.util.List;
-
+import androidx.test.internal.runner.junit4.statement.UiThreadStatement;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
@@ -31,31 +32,39 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 public class PrivateKeysManager {
 
-  private static final String TEMP_PASSPHRASE = "android";
-  private static final String TEMP_PRIVATE_KEY_LONGID = "6C0DD31D159DF3EF";
+  public static void saveKeyFromAssetsToDatabase(String keyPath, String passphrase, KeyDetails.Type type) throws Throwable {
+    NodeKeyDetails nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath);
+    saveKeyToDatabase(nodeKeyDetails, passphrase, type);
+  }
 
-  public static void addTempPrivateKey() throws Exception {
-    String armoredPrivateKey = IOUtils.toString(InstrumentationRegistry.getInstrumentation().getContext().getAssets()
-        .open("pgp/temp-sec.asc"), "UTF-8");
-    Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-    List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(armoredPrivateKey);
+  public static void saveKeyToDatabase(NodeKeyDetails nodeKeyDetails, String passphrase, KeyDetails.Type type) throws Throwable {
+    KeysDaoSource keysDaoSource = new KeysDaoSource();
+    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(InstrumentationRegistry.getInstrumentation()
+        .getTargetContext());
 
-    NodeKeyDetails nodeKeyDetails = details.get(0);
+    keysDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+        KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase));
 
-    KeysDao keysDao = new KeysDao();
-    keysDao.setLongId(nodeKeyDetails.getLongId());
-    keysDao.setPrivateKeySourceType(PrivateKeySourceType.NEW);
+    new UserIdEmailsKeysDaoSource().addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+        nodeKeyDetails.getLongId(), nodeKeyDetails.getPrimaryPgpContact().getEmail());
 
-    String randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(nodeKeyDetails.getLongId());
+    UiThreadStatement.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        UiJsManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
+            .getJs()
+            .getStorageConnector()
+            .refresh(InstrumentationRegistry.getInstrumentation().getTargetContext());
+      }
+    });
 
-    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(appContext);
+    // Added timeout for a better sync between threads.
+    Thread.sleep(1000);
+  }
 
-    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(nodeKeyDetails.getPrivateKey(), randomVector);
-    keysDao.setPrivateKey(encryptedPrivateKey);
-    keysDao.setPublicKey(nodeKeyDetails.getPublicKey());
-
-    String encryptedPassphrase = keyStoreCryptoManager.encrypt(TEMP_PASSPHRASE, randomVector);
-    keysDao.setPassphrase(encryptedPassphrase);
-    new KeysDaoSource().addRow(appContext, keysDao);
+  public static NodeKeyDetails getNodeKeyDetailsFromAssets(String assetsPath) throws IOException {
+    Gson gson = NodeGson.getInstance().getGson();
+    String json = TestGeneralUtil.readFileFromAssetsAsString(BaseTest.getContext(), assetsPath);
+    return gson.fromJson(json, NodeKeyDetails.class);
   }
 }

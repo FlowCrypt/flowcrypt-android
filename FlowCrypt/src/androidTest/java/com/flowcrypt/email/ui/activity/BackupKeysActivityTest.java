@@ -12,10 +12,12 @@ import android.net.Uri;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.base.BaseTest;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
+import com.flowcrypt.email.util.PrivateKeysManager;
 import com.flowcrypt.email.util.TestGeneralUtil;
 
 import org.junit.Rule;
@@ -62,8 +64,12 @@ public class BackupKeysActivityTest extends BaseTest {
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
-      .around(new AddPrivateKeyToDatabaseRule())
       .around(activityTestRule);
+
+  @Override
+  public ActivityTestRule getActivityTestRule() {
+    return activityTestRule;
+  }
 
   @Test
   public void testSuccessDownloadBackup() {
@@ -84,8 +90,15 @@ public class BackupKeysActivityTest extends BaseTest {
     onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
   }
 
-  @Override
-  public ActivityTestRule getActivityTestRule() {
-    return activityTestRule;
+  @Test
+  public void testWeakPassword() throws Throwable {
+    addKeyWithDefaultPassword();
+    testSuccessDownloadBackup();
+  }
+
+  private void addKeyWithDefaultPassword() throws Throwable {
+    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_default.json",
+        TestConstants.DEFAULT_PASSWORD,
+        KeyDetails.Type.EMAIL);
   }
 }

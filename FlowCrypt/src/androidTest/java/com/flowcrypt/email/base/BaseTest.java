@@ -211,6 +211,14 @@ public abstract class BaseTest {
     };
   }
 
+  public static Context getTargetContext() {
+    return InstrumentationRegistry.getInstrumentation().getTargetContext();
+  }
+
+  public static Context getContext() {
+    return InstrumentationRegistry.getInstrumentation().getContext();
+  }
+
   @Before
   public void registerNodeIdling() {
     ActivityTestRule activityTestRule = getActivityTestRule();
@@ -278,7 +286,7 @@ public abstract class BaseTest {
   protected void addTextToClipboard(final String label, final String text) throws Throwable {
     runOnUiThread(new Runnable() {
       public void run() {
-        ClipboardManager clipboard = (ClipboardManager) getAppContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager clipboard = (ClipboardManager) getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText(label, text);
         if (clipboard != null) {
           clipboard.setPrimaryClip(clip);
@@ -288,7 +296,8 @@ public abstract class BaseTest {
   }
 
   protected void checkClipboardText(final CharSequence text) {
-    ClipboardManager clipboardManager = (ClipboardManager) getAppContext().getSystemService(Context.CLIPBOARD_SERVICE);
+    ClipboardManager clipboardManager =
+        (ClipboardManager) getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE);
     CharSequence clipboardText = null;
     if (clipboardManager.getPrimaryClip() != null && clipboardManager.getPrimaryClip().getItemCount() > 0) {
       ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
@@ -298,7 +307,7 @@ public abstract class BaseTest {
   }
 
   protected String getResString(int resId) {
-    return getAppContext().getString(resId);
+    return getTargetContext().getString(resId);
   }
 
   protected String getHtmlString(String html) {
@@ -306,10 +315,6 @@ public abstract class BaseTest {
   }
 
   protected String getResString(int resId, Object... formatArgs) {
-    return getAppContext().getString(resId, formatArgs);
-  }
-
-  protected Context getAppContext() {
-    return InstrumentationRegistry.getInstrumentation().getTargetContext();
+    return getTargetContext().getString(resId, formatArgs);
   }
 }
