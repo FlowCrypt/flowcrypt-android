@@ -35,6 +35,31 @@ public class JsTest {
   }
 
   @Test
+  public void createKey() throws IOException {
+    File filePrv = new File("prv.asc");
+    File filePub = new File("pub.asc");
+
+    if (!filePrv.exists()) {
+      filePrv.createNewFile();
+    }
+
+    if (!filePub.exists()) {
+      filePub.createNewFile();
+    }
+
+    String userName = "key_C";
+    String email = "key_testing@denbond7.com";
+
+    PgpContact pgpContactMain = new PgpContact(email, userName);
+    PgpContact[] pgpContacts = new PgpContact[]{pgpContactMain};
+
+    PgpKey pgpKey = js.crypto_key_create(pgpContacts, 2048, "android");
+    FileUtils.write(filePrv, pgpKey.armor(), StandardCharsets.UTF_8, false);
+    FileUtils.write(filePub, pgpKey.toPublic().armor(), StandardCharsets.UTF_8, false);
+    System.out.println("Done!");
+  }
+
+  @Test
   public void createKeys() throws IOException {
     File file = new File("pub_keys.asc");
 
@@ -44,7 +69,7 @@ public class JsTest {
 
     int keysCount = 10;
 
-    int[] keySizes = {1024};
+    int[] keySizes = {2048};
     String[] domains = {"test.com", "example.com", "mail.com", "imap.com", "smtp.com"};
 
     for (int i = 0; i < keysCount; i++) {
