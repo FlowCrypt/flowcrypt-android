@@ -116,7 +116,7 @@ public class PreviewImportPgpContactActivityTest extends BaseTest {
 
   private String getSinglePublicKeyForUnsavedContact() {
     try {
-      return PrivateKeysManager.getNodeKeyDetailsFromAssets("pgp/default@denbond7.com_pub.asc").getPublicKey();
+      return PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_fisrtKey_pub_default.json").getPublicKey();
     } catch (IOException e) {
       e.printStackTrace();
       return null;

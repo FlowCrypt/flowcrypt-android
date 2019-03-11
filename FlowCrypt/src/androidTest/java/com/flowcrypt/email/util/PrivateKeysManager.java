@@ -17,7 +17,9 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
+import androidx.annotation.NonNull;
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement;
 import androidx.test.platform.app.InstrumentationRegistry;
 
@@ -66,5 +68,14 @@ public class PrivateKeysManager {
     Gson gson = NodeGson.getInstance().getGson();
     String json = TestGeneralUtil.readFileFromAssetsAsString(BaseTest.getContext(), assetsPath);
     return gson.fromJson(json, NodeKeyDetails.class);
+  }
+
+  @NonNull
+  public static ArrayList<NodeKeyDetails> getKeysFromAssets(String[] keysPaths) throws IOException {
+    ArrayList<NodeKeyDetails> privateKeys = new ArrayList<>();
+    for (String path : keysPaths) {
+      privateKeys.add(getNodeKeyDetailsFromAssets(path));
+    }
+    return privateKeys;
   }
 }

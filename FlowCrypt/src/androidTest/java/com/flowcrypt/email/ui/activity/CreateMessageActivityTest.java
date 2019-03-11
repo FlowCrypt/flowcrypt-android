@@ -384,7 +384,7 @@ public class CreateMessageActivityTest extends BaseTest {
   @NonNull
   private PgpContact getPgpContact() throws IOException {
     NodeKeyDetails nodeKeyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/not_attester_user@denbond7.com-pub.json");
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/not_attester_user@denbond7.com_prv_default.json");
     return nodeKeyDetails.getPrimaryPgpContact();
   }
 

@@ -8,9 +8,6 @@ package com.flowcrypt.email.util;
 import android.content.Context;
 import android.os.Environment;
 
-import com.flowcrypt.email.api.retrofit.node.NodeGson;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
 import com.google.gson.Gson;
 
 import org.apache.commons.io.IOUtils;
@@ -19,10 +16,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 
-import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
@@ -66,19 +61,5 @@ public class TestGeneralUtil {
       e.printStackTrace();
     }
     return file;
-  }
-
-  @NonNull
-  public static ArrayList<NodeKeyDetails> getKeyDetailsListFromAssets(String[] keysPaths) throws IOException {
-    ArrayList<NodeKeyDetails> privateKeys = new ArrayList<>();
-    Gson gson = NodeGson.getInstance().getGson();
-
-    for (String path : keysPaths) {
-      ParseKeysResult parseKeysResult = gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString
-          (InstrumentationRegistry.getInstrumentation().getContext(), path), ParseKeysResult.class);
-
-      privateKeys.add(parseKeysResult.getNodeKeyDetails().get(0));
-    }
-    return privateKeys;
   }
 }
