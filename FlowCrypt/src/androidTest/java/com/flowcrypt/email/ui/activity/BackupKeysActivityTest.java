@@ -20,6 +20,8 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.util.PrivateKeysManager;
 import com.flowcrypt.email.util.TestGeneralUtil;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -29,6 +31,7 @@ import org.junit.runner.RunWith;
 import java.io.File;
 import java.util.Collections;
 
+import androidx.test.espresso.IdlingRegistry;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
@@ -43,9 +46,11 @@ import static androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasType;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Denis Bondarenko
@@ -71,8 +76,48 @@ public class BackupKeysActivityTest extends BaseTest {
     return activityTestRule;
   }
 
+  @Before
+  public void registerIdlingResource() {
+    IdlingRegistry.getInstance().register(((BackupKeysActivity) activityTestRule.getActivity())
+        .getCountingIdlingResource());
+  }
+
+  @After
+  public void unregisterIdlingResource() {
+    IdlingRegistry.getInstance().unregister(((BackupKeysActivity) activityTestRule.getActivity())
+        .getCountingIdlingResource());
+  }
+
   @Test
-  public void testSuccessDownloadBackup() {
+  public void testSuccessDownloadOption() throws Throwable {
+    addKeyWithStrongPassword();
+    File file = selectDownloadOption();
+    assertTrue(activityTestRule.getActivity().isFinishing());
+    TestGeneralUtil.deleteFiles(Collections.singletonList(file));
+  }
+
+  @Test
+  public void testSuccessEmailOption() throws Throwable {
+    addKeyWithStrongPassword();
+    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
+    assertTrue(activityTestRule.getActivity().isFinishing());
+  }
+
+  @Test
+  public void testShowWeakPasswordHintForDownloadOption() throws Throwable {
+    addKeyWithDefaultPassword();
+    selectDownloadOption();
+    onView(withText(getResString(R.string.pass_phrase_is_too_weak))).check(matches(isDisplayed()));
+  }
+
+  @Test
+  public void testShowWeakPasswordHintForEmailOption() throws Throwable {
+    addKeyWithDefaultPassword();
+    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
+    onView(withText(getResString(R.string.pass_phrase_is_too_weak))).check(matches(isDisplayed()));
+  }
+
+  private File selectDownloadOption() {
     onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
     Intent resultData = new Intent();
     File file = TestGeneralUtil.createFile("key.asc", "");
@@ -82,23 +127,18 @@ public class BackupKeysActivityTest extends BaseTest {
         hasType(Constants.MIME_TYPE_PGP_KEY)))
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
     onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    TestGeneralUtil.deleteFiles(Collections.singletonList(file));
-  }
-
-  @Test
-  public void testSuccessEmailBackup() {
-    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-  }
-
-  @Test
-  public void testWeakPassword() throws Throwable {
-    addKeyWithDefaultPassword();
-    testSuccessDownloadBackup();
+    return file;
   }
 
   private void addKeyWithDefaultPassword() throws Throwable {
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_default.json",
         TestConstants.DEFAULT_PASSWORD,
+        KeyDetails.Type.EMAIL);
+  }
+
+  private void addKeyWithStrongPassword() throws Throwable {
+    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_strong.json",
+        TestConstants.DEFAULT_STRONG_PASSWORD,
         KeyDetails.Type.EMAIL);
   }
 }
