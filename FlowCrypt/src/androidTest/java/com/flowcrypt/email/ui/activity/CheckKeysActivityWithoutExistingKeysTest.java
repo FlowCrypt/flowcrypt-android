@@ -88,7 +88,7 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
   public void testShowMsgEmptyWarning() {
     Espresso.closeSoftKeyboard();
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext()
+    checkIsSnackbarDisplayedAndClick(InstrumentationRegistry.getInstrumentation().getTargetContext()
         .getString(R.string.passphrase_must_be_non_empty));
   }
 
@@ -97,7 +97,7 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
     onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
         .perform(typeText("some pass phrase"), closeSoftKeyboard());
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+    checkIsSnackbarDisplayedAndClick(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
         .password_is_incorrect));
   }
 

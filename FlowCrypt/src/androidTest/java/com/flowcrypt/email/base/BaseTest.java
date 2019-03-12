@@ -256,7 +256,7 @@ public abstract class BaseTest {
    *
    * @param message An input message.
    */
-  protected void checkIsSnackbarDisplayed(String message) {
+  protected void checkIsSnackbarDisplayedAndClick(String message) {
     onView(withText(message)).check(matches(isDisplayed()));
     onView(withId(com.google.android.material.R.id.snackbar_action)).check(matches(isDisplayed()))
         .perform(click());

@@ -156,7 +156,7 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
     useIntentionToRunActivityToSelectFile(fileWithoutPrivateKey);
 
     onView(withId(R.id.buttonLoadFromFile)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
+    checkIsSnackbarDisplayedAndClick(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
         R.string.file_has_wrong_pgp_structure,
         InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.private_)));
   }
@@ -174,7 +174,7 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
   public void testShowErrorWhenImportKeyFromClipboard() throws Throwable {
     addTextToClipboard("not private key", SOME_TEXT);
     onView(withId(R.id.buttonLoadFromClipboard)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
+    checkIsSnackbarDisplayedAndClick(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
         R.string.clipboard_has_wrong_structure,
         InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.private_)));
   }
