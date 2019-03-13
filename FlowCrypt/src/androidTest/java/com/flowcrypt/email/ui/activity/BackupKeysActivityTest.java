@@ -65,7 +65,6 @@ import static org.junit.Assert.assertTrue;
  */
 @LargeTest
 @RunWith(AndroidJUnit4.class)
-//todo-denbond7 Not completed
 public class BackupKeysActivityTest extends BaseTest {
 
   private IntentsTestRule activityTestRule = new IntentsTestRule<>(BackupKeysActivity.class);
@@ -123,7 +122,7 @@ public class BackupKeysActivityTest extends BaseTest {
 
   @Test
   public void testSuccessDownloadOption() throws Throwable {
-    addKeyWithStrongPassword();
+    addFirstKeyWithStrongPassword();
     onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
     File file = TestGeneralUtil.createFile("key.asc", "");
     intendingFileChoose(file);
@@ -134,14 +133,14 @@ public class BackupKeysActivityTest extends BaseTest {
 
   @Test
   public void testSuccessEmailOption() throws Throwable {
-    addKeyWithStrongPassword();
+    addFirstKeyWithStrongPassword();
     onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
     assertTrue(activityTestRule.getActivity().isFinishing());
   }
 
   @Test
   public void testShowWeakPasswordHintForDownloadOption() throws Throwable {
-    addKeyWithDefaultPassword();
+    addFirstKeyWithDefaultPassword();
     onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
     intendingFileChoose(new File(""));
     onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
@@ -150,14 +149,14 @@ public class BackupKeysActivityTest extends BaseTest {
 
   @Test
   public void testShowWeakPasswordHintForEmailOption() throws Throwable {
-    addKeyWithDefaultPassword();
+    addFirstKeyWithDefaultPassword();
     onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
     onView(withText(getResString(R.string.pass_phrase_is_too_weak))).check(matches(isDisplayed()));
   }
 
   @Test
   public void testFixWeakPasswordForDownloadOption() throws Throwable {
-    addKeyWithDefaultPassword();
+    addFirstKeyWithDefaultPassword();
     onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
     intendingFileChoose(new File(""));
     onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
@@ -169,11 +168,35 @@ public class BackupKeysActivityTest extends BaseTest {
 
   @Test
   public void testFixWeakPasswordForEmailOption() throws Throwable {
-    addKeyWithDefaultPassword();
+    addFirstKeyWithDefaultPassword();
     onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
     intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
         ChangePassPhraseActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
     checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak));
+    assertFalse(activityTestRule.getActivity().isFinishing());
+  }
+
+  @Test
+  public void testDiffPassphrasesForEmailOption() throws Throwable {
+    addFirstKeyWithStrongPassword();
+    addSecondKeyWithStrongSecondPassword();
+    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
+    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+        ChangePassPhraseActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
+    checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases));
+    assertFalse(activityTestRule.getActivity().isFinishing());
+  }
+
+  @Test
+  public void testDiffPassphrasesForDownloadOption() throws Throwable {
+    addFirstKeyWithStrongPassword();
+    addSecondKeyWithStrongSecondPassword();
+    onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
+    intendingFileChoose(new File(""));
+    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
+    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+        ChangePassPhraseActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
+    checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases));
     assertFalse(activityTestRule.getActivity().isFinishing());
   }
 
@@ -186,15 +209,21 @@ public class BackupKeysActivityTest extends BaseTest {
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
   }
 
-  private void addKeyWithDefaultPassword() throws Throwable {
+  private void addFirstKeyWithDefaultPassword() throws Throwable {
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_default.json",
         TestConstants.DEFAULT_PASSWORD,
         KeyDetails.Type.EMAIL);
   }
 
-  private void addKeyWithStrongPassword() throws Throwable {
+  private void addFirstKeyWithStrongPassword() throws Throwable {
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_strong.json",
         TestConstants.DEFAULT_STRONG_PASSWORD,
+        KeyDetails.Type.EMAIL);
+  }
+
+  private void addSecondKeyWithStrongSecondPassword() throws Throwable {
+    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong_second.json",
+        TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
         KeyDetails.Type.EMAIL);
   }
 }
