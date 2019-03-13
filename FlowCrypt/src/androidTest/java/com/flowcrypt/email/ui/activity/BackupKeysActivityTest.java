@@ -121,6 +121,19 @@ public class BackupKeysActivityTest extends BaseTest {
   }
 
   @Test
+  public void testSuccessEmailOption() throws Throwable {
+    addFirstKeyWithStrongPassword();
+    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
+    assertTrue(activityTestRule.getActivity().isFinishing());
+  }
+
+  @Test
+  public void testSuccessWithTwoKeysEmailOption() throws Throwable {
+    addSecondKeyWithStrongPassword();
+    testSuccessEmailOption();
+  }
+
+  @Test
   public void testSuccessDownloadOption() throws Throwable {
     addFirstKeyWithStrongPassword();
     onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
@@ -132,10 +145,9 @@ public class BackupKeysActivityTest extends BaseTest {
   }
 
   @Test
-  public void testSuccessEmailOption() throws Throwable {
-    addFirstKeyWithStrongPassword();
-    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    assertTrue(activityTestRule.getActivity().isFinishing());
+  public void testSuccessWithTwoKeysDownloadOption() throws Throwable {
+    addSecondKeyWithStrongPassword();
+    testSuccessDownloadOption();
   }
 
   @Test
@@ -217,6 +229,12 @@ public class BackupKeysActivityTest extends BaseTest {
 
   private void addFirstKeyWithStrongPassword() throws Throwable {
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_strong.json",
+        TestConstants.DEFAULT_STRONG_PASSWORD,
+        KeyDetails.Type.EMAIL);
+  }
+
+  private void addSecondKeyWithStrongPassword() throws Throwable {
+    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
         TestConstants.DEFAULT_STRONG_PASSWORD,
         KeyDetails.Type.EMAIL);
   }
