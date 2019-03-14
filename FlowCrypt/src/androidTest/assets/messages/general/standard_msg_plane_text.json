@@ -1,0 +1,25 @@
+{
+  "email": "default@denbond7.com",
+  "flags": [
+    "\\SEEN"
+  ],
+  "from": [
+    {
+      "address": "denbond7@denbond7.com"
+    }
+  ],
+  "hasAtts": false,
+  "isEncrypted": false,
+  "label": "INBOX",
+  "msgState": "NONE",
+  "rawMsgWithoutAtts": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 5A0E3202BB\r\n\tfor \u003cdefault@denbond7.com\u003e; Wed, 13 Mar 2019 14:37:44 +0000 (UTC)\r\nX-Virus-Scanned: Debian amavisd-new at mail.denbond7.com\r\nReceived: from mail.denbond7.com ([127.0.0.1])\r\n\tby mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10024)\r\n\twith ESMTP id 8yFaVy5EzMOY for \u003cdefault@denbond7.com\u003e;\r\n\tWed, 13 Mar 2019 14:37:34 +0000 (UTC)\r\nReceived: from localhost (MiA1 [192.168.3.6])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 0311020237\r\n\tfor \u003cdefault@denbond7.com\u003e; Wed, 13 Mar 2019 14:37:33 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-15524878518580.4200041649447792\"\r\nIn-Reply-To: \u003c\u003e\r\nReferences: \u003c\u003e\r\nTo: default@denbond7.com\r\nFrom: denbond7@denbond7.com\r\nSubject: Standard message - plane text\r\nDate: Wed, 13 Mar 2019 14:37:31 +0000\r\nMessage-Id: \u003c1552487851904-2a7c154c-44a30fa2-1bb06c08@denbond7.com\u003e\r\nMIME-Version: 1.0\r\n\r\n------sinikael-?\u003d_1-15524878518580.4200041649447792\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\nIt\u0027s a standard message with plane text\u003d20\r\n------sinikael-?\u003d_1-15524878518580.4200041649447792--\r\n",
+  "receivedDateInMillisecond": 1552487864000,
+  "sentDateInMillisecond": 1552487851000,
+  "subject": "Standard message - plane text",
+  "to": [
+    {
+      "address": "default@denbond7.com"
+    }
+  ],
+  "uid": 235
+}

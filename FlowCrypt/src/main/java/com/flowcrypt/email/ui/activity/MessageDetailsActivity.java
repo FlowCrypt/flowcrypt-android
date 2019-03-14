@@ -34,9 +34,11 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
+import androidx.test.espresso.idling.CountingIdlingResource;
 
 /**
  * This activity describe details of some message.
@@ -57,6 +59,8 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
   private GeneralMessageDetails details;
   private LocalFolder localFolder;
+  private CountingIdlingResource idlingForDecryption;
+
   private boolean isReceiveMsgBodyNeeded;
   private boolean isBackEnabled = true;
   private boolean isRequestMsgDetailsStarted;
@@ -86,6 +90,9 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       this.localFolder = getIntent().getParcelableExtra(EXTRA_KEY_FOLDER);
       this.details = getIntent().getParcelableExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
     }
+
+    idlingForDecryption = new CountingIdlingResource(
+        GeneralUtil.genIdlingResourcesName(MessageDetailsActivity.class), GeneralUtil.isDebugBuild());
 
     updateViews();
 
@@ -154,6 +161,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             messageDaoSource.setSeenStatus(this, details.getEmail(),
                 localFolder.getFolderAlias(), details.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
+            idlingForDecryption.increment();
             decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAtts());
           }
         }
@@ -271,6 +279,10 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_attachments, null, this);
           }
         }
+
+        if (!idlingForDecryption.isIdleNow()) {
+          idlingForDecryption.decrement();
+        }
         break;
     }
   }
@@ -279,6 +291,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void onJsServiceConnected() {
     super.onJsServiceConnected();
     if (!TextUtils.isEmpty(details.getRawMsgWithoutAtts())) {
+      idlingForDecryption.increment();
       decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAtts());
     }
   }
@@ -356,6 +369,11 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       ExceptionUtil.handleError(new IllegalArgumentException("Folder 'Inbox' not found"));
     }
     moveMsg(R.id.syns_request_move_message_to_inbox, localFolder, folderInbox, details.getUid());
+  }
+
+  @VisibleForTesting
+  public CountingIdlingResource getIdlingForDecryption() {
+    return idlingForDecryption;
   }
 
   private void messageNotAvailableInFolder() {

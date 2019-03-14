@@ -6,11 +6,16 @@
 package com.flowcrypt.email.util;
 
 import com.flowcrypt.email.api.email.LocalFolder;
+import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
+import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.js.MimeAddress;
 import com.flowcrypt.email.js.ProcessedMime;
 import com.flowcrypt.email.js.core.Js;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -55,5 +60,17 @@ public class MessageUtil {
     }
 
     return incomingMsgInfo;
+  }
+
+  public static GeneralMessageDetails getGeneralMessageDetails(String assetsPath) throws IOException {
+    Gson gson = new GsonBuilder().create();
+    String json = TestGeneralUtil.readFileFromAssetsAsString(BaseTest.getContext(), assetsPath);
+    return gson.fromJson(json, GeneralMessageDetails.class);
+  }
+
+  public static IncomingMessageInfo getIncomingMessageInfo(String assetsPath) throws IOException {
+    Gson gson = new GsonBuilder().create();
+    String json = TestGeneralUtil.readFileFromAssetsAsString(BaseTest.getContext(), assetsPath);
+    return gson.fromJson(json, IncomingMessageInfo.class);
   }
 }
