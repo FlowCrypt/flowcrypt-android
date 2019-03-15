@@ -7,18 +7,21 @@ package com.flowcrypt.email.ui.activity;
 
 import android.app.Activity;
 import android.text.format.DateFormat;
+import android.text.format.Formatter;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.LocalFolder;
+import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
+import com.flowcrypt.email.rules.AddAttachmentToDatabaseRule;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
-import com.flowcrypt.email.util.MessageUtil;
+import com.flowcrypt.email.util.TestGeneralUtil;
 
 import org.junit.After;
 import org.junit.Before;
@@ -26,8 +29,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
-
-import java.io.IOException;
 
 import androidx.test.espresso.IdlingRegistry;
 import androidx.test.rule.ActivityTestRule;
@@ -46,12 +47,15 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
  */
 public class MessageDetailsActivityTest extends BaseTest {
   private ActivityTestRule activityTestRule = new ActivityTestRule<>(MessageDetailsActivity.class, false, false);
-
+  private AddAttachmentToDatabaseRule simpleAttachmentRule =
+      new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/simple_att.json",
+          AttachmentInfo.class));
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
       .around(new AddPrivateKeyToDatabaseRule())
+      .around(simpleAttachmentRule)
       .around(activityTestRule);
 
   private java.text.DateFormat dateFormat;
@@ -80,20 +84,42 @@ public class MessageDetailsActivityTest extends BaseTest {
   }
 
   @Test
-  public void testStandardMessage() throws IOException {
+  public void testStandardMsgPlaneText() {
     GeneralMessageDetails details =
-        MessageUtil.getGeneralMessageDetails("messages/general/standard_msg_plane_text.json");
+        TestGeneralUtil.getObjectFromJson("messages/general/standard_msg_plane_text.json", GeneralMessageDetails.class);
     IncomingMessageInfo incomingMsgInfo =
-        MessageUtil.getIncomingMessageInfo("messages/info/standard_msg_info_plane_text.json");
+        TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text.json", IncomingMessageInfo.class);
     launchActivity(details);
     matchHeader(details);
     onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
+  }
+
+  @Test
+  public void testStandardMsgPlaneTextWithOneAttachment() {
+    GeneralMessageDetails details =
+        TestGeneralUtil.getObjectFromJson("messages/general/standard_msg_plane_text_with_one_att.json",
+            GeneralMessageDetails.class);
+    IncomingMessageInfo incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text_with_one_att.json",
+            IncomingMessageInfo.class);
+
+    launchActivity(details);
+    matchHeader(details);
+    onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
+    onView(withId(R.id.layoutAtt)).check(matches(isDisplayed()));
+    matchAtt(simpleAttachmentRule.getAttInfo());
   }
 
   private void matchHeader(GeneralMessageDetails details) {
     onView(withId(R.id.textViewSenderAddress)).check(matches(withText(EmailUtil.getFirstAddressString(details.getFrom()))));
     onView(withId(R.id.textViewDate)).check(matches(withText(dateFormat.format(details.getReceivedDate()))));
     onView(withId(R.id.textViewSubject)).check(matches(withText(details.getSubject())));
+  }
+
+  private void matchAtt(AttachmentInfo att) {
+    onView(withId(R.id.textViewAttchmentName)).check(matches(withText(att.getName())));
+    onView(withId(R.id.textViewAttSize)).check(matches(withText(
+        Formatter.formatFileSize(getContext(), att.getEncodedSize()))));
   }
 
   private void launchActivity(GeneralMessageDetails details) {
