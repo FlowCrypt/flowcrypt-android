@@ -51,12 +51,17 @@ public class MessageDetailsActivityTest extends BaseTest {
   private AddAttachmentToDatabaseRule simpleAttachmentRule =
       new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/simple_att.json",
           AttachmentInfo.class));
+
+  private AddAttachmentToDatabaseRule encryptedAttachmentRule =
+      new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/encrypted_att.json",
+          AttachmentInfo.class));
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
       .around(new AddPrivateKeyToDatabaseRule())
       .around(simpleAttachmentRule)
+      .around(encryptedAttachmentRule)
       .around(activityTestRule);
 
   private java.text.DateFormat dateFormat;
@@ -124,6 +129,23 @@ public class MessageDetailsActivityTest extends BaseTest {
     launchActivity(details);
     matchHeader(details);
     onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
+    matchReplyButtons(details);
+  }
+
+  @Test
+  public void testEncryptedMsgPlaneTextWithOneAttachment() {
+    GeneralMessageDetails details =
+        TestGeneralUtil.getObjectFromJson("messages/general/encrypted_msg_plane_text_with_one_att.json",
+            GeneralMessageDetails.class);
+    IncomingMessageInfo incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_one_att.json",
+            IncomingMessageInfo.class);
+
+    launchActivity(details);
+    matchHeader(details);
+    onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
+    onView(withId(R.id.layoutAtt)).check(matches(isDisplayed()));
+    matchAtt(encryptedAttachmentRule.getAttInfo());
     matchReplyButtons(details);
   }
 
