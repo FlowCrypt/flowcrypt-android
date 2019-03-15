@@ -38,6 +38,7 @@ import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.flowcrypt.email.matchers.CustomMatchers.withDrawable;
 
 /**
  * @author Denis Bondarenko
@@ -92,6 +93,7 @@ public class MessageDetailsActivityTest extends BaseTest {
     launchActivity(details);
     matchHeader(details);
     onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
+    matchReplyButtons(details);
   }
 
   @Test
@@ -108,6 +110,21 @@ public class MessageDetailsActivityTest extends BaseTest {
     onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
     onView(withId(R.id.layoutAtt)).check(matches(isDisplayed()));
     matchAtt(simpleAttachmentRule.getAttInfo());
+    matchReplyButtons(details);
+  }
+
+  @Test
+  public void testEncryptedMsgPlaneText() {
+    GeneralMessageDetails details =
+        TestGeneralUtil.getObjectFromJson("messages/general/encrypted_msg_plane_text.json",
+            GeneralMessageDetails.class);
+    IncomingMessageInfo incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
+            IncomingMessageInfo.class);
+    launchActivity(details);
+    matchHeader(details);
+    onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
+    matchReplyButtons(details);
   }
 
   private void matchHeader(GeneralMessageDetails details) {
@@ -120,6 +137,31 @@ public class MessageDetailsActivityTest extends BaseTest {
     onView(withId(R.id.textViewAttchmentName)).check(matches(withText(att.getName())));
     onView(withId(R.id.textViewAttSize)).check(matches(withText(
         Formatter.formatFileSize(getContext(), att.getEncodedSize()))));
+  }
+
+  private void matchReplyButtons(GeneralMessageDetails details) {
+    onView(withId(R.id.imageButtonReplyAll)).check(matches(isDisplayed()));
+    onView(withId(R.id.layoutReplyButton)).check(matches(isDisplayed()));
+    onView(withId(R.id.layoutReplyAllButton)).check(matches(isDisplayed()));
+    onView(withId(R.id.layoutFwdButton)).check(matches(isDisplayed()));
+
+    if (details.isEncrypted()) {
+      onView(withId(R.id.textViewReply)).check(matches(withText(getResString(R.string.reply_encrypted))));
+      onView(withId(R.id.textViewReplyAll)).check(matches(withText(getResString(R.string.reply_all_encrypted))));
+      onView(withId(R.id.textViewFwd)).check(matches(withText(getResString(R.string.forward_encrypted))));
+
+      onView(withId(R.id.imageViewReply)).check(matches(withDrawable(R.mipmap.ic_reply_green)));
+      onView(withId(R.id.imageViewReplyAll)).check(matches(withDrawable(R.mipmap.ic_reply_all_green)));
+      onView(withId(R.id.imageViewFwd)).check(matches(withDrawable(R.mipmap.ic_forward_green)));
+    } else {
+      onView(withId(R.id.textViewReply)).check(matches(withText(getResString(R.string.reply))));
+      onView(withId(R.id.textViewReplyAll)).check(matches(withText(getResString(R.string.reply_all))));
+      onView(withId(R.id.textViewFwd)).check(matches(withText(getResString(R.string.forward))));
+
+      onView(withId(R.id.imageViewReply)).check(matches(withDrawable(R.mipmap.ic_reply_red)));
+      onView(withId(R.id.imageViewReplyAll)).check(matches(withDrawable(R.mipmap.ic_reply_all_red)));
+      onView(withId(R.id.imageViewFwd)).check(matches(withDrawable(R.mipmap.ic_forward_red)));
+    }
   }
 
   private void launchActivity(GeneralMessageDetails details) {

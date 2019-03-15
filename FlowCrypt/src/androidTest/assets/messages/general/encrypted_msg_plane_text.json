@@ -1,0 +1,26 @@
+{
+  "email": "default@denbond7.com",
+  "flags": [
+    "\\RECENT",
+    "\\SEEN"
+  ],
+  "from": [
+    {
+      "address": "denbond7@denbond7.com"
+    }
+  ],
+  "hasAtts": false,
+  "isEncrypted": true,
+  "label": "INBOX",
+  "msgState": "NONE",
+  "rawMsgWithoutAtts": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 35CBC202F1\r\n\tfor \u003cdefault@denbond7.com\u003e; Fri, 15 Mar 2019 14:52:10 +0000 (UTC)\r\nX-Virus-Scanned: Debian amavisd-new at mail.denbond7.com\r\nReceived: from mail.denbond7.com ([127.0.0.1])\r\n\tby mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10024)\r\n\twith ESMTP id EstQPjUmZ4Hn for \u003cdefault@denbond7.com\u003e;\r\n\tFri, 15 Mar 2019 14:52:01 +0000 (UTC)\r\nReceived: from localhost (MiA1 [192.168.3.6])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id E17EF202E9\r\n\tfor \u003cdefault@denbond7.com\u003e; Fri, 15 Mar 2019 14:52:00 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-15526615192100.5959024994440685\"\r\nIn-Reply-To: \u003c\u003e\r\nReferences: \u003c\u003e\r\nTo: default@denbond7.com\r\nFrom: denbond7@denbond7.com\r\nSubject: Simple encrypted message\r\nDate: Fri, 15 Mar 2019 14:51:59 +0000\r\nMessage-Id: \u003c1552661519275-40db11d3-834101fe-9096ab5d@denbond7.com\u003e\r\nMIME-Version: 1.0\r\n\r\n------sinikael-?\u003d_1-15526615192100.5959024994440685\r\nContent-Type: text/plain\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n-----BEGIN PGP MESSAGE-----\r\nVersion: FlowCrypt 0.7.3 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nwcBMA/47aTYseLEDAQf9H9LsYvzeqpscSJARVtLon9K+IhYyO0CXKo6OcJOV\r\ngkniFsWn3x1X8jcB0yG/eGcueXvwlJGjQPM7HBwhW7yaz0K1ydtDVZuvBrPO\r\n3hmi61rUug+GcylOEC4BmjE6EOPKScb8b9zyK/nlsk4snRHtdMvnowVenwQm\r\n8xh1ADSzGEgYQHA4iVYZCXmqG/xKGgemTkIX1VjHHCSMmQcNEiaGSNaZCkmH\r\nfzORHHohSK46JskSy4uBDhe+qa499pJRt6Mr2Wxyup9lJSkHd02ylVZ2uIy5\r\n3BziomIcKa8ZG/YLnzTD1q/cvk3U/y1lPBlG+zZjppX1ZJcoq7TaAd5hkiWy\r\nXsGMA+qN/UHblp9OAQQAmSb1km5t4QdBfRkrJRe+z+u9uO1JwNjsZ+Oi5ofo\r\n3xIIahwYbDpE4gPpiJmKjoNmDMVdlcVIUFkQ/RVFMA2WhPVFOX3/Id+Ca5jK\r\nGKdfo4FmwAp6lkET+rJ5Pe1p+IjAqR4umJuJPXYK3rDQHq2nUalfHHg43u1M\r\nx24CVUHLzIrSTQGXtZNhtaig5JXmP8uQMTPxe443nY02Ti6qk2FAn4j17pXR\r\nnFDid8sVi9p0fCIQfqjRwCGo+Bbtjex29mgbOIDjfk4oWG56tpu9lA31\r\n\u003d3DMP4M\r\n-----END PGP MESSAGE-----\r\n\r\n------sinikael-?\u003d_1-15526615192100.5959024994440685--\r\n",
+  "receivedDateInMillisecond": 1552661530000,
+  "sentDateInMillisecond": 1552661519000,
+  "subject": "Simple encrypted message",
+  "to": [
+    {
+      "address": "default@denbond7.com"
+    }
+  ],
+  "uid": 239
+}
