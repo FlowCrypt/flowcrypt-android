@@ -21,6 +21,7 @@ import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -82,6 +83,7 @@ public class EncryptPrivateKeysIfNeededAction extends Action {
 
       List<NodeKeyDetails> keyDetailsList = NodeCallsExecutor.parseKeys(pgpKeyInfo.getPrivate());
       if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size() != 1) {
+        ExceptionUtil.handleError(new IllegalArgumentException("An error occurred during the key parsing| 1"));
         continue;
       }
 
@@ -94,11 +96,13 @@ public class EncryptPrivateKeysIfNeededAction extends Action {
       EncryptKeyResult encryptResult = NodeCallsExecutor.encryptKey(nodeKeyDetails.getPrivateKey(), passphrase);
 
       if (TextUtils.isEmpty(encryptResult.getEncryptedKey())) {
+        ExceptionUtil.handleError(new IllegalArgumentException("An error occurred during the key encryption"));
         continue;
       }
 
       List<NodeKeyDetails> modifiedKeyDetailsList = NodeCallsExecutor.parseKeys(encryptResult.getEncryptedKey());
       if (CollectionUtils.isEmpty(modifiedKeyDetailsList) || modifiedKeyDetailsList.size() != 1) {
+        ExceptionUtil.handleError(new IllegalArgumentException("An error occurred during the key parsing| 2"));
         continue;
       }
 
@@ -119,10 +123,10 @@ public class EncryptPrivateKeysIfNeededAction extends Action {
       }
 
       context.sendBroadcast(UpdateStorageConnectorBroadcastReceiver.newIntent(context));
-
-      SharedPreferencesHelper.setBoolean(PreferenceManager
-          .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, false);
     }
+
+    SharedPreferencesHelper.setBoolean(PreferenceManager
+        .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, false);
   }
 
   @Override

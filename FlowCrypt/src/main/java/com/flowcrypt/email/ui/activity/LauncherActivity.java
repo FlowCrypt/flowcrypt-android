@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -90,13 +89,11 @@ public class LauncherActivity extends BaseActivity {
 
   private void showEmailManagerActivity() {
     if (SecurityUtils.hasBackup(this)) {
-      if (BuildConfig.VERSION_CODE <= 72) {
-        boolean isCheckKeysNeeded = SharedPreferencesHelper.getBoolean(PreferenceManager
-            .getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, true);
+      boolean isCheckKeysNeeded = SharedPreferencesHelper.getBoolean(PreferenceManager
+          .getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, true);
 
-        if (isCheckKeysNeeded) {
-          new ActionQueueDaoSource().addAction(this, new EncryptPrivateKeysIfNeededAction(account.getEmail()));
-        }
+      if (isCheckKeysNeeded) {
+        new ActionQueueDaoSource().addAction(this, new EncryptPrivateKeysIfNeededAction(account.getEmail()));
       }
 
       EmailSyncService.startEmailSyncService(this);
