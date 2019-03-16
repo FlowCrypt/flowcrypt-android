@@ -15,12 +15,17 @@ import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
+import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.matchers.ToastMatcher;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.AddAttachmentToDatabaseRule;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
+import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.PrivateKeysManager;
 import com.flowcrypt.email.util.TestGeneralUtil;
 
 import org.junit.After;
@@ -30,15 +35,21 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 
+import java.io.IOException;
+
 import androidx.test.espresso.IdlingRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.scrollTo;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static com.flowcrypt.email.matchers.CustomMatchers.withDrawable;
+import static org.hamcrest.Matchers.not;
 
 /**
  * @author Denis Bondarenko
@@ -55,6 +66,10 @@ public class MessageDetailsActivityTest extends BaseTest {
   private AddAttachmentToDatabaseRule encryptedAttachmentRule =
       new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/encrypted_att.json",
           AttachmentInfo.class));
+
+  private AddAttachmentToDatabaseRule pubKeyAttachmentRule =
+      new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/pub_key.json",
+          AttachmentInfo.class));
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
@@ -62,6 +77,7 @@ public class MessageDetailsActivityTest extends BaseTest {
       .around(new AddPrivateKeyToDatabaseRule())
       .around(simpleAttachmentRule)
       .around(encryptedAttachmentRule)
+      .around(pubKeyAttachmentRule)
       .around(activityTestRule);
 
   private java.text.DateFormat dateFormat;
@@ -95,10 +111,7 @@ public class MessageDetailsActivityTest extends BaseTest {
         TestGeneralUtil.getObjectFromJson("messages/general/standard_msg_plane_text.json", GeneralMessageDetails.class);
     IncomingMessageInfo incomingMsgInfo =
         TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text.json", IncomingMessageInfo.class);
-    launchActivity(details);
-    matchHeader(details);
-    onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
-    matchReplyButtons(details);
+    baseCheck(details, incomingMsgInfo);
   }
 
   @Test
@@ -110,12 +123,7 @@ public class MessageDetailsActivityTest extends BaseTest {
         TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text_with_one_att.json",
             IncomingMessageInfo.class);
 
-    launchActivity(details);
-    matchHeader(details);
-    onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
-    onView(withId(R.id.layoutAtt)).check(matches(isDisplayed()));
-    matchAtt(simpleAttachmentRule.getAttInfo());
-    matchReplyButtons(details);
+    baseCheckWithAtt(details, incomingMsgInfo, simpleAttachmentRule);
   }
 
   @Test
@@ -126,10 +134,7 @@ public class MessageDetailsActivityTest extends BaseTest {
     IncomingMessageInfo incomingMsgInfo =
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
             IncomingMessageInfo.class);
-    launchActivity(details);
-    matchHeader(details);
-    onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
-    matchReplyButtons(details);
+    baseCheck(details, incomingMsgInfo);
   }
 
   @Test
@@ -141,6 +146,57 @@ public class MessageDetailsActivityTest extends BaseTest {
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_one_att.json",
             IncomingMessageInfo.class);
 
+    baseCheckWithAtt(details, incomingMsgInfo, encryptedAttachmentRule);
+  }
+
+  @Test
+  public void testEncryptedMsgPlaneTextWithPubKeyWhenContactDoesNotExist() throws IOException {
+    GeneralMessageDetails details =
+        TestGeneralUtil.getObjectFromJson("messages/general/encrypted_msg_plane_text_with_pub_key.json",
+            GeneralMessageDetails.class);
+    IncomingMessageInfo incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_pub_key.json",
+            IncomingMessageInfo.class);
+
+    baseCheckWithAtt(details, incomingMsgInfo, pubKeyAttachmentRule);
+
+    NodeKeyDetails nodeKeyDetails =
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/denbond7@denbond7.com_pub.json");
+    PgpContact pgpContact = nodeKeyDetails.getPrimaryPgpContact();
+
+    onView(withId(R.id.textViewKeyOwnerTemplate)).check(matches(withText(
+        getResString(R.string.template_message_part_public_key_owner, pgpContact.getEmail()))));
+
+    onView(withId(R.id.textViewKeyWordsTemplate)).check(matches(withText(
+        getHtmlString(getResString(R.string.template_message_part_public_key_key_words,
+            nodeKeyDetails.getKeywords())))));
+
+    onView(withId(R.id.textViewFingerprintTemplate)).check(matches(withText(
+        getHtmlString(getResString(R.string.template_message_part_public_key_fingerprint,
+            GeneralUtil.doSectionsInText(" ", nodeKeyDetails.getFingerprint(), 4))))));
+
+    onView(withId(R.id.textViewPgpPublicKey)).check(matches(not(isDisplayed())));
+    onView(withId(R.id.switchShowPublicKey)).check(matches(not(isChecked()))).perform(scrollTo(), click());
+    onView(withId(R.id.textViewPgpPublicKey)).check(matches(isDisplayed()));
+    onView(withId(R.id.textViewPgpPublicKey)).check(matches(withText(pgpContact.getPubkey())));
+    onView(withId(R.id.switchShowPublicKey)).check(matches(isChecked())).perform(scrollTo(), click());
+    onView(withId(R.id.textViewPgpPublicKey)).check(matches(not(isDisplayed())));
+
+    onView(withText(R.string.update_contact)).check(matches(isDisplayed())).perform(scrollTo(), click());
+    onView(withText(R.string.update_contact)).check(matches(not(isDisplayed())));
+
+    onView(withText(getResString(R.string.contact_successfully_updated))).inRoot(new ToastMatcher()).check(matches(isDisplayed()));
+  }
+
+  private void baseCheck(GeneralMessageDetails details, IncomingMessageInfo incomingMsgInfo) {
+    launchActivity(details);
+    matchHeader(details);
+    onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
+    matchReplyButtons(details);
+  }
+
+  private void baseCheckWithAtt(GeneralMessageDetails details, IncomingMessageInfo incomingMsgInfo,
+                                AddAttachmentToDatabaseRule encryptedAttachmentRule) {
     launchActivity(details);
     matchHeader(details);
     onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
