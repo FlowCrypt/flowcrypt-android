@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.matchers.ToastMatcher;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.AddAttachmentToDatabaseRule;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
@@ -150,7 +149,7 @@ public class MessageDetailsActivityTest extends BaseTest {
   }
 
   @Test
-  public void testEncryptedMsgPlaneTextWithPubKeyWhenContactDoesNotExist() throws IOException {
+  public void testEncryptedMsgPlaneTextWithPubKey() throws IOException {
     GeneralMessageDetails details =
         TestGeneralUtil.getObjectFromJson("messages/general/encrypted_msg_plane_text_with_pub_key.json",
             GeneralMessageDetails.class);
@@ -182,10 +181,8 @@ public class MessageDetailsActivityTest extends BaseTest {
     onView(withId(R.id.switchShowPublicKey)).check(matches(isChecked())).perform(scrollTo(), click());
     onView(withId(R.id.textViewPgpPublicKey)).check(matches(not(isDisplayed())));
 
-    onView(withText(R.string.update_contact)).check(matches(isDisplayed())).perform(scrollTo(), click());
-    onView(withText(R.string.update_contact)).check(matches(not(isDisplayed())));
-
-    onView(withText(getResString(R.string.contact_successfully_updated))).inRoot(new ToastMatcher()).check(matches(isDisplayed()));
+    onView(withId(R.id.buttonKeyAction)).check(matches(isDisplayed())).perform(scrollTo(), click());
+    onView(withId(R.id.buttonKeyAction)).check(matches(not(isDisplayed())));
   }
 
   private void baseCheck(GeneralMessageDetails details, IncomingMessageInfo incomingMsgInfo) {
