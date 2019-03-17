@@ -6,10 +6,13 @@
 package com.flowcrypt.email.ui.activity;
 
 import android.app.Activity;
+import android.app.Instrumentation;
+import android.content.ComponentName;
 import android.text.format.DateFormat;
 import android.text.format.Formatter;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
@@ -18,6 +21,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.AddAttachmentToDatabaseRule;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
@@ -37,12 +41,15 @@ import org.junit.rules.TestRule;
 import java.io.IOException;
 
 import androidx.test.espresso.IdlingRegistry;
+import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.scrollTo;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.intent.Intents.intending;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
@@ -57,7 +64,7 @@ import static org.hamcrest.Matchers.not;
  * E-mail: DenBond7@gmail.com
  */
 public class MessageDetailsActivityTest extends BaseTest {
-  private ActivityTestRule activityTestRule = new ActivityTestRule<>(MessageDetailsActivity.class, false, false);
+  private IntentsTestRule activityTestRule = new IntentsTestRule<>(MessageDetailsActivity.class, false, false);
   private AddAttachmentToDatabaseRule simpleAttachmentRule =
       new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/simple_att.json",
           AttachmentInfo.class));
@@ -134,6 +141,35 @@ public class MessageDetailsActivityTest extends BaseTest {
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
             IncomingMessageInfo.class);
     baseCheck(details, incomingMsgInfo);
+  }
+
+  @Test
+  public void testMissingKeyErrorImportKey() throws Throwable {
+    GeneralMessageDetails details =
+        TestGeneralUtil.getObjectFromJson("messages/general/encrypted_msg_plane_text_with_missing_key.json",
+            GeneralMessageDetails.class);
+    launchActivity(details);
+    matchHeader(details);
+
+    onView(withId(R.id.textViewErrorMessage)).check(
+        matches(withText(getResString(R.string.decrypt_error_current_key_cannot_message))));
+
+    matchReplyButtons(details);
+
+    intending(hasComponent(new ComponentName(getTargetContext(), ImportPrivateKeyActivity.class)))
+        .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
+
+    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
+        TestConstants.DEFAULT_STRONG_PASSWORD,
+        KeyDetails.Type.EMAIL);
+
+    onView(withId(R.id.buttonImportPrivateKey)).check(matches(isDisplayed())).perform(scrollTo(), click());
+
+    IncomingMessageInfo incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key_fixed.json",
+            IncomingMessageInfo.class);
+    onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
+    matchReplyButtons(details);
   }
 
   @Test

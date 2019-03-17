@@ -161,7 +161,6 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             messageDaoSource.setSeenStatus(this, details.getEmail(),
                 localFolder.getFolderAlias(), details.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
-            idlingForDecryption.increment();
             decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAtts());
           }
         }
@@ -291,9 +290,14 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void onJsServiceConnected() {
     super.onJsServiceConnected();
     if (!TextUtils.isEmpty(details.getRawMsgWithoutAtts())) {
-      idlingForDecryption.increment();
       decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAtts());
     }
+  }
+
+  @Override
+  public void decryptMsg(int requestCode, String rawMimeMsg) {
+    idlingForDecryption.increment();
+    super.decryptMsg(requestCode, rawMimeMsg);
   }
 
   @Override
