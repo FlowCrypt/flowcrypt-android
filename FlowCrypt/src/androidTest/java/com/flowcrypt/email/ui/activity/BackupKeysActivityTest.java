@@ -18,6 +18,7 @@ import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
+import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.util.AccountDaoManager;
 import com.flowcrypt.email.util.PrivateKeysManager;
 import com.flowcrypt.email.util.TestGeneralUtil;
@@ -224,24 +225,24 @@ public class BackupKeysActivityTest extends BaseTest {
   private void addFirstKeyWithDefaultPassword() throws Throwable {
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_default.json",
         TestConstants.DEFAULT_PASSWORD,
-        KeyDetails.Type.EMAIL);
+        KeyDetails.Type.EMAIL, (BaseActivity) activityTestRule.getActivity());
   }
 
   private void addFirstKeyWithStrongPassword() throws Throwable {
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_strong.json",
         TestConstants.DEFAULT_STRONG_PASSWORD,
-        KeyDetails.Type.EMAIL);
+        KeyDetails.Type.EMAIL, (BaseActivity) activityTestRule.getActivity());
   }
 
   private void addSecondKeyWithStrongPassword() throws Throwable {
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
         TestConstants.DEFAULT_STRONG_PASSWORD,
-        KeyDetails.Type.EMAIL);
+        KeyDetails.Type.EMAIL, (BaseActivity) activityTestRule.getActivity());
   }
 
   private void addSecondKeyWithStrongSecondPassword() throws Throwable {
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong_second.json",
         TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
-        KeyDetails.Type.EMAIL);
+        KeyDetails.Type.EMAIL, (BaseActivity) activityTestRule.getActivity());
   }
 }

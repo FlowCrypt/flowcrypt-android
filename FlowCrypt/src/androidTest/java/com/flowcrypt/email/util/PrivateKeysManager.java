@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.util;
 
+import android.content.Context;
+
 import com.flowcrypt.email.api.retrofit.node.NodeGson;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
@@ -14,6 +16,7 @@ import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
+import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.google.gson.Gson;
 
 import java.io.IOException;
@@ -34,34 +37,36 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 public class PrivateKeysManager {
 
-  public static void saveKeyFromAssetsToDatabase(String keyPath, String passphrase, KeyDetails.Type type) throws Throwable {
+  public static void saveKeyFromAssetsToDatabase(String keyPath, String passphrase, KeyDetails.Type type,
+                                                 BaseActivity baseActivity) throws Throwable {
     NodeKeyDetails nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath);
-    saveKeyToDatabase(nodeKeyDetails, passphrase, type);
+    saveKeyToDatabase(nodeKeyDetails, passphrase, type, baseActivity);
   }
 
-  public static void saveKeyToDatabase(NodeKeyDetails nodeKeyDetails, String passphrase, KeyDetails.Type type) throws Throwable {
+  public static void saveKeyToDatabase(NodeKeyDetails nodeKeyDetails, String passphrase, KeyDetails.Type type,
+                                       final BaseActivity baseActivity) throws Throwable {
+    final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
     KeysDaoSource keysDaoSource = new KeysDaoSource();
     KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(InstrumentationRegistry.getInstrumentation()
         .getTargetContext());
 
-    keysDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase));
+    keysDaoSource.addRow(context, KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase));
 
-    new UserIdEmailsKeysDaoSource().addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        nodeKeyDetails.getLongId(), nodeKeyDetails.getPrimaryPgpContact().getEmail());
+    new UserIdEmailsKeysDaoSource().addRow(context, nodeKeyDetails.getLongId(),
+        nodeKeyDetails.getPrimaryPgpContact().getEmail());
 
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        UiJsManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
-            .getJs()
-            .getStorageConnector()
-            .refresh(InstrumentationRegistry.getInstrumentation().getTargetContext());
+        UiJsManager.getInstance(context).getJs().getStorageConnector().refresh(context);
+        if (baseActivity != null) {
+          baseActivity.restartJsService();
+        }
       }
     });
-
     // Added timeout for a better sync between threads.
-    Thread.sleep(1000);
+    Thread.sleep(3000);
   }
 
   public static NodeKeyDetails getNodeKeyDetailsFromAssets(String assetsPath) throws IOException {
@@ -77,5 +82,27 @@ public class PrivateKeysManager {
       privateKeys.add(getNodeKeyDetailsFromAssets(path));
     }
     return privateKeys;
+  }
+
+  public static void deleteKey(String keyPath, final BaseActivity baseActivity) throws Throwable {
+    NodeKeyDetails nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath);
+    KeysDaoSource keysDaoSource = new KeysDaoSource();
+
+    final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+    keysDaoSource.removeKey(context, nodeKeyDetails.getLongId());
+    new UserIdEmailsKeysDaoSource().removeKey(context, nodeKeyDetails.getLongId());
+
+    UiThreadStatement.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        UiJsManager.getInstance(context).getJs().getStorageConnector().refresh(context);
+        if (baseActivity != null) {
+          baseActivity.restartJsService();
+        }
+      }
+    });
+    // Added timeout for a better sync between threads.
+    Thread.sleep(3000);
   }
 }

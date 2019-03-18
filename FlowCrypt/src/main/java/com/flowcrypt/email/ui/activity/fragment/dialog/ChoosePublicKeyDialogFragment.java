@@ -154,12 +154,14 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
 
               UIUtil.exchangeViewVisibility(getContext(), false, progressBar, content);
 
-              NodeKeyDetails matchedDetail = getMatchedKey(nodeKeyDetailsList);
-              if (matchedDetail != null) {
-                AttachmentInfo att = EmailUtil.genAttInfoFromPubKey(matchedDetail);
-                if (att != null) {
-                  atts.clear();
-                  atts.add(att);
+              List<NodeKeyDetails> matchedKeys = getMatchedKeys(nodeKeyDetailsList);
+              if (!CollectionUtils.isEmpty(matchedKeys)) {
+                atts.clear();
+                for (NodeKeyDetails nodeKeyDetails : matchedKeys) {
+                  AttachmentInfo att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails);
+                  if (att != null) {
+                    atts.add(att);
+                  }
                 }
               }
 
@@ -171,7 +173,7 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
                 String[] strings = new String[atts.size()];
                 for (int i = 0; i < atts.size(); i++) {
                   AttachmentInfo att = atts.get(i);
-                  strings[i] = att.getEmail();
+                  strings[i] = att.getEmail() + "\n" + att.getName();
                 }
 
                 ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
@@ -232,19 +234,21 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
   }
 
   /**
-   * Get the matched {@link NodeKeyDetails}. If the sender email matched to the email from {@link PgpContact} which got
-   * from the private key than we return a relevant public key.
+   * Get a list with the matched {@link NodeKeyDetails}. If the sender email matched to the email from
+   * {@link PgpContact} which got from the private key than we return a list with the relevant public key.
    *
    * @return A matched {@link NodeKeyDetails} or null.
    */
-  private NodeKeyDetails getMatchedKey(List<NodeKeyDetails> nodeKeyDetailsList) {
+  private List<NodeKeyDetails> getMatchedKeys(List<NodeKeyDetails> nodeKeyDetailsList) {
+    List<NodeKeyDetails> keyDetails = new ArrayList<>();
+
     for (NodeKeyDetails nodeKeyDetails : nodeKeyDetailsList) {
       PgpContact primaryUserId = nodeKeyDetails.getPrimaryPgpContact();
       if (primaryUserId.getEmail().equalsIgnoreCase(to)) {
-        return nodeKeyDetails;
+        keyDetails.add(nodeKeyDetails);
       }
     }
 
-    return null;
+    return keyDetails;
   }
 }

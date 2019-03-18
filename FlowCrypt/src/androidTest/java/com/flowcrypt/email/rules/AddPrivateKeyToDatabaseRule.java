@@ -52,7 +52,7 @@ public class AddPrivateKeyToDatabaseRule implements TestRule {
         Gson gson = NodeGson.getInstance().getGson();
         nodeKeyDetails = gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString
             (InstrumentationRegistry.getInstrumentation().getContext(), keyPath), NodeKeyDetails.class);
-        PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, passphrase, keyDetailsType);
+        PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, passphrase, keyDetailsType, null);
         base.evaluate();
       }
     };

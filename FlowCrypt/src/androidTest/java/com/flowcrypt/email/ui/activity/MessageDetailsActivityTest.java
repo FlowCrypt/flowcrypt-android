@@ -21,6 +21,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.matchers.ToastMatcher;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.AddAttachmentToDatabaseRule;
@@ -44,10 +45,12 @@ import androidx.test.espresso.IdlingRegistry;
 import androidx.test.espresso.intent.rule.IntentsTestRule;
 import androidx.test.rule.ActivityTestRule;
 
+import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.scrollTo;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.intent.Intents.intended;
 import static androidx.test.espresso.intent.Intents.intending;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
@@ -55,6 +58,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static com.flowcrypt.email.matchers.CustomMatchers.withDrawable;
+import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.not;
 
 /**
@@ -64,7 +68,7 @@ import static org.hamcrest.Matchers.not;
  * E-mail: DenBond7@gmail.com
  */
 public class MessageDetailsActivityTest extends BaseTest {
-  private IntentsTestRule activityTestRule = new IntentsTestRule<>(MessageDetailsActivity.class, false, false);
+  private IntentsTestRule intentsTestRule = new IntentsTestRule<>(MessageDetailsActivity.class, false, false);
   private AddAttachmentToDatabaseRule simpleAttachmentRule =
       new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/simple_att.json",
           AttachmentInfo.class));
@@ -84,14 +88,14 @@ public class MessageDetailsActivityTest extends BaseTest {
       .around(simpleAttachmentRule)
       .around(encryptedAttachmentRule)
       .around(pubKeyAttachmentRule)
-      .around(activityTestRule);
+      .around(intentsTestRule);
 
   private java.text.DateFormat dateFormat;
   private LocalFolder localFolder;
 
   @Override
   public ActivityTestRule getActivityTestRule() {
-    return activityTestRule;
+    return intentsTestRule;
   }
 
   @After
@@ -148,28 +152,69 @@ public class MessageDetailsActivityTest extends BaseTest {
     GeneralMessageDetails details =
         TestGeneralUtil.getObjectFromJson("messages/general/encrypted_msg_plane_text_with_missing_key.json",
             GeneralMessageDetails.class);
-    launchActivity(details);
-    matchHeader(details);
-
-    onView(withId(R.id.textViewErrorMessage)).check(
-        matches(withText(getResString(R.string.decrypt_error_current_key_cannot_message))));
-
-    matchReplyButtons(details);
+    IncomingMessageInfo incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+            IncomingMessageInfo.class);
+    testMissingKey(details, incomingMsgInfo);
 
     intending(hasComponent(new ComponentName(getTargetContext(), ImportPrivateKeyActivity.class)))
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
 
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
-        TestConstants.DEFAULT_STRONG_PASSWORD,
-        KeyDetails.Type.EMAIL);
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL, (BaseActivity) intentsTestRule.getActivity());
 
     onView(withId(R.id.buttonImportPrivateKey)).check(matches(isDisplayed())).perform(scrollTo(), click());
 
-    IncomingMessageInfo incomingMsgInfo =
+    IncomingMessageInfo incomingMsgInfoFixed =
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key_fixed.json",
             IncomingMessageInfo.class);
-    onView(withText(incomingMsgInfo.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
+    onView(withText(incomingMsgInfoFixed.getMsgParts().get(0).getValue())).check(matches(isDisplayed()));
     matchReplyButtons(details);
+
+    PrivateKeysManager.deleteKey("node/default@denbond7.com_secondKey_prv_strong.json",
+        (BaseActivity) intentsTestRule.getActivity());
+  }
+
+  @Test
+  public void testMissingKeyErrorChooseSinglePubKey() {
+    GeneralMessageDetails details =
+        TestGeneralUtil.getObjectFromJson("messages/general/encrypted_msg_plane_text_with_missing_key.json",
+            GeneralMessageDetails.class);
+    IncomingMessageInfo incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+            IncomingMessageInfo.class);
+    testMissingKey(details, incomingMsgInfo);
+
+    onView(withId(R.id.buttonSendOwnPublicKey)).check(matches(isDisplayed())).perform(scrollTo(), click());
+    onView(withId(R.id.textViewMessage)).check(
+        matches(withText(getResString(R.string.tell_sender_to_update_their_settings))));
+    onView(withId(R.id.buttonOk)).check(matches(isDisplayed())).perform(click());
+    intended(hasComponent(CreateMessageActivity.class.getName()));
+  }
+
+  @Test
+  public void testMissingKeyErrorChooseFromFewPubKeys() throws Throwable {
+    GeneralMessageDetails details =
+        TestGeneralUtil.getObjectFromJson("messages/general/encrypted_msg_plane_text_with_missing_key.json",
+            GeneralMessageDetails.class);
+    IncomingMessageInfo incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+            IncomingMessageInfo.class);
+    testMissingKey(details, incomingMsgInfo);
+
+    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL, (BaseActivity) intentsTestRule.getActivity());
+    onView(withId(R.id.buttonSendOwnPublicKey)).check(matches(isDisplayed())).perform(scrollTo(), click());
+
+    String msg = getResString(R.string.tell_sender_to_update_their_settings)
+        + "\n\n" + getResString(R.string.select_key);
+
+    onView(withId(R.id.textViewMessage)).check(matches(withText(msg)));
+    onView(withId(R.id.buttonOk)).check(matches(isDisplayed())).perform(click());
+    onView(withText(getResString(R.string.please_select_key))).inRoot(new ToastMatcher()).check(matches(isDisplayed()));
+    onData(anything()).inAdapterView(withId(R.id.listViewKeys)).atPosition(1).perform(click());
+    onView(withId(R.id.buttonOk)).check(matches(isDisplayed())).perform(click());
+    intended(hasComponent(CreateMessageActivity.class.getName()));
   }
 
   @Test
@@ -219,6 +264,23 @@ public class MessageDetailsActivityTest extends BaseTest {
 
     onView(withId(R.id.buttonKeyAction)).check(matches(isDisplayed())).perform(scrollTo(), click());
     onView(withId(R.id.buttonKeyAction)).check(matches(not(isDisplayed())));
+  }
+
+  private void testMissingKey(GeneralMessageDetails details, IncomingMessageInfo incomingMsgInfo) {
+    launchActivity(details);
+    matchHeader(details);
+
+    onView(withId(R.id.textViewErrorMessage)).check(
+        matches(withText(getResString(R.string.decrypt_error_current_key_cannot_message))));
+
+    onView(withId(R.id.textViewOrigPgpMsg)).check(matches(not(isDisplayed())));
+    onView(withId(R.id.switchShowOrigMsg)).check(matches(not(isChecked()))).perform(scrollTo(), click());
+    onView(withId(R.id.textViewOrigPgpMsg)).check(matches(isDisplayed()));
+    onView(withId(R.id.textViewOrigPgpMsg)).check(matches(withText(incomingMsgInfo.getMsgParts().get(0).getValue())));
+    onView(withId(R.id.switchShowOrigMsg)).check(matches(isChecked())).perform(scrollTo(), click());
+    onView(withId(R.id.textViewOrigPgpMsg)).check(matches(not(isDisplayed())));
+
+    matchReplyButtons(details);
   }
 
   private void baseCheck(GeneralMessageDetails details, IncomingMessageInfo incomingMsgInfo) {
@@ -276,8 +338,8 @@ public class MessageDetailsActivityTest extends BaseTest {
   }
 
   private void launchActivity(GeneralMessageDetails details) {
-    activityTestRule.launchActivity(MessageDetailsActivity.getIntent(getTargetContext(), localFolder, details));
-    IdlingRegistry.getInstance().register(((BaseActivity) activityTestRule.getActivity()).getNodeIdlingResource());
-    IdlingRegistry.getInstance().register(((MessageDetailsActivity) activityTestRule.getActivity()).getIdlingForDecryption());
+    intentsTestRule.launchActivity(MessageDetailsActivity.getIntent(getTargetContext(), localFolder, details));
+    IdlingRegistry.getInstance().register(((BaseActivity) intentsTestRule.getActivity()).getNodeIdlingResource());
+    IdlingRegistry.getInstance().register(((MessageDetailsActivity) intentsTestRule.getActivity()).getIdlingForDecryption());
   }
 }

@@ -5,10 +5,12 @@
 
 package com.flowcrypt.email.rules;
 
+import android.content.Context;
 import android.net.Uri;
 
 import com.flowcrypt.email.database.provider.FlowcryptContract;
 import com.flowcrypt.email.js.UiJsManager;
+import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 
@@ -49,17 +51,16 @@ public class ClearAppSettingsRule implements TestRule {
    * @throws IOException Different errors can be occurred.
    */
   private void clearApp() throws Throwable {
-    SharedPreferencesHelper.clear(InstrumentationRegistry.getInstrumentation().getTargetContext());
-    FileAndDirectoryUtils.cleanDir(InstrumentationRegistry.getInstrumentation().getTargetContext().getCacheDir());
-    InstrumentationRegistry.getInstrumentation().getTargetContext().getContentResolver().delete(Uri.parse
-        (FlowcryptContract.AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
+    final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+    SharedPreferencesHelper.clear(context);
+    FileAndDirectoryUtils.cleanDir(context.getCacheDir());
+    context.getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        UiJsManager.getInstance(InstrumentationRegistry.getInstrumentation().getTargetContext())
-            .getJs()
-            .getStorageConnector()
-            .refresh(InstrumentationRegistry.getInstrumentation().getTargetContext());
+        UiJsManager.getInstance(context).getJs().getStorageConnector().refresh(context);
+        JsBackgroundService.restart(context);
       }
     });
     Thread.sleep(1000);// Added timeout for a better sync between threads.

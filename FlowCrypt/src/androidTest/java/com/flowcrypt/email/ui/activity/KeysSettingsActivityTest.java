@@ -24,6 +24,7 @@ import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
+import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.PrivateKeysManager;
@@ -96,7 +97,8 @@ public class KeysSettingsActivityTest extends BaseTest {
     NodeKeyDetails nodeKeyDetails =
         PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_secondKey_prv_default.json");
 
-    PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
+    PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL,
+        (BaseActivity) getActivityTestRule().getActivity());
 
     onView(withId(R.id.floatActionButtonAddKey)).check(matches(isDisplayed())).perform(click());
     onView(withId(R.id.recyclerViewKeys)).check(matches(isDisplayed())).check(matches(matchRecyclerViewSize(2)));
