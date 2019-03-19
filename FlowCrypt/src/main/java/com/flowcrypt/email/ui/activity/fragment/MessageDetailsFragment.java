@@ -880,10 +880,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           case FORMAT_ERROR:
             final ViewGroup formatErrorLayout = (ViewGroup) layoutInflater.inflate(
                 R.layout.message_part_pgp_message_format_error, layoutMsgParts, false);
-            TextView textViewFormatError = formatErrorLayout.findViewById(R.id.textViewFormatError);
+            TextView textViewFormatError = formatErrorLayout.findViewById(R.id.textViewErrorMessage);
             textViewFormatError.setText(part.getErrorMsg());
-            formatErrorLayout.addView(genShowOrigMsgLayout
-                (part.getValue(), layoutInflater, formatErrorLayout));
+            formatErrorLayout.addView(genShowOrigMsgLayout(part.getValue(), layoutInflater, formatErrorLayout));
             return formatErrorLayout;
 
           case MISSING_PRIVATE_KEY:

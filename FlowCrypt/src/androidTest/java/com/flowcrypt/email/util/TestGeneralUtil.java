@@ -9,8 +9,8 @@ import android.content.Context;
 import android.os.Environment;
 
 import com.flowcrypt.email.base.BaseTest;
+import com.flowcrypt.email.util.gson.GsonHelper;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import org.apache.commons.io.IOUtils;
 
@@ -68,7 +68,7 @@ public class TestGeneralUtil {
   public static <T> T getObjectFromJson(String jsonPathInAssets, Class<T> classOfT) {
     try {
       if (jsonPathInAssets != null) {
-        Gson gson = new GsonBuilder().create();
+        Gson gson = GsonHelper.getInstance().getGson();
         String json = readFileFromAssetsAsString(BaseTest.getContext(), jsonPathInAssets);
         return gson.fromJson(json, classOfT);
       }
