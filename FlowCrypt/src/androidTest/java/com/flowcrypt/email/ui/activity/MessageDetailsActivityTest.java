@@ -125,6 +125,27 @@ public class MessageDetailsActivityTest extends BaseTest {
   }
 
   @Test
+  public void testReplyButton() {
+    testStandardMsgPlaneText();
+    onView(withId(R.id.layoutReplyButton)).check(matches(isDisplayed())).perform(scrollTo(), click());
+    intended(hasComponent(CreateMessageActivity.class.getName()));
+  }
+
+  @Test
+  public void testReplyAllButton() {
+    testStandardMsgPlaneText();
+    onView(withId(R.id.layoutReplyAllButton)).check(matches(isDisplayed())).perform(scrollTo(), click());
+    intended(hasComponent(CreateMessageActivity.class.getName()));
+  }
+
+  @Test
+  public void testFwdButton() {
+    testStandardMsgPlaneText();
+    onView(withId(R.id.layoutFwdButton)).check(matches(isDisplayed())).perform(scrollTo(), click());
+    intended(hasComponent(CreateMessageActivity.class.getName()));
+  }
+
+  @Test
   public void testStandardMsgPlaneTextWithOneAttachment() {
     GeneralMessageDetails details =
         TestGeneralUtil.getObjectFromJson("messages/general/standard_msg_plane_text_with_one_att.json",
