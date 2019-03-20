@@ -36,10 +36,18 @@ public final class DecryptMsgRequest extends BaseNodeRequest {
   @Expose
   private List<String> passphrases;
 
+  @Expose
+  private boolean isEmail;
+
   private String encryptedMsg;
 
   public DecryptMsgRequest(String encryptedMsg, PgpKeyInfo[] prvKeys, String[] passphrases) {
+    this(encryptedMsg, prvKeys, passphrases, false);
+  }
+
+  public DecryptMsgRequest(String encryptedMsg, PgpKeyInfo[] prvKeys, String[] passphrases, boolean isEmail) {
     this.encryptedMsg = encryptedMsg;
+    this.isEmail = isEmail;
     this.privateKeyInfoList = new ArrayList<>();
 
     for (PgpKeyInfo pgpKeyInfo : prvKeys) {

@@ -77,6 +77,15 @@ public class MsgBlock implements Parcelable {
     dest.writeByte(this.complete ? (byte) 1 : (byte) 0);
   }
 
+  @Override
+  public String toString() {
+    return "MsgBlock{" +
+        "type='" + type + '\'' +
+        ", content='" + content + '\'' +
+        ", complete=" + complete +
+        '}';
+  }
+
   public String getType() {
     return type;
   }

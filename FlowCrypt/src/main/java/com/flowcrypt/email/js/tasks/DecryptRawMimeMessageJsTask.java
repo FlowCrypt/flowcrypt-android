@@ -11,7 +11,12 @@ import android.text.TextUtils;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper;
+import com.flowcrypt.email.api.retrofit.node.NodeService;
+import com.flowcrypt.email.api.retrofit.request.node.DecryptMsgRequest;
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.node.DecryptedMsgResult;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.JsListener;
 import com.flowcrypt.email.js.MessageBlock;
@@ -19,6 +24,7 @@ import com.flowcrypt.email.js.MimeAddress;
 import com.flowcrypt.email.js.MimeMessage;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpDecrypted;
+import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.js.ProcessedMime;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.messages.MessagePart;
@@ -27,6 +33,7 @@ import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.model.messages.MessagePartSignedMessage;
 import com.flowcrypt.email.model.messages.MessagePartText;
 import com.flowcrypt.email.model.messages.MessagePartType;
+import com.flowcrypt.email.util.exception.NodeEncryptException;
 import com.flowcrypt.email.util.exception.NodeException;
 import com.google.android.gms.common.util.CollectionUtils;
 
@@ -60,6 +67,42 @@ public class DecryptRawMimeMessageJsTask extends BaseJsTask {
   public void runAction(Js js, JsListener jsListener) {
     IncomingMessageInfo incomingMsgInfo = new IncomingMessageInfo();
     if (!TextUtils.isEmpty(rawMimeMsg)) {
+
+      NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+
+      List<String> passphrases = new ArrayList<>();
+
+      PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getAllPgpPrivateKeys();
+
+      for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
+        passphrases.add(js.getStorageConnector().getPassphrase(pgpKeyInfo.getLongid()));
+      }
+
+      DecryptMsgRequest request = new DecryptMsgRequest(rawMimeMsg, pgpKeyInfoArray,
+          passphrases.toArray(new String[0]), true);
+
+      try {
+        retrofit2.Response<DecryptedMsgResult> response = nodeService.decryptMsg(request).execute();
+        DecryptedMsgResult result = response.body();
+
+        if (result == null) {
+          throw new NullPointerException("decryptedMsgResult == null");
+        }
+
+        if (result.getError() != null) {
+          throw new NodeEncryptException(result.getError().getMsg());
+        }
+
+        List<MsgBlock> blocks = result.getMsgBlocks();
+
+        System.out.println(blocks);
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (NodeEncryptException e) {
+        e.printStackTrace();
+      }
+
+
       ProcessedMime processedMime = js.mime_process(rawMimeMsg);
       ArrayList<String> addressesFrom = new ArrayList<>();
       ArrayList<String> addressesTo = new ArrayList<>();
