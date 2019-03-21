@@ -49,7 +49,6 @@ import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
 import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
-import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
@@ -158,10 +157,8 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       case REQUEST_CODE_START_IMPORT_KEY_ACTIVITY:
         switch (resultCode) {
           case Activity.RESULT_OK:
-            getBaseActivity().restartJsService();
             Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
             UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMsgContainer);
-            getBaseActivity().decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAtts());
             break;
         }
         break;
@@ -312,7 +309,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   /**
    * Show an incoming message info.
    *
-   * @param msgInfo An incoming message info which have received from {@link JsBackgroundService}
+   * @param msgInfo An incoming message info
    */
   public void showIncomingMsgInfo(IncomingMessageInfo msgInfo) {
     this.msgInfo = msgInfo;

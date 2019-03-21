@@ -19,7 +19,6 @@ import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.service.EmailSyncService;
-import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -41,7 +40,6 @@ public class LauncherActivity extends BaseActivity {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false);
-    JsBackgroundService.start(this);
     ForwardedAttachmentsDownloaderJobService.schedule(getApplicationContext());
     MessagesSenderJobService.schedule(getApplicationContext());
 

@@ -47,9 +47,4 @@ public abstract class BaseBackStackSyncActivity extends BaseSyncActivity {
   public void onSyncServiceConnected() {
 
   }
-
-  @Override
-  public void onJsServiceConnected() {
-
-  }
 }

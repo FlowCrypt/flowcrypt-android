@@ -11,7 +11,6 @@ import android.content.Intent;
 
 import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.security.SecurityStorageConnector;
-import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.util.GeneralUtil;
 
 /**
@@ -37,7 +36,6 @@ public class UpdateStorageConnectorBroadcastReceiver extends BroadcastReceiver {
   public void onReceive(Context context, Intent intent) {
     if (intent != null && ACTION_UPDATE_STORAGE_CONNECTOR.equals(intent.getAction())) {
       UiJsManager.getInstance(context).getJs().getStorageConnector().refresh(context);
-      JsBackgroundService.restart(context);
     }
   }
 }

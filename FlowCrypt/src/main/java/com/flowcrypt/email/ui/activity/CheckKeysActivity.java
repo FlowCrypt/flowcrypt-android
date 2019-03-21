@@ -273,7 +273,6 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         ArrayList<NodeKeyDetails> savedKeyDetailsList = (ArrayList<NodeKeyDetails>) result;
         if (savedKeyDetailsList != null && !savedKeyDetailsList.isEmpty()) {
           UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
-          restartJsService();
 
           Map<NodeKeyDetails, String> map = prepareMapFromKeyDetailsList(savedKeyDetailsList);
           keyDetailsList.removeAll(generateMatchedKeyDetailsList(map));
