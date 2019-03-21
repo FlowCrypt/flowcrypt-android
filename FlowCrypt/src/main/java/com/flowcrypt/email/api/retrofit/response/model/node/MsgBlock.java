@@ -10,20 +10,6 @@ import android.os.Parcelable;
 
 import com.google.gson.annotations.Expose;
 
-/**
- * //  type KeyDetails$ids = {
- * //      longid: string;
- * //    fingerprint: string;
- * //    keywords: string;
- * //    };
- * //    export interface KeyDetails {
- * //  private?: string;
- * //  public: string;
- * //  ids: KeyDetails$ids[];
- * //  users: string[];
- * //}
- * // AttMeta: { name: att.name }
- */
 public class MsgBlock implements Parcelable {
 
   public static final String TYPE_TEXT = "text";
@@ -51,8 +37,10 @@ public class MsgBlock implements Parcelable {
 
   @Expose
   private String type;
+
   @Expose
   private String content;
+
   @Expose
   private boolean complete;
 

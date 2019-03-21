@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit.node;
 
+import com.flowcrypt.email.api.retrofit.request.node.DecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
 
@@ -23,9 +24,18 @@ public interface PgpApiRepository {
    * Parse the given raw string and fetch a list of {@link NodeKeyDetails}.
    *
    * @param requestCode The unique request code for identify the current action.
-   * @param liveData    An instance of {@link MutableLiveData} which will be used for result delivering.
+   * @param liveData    An instance of {@link MutableLiveData} which will be used for the result delivering.
    * @param raw         The raw string which can take one key or many keys,
    *                    it can be private or public keys, it can be armored or binary.. doesn't matter.
    */
   void fetchKeyDetails(int requestCode, MutableLiveData<NodeResponseWrapper> liveData, String raw);
+
+  /**
+   * Parse the given raw MIME message and decrypt some parts if needed.
+   *
+   * @param requestCode The unique request code for identify the current action.
+   * @param liveData    An instance of {@link MutableLiveData} which will be used for the result delivering.
+   */
+  void parseAndDecryptMsg(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
+                          DecryptMsgRequest decryptMsgRequest);
 }

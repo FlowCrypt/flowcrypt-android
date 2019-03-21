@@ -9,10 +9,13 @@ import android.os.Parcel;
 
 import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.model.messages.MessagePart;
+import com.flowcrypt.email.model.messages.MessagePartType;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import javax.mail.internet.InternetAddress;
 
 /**
  * The class which describe an incoming message model.
@@ -36,49 +39,35 @@ public class IncomingMessageInfo extends MessageInfo {
       return new IncomingMessageInfo[size];
     }
   };
-  private int uid;
-  private ArrayList<String> from;
-  private ArrayList<String> to;
-  private ArrayList<String> cc;
+
+  private GeneralMessageDetails generalMsgDetails;
   private ArrayList<AttachmentInfo> atts;
-  private Date receiveDate;
-  private String origRawMsfWithoutAtts;
-  private List<MessagePart> msgParts;
   private LocalFolder localFolder;
-  private String htmlMsg;
-  private boolean hasPlainText;
+  private List<MessagePart> msgParts;
+
 
   public IncomingMessageInfo() {
   }
 
+  public IncomingMessageInfo(GeneralMessageDetails generalMsgDetails) {
+    this.generalMsgDetails = generalMsgDetails;
+  }
+
   protected IncomingMessageInfo(Parcel in) {
     super(in);
-    this.uid = in.readInt();
-    this.from = in.createStringArrayList();
-    this.to = in.createStringArrayList();
-    this.cc = in.createStringArrayList();
+    this.generalMsgDetails = in.readParcelable(GeneralMessageDetails.class.getClassLoader());
     this.atts = in.createTypedArrayList(AttachmentInfo.CREATOR);
-    long tmpReceiveDate = in.readLong();
-    this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
-    this.origRawMsfWithoutAtts = in.readString();
-    this.msgParts = in.createTypedArrayList(MessagePart.CREATOR);
     this.localFolder = in.readParcelable(LocalFolder.class.getClassLoader());
-    this.htmlMsg = in.readString();
-    this.hasPlainText = in.readByte() != 0;
+    this.msgParts = in.createTypedArrayList(MessagePart.CREATOR);
   }
 
   @Override
   public String toString() {
     return "IncomingMessageInfo{" +
-        "from=" + from +
-        ", to=" + to +
-        ", cc=" + cc +
-        ", receiveDate=" + receiveDate +
-        ", origRawMsfWithoutAtts='" + origRawMsfWithoutAtts + '\'' +
-        ", msgParts=" + msgParts +
+        "generalMsgDetails=" + generalMsgDetails +
+        ", atts=" + atts +
         ", localFolder=" + localFolder +
-        ", htmlMsg='" + htmlMsg + '\'' +
-        ", hasPlainText=" + hasPlainText +
+        ", msgBlocks=" + msgParts +
         "} " + super.toString();
   }
 
@@ -90,47 +79,26 @@ public class IncomingMessageInfo extends MessageInfo {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     super.writeToParcel(dest, flags);
-    dest.writeInt(this.uid);
-    dest.writeStringList(this.from);
-    dest.writeStringList(this.to);
-    dest.writeStringList(this.cc);
+    dest.writeParcelable(this.generalMsgDetails, flags);
     dest.writeTypedList(this.atts);
-    dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
-    dest.writeString(this.origRawMsfWithoutAtts);
-    dest.writeTypedList(this.msgParts);
     dest.writeParcelable(this.localFolder, flags);
-    dest.writeString(this.htmlMsg);
-    dest.writeByte(this.hasPlainText ? (byte) 1 : (byte) 0);
+    dest.writeTypedList(this.msgParts);
   }
 
-  /**
-   * Return a list of String which contain information
-   * about from addresses.
-   *
-   * @return <tt>ArrayList<String></tt> The list of from addresses.
-   */
-  public ArrayList<String> getFrom() {
-    return from;
+  public GeneralMessageDetails getGeneralMsgDetails() {
+    return generalMsgDetails;
   }
 
-  public void setFrom(ArrayList<String> from) {
-    this.from = from;
+  public InternetAddress[] getFrom() {
+    return generalMsgDetails.getFrom();
   }
 
   public Date getReceiveDate() {
-    return receiveDate;
-  }
-
-  public void setReceiveDate(Date receiveDate) {
-    this.receiveDate = receiveDate;
+    return new Date(generalMsgDetails.getReceivedDate());
   }
 
   public String getOrigRawMsgWithoutAtts() {
-    return origRawMsfWithoutAtts;
-  }
-
-  public void setOrigRawMsgWithoutAtts(String origRawMsfWithoutAtts) {
-    this.origRawMsfWithoutAtts = origRawMsfWithoutAtts;
+    return generalMsgDetails.getRawMsgWithoutAtts();
   }
 
   public List<MessagePart> getMsgParts() {
@@ -149,44 +117,34 @@ public class IncomingMessageInfo extends MessageInfo {
     this.localFolder = localFolder;
   }
 
-  public ArrayList<String> getTo() {
-    return to;
+  public InternetAddress[] getTo() {
+    return generalMsgDetails.getTo();
   }
 
-  public void setTo(ArrayList<String> to) {
-    this.to = to;
+  public InternetAddress[] getCc() {
+    return generalMsgDetails.getCc();
   }
 
-  public ArrayList<String> getCc() {
-    return cc;
-  }
-
-  public void setCc(ArrayList<String> cc) {
-    this.cc = cc;
+  public boolean hasHtmlText() {
+    return hasSomePart(MessagePartType.HTML);
   }
 
   public String getHtmlMsg() {
-    return htmlMsg;
-  }
+    for (MessagePart part : msgParts) {
+      if (part.getMsgPartType() == MessagePartType.HTML) {
+        return part.getValue();
+      }
+    }
 
-  public void setHtmlMsg(String htmlMsg) {
-    this.htmlMsg = htmlMsg;
+    return "";
   }
 
   public boolean hasPlainText() {
-    return hasPlainText;
-  }
-
-  public void setHasPlainText(boolean hasPlainText) {
-    this.hasPlainText = hasPlainText;
+    return hasSomePart(MessagePartType.TEXT);
   }
 
   public int getUid() {
-    return uid;
-  }
-
-  public void setUid(int uid) {
-    this.uid = uid;
+    return generalMsgDetails.getUid();
   }
 
   public ArrayList<AttachmentInfo> getAtts() {
@@ -195,5 +153,40 @@ public class IncomingMessageInfo extends MessageInfo {
 
   public void setAtts(ArrayList<AttachmentInfo> atts) {
     this.atts = atts;
+  }
+
+  /**
+   * Check that {@link IncomingMessageInfo} contains PGP blocks.
+   *
+   * @return true if {@link IncomingMessageInfo} contains PGP blocks
+   * ({@link MessagePartType#PGP_MESSAGE}, {@link MessagePartType#PGP_PUBLIC_KEY},
+   * {@link MessagePartType#PGP_PASSWORD_MESSAGE},  {@link MessagePartType#PGP_SIGNED_MESSAGE}), otherwise - false
+   */
+  private boolean hasPGPBlocks() {
+    if (msgParts != null) {
+      for (MessagePart messagePart : msgParts) {
+        if (messagePart.getMsgPartType() != null) {
+          switch (messagePart.getMsgPartType()) {
+            case PGP_MESSAGE:
+            case PGP_PUBLIC_KEY:
+            case PGP_PASSWORD_MESSAGE:
+            case PGP_SIGNED_MESSAGE:
+              return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private boolean hasSomePart(MessagePartType partType) {
+    for (MessagePart part : msgParts) {
+      if (part.getMsgPartType() == partType) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

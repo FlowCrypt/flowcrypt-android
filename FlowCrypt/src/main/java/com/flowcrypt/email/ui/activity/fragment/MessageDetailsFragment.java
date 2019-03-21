@@ -319,7 +319,6 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       getActivity().invalidateOptionsMenu();
     }
     msgInfo.setLocalFolder(localFolder);
-    msgInfo.setUid(details.getUid());
     updateMsgBody();
     UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMsgContainer);
   }
@@ -331,23 +330,6 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    */
   public void updateMsgDetails(GeneralMessageDetails details) {
     this.details = details;
-  }
-
-  public void notifyUserAboutActionError(int requestCode) {
-    isAdditionalActionEnabled = true;
-    getActivity().invalidateOptionsMenu();
-
-    UIUtil.exchangeViewVisibility(getContext(), false, progressBarActionRunning, layoutContent);
-
-    switch (requestCode) {
-      case R.id.syns_request_archive_message:
-        UIUtil.showInfoSnackbar(getView(), getString(R.string.error_occurred_while_archiving_message));
-        break;
-
-      case R.id.syns_request_delete_message:
-        UIUtil.showInfoSnackbar(getView(), getString(R.string.error_occurred_while_deleting_message));
-        break;
-    }
   }
 
   public void updateAttInfos(ArrayList<AttachmentInfo> attInfoList) {
@@ -627,7 +609,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
   private void updateMsgView() {
     layoutMsgParts.removeAllViews();
-    if (!TextUtils.isEmpty(msgInfo.getHtmlMsg())) {
+    if (msgInfo.hasHtmlText()) {
       EmailWebView emailWebView = new EmailWebView(getContext());
       emailWebView.configure();
 

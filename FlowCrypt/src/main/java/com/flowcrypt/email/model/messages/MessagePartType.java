@@ -27,6 +27,7 @@ import com.flowcrypt.email.js.MessageBlock;
  */
 
 public enum MessagePartType {
+  HTML,
   TEXT,
   PGP_MESSAGE,
   PGP_PUBLIC_KEY,

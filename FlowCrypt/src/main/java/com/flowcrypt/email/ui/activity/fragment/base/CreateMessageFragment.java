@@ -93,12 +93,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.mail.internet.InternetAddress;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -867,7 +867,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private void prepareAliasForReplyIfNeeded(List<String> aliases) {
     MessageEncryptionType messageEncryptionType = listener.getMsgEncryptionType();
 
-    ArrayList<String> toAddresses;
+    InternetAddress[] toAddresses;
     if (folderType == FoldersManager.FolderType.SENT) {
       toAddresses = msgInfo.getFrom();
     } else {
@@ -876,10 +876,10 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
     if (toAddresses != null) {
       String firstFoundedAlias = null;
-      for (String toAddress : toAddresses) {
+      for (InternetAddress toAddress : toAddresses) {
         if (firstFoundedAlias == null) {
           for (String alias : aliases) {
-            if (alias.equalsIgnoreCase(toAddress)) {
+            if (alias.equalsIgnoreCase(toAddress.getAddress())) {
               if (messageEncryptionType == MessageEncryptionType.ENCRYPTED && fromAddrs.hasPrvKey(alias)) {
                 firstFoundedAlias = alias;
               } else {
@@ -1291,11 +1291,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       }
     }
 
-    editTextEmailMsg.setText(getString(R.string.forward_template, msgInfo.getFrom().get(0),
+    editTextEmailMsg.setText(getString(R.string.forward_template, msgInfo.getFrom()[0].getAddress(),
         EmailUtil.genForwardedMsgDate(msgInfo.getReceiveDate()), msgInfo.getSubject(),
         prepareRecipientsLineForForwarding(msgInfo.getTo())));
 
-    if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
+    if (msgInfo.getCc() != null && msgInfo.getCc().length != 0) {
       editTextEmailMsg.append("Cc: ");
       editTextEmailMsg.append(prepareRecipientsLineForForwarding(msgInfo.getCc()));
       editTextEmailMsg.append("\n\n");
@@ -1323,10 +1323,10 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   }
 
   private void updateViewsIfReplyAllMode() {
-    if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
+    /*if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
       recipientsTo.setText(prepareRecipients(msgInfo.getTo()));
 
-      if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
+      if (msgInfo.getCc() != null && msgInfo.getCc().length != 0) {
         layoutCc.setVisibility(View.VISIBLE);
         recipientsCc.append(prepareRecipients(msgInfo.getCc()));
       }
@@ -1335,7 +1335,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
       Set<String> ccSet = new HashSet<>();
 
-      if (msgInfo.getTo() != null && !msgInfo.getTo().isEmpty()) {
+      if (msgInfo.getTo() != null && msgInfo.getTo().length != 0) {
         ArrayList<String> toRecipients = new ArrayList<>(msgInfo.getTo());
         toRecipients.remove(account.getEmail());
 
@@ -1363,7 +1363,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
     if (!TextUtils.isEmpty(recipientsTo.getText()) || !TextUtils.isEmpty(recipientsCc.getText())) {
       editTextEmailMsg.requestFocus();
-    }
+    }*/
   }
 
   private void updateViewsIfReplyMode() {
@@ -1390,20 +1390,20 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private void setupPgpFromExtraActionInfo(PgpContactsNachoTextView pgpContactsNachoTextView,
                                            ArrayList<String> addresses) {
     if (addresses != null && !addresses.isEmpty()) {
-      pgpContactsNachoTextView.setText(prepareRecipients(addresses));
+      //pgpContactsNachoTextView.setText(prepareRecipients(addresses));
       pgpContactsNachoTextView.chipifyAllUnterminatedTokens();
       pgpContactsNachoTextView.getOnFocusChangeListener().onFocusChange(pgpContactsNachoTextView, false);
     }
   }
 
-  private String prepareRecipientsLineForForwarding(ArrayList<String> recipients) {
+  private String prepareRecipientsLineForForwarding(InternetAddress[] recipients) {
     StringBuilder stringBuilder = new StringBuilder();
-    if (recipients != null && !recipients.isEmpty()) {
-      stringBuilder.append(recipients.get(0));
+    if (recipients != null && recipients.length != 0) {
+      stringBuilder.append(recipients[0]);
 
-      if (recipients.size() > 1) {
-        for (int i = 1; i < recipients.size(); i++) {
-          String recipient = recipients.get(i);
+      if (recipients.length > 1) {
+        for (int i = 1; i < recipients.length; i++) {
+          String recipient = recipients[i].getAddress();
           stringBuilder.append(", ");
           stringBuilder.append(recipient);
         }
@@ -1446,11 +1446,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     }
   }
 
-  private String prepareRecipients(List<String> recipients) {
+  private String prepareRecipients(InternetAddress[] recipients) {
     StringBuilder stringBuilder = new StringBuilder();
     if (recipients != null) {
-      for (String s : recipients) {
-        stringBuilder.append(s).append(" ");
+      for (InternetAddress s : recipients) {
+        stringBuilder.append(s.getAddress()).append(" ");
       }
     }
 
