@@ -32,6 +32,7 @@ import java.security.ProviderException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.util.UUID;
 
 import javax.crypto.BadPaddingException;
@@ -304,7 +305,11 @@ public class KeyStoreCryptoManager {
     }
 
     if (privateKey != null) {
-      this.publicKey = keyStore.getCertificate(ANDROID_KEY_STORE_RSA_ALIAS).getPublicKey();
+      Certificate certificate = keyStore.getCertificate(ANDROID_KEY_STORE_RSA_ALIAS);
+      if (certificate == null) {
+        throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
+      }
+      this.publicKey = certificate.getPublicKey();
     }
   }
 
