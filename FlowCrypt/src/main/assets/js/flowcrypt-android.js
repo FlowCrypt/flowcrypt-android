@@ -8,7 +8,7 @@ try {
 ;(function(root) {
 
 	// Detect free variables `exports`.
-	var freeExports = typeof exports == 'object' && exports;
+	var freeExports = false && exports;
 
 	// Detect free variable `module`.
 	var freeModule = typeof module == 'object' && module &&
@@ -163,7 +163,7 @@ try {
 ;(function(root) {
 
 	/** Detect free variables */
-	var freeExports = typeof exports == 'object' && exports &&
+	var freeExports = false && exports &&
 		!exports.nodeType && exports;
 	var freeModule = typeof module == 'object' && module &&
 		!module.nodeType && module;
@@ -67254,6 +67254,37 @@ class Endpoints {
       return fmt_1.fmtRes({}, Buffer.from(encrypted.data));
     };
 
+    this.composeEmail = async (uncheckedReq, data) => {
+      const req = validate_1.Validate.composeEmail(uncheckedReq);
+      const mimeHeaders = {
+        to: req.to,
+        from: req.from,
+        subject: req.subject,
+        cc: req.cc,
+        bcc: req.bcc
+      };
+
+      if (req.replyToMimeMsg) {
+        const previousMsg = await mime_1.Mime.decode(buf_1.Buf.fromUtfStr((req.replyToMimeMsg.substr(0, 10000).split('\n\n')[0] || '') + `\n\nno content`));
+        const replyHeaders = mime_1.Mime.replyHeaders(previousMsg);
+        mimeHeaders['in-reply-to'] = replyHeaders['in-reply-to'];
+        mimeHeaders['references'] = replyHeaders['references'];
+      }
+
+      if (req.format === 'plain') {
+        return fmt_1.fmtRes({}, buf_1.Buf.fromUtfStr((await mime_1.Mime.encode(req.text, mimeHeaders))));
+      } else if (req.format === 'encrypt-inline') {
+        const encrypted = await pgp_1.PgpMsg.encrypt({
+          pubkeys: req.pubKeys,
+          data: buf_1.Buf.fromUtfStr(req.text),
+          armor: true
+        });
+        return fmt_1.fmtRes({}, buf_1.Buf.fromUtfStr((await mime_1.Mime.encode(encrypted.data, mimeHeaders))));
+      } else {
+        throw new Error(`Unknown format: ${req.format}`);
+      }
+    };
+
     this.encryptFile = async (uncheckedReq, data) => {
       const req = validate_1.Validate.encryptFile(uncheckedReq);
       const encrypted = await pgp_1.PgpMsg.encrypt({
@@ -69079,8 +69110,8 @@ Mime.headersToFrom = parsedMimeMsg => {
 };
 
 Mime.replyHeaders = parsedMimeMsg => {
-  const msgId = parsedMimeMsg.headers['message-id'] || '';
-  const refs = parsedMimeMsg.headers['in-reply-to'] || '';
+  const msgId = String(parsedMimeMsg.headers['message-id'] || '');
+  const refs = String(parsedMimeMsg.headers['in-reply-to'] || '');
   return {
     'in-reply-to': msgId,
     'references': refs + ' ' + msgId
@@ -69784,6 +69815,13 @@ exports.mnemonic = hex => {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+var NodeRequest;
+
+(function (NodeRequest) {
+  ;
+  ;
+  ;
+})(NodeRequest = exports.NodeRequest || (exports.NodeRequest = {}));
 
 class Validate {}
 
@@ -69793,6 +69831,22 @@ Validate.encryptMsg = v => {
   }
 
   throw new Error('Wrong request structure for NodeRequest.encryptMsg');
+};
+
+Validate.composeEmail = v => {
+  if (!(isObj(v) && hasProp(v, 'text', 'string') && hasProp(v, 'from', 'string') && hasProp(v, 'subject', 'string') && hasProp(v, 'to', 'string[]') && hasProp(v, 'cc', 'string[]') && hasProp(v, 'bcc', 'string[]'))) {
+    throw new Error('Wrong request structure for NodeRequest.composeEmail, need: text,from,subject,to,cc,bcc (can use empty arr for cc/bcc)');
+  }
+
+  if (hasProp(v, 'pubKeys', 'string[]') && v.pubKeys.length && (v.format === 'encrypt-inline' || v.format === 'encrypt-pgpmime')) {
+    return v;
+  }
+
+  if (!v.pubKeys && v.format === 'plain') {
+    return v;
+  }
+
+  throw new Error('Wrong choice of pubKeys and format. Either pubKeys:[..]+format:encrypt-inline OR format:plain allowed');
 };
 
 Validate.parseDecryptMsg = v => {
