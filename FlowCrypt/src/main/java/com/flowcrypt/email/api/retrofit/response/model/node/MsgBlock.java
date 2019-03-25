@@ -12,16 +12,21 @@ import com.google.gson.annotations.Expose;
 
 public class MsgBlock implements Parcelable {
 
-  public static final String TYPE_TEXT = "text";
-  public static final String TYPE_PGP_MESSAGE = "message";
-  public static final String TYPE_PGP_PUBLIC_KEY = "public_key";
-  public static final String TYPE_PGP_SIGNED_MESSAGE = "signed_message";
-  public static final String TYPE_PGP_PASSWORD_MESSAGE = "password_message";
-  public static final String TYPE_ATTEST_PACKET = "attest_packet";
-  public static final String TYPE_VERIFICATION = "cryptup_verification";
-  public static final String TYPE_PGP_PRIVATE_KEY = "private_key";
-  public static final String TYPE_ATTACHMENT = "attachment";
-  public static final String TYPE_HTML = "html";
+  public static final String TYPE_PLAIN_TEXT = "plainText";
+  public static final String TYPE_DECRYPTED_TEXT = "decryptedText";
+  public static final String TYPE_PGP_ENCRYPTED_MSG = "encryptedMsg";
+  public static final String TYPE_PGP_PUBLIC_KEY = "publicKey";
+  public static final String TYPE_PGP_SIGNED_MSG = "signedMsg";
+  public static final String TYPE_PGP_ENCRYPTED_MSG_LINK = "encryptedMsgLink";
+  public static final String TYPE_ATTEST_PACKET = "attestPacket";
+  public static final String TYPE_VERIFICATION = "cryptupVerification";
+  public static final String TYPE_PGP_PRIVATE_KEY = "privateKey";
+  public static final String TYPE_PLAIN_ATT = "plainAtt";
+  public static final String TYPE_ENCRYPTED_ATT = "encryptedAtt";
+  public static final String TYPE_DECRYPTED_ATT = "decryptedAtt";
+  public static final String TYPE_ENCRYPTED_ATT_LINK = "encryptedAttLink";
+  public static final String TYPE_PLAIN_HTML = "plainHtml";
+  public static final String TYPE_DECRYPTED_HTML = "decryptedHtml";
 
   public static final Creator<MsgBlock> CREATOR = new Creator<MsgBlock>() {
     @Override

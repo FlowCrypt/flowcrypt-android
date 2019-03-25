@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit.node;
 
-import com.flowcrypt.email.api.retrofit.request.node.DecryptMsgRequest;
+import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
 
@@ -36,6 +36,6 @@ public interface PgpApiRepository {
    * @param requestCode The unique request code for identify the current action.
    * @param liveData    An instance of {@link MutableLiveData} which will be used for the result delivering.
    */
-  void parseAndDecryptMsg(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
-                          DecryptMsgRequest decryptMsgRequest);
+  void parseDecryptMsg(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
+                       ParseDecryptMsgRequest parseDecryptMsgRequest);
 }

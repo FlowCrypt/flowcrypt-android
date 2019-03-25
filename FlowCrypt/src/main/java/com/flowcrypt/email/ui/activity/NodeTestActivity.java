@@ -16,10 +16,10 @@ import com.flowcrypt.email.api.retrofit.node.RequestsManager;
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult;
-import com.flowcrypt.email.api.retrofit.response.node.DecryptedMsgResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
+import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult;
 import com.flowcrypt.email.api.retrofit.response.node.VersionResult;
 import com.flowcrypt.email.node.Node;
 import com.flowcrypt.email.node.TestData;
@@ -129,19 +129,19 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
           break;
 
         case R.id.req_id_decrypt_msg_ecc:
-          DecryptedMsgResult eccDecryptMsgResult = (DecryptedMsgResult) responseWrapper.getResult();
+          ParseDecryptedMsgResult eccDecryptMsgResult = (ParseDecryptedMsgResult) responseWrapper.getResult();
           printDecryptMsgResult("decrypt-msg-ecc", eccDecryptMsgResult);
           requestsManager.decryptMsg(R.id.req_id_decrypt_msg_rsa_2048, encryptedMsg, TestData.rsa2048PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_msg_rsa_2048:
-          DecryptedMsgResult rsa2048DecryptMsgResult = (DecryptedMsgResult) responseWrapper.getResult();
+          ParseDecryptedMsgResult rsa2048DecryptMsgResult = (ParseDecryptedMsgResult) responseWrapper.getResult();
           printDecryptMsgResult("decrypt-msg-rsa2048", rsa2048DecryptMsgResult);
           requestsManager.decryptMsg(R.id.req_id_decrypt_msg_rsa_4096, encryptedMsg, TestData.rsa4096PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_msg_rsa_4096:
-          DecryptedMsgResult rsa4096DecryptMsgResult = (DecryptedMsgResult) responseWrapper.getResult();
+          ParseDecryptedMsgResult rsa4096DecryptMsgResult = (ParseDecryptedMsgResult) responseWrapper.getResult();
           printDecryptMsgResult("decrypt-msg-rsa4096", rsa4096DecryptMsgResult);
           requestsManager.encryptFile(R.id.req_id_encrypt_file, TEST_MSG.getBytes());
           break;
@@ -266,7 +266,7 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
     }
   }
 
-  private void printDecryptMsgResult(String actionName, DecryptedMsgResult r) {
+  private void printDecryptMsgResult(String actionName, ParseDecryptedMsgResult r) {
     if (r.getError() != null) {
       addResultLine(actionName, r);
     } else if (r.getBlockMetas().size() != 1) {
@@ -274,13 +274,13 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
     } else if (r.getMsgBlocks().get(0).getContent().length() != TEST_MSG_HTML.length()) {
       addResultLine(actionName, r.getTime(),
           "wrong meta block len " + r.getBlockMetas().get(0).getLength() + "!=" + TEST_MSG_HTML.length(), false);
-    } else if (!r.getBlockMetas().get(0).getType().equals(MsgBlock.TYPE_HTML)) {
+    } else if (!r.getBlockMetas().get(0).getType().equals(MsgBlock.TYPE_PLAIN_HTML)) {
       addResultLine(actionName, r.getTime(), "wrong meta block type: " + r.getBlockMetas().get(0).getType(), false);
     } else {
       MsgBlock block = r.getMsgBlocks().get(0);
       if (block == null) {
         addResultLine(actionName, r.getTime(), "getNextBlock unexpectedly null", false);
-      } else if (!block.getType().equals(MsgBlock.TYPE_HTML)) {
+      } else if (!block.getType().equals(MsgBlock.TYPE_PLAIN_HTML)) {
         addResultLine(actionName, r.getTime(), "wrong block type: " + r.getBlockMetas().get(0).getLength(), false);
       } else if (!block.getContent().equals(TEST_MSG_HTML)) {
         addResultLine(actionName, r.getTime(), "block content mismatch", false);

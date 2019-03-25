@@ -24,24 +24,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * It's a result for "decryptMsg" requests.
+ * It's a result for "parseDecryptMsg" requests.
  *
  * @author Denis Bondarenko
  * Date: 1/11/19
  * Time: 3:48 PM
  * E-mail: DenBond7@gmail.com
  */
-public class DecryptedMsgResult extends BaseNodeResult {
+public class ParseDecryptedMsgResult extends BaseNodeResult {
 
-  public static final Creator<DecryptedMsgResult> CREATOR = new Creator<DecryptedMsgResult>() {
+  public static final Creator<ParseDecryptedMsgResult> CREATOR = new Creator<ParseDecryptedMsgResult>() {
     @Override
-    public DecryptedMsgResult createFromParcel(Parcel source) {
-      return new DecryptedMsgResult(source);
+    public ParseDecryptedMsgResult createFromParcel(Parcel source) {
+      return new ParseDecryptedMsgResult(source);
     }
 
     @Override
-    public DecryptedMsgResult[] newArray(int size) {
-      return new DecryptedMsgResult[size];
+    public ParseDecryptedMsgResult[] newArray(int size) {
+      return new ParseDecryptedMsgResult[size];
     }
   };
 
@@ -59,11 +59,11 @@ public class DecryptedMsgResult extends BaseNodeResult {
 
   private List<MsgBlock> msgBlocks;
 
-  public DecryptedMsgResult() {
+  public ParseDecryptedMsgResult() {
     this.msgBlocks = new ArrayList<>();
   }
 
-  protected DecryptedMsgResult(Parcel in) {
+  protected ParseDecryptedMsgResult(Parcel in) {
     super(in);
     this.success = in.readByte() != 0;
     this.blockMetas = in.createTypedArrayList(BlockMetas.CREATOR);
