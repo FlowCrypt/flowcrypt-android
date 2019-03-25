@@ -67317,6 +67317,11 @@ class Endpoints {
             block.content = block.content.toRawBytesStr();
           }
         }
+
+        if (block.type === 'publicKey' && !block.keyDetails) {
+          // this could eventually be moved into detectBlocks, which would make it async
+          block.keyDetails = await pgp_1.Pgp.key.serialize((await pgp_1.Pgp.key.read(block.content)));
+        }
       } // data represent one JSON-stringified block per line. This is so that it can be read as a stream later
 
 
