@@ -8,10 +8,10 @@ package com.flowcrypt.email.model.messages;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.flowcrypt.email.js.MessageBlock;
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 
 /**
- * The base class for the message blocks {@link MessageBlock}. Often, the original messages are
+ * The base class for the message blocks {@link MsgBlock}. Often, the original messages are
  * complicated and have several different parts in them.
  * <p>
  * For example, a single message may have the following structure:
