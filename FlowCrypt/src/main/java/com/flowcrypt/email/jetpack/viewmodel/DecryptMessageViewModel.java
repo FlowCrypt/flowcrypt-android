@@ -12,10 +12,10 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository;
-import com.flowcrypt.email.api.retrofit.request.node.DecryptMsgRequest;
+import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.node.DecryptedMsgResult;
+import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKeyInfo;
@@ -58,7 +58,6 @@ public class DecryptMessageViewModel extends BaseNodeApiViewModel implements Sec
 
   @Override
   public void onRefresh() {
-    decryptMessage(rawMessage);
   }
 
   public void init(PgpApiRepository apiRepository) {
@@ -79,14 +78,15 @@ public class DecryptMessageViewModel extends BaseNodeApiViewModel implements Sec
       passphrases.add(connector.getPassphrase(pgpKeyInfo.getLongid()));
     }
 
-    apiRepository.parseAndDecryptMsg(R.id.live_data_id_parse_and_decrypt_msg, responsesLiveData,
-        new DecryptMsgRequest(rawMessage, pgpKeyInfoArray, passphrases.toArray(new String[0]), true));
+    apiRepository.parseDecryptMsg(R.id.live_data_id_parse_and_decrypt_msg, responsesLiveData,
+        new ParseDecryptMsgRequest(rawMessage, pgpKeyInfoArray, passphrases.toArray(new String[0]), true));
   }
 
-  public IncomingMessageInfo getIncomingMsgInfo(GeneralMessageDetails details, DecryptedMsgResult decryptedMsgResult) {
+  public IncomingMessageInfo getIncomingMsgInfo(GeneralMessageDetails details,
+                                                ParseDecryptedMsgResult parseDecryptedMsgResult) {
     IncomingMessageInfo msgInfo = new IncomingMessageInfo(details);
     msgInfo.setSubject(details.getSubject());
-    msgInfo.setMsgParts(getMsgParts(decryptedMsgResult.getMsgBlocks()));
+    msgInfo.setMsgParts(getMsgParts(parseDecryptedMsgResult.getMsgBlocks()));
 
     return msgInfo;
   }
@@ -104,11 +104,11 @@ public class DecryptMessageViewModel extends BaseNodeApiViewModel implements Sec
     for (MsgBlock msgBlock : blocks) {
       if (msgBlock != null && msgBlock.getType() != null) {
         switch (msgBlock.getType()) {
-          case MsgBlock.TYPE_TEXT:
+          case MsgBlock.TYPE_PLAIN_TEXT:
             msgParts.add(new MessagePartText(msgBlock.getContent()));
             break;
 
-          case MsgBlock.TYPE_PGP_MESSAGE:
+          case MsgBlock.TYPE_DECRYPTED_TEXT:
             msgParts.add(new MessagePartPgpMessage(msgBlock.getContent(), null, null));
             break;
 
@@ -128,7 +128,7 @@ public class DecryptMessageViewModel extends BaseNodeApiViewModel implements Sec
 
             break;
 
-          case MsgBlock.TYPE_PGP_SIGNED_MESSAGE:
+          case MsgBlock.TYPE_PGP_SIGNED_MSG:
             msgParts.add(new MessagePartSignedMessage(msgBlock.getContent()));
             break;
 
@@ -140,11 +140,11 @@ public class DecryptMessageViewModel extends BaseNodeApiViewModel implements Sec
             msgParts.add(new MessagePart(MessagePartType.ATTEST_PACKET, msgBlock.getContent()));
             break;
 
-          case MsgBlock.TYPE_PGP_PASSWORD_MESSAGE:
+          case MsgBlock.TYPE_PGP_ENCRYPTED_MSG_LINK:
             msgParts.add(new MessagePart(MessagePartType.PGP_PASSWORD_MESSAGE, msgBlock.getContent()));
             break;
 
-          case MsgBlock.TYPE_HTML:
+          case MsgBlock.TYPE_PLAIN_HTML:
             msgParts.add(new MessagePartHtml(msgBlock.getContent()));
             break;
         }

@@ -7,9 +7,9 @@ package com.flowcrypt.email.api.retrofit.node;
 
 import android.os.AsyncTask;
 
-import com.flowcrypt.email.api.retrofit.request.node.DecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest;
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper;
+import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
@@ -33,9 +33,9 @@ public final class NodeRepository implements PgpApiRepository {
   }
 
   @Override
-  public void parseAndDecryptMsg(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
-                                 DecryptMsgRequest decryptMsgRequest) {
-    load(requestCode, liveData, decryptMsgRequest);
+  public void parseDecryptMsg(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
+                              ParseDecryptMsgRequest parseDecryptMsgRequest) {
+    load(requestCode, liveData, parseDecryptMsgRequest);
   }
 
   /**

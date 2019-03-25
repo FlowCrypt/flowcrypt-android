@@ -5,20 +5,11 @@
 
 package com.flowcrypt.email.model.messages;
 
-import com.flowcrypt.email.js.MessageBlock;
+
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 
 /**
- * The {@link MessageBlock} types. Can be one of:
- * <p>
- * <ul>
- * <li>{@link MessageBlock#TYPE_TEXT}</li>
- * <li>{@link MessageBlock#TYPE_PGP_MESSAGE}</li>
- * <li>{@link MessageBlock#TYPE_PGP_PUBLIC_KEY}</li>
- * <li>{@link MessageBlock#TYPE_PGP_SIGNED_MESSAGE}</li>
- * <li>{@link MessageBlock#TYPE_PGP_PASSWORD_MESSAGE}</li>
- * <li>{@link MessageBlock#TYPE_ATTEST_PACKET}</li>
- * <li>{@link MessageBlock#TYPE_VERIFICATION}</li>
- * </ul>
+ * The {@link MsgBlock} types.
  *
  * @author Denis Bondarenko
  * Date: 18.07.2017

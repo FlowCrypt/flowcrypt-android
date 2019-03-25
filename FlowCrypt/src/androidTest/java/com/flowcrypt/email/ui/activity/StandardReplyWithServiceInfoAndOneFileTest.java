@@ -135,7 +135,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
     String autoCorrectSeparator = Character.toString(SpanChipTokenizer.AUTOCORRECT_SEPARATOR);
     CharSequence textWithSeparator = autoCorrectSeparator
         + chipSeparator
-        + incomingMsgInfo.getFrom().get(0)
+        + incomingMsgInfo.getFrom()[0].getAddress()
         + chipSeparator
         + autoCorrectSeparator;
 

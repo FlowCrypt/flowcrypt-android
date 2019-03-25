@@ -23,8 +23,8 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.api.retrofit.node.NodeRepository;
-import com.flowcrypt.email.api.retrofit.response.node.DecryptedMsgResult;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
+import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult;
 import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
@@ -366,7 +366,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
         switch (nodeResponseWrapper.getStatus()) {
           case SUCCESS:
             IncomingMessageInfo msgInfo =
-                viewModel.getIncomingMsgInfo(details, (DecryptedMsgResult) nodeResponseWrapper.getResult());
+                viewModel.getIncomingMsgInfo(details, (ParseDecryptedMsgResult) nodeResponseWrapper.getResult());
 
             MessageDetailsFragment fragment = (MessageDetailsFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.messageDetailsFragment);

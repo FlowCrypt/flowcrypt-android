@@ -32,7 +32,6 @@ import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -175,37 +174,6 @@ public class EmailUtil {
 
       return attInfo;
     } else return null;
-  }
-
-  /**
-   * Generate {@link AttachmentInfo} using the sender public key.
-   *
-   * @param pubKey The sender public key
-   * @return A generated {@link AttachmentInfo}.
-   */
-  @Nullable
-  public static AttachmentInfo genAttInfoFromPubKey(PgpKey pubKey) {
-    if (pubKey != null) {
-      String fileName = "0x" + pubKey.getLongid().toUpperCase() + ".asc";
-      String pubKeyValue = pubKey.armor();
-
-      if (!TextUtils.isEmpty(pubKeyValue)) {
-        AttachmentInfo attachmentInfo = new AttachmentInfo();
-
-        attachmentInfo.setName(fileName);
-        attachmentInfo.setEncodedSize(pubKeyValue.length());
-        attachmentInfo.setRawData(pubKeyValue);
-        attachmentInfo.setType(Constants.MIME_TYPE_PGP_KEY);
-        attachmentInfo.setEmail(pubKey.getPrimaryUserId().getEmail());
-        attachmentInfo.setId(EmailUtil.generateContentId());
-
-        return attachmentInfo;
-      } else {
-        return null;
-      }
-    } else {
-      return null;
-    }
   }
 
   /**

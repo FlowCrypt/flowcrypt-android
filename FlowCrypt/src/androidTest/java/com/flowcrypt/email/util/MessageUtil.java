@@ -5,14 +5,8 @@
 
 package com.flowcrypt.email.util;
 
-import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
-import com.flowcrypt.email.js.MimeAddress;
-import com.flowcrypt.email.js.ProcessedMime;
 import com.flowcrypt.email.js.core.Js;
-
-import java.util.ArrayList;
-import java.util.Date;
 
 /**
  * This class helps to work with messages.
@@ -24,7 +18,7 @@ import java.util.Date;
  */
 public class MessageUtil {
   public static IncomingMessageInfo getIncomingMsgInfoWithoutBody(Js js, String rawMsg) {
-    ProcessedMime processedMime = js.mime_process(rawMsg);
+    /*ProcessedMime processedMime = js.mime_process(rawMsg);
     ArrayList<String> addressesFrom = new ArrayList<>();
     ArrayList<String> addressesTo = new ArrayList<>();
     ArrayList<String> addressesCc = new ArrayList<>();
@@ -52,8 +46,8 @@ public class MessageUtil {
     long timestamp = processedMime.getTimeHeader("date");
     if (timestamp != -1) {
       incomingMsgInfo.setReceiveDate(new Date(timestamp));
-    }
+    }*/
 
-    return incomingMsgInfo;
+    return new IncomingMessageInfo();
   }
 }
