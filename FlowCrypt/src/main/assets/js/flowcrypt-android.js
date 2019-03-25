@@ -69014,6 +69014,8 @@ Mime.process = async mimeMsg => {
   if (decoded.text) {
     // may be undefined or empty
     blocks.push(...pgp_js_1.Pgp.armor.detectBlocks(decoded.text).blocks);
+  } else if (decoded.html) {
+    blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('plainHtml', decoded.html));
   }
 
   for (const file of decoded.atts) {
