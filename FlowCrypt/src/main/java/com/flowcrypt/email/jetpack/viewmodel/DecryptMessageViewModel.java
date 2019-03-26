@@ -10,11 +10,11 @@ import android.app.Application;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository;
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock;
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
@@ -28,10 +28,7 @@ import com.flowcrypt.email.model.messages.MessagePartSignedMessage;
 import com.flowcrypt.email.model.messages.MessagePartText;
 import com.flowcrypt.email.model.messages.MessagePartType;
 import com.flowcrypt.email.security.SecurityStorageConnector;
-import com.flowcrypt.email.util.exception.NodeException;
-import com.google.android.gms.common.util.CollectionUtils;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -104,47 +101,40 @@ public class DecryptMessageViewModel extends BaseNodeApiViewModel implements Sec
     for (MsgBlock msgBlock : blocks) {
       if (msgBlock != null && msgBlock.getType() != null) {
         switch (msgBlock.getType()) {
-          case MsgBlock.TYPE_PLAIN_TEXT:
+          case PLAIN_TEXT:
             msgParts.add(new MessagePartText(msgBlock.getContent()));
             break;
 
-          case MsgBlock.TYPE_DECRYPTED_TEXT:
+          case DECRYPTED_TEXT:
             msgParts.add(new MessagePartPgpMessage(msgBlock.getContent(), null, null));
             break;
 
-          case MsgBlock.TYPE_PGP_PUBLIC_KEY:
-            try {
-              List<NodeKeyDetails> nodeKeyDetails = NodeCallsExecutor.parseKeys(msgBlock.getContent());
-              if (!CollectionUtils.isEmpty(nodeKeyDetails)) {
-                NodeKeyDetails keyDetails = nodeKeyDetails.get(0);
-                String keyOwner = keyDetails.getPrimaryPgpContact().getEmail();
-                PgpContact pgpContact = new ContactsDaoSource().getPgpContact(getApplication(), keyOwner);
-                MessagePartPgpPublicKey part = new MessagePartPgpPublicKey(keyDetails, pgpContact);
-                msgParts.add(part);
-              }
-            } catch (IOException | NodeException e) {
-              e.printStackTrace();
-            }
-
+          case PUBLIC_KEY:
+            PublicKeyMsgBlock publicKeyMsgBlock = (PublicKeyMsgBlock) msgBlock;
+            NodeKeyDetails keyDetails = publicKeyMsgBlock.getKeyDetails();
+            String keyOwner = keyDetails.getPrimaryPgpContact().getEmail();
+            PgpContact pgpContact = new ContactsDaoSource().getPgpContact(getApplication(), keyOwner);
+            MessagePartPgpPublicKey part = new MessagePartPgpPublicKey(keyDetails, pgpContact);
+            msgParts.add(part);
             break;
 
-          case MsgBlock.TYPE_PGP_SIGNED_MSG:
+          case SIGNED_MSG:
             msgParts.add(new MessagePartSignedMessage(msgBlock.getContent()));
             break;
 
-          case MsgBlock.TYPE_VERIFICATION:
+          case VERIFICATION:
             msgParts.add(new MessagePart(MessagePartType.VERIFICATION, msgBlock.getContent()));
             break;
 
-          case MsgBlock.TYPE_ATTEST_PACKET:
+          case ATTEST_PACKET:
             msgParts.add(new MessagePart(MessagePartType.ATTEST_PACKET, msgBlock.getContent()));
             break;
 
-          case MsgBlock.TYPE_PGP_ENCRYPTED_MSG_LINK:
+          case ENCRYPTED_MSG_LINK:
             msgParts.add(new MessagePart(MessagePartType.PGP_PASSWORD_MESSAGE, msgBlock.getContent()));
             break;
 
-          case MsgBlock.TYPE_PLAIN_HTML:
+          case PLAIN_HTML:
             msgParts.add(new MessagePartHtml(msgBlock.getContent()));
             break;
         }

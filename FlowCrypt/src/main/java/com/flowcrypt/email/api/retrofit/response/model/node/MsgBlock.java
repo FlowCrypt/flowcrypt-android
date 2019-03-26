@@ -9,29 +9,24 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
+import androidx.annotation.NonNull;
 
 public class MsgBlock implements Parcelable {
-
-  public static final String TYPE_PLAIN_TEXT = "plainText";
-  public static final String TYPE_DECRYPTED_TEXT = "decryptedText";
-  public static final String TYPE_PGP_ENCRYPTED_MSG = "encryptedMsg";
-  public static final String TYPE_PGP_PUBLIC_KEY = "publicKey";
-  public static final String TYPE_PGP_SIGNED_MSG = "signedMsg";
-  public static final String TYPE_PGP_ENCRYPTED_MSG_LINK = "encryptedMsgLink";
-  public static final String TYPE_ATTEST_PACKET = "attestPacket";
-  public static final String TYPE_VERIFICATION = "cryptupVerification";
-  public static final String TYPE_PGP_PRIVATE_KEY = "privateKey";
-  public static final String TYPE_PLAIN_ATT = "plainAtt";
-  public static final String TYPE_ENCRYPTED_ATT = "encryptedAtt";
-  public static final String TYPE_DECRYPTED_ATT = "decryptedAtt";
-  public static final String TYPE_ENCRYPTED_ATT_LINK = "encryptedAttLink";
-  public static final String TYPE_PLAIN_HTML = "plainHtml";
-  public static final String TYPE_DECRYPTED_HTML = "decryptedHtml";
+  public static final String TAG_TYPE = "type";
 
   public static final Creator<MsgBlock> CREATOR = new Creator<MsgBlock>() {
     @Override
     public MsgBlock createFromParcel(Parcel source) {
-      return new MsgBlock(source);
+      int tmp = source.readInt();
+      Type partType = tmp == -1 ? null : Type.values()[tmp];
+
+      if (partType != null) {
+        return genMsgBlockFromType(source, partType);
+      } else {
+        return new MsgBlock(source, Type.UNKNOWN);
+      }
     }
 
     @Override
@@ -41,7 +36,8 @@ public class MsgBlock implements Parcelable {
   };
 
   @Expose
-  private String type;
+  @SerializedName(TAG_TYPE)
+  protected Type type;
 
   @Expose
   private String content;
@@ -52,24 +48,13 @@ public class MsgBlock implements Parcelable {
   public MsgBlock() {
   }
 
-  protected MsgBlock(Parcel in) {
-    this.type = in.readString();
+  protected MsgBlock(Parcel in, Type type) {
+    this.type = type;
     this.content = in.readString();
     this.complete = in.readByte() != 0;
   }
 
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.type);
-    dest.writeString(this.content);
-    dest.writeByte(this.complete ? (byte) 1 : (byte) 0);
-  }
-
+  @NonNull
   @Override
   public String toString() {
     return "MsgBlock{" +
@@ -79,7 +64,19 @@ public class MsgBlock implements Parcelable {
         '}';
   }
 
-  public String getType() {
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeInt(this.type == null ? -1 : this.type.ordinal());
+    dest.writeString(this.content);
+    dest.writeByte(this.complete ? (byte) 1 : (byte) 0);
+  }
+
+  public Type getType() {
     return type;
   }
 
@@ -89,5 +86,64 @@ public class MsgBlock implements Parcelable {
 
   public boolean isComplete() {
     return complete;
+  }
+
+  private static MsgBlock genMsgBlockFromType(Parcel source, Type type) {
+    switch (type) {
+      case PUBLIC_KEY:
+        return new PublicKeyMsgBlock(source, type);
+
+      default:
+        return new BaseMsgBlock(source, type);
+    }
+  }
+
+  public enum Type {
+    UNKNOWN,
+
+    @SerializedName("plainText")
+    PLAIN_TEXT,
+
+    @SerializedName("decryptedText")
+    DECRYPTED_TEXT,
+
+    @SerializedName("encryptedMsg")
+    ENCRYPTED_MSG,
+
+    @SerializedName("publicKey")
+    PUBLIC_KEY,
+
+    @SerializedName("signedMsg")
+    SIGNED_MSG,
+
+    @SerializedName("encryptedMsgLink")
+    ENCRYPTED_MSG_LINK,
+
+    @SerializedName("attestPacket")
+    ATTEST_PACKET,
+
+    @SerializedName("cryptupVerification")
+    VERIFICATION,
+
+    @SerializedName("privateKey")
+    PRIVATE_KEY,
+
+    @SerializedName("plainAtt")
+    PLAIN_ATT,
+
+    @SerializedName("encryptedAtt")
+    ENCRYPTED_ATT,
+
+    @SerializedName("decryptedAtt")
+    DECRYPTED_ATT,
+
+    @SerializedName("encryptedAttLink")
+    ENCRYPTED_ATT_LINK,
+
+    @SerializedName("plainHtml")
+    PLAIN_HTML,
+
+    @SerializedName("decryptedHtml")
+    DECRYPTED_HTML
   }
 }

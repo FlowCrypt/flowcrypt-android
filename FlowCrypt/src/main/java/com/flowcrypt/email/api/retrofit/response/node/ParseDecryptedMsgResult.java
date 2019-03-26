@@ -7,12 +7,9 @@ package com.flowcrypt.email.api.retrofit.response.node;
 
 import android.os.Parcel;
 
-import com.flowcrypt.email.api.retrofit.node.NodeGson;
-import com.flowcrypt.email.api.retrofit.response.model.node.BlockMetas;
-import com.flowcrypt.email.api.retrofit.response.model.node.Longids;
+import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.google.gson.Gson;
-import com.google.gson.annotations.Expose;
 import com.google.gson.stream.JsonReader;
 
 import java.io.BufferedInputStream;
@@ -45,18 +42,6 @@ public class ParseDecryptedMsgResult extends BaseNodeResult {
     }
   };
 
-  @Expose
-  private boolean success;
-
-  @Expose
-  private List<BlockMetas> blockMetas;
-
-  @Expose
-  private boolean isEncrypted;
-
-  @Expose
-  private Longids longids;
-
   private List<MsgBlock> msgBlocks;
 
   public ParseDecryptedMsgResult() {
@@ -65,10 +50,6 @@ public class ParseDecryptedMsgResult extends BaseNodeResult {
 
   protected ParseDecryptedMsgResult(Parcel in) {
     super(in);
-    this.success = in.readByte() != 0;
-    this.blockMetas = in.createTypedArrayList(BlockMetas.CREATOR);
-    this.isEncrypted = in.readByte() != 0;
-    this.longids = in.readParcelable(Longids.class.getClassLoader());
     this.msgBlocks = in.createTypedArrayList(MsgBlock.CREATOR);
   }
 
@@ -113,30 +94,10 @@ public class ParseDecryptedMsgResult extends BaseNodeResult {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     super.writeToParcel(dest, flags);
-    dest.writeByte(this.success ? (byte) 1 : (byte) 0);
-    dest.writeTypedList(this.blockMetas);
-    dest.writeByte(this.isEncrypted ? (byte) 1 : (byte) 0);
-    dest.writeParcelable(this.longids, flags);
     dest.writeTypedList(this.msgBlocks);
-  }
-
-  public boolean isSuccess() {
-    return success;
-  }
-
-  public List<BlockMetas> getBlockMetas() {
-    return blockMetas;
   }
 
   public List<MsgBlock> getMsgBlocks() {
     return msgBlocks;
-  }
-
-  public boolean isEncrypted() {
-    return isEncrypted;
-  }
-
-  public Longids getLongids() {
-    return longids;
   }
 }

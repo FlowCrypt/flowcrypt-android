@@ -3,8 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.node;
+package com.flowcrypt.email.api.retrofit.node.gson;
 
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -22,6 +23,7 @@ public final class NodeGson {
 
   private NodeGson() {
     gson = new GsonBuilder()
+        .registerTypeAdapter(MsgBlock.class, new MsgBlockDeserializer())
         .excludeFieldsWithoutExposeAnnotation()
         .create();
   }

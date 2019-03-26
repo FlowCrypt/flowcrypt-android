@@ -269,19 +269,17 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   private void printDecryptMsgResult(String actionName, ParseDecryptedMsgResult r) {
     if (r.getError() != null) {
       addResultLine(actionName, r);
-    } else if (r.getBlockMetas().size() != 1) {
-      addResultLine(actionName, r.getTime(), "wrong amount of block metas: " + r.getBlockMetas().size(), false);
     } else if (r.getMsgBlocks().get(0).getContent().length() != TEST_MSG_HTML.length()) {
       addResultLine(actionName, r.getTime(),
-          "wrong meta block len " + r.getBlockMetas().get(0).getLength() + "!=" + TEST_MSG_HTML.length(), false);
-    } else if (!r.getBlockMetas().get(0).getType().equals(MsgBlock.TYPE_PLAIN_HTML)) {
-      addResultLine(actionName, r.getTime(), "wrong meta block type: " + r.getBlockMetas().get(0).getType(), false);
+          "wrong meta block len " + r.getMsgBlocks().size() + "!=" + TEST_MSG_HTML.length(), false);
+    } else if (r.getMsgBlocks().get(0).getType() != MsgBlock.Type.PLAIN_TEXT) {
+      addResultLine(actionName, r.getTime(), "wrong meta block type: " + r.getMsgBlocks().get(0).getType(), false);
     } else {
       MsgBlock block = r.getMsgBlocks().get(0);
       if (block == null) {
         addResultLine(actionName, r.getTime(), "getNextBlock unexpectedly null", false);
-      } else if (!block.getType().equals(MsgBlock.TYPE_PLAIN_HTML)) {
-        addResultLine(actionName, r.getTime(), "wrong block type: " + r.getBlockMetas().get(0).getLength(), false);
+      } else if (block.getType() != MsgBlock.Type.PLAIN_TEXT) {
+        addResultLine(actionName, r.getTime(), "wrong block type: " + r.getMsgBlocks().size(), false);
       } else if (!block.getContent().equals(TEST_MSG_HTML)) {
         addResultLine(actionName, r.getTime(), "block content mismatch", false);
       } else if (r.getMsgBlocks().size() > 1) {

@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit.node;
 
+import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
 import com.flowcrypt.email.node.NodeSecret;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.google.gson.Gson;
