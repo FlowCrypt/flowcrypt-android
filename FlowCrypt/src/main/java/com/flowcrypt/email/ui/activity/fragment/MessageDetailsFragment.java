@@ -41,17 +41,15 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
-import com.flowcrypt.email.model.messages.MessagePart;
-import com.flowcrypt.email.model.messages.MessagePartPgpMessage;
-import com.flowcrypt.email.model.messages.MessagePartPgpPublicKey;
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
-import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
@@ -59,8 +57,6 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFrag
 import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.common.util.CollectionUtils;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -628,30 +624,30 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           updateReplyButtons();
         }
       });
-    } else if (msgInfo.getMsgParts() != null && !msgInfo.getMsgParts().isEmpty()) {
+    } else if (msgInfo.getMsgBlocks() != null && !msgInfo.getMsgBlocks().isEmpty()) {
       boolean isFirstMsgPartText = true;
-      for (MessagePart msgPart : msgInfo.getMsgParts()) {
+      for (MsgBlock block : msgInfo.getMsgBlocks()) {
         LayoutInflater layoutInflater = LayoutInflater.from(getContext());
-        if (msgPart != null) {
-          switch (msgPart.getMsgPartType()) {
-            case PGP_MESSAGE:
+        if (block != null) {
+          switch (block.getType()) {
+            case DECRYPTED_TEXT:
               msgEncryptType = MessageEncryptionType.ENCRYPTED;
-              layoutMsgParts.addView(generatePgpMsgPart((MessagePartPgpMessage) msgPart, layoutInflater));
+              layoutMsgParts.addView(genDecryptedTextPart(block, layoutInflater));
               break;
 
-            case TEXT:
-              layoutMsgParts.addView(generateTextPart(msgPart, layoutInflater));
+            case PLAIN_TEXT:
+              layoutMsgParts.addView(genTextPart(block, layoutInflater));
               if (isFirstMsgPartText) {
                 viewFooterOfHeader.setVisibility(View.VISIBLE);
               }
               break;
 
-            case PGP_PUBLIC_KEY:
-              layoutMsgParts.addView(generatePublicKeyPart((MessagePartPgpPublicKey) msgPart, layoutInflater));
+            case PUBLIC_KEY:
+              layoutMsgParts.addView(genPublicKeyPart((PublicKeyMsgBlock) block, layoutInflater));
               break;
 
             default:
-              layoutMsgParts.addView(generateMsgPart(msgPart, layoutInflater, R.layout.message_part_other,
+              layoutMsgParts.addView(genDefPart(block, layoutInflater, R.layout.message_part_other,
                   layoutMsgParts));
               break;
           }
@@ -705,16 +701,15 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   }
 
   /**
-   * Generate the public key part. There we can see the public key details and save/update the
+   * Generate the public key block. There we can see the public key details and save/update the
    * key owner information to the local database.
    *
-   * @param part     The {@link MessagePartPgpPublicKey} object which contains
-   *                 information about a public key and his owner.
+   * @param block    The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
    * @param inflater The {@link LayoutInflater} instance.
    * @return The generated view.
    */
   @NonNull
-  private View generatePublicKeyPart(final MessagePartPgpPublicKey part, LayoutInflater inflater) {
+  private View genPublicKeyPart(final PublicKeyMsgBlock block, LayoutInflater inflater) {
 
     final ViewGroup pubKeyView = (ViewGroup) inflater.inflate(R.layout.message_part_public_key, layoutMsgParts, false);
     final TextView textViewPgpPublicKey = pubKeyView.findViewById(R.id.textViewPgpPublicKey);
@@ -730,7 +725,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       }
     });
 
-    NodeKeyDetails details = part.getNodeKeyDetails();
+    NodeKeyDetails details = block.getKeyDetails();
     PgpContact pgpContact = details.getPrimaryPgpContact();
 
     if (!TextUtils.isEmpty(pgpContact.getEmail())) {
@@ -746,18 +741,18 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_fingerprint,
         GeneralUtil.doSectionsInText(" ", details.getFingerprint(), 4)), fingerprint);
 
-    textViewPgpPublicKey.setText(part.getValue());
+    textViewPgpPublicKey.setText(block.getContent());
 
-    PgpContact existingPgpContact = part.getExistingPgpContact();
+    PgpContact existingPgpContact = new ContactsDaoSource().getPgpContact(getContext(), pgpContact.getEmail());
     Button button = pubKeyView.findViewById(R.id.buttonKeyAction);
     if (button != null) {
       if (existingPgpContact == null) {
-        initSaveContactButton(part, button);
+        initSaveContactButton(block, button);
       } else if (TextUtils.isEmpty(existingPgpContact.getLongid())
           || details.getLongId().equalsIgnoreCase(existingPgpContact.getLongid())) {
-        initUpdateContactButton(part, button);
+        initUpdateContactButton(block, button);
       } else {
-        initReplaceContactButton(part, button);
+        initReplaceContactButton(block, button);
       }
     }
 
@@ -768,16 +763,15 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Init the save contact button. When we press this button a new contact will be saved to the
    * local database.
    *
-   * @param part   The {@link MessagePartPgpPublicKey} object which contains
-   *               information about a public key and his owner.
+   * @param block   The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
    * @param button The key action button.
    */
-  private void initSaveContactButton(final MessagePartPgpPublicKey part, Button button) {
+  private void initSaveContactButton(final PublicKeyMsgBlock block, Button button) {
     button.setText(R.string.save_contact);
     button.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        PgpContact pgpContact = part.getNodeKeyDetails().getPrimaryPgpContact();
+        PgpContact pgpContact = block.getKeyDetails().getPrimaryPgpContact();
         Uri uri = new ContactsDaoSource().addRow(getContext(), pgpContact);
         if (uri != null) {
           Toast.makeText(getContext(), R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show();
@@ -793,16 +787,15 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Init the update contact button. When we press this button the contact will be updated in the
    * local database.
    *
-   * @param part   The {@link MessagePartPgpPublicKey} object which contains
-   *               information about a public key and his owner.
+   * @param block   The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
    * @param button The key action button.
    */
-  private void initUpdateContactButton(final MessagePartPgpPublicKey part, Button button) {
+  private void initUpdateContactButton(final PublicKeyMsgBlock block, Button button) {
     button.setText(R.string.update_contact);
     button.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        PgpContact pgpContact = part.getNodeKeyDetails().getPrimaryPgpContact();
+        PgpContact pgpContact = block.getKeyDetails().getPrimaryPgpContact();
         boolean isUpdated = new ContactsDaoSource().updatePgpContact(getContext(), pgpContact) > 0;
         if (isUpdated) {
           Toast.makeText(getContext(), R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show();
@@ -818,16 +811,15 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Init the replace contact button. When we press this button the contact will be replaced in the
    * local database.
    *
-   * @param part   The {@link MessagePartPgpPublicKey} object which contains
-   *               information about a public key and his owner.
+   * @param block   The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
    * @param button The key action button.
    */
-  private void initReplaceContactButton(final MessagePartPgpPublicKey part, Button button) {
+  private void initReplaceContactButton(final PublicKeyMsgBlock block, Button button) {
     button.setText(R.string.replace_contact);
     button.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        PgpContact pgpContact = part.getNodeKeyDetails().getPrimaryPgpContact();
+        PgpContact pgpContact = block.getKeyDetails().getPrimaryPgpContact();
         boolean isUpdated = new ContactsDaoSource().updatePgpContact(getContext(), pgpContact) > 0;
         if (isUpdated) {
           Toast.makeText(getContext(), R.string.contact_successfully_replaced, Toast.LENGTH_SHORT).show();
@@ -840,21 +832,21 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   }
 
   @NonNull
-  private TextView generateMsgPart(MessagePart part, LayoutInflater inflater, int res, ViewGroup viewGroup) {
+  private TextView genDefPart(MsgBlock part, LayoutInflater inflater, int res, ViewGroup viewGroup) {
     TextView textViewMsgPartOther = (TextView) inflater.inflate(res, viewGroup, false);
-    textViewMsgPartOther.setText(part.getValue());
+    textViewMsgPartOther.setText(part.getContent());
     return textViewMsgPartOther;
   }
 
   @NonNull
-  private TextView generateTextPart(MessagePart messagePart, LayoutInflater layoutInflater) {
-    return generateMsgPart(messagePart, layoutInflater, R.layout.message_part_text, layoutMsgParts);
+  private TextView genTextPart(MsgBlock messagePart, LayoutInflater layoutInflater) {
+    return genDefPart(messagePart, layoutInflater, R.layout.message_part_text, layoutMsgParts);
   }
 
   @NonNull
-  private View generatePgpMsgPart(MessagePartPgpMessage part, LayoutInflater layoutInflater) {
-    if (part != null) {
-      if (part.getPgpMsgDecryptError() != null) {
+  private View genDecryptedTextPart(MsgBlock part, LayoutInflater layoutInflater) {
+    /*if (part != null) {
+      if (false) {
         switch (part.getPgpMsgDecryptError()) {
           case FORMAT_ERROR:
             final ViewGroup formatErrorLayout = (ViewGroup) layoutInflater.inflate(
@@ -880,9 +872,10 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
             return viewGroup;
         }
       } else {
-        return generateMsgPart(part, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts);
+        return genDefPart(part, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts);
       }
-    } else return new TextView(getContext());
+    } else return new TextView(getContext());*/
+    return genDefPart(part, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts);
   }
 
   /**
@@ -892,7 +885,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * @param inflater The {@link LayoutInflater} instance.
    * @return Generated layout.
    */
-  @NonNull
+  /*@NonNull
   private View generateMissingPrivateKeyLayout(MessagePartPgpMessage part, LayoutInflater inflater) {
     ViewGroup viewGroup = (ViewGroup) inflater.inflate(
         R.layout.message_part_pgp_message_missing_private_key, layoutMsgParts, false);
@@ -919,7 +912,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
 
     viewGroup.addView(genShowOrigMsgLayout(part.getValue(), inflater, viewGroup));
     return viewGroup;
-  }
+  }*/
 
   /**
    * Generate a layout with switch button which will be regulate visibility of original message info.

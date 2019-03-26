@@ -365,19 +365,26 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       case R.id.live_data_id_parse_and_decrypt_msg:
         switch (nodeResponseWrapper.getStatus()) {
           case SUCCESS:
-            IncomingMessageInfo msgInfo =
-                viewModel.getIncomingMsgInfo(details, (ParseDecryptedMsgResult) nodeResponseWrapper.getResult());
+            ParseDecryptedMsgResult result = (ParseDecryptedMsgResult) nodeResponseWrapper.getResult();
+            if (result == null) {
+              Toast.makeText(this, getString(R.string.unknown_error), Toast.LENGTH_LONG).show();
+              if (!idlingForDecryption.isIdleNow()) {
+                idlingForDecryption.decrement();
+              }
+              return;
+            } else {
+              IncomingMessageInfo msgInfo = new IncomingMessageInfo(details, result.getMsgBlocks());
 
-            MessageDetailsFragment fragment = (MessageDetailsFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.messageDetailsFragment);
+              MessageDetailsFragment fragment = (MessageDetailsFragment) getSupportFragmentManager()
+                  .findFragmentById(R.id.messageDetailsFragment);
 
-            if (fragment != null) {
-              fragment.showIncomingMsgInfo(msgInfo);
-              LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_attachments, null, this);
-            }
-
-            if (!idlingForDecryption.isIdleNow()) {
-              idlingForDecryption.decrement();
+              if (fragment != null) {
+                fragment.showIncomingMsgInfo(msgInfo);
+                LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_attachments, null, this);
+              }
+              if (!idlingForDecryption.isIdleNow()) {
+                idlingForDecryption.decrement();
+              }
             }
             break;
 

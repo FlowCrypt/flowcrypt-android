@@ -48,6 +48,7 @@ import com.flowcrypt.email.api.email.model.ExtraActionInfo;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.flowcrypt.email.database.dao.source.AccountAliasesDao;
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -60,7 +61,6 @@ import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
-import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
@@ -1303,17 +1303,17 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       editTextEmailMsg.append("\n\n");
     }
 
-    if (!CollectionUtils.isEmpty(msgInfo.getMsgParts())) {
-      for (MessagePart msgPart : msgInfo.getMsgParts()) {
-        if (msgPart != null) {
-          switch (msgPart.getMsgPartType()) {
-            case PGP_MESSAGE:
-            case TEXT:
+    if (!CollectionUtils.isEmpty(msgInfo.getMsgBlocks())) {
+      for (MsgBlock block : msgInfo.getMsgBlocks()) {
+        if (block != null) {
+          switch (block.getType()) {
+            case DECRYPTED_TEXT:
+            case PLAIN_TEXT:
               editTextEmailMsg.append("\n\n");
-              editTextEmailMsg.append(msgPart.getValue());
+              editTextEmailMsg.append(block.getContent());
               break;
 
-            case PGP_PUBLIC_KEY:
+            case PUBLIC_KEY:
               //TODO-denbond7 add implementation of the public key view
               break;
           }

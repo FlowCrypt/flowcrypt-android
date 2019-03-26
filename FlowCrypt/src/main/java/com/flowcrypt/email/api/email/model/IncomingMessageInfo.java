@@ -8,8 +8,7 @@ package com.flowcrypt.email.api.email.model;
 import android.os.Parcel;
 
 import com.flowcrypt.email.api.email.LocalFolder;
-import com.flowcrypt.email.model.messages.MessagePart;
-import com.flowcrypt.email.model.messages.MessagePartType;
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -43,14 +42,11 @@ public class IncomingMessageInfo extends MessageInfo {
   private GeneralMessageDetails generalMsgDetails;
   private ArrayList<AttachmentInfo> atts;
   private LocalFolder localFolder;
-  private List<MessagePart> msgParts;
+  private List<MsgBlock> msgBlocks;
 
-
-  public IncomingMessageInfo() {
-  }
-
-  public IncomingMessageInfo(GeneralMessageDetails generalMsgDetails) {
+  public IncomingMessageInfo(GeneralMessageDetails generalMsgDetails, List<MsgBlock> msgBlocks) {
     this.generalMsgDetails = generalMsgDetails;
+    this.msgBlocks = msgBlocks;
   }
 
   protected IncomingMessageInfo(Parcel in) {
@@ -58,7 +54,7 @@ public class IncomingMessageInfo extends MessageInfo {
     this.generalMsgDetails = in.readParcelable(GeneralMessageDetails.class.getClassLoader());
     this.atts = in.createTypedArrayList(AttachmentInfo.CREATOR);
     this.localFolder = in.readParcelable(LocalFolder.class.getClassLoader());
-    this.msgParts = in.createTypedArrayList(MessagePart.CREATOR);
+    this.msgBlocks = in.createTypedArrayList(MsgBlock.CREATOR);
   }
 
   @Override
@@ -67,7 +63,7 @@ public class IncomingMessageInfo extends MessageInfo {
         "generalMsgDetails=" + generalMsgDetails +
         ", atts=" + atts +
         ", localFolder=" + localFolder +
-        ", msgBlocks=" + msgParts +
+        ", msgBlocks=" + msgBlocks +
         "} " + super.toString();
   }
 
@@ -82,7 +78,12 @@ public class IncomingMessageInfo extends MessageInfo {
     dest.writeParcelable(this.generalMsgDetails, flags);
     dest.writeTypedList(this.atts);
     dest.writeParcelable(this.localFolder, flags);
-    dest.writeTypedList(this.msgParts);
+    dest.writeTypedList(this.msgBlocks);
+  }
+
+  @Override
+  public String getSubject() {
+    return generalMsgDetails.getSubject();
   }
 
   public GeneralMessageDetails getGeneralMsgDetails() {
@@ -101,12 +102,12 @@ public class IncomingMessageInfo extends MessageInfo {
     return generalMsgDetails.getRawMsgWithoutAtts();
   }
 
-  public List<MessagePart> getMsgParts() {
-    return msgParts;
+  public List<MsgBlock> getMsgBlocks() {
+    return msgBlocks;
   }
 
-  public void setMsgParts(List<MessagePart> messageParts) {
-    this.msgParts = messageParts;
+  public void setMsgBlocks(List<MsgBlock> messageParts) {
+    this.msgBlocks = messageParts;
   }
 
   public LocalFolder getLocalFolder() {
@@ -126,13 +127,13 @@ public class IncomingMessageInfo extends MessageInfo {
   }
 
   public boolean hasHtmlText() {
-    return hasSomePart(MessagePartType.HTML);
+    return hasSomePart(MsgBlock.Type.PLAIN_HTML) || hasSomePart(MsgBlock.Type.DECRYPTED_HTML);
   }
 
   public String getHtmlMsg() {
-    for (MessagePart part : msgParts) {
-      if (part.getMsgPartType() == MessagePartType.HTML) {
-        return part.getValue();
+    for (MsgBlock part : msgBlocks) {
+      if (part.getType() == MsgBlock.Type.PLAIN_HTML) {
+        return part.getContent();
       }
     }
 
@@ -140,7 +141,7 @@ public class IncomingMessageInfo extends MessageInfo {
   }
 
   public boolean hasPlainText() {
-    return hasSomePart(MessagePartType.TEXT);
+    return hasSomePart(MsgBlock.Type.PLAIN_TEXT);
   }
 
   public int getUid() {
@@ -155,34 +156,9 @@ public class IncomingMessageInfo extends MessageInfo {
     this.atts = atts;
   }
 
-  /**
-   * Check that {@link IncomingMessageInfo} contains PGP blocks.
-   *
-   * @return true if {@link IncomingMessageInfo} contains PGP blocks
-   * ({@link MessagePartType#PGP_MESSAGE}, {@link MessagePartType#PGP_PUBLIC_KEY},
-   * {@link MessagePartType#PGP_PASSWORD_MESSAGE},  {@link MessagePartType#PGP_SIGNED_MESSAGE}), otherwise - false
-   */
-  private boolean hasPGPBlocks() {
-    if (msgParts != null) {
-      for (MessagePart messagePart : msgParts) {
-        if (messagePart.getMsgPartType() != null) {
-          switch (messagePart.getMsgPartType()) {
-            case PGP_MESSAGE:
-            case PGP_PUBLIC_KEY:
-            case PGP_PASSWORD_MESSAGE:
-            case PGP_SIGNED_MESSAGE:
-              return true;
-          }
-        }
-      }
-    }
-
-    return false;
-  }
-
-  private boolean hasSomePart(MessagePartType partType) {
-    for (MessagePart part : msgParts) {
-      if (part.getMsgPartType() == partType) {
+  private boolean hasSomePart(MsgBlock.Type partType) {
+    for (MsgBlock part : msgBlocks) {
+      if (part.getType() == partType) {
         return true;
       }
     }
