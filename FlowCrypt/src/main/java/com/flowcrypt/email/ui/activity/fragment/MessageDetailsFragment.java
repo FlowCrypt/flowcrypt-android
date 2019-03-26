@@ -41,6 +41,8 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptError;
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock;
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock;
@@ -57,6 +59,8 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFrag
 import com.flowcrypt.email.ui.widget.EmailWebView;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.common.util.CollectionUtils;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -646,6 +650,10 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
               layoutMsgParts.addView(genPublicKeyPart((PublicKeyMsgBlock) block, layoutInflater));
               break;
 
+            case DECRYPT_ERROR:
+              layoutMsgParts.addView(genDecryptErrorPart((DecryptErrorMsgBlock) block, layoutInflater));
+              break;
+
             default:
               layoutMsgParts.addView(genDefPart(block, layoutInflater, R.layout.message_part_other,
                   layoutMsgParts));
@@ -763,7 +771,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Init the save contact button. When we press this button a new contact will be saved to the
    * local database.
    *
-   * @param block   The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
+   * @param block  The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
    * @param button The key action button.
    */
   private void initSaveContactButton(final PublicKeyMsgBlock block, Button button) {
@@ -787,7 +795,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Init the update contact button. When we press this button the contact will be updated in the
    * local database.
    *
-   * @param block   The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
+   * @param block  The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
    * @param button The key action button.
    */
   private void initUpdateContactButton(final PublicKeyMsgBlock block, Button button) {
@@ -811,7 +819,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Init the replace contact button. When we press this button the contact will be replaced in the
    * local database.
    *
-   * @param block   The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
+   * @param block  The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
    * @param button The key action button.
    */
   private void initReplaceContactButton(final PublicKeyMsgBlock block, Button button) {
@@ -832,50 +840,90 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   }
 
   @NonNull
-  private TextView genDefPart(MsgBlock part, LayoutInflater inflater, int res, ViewGroup viewGroup) {
+  private TextView genDefPart(MsgBlock block, LayoutInflater inflater, int res, ViewGroup viewGroup) {
     TextView textViewMsgPartOther = (TextView) inflater.inflate(res, viewGroup, false);
-    textViewMsgPartOther.setText(part.getContent());
+    textViewMsgPartOther.setText(block.getContent());
     return textViewMsgPartOther;
   }
 
   @NonNull
-  private TextView genTextPart(MsgBlock messagePart, LayoutInflater layoutInflater) {
-    return genDefPart(messagePart, layoutInflater, R.layout.message_part_text, layoutMsgParts);
+  private TextView genTextPart(MsgBlock block, LayoutInflater layoutInflater) {
+    return genDefPart(block, layoutInflater, R.layout.message_part_text, layoutMsgParts);
   }
 
   @NonNull
-  private View genDecryptedTextPart(MsgBlock part, LayoutInflater layoutInflater) {
-    /*if (part != null) {
-      if (false) {
-        switch (part.getPgpMsgDecryptError()) {
-          case FORMAT_ERROR:
-            final ViewGroup formatErrorLayout = (ViewGroup) layoutInflater.inflate(
-                R.layout.message_part_pgp_message_format_error, layoutMsgParts, false);
-            TextView textViewFormatError = formatErrorLayout.findViewById(R.id.textViewErrorMessage);
-            textViewFormatError.setText(part.getErrorMsg());
-            formatErrorLayout.addView(genShowOrigMsgLayout(part.getValue(), layoutInflater, formatErrorLayout));
-            return formatErrorLayout;
+  private View genDecryptedTextPart(MsgBlock block, LayoutInflater layoutInflater) {
+    return genDefPart(block, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts);
+  }
 
-          case MISSING_PRIVATE_KEY:
-            return generateMissingPrivateKeyLayout(part, layoutInflater);
+  @NonNull
+  private View genDecryptErrorPart(DecryptErrorMsgBlock block, LayoutInflater layoutInflater) {
+    DecryptError decryptError = block.getError();
 
-          default:
-            ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(
-                R.layout.message_part_pgp_message_error, layoutMsgParts, false);
-            TextView textViewErrorMsg = viewGroup.findViewById(R.id.textViewErrorMessage);
-            String errorText = TextUtils.isEmpty(part.getErrorMsg()) ?
-                getString(R.string.could_not_decrypt_message_due_to_error, part.getPgpMsgDecryptError().name()) :
-                part.getErrorMsg();
-            ExceptionUtil.handleError(new ManualHandledException(errorText));
-            textViewErrorMsg.setText(errorText);
-            viewGroup.addView(genShowOrigMsgLayout(part.getValue(), layoutInflater, viewGroup));
-            return viewGroup;
+    if (decryptError == null) {
+      return new View(getContext());
+    }
+
+
+    /*if (pgpDecrypt != null) {
+      if (pgpDecrypt.isSuccess()) {
+        value = pgpDecrypt.getString();
+      } else if (pgpDecrypt.getMissingPassphraseLongids() != null
+          && pgpDecrypt.getMissingPassphraseLongids().length > 0) {
+        pgpDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PASS_PHRASES;
+      } else if (Objects.equals(pgpDecrypt.countPotentiallyMatchingKeys(), pgpDecrypt.countAttempts())
+          && Objects.equals(pgpDecrypt.countKeyMismatchErrors(), pgpDecrypt.countAttempts())) {
+        pgpDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PRIVATE_KEY;
+        if (pgpDecrypt.getEncryptedForLongids().length > 1) {
+          errorMsg = context.getString(R.string.decrypt_error_current_key_cannot_message);
+        } else {
+          errorMsg = context.getString(R.string.decrypt_error_could_not_open_message,
+              context.getString(R.string.app_name)) + "\n\n" +
+              context.getString(R.string.decrypt_error_single_sender);
         }
-      } else {
-        return genDefPart(part, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts);
       }
-    } else return new TextView(getContext());*/
-    return genDefPart(part, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts);
+    }*/
+
+
+    switch (decryptError.getDetails().getType()) {
+      /*case KEY_MISMATCH:
+        String keyMismatchErrorMsg;
+        if (decryptError.getLongids(). > 1) {
+          keyMismatchErrorMsg = getString(R.string.decrypt_error_current_key_cannot_open_message);
+        } else {
+          keyMismatchErrorMsg = getString(R.string.decrypt_error_could_not_open_message,
+              getString(R.string.app_name)) + "\n\n" + getString(R.string.decrypt_error_single_sender);
+        }
+
+        return generateMissingPrivateKeyLayout(part, layoutInflater);*/
+
+      case FORMAT:
+        String formatErrorMsg = getString(R.string.decrypt_error_message_badly_formatted,
+            getString(R.string.app_name)) + "\n\n"
+            + decryptError.getDetails().getType() + ":" + decryptError.getDetails().getMessage();
+        return getView(block.getContent(), formatErrorMsg, layoutInflater);
+
+      case OTHER:
+        String otherErrorMsg = getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
+            "\n\n" + getString(R.string.decrypt_error_please_write_me, getString(R.string.support_email)) +
+            "\n\n" + decryptError.getDetails().getType() + ":" + decryptError.getDetails().getMessage();
+        return getView(block.getContent(), otherErrorMsg, layoutInflater);
+
+      default:
+        return getView(block.getContent(), getString(R.string.could_not_decrypt_message_due_to_error,
+            decryptError.getDetails().getType() + ":" + decryptError.getDetails().getMessage()),
+            layoutInflater);
+    }
+  }
+
+  private View getView(String originalMsg, String errorMsg, LayoutInflater layoutInflater) {
+    ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(R.layout.message_part_pgp_message_error,
+        layoutMsgParts, false);
+    TextView textViewErrorMsg = viewGroup.findViewById(R.id.textViewErrorMessage);
+    ExceptionUtil.handleError(new ManualHandledException(errorMsg));
+    textViewErrorMsg.setText(errorMsg);
+    viewGroup.addView(genShowOrigMsgLayout(originalMsg, layoutInflater, viewGroup));
+    return viewGroup;
   }
 
   /**

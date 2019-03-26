@@ -93,6 +93,9 @@ public class MsgBlock implements Parcelable {
       case PUBLIC_KEY:
         return new PublicKeyMsgBlock(source, type);
 
+      case DECRYPT_ERROR:
+        return new DecryptErrorMsgBlock(source, type);
+
       default:
         return new BaseMsgBlock(source, type);
     }
@@ -144,6 +147,9 @@ public class MsgBlock implements Parcelable {
     PLAIN_HTML,
 
     @SerializedName("decryptedHtml")
-    DECRYPTED_HTML
+    DECRYPTED_HTML,
+
+    @SerializedName("decryptErr")
+    DECRYPT_ERROR
   }
 }
