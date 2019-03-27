@@ -14,8 +14,6 @@ import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Function;
 import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.js.Attachment;
-import com.flowcrypt.email.js.MimeMessage;
 import com.flowcrypt.email.js.PasswordStrength;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKey;
@@ -72,38 +70,6 @@ public class Js { // Create one object per thread and use them separately. Not t
     return storage;
   }
 
-  public MimeMessage mime_decode(String mime_message) {
-    this.call(Object.class, p("mime", "decode"), new V8Array(v8).push(mime_message).push(cb_catch));
-    if ((Boolean) cb_last_value[0]) {
-      return new MimeMessage((V8Object) cb_last_value[1], this);
-    } else {
-      return null;
-    }
-  }
-
-  public String mime_encode(String body, PgpContact[] to, PgpContact[] cc, PgpContact[] bcc,
-                            PgpContact from, String subject, Attachment[] atts, MimeMessage reply_to) {
-    V8Object headers = (reply_to == null) ? new V8Object(v8) : mime_reply_headers(reply_to);
-    headers.add("to", PgpContact.arrayAsMime(to)).add("from", from.getMime()).add("subject", subject);
-
-    if (cc != null && cc.length > 0) {
-      headers.add("cc", PgpContact.arrayAsMime(cc));
-    }
-
-    if (bcc != null && bcc.length > 0) {
-      headers.add("bcc", PgpContact.arrayAsMime(bcc));
-    }
-
-    V8Array files = new V8Array(v8);
-    if (atts != null && atts.length > 0) {
-      for (Attachment att : atts) {
-        files.push(att.getV8Object());
-      }
-    }
-    this.call(Void.class, p("mime", "encode"), new V8Array(v8).push(body).push(headers).push(files).push(cb_catch));
-    return (String) cb_last_value[0];
-  }
-
   public PgpKey crypto_key_create(PgpContact[] user_ids, int num_bits, String pass_phrase) {
     V8Array args = new V8Array(v8).push(PgpContact.arrayAsV8UserIds(v8, user_ids)).push(num_bits).push(pass_phrase)
         .push(cb_catch);
@@ -132,10 +98,6 @@ public class Js { // Create one object per thread and use them separately. Not t
 
   private static String read(InputStream inputStream) throws IOException {
     return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-  }
-
-  private V8Object mime_reply_headers(MimeMessage m) {
-    return (V8Object) this.call(Object.class, p("mime", "reply_headers"), new V8Array(v8).push(m.getV8Object()));
   }
 
   private Object call(Class<?> return_type, String path[], V8Array args) {

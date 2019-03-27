@@ -150,7 +150,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
           pubKeys = SecurityUtils.getRecipientsPubKeys(this, js, pgpContacts, account, senderEmail);
         }
 
-        String rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, js, pubKeys);
+        String rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys);
         MimeMessage mimeMsg = new MimeMessage(sess, IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8));
 
         File msgAttsCacheDir = new File(attsCacheDir, UUID.randomUUID().toString());

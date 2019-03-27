@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit.node;
 
+import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest;
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest;
 import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest;
@@ -14,6 +15,7 @@ import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest;
+import com.flowcrypt.email.api.retrofit.response.node.ComposeEmailResult;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
@@ -48,6 +50,9 @@ public interface NodeService {
 
   @POST("/")
   Call<EncryptedMsgResult> encryptMsg(@Body EncryptMsgRequest request);
+
+  @POST("/")
+  Call<ComposeEmailResult> composeEmail(@Body ComposeEmailRequest request);
 
   @POST("/")
   Call<ParseDecryptedMsgResult> parseDecryptMsg(@Body ParseDecryptMsgRequest request);

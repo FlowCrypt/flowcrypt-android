@@ -940,8 +940,9 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     List<PgpContact> pgpContactsCc = new ArrayList<>();
     List<PgpContact> pgpContactsBcc = new ArrayList<>();
 
-    if (msgInfo != null) {
-      messageInfo.setRawReplyMsg(msgInfo.getOrigRawMsgWithoutAtts());
+    if (msgInfo != null && !TextUtils.isEmpty(msgInfo.getOrigRawMsgWithoutAtts())) {
+      messageInfo.setRawReplyMsg(TextUtils.substring(msgInfo.getOrigRawMsgWithoutAtts(), 0, Math.min(10000,
+          msgInfo.getOrigRawMsgWithoutAtts().length())));
     }
 
     if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {

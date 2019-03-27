@@ -26,9 +26,9 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper;
 import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
+import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
+import com.flowcrypt.email.api.retrofit.response.node.ComposeEmailResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.js.PgpContact;
@@ -703,51 +703,32 @@ public class EmailUtil {
   }
 
   /**
-   * Generate a raw MIME message using {@link Js} tools. Don't call it in the main thread.
+   * Generate a raw MIME message. Don't call it in the main thread.
    *
    * @param info    The given {@link OutgoingMessageInfo} which contains information about an outgoing
    *                message.
-   * @param js      An instance of {@link Js}
    * @param pubKeys The public keys which will be used to generate an encrypted part.
    * @return The generated raw MIME message.
    */
   @NonNull
-  public static String genRawMsgWithoutAtts(OutgoingMessageInfo info, Js js, String[] pubKeys) throws IOException,
+  public static String genRawMsgWithoutAtts(OutgoingMessageInfo info, String[] pubKeys) throws IOException,
       NodeEncryptException {
-    String msgText = null;
 
-    switch (info.getEncryptionType()) {
-      case ENCRYPTED:
-        NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
-        EncryptMsgRequest request = new EncryptMsgRequest(info.getMsg(), pubKeys);
+    NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    ComposeEmailRequest request = new ComposeEmailRequest(info, pubKeys == null ? null : Arrays.asList(pubKeys));
 
-        retrofit2.Response<EncryptedMsgResult> response = nodeService.encryptMsg(request).execute();
-        EncryptedMsgResult result = response.body();
+    retrofit2.Response<ComposeEmailResult> response = nodeService.composeEmail(request).execute();
+    ComposeEmailResult result = response.body();
 
-        if (result == null) {
-          throw new NullPointerException("encryptedMsgResult == null");
-        }
-
-        if (result.getError() != null) {
-          throw new NodeEncryptException(result.getError().getMsg());
-        }
-
-        msgText = result.getEncryptedMsg();
-        break;
-
-      case STANDARD:
-        msgText = info.getMsg();
-        break;
+    if (result == null) {
+      throw new NullPointerException("ComposeEmailResult == null");
     }
 
-    return js.mime_encode(msgText,
-        info.getToPgpContacts(),
-        info.getCcPgpContacts(),
-        info.getBccPgpContacts(),
-        info.getFromPgpContact(),
-        info.getSubject(),
-        null,
-        js.mime_decode(info.getRawReplyMsg()));
+    if (result.getError() != null) {
+      throw new NodeEncryptException(result.getError().getMsg());
+    }
+
+    return result.getMimeMsg();
   }
 
   /**

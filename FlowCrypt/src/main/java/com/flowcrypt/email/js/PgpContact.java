@@ -78,14 +78,6 @@ public class PgpContact implements Parcelable {
     this.lastUse = in.readInt();
   }
 
-  public static String arrayAsMime(PgpContact[] contacts) {
-    String stringified = "";
-    for (Integer i = 0; i < contacts.length; i++) {
-      stringified += contacts[i].getMime() + (i < contacts.length - 1 ? "," : "");
-    }
-    return stringified;
-  }
-
   public static V8Array arrayAsV8UserIds(V8 v8, PgpContact[] contacts) {
     V8Array userIds = new V8Array(v8);
     for (PgpContact contact : contacts) {
@@ -166,9 +158,5 @@ public class PgpContact implements Parcelable {
 
   public int getLastUse() {
     return lastUse;
-  }
-
-  public String getMime() {
-    return MimeAddress.stringify(name, email);
   }
 }
