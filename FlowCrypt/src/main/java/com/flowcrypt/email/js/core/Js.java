@@ -6,26 +6,19 @@
 package com.flowcrypt.email.js.core;
 
 import android.content.Context;
-import android.text.TextUtils;
 
 import com.eclipsesource.v8.JavaCallback;
 import com.eclipsesource.v8.Releasable;
 import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Array;
-import com.eclipsesource.v8.V8ArrayBuffer;
 import com.eclipsesource.v8.V8Function;
 import com.eclipsesource.v8.V8Object;
-import com.eclipsesource.v8.V8TypedArray;
-import com.eclipsesource.v8.V8Value;
-import com.eclipsesource.v8.utils.typedarrays.ArrayBuffer;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.js.Attachment;
 import com.flowcrypt.email.js.MimeMessage;
 import com.flowcrypt.email.js.PasswordStrength;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpDecrypted;
 import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.js.ProcessedMime;
 import com.flowcrypt.email.js.StorageConnectorInterface;
 
 import org.apache.commons.io.IOUtils;
@@ -45,7 +38,6 @@ public class Js { // Create one object per thread and use them separately. Not t
   private final Context context;
   private final V8 v8;
   private final V8Object tool;
-  private final int NULL = V8Value.NULL;
   private V8Function cb_catch;
   private Object[] cb_last_value = new Object[3];
   private Class str = String.class;
@@ -80,27 +72,6 @@ public class Js { // Create one object per thread and use them separately. Not t
     return storage;
   }
 
-  public PgpContact str_parse_email(String email) {
-    V8Object e = (V8Object) this.call(Object.class, p("str", "parse_email"), new V8Array(v8).push(email));
-    return new PgpContact(e.getString("email"), e.getString("name"));
-  }
-
-  public long time_to_utc_timestamp(String string) {
-    if (TextUtils.isEmpty(string) || "NaN".equalsIgnoreCase(string)) {
-      return -1;
-    }
-
-    String number = (String) this.call(str, p("time", "to_utc_timestamp"),
-        new V8Array(v8).push(string).push(true));
-
-    try {
-      return Long.parseLong(number);
-    } catch (NumberFormatException e) {
-      e.printStackTrace();
-      return -1;
-    }
-  }
-
   public MimeMessage mime_decode(String mime_message) {
     this.call(Object.class, p("mime", "decode"), new V8Array(v8).push(mime_message).push(cb_catch));
     if ((Boolean) cb_last_value[0]) {
@@ -133,19 +104,6 @@ public class Js { // Create one object per thread and use them separately. Not t
     return (String) cb_last_value[0];
   }
 
-  public ProcessedMime mime_process(String mime_message) {
-    this.call(Object.class, p("mime", "process"), new V8Array(v8).push(mime_message).push(cb_catch));
-    return new ProcessedMime((V8Object) cb_last_value[0], this);
-  }
-
-  public String crypto_key_normalize(String armored_key) {
-    try {
-      return (String) this.call(str, p("crypto", "key", "normalize"), new V8Array(v8).push(armored_key));
-    } catch (com.eclipsesource.v8.V8ResultUndefined e) {
-      return "";
-    }
-  }
-
   public PgpKey crypto_key_create(PgpContact[] user_ids, int num_bits, String pass_phrase) {
     V8Array args = new V8Array(v8).push(PgpContact.arrayAsV8UserIds(v8, user_ids)).push(num_bits).push(pass_phrase)
         .push(cb_catch);
@@ -154,38 +112,8 @@ public class Js { // Create one object per thread and use them separately. Not t
         .push((String) cb_last_value[0])), this);
   }
 
-  public String crypto_key_fingerprint(PgpKey k) {
-    return (String) this.call(str, p("crypto", "key", "fingerprint"), new V8Array(v8).push(k.getV8Object()));
-  }
-
   public String crypto_key_longid(PgpKey k) {
     return (String) this.call(str, p("crypto", "key", "longid"), new V8Array(v8).push(k.getV8Object()));
-  }
-
-  public String crypto_key_longid(String fingerprint) {
-    return (String) this.call(str, p("crypto", "key", "longid"), new V8Array(v8).push(fingerprint));
-  }
-
-  public String mnemonic(String longid) {
-    return (String) this.call(str, v8, p("mnemonic"), new V8Array(v8).push(longid));
-  }
-
-  public PgpDecrypted crypto_message_decrypt(String data, String password) {
-    // db,account_email,encrypted_data,one_time_message_password,callback,force_output_format
-    V8Array params = new V8Array(v8).push(NULL).push("").push(data).push(password).push(cb_catch).push(NULL);
-    this.call(void.class, p("crypto", "message", "decrypt"), params);
-    return new PgpDecrypted((V8Object) cb_last_value[0]);
-  }
-
-  public PgpDecrypted crypto_message_decrypt(String data) {
-    return crypto_message_decrypt(data, "");
-  }
-
-  public PgpDecrypted crypto_message_decrypt(byte[] bytes) {
-    // db,account_email,encrypted_data,one_time_message_password,callback,force_output_format
-    V8Array params = new V8Array(v8).push(NULL).push("").push(uint8(bytes)).push("").push(cb_catch).push(NULL);
-    this.call(void.class, p("crypto", "message", "decrypt"), params);
-    return new PgpDecrypted((V8Object) cb_last_value[0]);
   }
 
   public List<String> crypto_password_weak_words() {
@@ -204,11 +132,6 @@ public class Js { // Create one object per thread and use them separately. Not t
 
   private static String read(InputStream inputStream) throws IOException {
     return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-  }
-
-  private V8TypedArray uint8(byte[] data) {
-    V8ArrayBuffer buffer = new V8ArrayBuffer(v8, new ArrayBuffer(data).getByteBuffer());
-    return new V8TypedArray(v8, buffer, V8Value.UNSIGNED_INT_8_ARRAY, 0, data.length);
   }
 
   private V8Object mime_reply_headers(MimeMessage m) {

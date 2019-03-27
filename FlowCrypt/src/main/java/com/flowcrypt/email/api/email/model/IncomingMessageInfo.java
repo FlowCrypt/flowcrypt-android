@@ -8,11 +8,13 @@ package com.flowcrypt.email.api.email.model;
 import android.os.Parcel;
 
 import com.flowcrypt.email.api.email.LocalFolder;
-import com.flowcrypt.email.model.messages.MessagePart;
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import javax.mail.internet.InternetAddress;
 
 /**
  * The class which describe an incoming message model.
@@ -36,49 +38,32 @@ public class IncomingMessageInfo extends MessageInfo {
       return new IncomingMessageInfo[size];
     }
   };
-  private int uid;
-  private ArrayList<String> from;
-  private ArrayList<String> to;
-  private ArrayList<String> cc;
-  private ArrayList<AttachmentInfo> atts;
-  private Date receiveDate;
-  private String origRawMsfWithoutAtts;
-  private List<MessagePart> msgParts;
-  private LocalFolder localFolder;
-  private String htmlMsg;
-  private boolean hasPlainText;
 
-  public IncomingMessageInfo() {
+  private GeneralMessageDetails generalMsgDetails;
+  private ArrayList<AttachmentInfo> atts;
+  private LocalFolder localFolder;
+  private List<MsgBlock> msgBlocks;
+
+  public IncomingMessageInfo(GeneralMessageDetails generalMsgDetails, List<MsgBlock> msgBlocks) {
+    this.generalMsgDetails = generalMsgDetails;
+    this.msgBlocks = msgBlocks;
   }
 
   protected IncomingMessageInfo(Parcel in) {
     super(in);
-    this.uid = in.readInt();
-    this.from = in.createStringArrayList();
-    this.to = in.createStringArrayList();
-    this.cc = in.createStringArrayList();
+    this.generalMsgDetails = in.readParcelable(GeneralMessageDetails.class.getClassLoader());
     this.atts = in.createTypedArrayList(AttachmentInfo.CREATOR);
-    long tmpReceiveDate = in.readLong();
-    this.receiveDate = tmpReceiveDate == -1 ? null : new Date(tmpReceiveDate);
-    this.origRawMsfWithoutAtts = in.readString();
-    this.msgParts = in.createTypedArrayList(MessagePart.CREATOR);
     this.localFolder = in.readParcelable(LocalFolder.class.getClassLoader());
-    this.htmlMsg = in.readString();
-    this.hasPlainText = in.readByte() != 0;
+    this.msgBlocks = in.createTypedArrayList(MsgBlock.CREATOR);
   }
 
   @Override
   public String toString() {
     return "IncomingMessageInfo{" +
-        "from=" + from +
-        ", to=" + to +
-        ", cc=" + cc +
-        ", receiveDate=" + receiveDate +
-        ", origRawMsfWithoutAtts='" + origRawMsfWithoutAtts + '\'' +
-        ", msgParts=" + msgParts +
+        "generalMsgDetails=" + generalMsgDetails +
+        ", atts=" + atts +
         ", localFolder=" + localFolder +
-        ", htmlMsg='" + htmlMsg + '\'' +
-        ", hasPlainText=" + hasPlainText +
+        ", msgBlocks=" + msgBlocks +
         "} " + super.toString();
   }
 
@@ -90,55 +75,39 @@ public class IncomingMessageInfo extends MessageInfo {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     super.writeToParcel(dest, flags);
-    dest.writeInt(this.uid);
-    dest.writeStringList(this.from);
-    dest.writeStringList(this.to);
-    dest.writeStringList(this.cc);
+    dest.writeParcelable(this.generalMsgDetails, flags);
     dest.writeTypedList(this.atts);
-    dest.writeLong(this.receiveDate != null ? this.receiveDate.getTime() : -1);
-    dest.writeString(this.origRawMsfWithoutAtts);
-    dest.writeTypedList(this.msgParts);
     dest.writeParcelable(this.localFolder, flags);
-    dest.writeString(this.htmlMsg);
-    dest.writeByte(this.hasPlainText ? (byte) 1 : (byte) 0);
+    dest.writeTypedList(this.msgBlocks);
   }
 
-  /**
-   * Return a list of String which contain information
-   * about from addresses.
-   *
-   * @return <tt>ArrayList<String></tt> The list of from addresses.
-   */
-  public ArrayList<String> getFrom() {
-    return from;
+  @Override
+  public String getSubject() {
+    return generalMsgDetails.getSubject();
   }
 
-  public void setFrom(ArrayList<String> from) {
-    this.from = from;
+  public GeneralMessageDetails getGeneralMsgDetails() {
+    return generalMsgDetails;
+  }
+
+  public InternetAddress[] getFrom() {
+    return generalMsgDetails.getFrom();
   }
 
   public Date getReceiveDate() {
-    return receiveDate;
-  }
-
-  public void setReceiveDate(Date receiveDate) {
-    this.receiveDate = receiveDate;
+    return new Date(generalMsgDetails.getReceivedDate());
   }
 
   public String getOrigRawMsgWithoutAtts() {
-    return origRawMsfWithoutAtts;
+    return generalMsgDetails.getRawMsgWithoutAtts();
   }
 
-  public void setOrigRawMsgWithoutAtts(String origRawMsfWithoutAtts) {
-    this.origRawMsfWithoutAtts = origRawMsfWithoutAtts;
+  public List<MsgBlock> getMsgBlocks() {
+    return msgBlocks;
   }
 
-  public List<MessagePart> getMsgParts() {
-    return msgParts;
-  }
-
-  public void setMsgParts(List<MessagePart> messageParts) {
-    this.msgParts = messageParts;
+  public void setMsgBlocks(List<MsgBlock> messageParts) {
+    this.msgBlocks = messageParts;
   }
 
   public LocalFolder getLocalFolder() {
@@ -149,44 +118,34 @@ public class IncomingMessageInfo extends MessageInfo {
     this.localFolder = localFolder;
   }
 
-  public ArrayList<String> getTo() {
-    return to;
+  public InternetAddress[] getTo() {
+    return generalMsgDetails.getTo();
   }
 
-  public void setTo(ArrayList<String> to) {
-    this.to = to;
+  public InternetAddress[] getCc() {
+    return generalMsgDetails.getCc();
   }
 
-  public ArrayList<String> getCc() {
-    return cc;
-  }
-
-  public void setCc(ArrayList<String> cc) {
-    this.cc = cc;
+  public boolean hasHtmlText() {
+    return hasSomePart(MsgBlock.Type.PLAIN_HTML) || hasSomePart(MsgBlock.Type.DECRYPTED_HTML);
   }
 
   public String getHtmlMsg() {
-    return htmlMsg;
-  }
+    for (MsgBlock part : msgBlocks) {
+      if (part.getType() == MsgBlock.Type.PLAIN_HTML) {
+        return part.getContent();
+      }
+    }
 
-  public void setHtmlMsg(String htmlMsg) {
-    this.htmlMsg = htmlMsg;
+    return "";
   }
 
   public boolean hasPlainText() {
-    return hasPlainText;
-  }
-
-  public void setHasPlainText(boolean hasPlainText) {
-    this.hasPlainText = hasPlainText;
+    return hasSomePart(MsgBlock.Type.PLAIN_TEXT);
   }
 
   public int getUid() {
-    return uid;
-  }
-
-  public void setUid(int uid) {
-    this.uid = uid;
+    return generalMsgDetails.getUid();
   }
 
   public ArrayList<AttachmentInfo> getAtts() {
@@ -195,5 +154,15 @@ public class IncomingMessageInfo extends MessageInfo {
 
   public void setAtts(ArrayList<AttachmentInfo> atts) {
     this.atts = atts;
+  }
+
+  private boolean hasSomePart(MsgBlock.Type partType) {
+    for (MsgBlock part : msgBlocks) {
+      if (part.getType() == partType) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

@@ -6,7 +6,7 @@
 package com.flowcrypt.email.rules;
 
 import com.flowcrypt.email.TestConstants;
-import com.flowcrypt.email.api.retrofit.node.NodeGson;
+import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.util.PrivateKeysManager;

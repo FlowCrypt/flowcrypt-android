@@ -10,11 +10,11 @@ import android.net.Uri;
 import android.os.AsyncTask;
 
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest;
-import com.flowcrypt.email.api.retrofit.request.node.DecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest;
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper;
+import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest;
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
@@ -61,7 +61,7 @@ public class RequestsManager {
   }
 
   public void decryptMsg(int requestCode, String msg, PgpKeyInfo[] prvKeys) {
-    load(requestCode, new DecryptMsgRequest(msg, prvKeys, TestData.passphrases()));
+    load(requestCode, new ParseDecryptMsgRequest(msg, prvKeys, TestData.passphrases()));
   }
 
   public void encryptFile(int requestCode, byte[] data) {

@@ -26,7 +26,7 @@ import retrofit2.Response;
  * Time: 03:29 PM
  * E-mail: DenBond7@gmail.com
  */
-public final class DecryptMsgRequest extends BaseNodeRequest {
+public final class ParseDecryptMsgRequest extends BaseNodeRequest {
 
   @SerializedName("keys")
   @Expose
@@ -36,10 +36,18 @@ public final class DecryptMsgRequest extends BaseNodeRequest {
   @Expose
   private List<String> passphrases;
 
+  @Expose
+  private boolean isEmail;
+
   private String encryptedMsg;
 
-  public DecryptMsgRequest(String encryptedMsg, PgpKeyInfo[] prvKeys, String[] passphrases) {
+  public ParseDecryptMsgRequest(String encryptedMsg, PgpKeyInfo[] prvKeys, String[] passphrases) {
+    this(encryptedMsg, prvKeys, passphrases, false);
+  }
+
+  public ParseDecryptMsgRequest(String encryptedMsg, PgpKeyInfo[] prvKeys, String[] passphrases, boolean isEmail) {
     this.encryptedMsg = encryptedMsg;
+    this.isEmail = isEmail;
     this.privateKeyInfoList = new ArrayList<>();
 
     for (PgpKeyInfo pgpKeyInfo : prvKeys) {
@@ -51,7 +59,7 @@ public final class DecryptMsgRequest extends BaseNodeRequest {
 
   @Override
   public String getEndpoint() {
-    return "decryptMsg";
+    return "parseDecryptMsg";
   }
 
   @Override
@@ -62,7 +70,7 @@ public final class DecryptMsgRequest extends BaseNodeRequest {
   @Override
   public Response getResponse(NodeService nodeService) throws IOException {
     if (nodeService != null) {
-      return nodeService.decryptMsg(this).execute();
+      return nodeService.parseDecryptMsg(this).execute();
     } else return null;
   }
 }

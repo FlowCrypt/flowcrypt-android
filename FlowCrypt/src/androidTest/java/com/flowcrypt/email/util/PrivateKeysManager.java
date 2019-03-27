@@ -7,7 +7,7 @@ package com.flowcrypt.email.util;
 
 import android.content.Context;
 
-import com.flowcrypt.email.api.retrofit.node.NodeGson;
+import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.database.dao.KeysDao;

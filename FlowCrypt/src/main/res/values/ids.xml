@@ -43,7 +43,6 @@
     <item name="syns_send_backup_with_private_key_to_key_owner" type="id" />
     <item name="syns_identify_encrypted_messages" type="id" />
 
-    <item name="js_decrypt_message" type="id" />
     <item name="js_refresh_storage_connector" type="id" />
 
     <item name="viewIdProgressView" type="id" />
@@ -65,4 +64,5 @@
     <item name="progress_id_thread_is_cancalled" type="id" />
 
     <item name="live_data_id_fetch_keys" type="id" />
+    <item name="live_data_id_parse_and_decrypt_msg" type="id" />
 </resources>

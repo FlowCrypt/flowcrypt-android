@@ -267,10 +267,6 @@
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
-        <service
-            android:name=".service.JsBackgroundService"
-            android:exported="false" />
-
         <!--This service will be used for syncing (JobScheduler logic)-->
         <service
             android:name=".jobscheduler.SyncJobService"
