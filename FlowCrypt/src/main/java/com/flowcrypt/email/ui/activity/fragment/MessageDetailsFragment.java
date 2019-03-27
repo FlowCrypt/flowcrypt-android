@@ -52,6 +52,7 @@ import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
+import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
@@ -864,38 +865,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       return new View(getContext());
     }
 
-
-    /*if (pgpDecrypt != null) {
-      if (pgpDecrypt.isSuccess()) {
-        value = pgpDecrypt.getString();
-      } else if (pgpDecrypt.getMissingPassphraseLongids() != null
-          && pgpDecrypt.getMissingPassphraseLongids().length > 0) {
-        pgpDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PASS_PHRASES;
-      } else if (Objects.equals(pgpDecrypt.countPotentiallyMatchingKeys(), pgpDecrypt.countAttempts())
-          && Objects.equals(pgpDecrypt.countKeyMismatchErrors(), pgpDecrypt.countAttempts())) {
-        pgpDecryptError = MessagePartPgpMessage.PgpMessageDecryptError.MISSING_PRIVATE_KEY;
-        if (pgpDecrypt.getEncryptedForLongids().length > 1) {
-          errorMsg = context.getString(R.string.decrypt_error_current_key_cannot_message);
-        } else {
-          errorMsg = context.getString(R.string.decrypt_error_could_not_open_message,
-              context.getString(R.string.app_name)) + "\n\n" +
-              context.getString(R.string.decrypt_error_single_sender);
-        }
-      }
-    }*/
-
-
     switch (decryptError.getDetails().getType()) {
-      /*case KEY_MISMATCH:
-        String keyMismatchErrorMsg;
-        if (decryptError.getLongids(). > 1) {
-          keyMismatchErrorMsg = getString(R.string.decrypt_error_current_key_cannot_open_message);
-        } else {
-          keyMismatchErrorMsg = getString(R.string.decrypt_error_could_not_open_message,
-              getString(R.string.app_name)) + "\n\n" + getString(R.string.decrypt_error_single_sender);
-        }
-
-        return generateMissingPrivateKeyLayout(part, layoutInflater);*/
+      case KEY_MISMATCH:
+        return generateMissingPrivateKeyLayout(block.getContent(), layoutInflater);
 
       case FORMAT:
         String formatErrorMsg = getString(R.string.decrypt_error_message_badly_formatted,
@@ -929,16 +901,16 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   /**
    * Generate a layout which describes the missing private keys situation.
    *
-   * @param part     The {@link MessagePartPgpMessage} which contains info about an error.
+   * @param pgpMsg   The pgp message.
    * @param inflater The {@link LayoutInflater} instance.
    * @return Generated layout.
    */
-  /*@NonNull
-  private View generateMissingPrivateKeyLayout(MessagePartPgpMessage part, LayoutInflater inflater) {
+  @NonNull
+  private View generateMissingPrivateKeyLayout(String pgpMsg, LayoutInflater inflater) {
     ViewGroup viewGroup = (ViewGroup) inflater.inflate(
         R.layout.message_part_pgp_message_missing_private_key, layoutMsgParts, false);
     TextView textViewErrorMsg = viewGroup.findViewById(R.id.textViewErrorMessage);
-    textViewErrorMsg.setText(part.getErrorMsg());
+    textViewErrorMsg.setText(getString(R.string.decrypt_error_current_key_cannot_open_message));
 
     Button buttonImportPrivateKey = viewGroup.findViewById(R.id.buttonImportPrivateKey);
     buttonImportPrivateKey.setOnClickListener(new View.OnClickListener() {
@@ -958,9 +930,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       }
     });
 
-    viewGroup.addView(genShowOrigMsgLayout(part.getValue(), inflater, viewGroup));
+    viewGroup.addView(genShowOrigMsgLayout(pgpMsg, inflater, viewGroup));
     return viewGroup;
-  }*/
+  }
 
   /**
    * Generate a layout with switch button which will be regulate visibility of original message info.
