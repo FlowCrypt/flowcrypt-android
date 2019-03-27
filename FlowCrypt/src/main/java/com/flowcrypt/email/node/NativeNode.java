@@ -109,6 +109,7 @@ final class NativeNode {
     src += genConst("NODE_DEBUG", "false");
     src += genConst("APP_ENV", "prod");
     src += genConst("APP_VERSION", BuildConfig.VERSION_NAME.split("_")[0]);
+    src += genConst("APP_PROFILE", "false");
     src += jsCode;
     return src;
   }

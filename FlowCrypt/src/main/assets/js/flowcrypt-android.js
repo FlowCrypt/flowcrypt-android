@@ -66974,6 +66974,7 @@ const util_1 = __webpack_require__(10);
 
 util_1.setGlobals();
 const doPrintDebug = Boolean(NODE_DEBUG === 'true');
+const doProfile = Boolean(APP_PROFILE === 'true');
 const endpoints = new endpoints_1.Endpoints();
 
 const delegateReqToEndpoint = async (endpointName, uncheckedReq, data) => {
@@ -66986,7 +66987,11 @@ const delegateReqToEndpoint = async (endpointName, uncheckedReq, data) => {
   throw new fmt_1.HttpClientErr(`unknown endpoint: ${endpointName}`);
 };
 
-const handleReq = async (req, res) => {
+const handleReq = async (req, res, receivedAt) => {
+  if (doProfile) {
+    console.debug(`PROFILE[${Date.now() - receivedAt}ms] new request ${req.url}`);
+  }
+
   if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT || !NODE_SSL_CA) {
     throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_CA, NODE_SSL_KEY or NODE_SSL_CRT');
   }
@@ -67007,12 +67012,22 @@ const handleReq = async (req, res) => {
       data
     } = await parse_1.parseReq(req, doPrintDebug);
 
-    if (doPrintDebug) {
-      console.log(`parsed endpoint:`, endpoint);
-      console.log(`parsed request:`, request);
+    if (doProfile) {
+      console.debug(`PROFILE[${Date.now() - receivedAt}ms] finished receiving and parsing request+data`);
     }
 
-    return await delegateReqToEndpoint(endpoint, request, data);
+    if (doPrintDebug) {
+      console.debug(`parsed endpoint:`, endpoint);
+      console.debug(`parsed request:`, request);
+    }
+
+    const res = await delegateReqToEndpoint(endpoint, request, data);
+
+    if (doProfile) {
+      console.debug(`PROFILE[${Date.now() - receivedAt}ms] finished processing request`);
+    }
+
+    return res;
   }
 
   throw new fmt_1.HttpClientErr(`unknown path ${req.url}`);
@@ -67036,7 +67051,18 @@ const sendRes = (res, buffers) => {
 };
 
 const server = https.createServer(serverOptins, (request, res) => {
-  handleReq(request, res).then(buffers => sendRes(res, buffers)).catch(e => {
+  const receivedAt = Date.now();
+  handleReq(request, res, receivedAt).then(buffers => {
+    if (doProfile) {
+      console.debug(`PROFILE[${Date.now() - receivedAt}ms] begin sending response`);
+    }
+
+    sendRes(res, buffers);
+
+    if (doProfile) {
+      console.debug(`PROFILE[${Date.now() - receivedAt}ms] response sent, DONE`);
+    }
+  }).catch(e => {
     res.statusCode = 200;
 
     if (e instanceof fmt_1.HttpAuthErr) {
