@@ -294,7 +294,10 @@ public class KeyStoreCryptoManager {
     keyStore.load(null);
 
     if (!keyStore.containsAlias(ANDROID_KEY_STORE_RSA_ALIAS)) {
-      createRSAKeyPair();
+      KeyPair keyPair = createRSAKeyPair();
+      this.privateKey = keyPair.getPrivate();
+      this.publicKey = keyPair.getPublic();
+      return;
     }
 
     try {
@@ -316,14 +319,15 @@ public class KeyStoreCryptoManager {
   /**
    * Create KeyPair for alias {@link KeyStoreCryptoManager#ANDROID_KEY_STORE_RSA_ALIAS}.
    *
+   * @return <tt>{@link KeyPair}</tt> Generated KeyPair object with a private key.
    * @throws NoSuchProviderException
    * @throws NoSuchAlgorithmException
    * @throws InvalidAlgorithmParameterException
    */
-  private void createRSAKeyPair() throws NoSuchProviderException, NoSuchAlgorithmException,
+  private KeyPair createRSAKeyPair() throws NoSuchProviderException, NoSuchAlgorithmException,
       InvalidAlgorithmParameterException, ManualHandledException {
     try {
-      genKeyPair();
+      return genKeyPair();
     } catch (NullPointerException e) {
       //try to catch an exception for the issue https://github.com/FlowCrypt/flowcrypt-android/issues/225
       e.printStackTrace();
@@ -348,7 +352,7 @@ public class KeyStoreCryptoManager {
     keyPairGenerator.initialize(
         new KeyGenParameterSpec.Builder(ANDROID_KEY_STORE_RSA_ALIAS,
             KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
-            .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+            .setBlockModes(KeyProperties.BLOCK_MODE_ECB)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
             .build());
 
