@@ -67021,13 +67021,13 @@ const handleReq = async (req, res, receivedAt) => {
       console.debug(`parsed request:`, request);
     }
 
-    const res = await delegateReqToEndpoint(endpoint, request, data);
+    const endpointResponse = await delegateReqToEndpoint(endpoint, request, data);
 
     if (doProfile) {
       console.debug(`PROFILE[${Date.now() - receivedAt}ms] finished processing request`);
     }
 
-    return res;
+    return endpointResponse;
   }
 
   throw new fmt_1.HttpClientErr(`unknown path ${req.url}`);
@@ -67280,6 +67280,28 @@ class Endpoints {
       return fmt_1.fmtRes({}, Buffer.from(encrypted.data));
     };
 
+    this.generateKey = async (uncheckedReq, data) => {
+      const {
+        passphrase,
+        userIds,
+        variant
+      } = validate_1.Validate.generateKey(uncheckedReq);
+
+      if (passphrase.length < 12) {
+        throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
+      }
+
+      let k;
+
+      if (variant === 'rsa2048') {
+        k = await pgp_1.Pgp.key.create(userIds, 2048, passphrase);
+      } else {
+        throw new Error(`Unknown generateKey variant: ${variant}`);
+      }
+
+      return fmt_1.fmtRes((await pgp_1.Pgp.key.serialize((await pgp_1.Pgp.key.read(k.private)))));
+    };
+
     this.composeEmail = async (uncheckedReq, data) => {
       const req = validate_1.Validate.composeEmail(uncheckedReq);
       const mimeHeaders = {
@@ -67514,7 +67536,7 @@ class Endpoints {
       } = validate_1.Validate.encryptKey(uncheckedReq);
       const key = await readArmoredKeyOrThrow(armored);
 
-      if (!passphrase || passphrase.length < 10) {
+      if (!passphrase || passphrase.length < 12) {
         // last resort check, this should never happen
         throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
       }
@@ -69851,6 +69873,14 @@ var NodeRequest;
 
 class Validate {}
 
+Validate.generateKey = v => {
+  if (isObj(v) && hasProp(v, 'userIds', 'Userid[]') && v.userIds.length && v.variant === 'rsa2048' && hasProp(v, 'passphrase', 'string')) {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.generateKey');
+};
+
 Validate.encryptMsg = v => {
   if (isObj(v) && hasProp(v, 'pubKeys', 'string[]')) {
     return v;
@@ -69970,6 +70000,10 @@ const hasProp = (v, name, type) => {
 
   if (type === 'PrvKeyInfo[]') {
     return Array.isArray(value) && value.filter(ki => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string')).length === value.length;
+  }
+
+  if (type === 'Userid[]') {
+    return Array.isArray(value) && value.filter(ui => hasProp(ui, 'name', 'string') && hasProp(ui, 'email', 'string')).length === value.length;
   }
 
   if (type === 'object') {
