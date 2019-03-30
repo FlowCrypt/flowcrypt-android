@@ -67442,6 +67442,19 @@ class Endpoints {
       });
     };
 
+    this.zxcvbnStrengthBar = async (uncheckedReq, data) => {
+      const {
+        guesses,
+        purpose
+      } = validate_1.Validate.zxcvbnStrengthBar(uncheckedReq);
+
+      if (purpose === 'passphrase') {
+        return fmt_1.fmtRes(pgp_1.Pgp.password.estimateStrength(guesses));
+      } else {
+        throw new Error(`Unknown purpose: ${purpose}`);
+      }
+    };
+
     this.gmailBackupSearch = async (uncheckedReq, data) => {
       const {
         acctEmail
@@ -69935,6 +69948,14 @@ Validate.parseDateStr = v => {
   }
 
   throw new Error('Wrong request structure for NodeRequest.dateStrParse');
+};
+
+Validate.zxcvbnStrengthBar = v => {
+  if (isObj(v) && hasProp(v, 'guesses', 'number') && hasProp(v, 'purpose', 'string') && v.purpose === 'passphrase') {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.zxcvbnStrengthBar');
 };
 
 Validate.gmailBackupSearch = v => {
