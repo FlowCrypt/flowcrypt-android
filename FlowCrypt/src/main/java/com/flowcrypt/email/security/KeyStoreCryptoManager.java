@@ -21,9 +21,6 @@ import com.flowcrypt.email.util.exception.ManualHandledException;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -37,57 +34,63 @@ import java.util.UUID;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * This class use Android Keystore System for encrypt/decrypt information. Since encryption which uses the RSA has a
- * limit on the maximum size of the data that can be encrypted("The RSA algorithm can only encrypt data that has a
- * maximum byte length of the RSA key length in bits
+ * This class uses AndroidKeyStore for encrypt/decrypt information.
+ * Since version 0.7.4 we use only AES cipher for encryption/decryption which uses
+ * AndroidKeyStore for storing keys.
+ * <p>
+ * But to support the older versions for compatibility we also use RSA + AES schema.
+ * Since encryption which uses the RSA has a limit on the maximum size of the data that can be encrypted
+ * ("The RSA algorithm can only encrypt data that has a maximum byte length of the RSA key length in bits
  * divided with eight minus eleven padding bytes, i.e. number of maximum bytes = key length in bits / 8 - 11.", see
  * http://stackoverflow.com/questions/10007147/getting-a-illegalblocksizeexception-data-must-not-be-longer-than-256
- * -bytes-when), we use the following algorithm:
+ * -bytes-when), we use the following algorithm for option RSA + AES:
  * <ul>
- * <li>Generate a RSA key pair via {@code KeyPairGenerator.getInstance(
+ * <li>Generate an RSA key pair via {@code KeyPairGenerator.getInstance(
  * KeyProperties.KEY_ALGORITHM_RSA, PROVIDER_ANDROID_KEY_STORE)}</li>
  * <li>Generate a 128 bits symmetric key with use {@link SecureRandom}</li>
  * <li>Encrypt and save the symmetric key with the RSA key from Android Keystore System to the shared preferences</li>
  * <li>Encrypt the data with the decrypted symmetric key</li>
  * <li>Decrypt the data with the decrypted symmetric key</li>
  * </ul>
+ * <p>
+ * See the great articles https://proandroiddev.com/secure-data-in-android-encryption-7eda33e68f58
+ * <p>
  *
  * @author DenBond7
  * Date: 12.05.2017
  * Time: 12:29
  * E-mail: DenBond7@gmail.com
+ * @version 2.0 Added using AES cipher for encryption/decryption which uses AndroidKeyStore for storing keys.
  */
 
 public class KeyStoreCryptoManager {
-  public static final int SIZE_OF_ALGORITHM_PARAMETER_SPEC = 16;
-  public static final String PREFERENCE_KEY_SECRET = "preference_key_secret";
+  private static final int SIZE_OF_ALGORITHM_PARAMETER_SPEC = 16;
+  private static final String PREFERENCE_KEY_SECRET = "preference_key_secret";
   private static final String TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING = "RSA/ECB/PKCS1Padding";
   private static final String TRANSFORMATION_AES_CBC_PKCS5_PADDING = "AES/CBC/PKCS5Padding";
-  private static final String ALGORITHM_RSA = "RSA";
-  private static final String ALGORITHM_SHA1PRNG = "SHA1PRNG";
-  private static final String ALGORITHM_AES = "AES";
+  private static final String TRANSFORMATION_AES_CBC_PKCS7_PADDING = "AES/CBC/PKCS7Padding";
   private static final String PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore";
   private static final String ANDROID_KEY_STORE_RSA_ALIAS = "flowcrypt_main";
-  private static final int KEY_SIZE_128 = 128;
+  private static final String ANDROID_KEY_STORE_AES_ALIAS = "flowcrypt_main_aes";
 
   private Context context;
+  private KeyStore keyStore;
   private PrivateKey privateKey;
   private PublicKey publicKey;
-  private SecretKeySpec secKeySpec;
+  private SecretKey secretKey;
+
+  private boolean isOldLogicUsed;
 
   /**
    * This constructor do initialization of symmetric (AES) and asymmetric keys (RSA).
    *
-   * @param context Interface to global information about an application environment. Need to
-   *                use an application context.
+   * @param context Interface to global information about an application environment. Need to use the app context.
    * @throws Exception Initialization can throw exceptions.
    */
   public KeyStoreCryptoManager(Context context) throws Exception {
@@ -96,8 +99,13 @@ public class KeyStoreCryptoManager {
     } else {
       throw new IllegalArgumentException("The context can not be null!");
     }
-    initRsaKeyPair();
-    initAesSecretKeySpec();
+
+    keyStore = KeyStore.getInstance(PROVIDER_ANDROID_KEY_STORE);
+    keyStore.load(null);
+
+    isOldLogicUsed = keyStore.containsAlias(ANDROID_KEY_STORE_RSA_ALIAS);
+
+    init();
   }
 
   /**
@@ -126,180 +134,167 @@ public class KeyStoreCryptoManager {
   }
 
   /**
-   * This method does encrypt via AES symmetric algorithm the input text and returns an
-   * encrypted data.
-   * <p>
-   * For encrypt will be created a Cipher object with transformation
-   * {@link KeyStoreCryptoManager#TRANSFORMATION_AES_CBC_PKCS5_PADDING} and initialized as
-   * {@link Cipher#ENCRYPT_MODE} with the SecretKeySpec (AES key) and an algorithm parameter spec. Then the
-   * plainData which will be as input will be convert to byte[] and encrypt via cipher.doFinal. After this we will
-   * return a base64 encoded encrypted result.
+   * This method encrypts an input text via AES symmetric algorithm and returns encrypted data.
    *
    * @param plainData                    The input text which will be encrypted.
    * @param algorithmParameterSpecString The algorithm parameter spec which will be used to randomize encryption.
-   *                                     The size must be equal 16 byte
+   *                                     The size must be equal 16 byte. It only used for compatibility with the
+   *                                     older versions.
    * @return <tt>String</tt> A base64 encoded encrypted result.
    * @throws Exception The encryption process can throw a lot of exceptions.
    */
   public String encrypt(String plainData, String algorithmParameterSpecString) throws Exception {
-    if (TextUtils.isEmpty(algorithmParameterSpecString)) {
-      throw new IllegalArgumentException("The algorithm parameter spec must not be null!");
-    }
-
-    if (algorithmParameterSpecString.length() != SIZE_OF_ALGORITHM_PARAMETER_SPEC) {
-      throw new IllegalArgumentException("The algorithm parameter spec size must be equal "
-          + SIZE_OF_ALGORITHM_PARAMETER_SPEC + " bytes!");
-    }
-
     if (!TextUtils.isEmpty(plainData)) {
-      Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS5_PADDING);
-      cipher.init(Cipher.ENCRYPT_MODE, secKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
-      byte[] encryptedBytes = cipher.doFinal(plainData.getBytes(StandardCharsets.UTF_8));
+      if (isOldLogicUsed) {
+        if (TextUtils.isEmpty(algorithmParameterSpecString)) {
+          throw new IllegalArgumentException("The algorithm parameter spec must not be null!");
+        }
 
-      return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
+        if (algorithmParameterSpecString.length() != SIZE_OF_ALGORITHM_PARAMETER_SPEC) {
+          throw new IllegalArgumentException("The algorithm parameter spec size must be equal "
+              + SIZE_OF_ALGORITHM_PARAMETER_SPEC + " bytes!");
+        }
+
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS5_PADDING);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
+        byte[] encryptedBytes = cipher.doFinal(plainData.getBytes(StandardCharsets.UTF_8));
+
+        return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
+      } else {
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] iv = cipher.getIV();
+        byte[] encryptedBytes = cipher.doFinal(plainData.getBytes(StandardCharsets.UTF_8));
+
+        return Base64.encodeToString(iv, Base64.DEFAULT) + "\n" + Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
+      }
     } else return plainData;
   }
 
   /**
-   * This method does decrypt via AES symmetric algorithm of the input encrypted text return a
-   * decrypted data.
-   * <p>
-   * will be created a Cipher object with transformation
-   * {@link KeyStoreCryptoManager#TRANSFORMATION_AES_CBC_PKCS5_PADDING} and initialized as
-   * {@link Cipher#ENCRYPT_MODE} with the SecretKeySpec (AES key) and an algorithm parameter spec. Then the
-   * encryptedData which will be as input will be decode to byte[] and decrypt via cipher.doFinal. After this we
-   * will return a decrypted result.
+   * This method decrypts the input encrypted text via AES symmetric algorithm and returns decrypted data.
    *
    * @param encryptedData                The input encrypted text, which must be encrypted and encoded in base64.
    * @param algorithmParameterSpecString The algorithm parameter spec which will be used to randomize encryption.
-   *                                     The size must be equal 16 byte.
-   * @return <tt>String</tt> Return a decrypted data.
-   * @throws Exception The encryption process can throw a lot of exceptions.
+   *                                     The size must be equal 16 byte. It only used for compatibility with the
+   *                                     older versions.
+   * @return <tt>String</tt> Return decrypted data.
+   * @throws Exception The decryption process can throw a lot of exceptions.
    */
   public String decrypt(String encryptedData, String algorithmParameterSpecString) throws Exception {
-    if (TextUtils.isEmpty(algorithmParameterSpecString)) {
-      throw new IllegalArgumentException("The algorithm parameter spec must not be null!");
-    }
-
-    if (algorithmParameterSpecString.length() != SIZE_OF_ALGORITHM_PARAMETER_SPEC) {
-      throw new IllegalArgumentException("The algorithm parameter spec size must be equal "
-          + SIZE_OF_ALGORITHM_PARAMETER_SPEC + " bytes!");
-    }
-
     if (!TextUtils.isEmpty(encryptedData)) {
-      Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS5_PADDING);
-      cipher.init(Cipher.DECRYPT_MODE, secKeySpec, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
-      byte[] decodedBytes = cipher.doFinal(Base64.decode(encryptedData, Base64.DEFAULT));
-      return new String(decodedBytes, StandardCharsets.UTF_8);
+      if (isOldLogicUsed) {
+        if (TextUtils.isEmpty(algorithmParameterSpecString)) {
+          throw new IllegalArgumentException("The algorithm parameter spec must not be null!");
+        }
+
+        if (algorithmParameterSpecString.length() != SIZE_OF_ALGORITHM_PARAMETER_SPEC) {
+          throw new IllegalArgumentException("The algorithm parameter spec size must be equal "
+              + SIZE_OF_ALGORITHM_PARAMETER_SPEC + " bytes!");
+        }
+
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS5_PADDING);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(algorithmParameterSpecString.getBytes()));
+        byte[] decodedBytes = cipher.doFinal(Base64.decode(encryptedData, Base64.DEFAULT));
+        return new String(decodedBytes, StandardCharsets.UTF_8);
+      } else {
+        int splitPosition = encryptedData.indexOf('\n');
+
+        if (splitPosition == -1) {
+          throw new IllegalArgumentException("wrong encryptedData");
+        }
+
+        String iv = encryptedData.substring(0, splitPosition);
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(Base64.decode(iv, Base64.DEFAULT)));
+        byte[] decodedBytes = cipher.doFinal(Base64.decode(encryptedData.substring(splitPosition + 1), Base64.DEFAULT));
+        return new String(decodedBytes, StandardCharsets.UTF_8);
+      }
     } else return encryptedData;
   }
 
   /**
-   * This method does encrypt of the input text and returns an encrypted data.
-   * <p>
-   * For encrypt will be created a Cipher object with transformation
-   * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING} and initialized as
-   * {@link Cipher#ENCRYPT_MODE} with a public key. Then the plainData which will be as input will be convert to
-   * byte[] and encryptWithRSA via cipher.doFinal. After this we will return a base64 encoded encrypted result.
+   * This method encrypts an input text and returns encrypted data.
+   * It uses RSA for the older versions (which have such support) or AES.
    *
    * @param plainData The input text which will be encrypted.
    * @return <tt>String</tt> A base64 encoded encrypted result.
-   * @throws NoSuchPaddingException
-   * @throws NoSuchAlgorithmException
-   * @throws InvalidKeyException
-   * @throws BadPaddingException
-   * @throws IllegalBlockSizeException
+   * @throws Exception The encryption process can throw a lot of exceptions.
    */
-  public String encryptWithRSA(String plainData) throws NoSuchPaddingException, NoSuchAlgorithmException,
-      InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+  public String encryptWithRSAOrAES(String plainData) throws Exception {
     if (!TextUtils.isEmpty(plainData)) {
-      Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING);
-      cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+      if (isOldLogicUsed) {
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING);
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
-      byte[] plainDataBytes = plainData.getBytes(StandardCharsets.UTF_8);
-      byte[] encryptedBytes = cipher.doFinal(plainDataBytes);
+        byte[] plainDataBytes = plainData.getBytes(StandardCharsets.UTF_8);
+        byte[] encryptedBytes = cipher.doFinal(plainDataBytes);
 
-      return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
+        return Base64.encodeToString(encryptedBytes, Base64.DEFAULT);
+      } else {
+        return encrypt(plainData, null);
+      }
     } else return plainData;
   }
 
   /**
-   * This method does decrypt of the input encrypted text and return a decrypted data.
-   * <p>
-   * For decrypt will be created a Cipher object with transformation
-   * {@link KeyStoreCryptoManager#TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING} and initialized as
-   * {@link Cipher#DECRYPT_MODE} with a private key. Then the encryptedData which will be as input will be decode
-   * to byte[] and decrypt via cipher.doFinal. After this we will return a decrypted result.
+   * This method decrypts an input encrypted text and returns decrypted data.
+   * It uses RSA for the older versions (which have such support) or AES.
    *
-   * @param encryptedData - The input encrypted text, which must be encrypted and encoded in
-   *                      base64.
-   * @return <tt>String</tt> Return a decrypted data.
-   * @throws GeneralSecurityException
+   * @param encryptedData - The input encrypted text, which must be encrypted and encoded in base64.
+   * @return <tt>String</tt> Return decrypt
+   * @throws Exception The decryption process can throw a lot of exceptions.
    */
-  public String decryptWithRSA(String encryptedData) throws GeneralSecurityException {
+  public String decryptWithRSAOrAES(String encryptedData) throws Exception {
     if (!TextUtils.isEmpty(encryptedData)) {
-      Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING);
-      cipher.init(Cipher.DECRYPT_MODE, privateKey);
+      if (isOldLogicUsed) {
+        Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING);
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
-      byte[] encryptedBytes = Base64.decode(encryptedData, Base64.DEFAULT);
-      byte[] decryptedBytes;
-      try {
-        decryptedBytes = cipher.doFinal(encryptedBytes);
-      } catch (BadPaddingException | RuntimeException e) {
-        e.printStackTrace();
+        byte[] encryptedBytes = Base64.decode(encryptedData, Base64.DEFAULT);
+        byte[] decryptedBytes;
+        try {
+          decryptedBytes = cipher.doFinal(encryptedBytes);
+        } catch (BadPaddingException | RuntimeException e) {
+          e.printStackTrace();
 
-        String runtimeMsg = "error:04000044:RSA routines:OPENSSL_internal:internal error";
-        if (e instanceof RuntimeException && runtimeMsg.equals(e.getMessage())) {
-          context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
-          throw new RuntimeException("Storage was corrupted", e);
+          String runtimeMsg = "error:04000044:RSA routines:OPENSSL_internal:internal error";
+          if (e instanceof RuntimeException && runtimeMsg.equals(e.getMessage())) {
+            context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
+            throw new RuntimeException("Storage was corrupted", e);
+          }
+
+          String badPaddingMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error";
+          if (e instanceof BadPaddingException && badPaddingMsg.equals(e.getMessage())) {
+            context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
+            throw new GeneralSecurityException("Storage was corrupted", e);
+          }
+
+          throw e;
         }
 
-        String badPaddingMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error";
-        if (e instanceof BadPaddingException && badPaddingMsg.equals(e.getMessage())) {
-          context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
-          throw new GeneralSecurityException("Storage was corrupted", e);
-        }
-
-        throw e;
+        return new String(decryptedBytes, StandardCharsets.UTF_8);
+      } else {
+        return decrypt(encryptedData, null);
       }
-
-      return new String(decryptedBytes, StandardCharsets.UTF_8);
     } else return encryptedData;
   }
 
-  /**
-   * Do initialization of an AES SecretKeySpec object.
-   *
-   * @throws Exception The initialization can throw a lot of exceptions.
-   */
-  private void initAesSecretKeySpec() throws Exception {
-    String encryptedSecretKey = getSecretKeyFromSharedPreferences();
-    if (getSecretKeyFromSharedPreferences() == null) {
-      encryptedSecretKey = generateEncodedSecretKey();
-      saveSecretKeyToSharedPreferences(encryptedSecretKey);
+  private void init() throws Exception {
+    if (isOldLogicUsed) {
+      initRSAKeys();
+      initAESSecretKey();
+    } else {
+      initAESSecretKey();
     }
-
-    String decryptedSecretKey = decryptWithRSA(encryptedSecretKey);
-
-    secKeySpec = new SecretKeySpec(Base64.decode(decryptedSecretKey, Base64.DEFAULT), ALGORITHM_AES);
   }
 
   /**
-   * Do initialization of a Rsa KeyPair object.
+   * Do initialization of RSA keys.
    *
    * @throws Exception The initialization can throw a lot of exceptions.
    */
-  private void initRsaKeyPair() throws Exception {
-    KeyStore keyStore = KeyStore.getInstance(PROVIDER_ANDROID_KEY_STORE);
-    keyStore.load(null);
-
-    if (!keyStore.containsAlias(ANDROID_KEY_STORE_RSA_ALIAS)) {
-      KeyPair keyPair = createRSAKeyPair();
-      this.privateKey = keyPair.getPrivate();
-      this.publicKey = keyPair.getPublic();
-      return;
-    }
-
+  private void initRSAKeys() throws Exception {
     try {
       this.privateKey = (PrivateKey) keyStore.getKey(ANDROID_KEY_STORE_RSA_ALIAS, null);
     } catch (UnrecoverableKeyException e) {
@@ -317,51 +312,37 @@ public class KeyStoreCryptoManager {
   }
 
   /**
-   * Create KeyPair for alias {@link KeyStoreCryptoManager#ANDROID_KEY_STORE_RSA_ALIAS}.
+   * Do initialization of AES {@link SecretKey} object.
    *
-   * @return <tt>{@link KeyPair}</tt> Generated KeyPair object with a private key.
-   * @throws NoSuchProviderException
-   * @throws NoSuchAlgorithmException
-   * @throws InvalidAlgorithmParameterException
+   * @throws Exception The initialization can throw a lot of exceptions.
    */
-  private KeyPair createRSAKeyPair() throws NoSuchProviderException, NoSuchAlgorithmException,
-      InvalidAlgorithmParameterException, ManualHandledException {
-    try {
-      return genKeyPair();
-    } catch (NullPointerException e) {
-      //try to catch an exception for the issue https://github.com/FlowCrypt/flowcrypt-android/issues/225
-      e.printStackTrace();
-      throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
+  private void initAESSecretKey() throws Exception {
+    if (isOldLogicUsed) {
+      initAESSecretKeyFromSharedPreferences();
+    } else {
+      if (!keyStore.containsAlias(ANDROID_KEY_STORE_AES_ALIAS)) {
+        genAESSecretKey();
+      }
+
+      try {
+        this.secretKey = (SecretKey) keyStore.getKey(ANDROID_KEY_STORE_AES_ALIAS, null);
+      } catch (UnrecoverableKeyException e) {
+        e.printStackTrace();
+        throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
+      }
     }
   }
 
   /**
-   * Generate {@link KeyPair} using AndroidKeyStore.
+   * Do initialization of AES {@link SecretKey} from the shared preferences.
    *
-   * @return <tt>{@link KeyPair}</tt> Generated KeyPair object with a private key.
-   * @throws NoSuchAlgorithmException
-   * @throws NoSuchProviderException
-   * @throws InvalidAlgorithmParameterException
+   * @throws Exception The initialization can throw a lot of exceptions.
    */
-  private KeyPair genKeyPair() throws NoSuchAlgorithmException,
-      NoSuchProviderException, InvalidAlgorithmParameterException, ManualHandledException {
+  private void initAESSecretKeyFromSharedPreferences() throws Exception {
+    String encryptedSecretKey = getSecretKeyFromSharedPreferences();
+    String decryptedSecretKey = decryptWithRSAOrAES(encryptedSecretKey);
 
-    KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
-        KeyProperties.KEY_ALGORITHM_RSA, PROVIDER_ANDROID_KEY_STORE);
-
-    keyPairGenerator.initialize(
-        new KeyGenParameterSpec.Builder(ANDROID_KEY_STORE_RSA_ALIAS,
-            KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
-            .setBlockModes(KeyProperties.BLOCK_MODE_ECB)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1)
-            .build());
-
-    try {
-      return keyPairGenerator.generateKeyPair();
-    } catch (ProviderException e) {
-      e.printStackTrace();
-      throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
-    }
+    secretKey = new SecretKeySpec(Base64.decode(decryptedSecretKey, Base64.DEFAULT), KeyProperties.KEY_ALGORITHM_AES);
   }
 
   /**
@@ -375,36 +356,25 @@ public class KeyStoreCryptoManager {
   }
 
   /**
-   * Save an encrypted secret key to SharedPreferences
-   *
-   * @param newSecretKey A new secret key, which must be encrypted.
-   * @return <tt>{@link Boolean}</tt> true if saving operation success, false otherwise..
+   * Generate {@link SecretKey} using AndroidKeyStore for the AES symmetric algorithm.
    */
-  private boolean saveSecretKeyToSharedPreferences(String newSecretKey) {
-    SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-    SharedPreferences.Editor edit = sharedPreferences.edit();
-    edit.putString(PREFERENCE_KEY_SECRET, newSecretKey);
-    return edit.commit();
-  }
+  private void genAESSecretKey() throws NoSuchAlgorithmException, NoSuchProviderException,
+      InvalidAlgorithmParameterException, ManualHandledException {
 
-  /**
-   * Generate an encrypted secret key for the AES symmetric algorithm.
-   *
-   * @return <tt>{@link String}</tt> An encrypted secret key with the RSA asymmetric algorithm.
-   * @throws NoSuchAlgorithmException
-   * @throws IllegalBlockSizeException
-   * @throws InvalidKeyException
-   * @throws BadPaddingException
-   * @throws NoSuchPaddingException
-   */
-  private String generateEncodedSecretKey() throws NoSuchAlgorithmException, IllegalBlockSizeException,
-      InvalidKeyException, BadPaddingException, NoSuchPaddingException {
-    KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM_AES);
-    SecureRandom secureRandom = SecureRandom.getInstance(ALGORITHM_SHA1PRNG);
-    keyGenerator.init(KEY_SIZE_128, secureRandom);
-    SecretKey secretKey = keyGenerator.generateKey();
+    KeyGenerator keyPairGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES,
+        PROVIDER_ANDROID_KEY_STORE);
 
-    String originalSecretKey = Base64.encodeToString(secretKey.getEncoded(), Base64.DEFAULT);
-    return encryptWithRSA(originalSecretKey);
+    keyPairGenerator.init(new KeyGenParameterSpec.Builder(ANDROID_KEY_STORE_AES_ALIAS,
+        KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+        .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+        .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+        .build());
+
+    try {
+      keyPairGenerator.generateKey();
+    } catch (ProviderException e) {
+      e.printStackTrace();
+      throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
+    }
   }
 }

@@ -136,7 +136,7 @@ public class AccountDaoSource extends BaseDaoSource {
    * @throws GeneralSecurityException
    */
   public static AuthCredentials getCurrentAuthCredsFromCursor(KeyStoreCryptoManager manager,
-                                                              Cursor cursor) throws GeneralSecurityException {
+                                                              Cursor cursor) throws Exception {
 
     SecurityType.Option imapOpt = SecurityType.Option.NONE;
 
@@ -164,7 +164,7 @@ public class AccountDaoSource extends BaseDaoSource {
 
     return new AuthCredentials.Builder().setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)))
         .setUsername(cursor.getString(cursor.getColumnIndex(COL_USERNAME)))
-        .setPassword(manager.decryptWithRSA(originalPassword))
+        .setPassword(manager.decryptWithRSAOrAES(originalPassword))
         .setImapServer(cursor.getString(cursor.getColumnIndex(COL_IMAP_SERVER)))
         .setImapPort(cursor.getInt(cursor.getColumnIndex(COL_IMAP_PORT)))
         .setImapSecurityTypeOpt(imapOpt)
@@ -173,7 +173,7 @@ public class AccountDaoSource extends BaseDaoSource {
         .setSmtpSecurityTypeOpt(smtpOpt)
         .setIsUseCustomSignInForSmtp(cursor.getInt(cursor.getColumnIndex(COL_SMTP_IS_USE_CUSTOM_SIGN)) == 1)
         .setSmtpSigInUsername(cursor.getString(cursor.getColumnIndex(COL_SMTP_USERNAME)))
-        .setSmtpSignInPassword(manager.decryptWithRSA(cursor.getString(cursor.getColumnIndex(COL_SMTP_PASSWORD))))
+        .setSmtpSignInPassword(manager.decryptWithRSAOrAES(cursor.getString(cursor.getColumnIndex(COL_SMTP_PASSWORD))))
         .build();
   }
 
@@ -507,9 +507,9 @@ public class AccountDaoSource extends BaseDaoSource {
 
     KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
 
-    contentValues.put(COL_ACCOUNT_TYPE, email.substring(email.indexOf('@') + 1, email.length()));
+    contentValues.put(COL_ACCOUNT_TYPE, email.substring(email.indexOf('@') + 1));
     contentValues.put(COL_USERNAME, authCreds.getUsername());
-    contentValues.put(COL_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCreds.getPassword()));
+    contentValues.put(COL_PASSWORD, keyStoreCryptoManager.encryptWithRSAOrAES(authCreds.getPassword()));
     contentValues.put(COL_IMAP_SERVER, authCreds.getImapServer());
     contentValues.put(COL_IMAP_PORT, authCreds.getImapPort());
     contentValues.put(COL_IMAP_IS_USE_SSL_TLS, authCreds.getImapOpt() == SecurityType.Option.SSL_TLS);
@@ -520,7 +520,7 @@ public class AccountDaoSource extends BaseDaoSource {
     contentValues.put(COL_SMTP_IS_USE_STARTTLS, authCreds.getSmtpOpt() == SecurityType.Option.STARTLS);
     contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCreds.hasCustomSignInForSmtp());
     contentValues.put(COL_SMTP_USERNAME, authCreds.getSmtpSigInUsername());
-    contentValues.put(COL_SMTP_PASSWORD, keyStoreCryptoManager.encryptWithRSA(authCreds.getSmtpSignInPassword()));
+    contentValues.put(COL_SMTP_PASSWORD, keyStoreCryptoManager.encryptWithRSAOrAES(authCreds.getSmtpSignInPassword()));
 
     contentValues.put(COL_IS_ACTIVE, true);
 
