@@ -7,14 +7,17 @@ package com.flowcrypt.email.api.retrofit.node;
 
 import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptKeyRequest;
+import com.flowcrypt.email.api.retrofit.request.node.GenerateKeyRequest;
 import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
+import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult;
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
+import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.util.exception.NodeException;
 import com.google.android.gms.common.util.CollectionUtils;
 
@@ -124,6 +127,28 @@ public class NodeCallsExecutor {
 
     retrofit2.Response<EncryptKeyResult> response = service.encryptKey(request).execute();
     EncryptKeyResult result = response.body();
+
+    checkResult(result);
+
+    return result;
+  }
+
+  /**
+   * Generate a private key using the given parameters.
+   *
+   * @param passphrase  The given passphrase.
+   * @param pgpContacts A list of contacts.
+   * @return An instance of {@link GenerateKeyResult}
+   * @throws IOException   Such exceptions can occur during network calls.
+   * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
+   */
+  public static GenerateKeyResult genKey(String passphrase, List<PgpContact> pgpContacts)
+      throws IOException, NodeException {
+    NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    GenerateKeyRequest request = new GenerateKeyRequest(passphrase, pgpContacts);
+
+    retrofit2.Response<GenerateKeyResult> response = service.generateKey(request).execute();
+    GenerateKeyResult result = response.body();
 
     checkResult(result);
 

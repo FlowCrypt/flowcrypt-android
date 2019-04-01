@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptKeyRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
+import com.flowcrypt.email.api.retrofit.request.node.GenerateKeyRequest;
 import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
@@ -21,6 +22,7 @@ import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
+import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult;
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult;
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
@@ -76,4 +78,7 @@ public interface NodeService {
   @POST("/")
   @Streaming
   Call<DecryptedFileResult> decryptFile(@Body DecryptFileRequest request);
+
+  @POST("/")
+  Call<GenerateKeyResult> generateKey(@Body GenerateKeyRequest request);
 }
