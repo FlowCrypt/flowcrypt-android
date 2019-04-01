@@ -15,8 +15,6 @@ import com.eclipsesource.v8.V8Function;
 import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.js.PasswordStrength;
-import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.StorageConnectorInterface;
 
 import org.apache.commons.io.IOUtils;
@@ -68,18 +66,6 @@ public class Js { // Create one object per thread and use them separately. Not t
 
   public StorageConnectorInterface getStorageConnector() {
     return storage;
-  }
-
-  public PgpKey crypto_key_create(PgpContact[] user_ids, int num_bits, String pass_phrase) {
-    V8Array args = new V8Array(v8).push(PgpContact.arrayAsV8UserIds(v8, user_ids)).push(num_bits).push(pass_phrase)
-        .push(cb_catch);
-    this.call(void.class, p("crypto", "key", "create"), args);
-    return new PgpKey((V8Object) this.call(Object.class, p("crypto", "key", "read"), new V8Array(v8)
-        .push((String) cb_last_value[0])), this);
-  }
-
-  public String crypto_key_longid(PgpKey k) {
-    return (String) this.call(str, p("crypto", "key", "longid"), new V8Array(v8).push(k.getV8Object()));
   }
 
   public List<String> crypto_password_weak_words() {

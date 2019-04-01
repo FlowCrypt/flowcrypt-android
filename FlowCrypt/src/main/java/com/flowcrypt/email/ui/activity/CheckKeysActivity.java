@@ -17,7 +17,6 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.js.StorageConnectorInterface;
 import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.KeyDetails;
@@ -395,7 +394,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
   }
 
   /**
-   * Generate a map of incoming list of {@link NodeKeyDetails} objects where values will be a {@link PgpKey} longId.
+   * Generate a map of incoming list of {@link NodeKeyDetails} objects where values will be a {@link NodeKeyDetails}
+   * longId.
    *
    * @param privateKeyDetailsList An incoming list of {@link NodeKeyDetails} objects.
    * @return A generated map.

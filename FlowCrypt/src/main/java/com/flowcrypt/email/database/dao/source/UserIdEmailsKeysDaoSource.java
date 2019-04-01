@@ -14,7 +14,6 @@ import android.provider.BaseColumns;
 import android.text.TextUtils;
 import android.util.Pair;
 
-import com.flowcrypt.email.js.PgpKey;
 import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -98,7 +97,7 @@ public class UserIdEmailsKeysDaoSource extends BaseDaoSource {
    *
    * @param context   Interface to global information about an application environment.
    * @param keyLognId The key longid.
-   * @return The count of deleted rows. Will be 1 if information about {@link PgpKey} was deleted or -1 otherwise.
+   * @return The count of deleted rows. Will be 1 if information about the key was deleted or -1 otherwise.
    */
   public int removeKey(Context context, String keyLognId) {
     if (!TextUtils.isEmpty(keyLognId)) {
