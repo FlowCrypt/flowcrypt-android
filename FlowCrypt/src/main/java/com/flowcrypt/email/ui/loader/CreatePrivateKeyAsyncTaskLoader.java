@@ -20,14 +20,13 @@ import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
@@ -35,7 +34,6 @@ import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAc
 import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction;
 import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.google.android.gms.common.util.CollectionUtils;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.ListSendAsResponse;
 import com.google.api.services.gmail.model.SendAs;
@@ -61,9 +59,6 @@ import retrofit2.Response;
  * E-mail: DenBond7@gmail.com
  */
 public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
-
-  private static final int DEFAULT_KEY_SIZE = 2048;
-
   private final String passphrase;
   private final AccountDao account;
   private boolean isActionStarted;
@@ -90,22 +85,13 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
   public LoaderResult loadInBackground() {
     String email = account.getEmail();
     isActionStarted = true;
-    PgpKey pgpKey = null;
+    NodeKeyDetails nodeKeyDetails = null;
     try {
-      pgpKey = createPgpKey();
-
-      if (pgpKey == null) {
-        return new LoaderResult(null, new NullPointerException("The generated private key is null!"));
-      }
-
       KeyStoreCryptoManager manager = new KeyStoreCryptoManager(getContext());
 
-      List<NodeKeyDetails> nodeKeyDetailsList = NodeCallsExecutor.parseKeys(pgpKey.armor());
-      if (CollectionUtils.isEmpty(nodeKeyDetailsList) || nodeKeyDetailsList.size() != 1) {
-        throw new IllegalStateException("Parse keys error");
-      }
+      GenerateKeyResult result = NodeCallsExecutor.genKey(passphrase, genContacts());
+      nodeKeyDetails = result.getKey();
 
-      NodeKeyDetails nodeKeyDetails = nodeKeyDetailsList.get(0);
       KeysDao keysDao = KeysDao.generateKeysDao(manager, KeyDetails.Type.NEW, nodeKeyDetails, passphrase);
 
       Uri uri = new KeysDaoSource().addRow(getContext(), keysDao);
@@ -134,9 +120,9 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
       return new LoaderResult(nodeKeyDetails.getLongId(), null);
     } catch (Exception e) {
       e.printStackTrace();
-      if (pgpKey != null) {
-        new KeysDaoSource().removeKey(getContext(), pgpKey.getLongid());
-        new UserIdEmailsKeysDaoSource().removeKey(getContext(), pgpKey.getLongid());
+      if (nodeKeyDetails != null) {
+        new KeysDaoSource().removeKey(getContext(), nodeKeyDetails.getLongId());
+        new UserIdEmailsKeysDaoSource().removeKey(getContext(), nodeKeyDetails.getLongId());
       }
       ExceptionUtil.handleError(e);
       return new LoaderResult(null, e);
@@ -168,35 +154,28 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
     return true;
   }
 
-  /**
-   * Create a private PGP key.
-   *
-   * @return Generated {@link PgpKey}
-   * @throws IOException Some exceptions can be throw.
-   */
-  private PgpKey createPgpKey() throws Exception {
+  private List<PgpContact> genContacts() throws Exception {
     PgpContact pgpContactMain = new PgpContact(account.getEmail(), account.getDisplayName());
-    PgpContact[] pgpContacts;
+    List<PgpContact> contacts = new ArrayList<>();
+
     switch (account.getAccountType()) {
       case AccountDao.ACCOUNT_TYPE_GOOGLE:
-        List<PgpContact> pgpContactList = new ArrayList<>();
-        pgpContactList.add(pgpContactMain);
+        contacts.add(pgpContactMain);
         Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), account);
         ListSendAsResponse aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute();
         for (SendAs alias : aliases.getSendAs()) {
           if (alias.getVerificationStatus() != null) {
-            pgpContactList.add(new PgpContact(alias.getSendAsEmail(), alias.getDisplayName()));
+            contacts.add(new PgpContact(alias.getSendAsEmail(), alias.getDisplayName()));
           }
         }
-        pgpContacts = pgpContactList.toArray(new PgpContact[0]);
         break;
 
       default:
-        pgpContacts = new PgpContact[]{pgpContactMain};
+        contacts.add(pgpContactMain);
         break;
     }
 
-    return new Js(getContext(), null).crypto_key_create(pgpContacts, DEFAULT_KEY_SIZE, passphrase);
+    return contacts;
   }
 
   /**
