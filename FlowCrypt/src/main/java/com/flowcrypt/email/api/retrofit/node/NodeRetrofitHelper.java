@@ -33,7 +33,7 @@ import retrofit2.Retrofit;
  * E-mail: DenBond7@gmail.com
  */
 public final class NodeRetrofitHelper {
-  private static final int TIMEOUT = 30;
+  private static final int TIMEOUT = 300;
   private static NodeRetrofitHelper ourInstance = new NodeRetrofitHelper();
   private OkHttpClient okHttpClient;
   private Retrofit retrofit;
