@@ -67299,7 +67299,9 @@ class Endpoints {
         throw new Error(`Unknown generateKey variant: ${variant}`);
       }
 
-      return fmt_1.fmtRes((await pgp_1.Pgp.key.serialize((await pgp_1.Pgp.key.read(k.private)))));
+      return fmt_1.fmtRes({
+        key: await pgp_1.Pgp.key.serialize((await pgp_1.Pgp.key.read(k.private)))
+      });
     };
 
     this.composeEmail = async (uncheckedReq, data) => {
