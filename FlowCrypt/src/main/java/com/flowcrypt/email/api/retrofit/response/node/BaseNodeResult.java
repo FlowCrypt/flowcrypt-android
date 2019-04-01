@@ -40,7 +40,7 @@ public class BaseNodeResult implements BaseNodeResponse, Parcelable {
 
   protected byte[] data;
 
-  private long time;
+  private long executionTime;
 
   @SerializedName("error")
   @Expose
@@ -50,7 +50,7 @@ public class BaseNodeResult implements BaseNodeResponse, Parcelable {
   }
 
   protected BaseNodeResult(Parcel in) {
-    this.time = in.readLong();
+    this.executionTime = in.readLong();
     this.error = in.readParcelable(Error.class.getClassLoader());
   }
 
@@ -70,7 +70,7 @@ public class BaseNodeResult implements BaseNodeResponse, Parcelable {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    dest.writeLong(this.time);
+    dest.writeLong(this.executionTime);
     dest.writeParcelable(this.error, flags);
   }
 
@@ -85,13 +85,13 @@ public class BaseNodeResult implements BaseNodeResponse, Parcelable {
     data = IOUtils.toByteArray(bufferedInputStream);
   }
 
-  public long getTime() {
-    return time;
+  public long getExecutionTime() {
+    return executionTime;
   }
 
   @Override
-  public void setTime(long time) {
-    this.time = time;
+  public void setExecutionTime(long executionTime) {
+    this.executionTime = executionTime;
   }
 
   public Error getError() {

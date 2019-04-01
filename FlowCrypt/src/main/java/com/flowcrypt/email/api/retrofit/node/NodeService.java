@@ -16,6 +16,7 @@ import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest;
+import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest;
 import com.flowcrypt.email.api.retrofit.response.node.ComposeEmailResult;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult;
@@ -27,6 +28,7 @@ import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult;
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult;
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
 import com.flowcrypt.email.api.retrofit.response.node.VersionResult;
+import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult;
 
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -81,4 +83,7 @@ public interface NodeService {
 
   @POST("/")
   Call<GenerateKeyResult> generateKey(@Body GenerateKeyRequest request);
+
+  @POST("/")
+  Call<ZxcvbnStrengthBarResult> zxcvbnStrengthBar(@Body ZxcvbnStrengthBarRequest request);
 }

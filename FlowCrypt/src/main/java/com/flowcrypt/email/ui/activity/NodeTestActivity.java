@@ -109,7 +109,7 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
       }
 
       if (responseWrapper.getResult().getError() != null) {
-        addResultLine("ERROR", responseWrapper.getResult().getTime(),
+        addResultLine("ERROR", responseWrapper.getResult().getExecutionTime(),
             "error: " + responseWrapper.getResult().getError(), true);
         return;
       }
@@ -252,16 +252,16 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
     if (result.getException() != null) {
       addResultLine(actionName, 0, result.getException());
     } else {
-      addResultLine(actionName, baseNodeResult.getTime(), "ok", false);
+      addResultLine(actionName, baseNodeResult.getExecutionTime(), "ok", false);
     }
   }
 
   private void addResultLine(String actionName, BaseNodeResult result) {
     if (result != null) {
       if (result.getError() != null) {
-        addResultLine(actionName, result.getTime(), result.getError().getMsg(), false);
+        addResultLine(actionName, result.getExecutionTime(), result.getError().getMsg(), false);
       } else {
-        addResultLine(actionName, result.getTime(), "ok", false);
+        addResultLine(actionName, result.getExecutionTime(), "ok", false);
       }
     }
   }
@@ -270,20 +270,21 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
     if (r.getError() != null) {
       addResultLine(actionName, r);
     } else if (r.getMsgBlocks().get(0).getContent().length() != TEST_MSG_HTML.length()) {
-      addResultLine(actionName, r.getTime(),
+      addResultLine(actionName, r.getExecutionTime(),
           "wrong meta block len " + r.getMsgBlocks().size() + "!=" + TEST_MSG_HTML.length(), false);
     } else if (r.getMsgBlocks().get(0).getType() != MsgBlock.Type.PLAIN_TEXT) {
-      addResultLine(actionName, r.getTime(), "wrong meta block type: " + r.getMsgBlocks().get(0).getType(), false);
+      addResultLine(actionName, r.getExecutionTime(), "wrong meta block type: " + r.getMsgBlocks().get(0).getType(),
+          false);
     } else {
       MsgBlock block = r.getMsgBlocks().get(0);
       if (block == null) {
-        addResultLine(actionName, r.getTime(), "getNextBlock unexpectedly null", false);
+        addResultLine(actionName, r.getExecutionTime(), "getNextBlock unexpectedly null", false);
       } else if (block.getType() != MsgBlock.Type.PLAIN_TEXT) {
-        addResultLine(actionName, r.getTime(), "wrong block type: " + r.getMsgBlocks().size(), false);
+        addResultLine(actionName, r.getExecutionTime(), "wrong block type: " + r.getMsgBlocks().size(), false);
       } else if (!block.getContent().equals(TEST_MSG_HTML)) {
-        addResultLine(actionName, r.getTime(), "block content mismatch", false);
+        addResultLine(actionName, r.getExecutionTime(), "block content mismatch", false);
       } else if (r.getMsgBlocks().size() > 1) {
-        addResultLine(actionName, r.getTime(), "unexpected second block", false);
+        addResultLine(actionName, r.getExecutionTime(), "unexpected second block", false);
       } else {
         addResultLine(actionName, r);
       }
@@ -294,9 +295,9 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
     if (r.getError() != null) {
       addResultLine(actionName, r);
     } else if (!"file.txt".equals(r.getName())) {
-      addResultLine(actionName, r.getTime(), "wrong filename", false);
+      addResultLine(actionName, r.getExecutionTime(), "wrong filename", false);
     } else if (originalData != null && !Arrays.equals(r.getDecryptedBytes(), originalData)) {
-      addResultLine(actionName, r.getTime(), "decrypted file content mismatch", false);
+      addResultLine(actionName, r.getExecutionTime(), "decrypted file content mismatch", false);
     } else {
       addResultLine(actionName, r);
     }

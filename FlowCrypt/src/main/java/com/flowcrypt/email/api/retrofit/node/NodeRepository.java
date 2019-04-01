@@ -74,7 +74,7 @@ public final class NodeRepository implements PgpApiRepository {
           long time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis();
           if (response.body() != null) {
             baseNodeResult = (BaseNodeResult) response.body();
-            baseNodeResult.setTime(time);
+            baseNodeResult.setExecutionTime(time);
 
             if (baseNodeResult.getError() != null) {
               return NodeResponseWrapper.error(nodeRequestWrapper.getRequestCode(), baseNodeResult);

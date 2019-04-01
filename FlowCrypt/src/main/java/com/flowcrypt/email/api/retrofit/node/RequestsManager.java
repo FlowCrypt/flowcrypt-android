@@ -102,12 +102,12 @@ public class RequestsManager {
           long time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis();
           if (response.body() != null) {
             baseNodeResult = (BaseNodeResult) response.body();
-            baseNodeResult.setTime(time);
+            baseNodeResult.setExecutionTime(time);
           } else {
             throw new NullPointerException("The response body is null!");
           }
 
-          baseNodeResult.setTime(time);
+          baseNodeResult.setExecutionTime(time);
         } else {
           throw new NullPointerException("The response is null!");
         }
