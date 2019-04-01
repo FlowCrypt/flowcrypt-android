@@ -67382,7 +67382,7 @@ class Endpoints {
             blocks.push(...(await pgp_1.PgpMsg.fmtDecrypted(decryptRes.content, 'decryptedText')));
           } else {
             decryptRes.message = undefined;
-            blocks.push(pgp_1.Pgp.internal.msgBlockDecryptErrObj(rawBlock.content, decryptRes));
+            blocks.push(pgp_1.Pgp.internal.msgBlockDecryptErrObj(decryptRes.error.type === pgp_1.DecryptErrTypes.noMdc ? decryptRes.content : rawBlock.content, decryptRes));
           }
         } else {
           blocks.push(rawBlock);
@@ -67657,7 +67657,9 @@ const openpgp = require_js_1.requireOpenpgp();
 if (typeof openpgp !== 'undefined') {
   // in certain environments, eg browser content scripts, openpgp is not included (not all functions below need it)
   openpgp.config.versionstring = `FlowCrypt ${const_js_1.VERSION} Gmail Encryption`;
-  openpgp.config.commentstring = 'Seamlessly send and receive encrypted email'; // openpgp.config.require_uid_self_cert = false;
+  openpgp.config.commentstring = 'Seamlessly send and receive encrypted email';
+  openpgp.config.ignore_mdc_error = true; // we manually check for missing MDC and show loud warning to user (no auto-decrypt)
+  // openpgp.config.require_uid_self_cert = false;
 }
 
 var DecryptErrTypes;
@@ -68322,7 +68324,7 @@ Pgp.internal = {
         type: DecryptErrTypes.wrongPwd,
         message: e
       };
-    } else if (e === 'Decryption failed due to missing MDC in combination with modern cipher.') {
+    } else if (e === 'Decryption failed due to missing MDC in combination with modern cipher.' || e === 'Decryption failed due to missing MDC.') {
       return {
         type: DecryptErrTypes.noMdc,
         message: e
@@ -68583,6 +68585,22 @@ PgpMsg.decrypt = async ({
     const decrypted = await prepared.message.decrypt(privateKeys, passwords, undefined, false); // const signature = keys.signed_by.length ? Pgp.message.verify(message, keys.for_verification, keys.verification_contacts[0]) : false;
 
     const content = new buf_js_1.Buf((await openpgp.stream.readToEnd(decrypted.getLiteralData())));
+
+    if (!prepared.isCleartext && prepared.message.packets.filterByTag(openpgp.enums.packet.symmetricallyEncrypted).length) {
+      const noMdc = 'Security threat!\n\nMessage is missing integrity checks (MDC). The sender should update their outdated software.\n\nDisplay the message at your own risk.';
+      return {
+        success: false,
+        content,
+        error: {
+          type: DecryptErrTypes.noMdc,
+          message: noMdc
+        },
+        message: prepared.message,
+        longids,
+        isEncrypted
+      };
+    }
+
     return {
       success: true,
       content,
