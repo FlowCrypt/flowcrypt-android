@@ -15,7 +15,7 @@ import android.os.Parcelable;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;

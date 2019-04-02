@@ -8,8 +8,6 @@ package com.flowcrypt.email.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.flowcrypt.email.js.PgpContact;
-
 /**
  * This class describes information about some public key.
  *

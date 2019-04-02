@@ -12,8 +12,8 @@ import android.util.Pair;
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.model.PgpContact;
+import com.flowcrypt.email.model.PgpKeyInfo;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.google.android.gms.common.util.CollectionUtils;
 

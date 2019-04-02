@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.js;
+package com.flowcrypt.email.model;
 
 import android.content.Context;
 

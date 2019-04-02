@@ -6,7 +6,7 @@
 package com.flowcrypt.email.api.retrofit.request.node;
 
 import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 import com.google.gson.annotations.Expose;
 
 import java.io.IOException;

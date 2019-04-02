@@ -16,8 +16,8 @@ import com.flowcrypt.email.api.email.sync.SyncListener;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.EmailAndNamePair;
+import com.flowcrypt.email.model.PgpContact;
 import com.sun.mail.imap.IMAPFolder;
 
 import java.util.ArrayList;

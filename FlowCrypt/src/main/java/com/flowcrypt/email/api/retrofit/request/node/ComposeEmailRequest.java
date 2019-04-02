@@ -6,8 +6,8 @@
 package com.flowcrypt.email.api.retrofit.request.node;
 
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
-import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.model.PgpContact;
 import com.google.gson.annotations.Expose;
 
 import java.util.ArrayList;

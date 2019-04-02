@@ -9,7 +9,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.assertions.RecyclerViewItemCountAssertion;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.util.PrivateKeysManager;

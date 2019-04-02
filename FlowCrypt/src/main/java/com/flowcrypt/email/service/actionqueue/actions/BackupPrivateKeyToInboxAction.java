@@ -16,7 +16,7 @@ import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.model.PgpKeyInfo;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 
 import javax.mail.Message;

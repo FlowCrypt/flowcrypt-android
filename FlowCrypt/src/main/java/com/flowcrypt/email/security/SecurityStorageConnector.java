@@ -7,9 +7,9 @@ package com.flowcrypt.email.security;
 
 import android.content.Context;
 
-import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKeyInfo;
-import com.flowcrypt.email.js.StorageConnectorInterface;
+import com.flowcrypt.email.model.PgpContact;
+import com.flowcrypt.email.model.PgpKeyInfo;
+import com.flowcrypt.email.model.StorageConnectorInterface;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 

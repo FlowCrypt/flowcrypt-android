@@ -17,8 +17,8 @@ import android.os.RemoteException;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
 
-import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.EmailAndNamePair;
+import com.flowcrypt.email.model.PgpContact;
 import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;

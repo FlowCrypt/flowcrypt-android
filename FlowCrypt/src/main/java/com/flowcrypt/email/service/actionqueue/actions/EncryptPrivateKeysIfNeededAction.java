@@ -17,7 +17,7 @@ import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.broadcastreceivers.UpdateStorageConnectorBroadcastReceiver;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.model.PgpKeyInfo;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.SharedPreferencesHelper;

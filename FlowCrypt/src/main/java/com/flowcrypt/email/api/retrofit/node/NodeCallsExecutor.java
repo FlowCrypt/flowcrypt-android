@@ -19,7 +19,7 @@ import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult;
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
 import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult;
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.util.exception.NodeException;
 import com.google.android.gms.common.util.CollectionUtils;
 

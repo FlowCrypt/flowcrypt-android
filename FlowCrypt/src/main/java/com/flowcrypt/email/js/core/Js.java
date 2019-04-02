@@ -14,7 +14,7 @@ import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Function;
 import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.js.StorageConnectorInterface;
+import com.flowcrypt.email.model.StorageConnectorInterface;
 
 import org.apache.commons.io.IOUtils;
 

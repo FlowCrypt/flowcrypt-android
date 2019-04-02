@@ -19,7 +19,7 @@ import com.flowcrypt.email.api.retrofit.request.node.VersionRequest;
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
 import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent;
-import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.model.PgpKeyInfo;
 import com.flowcrypt.email.node.NodeSecret;
 import com.flowcrypt.email.node.TestData;
 

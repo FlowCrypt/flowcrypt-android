@@ -11,7 +11,7 @@ import android.database.Cursor;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.util.UIUtil;
 import com.hootsuite.nachos.ChipConfiguration;
 import com.hootsuite.nachos.chip.Chip;

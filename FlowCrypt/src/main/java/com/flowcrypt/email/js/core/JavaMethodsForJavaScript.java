@@ -11,8 +11,8 @@ import android.text.Html;
 import com.eclipsesource.v8.V8;
 import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Object;
-import com.flowcrypt.email.js.PgpKeyInfo;
-import com.flowcrypt.email.js.StorageConnectorInterface;
+import com.flowcrypt.email.model.PgpKeyInfo;
+import com.flowcrypt.email.model.StorageConnectorInterface;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.math.BigInteger;

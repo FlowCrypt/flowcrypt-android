@@ -9,8 +9,8 @@ import android.app.Application;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository;
-import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.js.UiJsManager;
+import com.flowcrypt.email.model.PgpKeyInfo;
 import com.flowcrypt.email.security.SecurityStorageConnector;
 
 import androidx.annotation.NonNull;

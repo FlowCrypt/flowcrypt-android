@@ -10,7 +10,7 @@ import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.Patterns;
 
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 

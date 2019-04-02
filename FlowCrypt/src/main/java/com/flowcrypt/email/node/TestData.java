@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.node;
 
-import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.model.PgpKeyInfo;
 
 import java.util.Arrays;
 
