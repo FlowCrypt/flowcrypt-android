@@ -10,6 +10,7 @@ import com.flowcrypt.email.api.retrofit.request.node.EncryptKeyRequest;
 import com.flowcrypt.email.api.retrofit.request.node.GenerateKeyRequest;
 import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
+import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult;
@@ -17,6 +18,7 @@ import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.GmailBackupSearchResult;
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
+import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.util.exception.NodeException;
 import com.google.android.gms.common.util.CollectionUtils;
@@ -24,6 +26,8 @@ import com.google.android.gms.common.util.CollectionUtils;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+
+import retrofit2.Response;
 
 /**
  * It's an utility class which contains only static methods. Don't call this methods in the UI thread.
@@ -48,7 +52,7 @@ public class NodeCallsExecutor {
     NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
     ParseKeysRequest request = new ParseKeysRequest(key);
 
-    retrofit2.Response<ParseKeysResult> response = service.parseKeys(request).execute();
+    Response<ParseKeysResult> response = service.parseKeys(request).execute();
     ParseKeysResult result = response.body();
 
     checkResult(result);
@@ -70,7 +74,7 @@ public class NodeCallsExecutor {
     NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
     GmailBackupSearchRequest request = new GmailBackupSearchRequest(email);
 
-    retrofit2.Response<GmailBackupSearchResult> response = service.gmailBackupSearch(request).execute();
+    Response<GmailBackupSearchResult> response = service.gmailBackupSearch(request).execute();
     GmailBackupSearchResult result = response.body();
 
     checkResult(result);
@@ -104,7 +108,7 @@ public class NodeCallsExecutor {
     NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
     DecryptKeyRequest request = new DecryptKeyRequest(key, passphrases);
 
-    retrofit2.Response<DecryptKeyResult> response = service.decryptKey(request).execute();
+    Response<DecryptKeyResult> response = service.decryptKey(request).execute();
     DecryptKeyResult result = response.body();
 
     checkResult(result);
@@ -125,7 +129,7 @@ public class NodeCallsExecutor {
     NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
     EncryptKeyRequest request = new EncryptKeyRequest(key, passphrase);
 
-    retrofit2.Response<EncryptKeyResult> response = service.encryptKey(request).execute();
+    Response<EncryptKeyResult> response = service.encryptKey(request).execute();
     EncryptKeyResult result = response.body();
 
     checkResult(result);
@@ -147,8 +151,28 @@ public class NodeCallsExecutor {
     NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
     GenerateKeyRequest request = new GenerateKeyRequest(passphrase, pgpContacts);
 
-    retrofit2.Response<GenerateKeyResult> response = service.generateKey(request).execute();
+    Response<GenerateKeyResult> response = service.generateKey(request).execute();
     GenerateKeyResult result = response.body();
+
+    checkResult(result);
+
+    return result;
+  }
+
+  /**
+   * Check the passphrase strength.
+   *
+   * @param guesses The given passphrase.
+   * @return An instance of {@link ZxcvbnStrengthBarResult}
+   * @throws IOException   Such exceptions can occur during network calls.
+   * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
+   */
+  public static ZxcvbnStrengthBarResult zxcvbnStrengthBar(double guesses) throws IOException, NodeException {
+    NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    ZxcvbnStrengthBarRequest request = new ZxcvbnStrengthBarRequest(guesses);
+
+    Response<ZxcvbnStrengthBarResult> response = service.zxcvbnStrengthBar(request).execute();
+    ZxcvbnStrengthBarResult result = response.body();
 
     checkResult(result);
 

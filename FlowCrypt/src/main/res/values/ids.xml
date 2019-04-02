@@ -65,4 +65,5 @@
 
     <item name="live_data_id_fetch_keys" type="id" />
     <item name="live_data_id_parse_and_decrypt_msg" type="id" />
+    <item name="live_data_id_check_passphrase_strength" type="id" />
 </resources>

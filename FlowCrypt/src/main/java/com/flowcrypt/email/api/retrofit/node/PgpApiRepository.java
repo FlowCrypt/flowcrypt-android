@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.retrofit.node;
 
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
+import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
 
@@ -35,7 +36,17 @@ public interface PgpApiRepository {
    *
    * @param requestCode The unique request code for identify the current action.
    * @param liveData    An instance of {@link MutableLiveData} which will be used for the result delivering.
+   * @param request     An instance of {@link ParseDecryptMsgRequest} which contains information about a message.
    */
-  void parseDecryptMsg(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
-                       ParseDecryptMsgRequest parseDecryptMsgRequest);
+  void parseDecryptMsg(int requestCode, MutableLiveData<NodeResponseWrapper> liveData, ParseDecryptMsgRequest request);
+
+  /**
+   * Check the passphrase strength
+   *
+   * @param requestCode The unique request code for identify the current action.
+   * @param liveData    An instance of {@link MutableLiveData} which will be used for the result delivering.
+   * @param request     An instance of {@link ZxcvbnStrengthBarRequest}.
+   */
+  void checkPassphraseStrength(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
+                               ZxcvbnStrengthBarRequest request);
 }

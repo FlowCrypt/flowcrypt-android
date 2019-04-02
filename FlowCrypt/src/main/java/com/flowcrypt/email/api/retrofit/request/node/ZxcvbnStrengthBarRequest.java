@@ -23,12 +23,12 @@ import retrofit2.Response;
 public class ZxcvbnStrengthBarRequest extends BaseNodeRequest {
 
   @Expose
-  private long guesses;
+  private double guesses;
 
   @Expose
   private String purpose;
 
-  public ZxcvbnStrengthBarRequest(long guesses) {
+  public ZxcvbnStrengthBarRequest(double guesses) {
     this.guesses = guesses;
     this.purpose = "passphrase";
   }

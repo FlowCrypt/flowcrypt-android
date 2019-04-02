@@ -99,4 +99,13 @@ public class Constants {
   public static final String PASSWORD_QUALITY_POOR = "poor";
 
   public static final String PGP_FILE_EXT = ".pgp";
+
+  public static final String[] PASSWORD_WEAK_WORDS = new String[]{
+      "crypt", "up", "cryptup", "flow", "flowcrypt", "encryption", "pgp", "email", "set", "backup", "passphrase",
+      "best", "pass", "phrases", "are", "long", "and", "have", "several", "words", "in", "them",
+      "Best pass phrases are long", "have several words", "in them", "bestpassphrasesarelong", "haveseveralwords",
+      "inthem", "Loss of this pass phrase", "cannot be recovered", "Note it down", "on a paper", "lossofthispassphrase",
+      "cannotberecovered", "noteitdown", "onapaper", "setpassword", "set password", "set pass word", "setpassphrase",
+      "set pass phrase", "set passphrase"
+  };
 }

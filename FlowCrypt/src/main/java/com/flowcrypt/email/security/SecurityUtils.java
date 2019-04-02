@@ -13,10 +13,10 @@ import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
+import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.PasswordStrength;
 import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.js.PgpKeyInfo;
 import com.flowcrypt.email.js.core.Js;
@@ -31,6 +31,7 @@ import com.nulabinc.zxcvbn.Zxcvbn;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -124,7 +125,6 @@ public class SecurityUtils {
       throws PrivateKeyStrengthException, DifferentPassPhrasesException,
       NoPrivateKeysAvailableException, IOException, NodeException {
     StringBuilder builder = new StringBuilder();
-    Zxcvbn zxcvbn = new Zxcvbn();
     String email = account.getEmail();
     List<String> longIdsByEmail = new UserIdEmailsKeysDaoSource().getLongIdsByEmail(context, email);
     String[] longids = longIdsByEmail.toArray(new String[0]);
@@ -152,11 +152,12 @@ public class SecurityUtils {
         throw new PrivateKeyStrengthException("Empty pass phrase");
       }
 
-      PasswordStrength passwordStrength = js.crypto_password_estimate_strength(
-          zxcvbn.measure(passPhrase, js.crypto_password_weak_words()).getGuesses());
+      Zxcvbn zxcvbn = new Zxcvbn();
+      double measure = zxcvbn.measure(passPhrase, Arrays.asList(Constants.PASSWORD_WEAK_WORDS)).getGuesses();
+      ZxcvbnStrengthBarResult passwordStrength = NodeCallsExecutor.zxcvbnStrengthBar(measure);
 
       if (passwordStrength != null) {
-        switch (passwordStrength.getWord()) {
+        switch (passwordStrength.getWord().getWord()) {
           case Constants.PASSWORD_QUALITY_WEAK:
           case Constants.PASSWORD_QUALITY_POOR:
             throw new PrivateKeyStrengthException("Pass phrase too weak");

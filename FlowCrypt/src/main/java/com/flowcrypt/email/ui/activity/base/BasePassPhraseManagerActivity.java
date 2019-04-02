@@ -21,27 +21,34 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.retrofit.node.NodeRepository;
+import com.flowcrypt.email.api.retrofit.response.model.node.Error;
+import com.flowcrypt.email.api.retrofit.response.model.node.Word;
+import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
+import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.PasswordStrength;
-import com.flowcrypt.email.js.UiJsManager;
-import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.material.snackbar.Snackbar;
-import com.nulabinc.zxcvbn.Zxcvbn;
 
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 
 /**
  * @author Denis Bondarenko
@@ -50,10 +57,11 @@ import androidx.core.content.ContextCompat;
  * E-mail: DenBond7@gmail.com
  */
 public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivity implements View.OnClickListener,
-    TextWatcher {
+    TextWatcher, Observer<NodeResponseWrapper> {
 
   public static final String KEY_EXTRA_ACCOUNT_DAO =
       GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT_DAO", BasePassPhraseManagerActivity.class);
+  private static final long DELAY = 350;
 
   protected View layoutProgress;
   protected View layoutContentView;
@@ -71,11 +79,12 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
   protected TextView textViewSecondPasswordCheckTitle;
   protected Button btnSuccess;
 
-  protected Js js;
-  protected Zxcvbn zxcvbn;
-  protected PasswordStrength passwordStrength;
   protected AccountDao account;
   protected boolean isBackEnabled = true;
+
+  private PasswordStrengthViewModel viewModel;
+  private ZxcvbnStrengthBarResult strengthBarResult;
+  private Timer timer;
 
   public abstract void onConfirmPassPhraseSuccess();
 
@@ -105,8 +114,10 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
 
     initViews();
 
-    this.js = UiJsManager.getInstance(this).getJs();
-    this.zxcvbn = new Zxcvbn();
+    timer = new Timer();
+    viewModel = ViewModelProviders.of(this).get(PasswordStrengthViewModel.class);
+    viewModel.init(new NodeRepository());
+    viewModel.getResponsesLiveData().observe(this, this);
   }
 
   @Override
@@ -120,8 +131,8 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
             getSnackBar().dismiss();
           }
 
-          if (passwordStrength != null) {
-            switch (passwordStrength.getWord()) {
+          if (strengthBarResult != null && strengthBarResult.getWord() != null) {
+            switch (strengthBarResult.getWord().getWord()) {
               case Constants.PASSWORD_QUALITY_WEAK:
               case Constants.PASSWORD_QUALITY_POOR:
                 InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance("",
@@ -197,15 +208,56 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
 
   @Override
   public void afterTextChanged(Editable editable) {
-    double measure = zxcvbn.measure(editable.toString(), js.crypto_password_weak_words()).getGuesses();
-    passwordStrength = js.crypto_password_estimate_strength(measure);
-
-    updatePasswordQualityProgressBar(passwordStrength);
-    updatePasswordQualityInfo(passwordStrength);
-    updateSetPassButtonBackground();
+    final String passphrase = editable.toString();
+    timer.cancel();
+    timer = new Timer();
+    timer.schedule(
+        new TimerTask() {
+          @Override
+          public void run() {
+            runOnUiThread(new TimerTask() {
+              @Override
+              public void run() {
+                viewModel.check(passphrase);
+              }
+            });
+          }
+        },
+        DELAY
+    );
 
     if (TextUtils.isEmpty(editable)) {
       textViewPasswordQualityInfo.setText(R.string.passphrase_must_be_non_empty);
+    }
+  }
+
+  @Override
+  public void onChanged(NodeResponseWrapper nodeResponseWrapper) {
+    switch (nodeResponseWrapper.getRequestCode()) {
+      case R.id.live_data_id_check_passphrase_strength:
+        switch (nodeResponseWrapper.getStatus()) {
+          case SUCCESS:
+            strengthBarResult = (ZxcvbnStrengthBarResult) nodeResponseWrapper.getResult();
+            updateStrengthViews();
+            break;
+
+          case ERROR:
+            if (nodeResponseWrapper.getResult() != null) {
+              Error error = nodeResponseWrapper.getResult().getError();
+              Toast.makeText(this, error.toString(), Toast.LENGTH_SHORT).show();
+            }
+            break;
+
+          case EXCEPTION:
+            if (nodeResponseWrapper.getResult() != null) {
+              Throwable throwable = nodeResponseWrapper.getException();
+              if (throwable != null) {
+                Toast.makeText(this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
+              }
+            }
+            break;
+        }
+        break;
     }
   }
 
@@ -234,8 +286,14 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
     btnSuccess.setOnClickListener(this);
   }
 
-  private void updateSetPassButtonBackground() {
-    switch (passwordStrength.getWord()) {
+  private void updateStrengthViews() {
+    if (strengthBarResult == null || strengthBarResult.getWord() == null) {
+      return;
+    }
+
+    Word word = strengthBarResult.getWord();
+
+    switch (word.getWord()) {
       case Constants.PASSWORD_QUALITY_WEAK:
       case Constants.PASSWORD_QUALITY_POOR:
         btnSetPassPhrase.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.silver),
@@ -247,18 +305,13 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
             PorterDuff.Mode.MULTIPLY);
         break;
     }
-  }
 
-  private void updatePasswordQualityProgressBar(PasswordStrength passwordStrength) {
-    progressBarPasswordQuality.setProgress(passwordStrength.getBar());
-    progressBarPasswordQuality.getProgressDrawable().setColorFilter(Color.parseColor(passwordStrength.getColor()),
-        android.graphics.PorterDuff.Mode.SRC_IN);
-  }
+    int color = parseColor();
 
-  private void updatePasswordQualityInfo(PasswordStrength passwordStrength) {
-    int color = Color.parseColor(passwordStrength.getColor());
+    progressBarPasswordQuality.setProgress(word.getBar());
+    progressBarPasswordQuality.getProgressDrawable().setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
 
-    String qualityValue = getLocalizedPasswordQualityValue(passwordStrength);
+    String qualityValue = getLocalizedPasswordQualityValue(word);
 
     Spannable qualityValueSpannable = new SpannableString(qualityValue);
     qualityValueSpannable.setSpan(new ForegroundColorSpan(color), 0, qualityValueSpannable.length(),
@@ -269,15 +322,42 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
     textViewPasswordQualityInfo.append(" ");
     textViewPasswordQualityInfo.append(getString(R.string.password_quality_subtext));
 
-    Spannable timeSpannable = new SpannableString(passwordStrength.getTime());
-    timeSpannable.setSpan(new ForegroundColorSpan(color), 0, timeSpannable.length(), Spannable
-        .SPAN_EXCLUSIVE_EXCLUSIVE);
+    Spannable timeSpannable = new SpannableString(strengthBarResult.getTime());
+    timeSpannable.setSpan(new ForegroundColorSpan(color), 0, timeSpannable.length(),
+        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
     textViewPasswordQualityInfo.append(" ");
     textViewPasswordQualityInfo.append(timeSpannable);
     textViewPasswordQualityInfo.append(")");
   }
 
-  private String getLocalizedPasswordQualityValue(PasswordStrength passwordStrength) {
+  private int parseColor() {
+    int color;
+    try {
+      color = Color.parseColor(strengthBarResult.getWord().getColor());
+    } catch (IllegalArgumentException e) {
+      e.printStackTrace();
+
+      switch (strengthBarResult.getWord().getColor()) {
+        case "orange":
+          color = Color.parseColor("#FFA500");
+          break;
+
+        case "darkorange":
+          color = Color.parseColor("#FF8C00");
+          break;
+
+        case "darkred":
+          color = Color.parseColor("#8B0000");
+          break;
+
+        default:
+          color = Color.DKGRAY;
+      }
+    }
+    return color;
+  }
+
+  private String getLocalizedPasswordQualityValue(Word passwordStrength) {
     String qualityValue = passwordStrength.getWord();
 
     if (qualityValue != null) {

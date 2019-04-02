@@ -34,7 +34,7 @@ public class ZxcvbnStrengthBarResult extends BaseNodeResult {
   private Word word;
 
   @Expose
-  private long seconds;
+  private double seconds;
 
   @Expose
   private String time;
@@ -45,7 +45,7 @@ public class ZxcvbnStrengthBarResult extends BaseNodeResult {
   protected ZxcvbnStrengthBarResult(Parcel in) {
     super(in);
     this.word = in.readParcelable(Word.class.getClassLoader());
-    this.seconds = in.readLong();
+    this.seconds = in.readDouble();
     this.time = in.readString();
   }
 
@@ -58,7 +58,7 @@ public class ZxcvbnStrengthBarResult extends BaseNodeResult {
   public void writeToParcel(Parcel dest, int flags) {
     super.writeToParcel(dest, flags);
     dest.writeParcelable(this.word, flags);
-    dest.writeLong(this.seconds);
+    dest.writeDouble(this.seconds);
     dest.writeString(this.time);
   }
 
@@ -70,7 +70,7 @@ public class ZxcvbnStrengthBarResult extends BaseNodeResult {
     return word;
   }
 
-  public long getSeconds() {
+  public double getSeconds() {
     return seconds;
   }
 }

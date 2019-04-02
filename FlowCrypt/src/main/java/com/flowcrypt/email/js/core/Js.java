@@ -14,7 +14,6 @@ import com.eclipsesource.v8.V8Array;
 import com.eclipsesource.v8.V8Function;
 import com.eclipsesource.v8.V8Object;
 import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.js.PasswordStrength;
 import com.flowcrypt.email.js.StorageConnectorInterface;
 
 import org.apache.commons.io.IOUtils;
@@ -22,9 +21,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 
 @SuppressWarnings("WeakerAccess")
@@ -66,20 +63,6 @@ public class Js { // Create one object per thread and use them separately. Not t
 
   public StorageConnectorInterface getStorageConnector() {
     return storage;
-  }
-
-  public List<String> crypto_password_weak_words() {
-    V8Array a = ((V8Array) this.call(Object.class, p("crypto", "password", "weak_words"), new V8Array(v8)));
-    List<String> list = new ArrayList<>();
-    for (int i = 0; i < a.length(); i++) {
-      list.add(a.getString(i));
-    }
-    return list;
-  }
-
-  public PasswordStrength crypto_password_estimate_strength(double zxcvbn_guesses) {
-    return new PasswordStrength((V8Object) this.call(Object.class, p("crypto", "password", "estimate_strength"),
-        new V8Array(v8).push(zxcvbn_guesses)));
   }
 
   private static String read(InputStream inputStream) throws IOException {

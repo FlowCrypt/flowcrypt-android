@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.retrofit.request.node.NodeRequest;
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper;
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
+import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest;
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
 
@@ -34,8 +35,14 @@ public final class NodeRepository implements PgpApiRepository {
 
   @Override
   public void parseDecryptMsg(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
-                              ParseDecryptMsgRequest parseDecryptMsgRequest) {
-    load(requestCode, liveData, parseDecryptMsgRequest);
+                              ParseDecryptMsgRequest request) {
+    load(requestCode, liveData, request);
+  }
+
+  @Override
+  public void checkPassphraseStrength(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
+                                      ZxcvbnStrengthBarRequest request) {
+    load(requestCode, liveData, request);
   }
 
   /**
