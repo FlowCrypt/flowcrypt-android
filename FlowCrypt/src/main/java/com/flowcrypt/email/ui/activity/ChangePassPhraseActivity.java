@@ -151,7 +151,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
   public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_change_pass_phrase:
-        UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+        UiJsManager.getInstance(this).getStorageConnector().refresh(this);
         LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
         break;
 

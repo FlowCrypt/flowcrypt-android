@@ -17,7 +17,6 @@ import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.model.PgpKeyInfo;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
@@ -117,19 +116,18 @@ public class SecurityUtils {
    * Generate a private keys backup for the given account.
    *
    * @param context Interface to global information about an application environment.
-   * @param js      An instance of {@link Js}
    * @param account The given account
    * @return A string which includes private keys
    */
-  public static String genPrivateKeysBackup(Context context, Js js, AccountDao account)
+  public static String genPrivateKeysBackup(Context context, AccountDao account)
       throws PrivateKeyStrengthException, DifferentPassPhrasesException,
       NoPrivateKeysAvailableException, IOException, NodeException {
     StringBuilder builder = new StringBuilder();
     String email = account.getEmail();
     List<String> longIdsByEmail = new UserIdEmailsKeysDaoSource().getLongIdsByEmail(context, email);
     String[] longids = longIdsByEmail.toArray(new String[0]);
-    js.getStorageConnector().refresh(context);
-    PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys(longids);
+    SecurityStorageConnector connector = new SecurityStorageConnector(context);
+    PgpKeyInfo[] pgpKeyInfoArray = connector.getFilteredPgpPrivateKeys(longids);
 
     if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
       throw new NoPrivateKeysAvailableException(context, account.getEmail());
@@ -140,7 +138,7 @@ public class SecurityUtils {
     for (int i = 0; i < pgpKeyInfoArray.length; i++) {
       PgpKeyInfo pgpKeyInfo = pgpKeyInfoArray[i];
 
-      String passPhrase = js.getStorageConnector().getPassphrase(pgpKeyInfo.getLongid());
+      String passPhrase = connector.getPassphrase(pgpKeyInfo.getLongid());
 
       if (i == 0) {
         firstPassPhrase = passPhrase;
@@ -186,14 +184,13 @@ public class SecurityUtils {
    * Get public keys for recipients + keys of the sender;
    *
    * @param context     Interface to global information about an application environment.
-   * @param js          An instance of {@link Js}
    * @param pgpContacts An array which contains recipients
    * @param account     The given account
    * @param senderEmail The sender email
    * @return <tt>String[]</tt> An array of public keys.
    * @throws NoKeyAvailableException
    */
-  public static String[] getRecipientsPubKeys(Context context, Js js, PgpContact[] pgpContacts, AccountDao account,
+  public static String[] getRecipientsPubKeys(Context context, PgpContact[] pgpContacts, AccountDao account,
                                               String senderEmail) throws NoKeyAvailableException, IOException,
       NodeException {
     ArrayList<String> publicKeys = new ArrayList<>();
@@ -203,7 +200,7 @@ public class SecurityUtils {
       }
     }
 
-    publicKeys.add(getSenderPublicKey(context, js, account, senderEmail));
+    publicKeys.add(getSenderPublicKey(context, account, senderEmail));
 
     return publicKeys.toArray(new String[0]);
   }
@@ -212,13 +209,12 @@ public class SecurityUtils {
    * Get a public key of the sender;
    *
    * @param context     Interface to global information about an application environment.
-   * @param js          An instance of {@link Js}
    * @param account     The given account
    * @param senderEmail The sender email
    * @return <tt>String</tt> The sender public key.
    * @throws NoKeyAvailableException
    */
-  public static String getSenderPublicKey(Context context, Js js, AccountDao account, String senderEmail) throws
+  public static String getSenderPublicKey(Context context, AccountDao account, String senderEmail) throws
       NoKeyAvailableException, IOException, NodeException {
     UserIdEmailsKeysDaoSource userIdEmailsKeysDaoSource = new UserIdEmailsKeysDaoSource();
     List<String> longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(context, senderEmail);
@@ -234,7 +230,7 @@ public class SecurityUtils {
       }
     }
 
-    PgpKeyInfo pgpKeyInfo = js.getStorageConnector().getPgpPrivateKey(longIds.get(0));
+    PgpKeyInfo pgpKeyInfo = new SecurityStorageConnector(context).getPgpPrivateKey(longIds.get(0));
     if (pgpKeyInfo != null) {
       List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(pgpKeyInfo.getPrivate());
       if (CollectionUtils.isEmpty(details)) {

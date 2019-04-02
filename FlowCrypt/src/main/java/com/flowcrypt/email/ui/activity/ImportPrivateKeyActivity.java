@@ -229,7 +229,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   }
 
   private Set<String> filterKeys() {
-    SecurityStorageConnector connector = UiJsManager.getInstance(this).getSecurityStorageConnector();
+    SecurityStorageConnector connector = UiJsManager.getInstance(this).getStorageConnector();
 
     Iterator<NodeKeyDetails> iterator = privateKeys.iterator();
     Set<String> uniqueKeysLongIds = new HashSet<>();

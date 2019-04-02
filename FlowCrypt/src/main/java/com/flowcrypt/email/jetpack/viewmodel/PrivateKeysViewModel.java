@@ -39,7 +39,7 @@ public class PrivateKeysViewModel extends BaseNodeApiViewModel implements Securi
 
   public void init(PgpApiRepository apiRepository) {
     this.apiRepository = apiRepository;
-    this.connector = UiJsManager.getInstance(getApplication()).getSecurityStorageConnector();
+    this.connector = UiJsManager.getInstance(getApplication()).getStorageConnector();
     this.connector.attachOnRefreshListener(this);
     checkAndFetchKeys();
   }

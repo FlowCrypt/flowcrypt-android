@@ -43,7 +43,7 @@ public class DecryptMessageViewModel extends BaseNodeApiViewModel implements Sec
 
   public void init(PgpApiRepository apiRepository) {
     this.apiRepository = apiRepository;
-    this.connector = UiJsManager.getInstance(getApplication()).getSecurityStorageConnector();
+    this.connector = UiJsManager.getInstance(getApplication()).getStorageConnector();
     this.connector.attachOnRefreshListener(this);
   }
 
@@ -51,7 +51,7 @@ public class DecryptMessageViewModel extends BaseNodeApiViewModel implements Sec
     this.rawMessage = rawMessage;
     List<String> passphrases = new ArrayList<>();
 
-    SecurityStorageConnector connector = UiJsManager.getInstance(getApplication()).getSecurityStorageConnector();
+    SecurityStorageConnector connector = UiJsManager.getInstance(getApplication()).getStorageConnector();
 
     PgpKeyInfo[] pgpKeyInfoArray = connector.getAllPgpPrivateKeys();
 

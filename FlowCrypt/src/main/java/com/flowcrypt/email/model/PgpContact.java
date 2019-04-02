@@ -8,10 +8,6 @@ package com.flowcrypt.email.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.eclipsesource.v8.V8;
-import com.eclipsesource.v8.V8Array;
-import com.eclipsesource.v8.V8Object;
-
 public class PgpContact implements Parcelable {
 
   public static final Creator<PgpContact> CREATOR = new Creator<PgpContact>() {
@@ -76,14 +72,6 @@ public class PgpContact implements Parcelable {
     this.longid = in.readString();
     this.keywords = in.readString();
     this.lastUse = in.readInt();
-  }
-
-  public static V8Array arrayAsV8UserIds(V8 v8, PgpContact[] contacts) {
-    V8Array userIds = new V8Array(v8);
-    for (PgpContact contact : contacts) {
-      userIds.push(new V8Object(v8).add("name", contact.getName()).add("email", contact.getEmail()));
-    }
-    return userIds;
   }
 
   @Override

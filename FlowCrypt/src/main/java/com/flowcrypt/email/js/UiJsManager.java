@@ -9,14 +9,9 @@ import android.app.Application;
 import android.content.Context;
 import android.os.Looper;
 
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.security.SecurityStorageConnector;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-
-import java.io.IOException;
 
 /**
- * This class is the right way for using {@link Js} in the UI thread.
  *
  * @author Denis Bondarenko
  * Date: 13.12.2017
@@ -27,17 +22,10 @@ import java.io.IOException;
 public final class UiJsManager {
   private static UiJsManager ourInstance;
 
-  private Js js;
   private SecurityStorageConnector securityStorageConnector;
 
   private UiJsManager(Context context) {
-    try {
-      this.securityStorageConnector = new SecurityStorageConnector(context);
-      this.js = new Js(context, securityStorageConnector);
-    } catch (IOException e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
-    }
+    this.securityStorageConnector = new SecurityStorageConnector(context);
   }
 
   /**
@@ -58,11 +46,7 @@ public final class UiJsManager {
     return ourInstance;
   }
 
-  public Js getJs() {
-    return js;
-  }
-
-  public SecurityStorageConnector getSecurityStorageConnector() {
+  public SecurityStorageConnector getStorageConnector() {
     return securityStorageConnector;
   }
 

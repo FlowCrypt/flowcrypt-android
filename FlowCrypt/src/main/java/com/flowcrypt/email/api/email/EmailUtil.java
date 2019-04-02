@@ -31,7 +31,6 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.ComposeEmailResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -229,14 +228,13 @@ public class EmailUtil {
    * @param context Interface to global information about an application environment;
    * @param account The given account;
    * @param session The current sess.
-   * @param js      An instance of {@link Js}
    * @return Generated {@link Message} object.
    * @throws Exception will occur when generate this message.
    */
   @NonNull
   public static Message genMsgWithAllPrivateKeys(Context context, AccountDao account,
-                                                 Session session, Js js) throws Exception {
-    String keys = SecurityUtils.genPrivateKeysBackup(context, js, account);
+                                                 Session session) throws Exception {
+    String keys = SecurityUtils.genPrivateKeysBackup(context, account);
 
     Multipart multipart = new MimeMultipart();
     multipart.addBodyPart(getBodyPartWithBackupText(context));

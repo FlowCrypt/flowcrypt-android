@@ -217,7 +217,6 @@ dependencies {
 
     testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
-    testImplementation 'com.eclipsesource.j2v8:j2v8_linux_x86_64:4.8.0'
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -256,7 +255,6 @@ dependencies {
     annotationProcessor "com.github.bumptech.glide:compiler:${rootProject.ext.glideVersion}"
     annotationProcessor "androidx.annotation:annotation:${rootProject.ext.androidxBaseVersion}"
 
-    implementation 'com.eclipsesource.j2v8:j2v8:4.8.2@aar'
     implementation 'commons-io:commons-io:2.6'
     prodImplementation 'ch.acra:acra:4.11'
     implementation 'com.hootsuite.android:nachos:1.1.1'

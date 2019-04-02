@@ -151,7 +151,7 @@ public class CreatePrivateKeyActivity extends BasePassPhraseManagerActivity impl
         layoutSecondPasswordCheck.setVisibility(View.GONE);
         layoutSuccess.setVisibility(View.VISIBLE);
         UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView);
-        UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+        UiJsManager.getInstance(this).getStorageConnector().refresh(this);
         break;
 
       default:

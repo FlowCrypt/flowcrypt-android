@@ -32,9 +32,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -141,7 +139,6 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
     private boolean isFailed;
     private File attCacheDir;
     private File fwdAttsCacheDir;
-    private Js js;
 
     DownloadForwardedAttachmentsAsyncTask(ForwardedAttachmentsDownloaderJobService jobService) {
       this.weakRef = new WeakReference<>(jobService);
@@ -170,8 +167,6 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
             }
           }
 
-          js = new Js(context, new SecurityStorageConnector(context));
-
           AccountDao account = new AccountDaoSource().getActiveAccountInformation(context);
           MessageDaoSource msgDaoSource = new MessageDaoSource();
 
@@ -182,7 +177,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
             if (!CollectionUtils.isEmpty(newMsgs)) {
               sess = OpenStoreHelper.getAccountSess(context, account);
               store = OpenStoreHelper.openStore(context, account, sess);
-              downloadForwardedAtts(context, js, account, msgDaoSource);
+              downloadForwardedAtts(context, account, msgDaoSource);
             }
 
             if (store != null && store.isConnected()) {
@@ -219,7 +214,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
       isFailed = values[0];
     }
 
-    private void downloadForwardedAtts(Context context, Js js, AccountDao account, MessageDaoSource daoSource) {
+    private void downloadForwardedAtts(Context context, AccountDao account, MessageDaoSource daoSource) {
       AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
 
       while (true) {
@@ -239,7 +234,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
           if (details.isEncrypted()) {
             PgpContact[] pgpContacts = EmailUtil.getAllRecipients(context, details);
             String senderEmail = EmailUtil.getFirstAddressString(details.getFrom());
-            pubKeys = SecurityUtils.getRecipientsPubKeys(context, js, pgpContacts, account, senderEmail);
+            pubKeys = SecurityUtils.getRecipientsPubKeys(context, pgpContacts, account, senderEmail);
           }
 
           List<AttachmentInfo> atts = attDaoSource.getAttInfoList(context, account.getEmail(),

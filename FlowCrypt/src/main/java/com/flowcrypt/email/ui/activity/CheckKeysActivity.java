@@ -271,7 +271,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         progressBar.setVisibility(View.GONE);
         ArrayList<NodeKeyDetails> savedKeyDetailsList = (ArrayList<NodeKeyDetails>) result;
         if (savedKeyDetailsList != null && !savedKeyDetailsList.isEmpty()) {
-          UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
+          UiJsManager.getInstance(this).getStorageConnector().refresh(this);
 
           Map<NodeKeyDetails, String> map = prepareMapFromKeyDetailsList(savedKeyDetailsList);
           keyDetailsList.removeAll(generateMatchedKeyDetailsList(map));
@@ -358,7 +358,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
    */
   private void removeAlreadyImportedKeys() {
     Set<String> longIds = getUniqueKeysLongIds(keyDetailsAndLongIdsMap);
-    StorageConnectorInterface connector = UiJsManager.getInstance(this).getJs().getStorageConnector();
+    StorageConnectorInterface connector = UiJsManager.getInstance(this).getStorageConnector();
 
     for (String longId : longIds) {
       if (connector.getPgpPrivateKey(longId) != null) {

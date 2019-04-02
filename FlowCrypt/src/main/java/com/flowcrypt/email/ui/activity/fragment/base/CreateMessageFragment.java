@@ -55,8 +55,6 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.UiJsManager;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.model.PgpContact;
@@ -129,7 +127,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private static final int REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO = 105;
   private static final String TAG = CreateMessageFragment.class.getSimpleName();
 
-  private Js js;
   private OnMessageSendListener onMsgSendListener;
   private OnChangeMessageEncryptionTypeListener listener;
   private List<PgpContact> pgpContactsTo;
@@ -215,7 +212,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
           new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail())));
     }
 
-    js = UiJsManager.getInstance(getContext()).getJs();
     initExtras(getActivity().getIntent());
   }
 

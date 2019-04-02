@@ -35,7 +35,7 @@ public class UpdateStorageConnectorBroadcastReceiver extends BroadcastReceiver {
   @Override
   public void onReceive(Context context, Intent intent) {
     if (intent != null && ACTION_UPDATE_STORAGE_CONNECTOR.equals(intent.getAction())) {
-      UiJsManager.getInstance(context).getJs().getStorageConnector().refresh(context);
+      UiJsManager.getInstance(context).getStorageConnector().refresh(context);
     }
   }
 }
