@@ -20,7 +20,7 @@ import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.model.PgpKeyInfo;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException;
 import com.flowcrypt.email.util.exception.NodeException;
@@ -71,18 +71,18 @@ public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
     try {
       List<String> longIds = new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail());
 
-      SecurityStorageConnector storageConnector = new SecurityStorageConnector(getContext());
-      PgpKeyInfo[] pgpKeyInfoArray = storageConnector.getFilteredPgpPrivateKeys(longIds.toArray(new String[0]));
+      KeysStorageImpl keysStore = KeysStorageImpl.getInstance(getContext());
+      List<PgpKeyInfo> pgpKeyInfoList = keysStore.getFilteredPgpPrivateKeys(longIds.toArray(new String[0]));
 
-      if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
+      if (CollectionUtils.isEmpty(pgpKeyInfoList)) {
         throw new NoPrivateKeysAvailableException(getContext(), account.getEmail());
       }
 
       KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
       List<KeysDao> keysDaoList = new ArrayList<>();
 
-      for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-        String passphrase = storageConnector.getPassphrase(pgpKeyInfo.getLongid());
+      for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoList) {
+        String passphrase = keysStore.getPassphrase(pgpKeyInfo.getLongid());
         NodeKeyDetails modifiedNodeKeyDetails = getModifiedNodeKeyDetails(passphrase, pgpKeyInfo.getPrivate());
         keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, modifiedNodeKeyDetails, newPassphrase));
       }

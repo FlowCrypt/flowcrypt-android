@@ -14,9 +14,8 @@ import android.widget.Button;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
@@ -229,7 +228,7 @@ public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
   }
 
   private Set<String> filterKeys() {
-    SecurityStorageConnector connector = UiJsManager.getInstance(this).getStorageConnector();
+    KeysStorageImpl connector = KeysStorageImpl.getInstance(this);
 
     Iterator<NodeKeyDetails> iterator = privateKeys.iterator();
     Set<String> uniqueKeysLongIds = new HashSet<>();

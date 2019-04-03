@@ -41,11 +41,11 @@ public final class ParseDecryptMsgRequest extends BaseNodeRequest {
 
   private String encryptedMsg;
 
-  public ParseDecryptMsgRequest(String encryptedMsg, PgpKeyInfo[] prvKeys, String[] passphrases) {
+  public ParseDecryptMsgRequest(String encryptedMsg, List<PgpKeyInfo> prvKeys, String[] passphrases) {
     this(encryptedMsg, prvKeys, passphrases, false);
   }
 
-  public ParseDecryptMsgRequest(String encryptedMsg, PgpKeyInfo[] prvKeys, String[] passphrases, boolean isEmail) {
+  public ParseDecryptMsgRequest(String encryptedMsg, List<PgpKeyInfo> prvKeys, String[] passphrases, boolean isEmail) {
     this.encryptedMsg = encryptedMsg;
     this.isEmail = isEmail;
     this.privateKeyInfoList = new ArrayList<>();

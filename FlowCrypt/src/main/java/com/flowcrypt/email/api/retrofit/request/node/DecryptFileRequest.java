@@ -38,7 +38,7 @@ public class DecryptFileRequest extends BaseNodeRequest {
 
   private byte[] data;
 
-  public DecryptFileRequest(byte[] data, PgpKeyInfo[] prvKeys, String[] passphrases) {
+  public DecryptFileRequest(byte[] data, List<PgpKeyInfo> prvKeys, String[] passphrases) {
     this.data = data;
     this.privateKeyInfoList = new ArrayList<>();
 

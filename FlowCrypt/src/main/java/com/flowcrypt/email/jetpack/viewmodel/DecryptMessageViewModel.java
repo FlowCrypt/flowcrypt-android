@@ -10,9 +10,8 @@ import android.app.Application;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository;
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
-import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.PgpKeyInfo;
-import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.security.KeysStorageImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,8 +27,8 @@ import androidx.lifecycle.ViewModel;
  * Time: 11:47 AM
  * E-mail: DenBond7@gmail.com
  */
-public class DecryptMessageViewModel extends BaseNodeApiViewModel implements SecurityStorageConnector.OnRefreshListener {
-  private SecurityStorageConnector connector;
+public class DecryptMessageViewModel extends BaseNodeApiViewModel implements KeysStorageImpl.OnRefreshListener {
+  private KeysStorageImpl keysStorage;
   private PgpApiRepository apiRepository;
   private String rawMessage;
 
@@ -43,23 +42,21 @@ public class DecryptMessageViewModel extends BaseNodeApiViewModel implements Sec
 
   public void init(PgpApiRepository apiRepository) {
     this.apiRepository = apiRepository;
-    this.connector = UiJsManager.getInstance(getApplication()).getStorageConnector();
-    this.connector.attachOnRefreshListener(this);
+    this.keysStorage = KeysStorageImpl.getInstance(getApplication());
+    this.keysStorage.attachOnRefreshListener(this);
   }
 
   public void decryptMessage(String rawMessage) {
     this.rawMessage = rawMessage;
     List<String> passphrases = new ArrayList<>();
 
-    SecurityStorageConnector connector = UiJsManager.getInstance(getApplication()).getStorageConnector();
+    List<PgpKeyInfo> pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys();
 
-    PgpKeyInfo[] pgpKeyInfoArray = connector.getAllPgpPrivateKeys();
-
-    for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-      passphrases.add(connector.getPassphrase(pgpKeyInfo.getLongid()));
+    for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoList) {
+      passphrases.add(keysStorage.getPassphrase(pgpKeyInfo.getLongid()));
     }
 
     apiRepository.parseDecryptMsg(R.id.live_data_id_parse_and_decrypt_msg, responsesLiveData,
-        new ParseDecryptMsgRequest(rawMessage, pgpKeyInfoArray, passphrases.toArray(new String[0]), true));
+        new ParseDecryptMsgRequest(rawMessage, pgpKeyInfoList, passphrases.toArray(new String[0]), true));
   }
 }

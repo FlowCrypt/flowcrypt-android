@@ -7,19 +7,19 @@ package com.flowcrypt.email.security;
 
 import android.content.Context;
 
+import com.flowcrypt.email.model.KeysStorage;
 import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.model.PgpKeyInfo;
-import com.flowcrypt.email.model.StorageConnectorInterface;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * This class implemented StorageConnectorInterface. We collect information about available
- * private keys.
+ * This class implements {@link KeysStorage}. Here we collect information about imported private keys.
  *
  * @author DenBond7
  * Date: 05.05.2017
@@ -27,15 +27,32 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 
-public class SecurityStorageConnector implements StorageConnectorInterface {
+public class KeysStorageImpl implements KeysStorage {
+
+  private static volatile KeysStorageImpl ourInstance;
 
   private LinkedList<PgpKeyInfo> pgpKeyInfoList;
   private LinkedList<String> passphrases;
   private List<OnRefreshListener> onRefreshListeners;
 
-  public SecurityStorageConnector(Context context) {
+  private KeysStorageImpl(Context context) {
     this.onRefreshListeners = new ArrayList<>();
-    init(context);
+    setup(context);
+  }
+
+  public static void init(Context context) {
+    KeysStorageImpl.getInstance(context);
+  }
+
+  public static KeysStorageImpl getInstance(Context context) {
+    if (ourInstance == null) {
+      synchronized (KeysStorageImpl.class) {
+        if (ourInstance == null) {
+          ourInstance = new KeysStorageImpl(context);
+        }
+      }
+    }
+    return ourInstance;
   }
 
   @Override
@@ -44,8 +61,8 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
   }
 
   @Override
-  public PgpContact[] findPgpContacts(String[] longid) {
-    return new PgpContact[0];
+  public List<PgpContact> findPgpContacts(String[] longid) {
+    return Collections.emptyList();
   }
 
   @Override
@@ -59,7 +76,7 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
   }
 
   @Override
-  public PgpKeyInfo[] getFilteredPgpPrivateKeys(String[] longId) {
+  public List<PgpKeyInfo> getFilteredPgpPrivateKeys(String[] longId) {
     List<PgpKeyInfo> pgpKeyInfos = new ArrayList<>();
     for (String id : longId) {
       for (PgpKeyInfo pgpKeyInfo : this.pgpKeyInfoList) {
@@ -69,12 +86,12 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
         }
       }
     }
-    return pgpKeyInfos.toArray(new PgpKeyInfo[0]);
+    return pgpKeyInfos;
   }
 
   @Override
-  public PgpKeyInfo[] getAllPgpPrivateKeys() {
-    return pgpKeyInfoList.toArray(new PgpKeyInfo[0]);
+  public List<PgpKeyInfo> getAllPgpPrivateKeys() {
+    return pgpKeyInfoList;
   }
 
   @Override
@@ -90,8 +107,8 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
   }
 
   @Override
-  public void refresh(Context context) {
-    init(context);
+  public synchronized void refresh(Context context) {
+    setup(context);
 
     for (OnRefreshListener onRefreshListener : onRefreshListeners) {
       onRefreshListener.onRefresh();
@@ -110,11 +127,17 @@ public class SecurityStorageConnector implements StorageConnectorInterface {
     }
   }
 
-  private void init(Context context) {
+  private void setup(Context context) {
+    if (context == null) {
+      return;
+    }
+
+    Context appContext = context.getApplicationContext();
+
     this.pgpKeyInfoList = new LinkedList<>();
     this.passphrases = new LinkedList<>();
     try {
-      List<PrivateKeyInfo> privateKeysInfo = SecurityUtils.getPrivateKeysInfo(context);
+      List<PrivateKeyInfo> privateKeysInfo = SecurityUtils.getPrivateKeysInfo(appContext);
       for (PrivateKeyInfo privateKeyInfo : privateKeysInfo) {
         pgpKeyInfoList.add(privateKeyInfo.getPgpKeyInfo());
         passphrases.add(privateKeyInfo.getPassphrase());

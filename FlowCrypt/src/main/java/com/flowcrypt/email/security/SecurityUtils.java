@@ -126,19 +126,19 @@ public class SecurityUtils {
     String email = account.getEmail();
     List<String> longIdsByEmail = new UserIdEmailsKeysDaoSource().getLongIdsByEmail(context, email);
     String[] longids = longIdsByEmail.toArray(new String[0]);
-    SecurityStorageConnector connector = new SecurityStorageConnector(context);
-    PgpKeyInfo[] pgpKeyInfoArray = connector.getFilteredPgpPrivateKeys(longids);
+    KeysStorageImpl keysStorage = KeysStorageImpl.getInstance(context);
+    List<PgpKeyInfo> pgpKeyInfoList = keysStorage.getFilteredPgpPrivateKeys(longids);
 
-    if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
+    if (CollectionUtils.isEmpty(pgpKeyInfoList)) {
       throw new NoPrivateKeysAvailableException(context, account.getEmail());
     }
 
     String firstPassPhrase = null;
 
-    for (int i = 0; i < pgpKeyInfoArray.length; i++) {
-      PgpKeyInfo pgpKeyInfo = pgpKeyInfoArray[i];
+    for (int i = 0; i < pgpKeyInfoList.size(); i++) {
+      PgpKeyInfo pgpKeyInfo = pgpKeyInfoList.get(i);
 
-      String passPhrase = connector.getPassphrase(pgpKeyInfo.getLongid());
+      String passPhrase = keysStorage.getPassphrase(pgpKeyInfo.getLongid());
 
       if (i == 0) {
         firstPassPhrase = passPhrase;
@@ -230,7 +230,7 @@ public class SecurityUtils {
       }
     }
 
-    PgpKeyInfo pgpKeyInfo = new SecurityStorageConnector(context).getPgpPrivateKey(longIds.get(0));
+    PgpKeyInfo pgpKeyInfo = KeysStorageImpl.getInstance(context).getPgpPrivateKey(longIds.get(0));
     if (pgpKeyInfo != null) {
       List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(pgpKeyInfo.getPrivate());
       if (CollectionUtils.isEmpty(details)) {

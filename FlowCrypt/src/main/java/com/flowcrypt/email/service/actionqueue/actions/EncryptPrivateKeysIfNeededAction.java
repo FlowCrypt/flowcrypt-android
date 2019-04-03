@@ -19,7 +19,7 @@ import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.model.PgpKeyInfo;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.common.util.CollectionUtils;
@@ -64,18 +64,18 @@ public class EncryptPrivateKeysIfNeededAction extends Action {
   public void run(Context context) throws Exception {
     super.run(context);
 
-    SecurityStorageConnector storageConnector = new SecurityStorageConnector(context);
-    PgpKeyInfo[] pgpKeyInfoArray = storageConnector.getAllPgpPrivateKeys();
+    KeysStorageImpl keysStore = KeysStorageImpl.getInstance(context);
+    List<PgpKeyInfo> pgpKeyInfoList = keysStore.getAllPgpPrivateKeys();
 
-    if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
+    if (CollectionUtils.isEmpty(pgpKeyInfoList)) {
       return;
     }
 
     KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
     List<KeysDao> keysDaoList = new ArrayList<>();
 
-    for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-      String passphrase = storageConnector.getPassphrase(pgpKeyInfo.getLongid());
+    for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoList) {
+      String passphrase = keysStore.getPassphrase(pgpKeyInfo.getLongid());
 
       if (TextUtils.isEmpty(passphrase)) {
         continue;

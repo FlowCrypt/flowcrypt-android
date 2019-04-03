@@ -14,7 +14,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.model.PgpKeyInfo;
-import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.security.KeysStorageImpl;
 import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -54,12 +54,12 @@ public class FillUserIdEmailsKeysTableAction extends Action {
 
   @Override
   public void run(Context context) throws Exception {
-    SecurityStorageConnector connector = new SecurityStorageConnector(context);
+    KeysStorageImpl keysStorage = KeysStorageImpl.getInstance(context);
 
     List<Pair<String, String>> pairs = new ArrayList<>();
 
-    PgpKeyInfo[] pgpKeyInfoArray = connector.getAllPgpPrivateKeys();
-    for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
+    List<PgpKeyInfo> pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys();
+    for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoList) {
       List<NodeKeyDetails> nodeKeyDetailsList = NodeCallsExecutor.parseKeys(pgpKeyInfo.getPrivate());
 
       if (!CollectionUtils.isEmpty(nodeKeyDetailsList)) {

@@ -61,7 +61,7 @@ public class RequestsManager {
   }
 
   public void decryptMsg(int requestCode, String msg, PgpKeyInfo[] prvKeys) {
-    load(requestCode, new ParseDecryptMsgRequest(msg, prvKeys, TestData.passphrases()));
+    load(requestCode, new ParseDecryptMsgRequest(msg, Arrays.asList(prvKeys), TestData.passphrases()));
   }
 
   public void encryptFile(int requestCode, byte[] data) {
@@ -73,7 +73,7 @@ public class RequestsManager {
   }
 
   public void decryptFile(int requestCode, byte[] encryptedData, PgpKeyInfo[] prvKeys) {
-    load(requestCode, new DecryptFileRequest(encryptedData, prvKeys, TestData.passphrases()));
+    load(requestCode, new DecryptFileRequest(encryptedData, Arrays.asList(prvKeys), TestData.passphrases()));
   }
 
   private void load(final int requestCode, NodeRequest nodeRequest) {

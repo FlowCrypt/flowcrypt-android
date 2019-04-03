@@ -17,11 +17,11 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.StorageConnectorInterface;
+import com.flowcrypt.email.model.KeysStorage;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
+import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment;
@@ -271,7 +271,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         progressBar.setVisibility(View.GONE);
         ArrayList<NodeKeyDetails> savedKeyDetailsList = (ArrayList<NodeKeyDetails>) result;
         if (savedKeyDetailsList != null && !savedKeyDetailsList.isEmpty()) {
-          UiJsManager.getInstance(this).getStorageConnector().refresh(this);
+          KeysStorageImpl.getInstance(this).refresh(this);
 
           Map<NodeKeyDetails, String> map = prepareMapFromKeyDetailsList(savedKeyDetailsList);
           keyDetailsList.removeAll(generateMatchedKeyDetailsList(map));
@@ -358,10 +358,10 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
    */
   private void removeAlreadyImportedKeys() {
     Set<String> longIds = getUniqueKeysLongIds(keyDetailsAndLongIdsMap);
-    StorageConnectorInterface connector = UiJsManager.getInstance(this).getStorageConnector();
+    KeysStorage keysStorage = KeysStorageImpl.getInstance(this);
 
     for (String longId : longIds) {
-      if (connector.getPgpPrivateKey(longId) != null) {
+      if (keysStorage.getPgpPrivateKey(longId) != null) {
         for (Iterator<Map.Entry<NodeKeyDetails, String>> iterator = keyDetailsAndLongIdsMap.entrySet().iterator();
              iterator.hasNext(); ) {
           Map.Entry<NodeKeyDetails, String> entry = iterator.next();
