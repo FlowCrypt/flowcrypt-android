@@ -36,6 +36,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.idling.SingleIdlingResources;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.apache.commons.io.IOUtils;
@@ -46,6 +47,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
@@ -82,6 +84,7 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
   protected AccountDao account;
   protected boolean isBackEnabled = true;
 
+  private SingleIdlingResources idlingForPassphraseChecking;
   private PasswordStrengthViewModel viewModel;
   private ZxcvbnStrengthBarResult strengthBarResult;
   private Timer timer;
@@ -114,6 +117,7 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
 
     initViews();
 
+    idlingForPassphraseChecking = new SingleIdlingResources();
     timer = new Timer();
     viewModel = ViewModelProviders.of(this).get(PasswordStrengthViewModel.class);
     viewModel.init(new NodeRepository());
@@ -208,6 +212,7 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
 
   @Override
   public void afterTextChanged(Editable editable) {
+    idlingForPassphraseChecking.setIdleState(false);
     final String passphrase = editable.toString();
     timer.cancel();
     timer = new Timer();
@@ -235,6 +240,8 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
   public void onChanged(NodeResponseWrapper nodeResponseWrapper) {
     switch (nodeResponseWrapper.getRequestCode()) {
       case R.id.live_data_id_check_passphrase_strength:
+        idlingForPassphraseChecking.setIdleState(true);
+
         switch (nodeResponseWrapper.getStatus()) {
           case SUCCESS:
             strengthBarResult = (ZxcvbnStrengthBarResult) nodeResponseWrapper.getResult();
@@ -259,6 +266,11 @@ public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivit
         }
         break;
     }
+  }
+
+  @VisibleForTesting
+  public SingleIdlingResources getIdlingForPassphraseChecking() {
+    return idlingForPassphraseChecking;
   }
 
   protected void initViews() {

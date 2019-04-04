@@ -27,7 +27,7 @@ import androidx.test.rule.ActivityTestRule;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static androidx.test.espresso.action.ViewActions.typeText;
+import static androidx.test.espresso.action.ViewActions.replaceText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
@@ -68,11 +68,11 @@ public class CreatePrivateKeyActivityTest extends BasePassphraseActivityTest {
 
   @Test
   public void testUseCorrectPassPhrase() {
-    onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed())).perform(typeText(PERFECT_PASSWORD),
+    onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed())).perform(replaceText(PERFECT_PASSWORD),
         closeSoftKeyboard());
     onView(withId(R.id.buttonSetPassPhrase)).check(matches(isDisplayed())).perform(click());
 
-    onView(withId(R.id.editTextKeyPasswordSecond)).check(matches(isDisplayed())).perform(typeText(PERFECT_PASSWORD),
+    onView(withId(R.id.editTextKeyPasswordSecond)).check(matches(isDisplayed())).perform(replaceText(PERFECT_PASSWORD),
         closeSoftKeyboard());
     onView(withId(R.id.buttonConfirmPassPhrases)).check(matches(isDisplayed())).perform(click());
 
