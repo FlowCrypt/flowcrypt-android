@@ -9,7 +9,7 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.flowcrypt.email.database.provider.FlowcryptContract;
-import com.flowcrypt.email.js.UiJsManager;
+import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 
@@ -58,7 +58,7 @@ public class ClearAppSettingsRule implements TestRule {
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        UiJsManager.getInstance(context).getJs().getStorageConnector().refresh(context);
+        KeysStorageImpl.getInstance(context).refresh(context);
       }
     });
     Thread.sleep(1000);// Added timeout for a better sync between threads.

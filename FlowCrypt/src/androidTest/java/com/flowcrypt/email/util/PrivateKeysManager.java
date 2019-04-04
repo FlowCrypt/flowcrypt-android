@@ -13,9 +13,9 @@ import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
+import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.google.gson.Gson;
 
@@ -59,10 +59,7 @@ public class PrivateKeysManager {
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        UiJsManager.getInstance(context).getJs().getStorageConnector().refresh(context);
-        if (baseActivity != null) {
-          baseActivity.restartJsService();
-        }
+        KeysStorageImpl.getInstance(context).refresh(context);
       }
     });
     // Added timeout for a better sync between threads.
@@ -96,10 +93,7 @@ public class PrivateKeysManager {
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        UiJsManager.getInstance(context).getJs().getStorageConnector().refresh(context);
-        if (baseActivity != null) {
-          baseActivity.restartJsService();
-        }
+        KeysStorageImpl.getInstance(context).refresh(context);
       }
     });
     // Added timeout for a better sync between threads.
