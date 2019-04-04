@@ -107,13 +107,6 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
     updateViews();
 
-    if (TextUtils.isEmpty(details.getRawMsgWithoutAtts())) {
-      LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_message_info_from_database, null, this);
-    } else {
-      idlingForDecryption.increment();
-      viewModel.decryptMessage(details.getRawMsgWithoutAtts());
-    }
-
     LoaderManager.getInstance(this).initLoader(R.id.loader_id_subscribe_to_message_changes, null, this);
   }
 
@@ -218,6 +211,18 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     }
   }
 
+  @Override
+  protected void onNodeStateChanged(boolean isReady) {
+    super.onNodeStateChanged(isReady);
+    if (isReady) {
+      if (TextUtils.isEmpty(details.getRawMsgWithoutAtts())) {
+        LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_message_info_from_database, null, this);
+      } else {
+        idlingForDecryption.increment();
+        viewModel.decryptMessage(details.getRawMsgWithoutAtts());
+      }
+    }
+  }
 
   @Override
   public void onSyncServiceConnected() {
