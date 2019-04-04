@@ -22,7 +22,6 @@ import com.flowcrypt.email.model.KeysStorage;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.KeysStorageImpl;
-import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment;
 import com.flowcrypt.email.ui.loader.EncryptAndSavePrivateKeysAsyncTaskLoader;
@@ -57,7 +56,7 @@ import androidx.loader.content.Loader;
  * E-mail: DenBond7@gmail.com
  */
 
-public class CheckKeysActivity extends BaseActivity implements View.OnClickListener,
+public class CheckKeysActivity extends BaseNodeActivity implements View.OnClickListener,
     LoaderManager.LoaderCallbacks<LoaderResult> {
 
   public static final int RESULT_NEGATIVE = 10;
