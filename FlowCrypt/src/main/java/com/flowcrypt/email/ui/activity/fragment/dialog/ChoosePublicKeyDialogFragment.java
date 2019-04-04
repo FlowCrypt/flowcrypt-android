@@ -53,8 +53,7 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
   public static final String KEY_ATTACHMENT_INFO_LIST = GeneralUtil.generateUniqueExtraKey
       ("KEY_ATTACHMENT_INFO_LIST", InfoDialogFragment.class);
 
-  public static final String KEY_TO = GeneralUtil.generateUniqueExtraKey
-      ("KEY_TO", InfoDialogFragment.class);
+  private static final String KEY_TO = GeneralUtil.generateUniqueExtraKey("KEY_TO", InfoDialogFragment.class);
 
   private ArrayList<AttachmentInfo> atts;
   private ListView listViewKeys;
@@ -84,9 +83,6 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
     }
 
     this.atts = new ArrayList<>();
-    PrivateKeysViewModel viewModel = ViewModelProviders.of(this).get(PrivateKeysViewModel.class);
-    viewModel.init(new NodeRepository());
-    viewModel.getResponsesLiveData().observe(this, this);
   }
 
   @NonNull
@@ -127,6 +123,14 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
           dismiss();
         }
         break;
+    }
+  }
+
+  @Override
+  protected void onNodeStateChanged(Boolean newState) {
+    super.onNodeStateChanged(newState);
+    if (newState) {
+      fetchKeys();
     }
   }
 
@@ -200,6 +204,12 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
         }
         break;
     }
+  }
+
+  private void fetchKeys() {
+    PrivateKeysViewModel viewModel = ViewModelProviders.of(this).get(PrivateKeysViewModel.class);
+    viewModel.init(new NodeRepository());
+    viewModel.getResponsesLiveData().observe(this, this);
   }
 
   private void sendResult() {
