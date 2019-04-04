@@ -78,8 +78,6 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    */
   public abstract View getRootView();
 
-  public abstract void onJsServiceConnected();
-
   @Override
   public void onReplyReceived(int requestCode, int resultCode, Object obj) {
 

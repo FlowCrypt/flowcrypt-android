@@ -332,11 +332,6 @@ public class EmailManagerActivity extends BaseEmailListActivity
   }
 
   @Override
-  public void onJsServiceConnected() {
-
-  }
-
-  @Override
   public View getRootView() {
     return drawerLayout;
   }

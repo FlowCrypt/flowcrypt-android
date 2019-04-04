@@ -111,11 +111,6 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   }
 
   @Override
-  public void onJsServiceConnected() {
-
-  }
-
-  @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     this.authCreds = getTempAuthCreds();

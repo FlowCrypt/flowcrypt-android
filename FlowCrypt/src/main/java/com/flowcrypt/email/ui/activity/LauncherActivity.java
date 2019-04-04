@@ -70,11 +70,6 @@ public class LauncherActivity extends BaseActivity {
   }
 
   @Override
-  public void onJsServiceConnected() {
-
-  }
-
-  @Override
   public int getContentViewResourceId() {
     return R.layout.activity_launcher;
   }

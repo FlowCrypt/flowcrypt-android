@@ -40,9 +40,4 @@ public abstract class BaseBackStackActivity extends BaseActivity {
     }
     return super.onOptionsItemSelected(item);
   }
-
-  @Override
-  public void onJsServiceConnected() {
-
-  }
 }

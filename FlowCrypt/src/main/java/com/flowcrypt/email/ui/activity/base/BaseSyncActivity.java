@@ -95,11 +95,6 @@ public abstract class BaseSyncActivity extends BaseActivity {
     }
   }
 
-  @Override
-  public void onJsServiceConnected() {
-
-  }
-
   /**
    * Send a message with a backup to the key owner.
    *

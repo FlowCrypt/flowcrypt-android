@@ -134,11 +134,6 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
   }
 
   @Override
-  public void onJsServiceConnected() {
-
-  }
-
-  @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     if (getIntent() != null) {

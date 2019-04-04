@@ -114,11 +114,6 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
     showInfoSnackbar(getRootView(), connResult.getErrorMessage());
   }
 
-  @Override
-  public void onJsServiceConnected() {
-
-  }
-
   protected void initGoogleApiClient() {
     GoogleSignInOptions googleSignInOptions = GoogleApiClientHelper.generateGoogleSignInOptions();
     client = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, googleSignInOptions);
