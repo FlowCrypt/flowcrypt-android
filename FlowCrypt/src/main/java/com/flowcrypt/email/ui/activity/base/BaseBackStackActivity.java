@@ -9,6 +9,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import com.flowcrypt.email.ui.activity.BaseNodeActivity;
+
 /**
  * The base back stack activity. In this activity we add the back stack functionality. The
  * extended class must implement {@link BaseBackStackActivity#getContentViewResourceId()} method
@@ -23,7 +25,7 @@ import android.view.MenuItem;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseBackStackActivity extends BaseActivity {
+public abstract class BaseBackStackActivity extends BaseNodeActivity {
 
   @Override
   public boolean isDisplayHomeAsUpEnabled() {
