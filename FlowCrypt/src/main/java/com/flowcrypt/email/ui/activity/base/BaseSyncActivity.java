@@ -18,6 +18,7 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.service.BaseService;
 import com.flowcrypt.email.service.EmailSyncService;
+import com.flowcrypt.email.ui.activity.BaseNodeActivity;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import androidx.annotation.Nullable;
@@ -31,7 +32,7 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseSyncActivity extends BaseActivity {
+public abstract class BaseSyncActivity extends BaseNodeActivity {
   // Messengers for communicating with the service.
   protected Messenger syncMessenger;
   protected Messenger syncReplyMessenger;

@@ -98,8 +98,10 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     super.onCreate(savedInstanceState);
     registerNodeIdlingResources();
     Log.d(tag, "onCreate");
-    setContentView(getContentViewResourceId());
-    initScreenViews();
+    if (getContentViewResourceId() != 0) {
+      setContentView(getContentViewResourceId());
+      initScreenViews();
+    }
   }
 
   @Override
