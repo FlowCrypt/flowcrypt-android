@@ -16,14 +16,12 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.rules.UpdateAccountRule;
 import com.flowcrypt.email.util.AccountDaoManager;
-import com.flowcrypt.email.util.MessageUtil;
 import com.flowcrypt.email.util.TestGeneralUtil;
 import com.hootsuite.nachos.tokenizer.SpanChipTokenizer;
 
@@ -33,7 +31,6 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,8 +41,8 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.replaceText;
 import static androidx.test.espresso.action.ViewActions.scrollTo;
-import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -74,40 +71,33 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
   private IntentsTestRule intentsTestRule = new IntentsTestRule<CreateMessageActivity>(CreateMessageActivity.class) {
     @Override
     protected Intent getActivityIntent() {
-      try {
-        incomingMsgInfo = MessageUtil.getIncomingMsgInfoWithoutBody(
-            new Js(InstrumentationRegistry.getInstrumentation().getTargetContext(), null),
-            TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
-                "messages/mime_message.txt"));
+      incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
+          IncomingMessageInfo.class);
 
-        AttachmentInfo attachmentInfo = new AttachmentInfo();
-        attachmentInfo.setName("test.txt");
-        attachmentInfo.setEncodedSize(STRING.length());
-        attachmentInfo.setRawData(STRING);
-        attachmentInfo.setType("text/plain");
-        attachmentInfo.setId(EmailUtil.generateContentId());
-        attachmentInfo.setProtected(true);
+      AttachmentInfo attachmentInfo = new AttachmentInfo();
+      attachmentInfo.setName("test.txt");
+      attachmentInfo.setEncodedSize(STRING.length());
+      attachmentInfo.setRawData(STRING);
+      attachmentInfo.setType("text/plain");
+      attachmentInfo.setId(EmailUtil.generateContentId());
+      attachmentInfo.setProtected(true);
 
-        List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
-        attachmentInfoList.add(attachmentInfo);
+      List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
+      attachmentInfoList.add(attachmentInfo);
 
-        serviceInfo = new ServiceInfo.Builder()
-            .setIsFromFieldEditable(false)
-            .setIsToFieldEditable(false)
-            .setIsSubjectEditable(false)
-            .setIsMsgTypeSwitchable(false)
-            .setHasAbilityToAddNewAtt(false)
-            .setSystemMsg(InstrumentationRegistry.getInstrumentation().getTargetContext()
-                .getString(R.string.message_was_encrypted_for_wrong_key))
-            .setAtts(attachmentInfoList)
-            .build();
+      serviceInfo = new ServiceInfo.Builder()
+          .setIsFromFieldEditable(false)
+          .setIsToFieldEditable(false)
+          .setIsSubjectEditable(false)
+          .setIsMsgTypeSwitchable(false)
+          .setHasAbilityToAddNewAtt(false)
+          .setSystemMsg(InstrumentationRegistry.getInstrumentation().getTargetContext()
+              .getString(R.string.message_was_encrypted_for_wrong_key))
+          .setAtts(attachmentInfoList)
+          .build();
 
-        return CreateMessageActivity.generateIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-            incomingMsgInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, serviceInfo);
-      } catch (IOException e) {
-        e.printStackTrace();
-        throw new IllegalStateException(e);
-      }
+      return CreateMessageActivity.generateIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
+          incomingMsgInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, serviceInfo);
     }
   };
 
@@ -160,7 +150,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
             serviceInfo.isMsgEditable() ? isFocusable() : not(isFocusable()))));
 
     if (serviceInfo.isMsgEditable()) {
-      onView(withId(R.id.editTextEmailMessage)).perform(typeText(STRING));
+      onView(withId(R.id.editTextEmailMessage)).perform(replaceText(STRING));
     }
   }
 
