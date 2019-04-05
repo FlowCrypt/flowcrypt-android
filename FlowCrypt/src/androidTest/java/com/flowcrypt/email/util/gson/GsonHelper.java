@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.util.gson;
 
-import com.flowcrypt.email.model.messages.MessagePart;
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -21,7 +21,7 @@ public class GsonHelper {
 
   private GsonHelper() {
     GsonBuilder gsonBuilder = new GsonBuilder();
-    gsonBuilder.registerTypeAdapter(MessagePart.class, new MessagePartAdapter());
+    gsonBuilder.registerTypeAdapter(MsgBlock.class, new MsgBlockAdapter());
     gson = gsonBuilder.create();
   }
 

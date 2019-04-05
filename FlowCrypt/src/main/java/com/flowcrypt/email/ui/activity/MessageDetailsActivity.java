@@ -168,8 +168,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             messageDaoSource.setSeenStatus(this, details.getEmail(),
                 localFolder.getFolderAlias(), details.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
-            idlingForDecryption.increment();
-            viewModel.decryptMessage(details.getRawMsgWithoutAtts());
+            decryptMsg();
           }
         }
         break;
@@ -218,8 +217,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       if (TextUtils.isEmpty(details.getRawMsgWithoutAtts())) {
         LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_message_info_from_database, null, this);
       } else {
-        idlingForDecryption.increment();
-        viewModel.decryptMessage(details.getRawMsgWithoutAtts());
+        decryptMsg();
       }
     }
   }
@@ -414,6 +412,11 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   @VisibleForTesting
   public CountingIdlingResource getIdlingForDecryption() {
     return idlingForDecryption;
+  }
+
+  public void decryptMsg() {
+    idlingForDecryption.increment();
+    viewModel.decryptMessage(details.getRawMsgWithoutAtts());
   }
 
   private void messageNotAvailableInFolder() {

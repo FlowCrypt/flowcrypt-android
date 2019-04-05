@@ -160,6 +160,9 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
           case Activity.RESULT_OK:
             Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
             UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMsgContainer);
+
+            MessageDetailsActivity activity = (MessageDetailsActivity) getBaseActivity();
+            activity.decryptMsg();
             break;
         }
         break;
@@ -652,6 +655,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
               break;
 
             case DECRYPT_ERROR:
+              msgEncryptType = MessageEncryptionType.ENCRYPTED;
               layoutMsgParts.addView(genDecryptErrorPart((DecryptErrorMsgBlock) block, layoutInflater));
               break;
 
