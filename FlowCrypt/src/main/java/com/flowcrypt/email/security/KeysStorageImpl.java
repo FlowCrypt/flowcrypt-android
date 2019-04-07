@@ -27,7 +27,7 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 
-public class KeysStorageImpl implements KeysStorage {
+public final class KeysStorageImpl implements KeysStorage {
 
   private static volatile KeysStorageImpl ourInstance;
 

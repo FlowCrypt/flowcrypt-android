@@ -54,7 +54,8 @@ public class ClearAppSettingsRule implements TestRule {
 
     SharedPreferencesHelper.clear(context);
     FileAndDirectoryUtils.cleanDir(context.getCacheDir());
-    context.getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
+    context.getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI
+        + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
     UiThreadStatement.runOnUiThread(new Runnable() {
       @Override
       public void run() {

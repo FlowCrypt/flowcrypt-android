@@ -15,8 +15,8 @@ import com.google.gson.GsonBuilder;
  * Time: 2:55 PM
  * E-mail: DenBond7@gmail.com
  */
-public class GsonHelper {
-  private static final GsonHelper ourInstance = new GsonHelper();
+public final class GsonHelper {
+  private static final GsonHelper OUR_INSTANCE = new GsonHelper();
   private Gson gson;
 
   private GsonHelper() {
@@ -26,7 +26,7 @@ public class GsonHelper {
   }
 
   public static GsonHelper getInstance() {
-    return ourInstance;
+    return OUR_INSTANCE;
   }
 
   public Gson getGson() {

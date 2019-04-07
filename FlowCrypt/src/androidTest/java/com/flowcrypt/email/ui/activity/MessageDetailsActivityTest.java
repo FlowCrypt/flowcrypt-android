@@ -358,7 +358,8 @@ public class MessageDetailsActivityTest extends BaseTest {
   }
 
   private void matchHeader(GeneralMessageDetails details) {
-    onView(withId(R.id.textViewSenderAddress)).check(matches(withText(EmailUtil.getFirstAddressString(details.getFrom()))));
+    onView(withId(R.id.textViewSenderAddress))
+        .check(matches(withText(EmailUtil.getFirstAddressString(details.getFrom()))));
     onView(withId(R.id.textViewDate)).check(matches(withText(dateFormat.format(details.getReceivedDate()))));
     onView(withId(R.id.textViewSubject)).check(matches(withText(details.getSubject())));
   }
@@ -397,6 +398,7 @@ public class MessageDetailsActivityTest extends BaseTest {
   private void launchActivity(GeneralMessageDetails details) {
     intentsTestRule.launchActivity(MessageDetailsActivity.getIntent(getTargetContext(), localFolder, details));
     IdlingRegistry.getInstance().register(((BaseActivity) intentsTestRule.getActivity()).getNodeIdlingResource());
-    IdlingRegistry.getInstance().register(((MessageDetailsActivity) intentsTestRule.getActivity()).getIdlingForDecryption());
+    IdlingRegistry.getInstance().register(((MessageDetailsActivity) intentsTestRule.getActivity())
+        .getIdlingForDecryption());
   }
 }

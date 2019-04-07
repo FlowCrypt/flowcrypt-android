@@ -38,11 +38,13 @@ public class Action implements Parcelable {
 
   private static final String TAG = Action.class.getSimpleName();
 
-  @SerializedName(TAG_NAME_ACTION_TYPE)
-  private final ActionType actionType;
   protected long id;
   protected String email;
   protected int version;
+
+  @SerializedName(TAG_NAME_ACTION_TYPE)
+  private final ActionType actionType;
+
 
   public Action(String email, ActionType actionType) {
     this.email = email;

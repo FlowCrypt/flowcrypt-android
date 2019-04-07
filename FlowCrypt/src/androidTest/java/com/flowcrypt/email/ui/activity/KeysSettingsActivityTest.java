@@ -116,7 +116,7 @@ public class KeysSettingsActivityTest extends BaseTest {
   }
 
   @Test
-  public void testKeyDetails_showPubKey() {
+  public void testKeyDetailsShowPubKey() {
     selectFirstKey();
     NodeKeyDetails keyDetails = addPrivateKeyToDatabaseRule.getNodeKeyDetails();
     onView(withId(R.id.btnShowPubKey)).check(matches(isDisplayed())).perform(click());
@@ -124,7 +124,7 @@ public class KeysSettingsActivityTest extends BaseTest {
   }
 
   @Test
-  public void testKeyDetails_copyToClipBoard() {
+  public void testKeyDetailsCopyToClipBoard() {
     selectFirstKey();
     NodeKeyDetails details = addPrivateKeyToDatabaseRule.getNodeKeyDetails();
     onView(withId(R.id.btnCopyToClipboard)).check(matches(isDisplayed())).perform(click());
@@ -133,14 +133,15 @@ public class KeysSettingsActivityTest extends BaseTest {
   }
 
   @Test
-  public void testKeyDetails_showPrivateKey() {
+  public void testKeyDetailsShowPrivateKey() {
     selectFirstKey();
     onView(withId(R.id.btnShowPrKey)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.see_backups_to_save_your_private_keys))).inRoot(new ToastMatcher()).check(matches(isDisplayed()));
+    onView(withText(getResString(R.string.see_backups_to_save_your_private_keys)))
+        .inRoot(new ToastMatcher()).check(matches(isDisplayed()));
   }
 
   @Test
-  public void testKeyDetails_checkDetails() {
+  public void testKeyDetailsCheckDetails() {
     selectFirstKey();
     NodeKeyDetails details = addPrivateKeyToDatabaseRule.getNodeKeyDetails();
     onView(withId(R.id.textViewKeyWords)).check(matches(withText(
@@ -169,7 +170,7 @@ public class KeysSettingsActivityTest extends BaseTest {
   }
 
   @Test
-  public void testKeyDetails_savePubKeyToFileWhenFileIsNotExist() {
+  public void testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
     selectFirstKey();
     NodeKeyDetails details = addPrivateKeyToDatabaseRule.getNodeKeyDetails();
 

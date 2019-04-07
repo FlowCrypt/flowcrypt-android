@@ -310,11 +310,11 @@ public abstract class BaseTest {
     return getTargetContext().getString(resId);
   }
 
-  protected String getHtmlString(String html) {
-    return Html.fromHtml(html).toString();
-  }
-
   protected String getResString(int resId, Object... formatArgs) {
     return getTargetContext().getString(resId, formatArgs);
+  }
+
+  protected String getHtmlString(String html) {
+    return Html.fromHtml(html).toString();
   }
 }

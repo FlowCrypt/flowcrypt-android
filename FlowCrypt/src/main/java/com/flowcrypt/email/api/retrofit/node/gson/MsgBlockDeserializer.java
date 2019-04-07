@@ -27,7 +27,8 @@ import java.lang.reflect.Type;
  */
 public class MsgBlockDeserializer implements JsonDeserializer<MsgBlock> {
   @Override
-  public MsgBlock deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+  public MsgBlock deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+      throws JsonParseException {
     JsonObject jsonObject = json.getAsJsonObject();
 
     MsgBlock.Type type = context.deserialize(jsonObject.get(MsgBlock.TAG_TYPE), MsgBlock.Type.class);
