@@ -5,9 +5,6 @@
 
 package com.flowcrypt.email.util.exception;
 
-import com.flowcrypt.email.js.core.JavaScriptError;
-import com.flowcrypt.email.js.core.JavaScriptReport;
-
 import org.acra.ACRA;
 
 /**
