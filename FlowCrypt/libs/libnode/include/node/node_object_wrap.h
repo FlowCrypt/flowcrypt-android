@@ -83,7 +83,6 @@ namespace node {
 
         inline void MakeWeak(void) {
             persistent().SetWeak(this, WeakCallback, v8::WeakCallbackType::kParameter);
-            persistent().MarkIndependent();
         }
 
         /* Ref() marks the object as being attached to an event loop.
