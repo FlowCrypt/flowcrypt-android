@@ -20380,6 +20380,7 @@ try {
 // end emailjs
 })();
 (function(){
+console.debug = console.log;
 
 const dereq_minimalistic_assert =
 /******/ (function(modules) { // webpackBootstrap
@@ -68279,13 +68280,30 @@ Pgp.internal = {
     };
     keys.encryptedFor = await Pgp.internal.longids(msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : []);
     keys.signedBy = await Pgp.internal.longids(msg.getSigningKeyIds ? msg.getSigningKeyIds() : []);
-    keys.prvMatching = kiWithPp.keys.filter(ki => common_js_1.Value.is(ki.longid).in(keys.encryptedFor));
+
+    for (const ki of kiWithPp.keys) {
+      // this is inefficient because we are doing unnecessary parsing of all keys here
+      // better would be to compare to already stored KeyInfo, however KeyInfo currently only holds primary longid, not longids of subkeys
+      // while messages are typically encrypted for subkeys, thus we have to parse the key to get the info
+      // we are filtering here to avoid a significant performance issue of having to attempt decrypting with all keys simultaneously
+      const {
+        ids
+      } = await Pgp.key.serialize((await Pgp.key.read(ki.private)));
+
+      for (const {
+        longid
+      } of ids) {
+        if (keys.encryptedFor.includes(longid)) {
+          keys.prvMatching.push(ki);
+          break;
+        }
+      }
+    }
+
     keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp.keys;
 
     for (const prvForDecrypt of keys.prvForDecrypt) {
-      const {
-        keys: [prv]
-      } = await openpgp.key.readArmored(prvForDecrypt.private);
+      const prv = await Pgp.key.read(prvForDecrypt.private);
 
       if (prv.isDecrypted() || kiWithPp.passphrases.length && (await Pgp.key.decrypt(prv, kiWithPp.passphrases)) === true) {
         prvForDecrypt.decrypted = prv;
