@@ -45,9 +45,9 @@ namespace v8 {
                         const char **arg_names, const uint8_t *arg_types,
                         const uint64_t *arg_values,
                         std::unique_ptr<v8::ConvertableToTraceFormat> *arg_convertables,
-                        unsigned int flags);
+                        unsigned int flags, int64_t timestamp, int64_t cpu_timestamp);
 
-                void UpdateDuration();
+                void UpdateDuration(int64_t timestamp, int64_t cpu_timestamp);
 
                 void InitializeForTesting(
                         char phase, const uint8_t *category_enabled_flag, const char *name,
@@ -137,6 +137,9 @@ namespace v8 {
                 virtual void Flush() = 0;
 
                 static TraceWriter *CreateJSONTraceWriter(std::ostream &stream);
+
+                static TraceWriter *CreateJSONTraceWriter(std::ostream &stream,
+                                                          const std::string &tag);
 
             private:
                 // Disallow copy and assign
@@ -294,6 +297,14 @@ namespace v8 {
                         std::unique_ptr<v8::ConvertableToTraceFormat> *arg_convertables,
                         unsigned int flags) override;
 
+                uint64_t AddTraceEventWithTimestamp(
+                        char phase, const uint8_t *category_enabled_flag, const char *name,
+                        const char *scope, uint64_t id, uint64_t bind_id, int32_t num_args,
+                        const char **arg_names, const uint8_t *arg_types,
+                        const uint64_t *arg_values,
+                        std::unique_ptr<v8::ConvertableToTraceFormat> *arg_convertables,
+                        unsigned int flags, int64_t timestamp) override;
+
                 void UpdateTraceEventDuration(const uint8_t *category_enabled_flag,
                                               const char *name, uint64_t handle) override;
 
@@ -308,6 +319,11 @@ namespace v8 {
                 void StopTracing();
 
                 static const char *GetCategoryGroupName(const uint8_t *category_enabled_flag);
+
+            protected:
+                virtual int64_t CurrentTimestampMicroseconds();
+
+                virtual int64_t CurrentCpuTimestampMicroseconds();
 
             private:
                 const uint8_t *GetCategoryGroupEnabledInternal(const char *category_group);

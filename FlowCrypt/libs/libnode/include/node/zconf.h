@@ -244,7 +244,6 @@ typedef unsigned long z_size_t;
 #  if defined(NO_SIZE_T)
 typedef unsigned NO_SIZE_T z_size_t;
 #  elif defined(STDC)
-
 #    include <stddef.h>
 
 typedef size_t z_size_t;
@@ -311,7 +310,7 @@ typedef unsigned long z_size_t;
  */
 #ifdef SYS16BIT
 #  if defined(M_I86SM) || defined(M_I86MM)
-/* MSC small or medium model */
+     /* MSC small or medium model */
 #    define SMALL_MEDIUM
 #    ifdef _MSC_VER
 #      define FAR _far
@@ -320,7 +319,7 @@ typedef unsigned long z_size_t;
 #    endif
 #  endif
 #  if (defined(__SMALL__) || defined(__MEDIUM__))
-/* Turbo C small or medium model */
+     /* Turbo C small or medium model */
 #    define SMALL_MEDIUM
 #    ifdef __BORLANDC__
 #      define FAR _far
@@ -417,9 +416,7 @@ typedef Byte       *voidp;
 #endif
 
 #if !defined(Z_U4) && !defined(Z_SOLO) && defined(STDC)
-
 #  include <limits.h>
-
 #  if (UINT_MAX == 0xffffffffUL)
 #    define Z_U4 unsigned
 #  elif (ULONG_MAX == 0xffffffffUL)
@@ -445,17 +442,13 @@ typedef unsigned long z_crc_t;
 
 #ifdef STDC
 #  ifndef Z_SOLO
-
 #    include <sys/types.h>      /* for off_t */
-
 #  endif
 #endif
 
 #if defined(STDC) || defined(Z_HAVE_STDARG_H)
 #  ifndef Z_SOLO
-
 #    include <stdarg.h>         /* for va_list */
-
 #  endif
 #endif
 

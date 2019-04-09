@@ -1995,12 +1995,12 @@ ZEXTERN uLong ZEXPORT crc32_combine64 OF((uLong, uLong, z_off64_t));
 #    define crc32_combine crc32_combine64
 #  endif
 #  ifndef Z_LARGE64
-ZEXTERN gzFile ZEXPORT gzopen64 OF((const char *, const char *));
-ZEXTERN z_off_t ZEXPORT gzseek64 OF((gzFile, z_off_t, int));
-ZEXTERN z_off_t ZEXPORT gztell64 OF((gzFile));
-ZEXTERN z_off_t ZEXPORT gzoffset64 OF((gzFile));
-ZEXTERN uLong ZEXPORT adler32_combine64 OF((uLong, uLong, z_off_t));
-ZEXTERN uLong ZEXPORT crc32_combine64 OF((uLong, uLong, z_off_t));
+     ZEXTERN gzFile ZEXPORT gzopen64 OF((const char *, const char *));
+     ZEXTERN z_off_t ZEXPORT gzseek64 OF((gzFile, z_off_t, int));
+     ZEXTERN z_off_t ZEXPORT gztell64 OF((gzFile));
+     ZEXTERN z_off_t ZEXPORT gzoffset64 OF((gzFile));
+     ZEXTERN uLong ZEXPORT adler32_combine64 OF((uLong, uLong, z_off_t));
+     ZEXTERN uLong ZEXPORT crc32_combine64 OF((uLong, uLong, z_off_t));
 #  endif
 #else
 ZEXTERN gzFile ZEXPORT gzopen OF((const char *, const char *));
