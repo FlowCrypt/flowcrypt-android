@@ -67823,7 +67823,7 @@ Pgp.armor = {
     }
   },
   normalize: (armored, type) => {
-    armored = common_js_1.Str.normalize(armored);
+    armored = common_js_1.Str.normalize(armored).replace(/\n /g, '\n');
 
     if (common_js_1.Value.is(type).in(['encryptedMsg', 'publicKey', 'privateKey', 'key'])) {
       armored = armored.replace(/\r?\n/g, '\n').trim();
@@ -67928,7 +67928,7 @@ Pgp.key = {
         keys
       };
     } catch (error) {
-      catch_js_1.Catch.handleErr(error);
+      catch_js_1.Catch.reportErr(error);
       return {
         normalized: '',
         keys: []
@@ -67960,7 +67960,7 @@ Pgp.key = {
         return await Pgp.key.fingerprint((await Pgp.key.read(key)), formatting);
       } catch (e) {
         if (e instanceof Error && e.message === 'openpgp is not defined') {
-          catch_js_1.Catch.handleErr(e);
+          catch_js_1.Catch.reportErr(e);
         }
 
         console.error(e);
@@ -68504,7 +68504,7 @@ PgpMsg.verify = async (message, keysForVerification, optionalContact) => {
       sig.error = 'FlowCrypt is not equipped to verify this message (err 101)';
     } else {
       sig.error = `FlowCrypt had trouble verifying this message (${String(verifyErr)})`;
-      catch_js_1.Catch.handleErr(verifyErr);
+      catch_js_1.Catch.reportErr(verifyErr);
     }
   }
 
@@ -68864,7 +68864,7 @@ Object.defineProperty(exports, "__esModule", {
 
 class Catch {}
 
-Catch.handleErr = e => {
+Catch.reportErr = e => {
   console.error(e); // core errors that were not re-thrown are not so interesting as of 2018
 };
 
@@ -68930,7 +68930,7 @@ Str.parseEmail = full => {
 
 Str.prettyPrint = obj => typeof obj === 'object' ? JSON.stringify(obj, undefined, 2).replace(/ /g, '&nbsp;').replace(/\n/g, '<br>') : String(obj);
 
-Str.normalizeSpaces = str => str.replace(RegExp(String.fromCharCode(160), 'g'), String.fromCharCode(32)).replace(/\n /g, '\n');
+Str.normalizeSpaces = str => str.replace(RegExp(String.fromCharCode(160), 'g'), String.fromCharCode(32));
 
 Str.normalizeDashes = str => str.replace(/^—–|—–$/gm, '-----');
 
@@ -69301,7 +69301,7 @@ Mime.decode = mimeMsg => {
       parser.end(); // tslint:disable-line:no-unsafe-any
     } catch (e) {
       // todo - on Android we may want to fail when this happens, evaluate effect on browser extension
-      catch_js_1.Catch.handleErr(e);
+      catch_js_1.Catch.reportErr(e);
       resolve(mimeContent);
     }
   });
@@ -69477,8 +69477,7 @@ Mime.getNodeContentAsUtfStr = node => {
     return Mime.fromEqualSignNotationAsUtf(node.rawContent);
   }
 
-  if (node.charset === 'iso-8859-2') {
-    // todo - use iso88592.labels for detection
+  if (node.charset && Iso88592.labels.includes(node.charset)) {
     return Iso88592.decode(node.rawContent); // tslint:disable-line:no-unsafe-any
   }
 
