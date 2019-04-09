@@ -67301,7 +67301,7 @@ class Endpoints {
       }
 
       return fmt_1.fmtRes({
-        key: await pgp_1.Pgp.key.serialize((await pgp_1.Pgp.key.read(k.private)))
+        key: await pgp_1.Pgp.key.details((await pgp_1.Pgp.key.read(k.private)))
       });
     };
 
@@ -67402,7 +67402,7 @@ class Endpoints {
 
         if (block.type === 'publicKey' && !block.keyDetails) {
           // this could eventually be moved into detectBlocks, which would make it async
-          block.keyDetails = await pgp_1.Pgp.key.serialize((await pgp_1.Pgp.key.read(block.content)));
+          block.keyDetails = await pgp_1.Pgp.key.details((await pgp_1.Pgp.key.read(block.content)));
         }
       } // data represent one JSON-stringified block per line. This is so that it can be read as a stream later
 
@@ -67509,7 +67509,7 @@ class Endpoints {
       } = await openpgp.key.read(allData);
 
       for (const openPgpKey of openPgpKeys) {
-        keyDetails.push((await pgp_1.Pgp.key.serialize(openPgpKey)));
+        keyDetails.push((await pgp_1.Pgp.key.details(openPgpKey)));
       }
 
       return fmt_1.fmtRes({
@@ -68036,10 +68036,10 @@ Pgp.key = {
     return {
       original: armored,
       normalized,
-      keys: await Promise.all(keys.map(Pgp.key.serialize))
+      keys: await Promise.all(keys.map(Pgp.key.details))
     };
   },
-  serialize: async k => {
+  details: async k => {
     const keyPackets = [];
 
     for (const keyPacket of k.getKeys()) {
@@ -68288,7 +68288,7 @@ Pgp.internal = {
       // we are filtering here to avoid a significant performance issue of having to attempt decrypting with all keys simultaneously
       const {
         ids
-      } = await Pgp.key.serialize((await Pgp.key.read(ki.private)));
+      } = await Pgp.key.details((await Pgp.key.read(ki.private)));
 
       for (const {
         longid
