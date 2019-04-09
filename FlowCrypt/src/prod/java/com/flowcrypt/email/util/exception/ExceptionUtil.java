@@ -5,9 +5,6 @@
 
 package com.flowcrypt.email.util.exception;
 
-import com.flowcrypt.email.js.core.JavaScriptError;
-import com.flowcrypt.email.js.core.JavaScriptReport;
-
 import org.acra.ACRA;
 
 /**
@@ -31,22 +28,5 @@ public class ExceptionUtil extends ExceptionResolver {
         ACRA.getErrorReporter().handleException(new ManualHandledException(e));
       }
     }
-  }
-
-  /**
-   * Handle an error from Js.
-   */
-  public static void handleError(Boolean isError, String title, String stack_trace, String details) {
-    ACRA.getErrorReporter().putCustomData("JAVASCRIPT_TITLE", title);
-    ACRA.getErrorReporter().putCustomData("JAVASCRIPT_STACK_TRACE", stack_trace);
-    ACRA.getErrorReporter().putCustomData("JAVASCRIPT_DETAILS", details);
-    if (isError) {
-      ACRA.getErrorReporter().handleSilentException(new JavaScriptError(title));
-    } else {
-      ACRA.getErrorReporter().handleSilentException(new JavaScriptReport(title));
-    }
-    ACRA.getErrorReporter().removeCustomData("JAVASCRIPT_TITLE");
-    ACRA.getErrorReporter().removeCustomData("JAVASCRIPT_STACK_TRACE");
-    ACRA.getErrorReporter().removeCustomData("JAVASCRIPT_DETAILS");
   }
 }

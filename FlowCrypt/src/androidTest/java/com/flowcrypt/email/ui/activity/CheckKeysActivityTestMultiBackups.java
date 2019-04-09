@@ -14,7 +14,7 @@ import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
-import com.flowcrypt.email.util.TestGeneralUtil;
+import com.flowcrypt.email.util.PrivateKeysManager;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -68,8 +68,8 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testTwoKeysFirstCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
-        "node/default@denbond7.com_keyB_default.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyA_strong.json",
+        "node/key_testing@denbond7.com_keyB_default.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(2);
@@ -83,8 +83,8 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testTwoKeysSecondCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
-        "node/default@denbond7.com_keyB_default.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyA_strong.json",
+        "node/key_testing@denbond7.com_keyB_default.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(2);
@@ -100,8 +100,8 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testTwoKeysWithSamePasswordThirdCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
-        "node/default@denbond7.com_keyC_strong.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyA_strong.json",
+        "node/key_testing@denbond7.com_keyC_strong.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(2);
@@ -115,8 +115,8 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseTwoKeysFourthCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyC_default.json",
-        "node/default@denbond7.com_keyC_strong.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyC_default.json",
+        "node/key_testing@denbond7.com_keyC_strong.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(1);
@@ -130,8 +130,8 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseTwoKeysFifthCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyC_default.json",
-        "node/default@denbond7.com_keyC_strong.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyC_default.json",
+        "node/key_testing@denbond7.com_keyC_strong.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(1);
@@ -145,9 +145,9 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeFirstCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
-        "node/default@denbond7.com_keyB_default.json",
-        "node/default@denbond7.com_keyC_default.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyA_strong.json",
+        "node/key_testing@denbond7.com_keyB_default.json",
+        "node/key_testing@denbond7.com_keyC_default.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(3);
@@ -162,9 +162,9 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeKeysSecondCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
-        "node/default@denbond7.com_keyB_default.json",
-        "node/default@denbond7.com_keyC_strong.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyA_strong.json",
+        "node/key_testing@denbond7.com_keyB_default.json",
+        "node/key_testing@denbond7.com_keyC_strong.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(3);
@@ -179,9 +179,9 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeKeysThirdCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
-        "node/default@denbond7.com_keyB_default.json",
-        "node/default@denbond7.com_keyC_default.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyA_strong.json",
+        "node/key_testing@denbond7.com_keyB_default.json",
+        "node/key_testing@denbond7.com_keyC_default.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(3);
@@ -197,9 +197,9 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeKeysFourthCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
-        "node/default@denbond7.com_keyB_default.json",
-        "node/default@denbond7.com_keyC_strong.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyA_strong.json",
+        "node/key_testing@denbond7.com_keyB_default.json",
+        "node/key_testing@denbond7.com_keyC_strong.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(3);
@@ -215,9 +215,9 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeKeysFifthCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyB_default.json",
-        "node/default@denbond7.com_keyC_default.json",
-        "node/default@denbond7.com_keyC_strong.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyB_default.json",
+        "node/key_testing@denbond7.com_keyC_default.json",
+        "node/key_testing@denbond7.com_keyC_strong.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(2);
@@ -232,9 +232,9 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeKeysSixthCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
-        "node/default@denbond7.com_keyC_default.json",
-        "node/default@denbond7.com_keyC_strong.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyA_strong.json",
+        "node/key_testing@denbond7.com_keyC_default.json",
+        "node/key_testing@denbond7.com_keyC_strong.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(2);
@@ -248,9 +248,9 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseThreeKeysSeventhCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyB_default.json",
-        "node/default@denbond7.com_keyC_default.json",
-        "node/default@denbond7.com_keyC_strong.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyB_default.json",
+        "node/key_testing@denbond7.com_keyC_default.json",
+        "node/key_testing@denbond7.com_keyC_strong.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(2);
@@ -267,10 +267,10 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseFourKeysFirstCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
-        "node/default@denbond7.com_keyB_default.json",
-        "node/default@denbond7.com_keyC_default.json",
-        "node/default@denbond7.com_keyC_strong.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyA_strong.json",
+        "node/key_testing@denbond7.com_keyB_default.json",
+        "node/key_testing@denbond7.com_keyC_default.json",
+        "node/key_testing@denbond7.com_keyC_strong.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(3);
@@ -286,10 +286,10 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
    */
   @Test
   public void testUseFourKeysSecondCombination() throws IOException {
-    String[] keysPaths = {"node/default@denbond7.com_keyA_strong.json",
-        "node/default@denbond7.com_keyB_default.json",
-        "node/default@denbond7.com_keyC_default.json",
-        "node/default@denbond7.com_keyC_strong.json"};
+    String[] keysPaths = {"node/key_testing@denbond7.com_keyA_strong.json",
+        "node/key_testing@denbond7.com_keyB_default.json",
+        "node/key_testing@denbond7.com_keyC_default.json",
+        "node/key_testing@denbond7.com_keyC_strong.json"};
     launchActivity(keysPaths);
 
     checkKeysTitleAtStart(3);
@@ -338,7 +338,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
   private Intent getStartCheckKeysActivityIntent(String[] keysPaths) throws IOException {
     Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     return CheckKeysActivity.newIntent(targetContext,
-        TestGeneralUtil.getKeyDetailsListFromAssets(keysPaths),
+        PrivateKeysManager.getKeysFromAssets(keysPaths),
         KeyDetails.Type.EMAIL,
         targetContext.getResources().getQuantityString(
             R.plurals.found_backup_of_your_account_key, keysPaths.length, keysPaths.length),

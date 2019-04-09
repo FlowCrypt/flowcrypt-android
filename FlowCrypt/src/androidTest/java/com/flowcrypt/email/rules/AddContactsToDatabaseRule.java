@@ -7,7 +7,7 @@ package com.flowcrypt.email.rules;
 
 
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;

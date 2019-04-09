@@ -9,7 +9,9 @@ import android.os.AsyncTask;
 
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest;
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper;
+import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
+import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest;
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
 
@@ -29,6 +31,18 @@ public final class NodeRepository implements PgpApiRepository {
   @Override
   public void fetchKeyDetails(int requestCode, MutableLiveData<NodeResponseWrapper> liveData, String raw) {
     load(requestCode, liveData, new ParseKeysRequest(raw));
+  }
+
+  @Override
+  public void parseDecryptMsg(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
+                              ParseDecryptMsgRequest request) {
+    load(requestCode, liveData, request);
+  }
+
+  @Override
+  public void checkPassphraseStrength(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
+                                      ZxcvbnStrengthBarRequest request) {
+    load(requestCode, liveData, request);
   }
 
   /**
@@ -67,7 +81,7 @@ public final class NodeRepository implements PgpApiRepository {
           long time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis();
           if (response.body() != null) {
             baseNodeResult = (BaseNodeResult) response.body();
-            baseNodeResult.setTime(time);
+            baseNodeResult.setExecutionTime(time);
 
             if (baseNodeResult.getError() != null) {
               return NodeResponseWrapper.error(nodeRequestWrapper.getRequestCode(), baseNodeResult);

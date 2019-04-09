@@ -25,7 +25,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel;
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.google.android.gms.common.util.CollectionUtils;
@@ -53,8 +53,7 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
   public static final String KEY_ATTACHMENT_INFO_LIST = GeneralUtil.generateUniqueExtraKey
       ("KEY_ATTACHMENT_INFO_LIST", InfoDialogFragment.class);
 
-  public static final String KEY_TO = GeneralUtil.generateUniqueExtraKey
-      ("KEY_TO", InfoDialogFragment.class);
+  private static final String KEY_TO = GeneralUtil.generateUniqueExtraKey("KEY_TO", InfoDialogFragment.class);
 
   private ArrayList<AttachmentInfo> atts;
   private ListView listViewKeys;
@@ -84,9 +83,6 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
     }
 
     this.atts = new ArrayList<>();
-    PrivateKeysViewModel viewModel = ViewModelProviders.of(this).get(PrivateKeysViewModel.class);
-    viewModel.init(new NodeRepository());
-    viewModel.getResponsesLiveData().observe(this, this);
   }
 
   @NonNull
@@ -131,6 +127,14 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
   }
 
   @Override
+  protected void onNodeStateChanged(Boolean newState) {
+    super.onNodeStateChanged(newState);
+    if (newState) {
+      fetchKeys();
+    }
+  }
+
+  @Override
   public void onChanged(NodeResponseWrapper nodeResponseWrapper) {
     switch (nodeResponseWrapper.getRequestCode()) {
       case R.id.live_data_id_fetch_keys:
@@ -154,12 +158,14 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
 
               UIUtil.exchangeViewVisibility(getContext(), false, progressBar, content);
 
-              NodeKeyDetails matchedDetail = getMatchedKey(nodeKeyDetailsList);
-              if (matchedDetail != null) {
-                AttachmentInfo att = EmailUtil.genAttInfoFromPubKey(matchedDetail);
-                if (att != null) {
-                  atts.clear();
-                  atts.add(att);
+              List<NodeKeyDetails> matchedKeys = getMatchedKeys(nodeKeyDetailsList);
+              if (!CollectionUtils.isEmpty(matchedKeys)) {
+                atts.clear();
+                for (NodeKeyDetails nodeKeyDetails : matchedKeys) {
+                  AttachmentInfo att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails);
+                  if (att != null) {
+                    atts.add(att);
+                  }
                 }
               }
 
@@ -171,7 +177,7 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
                 String[] strings = new String[atts.size()];
                 for (int i = 0; i < atts.size(); i++) {
                   AttachmentInfo att = atts.get(i);
-                  strings[i] = att.getEmail();
+                  strings[i] = att.getEmail() + "\n" + att.getName();
                 }
 
                 ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
@@ -198,6 +204,12 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
         }
         break;
     }
+  }
+
+  private void fetchKeys() {
+    PrivateKeysViewModel viewModel = ViewModelProviders.of(this).get(PrivateKeysViewModel.class);
+    viewModel.init(new NodeRepository());
+    viewModel.getResponsesLiveData().observe(this, this);
   }
 
   private void sendResult() {
@@ -232,19 +244,21 @@ public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements
   }
 
   /**
-   * Get the matched {@link NodeKeyDetails}. If the sender email matched to the email from {@link PgpContact} which got
-   * from the private key than we return a relevant public key.
+   * Get a list with the matched {@link NodeKeyDetails}. If the sender email matched to the email from
+   * {@link PgpContact} which got from the private key than we return a list with the relevant public key.
    *
    * @return A matched {@link NodeKeyDetails} or null.
    */
-  private NodeKeyDetails getMatchedKey(List<NodeKeyDetails> nodeKeyDetailsList) {
+  private List<NodeKeyDetails> getMatchedKeys(List<NodeKeyDetails> nodeKeyDetailsList) {
+    List<NodeKeyDetails> keyDetails = new ArrayList<>();
+
     for (NodeKeyDetails nodeKeyDetails : nodeKeyDetailsList) {
       PgpContact primaryUserId = nodeKeyDetails.getPrimaryPgpContact();
       if (primaryUserId.getEmail().equalsIgnoreCase(to)) {
-        return nodeKeyDetails;
+        keyDetails.add(nodeKeyDetails);
       }
     }
 
-    return null;
+    return keyDetails;
   }
 }

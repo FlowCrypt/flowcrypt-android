@@ -61,7 +61,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
       " (" + COL_EMAIL + ", " + COL_UID + ", " + COL_FOLDER + ")";
 
   /**
-   * Prepare the content values for insert to the database.
+   * Prepare content values for insert to the database.
    *
    * @param email   The email that the message linked.
    * @param label   The folder label.
@@ -72,10 +72,36 @@ public class AttachmentDaoSource extends BaseDaoSource {
   @NonNull
   public static ContentValues prepareContentValues(String email, String label, long uid,
                                                    AttachmentInfo attInfo) {
-    ContentValues contentValues = new ContentValues();
+    ContentValues contentValues = prepareContentValuesFromAttInfo(attInfo);
     contentValues.put(COL_EMAIL, email);
     contentValues.put(COL_FOLDER, label);
     contentValues.put(COL_UID, uid);
+
+    return contentValues;
+  }
+
+  /**
+   * Prepare content values for insert to the database.
+   *
+   * @param attInfo The attachment info which will be added to the database.
+   * @return generated {@link ContentValues}
+   */
+  @NonNull
+  public static ContentValues prepareContentValuesFromAttInfo(AttachmentInfo attInfo) {
+    ContentValues contentValues = new ContentValues();
+
+    if (!TextUtils.isEmpty(attInfo.getEmail())) {
+      contentValues.put(COL_EMAIL, attInfo.getEmail());
+    }
+
+    if (!TextUtils.isEmpty(attInfo.getFolder())) {
+      contentValues.put(COL_FOLDER, attInfo.getFolder());
+    }
+
+    if (attInfo.getUid() != 0) {
+      contentValues.put(COL_UID, attInfo.getUid());
+    }
+
     contentValues.put(COL_NAME, attInfo.getName());
     contentValues.put(COL_ENCODED_SIZE_IN_BYTES, attInfo.getEncodedSize());
     contentValues.put(COL_TYPE, attInfo.getType());
@@ -85,6 +111,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
     }
     contentValues.put(COL_FORWARDED_FOLDER, attInfo.getFwdFolder());
     contentValues.put(COL_FORWARDED_UID, attInfo.getFwdUid());
+
     return contentValues;
   }
 
@@ -135,6 +162,21 @@ public class AttachmentDaoSource extends BaseDaoSource {
     ContentResolver contentResolver = context.getContentResolver();
     if (attInfo != null && label != null && contentResolver != null) {
       ContentValues contentValues = prepareContentValues(email, label, uid, attInfo);
+      return contentResolver.insert(getBaseContentUri(), contentValues);
+    } else return null;
+  }
+
+  /**
+   * Add a new attachment details to the database.
+   *
+   * @param context Interface to global information about an application environment.
+   * @param attInfo The attachment details which will be added to the database.
+   * @return A {@link Uri} of the created row.
+   */
+  public Uri addRow(Context context, AttachmentInfo attInfo) {
+    ContentResolver contentResolver = context.getContentResolver();
+    if (attInfo != null && contentResolver != null) {
+      ContentValues contentValues = prepareContentValuesFromAttInfo(attInfo);
       return contentResolver.insert(getBaseContentUri(), contentValues);
     } else return null;
   }

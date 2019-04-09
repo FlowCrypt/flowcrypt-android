@@ -11,6 +11,7 @@ import android.view.View;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity;
+import com.flowcrypt.email.ui.activity.BaseNodeActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.google.GoogleApiClientHelper;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -30,7 +31,7 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseSignInActivity extends BaseActivity implements View.OnClickListener,
+public abstract class BaseSignInActivity extends BaseNodeActivity implements View.OnClickListener,
     GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
   protected static final int REQUEST_CODE_SIGN_IN = 10;
   protected static final int REQUEST_CODE_ADD_OTHER_ACCOUNT = 11;
@@ -112,11 +113,6 @@ public abstract class BaseSignInActivity extends BaseActivity implements View.On
   @Override
   public void onConnectionFailed(@NonNull ConnectionResult connResult) {
     showInfoSnackbar(getRootView(), connResult.getErrorMessage());
-  }
-
-  @Override
-  public void onJsServiceConnected() {
-
   }
 
   protected void initGoogleApiClient() {

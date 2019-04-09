@@ -20,7 +20,7 @@ import android.widget.ListView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter;
 import com.flowcrypt.email.util.GeneralUtil;

@@ -14,14 +14,16 @@ import android.net.Uri;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
+import com.flowcrypt.email.util.PrivateKeysManager;
 import com.flowcrypt.email.util.TestGeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 
@@ -381,10 +383,9 @@ public class CreateMessageActivityTest extends BaseTest {
 
   @NonNull
   private PgpContact getPgpContact() throws IOException {
-    String publicKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation()
-        .getContext(), "pgp/not_attester_user@denbond7.com-pub.asc");
-    return new PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER, null, publicKey, true, null,
-        false, null, null, null, 0);
+    NodeKeyDetails nodeKeyDetails =
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/not_attester_user@denbond7.com_prv_default.json");
+    return nodeKeyDetails.getPrimaryPgpContact();
   }
 
   private void deleteAtt(File att) {

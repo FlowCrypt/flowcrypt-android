@@ -12,8 +12,8 @@ import android.text.TextUtils;
 import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.jobscheduler.JobIdManager;
-import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.EmailAndNamePair;
+import com.flowcrypt.email.model.PgpContact;
 
 import java.util.ArrayList;
 

@@ -7,8 +7,8 @@ package com.flowcrypt.email.api.email.model;
 
 import android.os.Parcel;
 
-import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.model.PgpContact;
 
 import java.util.ArrayList;
 

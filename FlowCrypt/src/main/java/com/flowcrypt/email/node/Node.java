@@ -9,8 +9,8 @@ import android.app.Application;
 import android.content.Context;
 import android.content.res.AssetManager;
 
-import com.flowcrypt.email.api.retrofit.node.NodeGson;
 import com.flowcrypt.email.api.retrofit.node.RequestsManager;
+import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
 import com.flowcrypt.email.node.exception.NodeNotReady;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.google.gson.Gson;

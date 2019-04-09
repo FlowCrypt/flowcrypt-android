@@ -48,19 +48,17 @@ import com.flowcrypt.email.api.email.model.ExtraActionInfo;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.email.model.ServiceInfo;
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.flowcrypt.email.database.dao.source.AccountAliasesDao;
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.UiJsManager;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.MessageType;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
-import com.flowcrypt.email.model.messages.MessagePart;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.ui.activity.CreateMessageActivity;
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
@@ -75,6 +73,7 @@ import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan;
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
+import com.flowcrypt.email.util.ArraysUtil;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
@@ -99,6 +98,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.mail.internet.InternetAddress;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -126,7 +127,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private static final int REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO = 105;
   private static final String TAG = CreateMessageFragment.class.getSimpleName();
 
-  private Js js;
   private OnMessageSendListener onMsgSendListener;
   private OnChangeMessageEncryptionTypeListener listener;
   private List<PgpContact> pgpContactsTo;
@@ -212,7 +212,6 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
           new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail())));
     }
 
-    js = UiJsManager.getInstance(getContext()).getJs();
     initExtras(getActivity().getIntent());
   }
 
@@ -867,19 +866,19 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private void prepareAliasForReplyIfNeeded(List<String> aliases) {
     MessageEncryptionType messageEncryptionType = listener.getMsgEncryptionType();
 
-    ArrayList<String> toAddresses;
+    InternetAddress[] toAddresses;
     if (folderType == FoldersManager.FolderType.SENT) {
       toAddresses = msgInfo.getFrom();
     } else {
       toAddresses = msgInfo.getTo();
     }
 
-    if (toAddresses != null) {
+    if (!ArraysUtil.isEmpty(toAddresses)) {
       String firstFoundedAlias = null;
-      for (String toAddress : toAddresses) {
+      for (InternetAddress toAddress : toAddresses) {
         if (firstFoundedAlias == null) {
           for (String alias : aliases) {
-            if (alias.equalsIgnoreCase(toAddress)) {
+            if (alias.equalsIgnoreCase(toAddress.getAddress())) {
               if (messageEncryptionType == MessageEncryptionType.ENCRYPTED && fromAddrs.hasPrvKey(alias)) {
                 firstFoundedAlias = alias;
               } else {
@@ -937,8 +936,9 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     List<PgpContact> pgpContactsCc = new ArrayList<>();
     List<PgpContact> pgpContactsBcc = new ArrayList<>();
 
-    if (msgInfo != null) {
-      messageInfo.setRawReplyMsg(msgInfo.getOrigRawMsgWithoutAtts());
+    if (msgInfo != null && !TextUtils.isEmpty(msgInfo.getOrigRawMsgWithoutAtts())) {
+      messageInfo.setRawReplyMsg(TextUtils.substring(msgInfo.getOrigRawMsgWithoutAtts(), 0, Math.min(10000,
+          msgInfo.getOrigRawMsgWithoutAtts().length())));
     }
 
     if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
@@ -1278,8 +1278,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   }
 
   private void updateViewsIfFwdMode() {
-    if (msgInfo.getAtts() != null
-        && !msgInfo.getAtts().isEmpty()) {
+    if (!CollectionUtils.isEmpty(msgInfo.getAtts())) {
       for (AttachmentInfo att : msgInfo.getAtts()) {
         if (hasAbilityToAddAtt(att)) {
           atts.add(att);
@@ -1291,27 +1290,27 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       }
     }
 
-    editTextEmailMsg.setText(getString(R.string.forward_template, msgInfo.getFrom().get(0),
+    editTextEmailMsg.setText(getString(R.string.forward_template, msgInfo.getFrom()[0].getAddress(),
         EmailUtil.genForwardedMsgDate(msgInfo.getReceiveDate()), msgInfo.getSubject(),
         prepareRecipientsLineForForwarding(msgInfo.getTo())));
 
-    if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
+    if (!ArraysUtil.isEmpty(msgInfo.getCc())) {
       editTextEmailMsg.append("Cc: ");
       editTextEmailMsg.append(prepareRecipientsLineForForwarding(msgInfo.getCc()));
       editTextEmailMsg.append("\n\n");
     }
 
-    if (msgInfo.getMsgParts() != null && !msgInfo.getMsgParts().isEmpty()) {
-      for (MessagePart msgPart : msgInfo.getMsgParts()) {
-        if (msgPart != null) {
-          switch (msgPart.getMsgPartType()) {
-            case PGP_MESSAGE:
-            case TEXT:
+    if (!CollectionUtils.isEmpty(msgInfo.getMsgBlocks())) {
+      for (MsgBlock block : msgInfo.getMsgBlocks()) {
+        if (block != null) {
+          switch (block.getType()) {
+            case DECRYPTED_TEXT:
+            case PLAIN_TEXT:
               editTextEmailMsg.append("\n\n");
-              editTextEmailMsg.append(msgPart.getValue());
+              editTextEmailMsg.append(block.getContent());
               break;
 
-            case PGP_PUBLIC_KEY:
+            case PUBLIC_KEY:
               //TODO-denbond7 add implementation of the public key view
               break;
           }
@@ -1326,38 +1325,47 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
       recipientsTo.setText(prepareRecipients(msgInfo.getTo()));
 
-      if (msgInfo.getCc() != null && !msgInfo.getCc().isEmpty()) {
+      if (msgInfo.getCc() != null && msgInfo.getCc().length != 0) {
         layoutCc.setVisibility(View.VISIBLE);
         recipientsCc.append(prepareRecipients(msgInfo.getCc()));
       }
     } else {
       recipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
 
-      Set<String> ccSet = new HashSet<>();
+      Set<InternetAddress> ccSet = new HashSet<>();
 
-      if (msgInfo.getTo() != null && !msgInfo.getTo().isEmpty()) {
-        ArrayList<String> toRecipients = new ArrayList<>(msgInfo.getTo());
-        toRecipients.remove(account.getEmail());
-
-        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
-          List<AccountAliasesDao> accountAliases = new AccountAliasesDaoSource().getAliases(getContext(), account);
-          for (AccountAliasesDao accountAliasesDao : accountAliases) {
-            toRecipients.remove(accountAliasesDao.getSendAsEmail());
+      if (!ArraysUtil.isEmpty(msgInfo.getTo())) {
+        for (InternetAddress address : msgInfo.getTo()) {
+          if (!account.getEmail().equalsIgnoreCase(address.getAddress())) {
+            ccSet.add(address);
           }
         }
 
-        ccSet.addAll(toRecipients);
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
+          List<AccountAliasesDao> accountAliases = new AccountAliasesDaoSource().getAliases(getContext(), account);
+          for (AccountAliasesDao dao : accountAliases) {
+            Iterator<InternetAddress> iterator = ccSet.iterator();
+
+            while (iterator.hasNext()) {
+              if (dao.getSendAsEmail().equalsIgnoreCase(iterator.next().getAddress())) {
+                iterator.remove();
+              }
+            }
+          }
+        }
       }
 
-      if (msgInfo.getCc() != null) {
-        ArrayList<String> ccRecipients = msgInfo.getCc();
-        ccRecipients.remove(account.getEmail());
-        ccSet.addAll(ccRecipients);
+      if (!ArraysUtil.isEmpty(msgInfo.getCc())) {
+        for (InternetAddress address : msgInfo.getCc()) {
+          if (!account.getEmail().equalsIgnoreCase(address.getAddress())) {
+            ccSet.add(address);
+          }
+        }
       }
 
       if (!ccSet.isEmpty()) {
         layoutCc.setVisibility(View.VISIBLE);
-        recipientsCc.append(prepareRecipients(new ArrayList<>(ccSet)));
+        recipientsCc.append(prepareRecipients(ccSet.toArray(new InternetAddress[0])));
       }
     }
 
@@ -1396,14 +1404,14 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     }
   }
 
-  private String prepareRecipientsLineForForwarding(ArrayList<String> recipients) {
+  private String prepareRecipientsLineForForwarding(InternetAddress[] recipients) {
     StringBuilder stringBuilder = new StringBuilder();
-    if (recipients != null && !recipients.isEmpty()) {
-      stringBuilder.append(recipients.get(0));
+    if (!ArraysUtil.isEmpty(recipients)) {
+      stringBuilder.append(recipients[0]);
 
-      if (recipients.size() > 1) {
-        for (int i = 1; i < recipients.size(); i++) {
-          String recipient = recipients.get(i);
+      if (recipients.length > 1) {
+        for (int i = 1; i < recipients.length; i++) {
+          String recipient = recipients[i].getAddress();
           stringBuilder.append(", ");
           stringBuilder.append(recipient);
         }
@@ -1444,6 +1452,17 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     } else {
       return subject;
     }
+  }
+
+  private String prepareRecipients(InternetAddress[] recipients) {
+    StringBuilder stringBuilder = new StringBuilder();
+    if (!ArraysUtil.isEmpty(recipients)) {
+      for (InternetAddress s : recipients) {
+        stringBuilder.append(s.getAddress()).append(" ");
+      }
+    }
+
+    return stringBuilder.toString();
   }
 
   private String prepareRecipients(List<String> recipients) {

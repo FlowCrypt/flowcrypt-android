@@ -8,7 +8,6 @@ package com.flowcrypt.email.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
 
 import java.util.List;

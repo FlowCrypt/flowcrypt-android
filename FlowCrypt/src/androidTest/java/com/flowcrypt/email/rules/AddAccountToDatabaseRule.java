@@ -43,6 +43,10 @@ public class AddAccountToDatabaseRule implements TestRule {
     };
   }
 
+  public AccountDao getAccount() {
+    return account;
+  }
+
   private void saveAccountToDatabase() throws Exception {
     AccountDaoSource accountDaoSource = new AccountDaoSource();
     accountDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), account.getAuthCreds());

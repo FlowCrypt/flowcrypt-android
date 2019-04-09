@@ -206,8 +206,8 @@
     <string name="decrypt_error_single_sender">Normally, messages are encrypted for at least two people
         (sender and the receiver). It seems the sender encrypted this message manually for themselves,
         and forgot to add you as a receiver. Please ask them to send a new message.</string>
-    <string name="decrypt_error_current_key_cannot_message">You current key cannot open this message. If you
-        have any other keys available, you should import them  now.</string>
+    <string name="decrypt_error_current_key_cannot_open_message">Your current key cannot open this message. If you
+        have any other keys available, you should import them now.</string>
     <string name="email_does_not_available_in_this_folder">Message not found, it may have been moved to another folder.</string>
     <string name="from">From</string>
     <string name="google_api_is_not_available">Error: Google API is not available</string>

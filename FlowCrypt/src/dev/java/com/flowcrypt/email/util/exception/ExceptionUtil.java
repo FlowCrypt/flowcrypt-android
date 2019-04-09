@@ -21,8 +21,4 @@ public class ExceptionUtil extends ExceptionResolver {
       //Don't modify it
     }
   }
-
-  public static void handleError(Boolean isError, String title, String stack_trace, String details) {
-    //Don't modify it
-  }
 }

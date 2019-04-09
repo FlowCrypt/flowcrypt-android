@@ -10,7 +10,6 @@ import android.text.TextUtils;
 
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
-import com.flowcrypt.email.js.PgpKey;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.model.PrivateKeySourceType;
@@ -68,7 +67,7 @@ public class KeysDao extends BaseDao {
 
   /**
    * Generate {@link KeysDao} using input parameters.
-   * This method use {@link PgpKey#getLongid()} for generate an algorithm parameter spec String and
+   * This method use {@link NodeKeyDetails#getLongId()} for generate an algorithm parameter spec String and
    * {@link KeyStoreCryptoManager} for generate encrypted version of the private key and password.
    *
    * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
@@ -101,7 +100,7 @@ public class KeysDao extends BaseDao {
 
   /**
    * Generate {@link KeysDao} using input parameters.
-   * This method use {@link PgpKey#getLongid()} for generate an algorithm parameter spec String and
+   * This method use {@link NodeKeyDetails#getLongId()} for generate an algorithm parameter spec String and
    * {@link KeyStoreCryptoManager} for generate encrypted version of the private key and password.
    *
    * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt

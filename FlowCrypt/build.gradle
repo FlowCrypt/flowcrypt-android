@@ -38,7 +38,7 @@ android {
             }
         }
         ndk {
-            abiFilters "armeabi-v7a", "x86", "x86_64"
+            abiFilters "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
         }
     }
 
@@ -255,7 +255,6 @@ dependencies {
     annotationProcessor "com.github.bumptech.glide:compiler:${rootProject.ext.glideVersion}"
     annotationProcessor "androidx.annotation:annotation:${rootProject.ext.androidxBaseVersion}"
 
-    implementation 'com.eclipsesource.j2v8:j2v8:4.8.2@aar'
     implementation 'commons-io:commons-io:2.6'
     prodImplementation 'ch.acra:acra:4.11'
     implementation 'com.hootsuite.android:nachos:1.1.1'

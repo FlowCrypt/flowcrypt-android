@@ -22,20 +22,29 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.api.retrofit.node.NodeRepository;
+import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
+import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult;
 import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.jetpack.viewmodel.DecryptMessageViewModel;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
+import androidx.test.espresso.idling.CountingIdlingResource;
 
 /**
  * This activity describe details of some message.
@@ -46,7 +55,7 @@ import androidx.loader.content.Loader;
  * E-mail: DenBond7@gmail.com
  */
 public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
-    LoaderManager.LoaderCallbacks<Cursor>, MessageDetailsFragment.OnActionListener {
+    LoaderManager.LoaderCallbacks<Cursor>, MessageDetailsFragment.OnActionListener, Observer<NodeResponseWrapper> {
   public static final int RESULT_CODE_UPDATE_LIST = 100;
 
   public static final String EXTRA_KEY_FOLDER = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_FOLDER",
@@ -56,10 +65,13 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
   private GeneralMessageDetails details;
   private LocalFolder localFolder;
+  private CountingIdlingResource idlingForDecryption;
+
   private boolean isReceiveMsgBodyNeeded;
   private boolean isBackEnabled = true;
   private boolean isRequestMsgDetailsStarted;
   private boolean isRetrieveIncomingMsgNeeded = true;
+  private DecryptMessageViewModel viewModel;
 
   public static Intent getIntent(Context context, LocalFolder localFolder, GeneralMessageDetails details) {
     Intent intent = new Intent(context, MessageDetailsActivity.class);
@@ -81,16 +93,19 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    viewModel = ViewModelProviders.of(this).get(DecryptMessageViewModel.class);
+    viewModel.init(new NodeRepository());
+    viewModel.getResponsesLiveData().observe(this, this);
+
     if (getIntent() != null) {
       this.localFolder = getIntent().getParcelableExtra(EXTRA_KEY_FOLDER);
       this.details = getIntent().getParcelableExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
     }
 
-    updateViews();
+    idlingForDecryption = new CountingIdlingResource(
+        GeneralUtil.genIdlingResourcesName(MessageDetailsActivity.class), GeneralUtil.isDebugBuild());
 
-    if (TextUtils.isEmpty(details.getRawMsgWithoutAtts())) {
-      LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_message_info_from_database, null, this);
-    }
+    updateViews();
 
     LoaderManager.getInstance(this).initLoader(R.id.loader_id_subscribe_to_message_changes, null, this);
   }
@@ -153,7 +168,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             messageDaoSource.setSeenStatus(this, details.getEmail(),
                 localFolder.getFolderAlias(), details.getUid());
             setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null);
-            decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAtts());
+            decryptMsg();
           }
         }
         break;
@@ -195,6 +210,17 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
     }
   }
 
+  @Override
+  protected void onNodeStateChanged(boolean isReady) {
+    super.onNodeStateChanged(isReady);
+    if (isReady) {
+      if (TextUtils.isEmpty(details.getRawMsgWithoutAtts())) {
+        LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_message_info_from_database, null, this);
+      } else {
+        decryptMsg();
+      }
+    }
+  }
 
   @Override
   public void onSyncServiceConnected() {
@@ -258,27 +284,6 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             break;
         }
         break;
-
-      case R.id.js_decrypt_message:
-        if (obj instanceof IncomingMessageInfo) {
-          IncomingMessageInfo msgInfo = (IncomingMessageInfo) obj;
-          MessageDetailsFragment fragment = (MessageDetailsFragment) getSupportFragmentManager()
-              .findFragmentById(R.id.messageDetailsFragment);
-
-          if (fragment != null) {
-            fragment.showIncomingMsgInfo(msgInfo);
-            LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_attachments, null, this);
-          }
-        }
-        break;
-    }
-  }
-
-  @Override
-  public void onJsServiceConnected() {
-    super.onJsServiceConnected();
-    if (!TextUtils.isEmpty(details.getRawMsgWithoutAtts())) {
-      decryptMsg(R.id.js_decrypt_message, details.getRawMsgWithoutAtts());
     }
   }
 
@@ -307,7 +312,11 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void onArchiveMsgClicked() {
     isBackEnabled = false;
     FoldersManager foldersManager = FoldersManager.fromDatabase(this, details.getEmail());
-    moveMsg(R.id.syns_request_archive_message, localFolder, foldersManager.getFolderArchive(), details.getUid());
+    LocalFolder archive = foldersManager.getFolderArchive();
+    if (archive == null) {
+      ExceptionUtil.handleError(new IllegalArgumentException("Folder 'All Mail' not found"));
+    }
+    moveMsg(R.id.syns_request_archive_message, localFolder, archive, details.getUid());
   }
 
   @Override
@@ -334,7 +343,11 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       finish();
     } else {
       FoldersManager foldersManager = FoldersManager.fromDatabase(this, details.getEmail());
-      moveMsg(R.id.syns_request_delete_message, localFolder, foldersManager.getFolderTrash(), details.getUid());
+      LocalFolder trash = foldersManager.getFolderTrash();
+      if (trash == null) {
+        ExceptionUtil.handleError(new IllegalArgumentException("Folder 'Trash' not found"));
+      }
+      moveMsg(R.id.syns_request_delete_message, localFolder, trash, details.getUid());
     }
   }
 
@@ -342,8 +355,68 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void onMoveMsgToInboxClicked() {
     isBackEnabled = false;
     FoldersManager foldersManager = FoldersManager.fromDatabase(this, details.getEmail());
-    LocalFolder desFolder = foldersManager.getFolderInbox();
-    moveMsg(R.id.syns_request_move_message_to_inbox, localFolder, desFolder, details.getUid());
+    LocalFolder folderInbox = foldersManager.getFolderInbox();
+    if (folderInbox == null) {
+      ExceptionUtil.handleError(new IllegalArgumentException("Folder 'Inbox' not found"));
+    }
+    moveMsg(R.id.syns_request_move_message_to_inbox, localFolder, folderInbox, details.getUid());
+  }
+
+  @Override
+  public void onChanged(NodeResponseWrapper nodeResponseWrapper) {
+    switch (nodeResponseWrapper.getRequestCode()) {
+      case R.id.live_data_id_parse_and_decrypt_msg:
+        switch (nodeResponseWrapper.getStatus()) {
+          case SUCCESS:
+            ParseDecryptedMsgResult result = (ParseDecryptedMsgResult) nodeResponseWrapper.getResult();
+            if (result == null) {
+              Toast.makeText(this, getString(R.string.unknown_error), Toast.LENGTH_LONG).show();
+              if (!idlingForDecryption.isIdleNow()) {
+                idlingForDecryption.decrement();
+              }
+              return;
+            } else {
+              IncomingMessageInfo msgInfo = new IncomingMessageInfo(details, result.getMsgBlocks());
+
+              MessageDetailsFragment fragment = (MessageDetailsFragment) getSupportFragmentManager()
+                  .findFragmentById(R.id.messageDetailsFragment);
+
+              if (fragment != null) {
+                fragment.showIncomingMsgInfo(msgInfo);
+                LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_attachments, null, this);
+              }
+              if (!idlingForDecryption.isIdleNow()) {
+                idlingForDecryption.decrement();
+              }
+            }
+            break;
+
+          case ERROR:
+            Toast.makeText(this, nodeResponseWrapper.getResult().getError().toString(), Toast.LENGTH_SHORT).show();
+            if (!idlingForDecryption.isIdleNow()) {
+              idlingForDecryption.decrement();
+            }
+            break;
+
+          case EXCEPTION:
+            Toast.makeText(this, nodeResponseWrapper.getException().getMessage(), Toast.LENGTH_SHORT).show();
+            if (!idlingForDecryption.isIdleNow()) {
+              idlingForDecryption.decrement();
+            }
+            break;
+        }
+        break;
+    }
+  }
+
+  @VisibleForTesting
+  public CountingIdlingResource getIdlingForDecryption() {
+    return idlingForDecryption;
+  }
+
+  public void decryptMsg() {
+    idlingForDecryption.increment();
+    viewModel.decryptMessage(details.getRawMsgWithoutAtts());
   }
 
   private void messageNotAvailableInFolder() {

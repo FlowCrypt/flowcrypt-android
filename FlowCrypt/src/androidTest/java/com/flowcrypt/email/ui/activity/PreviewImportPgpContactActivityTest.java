@@ -9,9 +9,10 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.assertions.RecyclerViewItemCountAssertion;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
+import com.flowcrypt.email.util.PrivateKeysManager;
 import com.flowcrypt.email.util.TestGeneralUtil;
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem;
 
@@ -115,8 +116,8 @@ public class PreviewImportPgpContactActivityTest extends BaseTest {
 
   private String getSinglePublicKeyForUnsavedContact() {
     try {
-      return TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
-          "pgp/default@denbond7.com_pub.asc");
+      return PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_fisrtKey_pub.json")
+          .getPublicKey();
     } catch (IOException e) {
       e.printStackTrace();
       return null;
@@ -126,7 +127,7 @@ public class PreviewImportPgpContactActivityTest extends BaseTest {
   private String get10PublicKeysForUnsavedContacts() {
     try {
       return TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
-          "pgp/ten_public_keys.asc");
+          "pgp/pub_keys_2048_bits_10.asc");
     } catch (IOException e) {
       e.printStackTrace();
       return null;

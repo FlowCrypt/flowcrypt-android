@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
@@ -222,6 +221,10 @@
             android:name=".ui.activity.NodeTestActivity"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.activity.NodeRunnerActivity"
+            android:theme="@style/AppTheme.NoActionBar.Launcher" />
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"
@@ -267,10 +270,6 @@
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
-        <service
-            android:name=".service.JsBackgroundService"
-            android:exported="false" />
-
         <!--This service will be used for syncing (JobScheduler logic)-->
         <service
             android:name=".jobscheduler.SyncJobService"
@@ -292,6 +291,12 @@
         <receiver android:name=".broadcastreceivers.CorruptedStorageBroadcastReceiver" />
 
         <receiver android:name=".broadcastreceivers.UpdateStorageConnectorBroadcastReceiver" />
+
+        <receiver android:name=".broadcastreceivers.AppUpdateBroadcastReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

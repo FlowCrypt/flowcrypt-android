@@ -8,14 +8,17 @@ package com.flowcrypt.email.api.retrofit.response.model.node;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
+import android.util.Patterns;
 
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -126,6 +129,14 @@ public class NodeKeyDetails implements Parcelable {
       name = internetAddresses[0].getPersonal();
     } catch (AddressException e) {
       e.printStackTrace();
+
+      //It means the input string has a wrong format. So we need to try to extract only an email address using regex.
+      Pattern pattern = Patterns.EMAIL_ADDRESS;
+      Matcher matcher = pattern.matcher(users.get(0));
+      if (matcher.find()) {
+        email = matcher.group();
+        name = email;
+      }
     }
 
     return new PgpContact(email, name, publicKey, !TextUtils.isEmpty(publicKey), null, false,

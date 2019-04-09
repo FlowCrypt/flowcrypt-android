@@ -9,13 +9,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import com.flowcrypt.email.js.UiJsManager;
-import com.flowcrypt.email.security.SecurityStorageConnector;
-import com.flowcrypt.email.service.JsBackgroundService;
+import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.util.GeneralUtil;
 
 /**
- * This {@link BroadcastReceiver} updates available {@link SecurityStorageConnector} instances.
+ * This {@link BroadcastReceiver} updates {@link KeysStorageImpl} instances.
  *
  * @author Denis Bondarenko
  * Date: 2/25/19
@@ -36,8 +34,7 @@ public class UpdateStorageConnectorBroadcastReceiver extends BroadcastReceiver {
   @Override
   public void onReceive(Context context, Intent intent) {
     if (intent != null && ACTION_UPDATE_STORAGE_CONNECTOR.equals(intent.getAction())) {
-      UiJsManager.getInstance(context).getJs().getStorageConnector().refresh(context);
-      JsBackgroundService.restart(context);
+      KeysStorageImpl.getInstance(context).refresh(context);
     }
   }
 }

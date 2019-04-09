@@ -33,10 +33,8 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService;
 import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
-import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
@@ -48,7 +46,6 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -79,7 +76,6 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
   private static final String TAG = PrepareOutgoingMessagesJobIntentService.class.getSimpleName();
 
   private MessageDaoSource msgDaoSource;
-  private Js js;
   private Session sess;
   private AccountDao account;
   private File attsCacheDir;
@@ -147,10 +143,10 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         if (outgoingMsgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
           PgpContact[] pgpContacts = EmailUtil.getAllRecipients(outgoingMsgInfo);
           String senderEmail = outgoingMsgInfo.getFromPgpContact().getEmail();
-          pubKeys = SecurityUtils.getRecipientsPubKeys(this, js, pgpContacts, account, senderEmail);
+          pubKeys = SecurityUtils.getRecipientsPubKeys(this, pgpContacts, account, senderEmail);
         }
 
-        String rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, js, pubKeys);
+        String rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys);
         MimeMessage mimeMsg = new MimeMessage(sess, IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8));
 
         File msgAttsCacheDir = new File(attsCacheDir, UUID.randomUUID().toString());
@@ -321,14 +317,6 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
   }
 
   private void setupIfNeeded() {
-    if (js == null) {
-      try {
-        js = new Js(getApplicationContext(), new SecurityStorageConnector(getApplicationContext()));
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-
     if (attsCacheDir == null) {
       attsCacheDir = new File(getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR);
       if (!attsCacheDir.exists()) {

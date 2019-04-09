@@ -9,9 +9,7 @@ import android.content.Context;
 import android.net.Uri;
 
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
@@ -43,8 +41,7 @@ public class SavePrivateKeyAsFileAsyncTaskLoader extends AsyncTaskLoader<LoaderR
   @Override
   public LoaderResult loadInBackground() {
     try {
-      Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
-      String backup = SecurityUtils.genPrivateKeysBackup(getContext(), js, account);
+      String backup = SecurityUtils.genPrivateKeysBackup(getContext(), account);
       boolean result = GeneralUtil.writeFileFromStringToUri(getContext(), destinationUri, backup) > 0;
       return new LoaderResult(result, null);
     } catch (Exception e) {

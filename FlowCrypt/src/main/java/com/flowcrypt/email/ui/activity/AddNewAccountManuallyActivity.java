@@ -31,7 +31,6 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.SecurityUtils;
-import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.loader.CheckEmailSettingsAsyncTaskLoader;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -64,7 +63,7 @@ import androidx.preference.PreferenceManager;
  * E-mail: DenBond7@gmail.com
  */
 
-public class AddNewAccountManuallyActivity extends BaseActivity implements CompoundButton.OnCheckedChangeListener,
+public class AddNewAccountManuallyActivity extends BaseNodeActivity implements CompoundButton.OnCheckedChangeListener,
     AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher,
     LoaderManager.LoaderCallbacks<LoaderResult> {
   public static final int RESULT_CODE_CONTINUE_WITH_GMAIL = 101;
@@ -108,11 +107,6 @@ public class AddNewAccountManuallyActivity extends BaseActivity implements Compo
   @Override
   public View getRootView() {
     return contentView;
-  }
-
-  @Override
-  public void onJsServiceConnected() {
-
   }
 
   @Override

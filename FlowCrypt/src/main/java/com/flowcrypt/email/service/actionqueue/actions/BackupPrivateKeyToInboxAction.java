@@ -16,8 +16,8 @@ import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.js.PgpKeyInfo;
-import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.model.PgpKeyInfo;
+import com.flowcrypt.email.security.KeysStorageImpl;
 
 import javax.mail.Message;
 import javax.mail.Session;
@@ -62,14 +62,14 @@ public class BackupPrivateKeyToInboxAction extends Action {
   @Override
   public void run(Context context) throws Exception {
     AccountDao account = new AccountDaoSource().getAccountInformation(context, email);
-    SecurityStorageConnector securityStorageConnector = new SecurityStorageConnector(context);
-    PgpKeyInfo pgpKeyInfo = securityStorageConnector.getPgpPrivateKey(privateKeyLongId);
+    KeysStorageImpl keysStorage = KeysStorageImpl.getInstance(context);
+    PgpKeyInfo pgpKeyInfo = keysStorage.getPgpPrivateKey(privateKeyLongId);
     if (account != null && pgpKeyInfo != null && !TextUtils.isEmpty(pgpKeyInfo.getPrivate())) {
       Session session = OpenStoreHelper.getAccountSess(context, account);
       Transport transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account);
 
       EncryptKeyResult encryptKeyResult = NodeCallsExecutor.encryptKey(pgpKeyInfo.getPrivate(),
-          securityStorageConnector.getPassphrase(privateKeyLongId));
+          keysStorage.getPassphrase(privateKeyLongId));
 
       if (TextUtils.isEmpty(encryptKeyResult.getEncryptedKey())) {
         throw new IllegalStateException("An error occurred during encrypting some key");

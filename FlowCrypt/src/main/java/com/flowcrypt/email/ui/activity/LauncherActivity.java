@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
-import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
@@ -20,7 +19,6 @@ import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.service.EmailSyncService;
-import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -42,7 +40,6 @@ public class LauncherActivity extends BaseActivity {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false);
-    JsBackgroundService.start(this);
     ForwardedAttachmentsDownloaderJobService.schedule(getApplicationContext());
     MessagesSenderJobService.schedule(getApplicationContext());
 
@@ -73,11 +70,6 @@ public class LauncherActivity extends BaseActivity {
   }
 
   @Override
-  public void onJsServiceConnected() {
-
-  }
-
-  @Override
   public int getContentViewResourceId() {
     return R.layout.activity_launcher;
   }
@@ -90,13 +82,11 @@ public class LauncherActivity extends BaseActivity {
 
   private void showEmailManagerActivity() {
     if (SecurityUtils.hasBackup(this)) {
-      if (BuildConfig.VERSION_CODE <= 72) {
-        boolean isCheckKeysNeeded = SharedPreferencesHelper.getBoolean(PreferenceManager
-            .getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, true);
+      boolean isCheckKeysNeeded = SharedPreferencesHelper.getBoolean(PreferenceManager
+          .getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, true);
 
-        if (isCheckKeysNeeded) {
-          new ActionQueueDaoSource().addAction(this, new EncryptPrivateKeysIfNeededAction(account.getEmail()));
-        }
+      if (isCheckKeysNeeded) {
+        new ActionQueueDaoSource().addAction(this, new EncryptPrivateKeysIfNeededAction(account.getEmail()));
       }
 
       EmailSyncService.startEmailSyncService(this);

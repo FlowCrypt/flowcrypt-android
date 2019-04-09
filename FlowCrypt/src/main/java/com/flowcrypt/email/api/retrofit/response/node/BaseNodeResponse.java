@@ -19,7 +19,7 @@ import java.io.IOException;
 public interface BaseNodeResponse {
   void setData(byte[] data);
 
-  void setTime(long time);
+  void setExecutionTime(long executionTime);
 
   void handleRawData(BufferedInputStream bufferedInputStream) throws IOException;
 }

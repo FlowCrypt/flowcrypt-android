@@ -16,7 +16,7 @@ import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.util.TestGeneralUtil;
+import com.flowcrypt.email.util.PrivateKeysManager;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,8 +58,8 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
     protected Intent getActivityIntent() {
       Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
       try {
-        ArrayList<NodeKeyDetails> privateKeys = TestGeneralUtil.getKeyDetailsListFromAssets(
-            new String[]{"node/default@denbond7.com_sec.json"});
+        ArrayList<NodeKeyDetails> privateKeys = PrivateKeysManager.getKeysFromAssets(
+            new String[]{"node/default@denbond7.com_fisrtKey_prv_default.json"});
         return CheckKeysActivity.newIntent(targetContext,
             privateKeys,
             KeyDetails.Type.EMAIL,
@@ -78,7 +78,7 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
-      .around(new AddPrivateKeyToDatabaseRule("pgp/not_attester_user@denbond7.com-sec.asc", TestConstants
+      .around(new AddPrivateKeyToDatabaseRule("node/not_attester_user@denbond7.com_prv_default.json", TestConstants
           .DEFAULT_PASSWORD, KeyDetails.Type.EMAIL))
       .around(activityTestRule);
 
@@ -91,7 +91,7 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
   public void testShowMsgEmptyPassPhrase() {
     Espresso.closeSoftKeyboard();
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+    checkIsSnackbarDisplayedAndClick(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
         .passphrase_must_be_non_empty));
   }
 
@@ -100,7 +100,7 @@ public class CheckKeysActivityWithExistingKeysTest extends BaseTest {
     onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
         .perform(typeText("some pass phrase"), closeSoftKeyboard());
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+    checkIsSnackbarDisplayedAndClick(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
         .password_is_incorrect));
   }
 

@@ -35,10 +35,11 @@ import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
-import com.flowcrypt.email.js.PgpKeyInfo;
-import com.flowcrypt.email.security.SecurityStorageConnector;
+import com.flowcrypt.email.model.PgpKeyInfo;
+import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.FlowCryptLimitException;
 import com.google.android.gms.common.util.CollectionUtils;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -637,12 +638,12 @@ public class AttachmentDownloadManagerService extends Service {
      * {@link Constants#MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED} we throw an exception. This is only for files
      * with the "pgp" extension.
      */
-    private void checkFileSize() {
+    private void checkFileSize() throws FlowCryptLimitException {
       if ("pgp".equalsIgnoreCase(FilenameUtils.getExtension(att.getName()))) {
         if (att.getEncodedSize() > Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED) {
           String errorMsg = context.getString(R.string.template_warning_max_attachments_size_for_decryption,
               FileUtils.byteCountToDisplaySize(Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED));
-          throw new IllegalArgumentException(errorMsg);
+          throw new FlowCryptLimitException(errorMsg);
         }
       }
     }
@@ -692,16 +693,16 @@ public class AttachmentDownloadManagerService extends Service {
     }
 
     private DecryptedFileResult getDecryptedFileResult(Context context, InputStream inputStream) throws Exception {
-      SecurityStorageConnector securityStorageConnector = new SecurityStorageConnector(context);
-      PgpKeyInfo[] pgpKeyInfoArray = securityStorageConnector.getAllPgpPrivateKeys();
+      KeysStorageImpl keysStorage = KeysStorageImpl.getInstance(context);
+      List<PgpKeyInfo> pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys();
       List<String> passphrases = new ArrayList<>();
 
-      for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoArray) {
-        passphrases.add(securityStorageConnector.getPassphrase(pgpKeyInfo.getLongid()));
+      for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoList) {
+        passphrases.add(keysStorage.getPassphrase(pgpKeyInfo.getLongid()));
       }
 
       NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
-      DecryptFileRequest request = new DecryptFileRequest(IOUtils.toByteArray(inputStream), pgpKeyInfoArray,
+      DecryptFileRequest request = new DecryptFileRequest(IOUtils.toByteArray(inputStream), pgpKeyInfoList,
           passphrases.toArray(new String[0]));
 
       Response<DecryptedFileResult> response = nodeService.decryptFile(request).execute();

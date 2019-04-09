@@ -10,16 +10,16 @@ import android.net.Uri;
 import android.os.AsyncTask;
 
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest;
-import com.flowcrypt.email.api.retrofit.request.node.DecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest;
 import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest;
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper;
+import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest;
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
 import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent;
-import com.flowcrypt.email.js.PgpKeyInfo;
+import com.flowcrypt.email.model.PgpKeyInfo;
 import com.flowcrypt.email.node.NodeSecret;
 import com.flowcrypt.email.node.TestData;
 
@@ -61,7 +61,7 @@ public class RequestsManager {
   }
 
   public void decryptMsg(int requestCode, String msg, PgpKeyInfo[] prvKeys) {
-    load(requestCode, new DecryptMsgRequest(msg, prvKeys, TestData.passphrases()));
+    load(requestCode, new ParseDecryptMsgRequest(msg, Arrays.asList(prvKeys), TestData.passphrases()));
   }
 
   public void encryptFile(int requestCode, byte[] data) {
@@ -73,7 +73,7 @@ public class RequestsManager {
   }
 
   public void decryptFile(int requestCode, byte[] encryptedData, PgpKeyInfo[] prvKeys) {
-    load(requestCode, new DecryptFileRequest(encryptedData, prvKeys, TestData.passphrases()));
+    load(requestCode, new DecryptFileRequest(encryptedData, Arrays.asList(prvKeys), TestData.passphrases()));
   }
 
   private void load(final int requestCode, NodeRequest nodeRequest) {
@@ -102,12 +102,12 @@ public class RequestsManager {
           long time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis();
           if (response.body() != null) {
             baseNodeResult = (BaseNodeResult) response.body();
-            baseNodeResult.setTime(time);
+            baseNodeResult.setExecutionTime(time);
           } else {
             throw new NullPointerException("The response body is null!");
           }
 
-          baseNodeResult.setTime(time);
+          baseNodeResult.setExecutionTime(time);
         } else {
           throw new NullPointerException("The response is null!");
         }

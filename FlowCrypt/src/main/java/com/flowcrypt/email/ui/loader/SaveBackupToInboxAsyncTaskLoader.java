@@ -11,9 +11,7 @@ import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.core.Js;
 import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.security.SecurityStorageConnector;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import javax.mail.Message;
@@ -56,10 +54,9 @@ public class SaveBackupToInboxAsyncTaskLoader extends AsyncTaskLoader<LoaderResu
   public LoaderResult loadInBackground() {
     isActionStarted = true;
     try {
-      Js js = new Js(getContext(), new SecurityStorageConnector(getContext()));
       Session sess = OpenStoreHelper.getAccountSess(getContext(), account);
       Transport transport = SmtpProtocolUtil.prepareSmtpTransport(getContext(), sess, account);
-      Message msg = EmailUtil.genMsgWithAllPrivateKeys(getContext(), account, sess, js);
+      Message msg = EmailUtil.genMsgWithAllPrivateKeys(getContext(), account, sess);
       transport.sendMessage(msg, msg.getAllRecipients());
       return new LoaderResult(true, null);
     } catch (Exception e) {

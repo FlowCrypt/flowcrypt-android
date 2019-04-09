@@ -8,8 +8,6 @@ package com.flowcrypt.email.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.flowcrypt.email.js.PgpContact;
-
 /**
  * This class describes a details about the key. The key can be one of three
  * different types:

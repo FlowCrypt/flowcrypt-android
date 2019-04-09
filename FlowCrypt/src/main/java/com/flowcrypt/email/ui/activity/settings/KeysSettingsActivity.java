@@ -47,4 +47,16 @@ public class KeysSettingsActivity extends BaseBackStackActivity {
   public View getRootView() {
     return null;
   }
+
+  @Override
+  protected void onNodeStateChanged(boolean isReady) {
+    super.onNodeStateChanged(isReady);
+    if (isReady) {
+      KeysListFragment fragment = (KeysListFragment) getSupportFragmentManager().findFragmentById(R.id.layoutContent);
+
+      if (fragment != null) {
+        fragment.fetchKeys();
+      }
+    }
+  }
 }

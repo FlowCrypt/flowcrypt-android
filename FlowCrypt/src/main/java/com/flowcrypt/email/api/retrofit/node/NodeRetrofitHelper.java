@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit.node;
 
+import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
 import com.flowcrypt.email.node.NodeSecret;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.google.gson.Gson;
@@ -32,7 +33,7 @@ import retrofit2.Retrofit;
  * E-mail: DenBond7@gmail.com
  */
 public final class NodeRetrofitHelper {
-  private static final int TIMEOUT = 30;
+  private static final int TIMEOUT = 300;
   private static NodeRetrofitHelper ourInstance = new NodeRetrofitHelper();
   private OkHttpClient okHttpClient;
   private Retrofit retrofit;

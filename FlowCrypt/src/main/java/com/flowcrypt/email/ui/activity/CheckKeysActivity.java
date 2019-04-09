@@ -17,13 +17,11 @@ import android.widget.TextView;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.js.StorageConnectorInterface;
-import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.KeyDetails;
+import com.flowcrypt.email.model.KeysStorage;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.ui.activity.base.BaseActivity;
+import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment;
 import com.flowcrypt.email.ui.loader.EncryptAndSavePrivateKeysAsyncTaskLoader;
@@ -58,7 +56,7 @@ import androidx.loader.content.Loader;
  * E-mail: DenBond7@gmail.com
  */
 
-public class CheckKeysActivity extends BaseActivity implements View.OnClickListener,
+public class CheckKeysActivity extends BaseNodeActivity implements View.OnClickListener,
     LoaderManager.LoaderCallbacks<LoaderResult> {
 
   public static final int RESULT_NEGATIVE = 10;
@@ -132,11 +130,6 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
   @Override
   public View getRootView() {
     return findViewById(R.id.layoutContent);
-  }
-
-  @Override
-  public void onJsServiceConnected() {
-
   }
 
   @Override
@@ -272,8 +265,7 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
         progressBar.setVisibility(View.GONE);
         ArrayList<NodeKeyDetails> savedKeyDetailsList = (ArrayList<NodeKeyDetails>) result;
         if (savedKeyDetailsList != null && !savedKeyDetailsList.isEmpty()) {
-          UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
-          restartJsService();
+          KeysStorageImpl.getInstance(this).refresh(this);
 
           Map<NodeKeyDetails, String> map = prepareMapFromKeyDetailsList(savedKeyDetailsList);
           keyDetailsList.removeAll(generateMatchedKeyDetailsList(map));
@@ -360,10 +352,10 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
    */
   private void removeAlreadyImportedKeys() {
     Set<String> longIds = getUniqueKeysLongIds(keyDetailsAndLongIdsMap);
-    StorageConnectorInterface connector = UiJsManager.getInstance(this).getJs().getStorageConnector();
+    KeysStorage keysStorage = KeysStorageImpl.getInstance(this);
 
     for (String longId : longIds) {
-      if (connector.getPgpPrivateKey(longId) != null) {
+      if (keysStorage.getPgpPrivateKey(longId) != null) {
         for (Iterator<Map.Entry<NodeKeyDetails, String>> iterator = keyDetailsAndLongIdsMap.entrySet().iterator();
              iterator.hasNext(); ) {
           Map.Entry<NodeKeyDetails, String> entry = iterator.next();
@@ -396,7 +388,8 @@ public class CheckKeysActivity extends BaseActivity implements View.OnClickListe
   }
 
   /**
-   * Generate a map of incoming list of {@link NodeKeyDetails} objects where values will be a {@link PgpKey} longId.
+   * Generate a map of incoming list of {@link NodeKeyDetails} objects where values will be a {@link NodeKeyDetails}
+   * longId.
    *
    * @param privateKeyDetailsList An incoming list of {@link NodeKeyDetails} objects.
    * @return A generated map.

@@ -332,11 +332,6 @@ public class EmailManagerActivity extends BaseEmailListActivity
   }
 
   @Override
-  public void onJsServiceConnected() {
-
-  }
-
-  @Override
   public View getRootView() {
     return drawerLayout;
   }
@@ -369,10 +364,6 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
       case R.id.navigationMenuActionSettings:
         startActivity(new Intent(this, SettingsActivity.class));
-        break;
-
-      case R.id.navigationMenuDevSettings:
-        startActivity(new Intent(this, DevSettingsActivity.class));
         break;
 
       case Menu.NONE:
@@ -710,11 +701,6 @@ public class EmailManagerActivity extends BaseEmailListActivity
     navigationView = findViewById(R.id.navigationView);
     navigationView.setNavigationItemSelectedListener(this);
     navigationView.addHeaderView(genAccountManagementLayout());
-
-    MenuItem item = navigationView.getMenu().findItem(R.id.navigationMenuDevSettings);
-    if (item != null) {
-      item.setVisible(GeneralUtil.isDebugBuild());
-    }
 
     if (findViewById(R.id.floatActionButtonCompose) != null) {
       findViewById(R.id.floatActionButtonCompose).setOnClickListener(this);

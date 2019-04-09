@@ -12,8 +12,8 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.js.PgpContact;
 import com.flowcrypt.email.model.DialogItem;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.ui.adapter.DialogItemAdapter;
 import com.flowcrypt.email.util.GeneralUtil;
 

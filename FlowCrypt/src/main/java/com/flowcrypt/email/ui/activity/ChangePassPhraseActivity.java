@@ -14,9 +14,9 @@ import android.widget.Toast;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.UiJsManager;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.results.LoaderResult;
+import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity;
 import com.flowcrypt.email.ui.loader.ChangePassPhraseAsyncTaskLoader;
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
@@ -151,8 +151,7 @@ public class ChangePassPhraseActivity extends BasePassPhraseManagerActivity
   public void onSuccess(int loaderId, Object result) {
     switch (loaderId) {
       case R.id.loader_id_change_pass_phrase:
-        UiJsManager.getInstance(this).getJs().getStorageConnector().refresh(this);
-        restartJsService();
+        KeysStorageImpl.getInstance(this).refresh(this);
         LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
         break;
 

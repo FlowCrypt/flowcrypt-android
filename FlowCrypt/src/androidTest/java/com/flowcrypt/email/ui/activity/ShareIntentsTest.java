@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -37,6 +38,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
+import androidx.test.rule.GrantPermissionRule;
 
 import static androidx.test.espresso.Espresso.closeSoftKeyboard;
 import static androidx.test.espresso.Espresso.onView;
@@ -70,6 +72,7 @@ public class ShareIntentsTest extends BaseTest {
   @Rule
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
+      .around(GrantPermissionRule.grant(Manifest.permission.READ_EXTERNAL_STORAGE))
       .around(new AddAccountToDatabaseRule())
       .around(activityTestRule);
 

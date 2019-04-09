@@ -8,7 +8,7 @@ try {
 ;(function(root) {
 
 	// Detect free variables `exports`.
-	var freeExports = typeof exports == 'object' && exports;
+	var freeExports = false && exports;
 
 	// Detect free variable `module`.
 	var freeModule = typeof module == 'object' && module &&
@@ -163,7 +163,7 @@ try {
 ;(function(root) {
 
 	/** Detect free variables */
-	var freeExports = typeof exports == 'object' && exports &&
+	var freeExports = false && exports &&
 		!exports.nodeType && exports;
 	var freeModule = typeof module == 'object' && module &&
 		!module.nodeType && module;
@@ -692,3298 +692,6 @@ try {
 	}
 
 }(this));
-
-// Copyright (c) 2013 Andris Reinman
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-
-(function(root, factory) {
-    'use strict';
-    if (false) {
-        define(factory);
-    } else if (false) {
-        module.exports = factory();
-    } else {
-        root['emailjs-mime-types'] = factory();
-    }
-}(this, function() {
-    'use strict';
-
-    /**
-     * Returns file extension for a content type string. If no suitable extensions
-     * are found, 'bin' is used as the default extension
-     *
-     * @param {String} mimeType Content type to be checked for
-     * @return {String} File extension
-     */
-    function detectExtension(mimeType) {
-        mimeType = (mimeType || '').toString().toLowerCase().replace(/\s/g, '');
-        if (!(mimeType in mimetypesList)) {
-            return 'bin';
-        }
-
-        if (typeof mimetypesList[mimeType] === 'string') {
-            return mimetypesList[mimeType];
-        }
-
-        var mimeParts = mimeType.split('/');
-
-        // search for name match
-        for (var i = 0, len = mimetypesList[mimeType].length; i < len; i++) {
-            if (mimeParts[1] === mimetypesList[mimeType][i]) {
-                return mimetypesList[mimeType][i];
-            }
-        }
-
-        // use the first one
-        return mimetypesList[mimeType][0];
-    }
-
-    /**
-     * Returns content type for a file extension. If no suitable content types
-     * are found, 'application/octet-stream' is used as the default content type
-     *
-     * @param {String} extension Extension to be checked for
-     * @return {String} File extension
-     */
-    function detectMimeType(extension) {
-        extension = (extension || '').toString().toLowerCase().replace(/\s/g, '').replace(/^\./g, '');
-
-        if (!(extension in mimetypesExtensions)) {
-            return 'application/octet-stream';
-        }
-
-        if (typeof mimetypesExtensions[extension] === 'string') {
-            return mimetypesExtensions[extension];
-        }
-
-        var mimeParts;
-
-        // search for name match
-        for (var i = 0, len = mimetypesExtensions[extension].length; i < len; i++) {
-            mimeParts = mimetypesExtensions[extension][i].split('/');
-            if (mimeParts[1] === extension) {
-                return mimetypesExtensions[extension][i];
-            }
-        }
-
-        // use the first one
-        return mimetypesExtensions[extension][0];
-    }
-
-    var mimetypesList = {
-        'application/acad': 'dwg',
-        'application/andrew-inset': '',
-        'application/applixware': 'aw',
-        'application/arj': 'arj',
-        'application/atom+xml': 'xml',
-        'application/atomcat+xml': 'atomcat',
-        'application/atomsvc+xml': 'atomsvc',
-        'application/base64': ['mm', 'mme'],
-        'application/binhex': 'hqx',
-        'application/binhex4': 'hqx',
-        'application/book': ['boo', 'book'],
-        'application/ccxml+xml,': 'ccxml',
-        'application/cdf': 'cdf',
-        'application/cdmi-capability': 'cdmia',
-        'application/cdmi-container': 'cdmic',
-        'application/cdmi-domain': 'cdmid',
-        'application/cdmi-object': 'cdmio',
-        'application/cdmi-queue': 'cdmiq',
-        'application/clariscad': 'ccad',
-        'application/commonground': 'dp',
-        'application/cu-seeme': 'cu',
-        'application/davmount+xml': 'davmount',
-        'application/drafting': 'drw',
-        'application/dsptype': 'tsp',
-        'application/dssc+der': 'dssc',
-        'application/dssc+xml': 'xdssc',
-        'application/dxf': 'dxf',
-        'application/ecmascript': ['js', 'es'],
-        'application/emma+xml': 'emma',
-        'application/envoy': 'evy',
-        'application/epub+zip': 'epub',
-        'application/excel': ['xl', 'xla', 'xlb', 'xlc', 'xld', 'xlk', 'xll', 'xlm', 'xls', 'xlt', 'xlv', 'xlw'],
-        'application/exi': 'exi',
-        'application/font-tdpfr': 'pfr',
-        'application/fractals': 'fif',
-        'application/freeloader': 'frl',
-        'application/futuresplash': 'spl',
-        'application/gnutar': 'tgz',
-        'application/groupwise': 'vew',
-        'application/hlp': 'hlp',
-        'application/hta': 'hta',
-        'application/hyperstudio': 'stk',
-        'application/i-deas': 'unv',
-        'application/iges': ['iges', 'igs'],
-        'application/inf': 'inf',
-        'application/internet-property-stream': 'acx',
-        'application/ipfix': 'ipfix',
-        'application/java': 'class',
-        'application/java-archive': 'jar',
-        'application/java-byte-code': 'class',
-        'application/java-serialized-object': 'ser',
-        'application/java-vm': 'class',
-        'application/javascript': 'js',
-        'application/json': 'json',
-        'application/lha': 'lha',
-        'application/lzx': 'lzx',
-        'application/mac-binary': 'bin',
-        'application/mac-binhex': 'hqx',
-        'application/mac-binhex40': 'hqx',
-        'application/mac-compactpro': 'cpt',
-        'application/macbinary': 'bin',
-        'application/mads+xml': 'mads',
-        'application/marc': 'mrc',
-        'application/marcxml+xml': 'mrcx',
-        'application/mathematica': 'ma',
-        'application/mathml+xml': 'mathml',
-        'application/mbedlet': 'mbd',
-        'application/mbox': 'mbox',
-        'application/mcad': 'mcd',
-        'application/mediaservercontrol+xml': 'mscml',
-        'application/metalink4+xml': 'meta4',
-        'application/mets+xml': 'mets',
-        'application/mime': 'aps',
-        'application/mods+xml': 'mods',
-        'application/mp21': 'm21',
-        'application/mp4': 'mp4',
-        'application/mspowerpoint': ['pot', 'pps', 'ppt', 'ppz'],
-        'application/msword': ['doc', 'dot', 'w6w', 'wiz', 'word'],
-        'application/mswrite': 'wri',
-        'application/mxf': 'mxf',
-        'application/netmc': 'mcp',
-        'application/octet-stream': ['*'],
-        'application/oda': 'oda',
-        'application/oebps-package+xml': 'opf',
-        'application/ogg': 'ogx',
-        'application/olescript': 'axs',
-        'application/onenote': 'onetoc',
-        'application/patch-ops-error+xml': 'xer',
-        'application/pdf': 'pdf',
-        'application/pgp-encrypted': '',
-        'application/pgp-signature': 'pgp',
-        'application/pics-rules': 'prf',
-        'application/pkcs-12': 'p12',
-        'application/pkcs-crl': 'crl',
-        'application/pkcs10': 'p10',
-        'application/pkcs7-mime': ['p7c', 'p7m'],
-        'application/pkcs7-signature': 'p7s',
-        'application/pkcs8': 'p8',
-        'application/pkix-attr-cert': 'ac',
-        'application/pkix-cert': ['cer', 'crt'],
-        'application/pkix-crl': 'crl',
-        'application/pkix-pkipath': 'pkipath',
-        'application/pkixcmp': 'pki',
-        'application/plain': 'text',
-        'application/pls+xml': 'pls',
-        'application/postscript': ['ai', 'eps', 'ps'],
-        'application/powerpoint': 'ppt',
-        'application/pro_eng': ['part', 'prt'],
-        'application/prs.cww': 'cww',
-        'application/pskc+xml': 'pskcxml',
-        'application/rdf+xml': 'rdf',
-        'application/reginfo+xml': 'rif',
-        'application/relax-ng-compact-syntax': 'rnc',
-        'application/resource-lists+xml': 'rl',
-        'application/resource-lists-diff+xml': 'rld',
-        'application/ringing-tones': 'rng',
-        'application/rls-services+xml': 'rs',
-        'application/rsd+xml': 'rsd',
-        'application/rss+xml': 'xml',
-        'application/rtf': ['rtf', 'rtx'],
-        'application/sbml+xml': 'sbml',
-        'application/scvp-cv-request': 'scq',
-        'application/scvp-cv-response': 'scs',
-        'application/scvp-vp-request': 'spq',
-        'application/scvp-vp-response': 'spp',
-        'application/sdp': 'sdp',
-        'application/sea': 'sea',
-        'application/set': 'set',
-        'application/set-payment-initiation': 'setpay',
-        'application/set-registration-initiation': 'setreg',
-        'application/shf+xml': 'shf',
-        'application/sla': 'stl',
-        'application/smil': ['smi', 'smil'],
-        'application/smil+xml': 'smi',
-        'application/solids': 'sol',
-        'application/sounder': 'sdr',
-        'application/sparql-query': 'rq',
-        'application/sparql-results+xml': 'srx',
-        'application/srgs': 'gram',
-        'application/srgs+xml': 'grxml',
-        'application/sru+xml': 'sru',
-        'application/ssml+xml': 'ssml',
-        'application/step': ['step', 'stp'],
-        'application/streamingmedia': 'ssm',
-        'application/tei+xml': 'tei',
-        'application/thraud+xml': 'tfi',
-        'application/timestamped-data': 'tsd',
-        'application/toolbook': 'tbk',
-        'application/vda': 'vda',
-        'application/vnd.3gpp.pic-bw-large': 'plb',
-        'application/vnd.3gpp.pic-bw-small': 'psb',
-        'application/vnd.3gpp.pic-bw-var': 'pvb',
-        'application/vnd.3gpp2.tcap': 'tcap',
-        'application/vnd.3m.post-it-notes': 'pwn',
-        'application/vnd.accpac.simply.aso': 'aso',
-        'application/vnd.accpac.simply.imp': 'imp',
-        'application/vnd.acucobol': 'acu',
-        'application/vnd.acucorp': 'atc',
-        'application/vnd.adobe.air-application-installer-package+zip': 'air',
-        'application/vnd.adobe.fxp': 'fxp',
-        'application/vnd.adobe.xdp+xml': 'xdp',
-        'application/vnd.adobe.xfdf': 'xfdf',
-        'application/vnd.ahead.space': 'ahead',
-        'application/vnd.airzip.filesecure.azf': 'azf',
-        'application/vnd.airzip.filesecure.azs': 'azs',
-        'application/vnd.amazon.ebook': 'azw',
-        'application/vnd.americandynamics.acc': 'acc',
-        'application/vnd.amiga.ami': 'ami',
-        'application/vnd.android.package-archive': 'apk',
-        'application/vnd.anser-web-certificate-issue-initiation': 'cii',
-        'application/vnd.anser-web-funds-transfer-initiation': 'fti',
-        'application/vnd.antix.game-component': 'atx',
-        'application/vnd.apple.installer+xml': 'mpkg',
-        'application/vnd.apple.mpegurl': 'm3u8',
-        'application/vnd.aristanetworks.swi': 'swi',
-        'application/vnd.audiograph': 'aep',
-        'application/vnd.blueice.multipass': 'mpm',
-        'application/vnd.bmi': 'bmi',
-        'application/vnd.businessobjects': 'rep',
-        'application/vnd.chemdraw+xml': 'cdxml',
-        'application/vnd.chipnuts.karaoke-mmd': 'mmd',
-        'application/vnd.cinderella': 'cdy',
-        'application/vnd.claymore': 'cla',
-        'application/vnd.cloanto.rp9': 'rp9',
-        'application/vnd.clonk.c4group': 'c4g',
-        'application/vnd.cluetrust.cartomobile-config': 'c11amc',
-        'application/vnd.cluetrust.cartomobile-config-pkg': 'c11amz',
-        'application/vnd.commonspace': 'csp',
-        'application/vnd.contact.cmsg': 'cdbcmsg',
-        'application/vnd.cosmocaller': 'cmc',
-        'application/vnd.crick.clicker': 'clkx',
-        'application/vnd.crick.clicker.keyboard': 'clkk',
-        'application/vnd.crick.clicker.palette': 'clkp',
-        'application/vnd.crick.clicker.template': 'clkt',
-        'application/vnd.crick.clicker.wordbank': 'clkw',
-        'application/vnd.criticaltools.wbs+xml': 'wbs',
-        'application/vnd.ctc-posml': 'pml',
-        'application/vnd.cups-ppd': 'ppd',
-        'application/vnd.curl.car': 'car',
-        'application/vnd.curl.pcurl': 'pcurl',
-        'application/vnd.data-vision.rdz': 'rdz',
-        'application/vnd.denovo.fcselayout-link': 'fe_launch',
-        'application/vnd.dna': 'dna',
-        'application/vnd.dolby.mlp': 'mlp',
-        'application/vnd.dpgraph': 'dpg',
-        'application/vnd.dreamfactory': 'dfac',
-        'application/vnd.dvb.ait': 'ait',
-        'application/vnd.dvb.service': 'svc',
-        'application/vnd.dynageo': 'geo',
-        'application/vnd.ecowin.chart': 'mag',
-        'application/vnd.enliven': 'nml',
-        'application/vnd.epson.esf': 'esf',
-        'application/vnd.epson.msf': 'msf',
-        'application/vnd.epson.quickanime': 'qam',
-        'application/vnd.epson.salt': 'slt',
-        'application/vnd.epson.ssf': 'ssf',
-        'application/vnd.eszigno3+xml': 'es3',
-        'application/vnd.ezpix-album': 'ez2',
-        'application/vnd.ezpix-package': 'ez3',
-        'application/vnd.fdf': 'fdf',
-        'application/vnd.fdsn.seed': 'seed',
-        'application/vnd.flographit': 'gph',
-        'application/vnd.fluxtime.clip': 'ftc',
-        'application/vnd.framemaker': 'fm',
-        'application/vnd.frogans.fnc': 'fnc',
-        'application/vnd.frogans.ltf': 'ltf',
-        'application/vnd.fsc.weblaunch': 'fsc',
-        'application/vnd.fujitsu.oasys': 'oas',
-        'application/vnd.fujitsu.oasys2': 'oa2',
-        'application/vnd.fujitsu.oasys3': 'oa3',
-        'application/vnd.fujitsu.oasysgp': 'fg5',
-        'application/vnd.fujitsu.oasysprs': 'bh2',
-        'application/vnd.fujixerox.ddd': 'ddd',
-        'application/vnd.fujixerox.docuworks': 'xdw',
-        'application/vnd.fujixerox.docuworks.binder': 'xbd',
-        'application/vnd.fuzzysheet': 'fzs',
-        'application/vnd.genomatix.tuxedo': 'txd',
-        'application/vnd.geogebra.file': 'ggb',
-        'application/vnd.geogebra.tool': 'ggt',
-        'application/vnd.geometry-explorer': 'gex',
-        'application/vnd.geonext': 'gxt',
-        'application/vnd.geoplan': 'g2w',
-        'application/vnd.geospace': 'g3w',
-        'application/vnd.gmx': 'gmx',
-        'application/vnd.google-earth.kml+xml': 'kml',
-        'application/vnd.google-earth.kmz': 'kmz',
-        'application/vnd.grafeq': 'gqf',
-        'application/vnd.groove-account': 'gac',
-        'application/vnd.groove-help': 'ghf',
-        'application/vnd.groove-identity-message': 'gim',
-        'application/vnd.groove-injector': 'grv',
-        'application/vnd.groove-tool-message': 'gtm',
-        'application/vnd.groove-tool-template': 'tpl',
-        'application/vnd.groove-vcard': 'vcg',
-        'application/vnd.hal+xml': 'hal',
-        'application/vnd.handheld-entertainment+xml': 'zmm',
-        'application/vnd.hbci': 'hbci',
-        'application/vnd.hhe.lesson-player': 'les',
-        'application/vnd.hp-hpgl': ['hgl', 'hpg', 'hpgl'],
-        'application/vnd.hp-hpid': 'hpid',
-        'application/vnd.hp-hps': 'hps',
-        'application/vnd.hp-jlyt': 'jlt',
-        'application/vnd.hp-pcl': 'pcl',
-        'application/vnd.hp-pclxl': 'pclxl',
-        'application/vnd.hydrostatix.sof-data': 'sfd-hdstx',
-        'application/vnd.hzn-3d-crossword': 'x3d',
-        'application/vnd.ibm.minipay': 'mpy',
-        'application/vnd.ibm.modcap': 'afp',
-        'application/vnd.ibm.rights-management': 'irm',
-        'application/vnd.ibm.secure-container': 'sc',
-        'application/vnd.iccprofile': 'icc',
-        'application/vnd.igloader': 'igl',
-        'application/vnd.immervision-ivp': 'ivp',
-        'application/vnd.immervision-ivu': 'ivu',
-        'application/vnd.insors.igm': 'igm',
-        'application/vnd.intercon.formnet': 'xpw',
-        'application/vnd.intergeo': 'i2g',
-        'application/vnd.intu.qbo': 'qbo',
-        'application/vnd.intu.qfx': 'qfx',
-        'application/vnd.ipunplugged.rcprofile': 'rcprofile',
-        'application/vnd.irepository.package+xml': 'irp',
-        'application/vnd.is-xpr': 'xpr',
-        'application/vnd.isac.fcs': 'fcs',
-        'application/vnd.jam': 'jam',
-        'application/vnd.jcp.javame.midlet-rms': 'rms',
-        'application/vnd.jisp': 'jisp',
-        'application/vnd.joost.joda-archive': 'joda',
-        'application/vnd.kahootz': 'ktz',
-        'application/vnd.kde.karbon': 'karbon',
-        'application/vnd.kde.kchart': 'chrt',
-        'application/vnd.kde.kformula': 'kfo',
-        'application/vnd.kde.kivio': 'flw',
-        'application/vnd.kde.kontour': 'kon',
-        'application/vnd.kde.kpresenter': 'kpr',
-        'application/vnd.kde.kspread': 'ksp',
-        'application/vnd.kde.kword': 'kwd',
-        'application/vnd.kenameaapp': 'htke',
-        'application/vnd.kidspiration': 'kia',
-        'application/vnd.kinar': 'kne',
-        'application/vnd.koan': 'skp',
-        'application/vnd.kodak-descriptor': 'sse',
-        'application/vnd.las.las+xml': 'lasxml',
-        'application/vnd.llamagraphics.life-balance.desktop': 'lbd',
-        'application/vnd.llamagraphics.life-balance.exchange+xml': 'lbe',
-        'application/vnd.lotus-1-2-3': '123',
-        'application/vnd.lotus-approach': 'apr',
-        'application/vnd.lotus-freelance': 'pre',
-        'application/vnd.lotus-notes': 'nsf',
-        'application/vnd.lotus-organizer': 'org',
-        'application/vnd.lotus-screencam': 'scm',
-        'application/vnd.lotus-wordpro': 'lwp',
-        'application/vnd.macports.portpkg': 'portpkg',
-        'application/vnd.mcd': 'mcd',
-        'application/vnd.medcalcdata': 'mc1',
-        'application/vnd.mediastation.cdkey': 'cdkey',
-        'application/vnd.mfer': 'mwf',
-        'application/vnd.mfmp': 'mfm',
-        'application/vnd.micrografx.flo': 'flo',
-        'application/vnd.micrografx.igx': 'igx',
-        'application/vnd.mif': 'mif',
-        'application/vnd.mobius.daf': 'daf',
-        'application/vnd.mobius.dis': 'dis',
-        'application/vnd.mobius.mbk': 'mbk',
-        'application/vnd.mobius.mqy': 'mqy',
-        'application/vnd.mobius.msl': 'msl',
-        'application/vnd.mobius.plc': 'plc',
-        'application/vnd.mobius.txf': 'txf',
-        'application/vnd.mophun.application': 'mpn',
-        'application/vnd.mophun.certificate': 'mpc',
-        'application/vnd.mozilla.xul+xml': 'xul',
-        'application/vnd.ms-artgalry': 'cil',
-        'application/vnd.ms-cab-compressed': 'cab',
-        'application/vnd.ms-excel': ['xla', 'xlc', 'xlm', 'xls', 'xlt', 'xlw', 'xlb', 'xll'],
-        'application/vnd.ms-excel.addin.macroenabled.12': 'xlam',
-        'application/vnd.ms-excel.sheet.binary.macroenabled.12': 'xlsb',
-        'application/vnd.ms-excel.sheet.macroenabled.12': 'xlsm',
-        'application/vnd.ms-excel.template.macroenabled.12': 'xltm',
-        'application/vnd.ms-fontobject': 'eot',
-        'application/vnd.ms-htmlhelp': 'chm',
-        'application/vnd.ms-ims': 'ims',
-        'application/vnd.ms-lrm': 'lrm',
-        'application/vnd.ms-officetheme': 'thmx',
-        'application/vnd.ms-outlook': 'msg',
-        'application/vnd.ms-pki.certstore': 'sst',
-        'application/vnd.ms-pki.pko': 'pko',
-        'application/vnd.ms-pki.seccat': 'cat',
-        'application/vnd.ms-pki.stl': 'stl',
-        'application/vnd.ms-pkicertstore': 'sst',
-        'application/vnd.ms-pkiseccat': 'cat',
-        'application/vnd.ms-pkistl': 'stl',
-        'application/vnd.ms-powerpoint': ['pot', 'pps', 'ppt', 'ppa', 'pwz'],
-        'application/vnd.ms-powerpoint.addin.macroenabled.12': 'ppam',
-        'application/vnd.ms-powerpoint.presentation.macroenabled.12': 'pptm',
-        'application/vnd.ms-powerpoint.slide.macroenabled.12': 'sldm',
-        'application/vnd.ms-powerpoint.slideshow.macroenabled.12': 'ppsm',
-        'application/vnd.ms-powerpoint.template.macroenabled.12': 'potm',
-        'application/vnd.ms-project': 'mpp',
-        'application/vnd.ms-word.document.macroenabled.12': 'docm',
-        'application/vnd.ms-word.template.macroenabled.12': 'dotm',
-        'application/vnd.ms-works': ['wcm', 'wdb', 'wks', 'wps'],
-        'application/vnd.ms-wpl': 'wpl',
-        'application/vnd.ms-xpsdocument': 'xps',
-        'application/vnd.mseq': 'mseq',
-        'application/vnd.musician': 'mus',
-        'application/vnd.muvee.style': 'msty',
-        'application/vnd.neurolanguage.nlu': 'nlu',
-        'application/vnd.noblenet-directory': 'nnd',
-        'application/vnd.noblenet-sealer': 'nns',
-        'application/vnd.noblenet-web': 'nnw',
-        'application/vnd.nokia.configuration-message': 'ncm',
-        'application/vnd.nokia.n-gage.data': 'ngdat',
-        'application/vnd.nokia.n-gage.symbian.install': 'n-gage',
-        'application/vnd.nokia.radio-preset': 'rpst',
-        'application/vnd.nokia.radio-presets': 'rpss',
-        'application/vnd.nokia.ringing-tone': 'rng',
-        'application/vnd.novadigm.edm': 'edm',
-        'application/vnd.novadigm.edx': 'edx',
-        'application/vnd.novadigm.ext': 'ext',
-        'application/vnd.oasis.opendocument.chart': 'odc',
-        'application/vnd.oasis.opendocument.chart-template': 'otc',
-        'application/vnd.oasis.opendocument.database': 'odb',
-        'application/vnd.oasis.opendocument.formula': 'odf',
-        'application/vnd.oasis.opendocument.formula-template': 'odft',
-        'application/vnd.oasis.opendocument.graphics': 'odg',
-        'application/vnd.oasis.opendocument.graphics-template': 'otg',
-        'application/vnd.oasis.opendocument.image': 'odi',
-        'application/vnd.oasis.opendocument.image-template': 'oti',
-        'application/vnd.oasis.opendocument.presentation': 'odp',
-        'application/vnd.oasis.opendocument.presentation-template': 'otp',
-        'application/vnd.oasis.opendocument.spreadsheet': 'ods',
-        'application/vnd.oasis.opendocument.spreadsheet-template': 'ots',
-        'application/vnd.oasis.opendocument.text': 'odt',
-        'application/vnd.oasis.opendocument.text-master': 'odm',
-        'application/vnd.oasis.opendocument.text-template': 'ott',
-        'application/vnd.oasis.opendocument.text-web': 'oth',
-        'application/vnd.olpc-sugar': 'xo',
-        'application/vnd.oma.dd2+xml': 'dd2',
-        'application/vnd.openofficeorg.extension': 'oxt',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
-        'application/vnd.openxmlformats-officedocument.presentationml.slide': 'sldx',
-        'application/vnd.openxmlformats-officedocument.presentationml.slideshow': 'ppsx',
-        'application/vnd.openxmlformats-officedocument.presentationml.template': 'potx',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.template': 'xltx',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.template': 'dotx',
-        'application/vnd.osgeo.mapguide.package': 'mgp',
-        'application/vnd.osgi.dp': 'dp',
-        'application/vnd.palm': 'pdb',
-        'application/vnd.pawaafile': 'paw',
-        'application/vnd.pg.format': 'str',
-        'application/vnd.pg.osasli': 'ei6',
-        'application/vnd.picsel': 'efif',
-        'application/vnd.pmi.widget': 'wg',
-        'application/vnd.pocketlearn': 'plf',
-        'application/vnd.powerbuilder6': 'pbd',
-        'application/vnd.previewsystems.box': 'box',
-        'application/vnd.proteus.magazine': 'mgz',
-        'application/vnd.publishare-delta-tree': 'qps',
-        'application/vnd.pvi.ptid1': 'ptid',
-        'application/vnd.quark.quarkxpress': 'qxd',
-        'application/vnd.realvnc.bed': 'bed',
-        'application/vnd.recordare.musicxml': 'mxl',
-        'application/vnd.recordare.musicxml+xml': 'musicxml',
-        'application/vnd.rig.cryptonote': 'cryptonote',
-        'application/vnd.rim.cod': 'cod',
-        'application/vnd.rn-realmedia': 'rm',
-        'application/vnd.rn-realplayer': 'rnx',
-        'application/vnd.route66.link66+xml': 'link66',
-        'application/vnd.sailingtracker.track': 'st',
-        'application/vnd.seemail': 'see',
-        'application/vnd.sema': 'sema',
-        'application/vnd.semd': 'semd',
-        'application/vnd.semf': 'semf',
-        'application/vnd.shana.informed.formdata': 'ifm',
-        'application/vnd.shana.informed.formtemplate': 'itp',
-        'application/vnd.shana.informed.interchange': 'iif',
-        'application/vnd.shana.informed.package': 'ipk',
-        'application/vnd.simtech-mindmapper': 'twd',
-        'application/vnd.smaf': 'mmf',
-        'application/vnd.smart.teacher': 'teacher',
-        'application/vnd.solent.sdkm+xml': 'sdkm',
-        'application/vnd.spotfire.dxp': 'dxp',
-        'application/vnd.spotfire.sfs': 'sfs',
-        'application/vnd.stardivision.calc': 'sdc',
-        'application/vnd.stardivision.draw': 'sda',
-        'application/vnd.stardivision.impress': 'sdd',
-        'application/vnd.stardivision.math': 'smf',
-        'application/vnd.stardivision.writer': 'sdw',
-        'application/vnd.stardivision.writer-global': 'sgl',
-        'application/vnd.stepmania.stepchart': 'sm',
-        'application/vnd.sun.xml.calc': 'sxc',
-        'application/vnd.sun.xml.calc.template': 'stc',
-        'application/vnd.sun.xml.draw': 'sxd',
-        'application/vnd.sun.xml.draw.template': 'std',
-        'application/vnd.sun.xml.impress': 'sxi',
-        'application/vnd.sun.xml.impress.template': 'sti',
-        'application/vnd.sun.xml.math': 'sxm',
-        'application/vnd.sun.xml.writer': 'sxw',
-        'application/vnd.sun.xml.writer.global': 'sxg',
-        'application/vnd.sun.xml.writer.template': 'stw',
-        'application/vnd.sus-calendar': 'sus',
-        'application/vnd.svd': 'svd',
-        'application/vnd.symbian.install': 'sis',
-        'application/vnd.syncml+xml': 'xsm',
-        'application/vnd.syncml.dm+wbxml': 'bdm',
-        'application/vnd.syncml.dm+xml': 'xdm',
-        'application/vnd.tao.intent-module-archive': 'tao',
-        'application/vnd.tmobile-livetv': 'tmo',
-        'application/vnd.trid.tpt': 'tpt',
-        'application/vnd.triscape.mxs': 'mxs',
-        'application/vnd.trueapp': 'tra',
-        'application/vnd.ufdl': 'ufd',
-        'application/vnd.uiq.theme': 'utz',
-        'application/vnd.umajin': 'umj',
-        'application/vnd.unity': 'unityweb',
-        'application/vnd.uoml+xml': 'uoml',
-        'application/vnd.vcx': 'vcx',
-        'application/vnd.visio': 'vsd',
-        'application/vnd.visionary': 'vis',
-        'application/vnd.vsf': 'vsf',
-        'application/vnd.wap.wbxml': 'wbxml',
-        'application/vnd.wap.wmlc': 'wmlc',
-        'application/vnd.wap.wmlscriptc': 'wmlsc',
-        'application/vnd.webturbo': 'wtb',
-        'application/vnd.wolfram.player': 'nbp',
-        'application/vnd.wordperfect': 'wpd',
-        'application/vnd.wqd': 'wqd',
-        'application/vnd.wt.stf': 'stf',
-        'application/vnd.xara': ['web', 'xar'],
-        'application/vnd.xfdl': 'xfdl',
-        'application/vnd.yamaha.hv-dic': 'hvd',
-        'application/vnd.yamaha.hv-script': 'hvs',
-        'application/vnd.yamaha.hv-voice': 'hvp',
-        'application/vnd.yamaha.openscoreformat': 'osf',
-        'application/vnd.yamaha.openscoreformat.osfpvg+xml': 'osfpvg',
-        'application/vnd.yamaha.smaf-audio': 'saf',
-        'application/vnd.yamaha.smaf-phrase': 'spf',
-        'application/vnd.yellowriver-custom-menu': 'cmp',
-        'application/vnd.zul': 'zir',
-        'application/vnd.zzazz.deck+xml': 'zaz',
-        'application/vocaltec-media-desc': 'vmd',
-        'application/vocaltec-media-file': 'vmf',
-        'application/voicexml+xml': 'vxml',
-        'application/widget': 'wgt',
-        'application/winhlp': 'hlp',
-        'application/wordperfect': ['wp', 'wp5', 'wp6', 'wpd'],
-        'application/wordperfect6.0': ['w60', 'wp5'],
-        'application/wordperfect6.1': 'w61',
-        'application/wsdl+xml': 'wsdl',
-        'application/wspolicy+xml': 'wspolicy',
-        'application/x-123': 'wk1',
-        'application/x-7z-compressed': '7z',
-        'application/x-abiword': 'abw',
-        'application/x-ace-compressed': 'ace',
-        'application/x-aim': 'aim',
-        'application/x-authorware-bin': 'aab',
-        'application/x-authorware-map': 'aam',
-        'application/x-authorware-seg': 'aas',
-        'application/x-bcpio': 'bcpio',
-        'application/x-binary': 'bin',
-        'application/x-binhex40': 'hqx',
-        'application/x-bittorrent': 'torrent',
-        'application/x-bsh': ['bsh', 'sh', 'shar'],
-        'application/x-bytecode.elisp': 'elc',
-        'applicaiton/x-bytecode.python': 'pyc',
-        'application/x-bzip': 'bz',
-        'application/x-bzip2': ['boz', 'bz2'],
-        'application/x-cdf': 'cdf',
-        'application/x-cdlink': 'vcd',
-        'application/x-chat': ['cha', 'chat'],
-        'application/x-chess-pgn': 'pgn',
-        'application/x-cmu-raster': 'ras',
-        'application/x-cocoa': 'cco',
-        'application/x-compactpro': 'cpt',
-        'application/x-compress': 'z',
-        'application/x-compressed': ['tgz', 'gz', 'z', 'zip'],
-        'application/x-conference': 'nsc',
-        'application/x-cpio': 'cpio',
-        'application/x-cpt': 'cpt',
-        'application/x-csh': 'csh',
-        'application/x-debian-package': 'deb',
-        'application/x-deepv': 'deepv',
-        'application/x-director': ['dcr', 'dir', 'dxr'],
-        'application/x-doom': 'wad',
-        'application/x-dtbncx+xml': 'ncx',
-        'application/x-dtbook+xml': 'dtb',
-        'application/x-dtbresource+xml': 'res',
-        'application/x-dvi': 'dvi',
-        'application/x-elc': 'elc',
-        'application/x-envoy': ['env', 'evy'],
-        'application/x-esrehber': 'es',
-        'application/x-excel': ['xla', 'xlb', 'xlc', 'xld', 'xlk', 'xll', 'xlm', 'xls', 'xlt', 'xlv', 'xlw'],
-        'application/x-font-bdf': 'bdf',
-        'application/x-font-ghostscript': 'gsf',
-        'application/x-font-linux-psf': 'psf',
-        'application/x-font-otf': 'otf',
-        'application/x-font-pcf': 'pcf',
-        'application/x-font-snf': 'snf',
-        'application/x-font-ttf': 'ttf',
-        'application/x-font-type1': 'pfa',
-        'application/x-font-woff': 'woff',
-        'application/x-frame': 'mif',
-        'application/x-freelance': 'pre',
-        'application/x-futuresplash': 'spl',
-        'application/x-gnumeric': 'gnumeric',
-        'application/x-gsp': 'gsp',
-        'application/x-gss': 'gss',
-        'application/x-gtar': 'gtar',
-        'application/x-gzip': ['gz', 'gzip'],
-        'application/x-hdf': 'hdf',
-        'application/x-helpfile': ['help', 'hlp'],
-        'application/x-httpd-imap': 'imap',
-        'application/x-ima': 'ima',
-        'application/x-internet-signup': ['ins', 'isp'],
-        'application/x-internett-signup': 'ins',
-        'application/x-inventor': 'iv',
-        'application/x-ip2': 'ip',
-        'application/x-iphone': 'iii',
-        'application/x-java-class': 'class',
-        'application/x-java-commerce': 'jcm',
-        'application/x-java-jnlp-file': 'jnlp',
-        'application/x-javascript': 'js',
-        'application/x-koan': ['skd', 'skm', 'skp', 'skt'],
-        'application/x-ksh': 'ksh',
-        'application/x-latex': ['latex', 'ltx'],
-        'application/x-lha': 'lha',
-        'application/x-lisp': 'lsp',
-        'application/x-livescreen': 'ivy',
-        'application/x-lotus': 'wq1',
-        'application/x-lotusscreencam': 'scm',
-        'application/x-lzh': 'lzh',
-        'application/x-lzx': 'lzx',
-        'application/x-mac-binhex40': 'hqx',
-        'application/x-macbinary': 'bin',
-        'application/x-magic-cap-package-1.0': 'mc$',
-        'application/x-mathcad': 'mcd',
-        'application/x-meme': 'mm',
-        'application/x-midi': ['mid', 'midi'],
-        'application/x-mif': 'mif',
-        'application/x-mix-transfer': 'nix',
-        'application/x-mobipocket-ebook': 'prc',
-        'application/x-mplayer2': 'asx',
-        'application/x-ms-application': 'application',
-        'application/x-ms-wmd': 'wmd',
-        'application/x-ms-wmz': 'wmz',
-        'application/x-ms-xbap': 'xbap',
-        'application/x-msaccess': 'mdb',
-        'application/x-msbinder': 'obd',
-        'application/x-mscardfile': 'crd',
-        'application/x-msclip': 'clp',
-        'application/x-msdownload': ['dll', 'exe'],
-        'application/x-msexcel': ['xla', 'xls', 'xlw'],
-        'application/x-msmediaview': ['m13', 'm14', 'mvb'],
-        'application/x-msmetafile': 'wmf',
-        'application/x-msmoney': 'mny',
-        'application/x-mspowerpoint': 'ppt',
-        'application/x-mspublisher': 'pub',
-        'application/x-msschedule': 'scd',
-        'application/x-msterminal': 'trm',
-        'application/x-mswrite': 'wri',
-        'application/x-navi-animation': 'ani',
-        'application/x-navidoc': 'nvd',
-        'application/x-navimap': 'map',
-        'application/x-navistyle': 'stl',
-        'application/x-netcdf': ['cdf', 'nc'],
-        'application/x-newton-compatible-pkg': 'pkg',
-        'application/x-nokia-9000-communicator-add-on-software': 'aos',
-        'application/x-omc': 'omc',
-        'application/x-omcdatamaker': 'omcd',
-        'application/x-omcregerator': 'omcr',
-        'application/x-pagemaker': ['pm4', 'pm5'],
-        'application/x-pcl': 'pcl',
-        'application/x-perfmon': ['pma', 'pmc', 'pml', 'pmr', 'pmw'],
-        'application/x-pixclscript': 'plx',
-        'application/x-pkcs10': 'p10',
-        'application/x-pkcs12': ['p12', 'pfx'],
-        'application/x-pkcs7-certificates': ['p7b', 'spc'],
-        'application/x-pkcs7-certreqresp': 'p7r',
-        'application/x-pkcs7-mime': ['p7c', 'p7m'],
-        'application/x-pkcs7-signature': ['p7s', 'p7a'],
-        'application/x-pointplus': 'css',
-        'application/x-portable-anymap': 'pnm',
-        'application/x-project': ['mpc', 'mpt', 'mpv', 'mpx'],
-        'application/x-qpro': 'wb1',
-        'application/x-rar-compressed': 'rar',
-        'application/x-rtf': 'rtf',
-        'application/x-sdp': 'sdp',
-        'application/x-sea': 'sea',
-        'application/x-seelogo': 'sl',
-        'application/x-sh': 'sh',
-        'application/x-shar': ['shar', 'sh'],
-        'application/x-shockwave-flash': 'swf',
-        'application/x-silverlight-app': 'xap',
-        'application/x-sit': 'sit',
-        'application/x-sprite': ['spr', 'sprite'],
-        'application/x-stuffit': 'sit',
-        'application/x-stuffitx': 'sitx',
-        'application/x-sv4cpio': 'sv4cpio',
-        'application/x-sv4crc': 'sv4crc',
-        'application/x-tar': 'tar',
-        'application/x-tbook': ['sbk', 'tbk'],
-        'application/x-tcl': 'tcl',
-        'application/x-tex': 'tex',
-        'application/x-tex-tfm': 'tfm',
-        'application/x-texinfo': ['texi', 'texinfo'],
-        'application/x-troff': ['roff', 't', 'tr'],
-        'application/x-troff-man': 'man',
-        'application/x-troff-me': 'me',
-        'application/x-troff-ms': 'ms',
-        'application/x-troff-msvideo': 'avi',
-        'application/x-ustar': 'ustar',
-        'application/x-visio': ['vsd', 'vst', 'vsw'],
-        'application/x-vnd.audioexplosion.mzz': 'mzz',
-        'application/x-vnd.ls-xpix': 'xpix',
-        'application/x-vrml': 'vrml',
-        'application/x-wais-source': ['src', 'wsrc'],
-        'application/x-winhelp': 'hlp',
-        'application/x-wintalk': 'wtk',
-        'application/x-world': ['svr', 'wrl'],
-        'application/x-wpwin': 'wpd',
-        'application/x-wri': 'wri',
-        'application/x-x509-ca-cert': ['cer', 'crt', 'der'],
-        'application/x-x509-user-cert': 'crt',
-        'application/x-xfig': 'fig',
-        'application/x-xpinstall': 'xpi',
-        'application/x-zip-compressed': 'zip',
-        'application/xcap-diff+xml': 'xdf',
-        'application/xenc+xml': 'xenc',
-        'application/xhtml+xml': 'xhtml',
-        'application/xml': 'xml',
-        'application/xml-dtd': 'dtd',
-        'application/xop+xml': 'xop',
-        'application/xslt+xml': 'xslt',
-        'application/xspf+xml': 'xspf',
-        'application/xv+xml': 'mxml',
-        'application/yang': 'yang',
-        'application/yin+xml': 'yin',
-        'application/ynd.ms-pkipko': 'pko',
-        'application/zip': 'zip',
-        'audio/adpcm': 'adp',
-        'audio/aiff': ['aif', 'aifc', 'aiff'],
-        'audio/basic': ['au', 'snd'],
-        'audio/it': 'it',
-        'audio/make': ['funk', 'my', 'pfunk'],
-        'audio/make.my.funk': 'pfunk',
-        'audio/mid': ['mid', 'rmi'],
-        'audio/midi': ['kar', 'mid', 'midi'],
-        'audio/mod': 'mod',
-        'audio/mp4': 'mp4a',
-        'audio/mpeg': ['mp3', 'm2a', 'mp2', 'mpa', 'mpg', 'mpga'],
-        'audio/mpeg3': 'mp3',
-        'audio/nspaudio': ['la', 'lma'],
-        'audio/ogg': 'oga',
-        'audio/s3m': 's3m',
-        'audio/tsp-audio': 'tsi',
-        'audio/tsplayer': 'tsp',
-        'audio/vnd.dece.audio': 'uva',
-        'audio/vnd.digital-winds': 'eol',
-        'audio/vnd.dra': 'dra',
-        'audio/vnd.dts': 'dts',
-        'audio/vnd.dts.hd': 'dtshd',
-        'audio/vnd.lucent.voice': 'lvp',
-        'audio/vnd.ms-playready.media.pya': 'pya',
-        'audio/vnd.nuera.ecelp4800': 'ecelp4800',
-        'audio/vnd.nuera.ecelp7470': 'ecelp7470',
-        'audio/vnd.nuera.ecelp9600': 'ecelp9600',
-        'audio/vnd.qcelp': 'qcp',
-        'audio/vnd.rip': 'rip',
-        'audio/voc': 'voc',
-        'audio/voxware': 'vox',
-        'audio/wav': 'wav',
-        'audio/webm': 'weba',
-        'audio/x-aac': 'aac',
-        'audio/x-adpcm': 'snd',
-        'audio/x-aiff': ['aif', 'aifc', 'aiff'],
-        'audio/x-au': 'au',
-        'audio/x-gsm': ['gsd', 'gsm'],
-        'audio/x-jam': 'jam',
-        'audio/x-liveaudio': 'lam',
-        'audio/x-mid': ['mid', 'midi'],
-        'audio/x-midi': ['mid', 'midi'],
-        'audio/x-mod': 'mod',
-        'audio/x-mpeg': 'mp2',
-        'audio/x-mpeg-3': 'mp3',
-        'audio/x-mpegurl': 'm3u',
-        'audio/x-mpequrl': 'm3u',
-        'audio/x-ms-wax': 'wax',
-        'audio/x-ms-wma': 'wma',
-        'audio/x-nspaudio': ['la', 'lma'],
-        'audio/x-pn-realaudio': ['ra', 'ram', 'rm', 'rmm', 'rmp'],
-        'audio/x-pn-realaudio-plugin': ['ra', 'rmp', 'rpm'],
-        'audio/x-psid': 'sid',
-        'audio/x-realaudio': 'ra',
-        'audio/x-twinvq': 'vqf',
-        'audio/x-twinvq-plugin': ['vqe', 'vql'],
-        'audio/x-vnd.audioexplosion.mjuicemediafile': 'mjf',
-        'audio/x-voc': 'voc',
-        'audio/x-wav': 'wav',
-        'audio/xm': 'xm',
-        'chemical/x-cdx': 'cdx',
-        'chemical/x-cif': 'cif',
-        'chemical/x-cmdf': 'cmdf',
-        'chemical/x-cml': 'cml',
-        'chemical/x-csml': 'csml',
-        'chemical/x-pdb': ['pdb', 'xyz'],
-        'chemical/x-xyz': 'xyz',
-        'drawing/x-dwf': 'dwf',
-        'i-world/i-vrml': 'ivr',
-        'image/bmp': ['bmp', 'bm'],
-        'image/cgm': 'cgm',
-        'image/cis-cod': 'cod',
-        'image/cmu-raster': ['ras', 'rast'],
-        'image/fif': 'fif',
-        'image/florian': ['flo', 'turbot'],
-        'image/g3fax': 'g3',
-        'image/gif': 'gif',
-        'image/ief': ['ief', 'iefs'],
-        'image/jpeg': ['jpe', 'jpeg', 'jpg', 'jfif', 'jfif-tbnl'],
-        'image/jutvision': 'jut',
-        'image/ktx': 'ktx',
-        'image/naplps': ['nap', 'naplps'],
-        'image/pict': ['pic', 'pict'],
-        'image/pipeg': 'jfif',
-        'image/pjpeg': ['jfif', 'jpe', 'jpeg', 'jpg'],
-        'image/png': ['png', 'x-png'],
-        'image/prs.btif': 'btif',
-        'image/svg+xml': 'svg',
-        'image/tiff': ['tif', 'tiff'],
-        'image/vasa': 'mcf',
-        'image/vnd.adobe.photoshop': 'psd',
-        'image/vnd.dece.graphic': 'uvi',
-        'image/vnd.djvu': 'djvu',
-        'image/vnd.dvb.subtitle': 'sub',
-        'image/vnd.dwg': ['dwg', 'dxf', 'svf'],
-        'image/vnd.dxf': 'dxf',
-        'image/vnd.fastbidsheet': 'fbs',
-        'image/vnd.fpx': 'fpx',
-        'image/vnd.fst': 'fst',
-        'image/vnd.fujixerox.edmics-mmr': 'mmr',
-        'image/vnd.fujixerox.edmics-rlc': 'rlc',
-        'image/vnd.ms-modi': 'mdi',
-        'image/vnd.net-fpx': ['fpx', 'npx'],
-        'image/vnd.rn-realflash': 'rf',
-        'image/vnd.rn-realpix': 'rp',
-        'image/vnd.wap.wbmp': 'wbmp',
-        'image/vnd.xiff': 'xif',
-        'image/webp': 'webp',
-        'image/x-cmu-raster': 'ras',
-        'image/x-cmx': 'cmx',
-        'image/x-dwg': ['dwg', 'dxf', 'svf'],
-        'image/x-freehand': 'fh',
-        'image/x-icon': 'ico',
-        'image/x-jg': 'art',
-        'image/x-jps': 'jps',
-        'image/x-niff': ['nif', 'niff'],
-        'image/x-pcx': 'pcx',
-        'image/x-pict': ['pct', 'pic'],
-        'image/x-portable-anymap': 'pnm',
-        'image/x-portable-bitmap': 'pbm',
-        'image/x-portable-graymap': 'pgm',
-        'image/x-portable-greymap': 'pgm',
-        'image/x-portable-pixmap': 'ppm',
-        'image/x-quicktime': ['qif', 'qti', 'qtif'],
-        'image/x-rgb': 'rgb',
-        'image/x-tiff': ['tif', 'tiff'],
-        'image/x-windows-bmp': 'bmp',
-        'image/x-xbitmap': 'xbm',
-        'image/x-xbm': 'xbm',
-        'image/x-xpixmap': ['xpm', 'pm'],
-        'image/x-xwd': 'xwd',
-        'image/x-xwindowdump': 'xwd',
-        'image/xbm': 'xbm',
-        'image/xpm': 'xpm',
-        'message/rfc822': ['mht', 'mhtml', 'nws', 'mime', 'eml'],
-        'model/iges': ['iges', 'igs'],
-        'model/mesh': 'msh',
-        'model/vnd.collada+xml': 'dae',
-        'model/vnd.dwf': 'dwf',
-        'model/vnd.gdl': 'gdl',
-        'model/vnd.gtw': 'gtw',
-        'model/vnd.mts': 'mts',
-        'model/vnd.vtu': 'vtu',
-        'model/vrml': ['vrml', 'wrl', 'wrz'],
-        'model/x-pov': 'pov',
-        'multipart/x-gzip': 'gzip',
-        'multipart/x-ustar': 'ustar',
-        'multipart/x-zip': 'zip',
-        'music/crescendo': ['mid', 'midi'],
-        'music/x-karaoke': 'kar',
-        'paleovu/x-pv': 'pvu',
-        'text/asp': 'asp',
-        'text/calendar': 'ics',
-        'text/css': 'css',
-        'text/csv': 'csv',
-        'text/ecmascript': 'js',
-        'text/h323': '323',
-        'text/html': ['htm', 'html', 'stm', 'acgi', 'htmls', 'htx', 'shtml'],
-        'text/iuls': 'uls',
-        'text/javascript': 'js',
-        'text/mcf': 'mcf',
-        'text/n3': 'n3',
-        'text/pascal': 'pas',
-        'text/plain': ['bas', 'c', 'h', 'txt', 'c++', 'cc', 'com', 'conf', 'cxx', 'def', 'f', 'f90', 'for', 'g', 'hh', 'idc', 'jav', 'java', 'list', 'log', 'lst', 'm', 'mar', 'pl', 'sdml', 'text'],
-        'text/plain-bas': 'par',
-        'text/prs.lines.tag': 'dsc',
-        'text/richtext': ['rtx', 'rt', 'rtf'],
-        'text/scriplet': 'wsc',
-        'text/scriptlet': 'sct',
-        'text/sgml': ['sgm', 'sgml'],
-        'text/tab-separated-values': 'tsv',
-        'text/troff': 't',
-        'text/turtle': 'ttl',
-        'text/uri-list': ['uni', 'unis', 'uri', 'uris'],
-        'text/vnd.abc': 'abc',
-        'text/vnd.curl': 'curl',
-        'text/vnd.curl.dcurl': 'dcurl',
-        'text/vnd.curl.mcurl': 'mcurl',
-        'text/vnd.curl.scurl': 'scurl',
-        'text/vnd.fly': 'fly',
-        'text/vnd.fmi.flexstor': 'flx',
-        'text/vnd.graphviz': 'gv',
-        'text/vnd.in3d.3dml': '3dml',
-        'text/vnd.in3d.spot': 'spot',
-        'text/vnd.rn-realtext': 'rt',
-        'text/vnd.sun.j2me.app-descriptor': 'jad',
-        'text/vnd.wap.wml': 'wml',
-        'text/vnd.wap.wmlscript': 'wmls',
-        'text/webviewhtml': 'htt',
-        'text/x-asm': ['asm', 's'],
-        'text/x-audiosoft-intra': 'aip',
-        'text/x-c': ['c', 'cc', 'cpp'],
-        'text/x-component': 'htc',
-        'text/x-fortran': ['f', 'f77', 'f90', 'for'],
-        'text/x-h': ['h', 'hh'],
-        'text/x-java-source': ['jav', 'java'],
-        'text/x-java-source,java': 'java',
-        'text/x-la-asf': 'lsx',
-        'text/x-m': 'm',
-        'text/x-pascal': 'p',
-        'text/x-script': 'hlb',
-        'text/x-script.csh': 'csh',
-        'text/x-script.elisp': 'el',
-        'text/x-script.guile': 'scm',
-        'text/x-script.ksh': 'ksh',
-        'text/x-script.lisp': 'lsp',
-        'text/x-script.perl': 'pl',
-        'text/x-script.perl-module': 'pm',
-        'text/x-script.phyton': 'py',
-        'text/x-script.rexx': 'rexx',
-        'text/x-script.scheme': 'scm',
-        'text/x-script.sh': 'sh',
-        'text/x-script.tcl': 'tcl',
-        'text/x-script.tcsh': 'tcsh',
-        'text/x-script.zsh': 'zsh',
-        'text/x-server-parsed-html': ['shtml', 'ssi'],
-        'text/x-setext': 'etx',
-        'text/x-sgml': ['sgm', 'sgml'],
-        'text/x-speech': ['spc', 'talk'],
-        'text/x-uil': 'uil',
-        'text/x-uuencode': ['uu', 'uue'],
-        'text/x-vcalendar': 'vcs',
-        'text/x-vcard': 'vcf',
-        'text/xml': 'xml',
-        'video/3gpp': '3gp',
-        'video/3gpp2': '3g2',
-        'video/animaflex': 'afl',
-        'video/avi': 'avi',
-        'video/avs-video': 'avs',
-        'video/dl': 'dl',
-        'video/fli': 'fli',
-        'video/gl': 'gl',
-        'video/h261': 'h261',
-        'video/h263': 'h263',
-        'video/h264': 'h264',
-        'video/jpeg': 'jpgv',
-        'video/jpm': 'jpm',
-        'video/mj2': 'mj2',
-        'video/mp4': 'mp4',
-        'video/mpeg': ['mp2', 'mpa', 'mpe', 'mpeg', 'mpg', 'mpv2', 'm1v', 'm2v', 'mp3'],
-        'video/msvideo': 'avi',
-        'video/ogg': 'ogv',
-        'video/quicktime': ['mov', 'qt', 'moov'],
-        'video/vdo': 'vdo',
-        'video/vivo': ['viv', 'vivo'],
-        'video/vnd.dece.hd': 'uvh',
-        'video/vnd.dece.mobile': 'uvm',
-        'video/vnd.dece.pd': 'uvp',
-        'video/vnd.dece.sd': 'uvs',
-        'video/vnd.dece.video': 'uvv',
-        'video/vnd.fvt': 'fvt',
-        'video/vnd.mpegurl': 'mxu',
-        'video/vnd.ms-playready.media.pyv': 'pyv',
-        'video/vnd.rn-realvideo': 'rv',
-        'video/vnd.uvvu.mp4': 'uvu',
-        'video/vnd.vivo': ['viv', 'vivo'],
-        'video/vosaic': 'vos',
-        'video/webm': 'webm',
-        'video/x-amt-demorun': 'xdr',
-        'video/x-amt-showrun': 'xsr',
-        'video/x-atomic3d-feature': 'fmf',
-        'video/x-dl': 'dl',
-        'video/x-dv': ['dif', 'dv'],
-        'video/x-f4v': 'f4v',
-        'video/x-fli': 'fli',
-        'video/x-flv': 'flv',
-        'video/x-gl': 'gl',
-        'video/x-isvideo': 'isu',
-        'video/x-la-asf': ['lsf', 'lsx'],
-        'video/x-m4v': 'm4v',
-        'video/x-motion-jpeg': 'mjpg',
-        'video/x-mpeg': ['mp2', 'mp3'],
-        'video/x-mpeq2a': 'mp2',
-        'video/x-ms-asf': ['asf', 'asr', 'asx'],
-        'video/x-ms-asf-plugin': 'asx',
-        'video/x-ms-wm': 'wm',
-        'video/x-ms-wmv': 'wmv',
-        'video/x-ms-wmx': 'wmx',
-        'video/x-ms-wvx': 'wvx',
-        'video/x-msvideo': 'avi',
-        'video/x-qtc': 'qtc',
-        'video/x-scm': 'scm',
-        'video/x-sgi-movie': ['movie', 'mv'],
-        'windows/metafile': 'wmf',
-        'www/mime': 'mime',
-        'x-conference/x-cooltalk': 'ice',
-        'x-music/x-midi': ['mid', 'midi'],
-        'x-world/x-3dmf': ['3dm', '3dmf', 'qd3', 'qd3d'],
-        'x-world/x-svr': 'svr',
-        'x-world/x-vrml': ['flr', 'vrml', 'wrl', 'wrz', 'xaf', 'xof'],
-        'x-world/x-vrt': 'vrt',
-        'xgl/drawing': 'xgz',
-        'xgl/movie': 'xmz',
-    };
-
-    var mimetypesExtensions = {
-        '': ['application/andrew-inset', 'application/pgp-encrypted'],
-        '*': 'application/octet-stream',
-        '123': 'application/vnd.lotus-1-2-3',
-        '323': 'text/h323',
-        '3dm': 'x-world/x-3dmf',
-        '3dmf': 'x-world/x-3dmf',
-        '3dml': 'text/vnd.in3d.3dml',
-        '3g2': 'video/3gpp2',
-        '3gp': 'video/3gpp',
-        '7z': 'application/x-7z-compressed',
-        'a': 'application/octet-stream',
-        'aab': 'application/x-authorware-bin',
-        'aac': 'audio/x-aac',
-        'aam': 'application/x-authorware-map',
-        'aas': 'application/x-authorware-seg',
-        'abc': 'text/vnd.abc',
-        'abw': 'application/x-abiword',
-        'ac': 'application/pkix-attr-cert',
-        'acc': 'application/vnd.americandynamics.acc',
-        'ace': 'application/x-ace-compressed',
-        'acgi': 'text/html',
-        'acu': 'application/vnd.acucobol',
-        'acx': 'application/internet-property-stream',
-        'adp': 'audio/adpcm',
-        'aep': 'application/vnd.audiograph',
-        'afl': 'video/animaflex',
-        'afp': 'application/vnd.ibm.modcap',
-        'ahead': 'application/vnd.ahead.space',
-        'ai': 'application/postscript',
-        'aif': ['audio/aiff', 'audio/x-aiff'],
-        'aifc': ['audio/aiff', 'audio/x-aiff'],
-        'aiff': ['audio/aiff', 'audio/x-aiff'],
-        'aim': 'application/x-aim',
-        'aip': 'text/x-audiosoft-intra',
-        'air': 'application/vnd.adobe.air-application-installer-package+zip',
-        'ait': 'application/vnd.dvb.ait',
-        'ami': 'application/vnd.amiga.ami',
-        'ani': 'application/x-navi-animation',
-        'aos': 'application/x-nokia-9000-communicator-add-on-software',
-        'apk': 'application/vnd.android.package-archive',
-        'application': 'application/x-ms-application',
-        'apr': 'application/vnd.lotus-approach',
-        'aps': 'application/mime',
-        'arc': 'application/octet-stream',
-        'arj': ['application/arj', 'application/octet-stream'],
-        'art': 'image/x-jg',
-        'asf': 'video/x-ms-asf',
-        'asm': 'text/x-asm',
-        'aso': 'application/vnd.accpac.simply.aso',
-        'asp': 'text/asp',
-        'asr': 'video/x-ms-asf',
-        'asx': ['video/x-ms-asf', 'application/x-mplayer2', 'video/x-ms-asf-plugin'],
-        'atc': 'application/vnd.acucorp',
-        'atomcat': 'application/atomcat+xml',
-        'atomsvc': 'application/atomsvc+xml',
-        'atx': 'application/vnd.antix.game-component',
-        'au': ['audio/basic', 'audio/x-au'],
-        'avi': ['video/avi', 'video/msvideo', 'application/x-troff-msvideo', 'video/x-msvideo'],
-        'avs': 'video/avs-video',
-        'aw': 'application/applixware',
-        'axs': 'application/olescript',
-        'azf': 'application/vnd.airzip.filesecure.azf',
-        'azs': 'application/vnd.airzip.filesecure.azs',
-        'azw': 'application/vnd.amazon.ebook',
-        'bas': 'text/plain',
-        'bcpio': 'application/x-bcpio',
-        'bdf': 'application/x-font-bdf',
-        'bdm': 'application/vnd.syncml.dm+wbxml',
-        'bed': 'application/vnd.realvnc.bed',
-        'bh2': 'application/vnd.fujitsu.oasysprs',
-        'bin': ['application/octet-stream', 'application/mac-binary', 'application/macbinary', 'application/x-macbinary', 'application/x-binary'],
-        'bm': 'image/bmp',
-        'bmi': 'application/vnd.bmi',
-        'bmp': ['image/bmp', 'image/x-windows-bmp'],
-        'boo': 'application/book',
-        'book': 'application/book',
-        'box': 'application/vnd.previewsystems.box',
-        'boz': 'application/x-bzip2',
-        'bsh': 'application/x-bsh',
-        'btif': 'image/prs.btif',
-        'bz': 'application/x-bzip',
-        'bz2': 'application/x-bzip2',
-        'c': ['text/plain', 'text/x-c'],
-        'c++': 'text/plain',
-        'c11amc': 'application/vnd.cluetrust.cartomobile-config',
-        'c11amz': 'application/vnd.cluetrust.cartomobile-config-pkg',
-        'c4g': 'application/vnd.clonk.c4group',
-        'cab': 'application/vnd.ms-cab-compressed',
-        'car': 'application/vnd.curl.car',
-        'cat': ['application/vnd.ms-pkiseccat', 'application/vnd.ms-pki.seccat'],
-        'cc': ['text/plain', 'text/x-c'],
-        'ccad': 'application/clariscad',
-        'cco': 'application/x-cocoa',
-        'ccxml': 'application/ccxml+xml,',
-        'cdbcmsg': 'application/vnd.contact.cmsg',
-        'cdf': ['application/cdf', 'application/x-cdf', 'application/x-netcdf'],
-        'cdkey': 'application/vnd.mediastation.cdkey',
-        'cdmia': 'application/cdmi-capability',
-        'cdmic': 'application/cdmi-container',
-        'cdmid': 'application/cdmi-domain',
-        'cdmio': 'application/cdmi-object',
-        'cdmiq': 'application/cdmi-queue',
-        'cdx': 'chemical/x-cdx',
-        'cdxml': 'application/vnd.chemdraw+xml',
-        'cdy': 'application/vnd.cinderella',
-        'cer': ['application/pkix-cert', 'application/x-x509-ca-cert'],
-        'cgm': 'image/cgm',
-        'cha': 'application/x-chat',
-        'chat': 'application/x-chat',
-        'chm': 'application/vnd.ms-htmlhelp',
-        'chrt': 'application/vnd.kde.kchart',
-        'cif': 'chemical/x-cif',
-        'cii': 'application/vnd.anser-web-certificate-issue-initiation',
-        'cil': 'application/vnd.ms-artgalry',
-        'cla': 'application/vnd.claymore',
-        'class': ['application/octet-stream', 'application/java', 'application/java-byte-code', 'application/java-vm', 'application/x-java-class'],
-        'clkk': 'application/vnd.crick.clicker.keyboard',
-        'clkp': 'application/vnd.crick.clicker.palette',
-        'clkt': 'application/vnd.crick.clicker.template',
-        'clkw': 'application/vnd.crick.clicker.wordbank',
-        'clkx': 'application/vnd.crick.clicker',
-        'clp': 'application/x-msclip',
-        'cmc': 'application/vnd.cosmocaller',
-        'cmdf': 'chemical/x-cmdf',
-        'cml': 'chemical/x-cml',
-        'cmp': 'application/vnd.yellowriver-custom-menu',
-        'cmx': 'image/x-cmx',
-        'cod': ['image/cis-cod', 'application/vnd.rim.cod'],
-        'com': ['application/octet-stream', 'text/plain'],
-        'conf': 'text/plain',
-        'cpio': 'application/x-cpio',
-        'cpp': 'text/x-c',
-        'cpt': ['application/mac-compactpro', 'application/x-compactpro', 'application/x-cpt'],
-        'crd': 'application/x-mscardfile',
-        'crl': ['application/pkix-crl', 'application/pkcs-crl'],
-        'crt': ['application/pkix-cert', 'application/x-x509-user-cert', 'application/x-x509-ca-cert'],
-        'cryptonote': 'application/vnd.rig.cryptonote',
-        'csh': ['text/x-script.csh', 'application/x-csh'],
-        'csml': 'chemical/x-csml',
-        'csp': 'application/vnd.commonspace',
-        'css': ['text/css', 'application/x-pointplus'],
-        'csv': 'text/csv',
-        'cu': 'application/cu-seeme',
-        'curl': 'text/vnd.curl',
-        'cww': 'application/prs.cww',
-        'cxx': 'text/plain',
-        'dae': 'model/vnd.collada+xml',
-        'daf': 'application/vnd.mobius.daf',
-        'davmount': 'application/davmount+xml',
-        'dcr': 'application/x-director',
-        'dcurl': 'text/vnd.curl.dcurl',
-        'dd2': 'application/vnd.oma.dd2+xml',
-        'ddd': 'application/vnd.fujixerox.ddd',
-        'deb': 'application/x-debian-package',
-        'deepv': 'application/x-deepv',
-        'def': 'text/plain',
-        'der': 'application/x-x509-ca-cert',
-        'dfac': 'application/vnd.dreamfactory',
-        'dif': 'video/x-dv',
-        'dir': 'application/x-director',
-        'dis': 'application/vnd.mobius.dis',
-        'djvu': 'image/vnd.djvu',
-        'dl': ['video/dl', 'video/x-dl'],
-        'dll': 'application/x-msdownload',
-        'dms': 'application/octet-stream',
-        'dna': 'application/vnd.dna',
-        'doc': 'application/msword',
-        'docm': 'application/vnd.ms-word.document.macroenabled.12',
-        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'dot': 'application/msword',
-        'dotm': 'application/vnd.ms-word.template.macroenabled.12',
-        'dotx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
-        'dp': ['application/commonground', 'application/vnd.osgi.dp'],
-        'dpg': 'application/vnd.dpgraph',
-        'dra': 'audio/vnd.dra',
-        'drw': 'application/drafting',
-        'dsc': 'text/prs.lines.tag',
-        'dssc': 'application/dssc+der',
-        'dtb': 'application/x-dtbook+xml',
-        'dtd': 'application/xml-dtd',
-        'dts': 'audio/vnd.dts',
-        'dtshd': 'audio/vnd.dts.hd',
-        'dump': 'application/octet-stream',
-        'dv': 'video/x-dv',
-        'dvi': 'application/x-dvi',
-        'dwf': ['model/vnd.dwf', 'drawing/x-dwf'],
-        'dwg': ['application/acad', 'image/vnd.dwg', 'image/x-dwg'],
-        'dxf': ['application/dxf', 'image/vnd.dwg', 'image/vnd.dxf', 'image/x-dwg'],
-        'dxp': 'application/vnd.spotfire.dxp',
-        'dxr': 'application/x-director',
-        'ecelp4800': 'audio/vnd.nuera.ecelp4800',
-        'ecelp7470': 'audio/vnd.nuera.ecelp7470',
-        'ecelp9600': 'audio/vnd.nuera.ecelp9600',
-        'edm': 'application/vnd.novadigm.edm',
-        'edx': 'application/vnd.novadigm.edx',
-        'efif': 'application/vnd.picsel',
-        'ei6': 'application/vnd.pg.osasli',
-        'el': 'text/x-script.elisp',
-        'elc': ['application/x-elc', 'application/x-bytecode.elisp'],
-        'eml': 'message/rfc822',
-        'emma': 'application/emma+xml',
-        'env': 'application/x-envoy',
-        'eol': 'audio/vnd.digital-winds',
-        'eot': 'application/vnd.ms-fontobject',
-        'eps': 'application/postscript',
-        'epub': 'application/epub+zip',
-        'es': ['application/ecmascript', 'application/x-esrehber'],
-        'es3': 'application/vnd.eszigno3+xml',
-        'esf': 'application/vnd.epson.esf',
-        'etx': 'text/x-setext',
-        'evy': ['application/envoy', 'application/x-envoy'],
-        'exe': ['application/octet-stream', 'application/x-msdownload'],
-        'exi': 'application/exi',
-        'ext': 'application/vnd.novadigm.ext',
-        'ez2': 'application/vnd.ezpix-album',
-        'ez3': 'application/vnd.ezpix-package',
-        'f': ['text/plain', 'text/x-fortran'],
-        'f4v': 'video/x-f4v',
-        'f77': 'text/x-fortran',
-        'f90': ['text/plain', 'text/x-fortran'],
-        'fbs': 'image/vnd.fastbidsheet',
-        'fcs': 'application/vnd.isac.fcs',
-        'fdf': 'application/vnd.fdf',
-        'fe_launch': 'application/vnd.denovo.fcselayout-link',
-        'fg5': 'application/vnd.fujitsu.oasysgp',
-        'fh': 'image/x-freehand',
-        'fif': ['application/fractals', 'image/fif'],
-        'fig': 'application/x-xfig',
-        'fli': ['video/fli', 'video/x-fli'],
-        'flo': ['image/florian', 'application/vnd.micrografx.flo'],
-        'flr': 'x-world/x-vrml',
-        'flv': 'video/x-flv',
-        'flw': 'application/vnd.kde.kivio',
-        'flx': 'text/vnd.fmi.flexstor',
-        'fly': 'text/vnd.fly',
-        'fm': 'application/vnd.framemaker',
-        'fmf': 'video/x-atomic3d-feature',
-        'fnc': 'application/vnd.frogans.fnc',
-        'for': ['text/plain', 'text/x-fortran'],
-        'fpx': ['image/vnd.fpx', 'image/vnd.net-fpx'],
-        'frl': 'application/freeloader',
-        'fsc': 'application/vnd.fsc.weblaunch',
-        'fst': 'image/vnd.fst',
-        'ftc': 'application/vnd.fluxtime.clip',
-        'fti': 'application/vnd.anser-web-funds-transfer-initiation',
-        'funk': 'audio/make',
-        'fvt': 'video/vnd.fvt',
-        'fxp': 'application/vnd.adobe.fxp',
-        'fzs': 'application/vnd.fuzzysheet',
-        'g': 'text/plain',
-        'g2w': 'application/vnd.geoplan',
-        'g3': 'image/g3fax',
-        'g3w': 'application/vnd.geospace',
-        'gac': 'application/vnd.groove-account',
-        'gdl': 'model/vnd.gdl',
-        'geo': 'application/vnd.dynageo',
-        'gex': 'application/vnd.geometry-explorer',
-        'ggb': 'application/vnd.geogebra.file',
-        'ggt': 'application/vnd.geogebra.tool',
-        'ghf': 'application/vnd.groove-help',
-        'gif': 'image/gif',
-        'gim': 'application/vnd.groove-identity-message',
-        'gl': ['video/gl', 'video/x-gl'],
-        'gmx': 'application/vnd.gmx',
-        'gnumeric': 'application/x-gnumeric',
-        'gph': 'application/vnd.flographit',
-        'gqf': 'application/vnd.grafeq',
-        'gram': 'application/srgs',
-        'grv': 'application/vnd.groove-injector',
-        'grxml': 'application/srgs+xml',
-        'gsd': 'audio/x-gsm',
-        'gsf': 'application/x-font-ghostscript',
-        'gsm': 'audio/x-gsm',
-        'gsp': 'application/x-gsp',
-        'gss': 'application/x-gss',
-        'gtar': 'application/x-gtar',
-        'gtm': 'application/vnd.groove-tool-message',
-        'gtw': 'model/vnd.gtw',
-        'gv': 'text/vnd.graphviz',
-        'gxt': 'application/vnd.geonext',
-        'gz': ['application/x-gzip', 'application/x-compressed'],
-        'gzip': ['multipart/x-gzip', 'application/x-gzip'],
-        'h': ['text/plain', 'text/x-h'],
-        'h261': 'video/h261',
-        'h263': 'video/h263',
-        'h264': 'video/h264',
-        'hal': 'application/vnd.hal+xml',
-        'hbci': 'application/vnd.hbci',
-        'hdf': 'application/x-hdf',
-        'help': 'application/x-helpfile',
-        'hgl': 'application/vnd.hp-hpgl',
-        'hh': ['text/plain', 'text/x-h'],
-        'hlb': 'text/x-script',
-        'hlp': ['application/winhlp', 'application/hlp', 'application/x-helpfile', 'application/x-winhelp'],
-        'hpg': 'application/vnd.hp-hpgl',
-        'hpgl': 'application/vnd.hp-hpgl',
-        'hpid': 'application/vnd.hp-hpid',
-        'hps': 'application/vnd.hp-hps',
-        'hqx': ['application/mac-binhex40', 'application/binhex', 'application/binhex4', 'application/mac-binhex', 'application/x-binhex40', 'application/x-mac-binhex40'],
-        'hta': 'application/hta',
-        'htc': 'text/x-component',
-        'htke': 'application/vnd.kenameaapp',
-        'htm': 'text/html',
-        'html': 'text/html',
-        'htmls': 'text/html',
-        'htt': 'text/webviewhtml',
-        'htx': 'text/html',
-        'hvd': 'application/vnd.yamaha.hv-dic',
-        'hvp': 'application/vnd.yamaha.hv-voice',
-        'hvs': 'application/vnd.yamaha.hv-script',
-        'i2g': 'application/vnd.intergeo',
-        'icc': 'application/vnd.iccprofile',
-        'ice': 'x-conference/x-cooltalk',
-        'ico': 'image/x-icon',
-        'ics': 'text/calendar',
-        'idc': 'text/plain',
-        'ief': 'image/ief',
-        'iefs': 'image/ief',
-        'ifm': 'application/vnd.shana.informed.formdata',
-        'iges': ['application/iges', 'model/iges'],
-        'igl': 'application/vnd.igloader',
-        'igm': 'application/vnd.insors.igm',
-        'igs': ['application/iges', 'model/iges'],
-        'igx': 'application/vnd.micrografx.igx',
-        'iif': 'application/vnd.shana.informed.interchange',
-        'iii': 'application/x-iphone',
-        'ima': 'application/x-ima',
-        'imap': 'application/x-httpd-imap',
-        'imp': 'application/vnd.accpac.simply.imp',
-        'ims': 'application/vnd.ms-ims',
-        'inf': 'application/inf',
-        'ins': ['application/x-internet-signup', 'application/x-internett-signup'],
-        'ip': 'application/x-ip2',
-        'ipfix': 'application/ipfix',
-        'ipk': 'application/vnd.shana.informed.package',
-        'irm': 'application/vnd.ibm.rights-management',
-        'irp': 'application/vnd.irepository.package+xml',
-        'isp': 'application/x-internet-signup',
-        'isu': 'video/x-isvideo',
-        'it': 'audio/it',
-        'itp': 'application/vnd.shana.informed.formtemplate',
-        'iv': 'application/x-inventor',
-        'ivp': 'application/vnd.immervision-ivp',
-        'ivr': 'i-world/i-vrml',
-        'ivu': 'application/vnd.immervision-ivu',
-        'ivy': 'application/x-livescreen',
-        'jad': 'text/vnd.sun.j2me.app-descriptor',
-        'jam': ['application/vnd.jam', 'audio/x-jam'],
-        'jar': 'application/java-archive',
-        'jav': ['text/plain', 'text/x-java-source'],
-        'java': ['text/plain', 'text/x-java-source,java', 'text/x-java-source'],
-        'jcm': 'application/x-java-commerce',
-        'jfif': ['image/pipeg', 'image/jpeg', 'image/pjpeg'],
-        'jfif-tbnl': 'image/jpeg',
-        'jisp': 'application/vnd.jisp',
-        'jlt': 'application/vnd.hp-jlyt',
-        'jnlp': 'application/x-java-jnlp-file',
-        'joda': 'application/vnd.joost.joda-archive',
-        'jpe': ['image/jpeg', 'image/pjpeg'],
-        'jpeg': ['image/jpeg', 'image/pjpeg'],
-        'jpg': ['image/jpeg', 'image/pjpeg'],
-        'jpgv': 'video/jpeg',
-        'jpm': 'video/jpm',
-        'jps': 'image/x-jps',
-        'js': ['application/javascript', 'application/ecmascript', 'text/javascript', 'text/ecmascript', 'application/x-javascript'],
-        'json': 'application/json',
-        'jut': 'image/jutvision',
-        'kar': ['audio/midi', 'music/x-karaoke'],
-        'karbon': 'application/vnd.kde.karbon',
-        'kfo': 'application/vnd.kde.kformula',
-        'kia': 'application/vnd.kidspiration',
-        'kml': 'application/vnd.google-earth.kml+xml',
-        'kmz': 'application/vnd.google-earth.kmz',
-        'kne': 'application/vnd.kinar',
-        'kon': 'application/vnd.kde.kontour',
-        'kpr': 'application/vnd.kde.kpresenter',
-        'ksh': ['application/x-ksh', 'text/x-script.ksh'],
-        'ksp': 'application/vnd.kde.kspread',
-        'ktx': 'image/ktx',
-        'ktz': 'application/vnd.kahootz',
-        'kwd': 'application/vnd.kde.kword',
-        'la': ['audio/nspaudio', 'audio/x-nspaudio'],
-        'lam': 'audio/x-liveaudio',
-        'lasxml': 'application/vnd.las.las+xml',
-        'latex': 'application/x-latex',
-        'lbd': 'application/vnd.llamagraphics.life-balance.desktop',
-        'lbe': 'application/vnd.llamagraphics.life-balance.exchange+xml',
-        'les': 'application/vnd.hhe.lesson-player',
-        'lha': ['application/octet-stream', 'application/lha', 'application/x-lha'],
-        'lhx': 'application/octet-stream',
-        'link66': 'application/vnd.route66.link66+xml',
-        'list': 'text/plain',
-        'lma': ['audio/nspaudio', 'audio/x-nspaudio'],
-        'log': 'text/plain',
-        'lrm': 'application/vnd.ms-lrm',
-        'lsf': 'video/x-la-asf',
-        'lsp': ['application/x-lisp', 'text/x-script.lisp'],
-        'lst': 'text/plain',
-        'lsx': ['video/x-la-asf', 'text/x-la-asf'],
-        'ltf': 'application/vnd.frogans.ltf',
-        'ltx': 'application/x-latex',
-        'lvp': 'audio/vnd.lucent.voice',
-        'lwp': 'application/vnd.lotus-wordpro',
-        'lzh': ['application/octet-stream', 'application/x-lzh'],
-        'lzx': ['application/lzx', 'application/octet-stream', 'application/x-lzx'],
-        'm': ['text/plain', 'text/x-m'],
-        'm13': 'application/x-msmediaview',
-        'm14': 'application/x-msmediaview',
-        'm1v': 'video/mpeg',
-        'm21': 'application/mp21',
-        'm2a': 'audio/mpeg',
-        'm2v': 'video/mpeg',
-        'm3u': ['audio/x-mpegurl', 'audio/x-mpequrl'],
-        'm3u8': 'application/vnd.apple.mpegurl',
-        'm4v': 'video/x-m4v',
-        'ma': 'application/mathematica',
-        'mads': 'application/mads+xml',
-        'mag': 'application/vnd.ecowin.chart',
-        'man': 'application/x-troff-man',
-        'map': 'application/x-navimap',
-        'mar': 'text/plain',
-        'mathml': 'application/mathml+xml',
-        'mbd': 'application/mbedlet',
-        'mbk': 'application/vnd.mobius.mbk',
-        'mbox': 'application/mbox',
-        'mc$': 'application/x-magic-cap-package-1.0',
-        'mc1': 'application/vnd.medcalcdata',
-        'mcd': ['application/mcad', 'application/vnd.mcd', 'application/x-mathcad'],
-        'mcf': ['image/vasa', 'text/mcf'],
-        'mcp': 'application/netmc',
-        'mcurl': 'text/vnd.curl.mcurl',
-        'mdb': 'application/x-msaccess',
-        'mdi': 'image/vnd.ms-modi',
-        'me': 'application/x-troff-me',
-        'meta4': 'application/metalink4+xml',
-        'mets': 'application/mets+xml',
-        'mfm': 'application/vnd.mfmp',
-        'mgp': 'application/vnd.osgeo.mapguide.package',
-        'mgz': 'application/vnd.proteus.magazine',
-        'mht': 'message/rfc822',
-        'mhtml': 'message/rfc822',
-        'mid': ['audio/mid', 'audio/midi', 'music/crescendo', 'x-music/x-midi', 'audio/x-midi', 'application/x-midi', 'audio/x-mid'],
-        'midi': ['audio/midi', 'music/crescendo', 'x-music/x-midi', 'audio/x-midi', 'application/x-midi', 'audio/x-mid'],
-        'mif': ['application/vnd.mif', 'application/x-mif', 'application/x-frame'],
-        'mime': ['message/rfc822', 'www/mime'],
-        'mj2': 'video/mj2',
-        'mjf': 'audio/x-vnd.audioexplosion.mjuicemediafile',
-        'mjpg': 'video/x-motion-jpeg',
-        'mlp': 'application/vnd.dolby.mlp',
-        'mm': ['application/base64', 'application/x-meme'],
-        'mmd': 'application/vnd.chipnuts.karaoke-mmd',
-        'mme': 'application/base64',
-        'mmf': 'application/vnd.smaf',
-        'mmr': 'image/vnd.fujixerox.edmics-mmr',
-        'mny': 'application/x-msmoney',
-        'mod': ['audio/mod', 'audio/x-mod'],
-        'mods': 'application/mods+xml',
-        'moov': 'video/quicktime',
-        'mov': 'video/quicktime',
-        'movie': 'video/x-sgi-movie',
-        'mp2': ['video/mpeg', 'audio/mpeg', 'video/x-mpeg', 'audio/x-mpeg', 'video/x-mpeq2a'],
-        'mp3': ['audio/mpeg', 'audio/mpeg3', 'video/mpeg', 'audio/x-mpeg-3', 'video/x-mpeg'],
-        'mp4': ['video/mp4', 'application/mp4'],
-        'mp4a': 'audio/mp4',
-        'mpa': ['video/mpeg', 'audio/mpeg'],
-        'mpc': ['application/vnd.mophun.certificate', 'application/x-project'],
-        'mpe': 'video/mpeg',
-        'mpeg': 'video/mpeg',
-        'mpg': ['video/mpeg', 'audio/mpeg'],
-        'mpga': 'audio/mpeg',
-        'mpkg': 'application/vnd.apple.installer+xml',
-        'mpm': 'application/vnd.blueice.multipass',
-        'mpn': 'application/vnd.mophun.application',
-        'mpp': 'application/vnd.ms-project',
-        'mpt': 'application/x-project',
-        'mpv': 'application/x-project',
-        'mpv2': 'video/mpeg',
-        'mpx': 'application/x-project',
-        'mpy': 'application/vnd.ibm.minipay',
-        'mqy': 'application/vnd.mobius.mqy',
-        'mrc': 'application/marc',
-        'mrcx': 'application/marcxml+xml',
-        'ms': 'application/x-troff-ms',
-        'mscml': 'application/mediaservercontrol+xml',
-        'mseq': 'application/vnd.mseq',
-        'msf': 'application/vnd.epson.msf',
-        'msg': 'application/vnd.ms-outlook',
-        'msh': 'model/mesh',
-        'msl': 'application/vnd.mobius.msl',
-        'msty': 'application/vnd.muvee.style',
-        'mts': 'model/vnd.mts',
-        'mus': 'application/vnd.musician',
-        'musicxml': 'application/vnd.recordare.musicxml+xml',
-        'mv': 'video/x-sgi-movie',
-        'mvb': 'application/x-msmediaview',
-        'mwf': 'application/vnd.mfer',
-        'mxf': 'application/mxf',
-        'mxl': 'application/vnd.recordare.musicxml',
-        'mxml': 'application/xv+xml',
-        'mxs': 'application/vnd.triscape.mxs',
-        'mxu': 'video/vnd.mpegurl',
-        'my': 'audio/make',
-        'mzz': 'application/x-vnd.audioexplosion.mzz',
-        'n-gage': 'application/vnd.nokia.n-gage.symbian.install',
-        'n3': 'text/n3',
-        'nap': 'image/naplps',
-        'naplps': 'image/naplps',
-        'nbp': 'application/vnd.wolfram.player',
-        'nc': 'application/x-netcdf',
-        'ncm': 'application/vnd.nokia.configuration-message',
-        'ncx': 'application/x-dtbncx+xml',
-        'ngdat': 'application/vnd.nokia.n-gage.data',
-        'nif': 'image/x-niff',
-        'niff': 'image/x-niff',
-        'nix': 'application/x-mix-transfer',
-        'nlu': 'application/vnd.neurolanguage.nlu',
-        'nml': 'application/vnd.enliven',
-        'nnd': 'application/vnd.noblenet-directory',
-        'nns': 'application/vnd.noblenet-sealer',
-        'nnw': 'application/vnd.noblenet-web',
-        'npx': 'image/vnd.net-fpx',
-        'nsc': 'application/x-conference',
-        'nsf': 'application/vnd.lotus-notes',
-        'nvd': 'application/x-navidoc',
-        'nws': 'message/rfc822',
-        'o': 'application/octet-stream',
-        'oa2': 'application/vnd.fujitsu.oasys2',
-        'oa3': 'application/vnd.fujitsu.oasys3',
-        'oas': 'application/vnd.fujitsu.oasys',
-        'obd': 'application/x-msbinder',
-        'oda': 'application/oda',
-        'odb': 'application/vnd.oasis.opendocument.database',
-        'odc': 'application/vnd.oasis.opendocument.chart',
-        'odf': 'application/vnd.oasis.opendocument.formula',
-        'odft': 'application/vnd.oasis.opendocument.formula-template',
-        'odg': 'application/vnd.oasis.opendocument.graphics',
-        'odi': 'application/vnd.oasis.opendocument.image',
-        'odm': 'application/vnd.oasis.opendocument.text-master',
-        'odp': 'application/vnd.oasis.opendocument.presentation',
-        'ods': 'application/vnd.oasis.opendocument.spreadsheet',
-        'odt': 'application/vnd.oasis.opendocument.text',
-        'oga': 'audio/ogg',
-        'ogv': 'video/ogg',
-        'ogx': 'application/ogg',
-        'omc': 'application/x-omc',
-        'omcd': 'application/x-omcdatamaker',
-        'omcr': 'application/x-omcregerator',
-        'onetoc': 'application/onenote',
-        'opf': 'application/oebps-package+xml',
-        'org': 'application/vnd.lotus-organizer',
-        'osf': 'application/vnd.yamaha.openscoreformat',
-        'osfpvg': 'application/vnd.yamaha.openscoreformat.osfpvg+xml',
-        'otc': 'application/vnd.oasis.opendocument.chart-template',
-        'otf': 'application/x-font-otf',
-        'otg': 'application/vnd.oasis.opendocument.graphics-template',
-        'oth': 'application/vnd.oasis.opendocument.text-web',
-        'oti': 'application/vnd.oasis.opendocument.image-template',
-        'otp': 'application/vnd.oasis.opendocument.presentation-template',
-        'ots': 'application/vnd.oasis.opendocument.spreadsheet-template',
-        'ott': 'application/vnd.oasis.opendocument.text-template',
-        'oxt': 'application/vnd.openofficeorg.extension',
-        'p': 'text/x-pascal',
-        'p10': ['application/pkcs10', 'application/x-pkcs10'],
-        'p12': ['application/pkcs-12', 'application/x-pkcs12'],
-        'p7a': 'application/x-pkcs7-signature',
-        'p7b': 'application/x-pkcs7-certificates',
-        'p7c': ['application/pkcs7-mime', 'application/x-pkcs7-mime'],
-        'p7m': ['application/pkcs7-mime', 'application/x-pkcs7-mime'],
-        'p7r': 'application/x-pkcs7-certreqresp',
-        'p7s': ['application/pkcs7-signature', 'application/x-pkcs7-signature'],
-        'p8': 'application/pkcs8',
-        'par': 'text/plain-bas',
-        'part': 'application/pro_eng',
-        'pas': 'text/pascal',
-        'paw': 'application/vnd.pawaafile',
-        'pbd': 'application/vnd.powerbuilder6',
-        'pbm': 'image/x-portable-bitmap',
-        'pcf': 'application/x-font-pcf',
-        'pcl': ['application/vnd.hp-pcl', 'application/x-pcl'],
-        'pclxl': 'application/vnd.hp-pclxl',
-        'pct': 'image/x-pict',
-        'pcurl': 'application/vnd.curl.pcurl',
-        'pcx': 'image/x-pcx',
-        'pdb': ['application/vnd.palm', 'chemical/x-pdb'],
-        'pdf': 'application/pdf',
-        'pfa': 'application/x-font-type1',
-        'pfr': 'application/font-tdpfr',
-        'pfunk': ['audio/make', 'audio/make.my.funk'],
-        'pfx': 'application/x-pkcs12',
-        'pgm': ['image/x-portable-graymap', 'image/x-portable-greymap'],
-        'pgn': 'application/x-chess-pgn',
-        'pgp': 'application/pgp-signature',
-        'pic': ['image/pict', 'image/x-pict'],
-        'pict': 'image/pict',
-        'pkg': 'application/x-newton-compatible-pkg',
-        'pki': 'application/pkixcmp',
-        'pkipath': 'application/pkix-pkipath',
-        'pko': ['application/ynd.ms-pkipko', 'application/vnd.ms-pki.pko'],
-        'pl': ['text/plain', 'text/x-script.perl'],
-        'plb': 'application/vnd.3gpp.pic-bw-large',
-        'plc': 'application/vnd.mobius.plc',
-        'plf': 'application/vnd.pocketlearn',
-        'pls': 'application/pls+xml',
-        'plx': 'application/x-pixclscript',
-        'pm': ['text/x-script.perl-module', 'image/x-xpixmap'],
-        'pm4': 'application/x-pagemaker',
-        'pm5': 'application/x-pagemaker',
-        'pma': 'application/x-perfmon',
-        'pmc': 'application/x-perfmon',
-        'pml': ['application/vnd.ctc-posml', 'application/x-perfmon'],
-        'pmr': 'application/x-perfmon',
-        'pmw': 'application/x-perfmon',
-        'png': 'image/png',
-        'pnm': ['application/x-portable-anymap', 'image/x-portable-anymap'],
-        'portpkg': 'application/vnd.macports.portpkg',
-        'pot': ['application/vnd.ms-powerpoint', 'application/mspowerpoint'],
-        'potm': 'application/vnd.ms-powerpoint.template.macroenabled.12',
-        'potx': 'application/vnd.openxmlformats-officedocument.presentationml.template',
-        'pov': 'model/x-pov',
-        'ppa': 'application/vnd.ms-powerpoint',
-        'ppam': 'application/vnd.ms-powerpoint.addin.macroenabled.12',
-        'ppd': 'application/vnd.cups-ppd',
-        'ppm': 'image/x-portable-pixmap',
-        'pps': ['application/vnd.ms-powerpoint', 'application/mspowerpoint'],
-        'ppsm': 'application/vnd.ms-powerpoint.slideshow.macroenabled.12',
-        'ppsx': 'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
-        'ppt': ['application/vnd.ms-powerpoint', 'application/mspowerpoint', 'application/powerpoint', 'application/x-mspowerpoint'],
-        'pptm': 'application/vnd.ms-powerpoint.presentation.macroenabled.12',
-        'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'ppz': 'application/mspowerpoint',
-        'prc': 'application/x-mobipocket-ebook',
-        'pre': ['application/vnd.lotus-freelance', 'application/x-freelance'],
-        'prf': 'application/pics-rules',
-        'prt': 'application/pro_eng',
-        'ps': 'application/postscript',
-        'psb': 'application/vnd.3gpp.pic-bw-small',
-        'psd': ['application/octet-stream', 'image/vnd.adobe.photoshop'],
-        'psf': 'application/x-font-linux-psf',
-        'pskcxml': 'application/pskc+xml',
-        'ptid': 'application/vnd.pvi.ptid1',
-        'pub': 'application/x-mspublisher',
-        'pvb': 'application/vnd.3gpp.pic-bw-var',
-        'pvu': 'paleovu/x-pv',
-        'pwn': 'application/vnd.3m.post-it-notes',
-        'pwz': 'application/vnd.ms-powerpoint',
-        'py': 'text/x-script.phyton',
-        'pya': 'audio/vnd.ms-playready.media.pya',
-        'pyc': 'applicaiton/x-bytecode.python',
-        'pyv': 'video/vnd.ms-playready.media.pyv',
-        'qam': 'application/vnd.epson.quickanime',
-        'qbo': 'application/vnd.intu.qbo',
-        'qcp': 'audio/vnd.qcelp',
-        'qd3': 'x-world/x-3dmf',
-        'qd3d': 'x-world/x-3dmf',
-        'qfx': 'application/vnd.intu.qfx',
-        'qif': 'image/x-quicktime',
-        'qps': 'application/vnd.publishare-delta-tree',
-        'qt': 'video/quicktime',
-        'qtc': 'video/x-qtc',
-        'qti': 'image/x-quicktime',
-        'qtif': 'image/x-quicktime',
-        'qxd': 'application/vnd.quark.quarkxpress',
-        'ra': ['audio/x-realaudio', 'audio/x-pn-realaudio', 'audio/x-pn-realaudio-plugin'],
-        'ram': 'audio/x-pn-realaudio',
-        'rar': 'application/x-rar-compressed',
-        'ras': ['image/cmu-raster', 'application/x-cmu-raster', 'image/x-cmu-raster'],
-        'rast': 'image/cmu-raster',
-        'rcprofile': 'application/vnd.ipunplugged.rcprofile',
-        'rdf': 'application/rdf+xml',
-        'rdz': 'application/vnd.data-vision.rdz',
-        'rep': 'application/vnd.businessobjects',
-        'res': 'application/x-dtbresource+xml',
-        'rexx': 'text/x-script.rexx',
-        'rf': 'image/vnd.rn-realflash',
-        'rgb': 'image/x-rgb',
-        'rif': 'application/reginfo+xml',
-        'rip': 'audio/vnd.rip',
-        'rl': 'application/resource-lists+xml',
-        'rlc': 'image/vnd.fujixerox.edmics-rlc',
-        'rld': 'application/resource-lists-diff+xml',
-        'rm': ['application/vnd.rn-realmedia', 'audio/x-pn-realaudio'],
-        'rmi': 'audio/mid',
-        'rmm': 'audio/x-pn-realaudio',
-        'rmp': ['audio/x-pn-realaudio-plugin', 'audio/x-pn-realaudio'],
-        'rms': 'application/vnd.jcp.javame.midlet-rms',
-        'rnc': 'application/relax-ng-compact-syntax',
-        'rng': ['application/ringing-tones', 'application/vnd.nokia.ringing-tone'],
-        'rnx': 'application/vnd.rn-realplayer',
-        'roff': 'application/x-troff',
-        'rp': 'image/vnd.rn-realpix',
-        'rp9': 'application/vnd.cloanto.rp9',
-        'rpm': 'audio/x-pn-realaudio-plugin',
-        'rpss': 'application/vnd.nokia.radio-presets',
-        'rpst': 'application/vnd.nokia.radio-preset',
-        'rq': 'application/sparql-query',
-        'rs': 'application/rls-services+xml',
-        'rsd': 'application/rsd+xml',
-        'rt': ['text/richtext', 'text/vnd.rn-realtext'],
-        'rtf': ['application/rtf', 'text/richtext', 'application/x-rtf'],
-        'rtx': ['text/richtext', 'application/rtf'],
-        'rv': 'video/vnd.rn-realvideo',
-        's': 'text/x-asm',
-        's3m': 'audio/s3m',
-        'saf': 'application/vnd.yamaha.smaf-audio',
-        'saveme': 'application/octet-stream',
-        'sbk': 'application/x-tbook',
-        'sbml': 'application/sbml+xml',
-        'sc': 'application/vnd.ibm.secure-container',
-        'scd': 'application/x-msschedule',
-        'scm': ['application/vnd.lotus-screencam', 'video/x-scm', 'text/x-script.guile', 'application/x-lotusscreencam', 'text/x-script.scheme'],
-        'scq': 'application/scvp-cv-request',
-        'scs': 'application/scvp-cv-response',
-        'sct': 'text/scriptlet',
-        'scurl': 'text/vnd.curl.scurl',
-        'sda': 'application/vnd.stardivision.draw',
-        'sdc': 'application/vnd.stardivision.calc',
-        'sdd': 'application/vnd.stardivision.impress',
-        'sdkm': 'application/vnd.solent.sdkm+xml',
-        'sdml': 'text/plain',
-        'sdp': ['application/sdp', 'application/x-sdp'],
-        'sdr': 'application/sounder',
-        'sdw': 'application/vnd.stardivision.writer',
-        'sea': ['application/sea', 'application/x-sea'],
-        'see': 'application/vnd.seemail',
-        'seed': 'application/vnd.fdsn.seed',
-        'sema': 'application/vnd.sema',
-        'semd': 'application/vnd.semd',
-        'semf': 'application/vnd.semf',
-        'ser': 'application/java-serialized-object',
-        'set': 'application/set',
-        'setpay': 'application/set-payment-initiation',
-        'setreg': 'application/set-registration-initiation',
-        'sfd-hdstx': 'application/vnd.hydrostatix.sof-data',
-        'sfs': 'application/vnd.spotfire.sfs',
-        'sgl': 'application/vnd.stardivision.writer-global',
-        'sgm': ['text/sgml', 'text/x-sgml'],
-        'sgml': ['text/sgml', 'text/x-sgml'],
-        'sh': ['application/x-shar', 'application/x-bsh', 'application/x-sh', 'text/x-script.sh'],
-        'shar': ['application/x-bsh', 'application/x-shar'],
-        'shf': 'application/shf+xml',
-        'shtml': ['text/html', 'text/x-server-parsed-html'],
-        'sid': 'audio/x-psid',
-        'sis': 'application/vnd.symbian.install',
-        'sit': ['application/x-stuffit', 'application/x-sit'],
-        'sitx': 'application/x-stuffitx',
-        'skd': 'application/x-koan',
-        'skm': 'application/x-koan',
-        'skp': ['application/vnd.koan', 'application/x-koan'],
-        'skt': 'application/x-koan',
-        'sl': 'application/x-seelogo',
-        'sldm': 'application/vnd.ms-powerpoint.slide.macroenabled.12',
-        'sldx': 'application/vnd.openxmlformats-officedocument.presentationml.slide',
-        'slt': 'application/vnd.epson.salt',
-        'sm': 'application/vnd.stepmania.stepchart',
-        'smf': 'application/vnd.stardivision.math',
-        'smi': ['application/smil', 'application/smil+xml'],
-        'smil': 'application/smil',
-        'snd': ['audio/basic', 'audio/x-adpcm'],
-        'snf': 'application/x-font-snf',
-        'sol': 'application/solids',
-        'spc': ['text/x-speech', 'application/x-pkcs7-certificates'],
-        'spf': 'application/vnd.yamaha.smaf-phrase',
-        'spl': ['application/futuresplash', 'application/x-futuresplash'],
-        'spot': 'text/vnd.in3d.spot',
-        'spp': 'application/scvp-vp-response',
-        'spq': 'application/scvp-vp-request',
-        'spr': 'application/x-sprite',
-        'sprite': 'application/x-sprite',
-        'src': 'application/x-wais-source',
-        'sru': 'application/sru+xml',
-        'srx': 'application/sparql-results+xml',
-        'sse': 'application/vnd.kodak-descriptor',
-        'ssf': 'application/vnd.epson.ssf',
-        'ssi': 'text/x-server-parsed-html',
-        'ssm': 'application/streamingmedia',
-        'ssml': 'application/ssml+xml',
-        'sst': ['application/vnd.ms-pkicertstore', 'application/vnd.ms-pki.certstore'],
-        'st': 'application/vnd.sailingtracker.track',
-        'stc': 'application/vnd.sun.xml.calc.template',
-        'std': 'application/vnd.sun.xml.draw.template',
-        'step': 'application/step',
-        'stf': 'application/vnd.wt.stf',
-        'sti': 'application/vnd.sun.xml.impress.template',
-        'stk': 'application/hyperstudio',
-        'stl': ['application/vnd.ms-pkistl', 'application/sla', 'application/vnd.ms-pki.stl', 'application/x-navistyle'],
-        'stm': 'text/html',
-        'stp': 'application/step',
-        'str': 'application/vnd.pg.format',
-        'stw': 'application/vnd.sun.xml.writer.template',
-        'sub': 'image/vnd.dvb.subtitle',
-        'sus': 'application/vnd.sus-calendar',
-        'sv4cpio': 'application/x-sv4cpio',
-        'sv4crc': 'application/x-sv4crc',
-        'svc': 'application/vnd.dvb.service',
-        'svd': 'application/vnd.svd',
-        'svf': ['image/vnd.dwg', 'image/x-dwg'],
-        'svg': 'image/svg+xml',
-        'svr': ['x-world/x-svr', 'application/x-world'],
-        'swf': 'application/x-shockwave-flash',
-        'swi': 'application/vnd.aristanetworks.swi',
-        'sxc': 'application/vnd.sun.xml.calc',
-        'sxd': 'application/vnd.sun.xml.draw',
-        'sxg': 'application/vnd.sun.xml.writer.global',
-        'sxi': 'application/vnd.sun.xml.impress',
-        'sxm': 'application/vnd.sun.xml.math',
-        'sxw': 'application/vnd.sun.xml.writer',
-        't': ['text/troff', 'application/x-troff'],
-        'talk': 'text/x-speech',
-        'tao': 'application/vnd.tao.intent-module-archive',
-        'tar': 'application/x-tar',
-        'tbk': ['application/toolbook', 'application/x-tbook'],
-        'tcap': 'application/vnd.3gpp2.tcap',
-        'tcl': ['text/x-script.tcl', 'application/x-tcl'],
-        'tcsh': 'text/x-script.tcsh',
-        'teacher': 'application/vnd.smart.teacher',
-        'tei': 'application/tei+xml',
-        'tex': 'application/x-tex',
-        'texi': 'application/x-texinfo',
-        'texinfo': 'application/x-texinfo',
-        'text': ['application/plain', 'text/plain'],
-        'tfi': 'application/thraud+xml',
-        'tfm': 'application/x-tex-tfm',
-        'tgz': ['application/gnutar', 'application/x-compressed'],
-        'thmx': 'application/vnd.ms-officetheme',
-        'tif': ['image/tiff', 'image/x-tiff'],
-        'tiff': ['image/tiff', 'image/x-tiff'],
-        'tmo': 'application/vnd.tmobile-livetv',
-        'torrent': 'application/x-bittorrent',
-        'tpl': 'application/vnd.groove-tool-template',
-        'tpt': 'application/vnd.trid.tpt',
-        'tr': 'application/x-troff',
-        'tra': 'application/vnd.trueapp',
-        'trm': 'application/x-msterminal',
-        'tsd': 'application/timestamped-data',
-        'tsi': 'audio/tsp-audio',
-        'tsp': ['application/dsptype', 'audio/tsplayer'],
-        'tsv': 'text/tab-separated-values',
-        'ttf': 'application/x-font-ttf',
-        'ttl': 'text/turtle',
-        'turbot': 'image/florian',
-        'twd': 'application/vnd.simtech-mindmapper',
-        'txd': 'application/vnd.genomatix.tuxedo',
-        'txf': 'application/vnd.mobius.txf',
-        'txt': 'text/plain',
-        'ufd': 'application/vnd.ufdl',
-        'uil': 'text/x-uil',
-        'uls': 'text/iuls',
-        'umj': 'application/vnd.umajin',
-        'uni': 'text/uri-list',
-        'unis': 'text/uri-list',
-        'unityweb': 'application/vnd.unity',
-        'unv': 'application/i-deas',
-        'uoml': 'application/vnd.uoml+xml',
-        'uri': 'text/uri-list',
-        'uris': 'text/uri-list',
-        'ustar': ['application/x-ustar', 'multipart/x-ustar'],
-        'utz': 'application/vnd.uiq.theme',
-        'uu': ['application/octet-stream', 'text/x-uuencode'],
-        'uue': 'text/x-uuencode',
-        'uva': 'audio/vnd.dece.audio',
-        'uvh': 'video/vnd.dece.hd',
-        'uvi': 'image/vnd.dece.graphic',
-        'uvm': 'video/vnd.dece.mobile',
-        'uvp': 'video/vnd.dece.pd',
-        'uvs': 'video/vnd.dece.sd',
-        'uvu': 'video/vnd.uvvu.mp4',
-        'uvv': 'video/vnd.dece.video',
-        'vcd': 'application/x-cdlink',
-        'vcf': 'text/x-vcard',
-        'vcg': 'application/vnd.groove-vcard',
-        'vcs': 'text/x-vcalendar',
-        'vcx': 'application/vnd.vcx',
-        'vda': 'application/vda',
-        'vdo': 'video/vdo',
-        'vew': 'application/groupwise',
-        'vis': 'application/vnd.visionary',
-        'viv': ['video/vivo', 'video/vnd.vivo'],
-        'vivo': ['video/vivo', 'video/vnd.vivo'],
-        'vmd': 'application/vocaltec-media-desc',
-        'vmf': 'application/vocaltec-media-file',
-        'voc': ['audio/voc', 'audio/x-voc'],
-        'vos': 'video/vosaic',
-        'vox': 'audio/voxware',
-        'vqe': 'audio/x-twinvq-plugin',
-        'vqf': 'audio/x-twinvq',
-        'vql': 'audio/x-twinvq-plugin',
-        'vrml': ['model/vrml', 'x-world/x-vrml', 'application/x-vrml'],
-        'vrt': 'x-world/x-vrt',
-        'vsd': ['application/vnd.visio', 'application/x-visio'],
-        'vsf': 'application/vnd.vsf',
-        'vst': 'application/x-visio',
-        'vsw': 'application/x-visio',
-        'vtu': 'model/vnd.vtu',
-        'vxml': 'application/voicexml+xml',
-        'w60': 'application/wordperfect6.0',
-        'w61': 'application/wordperfect6.1',
-        'w6w': 'application/msword',
-        'wad': 'application/x-doom',
-        'wav': ['audio/wav', 'audio/x-wav'],
-        'wax': 'audio/x-ms-wax',
-        'wb1': 'application/x-qpro',
-        'wbmp': 'image/vnd.wap.wbmp',
-        'wbs': 'application/vnd.criticaltools.wbs+xml',
-        'wbxml': 'application/vnd.wap.wbxml',
-        'wcm': 'application/vnd.ms-works',
-        'wdb': 'application/vnd.ms-works',
-        'web': 'application/vnd.xara',
-        'weba': 'audio/webm',
-        'webm': 'video/webm',
-        'webp': 'image/webp',
-        'wg': 'application/vnd.pmi.widget',
-        'wgt': 'application/widget',
-        'wiz': 'application/msword',
-        'wk1': 'application/x-123',
-        'wks': 'application/vnd.ms-works',
-        'wm': 'video/x-ms-wm',
-        'wma': 'audio/x-ms-wma',
-        'wmd': 'application/x-ms-wmd',
-        'wmf': ['windows/metafile', 'application/x-msmetafile'],
-        'wml': 'text/vnd.wap.wml',
-        'wmlc': 'application/vnd.wap.wmlc',
-        'wmls': 'text/vnd.wap.wmlscript',
-        'wmlsc': 'application/vnd.wap.wmlscriptc',
-        'wmv': 'video/x-ms-wmv',
-        'wmx': 'video/x-ms-wmx',
-        'wmz': 'application/x-ms-wmz',
-        'woff': 'application/x-font-woff',
-        'word': 'application/msword',
-        'wp': 'application/wordperfect',
-        'wp5': ['application/wordperfect', 'application/wordperfect6.0'],
-        'wp6': 'application/wordperfect',
-        'wpd': ['application/wordperfect', 'application/vnd.wordperfect', 'application/x-wpwin'],
-        'wpl': 'application/vnd.ms-wpl',
-        'wps': 'application/vnd.ms-works',
-        'wq1': 'application/x-lotus',
-        'wqd': 'application/vnd.wqd',
-        'wri': ['application/mswrite', 'application/x-wri', 'application/x-mswrite'],
-        'wrl': ['model/vrml', 'x-world/x-vrml', 'application/x-world'],
-        'wrz': ['model/vrml', 'x-world/x-vrml'],
-        'wsc': 'text/scriplet',
-        'wsdl': 'application/wsdl+xml',
-        'wspolicy': 'application/wspolicy+xml',
-        'wsrc': 'application/x-wais-source',
-        'wtb': 'application/vnd.webturbo',
-        'wtk': 'application/x-wintalk',
-        'wvx': 'video/x-ms-wvx',
-        'x-png': 'image/png',
-        'x3d': 'application/vnd.hzn-3d-crossword',
-        'xaf': 'x-world/x-vrml',
-        'xap': 'application/x-silverlight-app',
-        'xar': 'application/vnd.xara',
-        'xbap': 'application/x-ms-xbap',
-        'xbd': 'application/vnd.fujixerox.docuworks.binder',
-        'xbm': ['image/xbm', 'image/x-xbm', 'image/x-xbitmap'],
-        'xdf': 'application/xcap-diff+xml',
-        'xdm': 'application/vnd.syncml.dm+xml',
-        'xdp': 'application/vnd.adobe.xdp+xml',
-        'xdr': 'video/x-amt-demorun',
-        'xdssc': 'application/dssc+xml',
-        'xdw': 'application/vnd.fujixerox.docuworks',
-        'xenc': 'application/xenc+xml',
-        'xer': 'application/patch-ops-error+xml',
-        'xfdf': 'application/vnd.adobe.xfdf',
-        'xfdl': 'application/vnd.xfdl',
-        'xgz': 'xgl/drawing',
-        'xhtml': 'application/xhtml+xml',
-        'xif': 'image/vnd.xiff',
-        'xl': 'application/excel',
-        'xla': ['application/vnd.ms-excel', 'application/excel', 'application/x-msexcel', 'application/x-excel'],
-        'xlam': 'application/vnd.ms-excel.addin.macroenabled.12',
-        'xlb': ['application/excel', 'application/vnd.ms-excel', 'application/x-excel'],
-        'xlc': ['application/vnd.ms-excel', 'application/excel', 'application/x-excel'],
-        'xld': ['application/excel', 'application/x-excel'],
-        'xlk': ['application/excel', 'application/x-excel'],
-        'xll': ['application/excel', 'application/vnd.ms-excel', 'application/x-excel'],
-        'xlm': ['application/vnd.ms-excel', 'application/excel', 'application/x-excel'],
-        'xls': ['application/vnd.ms-excel', 'application/excel', 'application/x-msexcel', 'application/x-excel'],
-        'xlsb': 'application/vnd.ms-excel.sheet.binary.macroenabled.12',
-        'xlsm': 'application/vnd.ms-excel.sheet.macroenabled.12',
-        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'xlt': ['application/vnd.ms-excel', 'application/excel', 'application/x-excel'],
-        'xltm': 'application/vnd.ms-excel.template.macroenabled.12',
-        'xltx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
-        'xlv': ['application/excel', 'application/x-excel'],
-        'xlw': ['application/vnd.ms-excel', 'application/excel', 'application/x-msexcel', 'application/x-excel'],
-        'xm': 'audio/xm',
-        'xml': ['application/xml', 'text/xml', 'application/atom+xml', 'application/rss+xml'],
-        'xmz': 'xgl/movie',
-        'xo': 'application/vnd.olpc-sugar',
-        'xof': 'x-world/x-vrml',
-        'xop': 'application/xop+xml',
-        'xpi': 'application/x-xpinstall',
-        'xpix': 'application/x-vnd.ls-xpix',
-        'xpm': ['image/xpm', 'image/x-xpixmap'],
-        'xpr': 'application/vnd.is-xpr',
-        'xps': 'application/vnd.ms-xpsdocument',
-        'xpw': 'application/vnd.intercon.formnet',
-        'xslt': 'application/xslt+xml',
-        'xsm': 'application/vnd.syncml+xml',
-        'xspf': 'application/xspf+xml',
-        'xsr': 'video/x-amt-showrun',
-        'xul': 'application/vnd.mozilla.xul+xml',
-        'xwd': ['image/x-xwd', 'image/x-xwindowdump'],
-        'xyz': ['chemical/x-xyz', 'chemical/x-pdb'],
-        'yang': 'application/yang',
-        'yin': 'application/yin+xml',
-        'z': ['application/x-compressed', 'application/x-compress'],
-        'zaz': 'application/vnd.zzazz.deck+xml',
-        'zip': ['application/zip', 'multipart/x-zip', 'application/x-zip-compressed', 'application/x-compressed'],
-        'zir': 'application/vnd.zul',
-        'zmm': 'application/vnd.handheld-entertainment+xml',
-        'zoo': 'application/octet-stream',
-        'zsh': 'text/x-script.zsh'
-    };
-
-    return {
-        detectExtension: detectExtension,
-        detectMimeType: detectMimeType
-    };
-}));
-
-// Copyright (c) 2013 Andris Reinman
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-
-(function(root, factory) {
-    'use strict';
-
-    var encoding;
-
-    if (false) {
-        // amd for browser
-        define(['emailjs-stringencoding'], function(encoding) {
-            return factory(encoding.TextEncoder, encoding.TextDecoder, root.btoa);
-        });
-    } else if (false && typeof navigator !== 'undefined') {
-        // common.js for browser
-        encoding = global['emailjs-stringencoding'];
-        module.exports = factory(encoding.TextEncoder, encoding.TextDecoder, root.btoa);
-    } else if (false) {
-        // common.js for node.js
-        encoding = global['emailjs-stringencoding'];
-        module.exports = factory(encoding.TextEncoder, encoding.TextDecoder, function(str) {
-            var NodeBuffer = Buffer;
-            return new NodeBuffer(str, 'binary').toString("base64");
-        });
-    } else {
-        // global for browser
-        root['emailjs-mime-codec'] = factory(root.TextEncoder, root.TextDecoder, root.btoa);
-    }
-}(this, function(TextEncoder, TextDecoder, btoa) {
-    'use strict';
-
-    btoa = btoa || base64Encode;
-
-    var mimecodec = {
-        /**
-         * Encodes all non printable and non ascii bytes to =XX form, where XX is the
-         * byte value in hex. This function does not convert linebreaks etc. it
-         * only escapes character sequences
-         *
-         * @param {String|Uint8Array} data Either a string or an Uint8Array
-         * @param {String} [fromCharset='UTF-8'] Source encoding
-         * @return {String} Mime encoded string
-         */
-        mimeEncode: function(data, fromCharset) {
-            fromCharset = fromCharset || 'UTF-8';
-
-            var buffer = mimecodec.charset.convert(data || '', fromCharset),
-                ranges = [
-                    // https://tools.ietf.org/html/rfc2045#section-6.7
-                    [0x09], // <TAB>
-                    [0x0A], // <LF>
-                    [0x0D], // <CR>
-                    [0x20, 0x3C], // <SP>!"#$%&'()*+,-./0123456789:;
-                    [0x3E, 0x7E] // >?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}
-                ],
-                result = '',
-                ord;
-
-            for (var i = 0, len = buffer.length; i < len; i++) {
-                ord = buffer[i];
-                // if the char is in allowed range, then keep as is, unless it is a ws in the end of a line
-                if (mimecodec._checkRanges(ord, ranges) && !((ord === 0x20 || ord === 0x09) && (i === len - 1 || buffer[i + 1] === 0x0a || buffer[i + 1] === 0x0d))) {
-                    result += String.fromCharCode(ord);
-                    continue;
-                }
-                result += '=' + (ord < 0x10 ? '0' : '') + ord.toString(16).toUpperCase();
-            }
-
-            return result;
-        },
-
-        /**
-         * Decodes mime encoded string to an unicode string
-         *
-         * @param {String} str Mime encoded string
-         * @param {String} [fromCharset='UTF-8'] Source encoding
-         * @return {String} Decoded unicode string
-         */
-        mimeDecode: function(str, fromCharset) {
-            str = (str || '').toString();
-
-            fromCharset = fromCharset || 'UTF-8';
-
-            var encodedBytesCount = (str.match(/\=[\da-fA-F]{2}/g) || []).length,
-                bufferLength = str.length - encodedBytesCount * 2,
-                chr, hex,
-                buffer = new Uint8Array(bufferLength),
-                bufferPos = 0;
-
-            for (var i = 0, len = str.length; i < len; i++) {
-                chr = str.charAt(i);
-                if (chr === '=' && (hex = str.substr(i + 1, 2)) && /[\da-fA-F]{2}/.test(hex)) {
-                    buffer[bufferPos++] = parseInt(hex, 16);
-                    i += 2;
-                    continue;
-                }
-                buffer[bufferPos++] = chr.charCodeAt(0);
-            }
-
-            return mimecodec.charset.decode(buffer, fromCharset);
-        },
-
-        /**
-         * Encodes a string or an typed array of given charset into unicode
-         * base64 string. Also adds line breaks
-         *
-         * @param {String|Uint8Array} data String to be base64 encoded
-         * @param {String} [fromCharset='UTF-8']
-         * @return {String} Base64 encoded string
-         */
-        base64Encode: function(data, fromCharset) {
-            var buf, b64;
-
-            if (fromCharset !== 'binary' && typeof data !== 'string') {
-                buf = mimecodec.charset.convert(data || '', fromCharset);
-            } else {
-                buf = data;
-            }
-
-            b64 = mimecodec.base64.encode(buf);
-            return mimecodec._addSoftLinebreaks(b64, 'base64');
-        },
-
-        /**
-         * Decodes a base64 string of any charset into an unicode string
-         *
-         * @param {String} str Base64 encoded string
-         * @param {String} [fromCharset='UTF-8'] Original charset of the base64 encoded string
-         * @return {String} Decoded unicode string
-         */
-        base64Decode: function(str, fromCharset) {
-            var buf = mimecodec.base64.decode(str || '', 'buffer');
-            return mimecodec.charset.decode(buf, fromCharset);
-        },
-
-        /**
-         * Encodes a string or an Uint8Array into a quoted printable encoding
-         * This is almost the same as mimeEncode, except line breaks will be changed
-         * as well to ensure that the lines are never longer than allowed length
-         *
-         * @param {String|Uint8Array} data String or an Uint8Array to mime encode
-         * @param {String} [fromCharset='UTF-8'] Original charset of the string
-         * @return {String} Mime encoded string
-         */
-        quotedPrintableEncode: function(data, fromCharset) {
-            var mimeEncodedStr = mimecodec.mimeEncode(data, fromCharset);
-
-            mimeEncodedStr = mimeEncodedStr.
-                // fix line breaks, ensure <CR><LF>
-            replace(/\r?\n|\r/g, '\r\n').
-                // replace spaces in the end of lines
-            replace(/[\t ]+$/gm, function(spaces) {
-                return spaces.replace(/ /g, '=20').replace(/\t/g, '=09');
-            });
-
-            // add soft line breaks to ensure line lengths sjorter than 76 bytes
-            return mimecodec._addSoftLinebreaks(mimeEncodedStr, 'qp');
-        },
-
-        /**
-         * Decodes a string from a quoted printable encoding. This is almost the
-         * same as mimeDecode, except line breaks will be changed as well
-         *
-         * @param {String} str Mime encoded string to decode
-         * @param {String} [fromCharset='UTF-8'] Original charset of the string
-         * @return {String} Mime decoded string
-         */
-        quotedPrintableDecode: function(str, fromCharset) {
-            str = (str || '').toString();
-
-            str = str.
-                // remove invalid whitespace from the end of lines
-            replace(/[\t ]+$/gm, '').
-                // remove soft line breaks
-            replace(/\=(?:\r?\n|$)/g, '');
-
-            return mimecodec.mimeDecode(str, fromCharset);
-        },
-
-        /**
-         * Encodes a string or an Uint8Array to an UTF-8 MIME Word (rfc2047)
-         *
-         * @param {String|Uint8Array} data String to be encoded
-         * @param {String} mimeWordEncoding='Q' Encoding for the mime word, either Q or B
-         * @param {Number} [maxLength=0] If set, split mime words into several chunks if needed
-         * @param {String} [fromCharset='UTF-8'] Source sharacter set
-         * @return {String} Single or several mime words joined together
-         */
-        mimeWordEncode: function(data, mimeWordEncoding, maxLength, fromCharset) {
-            mimeWordEncoding = (mimeWordEncoding || 'Q').toString().toUpperCase().trim().charAt(0);
-
-            if (!fromCharset && typeof maxLength === 'string' && !maxLength.match(/^[0-9]+$/)) {
-                fromCharset = maxLength;
-                maxLength = undefined;
-            }
-
-            maxLength = maxLength || 0;
-
-            var encodedStr,
-                toCharset = 'UTF-8',
-                i, len, parts;
-
-            if (maxLength && maxLength > 7 + toCharset.length) {
-                maxLength -= (7 + toCharset.length);
-            }
-
-            if (mimeWordEncoding === 'Q') {
-                encodedStr = mimecodec.mimeEncode(data, fromCharset);
-                // https://tools.ietf.org/html/rfc2047#section-5 rule (3)
-                encodedStr = encodedStr.replace(/[^a-z0-9!*+\-\/=]/ig, function(chr) {
-                    var code = chr.charCodeAt(0);
-                    if(chr === ' '){
-                        return '_';
-                    }else{
-                        return '=' + (code < 0x10 ? '0' : '') + code.toString(16).toUpperCase();
-                    }
-                });
-            } else if (mimeWordEncoding === 'B') {
-                encodedStr = typeof data === 'string' ? data : mimecodec.decode(data, fromCharset);
-                maxLength = Math.max(3, (maxLength - maxLength % 4) / 4 * 3);
-            }
-
-            if (maxLength && encodedStr.length > maxLength) {
-                if (mimeWordEncoding === 'Q') {
-                    encodedStr = mimecodec._splitMimeEncodedString(encodedStr, maxLength).join('?= =?' + toCharset + '?' + mimeWordEncoding + '?');
-                } else {
-
-                    // RFC2047 6.3 (2) states that encoded-word must include an integral number of characters, so no chopping unicode sequences
-                    parts = [];
-                    for (i = 0, len = encodedStr.length; i < len; i += maxLength) {
-                        parts.push(mimecodec.base64.encode(encodedStr.substr(i, maxLength)));
-                    }
-
-                    if (parts.length > 1) {
-                        return '=?' + toCharset + '?' + mimeWordEncoding + '?' + parts.join('?= =?' + toCharset + '?' + mimeWordEncoding + '?') + '?=';
-                    } else {
-                        encodedStr = parts.join('');
-                    }
-                }
-            } else if (mimeWordEncoding === 'B') {
-                encodedStr = mimecodec.base64.encode(encodedStr);
-            }
-
-            return '=?' + toCharset + '?' + mimeWordEncoding + '?' + encodedStr + (encodedStr.substr(-2) === '?=' ? '' : '?=');
-        },
-
-        /**
-         * Finds word sequences with non ascii text and converts these to mime words
-         *
-         * @param {String|Uint8Array} data String to be encoded
-         * @param {String} mimeWordEncoding='Q' Encoding for the mime word, either Q or B
-         * @param {Number} [maxLength=0] If set, split mime words into several chunks if needed
-         * @param {String} [fromCharset='UTF-8'] Source sharacter set
-         * @return {String} String with possible mime words
-         */
-        mimeWordsEncode: function(data, mimeWordEncoding, maxLength, fromCharset) {
-            if (!fromCharset && typeof maxLength === 'string' && !maxLength.match(/^[0-9]+$/)) {
-                fromCharset = maxLength;
-                maxLength = undefined;
-            }
-
-            maxLength = maxLength || 0;
-
-            var decodedValue = mimecodec.charset.decode(mimecodec.charset.convert((data || ''), fromCharset)),
-                encodedValue;
-
-            encodedValue = decodedValue.replace(/([^\s\u0080-\uFFFF]*[\u0080-\uFFFF]+[^\s\u0080-\uFFFF]*(?:\s+[^\s\u0080-\uFFFF]*[\u0080-\uFFFF]+[^\s\u0080-\uFFFF]*\s*)?)+/g, function(match) {
-                return match.length ? mimecodec.mimeWordEncode(match, mimeWordEncoding || 'Q', maxLength) : '';
-            });
-
-            return encodedValue;
-        },
-
-        /**
-         * Decode a complete mime word encoded string
-         *
-         * @param {String} str Mime word encoded string
-         * @return {String} Decoded unicode string
-         */
-        mimeWordDecode: function(str) {
-            str = (str || '').toString().trim();
-
-            var fromCharset, encoding, match;
-
-            match = str.match(/^\=\?([\w_\-\*]+)\?([QqBb])\?([^\?]+)\?\=$/i);
-            if (!match) {
-                return str;
-            }
-
-            // RFC2231 added language tag to the encoding
-            // see: https://tools.ietf.org/html/rfc2231#section-5
-            // this implementation silently ignores this tag
-            fromCharset = match[1].split('*').shift();
-
-            encoding = (match[2] || 'Q').toString().toUpperCase();
-            str = (match[3] || '').replace(/_/g, ' ');
-
-            if (encoding === 'B') {
-                return mimecodec.base64Decode(str, fromCharset);
-            } else if (encoding === 'Q') {
-                return mimecodec.mimeDecode(str, fromCharset);
-            } else {
-                return str;
-            }
-
-        },
-
-        /**
-         * Decode a string that might include one or several mime words
-         *
-         * @param {String} str String including some mime words that will be encoded
-         * @return {String} Decoded unicode string
-         */
-        mimeWordsDecode: function(str) {
-            str = (str || '').toString();
-            str = str.
-            replace(/(=\?[^?]+\?[QqBb]\?[^?]+\?=)\s+(?==\?[^?]+\?[QqBb]\?[^?]+\?=)/g, '$1').
-            replace(/\=\?([\w_\-\*]+)\?([QqBb])\?[^\?]+\?\=/g, function(mimeWord) {
-                return mimecodec.mimeWordDecode(mimeWord);
-            });
-
-            return str;
-        },
-
-        /**
-         * Folds long lines, useful for folding header lines (afterSpace=false) and
-         * flowed text (afterSpace=true)
-         *
-         * @param {String} str String to be folded
-         * @param {Number} [lineLengthMax=76] Maximum length of a line
-         * @param {Boolean} afterSpace If true, leave a space in th end of a line
-         * @return {String} String with folded lines
-         */
-        foldLines: function(str, lineLengthMax, afterSpace) {
-            str = (str || '').toString();
-            lineLengthMax = lineLengthMax || 76;
-
-            var pos = 0,
-                len = str.length,
-                result = '',
-                line, match;
-
-            while (pos < len) {
-                line = str.substr(pos, lineLengthMax);
-                if (line.length < lineLengthMax) {
-                    result += line;
-                    break;
-                }
-                if ((match = line.match(/^[^\n\r]*(\r?\n|\r)/))) {
-                    line = match[0];
-                    result += line;
-                    pos += line.length;
-                    continue;
-                } else if ((match = line.match(/(\s+)[^\s]*$/)) && match[0].length - (afterSpace ? (match[1] || '').length : 0) < line.length) {
-                    line = line.substr(0, line.length - (match[0].length - (afterSpace ? (match[1] || '').length : 0)));
-                } else if ((match = str.substr(pos + line.length).match(/^[^\s]+(\s*)/))) {
-                    line = line + match[0].substr(0, match[0].length - (!afterSpace ? (match[1] || '').length : 0));
-                }
-
-                result += line;
-                pos += line.length;
-                if (pos < len) {
-                    result += '\r\n';
-                }
-            }
-
-            return result;
-        },
-
-        /**
-         * Encodes and folds a header line for a MIME message header.
-         * Shorthand for mimeWordsEncode + foldLines
-         *
-         * @param {String} key Key name, will not be encoded
-         * @param {String|Uint8Array} value Value to be encoded
-         * @param {String} [fromCharset='UTF-8'] Character set of the value
-         * @return {String} encoded and folded header line
-         */
-        headerLineEncode: function(key, value, fromCharset) {
-            var encodedValue = mimecodec.mimeWordsEncode(value, 'Q', 52, fromCharset);
-            return mimecodec.foldLines(key + ': ' + encodedValue, 76);
-        },
-
-        /**
-         * Splits a string by :
-         * The result is not mime word decoded, you need to do your own decoding based
-         * on the rules for the specific header key
-         *
-         * @param {String} headerLine Single header line, might include linebreaks as well if folded
-         * @return {Object} And object of {key, value}
-         */
-        headerLineDecode: function(headerLine) {
-            var line = (headerLine || '').toString().replace(/(?:\r?\n|\r)[ \t]*/g, ' ').trim(),
-                match = line.match(/^\s*([^:]+):(.*)$/),
-                key = (match && match[1] || '').trim(),
-                value = (match && match[2] || '').trim();
-
-            return {
-                key: key,
-                value: value
-            };
-        },
-
-        /**
-         * Parses a block of header lines. Does not decode mime words as every
-         * header might have its own rules (eg. formatted email addresses and such)
-         *
-         * @param {String} headers Headers string
-         * @return {Object} An object of headers, where header keys are object keys. NB! Several values with the same key make up an Array
-         */
-        headerLinesDecode: function(headers) {
-            var lines = headers.split(/\r?\n|\r/),
-                headersObj = {},
-                key, value,
-                header,
-                i, len;
-
-            for (i = lines.length - 1; i >= 0; i--) {
-                if (i && lines[i].match(/^\s/)) {
-                    lines[i - 1] += '\r\n' + lines[i];
-                    lines.splice(i, 1);
-                }
-            }
-
-            for (i = 0, len = lines.length; i < len; i++) {
-                header = mimecodec.headerLineDecode(lines[i]);
-                key = (header.key || '').toString().toLowerCase().trim();
-                value = header.value || '';
-
-                if (!headersObj[key]) {
-                    headersObj[key] = value;
-                } else {
-                    headersObj[key] = [].concat(headersObj[key], value);
-                }
-            }
-
-            return headersObj;
-        },
-
-        /**
-         * Converts 'binary' string to an Uint8Array
-         *
-         * @param {String} 'binary' string
-         * @return {Uint8Array} Octet stream buffer
-         */
-        toTypedArray: function(binaryString) {
-            var buf = new Uint8Array(binaryString.length);
-            for (var i = 0, len = binaryString.length; i < len; i++) {
-                buf[i] = binaryString.charCodeAt(i);
-            }
-            return buf;
-        },
-
-        /**
-         * Converts an Uint8Array to 'binary' string
-         *
-         * @param {Uint8Array} buf Octet stream buffer
-         * @return {String} 'binary' string
-         */
-        fromTypedArray: function(buf) {
-            var i, l;
-
-            // ensure the value is a Uint8Array, not ArrayBuffer if used
-            if (!buf.buffer) {
-                buf = new Uint8Array(buf);
-            }
-
-            var sbits = new Array(buf.length);
-            for (i = 0, l = buf.length; i < l; i++) {
-                sbits[i] = String.fromCharCode(buf[i]);
-            }
-
-            return sbits.join('');
-        },
-
-        /**
-         * Parses a header value with key=value arguments into a structured
-         * object.
-         *
-         *   parseHeaderValue('content-type: text/plain; CHARSET='UTF-8'') ->
-         *   {
-         *     'value': 'text/plain',
-         *     'params': {
-         *       'charset': 'UTF-8'
-         *     }
-         *   }
-         *
-         * @param {String} str Header value
-         * @return {Object} Header value as a parsed structure
-         */
-        parseHeaderValue: function(str) {
-            var response = {
-                    value: false,
-                    params: {}
-                },
-                key = false,
-                value = '',
-                type = 'value',
-                quote = false,
-                escaped = false,
-                chr;
-
-            for (var i = 0, len = str.length; i < len; i++) {
-                chr = str.charAt(i);
-                if (type === 'key') {
-                    if (chr === '=') {
-                        key = value.trim().toLowerCase();
-                        type = 'value';
-                        value = '';
-                        continue;
-                    }
-                    value += chr;
-                } else {
-                    if (escaped) {
-                        value += chr;
-                    } else if (chr === '\\') {
-                        escaped = true;
-                        continue;
-                    } else if (quote && chr === quote) {
-                        quote = false;
-                    } else if (!quote && chr === '"') {
-                        quote = chr;
-                    } else if (!quote && chr === ';') {
-                        if (key === false) {
-                            response.value = value.trim();
-                        } else {
-                            response.params[key] = value.trim();
-                        }
-                        type = 'key';
-                        value = '';
-                    } else {
-                        value += chr;
-                    }
-                    escaped = false;
-
-                }
-            }
-
-            if (type === 'value') {
-                if (key === false) {
-                    response.value = value.trim();
-                } else {
-                    response.params[key] = value.trim();
-                }
-            } else if (value.trim()) {
-                response.params[value.trim().toLowerCase()] = '';
-            }
-
-            // handle parameter value continuations
-            // https://tools.ietf.org/html/rfc2231#section-3
-
-            // preprocess values
-            Object.keys(response.params).forEach(function(key) {
-                var actualKey, nr, match, value;
-                if ((match = key.match(/(\*(\d+)|\*(\d+)\*|\*)$/))) {
-                    actualKey = key.substr(0, match.index);
-                    nr = Number(match[2] || match[3]) || 0;
-
-                    if (!response.params[actualKey] || typeof response.params[actualKey] !== 'object') {
-                        response.params[actualKey] = {
-                            charset: false,
-                            values: []
-                        };
-                    }
-
-                    value = response.params[key];
-
-                    if (nr === 0 && match[0].substr(-1) === '*' && (match = value.match(/^([^']*)'[^']*'(.*)$/))) {
-                        response.params[actualKey].charset = match[1] || 'iso-8859-1';
-                        value = match[2];
-                    }
-
-                    response.params[actualKey].values[nr] = value;
-
-                    // remove the old reference
-                    delete response.params[key];
-                }
-            });
-
-            // concatenate split rfc2231 strings and convert encoded strings to mime encoded words
-            Object.keys(response.params).forEach(function(key) {
-                var value;
-                if (response.params[key] && Array.isArray(response.params[key].values)) {
-                    value = response.params[key].values.map(function(val) {
-                        return val || '';
-                    }).join('');
-
-                    if (response.params[key].charset) {
-                        // convert "%AB" to "=?charset?Q?=AB?="
-                        response.params[key] = '=?' +
-                            response.params[key].charset +
-                            '?Q?' +
-                            value.
-                            // fix invalidly encoded chars
-                        replace(/[=\?_\s]/g, function(s) {
-                                var c = s.charCodeAt(0).toString(16);
-                                if (s === ' ') {
-                                    return '_';
-                                } else {
-                                    return '%' + (c.length < 2 ? '0' : '') + c;
-                                }
-                            }).
-                            // change from urlencoding to percent encoding
-                        replace(/%/g, '=') +
-                            '?=';
-                    } else {
-                        response.params[key] = value;
-                    }
-                }
-            }.bind(this));
-
-            return response;
-        },
-
-        /**
-         * Encodes a string or an Uint8Array to an UTF-8 Parameter Value Continuation encoding (rfc2231)
-         * Useful for splitting long parameter values.
-         *
-         * For example
-         *      title="unicode string"
-         * becomes
-         *     title*0*="utf-8''unicode"
-         *     title*1*="%20string"
-         *
-         * @param {String|Uint8Array} data String to be encoded
-         * @param {Number} [maxLength=50] Max length for generated chunks
-         * @param {String} [fromCharset='UTF-8'] Source sharacter set
-         * @return {Array} A list of encoded keys and headers
-         */
-        continuationEncode: function(key, data, maxLength, fromCharset) {
-            var list = [];
-            var encodedStr = typeof data === 'string' ? data : mimecodec.decode(data, fromCharset);
-            var chr;
-            var line;
-            var startPos = 0;
-            var isEncoded = false;
-
-            maxLength = maxLength || 50;
-
-            // process ascii only text
-            if (/^[\w.\- ]*$/.test(data)) {
-
-                // check if conversion is even needed
-                if (encodedStr.length <= maxLength) {
-                    return [{
-                        key: key,
-                        value: /[\s";=]/.test(encodedStr) ? '"' + encodedStr + '"' : encodedStr
-                    }];
-                }
-
-                encodedStr = encodedStr.replace(new RegExp('.{' + maxLength + '}', 'g'), function(str) {
-                    list.push({
-                        line: str
-                    });
-                    return '';
-                });
-
-                if (encodedStr) {
-                    list.push({
-                        line: encodedStr
-                    });
-                }
-
-            } else {
-
-                // first line includes the charset and language info and needs to be encoded
-                // even if it does not contain any unicode characters
-                line = 'utf-8\'\'';
-                isEncoded = true;
-                startPos = 0;
-                // process text with unicode or special chars
-                for (var i = 0, len = encodedStr.length; i < len; i++) {
-
-                    chr = encodedStr[i];
-
-                    if (isEncoded) {
-                        chr = encodeURIComponent(chr);
-                    } else {
-                        // try to urlencode current char
-                        chr = chr === ' ' ? chr : encodeURIComponent(chr);
-                        // By default it is not required to encode a line, the need
-                        // only appears when the string contains unicode or special chars
-                        // in this case we start processing the line over and encode all chars
-                        if (chr !== encodedStr[i]) {
-                            // Check if it is even possible to add the encoded char to the line
-                            // If not, there is no reason to use this line, just push it to the list
-                            // and start a new line with the char that needs encoding
-                            if ((encodeURIComponent(line) + chr).length >= maxLength) {
-                                list.push({
-                                    line: line,
-                                    encoded: isEncoded
-                                });
-                                line = '';
-                                startPos = i - 1;
-                            } else {
-                                isEncoded = true;
-                                i = startPos;
-                                line = '';
-                                continue;
-                            }
-                        }
-                    }
-
-                    // if the line is already too long, push it to the list and start a new one
-                    if ((line + chr).length >= maxLength) {
-                        list.push({
-                            line: line,
-                            encoded: isEncoded
-                        });
-                        line = chr = encodedStr[i] === ' ' ? ' ' : encodeURIComponent(encodedStr[i]);
-                        if (chr === encodedStr[i]) {
-                            isEncoded = false;
-                            startPos = i - 1;
-                        } else {
-                            isEncoded = true;
-                        }
-                    } else {
-                        line += chr;
-                    }
-                }
-
-                if (line) {
-                    list.push({
-                        line: line,
-                        encoded: isEncoded
-                    });
-                }
-            }
-
-            return list.map(function(item, i) {
-                return {
-                    // encoded lines: {name}*{part}*
-                    // unencoded lines: {name}*{part}
-                    // if any line needs to be encoded then the first line (part==0) is always encoded
-                    key: key + '*' + i + (item.encoded ? '*' : ''),
-                    value: /[\s";=]/.test(item.line) ? '"' + item.line + '"' : item.line
-                };
-            });
-        },
-
-        /**
-         * Splits a mime encoded string. Needed for dividing mime words into smaller chunks
-         *
-         * @param {String} str Mime encoded string to be split up
-         * @param {Number} maxlen Maximum length of characters for one part (minimum 12)
-         * @return {Array} Split string
-         */
-        _splitMimeEncodedString: function(str, maxlen) {
-            var curLine, match, chr, done,
-                lines = [];
-
-            // require at least 12 symbols to fit possible 4 octet UTF-8 sequences
-            maxlen = Math.max(maxlen || 0, 12);
-
-            while (str.length) {
-                curLine = str.substr(0, maxlen);
-
-                // move incomplete escaped char back to main
-                if ((match = curLine.match(/\=[0-9A-F]?$/i))) {
-                    curLine = curLine.substr(0, match.index);
-                }
-
-                done = false;
-                while (!done) {
-                    done = true;
-                    // check if not middle of a unicode char sequence
-                    if ((match = str.substr(curLine.length).match(/^\=([0-9A-F]{2})/i))) {
-                        chr = parseInt(match[1], 16);
-                        // invalid sequence, move one char back anc recheck
-                        if (chr < 0xC2 && chr > 0x7F) {
-                            curLine = curLine.substr(0, curLine.length - 3);
-                            done = false;
-                        }
-                    }
-                }
-
-                if (curLine.length) {
-                    lines.push(curLine);
-                }
-                str = str.substr(curLine.length);
-            }
-
-            return lines;
-        },
-
-        /**
-         * Adds soft line breaks (the ones that will be stripped out when decoding) to
-         * ensure that no line in the message is never longer than 76 symbols
-         *
-         * Lines can't be longer than 76 + <CR><LF> = 78 bytes
-         * http://tools.ietf.org/html/rfc2045#section-6.7
-         *
-         * @param {String} str Encoded string
-         * @param {String} encoding Either "qp" or "base64" (the default)
-         * @return {String} String with forced line breaks
-         */
-        _addSoftLinebreaks: function(str, encoding) {
-            var lineLengthMax = 76;
-
-            encoding = (encoding || 'base64').toString().toLowerCase().trim();
-
-            if (encoding === 'qp') {
-                return mimecodec._addQPSoftLinebreaks(str, lineLengthMax);
-            } else {
-                return mimecodec._addBase64SoftLinebreaks(str, lineLengthMax);
-            }
-        },
-
-        /**
-         * Adds soft line breaks (the ones that will be stripped out when decoding base64) to
-         * ensure that no line in the message is never longer than lineLengthMax
-         *
-         * @param {String} base64EncodedStr String in BASE64 encoding
-         * @param {Number} lineLengthMax Maximum length of a line
-         * @return {String} String with forced line breaks
-         */
-        _addBase64SoftLinebreaks: function(base64EncodedStr, lineLengthMax) {
-            base64EncodedStr = (base64EncodedStr || '').toString().trim();
-            return base64EncodedStr.replace(new RegExp('.{' + lineLengthMax + '}', 'g'), '$&\r\n').trim();
-        },
-
-        /**
-         * Adds soft line breaks(the ones that will be stripped out when decoding QP) to * ensure that no line in the message is never longer than lineLengthMax * * Not sure of how and why this works, but at least it seems to be working: /
-         *
-         * @param {String} qpEncodedStr String in Quoted-Printable encoding
-         * @param {Number} lineLengthMax Maximum length of a line
-         * @return {String} String with forced line breaks
-         */
-        _addQPSoftLinebreaks: function(qpEncodedStr, lineLengthMax) {
-            qpEncodedStr = (qpEncodedStr || '').toString();
-
-            lineLengthMax = lineLengthMax || 76;
-
-            var pos = 0,
-                len = qpEncodedStr.length,
-                match, code, line,
-                lineMargin = Math.floor(lineLengthMax / 3),
-                result = '';
-
-            // insert soft linebreaks where needed
-            while (pos < len) {
-                line = qpEncodedStr.substr(pos, lineLengthMax);
-                if ((match = line.match(/\r\n/))) {
-                    line = line.substr(0, match.index + match[0].length);
-                    result += line;
-                    pos += line.length;
-                    continue;
-                }
-
-                if (line.substr(-1) === '\n') {
-                    // nothing to change here
-                    result += line;
-                    pos += line.length;
-                    continue;
-                } else if ((match = line.substr(-lineMargin).match(/\n.*?$/))) {
-                    // truncate to nearest line break
-                    line = line.substr(0, line.length - (match[0].length - 1));
-                    result += line;
-                    pos += line.length;
-                    continue;
-                } else if (line.length > lineLengthMax - lineMargin && (match = line.substr(-lineMargin).match(/[ \t\.,!\?][^ \t\.,!\?]*$/))) {
-                    // truncate to nearest space
-                    line = line.substr(0, line.length - (match[0].length - 1));
-                } else if (line.substr(-1) === '\r') {
-                    line = line.substr(0, line.length - 1);
-                } else {
-                    if (line.match(/\=[\da-f]{0,2}$/i)) {
-
-                        // push incomplete encoding sequences to the next line
-                        if ((match = line.match(/\=[\da-f]{0,1}$/i))) {
-                            line = line.substr(0, line.length - match[0].length);
-                        }
-
-                        // ensure that utf-8 sequences are not split
-                        while (line.length > 3 && line.length < len - pos && !line.match(/^(?:=[\da-f]{2}){1,4}$/i) && (match = line.match(/\=[\da-f]{2}$/ig))) {
-                            code = parseInt(match[0].substr(1, 2), 16);
-                            if (code < 128) {
-                                break;
-                            }
-
-                            line = line.substr(0, line.length - 3);
-
-                            if (code >= 0xC0) {
-                                break;
-                            }
-                        }
-
-                    }
-                }
-
-                if (pos + line.length < len && line.substr(-1) !== '\n') {
-                    if (line.length === lineLengthMax && line.match(/\=[\da-f]{2}$/i)) {
-                        line = line.substr(0, line.length - 3);
-                    } else if (line.length === lineLengthMax) {
-                        line = line.substr(0, line.length - 1);
-                    }
-                    pos += line.length;
-                    line += '=\r\n';
-                } else {
-                    pos += line.length;
-                }
-
-                result += line;
-            }
-
-            return result;
-        },
-
-        /**
-         * Checks if a number is in specified ranges or not
-         *
-         * @param {Number} nr Number to check for
-         * @ranges {Array} ranges Array of range duples
-         * @return {Boolean} Returns true, if nr was found to be at least one of the specified ranges
-         */
-        _checkRanges: function(nr, ranges) {
-            for (var i = ranges.length - 1; i >= 0; i--) {
-                if (!ranges[i].length) {
-                    continue;
-                }
-                if (ranges[i].length === 1 && nr === ranges[i][0]) {
-                    return true;
-                }
-                if (ranges[i].length === 2 && nr >= ranges[i][0] && nr <= ranges[i][1]) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    };
-
-    /**
-     * Character set encoding and decoding functions
-     */
-    mimecodec.charset = {
-
-        /**
-         * Encodes an unicode string into an Uint8Array object as UTF-8
-         *
-         * TextEncoder only supports unicode encodings (utf-8, utf16le/be) but no other,
-         * so we force UTF-8 here.
-         *
-         * @param {String} str String to be encoded
-         * @return {Uint8Array} UTF-8 encoded typed array
-         */
-        encode: function(str) {
-            return new TextEncoder('UTF-8').encode(str);
-        },
-
-        /**
-         * Decodes a string from Uint8Array to an unicode string using specified encoding
-         *
-         * @param {Uint8Array} buf Binary data to be decoded
-         * @param {String} [fromCharset='UTF-8'] Binary data is decoded into string using this charset
-         * @return {String} Decded string
-         */
-        decode: function(buf, fromCharset) {
-            fromCharset = mimecodec.charset.normalizeCharset(fromCharset || 'UTF-8');
-
-            // ensure the value is a Uint8Array, not ArrayBuffer if used
-            if (!buf.buffer) {
-                buf = new Uint8Array(buf);
-            }
-
-            try {
-                return new TextDecoder(fromCharset).decode(buf);
-            } catch (E) {
-                try {
-                    return new TextDecoder('utf-8', {
-                        fatal: true // if the input is not a valid utf-8 the decoder will throw
-                    }).decode(buf);
-                } catch (E) {
-                    try {
-                        return new TextDecoder('iso-8859-15').decode(buf);
-                    } catch (E) {
-                        // should not happen as there is something matching for every byte (non character bytes are allowed)
-                        return mimecodec.fromTypedArray(buf);
-                    }
-                }
-            }
-
-        },
-
-        /**
-         * Convert a string from specific encoding to UTF-8 Uint8Array
-         *
-         * @param {String|Uint8Array} str String to be encoded
-         * @param {String} [fromCharset='UTF-8'] Source encoding for the string
-         * @return {Uint8Array} UTF-8 encoded typed array
-         */
-        convert: function(data, fromCharset) {
-            fromCharset = mimecodec.charset.normalizeCharset(fromCharset || 'UTF-8');
-
-            var bufString;
-
-            if (typeof data !== 'string') {
-                if (fromCharset.match(/^utf[\-_]?8$/)) {
-                    return data;
-                }
-                bufString = mimecodec.charset.decode(data, fromCharset);
-                return mimecodec.charset.encode(bufString);
-            }
-            return mimecodec.charset.encode(data);
-        },
-
-        /**
-         * Converts well known invalid character set names to proper names.
-         * eg. win-1257 will be converted to WINDOWS-1257
-         *
-         * @param {String} charset Charset name to convert
-         * @return {String} Canoninicalized charset name
-         */
-        normalizeCharset: function(charset) {
-            var match;
-
-            if ((match = charset.match(/^utf[\-_]?(\d+)$/i))) {
-                return 'UTF-' + match[1];
-            }
-
-            if ((match = charset.match(/^win[\-_]?(\d+)$/i))) {
-                return 'WINDOWS-' + match[1];
-            }
-
-            if ((match = charset.match(/^latin[\-_]?(\d+)$/i))) {
-                return 'ISO-8859-' + match[1];
-            }
-
-            return charset;
-        }
-    };
-
-    /**
-     * Base64 encoding and decoding functions
-     */
-    mimecodec.base64 = {
-
-        /**
-         * Encodes input into base64
-         *
-         * @param {String|Uint8Array} data Data to be encoded into base64
-         * @return {String} Base64 encoded string
-         */
-        encode: function(data) {
-            if (!data) {
-                return '';
-            }
-
-            if (typeof data === 'string') {
-                // window.btoa uses pseudo binary encoding, so unicode strings
-                // need to be converted before encoding
-                return btoa(unescape(encodeURIComponent(data)));
-            }
-
-            var len = data.byteLength,
-                binStr = '';
-
-            if (!data.buffer) {
-                data.buffer = new Uint8Array(data);
-            }
-
-            for (var i = 0; i < len; i++) {
-                binStr += String.fromCharCode(data[i]);
-            }
-
-            return btoa(binStr);
-        },
-
-        /**
-         * Decodes base64 encoded string into an unicode string or Uint8Array
-         *
-         * @param {String} data Base64 encoded data
-         * @param {String} [outputEncoding='buffer'] Output encoding, either 'string' or 'buffer' (Uint8Array)
-         * @return {String|Uint8Array} Decoded string
-         */
-        decode: function(data, outputEncoding) {
-            outputEncoding = (outputEncoding || 'buffer').toLowerCase().trim();
-
-            var buf = mimecodec.base64.toTypedArray(data);
-
-            if (outputEncoding === 'string') {
-                return mimecodec.charset.decode(buf);
-            } else {
-                return buf;
-            }
-        },
-
-        /**
-         * Safe base64 decoding. Does not throw on unexpected input.
-         *
-         * Implementation from the MDN docs:
-         * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
-         * (MDN code samples are MIT licensed)
-         *
-         * @param {String} base64Str Base64 encoded string
-         * @returns {Uint8Array} Decoded binary blob
-         */
-        toTypedArray: function(base64Str) {
-            var bitsSoFar = 0;
-            var validBits = 0;
-            var iOut = 0;
-            var arr = new Uint8Array(Math.ceil(base64Str.length * 3 / 4));
-            var c;
-            var bits;
-
-            for (var i = 0, len = base64Str.length; i < len; i++) {
-                c = base64Str.charCodeAt(i);
-                if (c >= 0x41 && c <= 0x5a) { // [A-Z]
-                    bits = c - 0x41;
-                } else if (c >= 0x61 && c <= 0x7a) { // [a-z]
-                    bits = c - 0x61 + 0x1a;
-                } else if (c >= 0x30 && c <= 0x39) { // [0-9]
-                    bits = c - 0x30 + 0x34;
-                } else if (c === 0x2b) { // +
-                    bits = 0x3e;
-                } else if (c === 0x2f) { // /
-                    bits = 0x3f;
-                } else if (c === 0x3d) { // =
-                    validBits = 0;
-                    continue;
-                } else {
-                    // ignore all other characters!
-                    continue;
-                }
-                bitsSoFar = (bitsSoFar << 6) | bits;
-                validBits += 6;
-                if (validBits >= 8) {
-                    validBits -= 8;
-                    arr[iOut++] = bitsSoFar >> validBits;
-                    if (validBits === 2) {
-                        bitsSoFar &= 0x03;
-                    } else if (validBits === 4) {
-                        bitsSoFar &= 0x0f;
-                    }
-                }
-            }
-
-            if (iOut < arr.length) {
-                return arr.subarray(0, iOut);
-            }
-            return arr;
-        }
-    };
-
-    /*
-     * Encodes a string in base 64. DedicatedWorkerGlobalScope for Safari does not provide btoa.
-     * https://github.com/davidchambers/Base64.js
-     */
-    function base64Encode(input) {
-        var str = String(input);
-        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-        for (var block, charCode, idx = 0, map = chars, output = ''; str.charAt(idx | 0) || (map = '=', idx % 1); output += map.charAt(63 & block >> 8 - idx % 1 * 8)) {
-            charCode = str.charCodeAt(idx += 3 / 4);
-            if (charCode > 0xFF) {
-                throw new Error("'btoa' failed: The string to be encoded contains characters outside of the Latin1 range.");
-            }
-            block = block << 8 | charCode;
-        }
-        return output;
-    }
-
-    return mimecodec;
-}));
 
 // un-licensed as public domain https://github.com/inexorabletash/text-encoding/blob/master/LICENSE.md
 (function(root, factory) {
@@ -18486,6 +15194,3298 @@ try {
 // THE SOFTWARE.
 
 (function(root, factory) {
+    'use strict';
+    if (false) {
+        define(factory);
+    } else if (false) {
+        module.exports = factory();
+    } else {
+        root['emailjs-mime-types'] = factory();
+    }
+}(this, function() {
+    'use strict';
+
+    /**
+     * Returns file extension for a content type string. If no suitable extensions
+     * are found, 'bin' is used as the default extension
+     *
+     * @param {String} mimeType Content type to be checked for
+     * @return {String} File extension
+     */
+    function detectExtension(mimeType) {
+        mimeType = (mimeType || '').toString().toLowerCase().replace(/\s/g, '');
+        if (!(mimeType in mimetypesList)) {
+            return 'bin';
+        }
+
+        if (typeof mimetypesList[mimeType] === 'string') {
+            return mimetypesList[mimeType];
+        }
+
+        var mimeParts = mimeType.split('/');
+
+        // search for name match
+        for (var i = 0, len = mimetypesList[mimeType].length; i < len; i++) {
+            if (mimeParts[1] === mimetypesList[mimeType][i]) {
+                return mimetypesList[mimeType][i];
+            }
+        }
+
+        // use the first one
+        return mimetypesList[mimeType][0];
+    }
+
+    /**
+     * Returns content type for a file extension. If no suitable content types
+     * are found, 'application/octet-stream' is used as the default content type
+     *
+     * @param {String} extension Extension to be checked for
+     * @return {String} File extension
+     */
+    function detectMimeType(extension) {
+        extension = (extension || '').toString().toLowerCase().replace(/\s/g, '').replace(/^\./g, '');
+
+        if (!(extension in mimetypesExtensions)) {
+            return 'application/octet-stream';
+        }
+
+        if (typeof mimetypesExtensions[extension] === 'string') {
+            return mimetypesExtensions[extension];
+        }
+
+        var mimeParts;
+
+        // search for name match
+        for (var i = 0, len = mimetypesExtensions[extension].length; i < len; i++) {
+            mimeParts = mimetypesExtensions[extension][i].split('/');
+            if (mimeParts[1] === extension) {
+                return mimetypesExtensions[extension][i];
+            }
+        }
+
+        // use the first one
+        return mimetypesExtensions[extension][0];
+    }
+
+    var mimetypesList = {
+        'application/acad': 'dwg',
+        'application/andrew-inset': '',
+        'application/applixware': 'aw',
+        'application/arj': 'arj',
+        'application/atom+xml': 'xml',
+        'application/atomcat+xml': 'atomcat',
+        'application/atomsvc+xml': 'atomsvc',
+        'application/base64': ['mm', 'mme'],
+        'application/binhex': 'hqx',
+        'application/binhex4': 'hqx',
+        'application/book': ['boo', 'book'],
+        'application/ccxml+xml,': 'ccxml',
+        'application/cdf': 'cdf',
+        'application/cdmi-capability': 'cdmia',
+        'application/cdmi-container': 'cdmic',
+        'application/cdmi-domain': 'cdmid',
+        'application/cdmi-object': 'cdmio',
+        'application/cdmi-queue': 'cdmiq',
+        'application/clariscad': 'ccad',
+        'application/commonground': 'dp',
+        'application/cu-seeme': 'cu',
+        'application/davmount+xml': 'davmount',
+        'application/drafting': 'drw',
+        'application/dsptype': 'tsp',
+        'application/dssc+der': 'dssc',
+        'application/dssc+xml': 'xdssc',
+        'application/dxf': 'dxf',
+        'application/ecmascript': ['js', 'es'],
+        'application/emma+xml': 'emma',
+        'application/envoy': 'evy',
+        'application/epub+zip': 'epub',
+        'application/excel': ['xl', 'xla', 'xlb', 'xlc', 'xld', 'xlk', 'xll', 'xlm', 'xls', 'xlt', 'xlv', 'xlw'],
+        'application/exi': 'exi',
+        'application/font-tdpfr': 'pfr',
+        'application/fractals': 'fif',
+        'application/freeloader': 'frl',
+        'application/futuresplash': 'spl',
+        'application/gnutar': 'tgz',
+        'application/groupwise': 'vew',
+        'application/hlp': 'hlp',
+        'application/hta': 'hta',
+        'application/hyperstudio': 'stk',
+        'application/i-deas': 'unv',
+        'application/iges': ['iges', 'igs'],
+        'application/inf': 'inf',
+        'application/internet-property-stream': 'acx',
+        'application/ipfix': 'ipfix',
+        'application/java': 'class',
+        'application/java-archive': 'jar',
+        'application/java-byte-code': 'class',
+        'application/java-serialized-object': 'ser',
+        'application/java-vm': 'class',
+        'application/javascript': 'js',
+        'application/json': 'json',
+        'application/lha': 'lha',
+        'application/lzx': 'lzx',
+        'application/mac-binary': 'bin',
+        'application/mac-binhex': 'hqx',
+        'application/mac-binhex40': 'hqx',
+        'application/mac-compactpro': 'cpt',
+        'application/macbinary': 'bin',
+        'application/mads+xml': 'mads',
+        'application/marc': 'mrc',
+        'application/marcxml+xml': 'mrcx',
+        'application/mathematica': 'ma',
+        'application/mathml+xml': 'mathml',
+        'application/mbedlet': 'mbd',
+        'application/mbox': 'mbox',
+        'application/mcad': 'mcd',
+        'application/mediaservercontrol+xml': 'mscml',
+        'application/metalink4+xml': 'meta4',
+        'application/mets+xml': 'mets',
+        'application/mime': 'aps',
+        'application/mods+xml': 'mods',
+        'application/mp21': 'm21',
+        'application/mp4': 'mp4',
+        'application/mspowerpoint': ['pot', 'pps', 'ppt', 'ppz'],
+        'application/msword': ['doc', 'dot', 'w6w', 'wiz', 'word'],
+        'application/mswrite': 'wri',
+        'application/mxf': 'mxf',
+        'application/netmc': 'mcp',
+        'application/octet-stream': ['*'],
+        'application/oda': 'oda',
+        'application/oebps-package+xml': 'opf',
+        'application/ogg': 'ogx',
+        'application/olescript': 'axs',
+        'application/onenote': 'onetoc',
+        'application/patch-ops-error+xml': 'xer',
+        'application/pdf': 'pdf',
+        'application/pgp-encrypted': '',
+        'application/pgp-signature': 'pgp',
+        'application/pics-rules': 'prf',
+        'application/pkcs-12': 'p12',
+        'application/pkcs-crl': 'crl',
+        'application/pkcs10': 'p10',
+        'application/pkcs7-mime': ['p7c', 'p7m'],
+        'application/pkcs7-signature': 'p7s',
+        'application/pkcs8': 'p8',
+        'application/pkix-attr-cert': 'ac',
+        'application/pkix-cert': ['cer', 'crt'],
+        'application/pkix-crl': 'crl',
+        'application/pkix-pkipath': 'pkipath',
+        'application/pkixcmp': 'pki',
+        'application/plain': 'text',
+        'application/pls+xml': 'pls',
+        'application/postscript': ['ai', 'eps', 'ps'],
+        'application/powerpoint': 'ppt',
+        'application/pro_eng': ['part', 'prt'],
+        'application/prs.cww': 'cww',
+        'application/pskc+xml': 'pskcxml',
+        'application/rdf+xml': 'rdf',
+        'application/reginfo+xml': 'rif',
+        'application/relax-ng-compact-syntax': 'rnc',
+        'application/resource-lists+xml': 'rl',
+        'application/resource-lists-diff+xml': 'rld',
+        'application/ringing-tones': 'rng',
+        'application/rls-services+xml': 'rs',
+        'application/rsd+xml': 'rsd',
+        'application/rss+xml': 'xml',
+        'application/rtf': ['rtf', 'rtx'],
+        'application/sbml+xml': 'sbml',
+        'application/scvp-cv-request': 'scq',
+        'application/scvp-cv-response': 'scs',
+        'application/scvp-vp-request': 'spq',
+        'application/scvp-vp-response': 'spp',
+        'application/sdp': 'sdp',
+        'application/sea': 'sea',
+        'application/set': 'set',
+        'application/set-payment-initiation': 'setpay',
+        'application/set-registration-initiation': 'setreg',
+        'application/shf+xml': 'shf',
+        'application/sla': 'stl',
+        'application/smil': ['smi', 'smil'],
+        'application/smil+xml': 'smi',
+        'application/solids': 'sol',
+        'application/sounder': 'sdr',
+        'application/sparql-query': 'rq',
+        'application/sparql-results+xml': 'srx',
+        'application/srgs': 'gram',
+        'application/srgs+xml': 'grxml',
+        'application/sru+xml': 'sru',
+        'application/ssml+xml': 'ssml',
+        'application/step': ['step', 'stp'],
+        'application/streamingmedia': 'ssm',
+        'application/tei+xml': 'tei',
+        'application/thraud+xml': 'tfi',
+        'application/timestamped-data': 'tsd',
+        'application/toolbook': 'tbk',
+        'application/vda': 'vda',
+        'application/vnd.3gpp.pic-bw-large': 'plb',
+        'application/vnd.3gpp.pic-bw-small': 'psb',
+        'application/vnd.3gpp.pic-bw-var': 'pvb',
+        'application/vnd.3gpp2.tcap': 'tcap',
+        'application/vnd.3m.post-it-notes': 'pwn',
+        'application/vnd.accpac.simply.aso': 'aso',
+        'application/vnd.accpac.simply.imp': 'imp',
+        'application/vnd.acucobol': 'acu',
+        'application/vnd.acucorp': 'atc',
+        'application/vnd.adobe.air-application-installer-package+zip': 'air',
+        'application/vnd.adobe.fxp': 'fxp',
+        'application/vnd.adobe.xdp+xml': 'xdp',
+        'application/vnd.adobe.xfdf': 'xfdf',
+        'application/vnd.ahead.space': 'ahead',
+        'application/vnd.airzip.filesecure.azf': 'azf',
+        'application/vnd.airzip.filesecure.azs': 'azs',
+        'application/vnd.amazon.ebook': 'azw',
+        'application/vnd.americandynamics.acc': 'acc',
+        'application/vnd.amiga.ami': 'ami',
+        'application/vnd.android.package-archive': 'apk',
+        'application/vnd.anser-web-certificate-issue-initiation': 'cii',
+        'application/vnd.anser-web-funds-transfer-initiation': 'fti',
+        'application/vnd.antix.game-component': 'atx',
+        'application/vnd.apple.installer+xml': 'mpkg',
+        'application/vnd.apple.mpegurl': 'm3u8',
+        'application/vnd.aristanetworks.swi': 'swi',
+        'application/vnd.audiograph': 'aep',
+        'application/vnd.blueice.multipass': 'mpm',
+        'application/vnd.bmi': 'bmi',
+        'application/vnd.businessobjects': 'rep',
+        'application/vnd.chemdraw+xml': 'cdxml',
+        'application/vnd.chipnuts.karaoke-mmd': 'mmd',
+        'application/vnd.cinderella': 'cdy',
+        'application/vnd.claymore': 'cla',
+        'application/vnd.cloanto.rp9': 'rp9',
+        'application/vnd.clonk.c4group': 'c4g',
+        'application/vnd.cluetrust.cartomobile-config': 'c11amc',
+        'application/vnd.cluetrust.cartomobile-config-pkg': 'c11amz',
+        'application/vnd.commonspace': 'csp',
+        'application/vnd.contact.cmsg': 'cdbcmsg',
+        'application/vnd.cosmocaller': 'cmc',
+        'application/vnd.crick.clicker': 'clkx',
+        'application/vnd.crick.clicker.keyboard': 'clkk',
+        'application/vnd.crick.clicker.palette': 'clkp',
+        'application/vnd.crick.clicker.template': 'clkt',
+        'application/vnd.crick.clicker.wordbank': 'clkw',
+        'application/vnd.criticaltools.wbs+xml': 'wbs',
+        'application/vnd.ctc-posml': 'pml',
+        'application/vnd.cups-ppd': 'ppd',
+        'application/vnd.curl.car': 'car',
+        'application/vnd.curl.pcurl': 'pcurl',
+        'application/vnd.data-vision.rdz': 'rdz',
+        'application/vnd.denovo.fcselayout-link': 'fe_launch',
+        'application/vnd.dna': 'dna',
+        'application/vnd.dolby.mlp': 'mlp',
+        'application/vnd.dpgraph': 'dpg',
+        'application/vnd.dreamfactory': 'dfac',
+        'application/vnd.dvb.ait': 'ait',
+        'application/vnd.dvb.service': 'svc',
+        'application/vnd.dynageo': 'geo',
+        'application/vnd.ecowin.chart': 'mag',
+        'application/vnd.enliven': 'nml',
+        'application/vnd.epson.esf': 'esf',
+        'application/vnd.epson.msf': 'msf',
+        'application/vnd.epson.quickanime': 'qam',
+        'application/vnd.epson.salt': 'slt',
+        'application/vnd.epson.ssf': 'ssf',
+        'application/vnd.eszigno3+xml': 'es3',
+        'application/vnd.ezpix-album': 'ez2',
+        'application/vnd.ezpix-package': 'ez3',
+        'application/vnd.fdf': 'fdf',
+        'application/vnd.fdsn.seed': 'seed',
+        'application/vnd.flographit': 'gph',
+        'application/vnd.fluxtime.clip': 'ftc',
+        'application/vnd.framemaker': 'fm',
+        'application/vnd.frogans.fnc': 'fnc',
+        'application/vnd.frogans.ltf': 'ltf',
+        'application/vnd.fsc.weblaunch': 'fsc',
+        'application/vnd.fujitsu.oasys': 'oas',
+        'application/vnd.fujitsu.oasys2': 'oa2',
+        'application/vnd.fujitsu.oasys3': 'oa3',
+        'application/vnd.fujitsu.oasysgp': 'fg5',
+        'application/vnd.fujitsu.oasysprs': 'bh2',
+        'application/vnd.fujixerox.ddd': 'ddd',
+        'application/vnd.fujixerox.docuworks': 'xdw',
+        'application/vnd.fujixerox.docuworks.binder': 'xbd',
+        'application/vnd.fuzzysheet': 'fzs',
+        'application/vnd.genomatix.tuxedo': 'txd',
+        'application/vnd.geogebra.file': 'ggb',
+        'application/vnd.geogebra.tool': 'ggt',
+        'application/vnd.geometry-explorer': 'gex',
+        'application/vnd.geonext': 'gxt',
+        'application/vnd.geoplan': 'g2w',
+        'application/vnd.geospace': 'g3w',
+        'application/vnd.gmx': 'gmx',
+        'application/vnd.google-earth.kml+xml': 'kml',
+        'application/vnd.google-earth.kmz': 'kmz',
+        'application/vnd.grafeq': 'gqf',
+        'application/vnd.groove-account': 'gac',
+        'application/vnd.groove-help': 'ghf',
+        'application/vnd.groove-identity-message': 'gim',
+        'application/vnd.groove-injector': 'grv',
+        'application/vnd.groove-tool-message': 'gtm',
+        'application/vnd.groove-tool-template': 'tpl',
+        'application/vnd.groove-vcard': 'vcg',
+        'application/vnd.hal+xml': 'hal',
+        'application/vnd.handheld-entertainment+xml': 'zmm',
+        'application/vnd.hbci': 'hbci',
+        'application/vnd.hhe.lesson-player': 'les',
+        'application/vnd.hp-hpgl': ['hgl', 'hpg', 'hpgl'],
+        'application/vnd.hp-hpid': 'hpid',
+        'application/vnd.hp-hps': 'hps',
+        'application/vnd.hp-jlyt': 'jlt',
+        'application/vnd.hp-pcl': 'pcl',
+        'application/vnd.hp-pclxl': 'pclxl',
+        'application/vnd.hydrostatix.sof-data': 'sfd-hdstx',
+        'application/vnd.hzn-3d-crossword': 'x3d',
+        'application/vnd.ibm.minipay': 'mpy',
+        'application/vnd.ibm.modcap': 'afp',
+        'application/vnd.ibm.rights-management': 'irm',
+        'application/vnd.ibm.secure-container': 'sc',
+        'application/vnd.iccprofile': 'icc',
+        'application/vnd.igloader': 'igl',
+        'application/vnd.immervision-ivp': 'ivp',
+        'application/vnd.immervision-ivu': 'ivu',
+        'application/vnd.insors.igm': 'igm',
+        'application/vnd.intercon.formnet': 'xpw',
+        'application/vnd.intergeo': 'i2g',
+        'application/vnd.intu.qbo': 'qbo',
+        'application/vnd.intu.qfx': 'qfx',
+        'application/vnd.ipunplugged.rcprofile': 'rcprofile',
+        'application/vnd.irepository.package+xml': 'irp',
+        'application/vnd.is-xpr': 'xpr',
+        'application/vnd.isac.fcs': 'fcs',
+        'application/vnd.jam': 'jam',
+        'application/vnd.jcp.javame.midlet-rms': 'rms',
+        'application/vnd.jisp': 'jisp',
+        'application/vnd.joost.joda-archive': 'joda',
+        'application/vnd.kahootz': 'ktz',
+        'application/vnd.kde.karbon': 'karbon',
+        'application/vnd.kde.kchart': 'chrt',
+        'application/vnd.kde.kformula': 'kfo',
+        'application/vnd.kde.kivio': 'flw',
+        'application/vnd.kde.kontour': 'kon',
+        'application/vnd.kde.kpresenter': 'kpr',
+        'application/vnd.kde.kspread': 'ksp',
+        'application/vnd.kde.kword': 'kwd',
+        'application/vnd.kenameaapp': 'htke',
+        'application/vnd.kidspiration': 'kia',
+        'application/vnd.kinar': 'kne',
+        'application/vnd.koan': 'skp',
+        'application/vnd.kodak-descriptor': 'sse',
+        'application/vnd.las.las+xml': 'lasxml',
+        'application/vnd.llamagraphics.life-balance.desktop': 'lbd',
+        'application/vnd.llamagraphics.life-balance.exchange+xml': 'lbe',
+        'application/vnd.lotus-1-2-3': '123',
+        'application/vnd.lotus-approach': 'apr',
+        'application/vnd.lotus-freelance': 'pre',
+        'application/vnd.lotus-notes': 'nsf',
+        'application/vnd.lotus-organizer': 'org',
+        'application/vnd.lotus-screencam': 'scm',
+        'application/vnd.lotus-wordpro': 'lwp',
+        'application/vnd.macports.portpkg': 'portpkg',
+        'application/vnd.mcd': 'mcd',
+        'application/vnd.medcalcdata': 'mc1',
+        'application/vnd.mediastation.cdkey': 'cdkey',
+        'application/vnd.mfer': 'mwf',
+        'application/vnd.mfmp': 'mfm',
+        'application/vnd.micrografx.flo': 'flo',
+        'application/vnd.micrografx.igx': 'igx',
+        'application/vnd.mif': 'mif',
+        'application/vnd.mobius.daf': 'daf',
+        'application/vnd.mobius.dis': 'dis',
+        'application/vnd.mobius.mbk': 'mbk',
+        'application/vnd.mobius.mqy': 'mqy',
+        'application/vnd.mobius.msl': 'msl',
+        'application/vnd.mobius.plc': 'plc',
+        'application/vnd.mobius.txf': 'txf',
+        'application/vnd.mophun.application': 'mpn',
+        'application/vnd.mophun.certificate': 'mpc',
+        'application/vnd.mozilla.xul+xml': 'xul',
+        'application/vnd.ms-artgalry': 'cil',
+        'application/vnd.ms-cab-compressed': 'cab',
+        'application/vnd.ms-excel': ['xla', 'xlc', 'xlm', 'xls', 'xlt', 'xlw', 'xlb', 'xll'],
+        'application/vnd.ms-excel.addin.macroenabled.12': 'xlam',
+        'application/vnd.ms-excel.sheet.binary.macroenabled.12': 'xlsb',
+        'application/vnd.ms-excel.sheet.macroenabled.12': 'xlsm',
+        'application/vnd.ms-excel.template.macroenabled.12': 'xltm',
+        'application/vnd.ms-fontobject': 'eot',
+        'application/vnd.ms-htmlhelp': 'chm',
+        'application/vnd.ms-ims': 'ims',
+        'application/vnd.ms-lrm': 'lrm',
+        'application/vnd.ms-officetheme': 'thmx',
+        'application/vnd.ms-outlook': 'msg',
+        'application/vnd.ms-pki.certstore': 'sst',
+        'application/vnd.ms-pki.pko': 'pko',
+        'application/vnd.ms-pki.seccat': 'cat',
+        'application/vnd.ms-pki.stl': 'stl',
+        'application/vnd.ms-pkicertstore': 'sst',
+        'application/vnd.ms-pkiseccat': 'cat',
+        'application/vnd.ms-pkistl': 'stl',
+        'application/vnd.ms-powerpoint': ['pot', 'pps', 'ppt', 'ppa', 'pwz'],
+        'application/vnd.ms-powerpoint.addin.macroenabled.12': 'ppam',
+        'application/vnd.ms-powerpoint.presentation.macroenabled.12': 'pptm',
+        'application/vnd.ms-powerpoint.slide.macroenabled.12': 'sldm',
+        'application/vnd.ms-powerpoint.slideshow.macroenabled.12': 'ppsm',
+        'application/vnd.ms-powerpoint.template.macroenabled.12': 'potm',
+        'application/vnd.ms-project': 'mpp',
+        'application/vnd.ms-word.document.macroenabled.12': 'docm',
+        'application/vnd.ms-word.template.macroenabled.12': 'dotm',
+        'application/vnd.ms-works': ['wcm', 'wdb', 'wks', 'wps'],
+        'application/vnd.ms-wpl': 'wpl',
+        'application/vnd.ms-xpsdocument': 'xps',
+        'application/vnd.mseq': 'mseq',
+        'application/vnd.musician': 'mus',
+        'application/vnd.muvee.style': 'msty',
+        'application/vnd.neurolanguage.nlu': 'nlu',
+        'application/vnd.noblenet-directory': 'nnd',
+        'application/vnd.noblenet-sealer': 'nns',
+        'application/vnd.noblenet-web': 'nnw',
+        'application/vnd.nokia.configuration-message': 'ncm',
+        'application/vnd.nokia.n-gage.data': 'ngdat',
+        'application/vnd.nokia.n-gage.symbian.install': 'n-gage',
+        'application/vnd.nokia.radio-preset': 'rpst',
+        'application/vnd.nokia.radio-presets': 'rpss',
+        'application/vnd.nokia.ringing-tone': 'rng',
+        'application/vnd.novadigm.edm': 'edm',
+        'application/vnd.novadigm.edx': 'edx',
+        'application/vnd.novadigm.ext': 'ext',
+        'application/vnd.oasis.opendocument.chart': 'odc',
+        'application/vnd.oasis.opendocument.chart-template': 'otc',
+        'application/vnd.oasis.opendocument.database': 'odb',
+        'application/vnd.oasis.opendocument.formula': 'odf',
+        'application/vnd.oasis.opendocument.formula-template': 'odft',
+        'application/vnd.oasis.opendocument.graphics': 'odg',
+        'application/vnd.oasis.opendocument.graphics-template': 'otg',
+        'application/vnd.oasis.opendocument.image': 'odi',
+        'application/vnd.oasis.opendocument.image-template': 'oti',
+        'application/vnd.oasis.opendocument.presentation': 'odp',
+        'application/vnd.oasis.opendocument.presentation-template': 'otp',
+        'application/vnd.oasis.opendocument.spreadsheet': 'ods',
+        'application/vnd.oasis.opendocument.spreadsheet-template': 'ots',
+        'application/vnd.oasis.opendocument.text': 'odt',
+        'application/vnd.oasis.opendocument.text-master': 'odm',
+        'application/vnd.oasis.opendocument.text-template': 'ott',
+        'application/vnd.oasis.opendocument.text-web': 'oth',
+        'application/vnd.olpc-sugar': 'xo',
+        'application/vnd.oma.dd2+xml': 'dd2',
+        'application/vnd.openofficeorg.extension': 'oxt',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+        'application/vnd.openxmlformats-officedocument.presentationml.slide': 'sldx',
+        'application/vnd.openxmlformats-officedocument.presentationml.slideshow': 'ppsx',
+        'application/vnd.openxmlformats-officedocument.presentationml.template': 'potx',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.template': 'xltx',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.template': 'dotx',
+        'application/vnd.osgeo.mapguide.package': 'mgp',
+        'application/vnd.osgi.dp': 'dp',
+        'application/vnd.palm': 'pdb',
+        'application/vnd.pawaafile': 'paw',
+        'application/vnd.pg.format': 'str',
+        'application/vnd.pg.osasli': 'ei6',
+        'application/vnd.picsel': 'efif',
+        'application/vnd.pmi.widget': 'wg',
+        'application/vnd.pocketlearn': 'plf',
+        'application/vnd.powerbuilder6': 'pbd',
+        'application/vnd.previewsystems.box': 'box',
+        'application/vnd.proteus.magazine': 'mgz',
+        'application/vnd.publishare-delta-tree': 'qps',
+        'application/vnd.pvi.ptid1': 'ptid',
+        'application/vnd.quark.quarkxpress': 'qxd',
+        'application/vnd.realvnc.bed': 'bed',
+        'application/vnd.recordare.musicxml': 'mxl',
+        'application/vnd.recordare.musicxml+xml': 'musicxml',
+        'application/vnd.rig.cryptonote': 'cryptonote',
+        'application/vnd.rim.cod': 'cod',
+        'application/vnd.rn-realmedia': 'rm',
+        'application/vnd.rn-realplayer': 'rnx',
+        'application/vnd.route66.link66+xml': 'link66',
+        'application/vnd.sailingtracker.track': 'st',
+        'application/vnd.seemail': 'see',
+        'application/vnd.sema': 'sema',
+        'application/vnd.semd': 'semd',
+        'application/vnd.semf': 'semf',
+        'application/vnd.shana.informed.formdata': 'ifm',
+        'application/vnd.shana.informed.formtemplate': 'itp',
+        'application/vnd.shana.informed.interchange': 'iif',
+        'application/vnd.shana.informed.package': 'ipk',
+        'application/vnd.simtech-mindmapper': 'twd',
+        'application/vnd.smaf': 'mmf',
+        'application/vnd.smart.teacher': 'teacher',
+        'application/vnd.solent.sdkm+xml': 'sdkm',
+        'application/vnd.spotfire.dxp': 'dxp',
+        'application/vnd.spotfire.sfs': 'sfs',
+        'application/vnd.stardivision.calc': 'sdc',
+        'application/vnd.stardivision.draw': 'sda',
+        'application/vnd.stardivision.impress': 'sdd',
+        'application/vnd.stardivision.math': 'smf',
+        'application/vnd.stardivision.writer': 'sdw',
+        'application/vnd.stardivision.writer-global': 'sgl',
+        'application/vnd.stepmania.stepchart': 'sm',
+        'application/vnd.sun.xml.calc': 'sxc',
+        'application/vnd.sun.xml.calc.template': 'stc',
+        'application/vnd.sun.xml.draw': 'sxd',
+        'application/vnd.sun.xml.draw.template': 'std',
+        'application/vnd.sun.xml.impress': 'sxi',
+        'application/vnd.sun.xml.impress.template': 'sti',
+        'application/vnd.sun.xml.math': 'sxm',
+        'application/vnd.sun.xml.writer': 'sxw',
+        'application/vnd.sun.xml.writer.global': 'sxg',
+        'application/vnd.sun.xml.writer.template': 'stw',
+        'application/vnd.sus-calendar': 'sus',
+        'application/vnd.svd': 'svd',
+        'application/vnd.symbian.install': 'sis',
+        'application/vnd.syncml+xml': 'xsm',
+        'application/vnd.syncml.dm+wbxml': 'bdm',
+        'application/vnd.syncml.dm+xml': 'xdm',
+        'application/vnd.tao.intent-module-archive': 'tao',
+        'application/vnd.tmobile-livetv': 'tmo',
+        'application/vnd.trid.tpt': 'tpt',
+        'application/vnd.triscape.mxs': 'mxs',
+        'application/vnd.trueapp': 'tra',
+        'application/vnd.ufdl': 'ufd',
+        'application/vnd.uiq.theme': 'utz',
+        'application/vnd.umajin': 'umj',
+        'application/vnd.unity': 'unityweb',
+        'application/vnd.uoml+xml': 'uoml',
+        'application/vnd.vcx': 'vcx',
+        'application/vnd.visio': 'vsd',
+        'application/vnd.visionary': 'vis',
+        'application/vnd.vsf': 'vsf',
+        'application/vnd.wap.wbxml': 'wbxml',
+        'application/vnd.wap.wmlc': 'wmlc',
+        'application/vnd.wap.wmlscriptc': 'wmlsc',
+        'application/vnd.webturbo': 'wtb',
+        'application/vnd.wolfram.player': 'nbp',
+        'application/vnd.wordperfect': 'wpd',
+        'application/vnd.wqd': 'wqd',
+        'application/vnd.wt.stf': 'stf',
+        'application/vnd.xara': ['web', 'xar'],
+        'application/vnd.xfdl': 'xfdl',
+        'application/vnd.yamaha.hv-dic': 'hvd',
+        'application/vnd.yamaha.hv-script': 'hvs',
+        'application/vnd.yamaha.hv-voice': 'hvp',
+        'application/vnd.yamaha.openscoreformat': 'osf',
+        'application/vnd.yamaha.openscoreformat.osfpvg+xml': 'osfpvg',
+        'application/vnd.yamaha.smaf-audio': 'saf',
+        'application/vnd.yamaha.smaf-phrase': 'spf',
+        'application/vnd.yellowriver-custom-menu': 'cmp',
+        'application/vnd.zul': 'zir',
+        'application/vnd.zzazz.deck+xml': 'zaz',
+        'application/vocaltec-media-desc': 'vmd',
+        'application/vocaltec-media-file': 'vmf',
+        'application/voicexml+xml': 'vxml',
+        'application/widget': 'wgt',
+        'application/winhlp': 'hlp',
+        'application/wordperfect': ['wp', 'wp5', 'wp6', 'wpd'],
+        'application/wordperfect6.0': ['w60', 'wp5'],
+        'application/wordperfect6.1': 'w61',
+        'application/wsdl+xml': 'wsdl',
+        'application/wspolicy+xml': 'wspolicy',
+        'application/x-123': 'wk1',
+        'application/x-7z-compressed': '7z',
+        'application/x-abiword': 'abw',
+        'application/x-ace-compressed': 'ace',
+        'application/x-aim': 'aim',
+        'application/x-authorware-bin': 'aab',
+        'application/x-authorware-map': 'aam',
+        'application/x-authorware-seg': 'aas',
+        'application/x-bcpio': 'bcpio',
+        'application/x-binary': 'bin',
+        'application/x-binhex40': 'hqx',
+        'application/x-bittorrent': 'torrent',
+        'application/x-bsh': ['bsh', 'sh', 'shar'],
+        'application/x-bytecode.elisp': 'elc',
+        'applicaiton/x-bytecode.python': 'pyc',
+        'application/x-bzip': 'bz',
+        'application/x-bzip2': ['boz', 'bz2'],
+        'application/x-cdf': 'cdf',
+        'application/x-cdlink': 'vcd',
+        'application/x-chat': ['cha', 'chat'],
+        'application/x-chess-pgn': 'pgn',
+        'application/x-cmu-raster': 'ras',
+        'application/x-cocoa': 'cco',
+        'application/x-compactpro': 'cpt',
+        'application/x-compress': 'z',
+        'application/x-compressed': ['tgz', 'gz', 'z', 'zip'],
+        'application/x-conference': 'nsc',
+        'application/x-cpio': 'cpio',
+        'application/x-cpt': 'cpt',
+        'application/x-csh': 'csh',
+        'application/x-debian-package': 'deb',
+        'application/x-deepv': 'deepv',
+        'application/x-director': ['dcr', 'dir', 'dxr'],
+        'application/x-doom': 'wad',
+        'application/x-dtbncx+xml': 'ncx',
+        'application/x-dtbook+xml': 'dtb',
+        'application/x-dtbresource+xml': 'res',
+        'application/x-dvi': 'dvi',
+        'application/x-elc': 'elc',
+        'application/x-envoy': ['env', 'evy'],
+        'application/x-esrehber': 'es',
+        'application/x-excel': ['xla', 'xlb', 'xlc', 'xld', 'xlk', 'xll', 'xlm', 'xls', 'xlt', 'xlv', 'xlw'],
+        'application/x-font-bdf': 'bdf',
+        'application/x-font-ghostscript': 'gsf',
+        'application/x-font-linux-psf': 'psf',
+        'application/x-font-otf': 'otf',
+        'application/x-font-pcf': 'pcf',
+        'application/x-font-snf': 'snf',
+        'application/x-font-ttf': 'ttf',
+        'application/x-font-type1': 'pfa',
+        'application/x-font-woff': 'woff',
+        'application/x-frame': 'mif',
+        'application/x-freelance': 'pre',
+        'application/x-futuresplash': 'spl',
+        'application/x-gnumeric': 'gnumeric',
+        'application/x-gsp': 'gsp',
+        'application/x-gss': 'gss',
+        'application/x-gtar': 'gtar',
+        'application/x-gzip': ['gz', 'gzip'],
+        'application/x-hdf': 'hdf',
+        'application/x-helpfile': ['help', 'hlp'],
+        'application/x-httpd-imap': 'imap',
+        'application/x-ima': 'ima',
+        'application/x-internet-signup': ['ins', 'isp'],
+        'application/x-internett-signup': 'ins',
+        'application/x-inventor': 'iv',
+        'application/x-ip2': 'ip',
+        'application/x-iphone': 'iii',
+        'application/x-java-class': 'class',
+        'application/x-java-commerce': 'jcm',
+        'application/x-java-jnlp-file': 'jnlp',
+        'application/x-javascript': 'js',
+        'application/x-koan': ['skd', 'skm', 'skp', 'skt'],
+        'application/x-ksh': 'ksh',
+        'application/x-latex': ['latex', 'ltx'],
+        'application/x-lha': 'lha',
+        'application/x-lisp': 'lsp',
+        'application/x-livescreen': 'ivy',
+        'application/x-lotus': 'wq1',
+        'application/x-lotusscreencam': 'scm',
+        'application/x-lzh': 'lzh',
+        'application/x-lzx': 'lzx',
+        'application/x-mac-binhex40': 'hqx',
+        'application/x-macbinary': 'bin',
+        'application/x-magic-cap-package-1.0': 'mc$',
+        'application/x-mathcad': 'mcd',
+        'application/x-meme': 'mm',
+        'application/x-midi': ['mid', 'midi'],
+        'application/x-mif': 'mif',
+        'application/x-mix-transfer': 'nix',
+        'application/x-mobipocket-ebook': 'prc',
+        'application/x-mplayer2': 'asx',
+        'application/x-ms-application': 'application',
+        'application/x-ms-wmd': 'wmd',
+        'application/x-ms-wmz': 'wmz',
+        'application/x-ms-xbap': 'xbap',
+        'application/x-msaccess': 'mdb',
+        'application/x-msbinder': 'obd',
+        'application/x-mscardfile': 'crd',
+        'application/x-msclip': 'clp',
+        'application/x-msdownload': ['dll', 'exe'],
+        'application/x-msexcel': ['xla', 'xls', 'xlw'],
+        'application/x-msmediaview': ['m13', 'm14', 'mvb'],
+        'application/x-msmetafile': 'wmf',
+        'application/x-msmoney': 'mny',
+        'application/x-mspowerpoint': 'ppt',
+        'application/x-mspublisher': 'pub',
+        'application/x-msschedule': 'scd',
+        'application/x-msterminal': 'trm',
+        'application/x-mswrite': 'wri',
+        'application/x-navi-animation': 'ani',
+        'application/x-navidoc': 'nvd',
+        'application/x-navimap': 'map',
+        'application/x-navistyle': 'stl',
+        'application/x-netcdf': ['cdf', 'nc'],
+        'application/x-newton-compatible-pkg': 'pkg',
+        'application/x-nokia-9000-communicator-add-on-software': 'aos',
+        'application/x-omc': 'omc',
+        'application/x-omcdatamaker': 'omcd',
+        'application/x-omcregerator': 'omcr',
+        'application/x-pagemaker': ['pm4', 'pm5'],
+        'application/x-pcl': 'pcl',
+        'application/x-perfmon': ['pma', 'pmc', 'pml', 'pmr', 'pmw'],
+        'application/x-pixclscript': 'plx',
+        'application/x-pkcs10': 'p10',
+        'application/x-pkcs12': ['p12', 'pfx'],
+        'application/x-pkcs7-certificates': ['p7b', 'spc'],
+        'application/x-pkcs7-certreqresp': 'p7r',
+        'application/x-pkcs7-mime': ['p7c', 'p7m'],
+        'application/x-pkcs7-signature': ['p7s', 'p7a'],
+        'application/x-pointplus': 'css',
+        'application/x-portable-anymap': 'pnm',
+        'application/x-project': ['mpc', 'mpt', 'mpv', 'mpx'],
+        'application/x-qpro': 'wb1',
+        'application/x-rar-compressed': 'rar',
+        'application/x-rtf': 'rtf',
+        'application/x-sdp': 'sdp',
+        'application/x-sea': 'sea',
+        'application/x-seelogo': 'sl',
+        'application/x-sh': 'sh',
+        'application/x-shar': ['shar', 'sh'],
+        'application/x-shockwave-flash': 'swf',
+        'application/x-silverlight-app': 'xap',
+        'application/x-sit': 'sit',
+        'application/x-sprite': ['spr', 'sprite'],
+        'application/x-stuffit': 'sit',
+        'application/x-stuffitx': 'sitx',
+        'application/x-sv4cpio': 'sv4cpio',
+        'application/x-sv4crc': 'sv4crc',
+        'application/x-tar': 'tar',
+        'application/x-tbook': ['sbk', 'tbk'],
+        'application/x-tcl': 'tcl',
+        'application/x-tex': 'tex',
+        'application/x-tex-tfm': 'tfm',
+        'application/x-texinfo': ['texi', 'texinfo'],
+        'application/x-troff': ['roff', 't', 'tr'],
+        'application/x-troff-man': 'man',
+        'application/x-troff-me': 'me',
+        'application/x-troff-ms': 'ms',
+        'application/x-troff-msvideo': 'avi',
+        'application/x-ustar': 'ustar',
+        'application/x-visio': ['vsd', 'vst', 'vsw'],
+        'application/x-vnd.audioexplosion.mzz': 'mzz',
+        'application/x-vnd.ls-xpix': 'xpix',
+        'application/x-vrml': 'vrml',
+        'application/x-wais-source': ['src', 'wsrc'],
+        'application/x-winhelp': 'hlp',
+        'application/x-wintalk': 'wtk',
+        'application/x-world': ['svr', 'wrl'],
+        'application/x-wpwin': 'wpd',
+        'application/x-wri': 'wri',
+        'application/x-x509-ca-cert': ['cer', 'crt', 'der'],
+        'application/x-x509-user-cert': 'crt',
+        'application/x-xfig': 'fig',
+        'application/x-xpinstall': 'xpi',
+        'application/x-zip-compressed': 'zip',
+        'application/xcap-diff+xml': 'xdf',
+        'application/xenc+xml': 'xenc',
+        'application/xhtml+xml': 'xhtml',
+        'application/xml': 'xml',
+        'application/xml-dtd': 'dtd',
+        'application/xop+xml': 'xop',
+        'application/xslt+xml': 'xslt',
+        'application/xspf+xml': 'xspf',
+        'application/xv+xml': 'mxml',
+        'application/yang': 'yang',
+        'application/yin+xml': 'yin',
+        'application/ynd.ms-pkipko': 'pko',
+        'application/zip': 'zip',
+        'audio/adpcm': 'adp',
+        'audio/aiff': ['aif', 'aifc', 'aiff'],
+        'audio/basic': ['au', 'snd'],
+        'audio/it': 'it',
+        'audio/make': ['funk', 'my', 'pfunk'],
+        'audio/make.my.funk': 'pfunk',
+        'audio/mid': ['mid', 'rmi'],
+        'audio/midi': ['kar', 'mid', 'midi'],
+        'audio/mod': 'mod',
+        'audio/mp4': 'mp4a',
+        'audio/mpeg': ['mp3', 'm2a', 'mp2', 'mpa', 'mpg', 'mpga'],
+        'audio/mpeg3': 'mp3',
+        'audio/nspaudio': ['la', 'lma'],
+        'audio/ogg': 'oga',
+        'audio/s3m': 's3m',
+        'audio/tsp-audio': 'tsi',
+        'audio/tsplayer': 'tsp',
+        'audio/vnd.dece.audio': 'uva',
+        'audio/vnd.digital-winds': 'eol',
+        'audio/vnd.dra': 'dra',
+        'audio/vnd.dts': 'dts',
+        'audio/vnd.dts.hd': 'dtshd',
+        'audio/vnd.lucent.voice': 'lvp',
+        'audio/vnd.ms-playready.media.pya': 'pya',
+        'audio/vnd.nuera.ecelp4800': 'ecelp4800',
+        'audio/vnd.nuera.ecelp7470': 'ecelp7470',
+        'audio/vnd.nuera.ecelp9600': 'ecelp9600',
+        'audio/vnd.qcelp': 'qcp',
+        'audio/vnd.rip': 'rip',
+        'audio/voc': 'voc',
+        'audio/voxware': 'vox',
+        'audio/wav': 'wav',
+        'audio/webm': 'weba',
+        'audio/x-aac': 'aac',
+        'audio/x-adpcm': 'snd',
+        'audio/x-aiff': ['aif', 'aifc', 'aiff'],
+        'audio/x-au': 'au',
+        'audio/x-gsm': ['gsd', 'gsm'],
+        'audio/x-jam': 'jam',
+        'audio/x-liveaudio': 'lam',
+        'audio/x-mid': ['mid', 'midi'],
+        'audio/x-midi': ['mid', 'midi'],
+        'audio/x-mod': 'mod',
+        'audio/x-mpeg': 'mp2',
+        'audio/x-mpeg-3': 'mp3',
+        'audio/x-mpegurl': 'm3u',
+        'audio/x-mpequrl': 'm3u',
+        'audio/x-ms-wax': 'wax',
+        'audio/x-ms-wma': 'wma',
+        'audio/x-nspaudio': ['la', 'lma'],
+        'audio/x-pn-realaudio': ['ra', 'ram', 'rm', 'rmm', 'rmp'],
+        'audio/x-pn-realaudio-plugin': ['ra', 'rmp', 'rpm'],
+        'audio/x-psid': 'sid',
+        'audio/x-realaudio': 'ra',
+        'audio/x-twinvq': 'vqf',
+        'audio/x-twinvq-plugin': ['vqe', 'vql'],
+        'audio/x-vnd.audioexplosion.mjuicemediafile': 'mjf',
+        'audio/x-voc': 'voc',
+        'audio/x-wav': 'wav',
+        'audio/xm': 'xm',
+        'chemical/x-cdx': 'cdx',
+        'chemical/x-cif': 'cif',
+        'chemical/x-cmdf': 'cmdf',
+        'chemical/x-cml': 'cml',
+        'chemical/x-csml': 'csml',
+        'chemical/x-pdb': ['pdb', 'xyz'],
+        'chemical/x-xyz': 'xyz',
+        'drawing/x-dwf': 'dwf',
+        'i-world/i-vrml': 'ivr',
+        'image/bmp': ['bmp', 'bm'],
+        'image/cgm': 'cgm',
+        'image/cis-cod': 'cod',
+        'image/cmu-raster': ['ras', 'rast'],
+        'image/fif': 'fif',
+        'image/florian': ['flo', 'turbot'],
+        'image/g3fax': 'g3',
+        'image/gif': 'gif',
+        'image/ief': ['ief', 'iefs'],
+        'image/jpeg': ['jpe', 'jpeg', 'jpg', 'jfif', 'jfif-tbnl'],
+        'image/jutvision': 'jut',
+        'image/ktx': 'ktx',
+        'image/naplps': ['nap', 'naplps'],
+        'image/pict': ['pic', 'pict'],
+        'image/pipeg': 'jfif',
+        'image/pjpeg': ['jfif', 'jpe', 'jpeg', 'jpg'],
+        'image/png': ['png', 'x-png'],
+        'image/prs.btif': 'btif',
+        'image/svg+xml': 'svg',
+        'image/tiff': ['tif', 'tiff'],
+        'image/vasa': 'mcf',
+        'image/vnd.adobe.photoshop': 'psd',
+        'image/vnd.dece.graphic': 'uvi',
+        'image/vnd.djvu': 'djvu',
+        'image/vnd.dvb.subtitle': 'sub',
+        'image/vnd.dwg': ['dwg', 'dxf', 'svf'],
+        'image/vnd.dxf': 'dxf',
+        'image/vnd.fastbidsheet': 'fbs',
+        'image/vnd.fpx': 'fpx',
+        'image/vnd.fst': 'fst',
+        'image/vnd.fujixerox.edmics-mmr': 'mmr',
+        'image/vnd.fujixerox.edmics-rlc': 'rlc',
+        'image/vnd.ms-modi': 'mdi',
+        'image/vnd.net-fpx': ['fpx', 'npx'],
+        'image/vnd.rn-realflash': 'rf',
+        'image/vnd.rn-realpix': 'rp',
+        'image/vnd.wap.wbmp': 'wbmp',
+        'image/vnd.xiff': 'xif',
+        'image/webp': 'webp',
+        'image/x-cmu-raster': 'ras',
+        'image/x-cmx': 'cmx',
+        'image/x-dwg': ['dwg', 'dxf', 'svf'],
+        'image/x-freehand': 'fh',
+        'image/x-icon': 'ico',
+        'image/x-jg': 'art',
+        'image/x-jps': 'jps',
+        'image/x-niff': ['nif', 'niff'],
+        'image/x-pcx': 'pcx',
+        'image/x-pict': ['pct', 'pic'],
+        'image/x-portable-anymap': 'pnm',
+        'image/x-portable-bitmap': 'pbm',
+        'image/x-portable-graymap': 'pgm',
+        'image/x-portable-greymap': 'pgm',
+        'image/x-portable-pixmap': 'ppm',
+        'image/x-quicktime': ['qif', 'qti', 'qtif'],
+        'image/x-rgb': 'rgb',
+        'image/x-tiff': ['tif', 'tiff'],
+        'image/x-windows-bmp': 'bmp',
+        'image/x-xbitmap': 'xbm',
+        'image/x-xbm': 'xbm',
+        'image/x-xpixmap': ['xpm', 'pm'],
+        'image/x-xwd': 'xwd',
+        'image/x-xwindowdump': 'xwd',
+        'image/xbm': 'xbm',
+        'image/xpm': 'xpm',
+        'message/rfc822': ['mht', 'mhtml', 'nws', 'mime', 'eml'],
+        'model/iges': ['iges', 'igs'],
+        'model/mesh': 'msh',
+        'model/vnd.collada+xml': 'dae',
+        'model/vnd.dwf': 'dwf',
+        'model/vnd.gdl': 'gdl',
+        'model/vnd.gtw': 'gtw',
+        'model/vnd.mts': 'mts',
+        'model/vnd.vtu': 'vtu',
+        'model/vrml': ['vrml', 'wrl', 'wrz'],
+        'model/x-pov': 'pov',
+        'multipart/x-gzip': 'gzip',
+        'multipart/x-ustar': 'ustar',
+        'multipart/x-zip': 'zip',
+        'music/crescendo': ['mid', 'midi'],
+        'music/x-karaoke': 'kar',
+        'paleovu/x-pv': 'pvu',
+        'text/asp': 'asp',
+        'text/calendar': 'ics',
+        'text/css': 'css',
+        'text/csv': 'csv',
+        'text/ecmascript': 'js',
+        'text/h323': '323',
+        'text/html': ['htm', 'html', 'stm', 'acgi', 'htmls', 'htx', 'shtml'],
+        'text/iuls': 'uls',
+        'text/javascript': 'js',
+        'text/mcf': 'mcf',
+        'text/n3': 'n3',
+        'text/pascal': 'pas',
+        'text/plain': ['bas', 'c', 'h', 'txt', 'c++', 'cc', 'com', 'conf', 'cxx', 'def', 'f', 'f90', 'for', 'g', 'hh', 'idc', 'jav', 'java', 'list', 'log', 'lst', 'm', 'mar', 'pl', 'sdml', 'text'],
+        'text/plain-bas': 'par',
+        'text/prs.lines.tag': 'dsc',
+        'text/richtext': ['rtx', 'rt', 'rtf'],
+        'text/scriplet': 'wsc',
+        'text/scriptlet': 'sct',
+        'text/sgml': ['sgm', 'sgml'],
+        'text/tab-separated-values': 'tsv',
+        'text/troff': 't',
+        'text/turtle': 'ttl',
+        'text/uri-list': ['uni', 'unis', 'uri', 'uris'],
+        'text/vnd.abc': 'abc',
+        'text/vnd.curl': 'curl',
+        'text/vnd.curl.dcurl': 'dcurl',
+        'text/vnd.curl.mcurl': 'mcurl',
+        'text/vnd.curl.scurl': 'scurl',
+        'text/vnd.fly': 'fly',
+        'text/vnd.fmi.flexstor': 'flx',
+        'text/vnd.graphviz': 'gv',
+        'text/vnd.in3d.3dml': '3dml',
+        'text/vnd.in3d.spot': 'spot',
+        'text/vnd.rn-realtext': 'rt',
+        'text/vnd.sun.j2me.app-descriptor': 'jad',
+        'text/vnd.wap.wml': 'wml',
+        'text/vnd.wap.wmlscript': 'wmls',
+        'text/webviewhtml': 'htt',
+        'text/x-asm': ['asm', 's'],
+        'text/x-audiosoft-intra': 'aip',
+        'text/x-c': ['c', 'cc', 'cpp'],
+        'text/x-component': 'htc',
+        'text/x-fortran': ['f', 'f77', 'f90', 'for'],
+        'text/x-h': ['h', 'hh'],
+        'text/x-java-source': ['jav', 'java'],
+        'text/x-java-source,java': 'java',
+        'text/x-la-asf': 'lsx',
+        'text/x-m': 'm',
+        'text/x-pascal': 'p',
+        'text/x-script': 'hlb',
+        'text/x-script.csh': 'csh',
+        'text/x-script.elisp': 'el',
+        'text/x-script.guile': 'scm',
+        'text/x-script.ksh': 'ksh',
+        'text/x-script.lisp': 'lsp',
+        'text/x-script.perl': 'pl',
+        'text/x-script.perl-module': 'pm',
+        'text/x-script.phyton': 'py',
+        'text/x-script.rexx': 'rexx',
+        'text/x-script.scheme': 'scm',
+        'text/x-script.sh': 'sh',
+        'text/x-script.tcl': 'tcl',
+        'text/x-script.tcsh': 'tcsh',
+        'text/x-script.zsh': 'zsh',
+        'text/x-server-parsed-html': ['shtml', 'ssi'],
+        'text/x-setext': 'etx',
+        'text/x-sgml': ['sgm', 'sgml'],
+        'text/x-speech': ['spc', 'talk'],
+        'text/x-uil': 'uil',
+        'text/x-uuencode': ['uu', 'uue'],
+        'text/x-vcalendar': 'vcs',
+        'text/x-vcard': 'vcf',
+        'text/xml': 'xml',
+        'video/3gpp': '3gp',
+        'video/3gpp2': '3g2',
+        'video/animaflex': 'afl',
+        'video/avi': 'avi',
+        'video/avs-video': 'avs',
+        'video/dl': 'dl',
+        'video/fli': 'fli',
+        'video/gl': 'gl',
+        'video/h261': 'h261',
+        'video/h263': 'h263',
+        'video/h264': 'h264',
+        'video/jpeg': 'jpgv',
+        'video/jpm': 'jpm',
+        'video/mj2': 'mj2',
+        'video/mp4': 'mp4',
+        'video/mpeg': ['mp2', 'mpa', 'mpe', 'mpeg', 'mpg', 'mpv2', 'm1v', 'm2v', 'mp3'],
+        'video/msvideo': 'avi',
+        'video/ogg': 'ogv',
+        'video/quicktime': ['mov', 'qt', 'moov'],
+        'video/vdo': 'vdo',
+        'video/vivo': ['viv', 'vivo'],
+        'video/vnd.dece.hd': 'uvh',
+        'video/vnd.dece.mobile': 'uvm',
+        'video/vnd.dece.pd': 'uvp',
+        'video/vnd.dece.sd': 'uvs',
+        'video/vnd.dece.video': 'uvv',
+        'video/vnd.fvt': 'fvt',
+        'video/vnd.mpegurl': 'mxu',
+        'video/vnd.ms-playready.media.pyv': 'pyv',
+        'video/vnd.rn-realvideo': 'rv',
+        'video/vnd.uvvu.mp4': 'uvu',
+        'video/vnd.vivo': ['viv', 'vivo'],
+        'video/vosaic': 'vos',
+        'video/webm': 'webm',
+        'video/x-amt-demorun': 'xdr',
+        'video/x-amt-showrun': 'xsr',
+        'video/x-atomic3d-feature': 'fmf',
+        'video/x-dl': 'dl',
+        'video/x-dv': ['dif', 'dv'],
+        'video/x-f4v': 'f4v',
+        'video/x-fli': 'fli',
+        'video/x-flv': 'flv',
+        'video/x-gl': 'gl',
+        'video/x-isvideo': 'isu',
+        'video/x-la-asf': ['lsf', 'lsx'],
+        'video/x-m4v': 'm4v',
+        'video/x-motion-jpeg': 'mjpg',
+        'video/x-mpeg': ['mp2', 'mp3'],
+        'video/x-mpeq2a': 'mp2',
+        'video/x-ms-asf': ['asf', 'asr', 'asx'],
+        'video/x-ms-asf-plugin': 'asx',
+        'video/x-ms-wm': 'wm',
+        'video/x-ms-wmv': 'wmv',
+        'video/x-ms-wmx': 'wmx',
+        'video/x-ms-wvx': 'wvx',
+        'video/x-msvideo': 'avi',
+        'video/x-qtc': 'qtc',
+        'video/x-scm': 'scm',
+        'video/x-sgi-movie': ['movie', 'mv'],
+        'windows/metafile': 'wmf',
+        'www/mime': 'mime',
+        'x-conference/x-cooltalk': 'ice',
+        'x-music/x-midi': ['mid', 'midi'],
+        'x-world/x-3dmf': ['3dm', '3dmf', 'qd3', 'qd3d'],
+        'x-world/x-svr': 'svr',
+        'x-world/x-vrml': ['flr', 'vrml', 'wrl', 'wrz', 'xaf', 'xof'],
+        'x-world/x-vrt': 'vrt',
+        'xgl/drawing': 'xgz',
+        'xgl/movie': 'xmz',
+    };
+
+    var mimetypesExtensions = {
+        '': ['application/andrew-inset', 'application/pgp-encrypted'],
+        '*': 'application/octet-stream',
+        '123': 'application/vnd.lotus-1-2-3',
+        '323': 'text/h323',
+        '3dm': 'x-world/x-3dmf',
+        '3dmf': 'x-world/x-3dmf',
+        '3dml': 'text/vnd.in3d.3dml',
+        '3g2': 'video/3gpp2',
+        '3gp': 'video/3gpp',
+        '7z': 'application/x-7z-compressed',
+        'a': 'application/octet-stream',
+        'aab': 'application/x-authorware-bin',
+        'aac': 'audio/x-aac',
+        'aam': 'application/x-authorware-map',
+        'aas': 'application/x-authorware-seg',
+        'abc': 'text/vnd.abc',
+        'abw': 'application/x-abiword',
+        'ac': 'application/pkix-attr-cert',
+        'acc': 'application/vnd.americandynamics.acc',
+        'ace': 'application/x-ace-compressed',
+        'acgi': 'text/html',
+        'acu': 'application/vnd.acucobol',
+        'acx': 'application/internet-property-stream',
+        'adp': 'audio/adpcm',
+        'aep': 'application/vnd.audiograph',
+        'afl': 'video/animaflex',
+        'afp': 'application/vnd.ibm.modcap',
+        'ahead': 'application/vnd.ahead.space',
+        'ai': 'application/postscript',
+        'aif': ['audio/aiff', 'audio/x-aiff'],
+        'aifc': ['audio/aiff', 'audio/x-aiff'],
+        'aiff': ['audio/aiff', 'audio/x-aiff'],
+        'aim': 'application/x-aim',
+        'aip': 'text/x-audiosoft-intra',
+        'air': 'application/vnd.adobe.air-application-installer-package+zip',
+        'ait': 'application/vnd.dvb.ait',
+        'ami': 'application/vnd.amiga.ami',
+        'ani': 'application/x-navi-animation',
+        'aos': 'application/x-nokia-9000-communicator-add-on-software',
+        'apk': 'application/vnd.android.package-archive',
+        'application': 'application/x-ms-application',
+        'apr': 'application/vnd.lotus-approach',
+        'aps': 'application/mime',
+        'arc': 'application/octet-stream',
+        'arj': ['application/arj', 'application/octet-stream'],
+        'art': 'image/x-jg',
+        'asf': 'video/x-ms-asf',
+        'asm': 'text/x-asm',
+        'aso': 'application/vnd.accpac.simply.aso',
+        'asp': 'text/asp',
+        'asr': 'video/x-ms-asf',
+        'asx': ['video/x-ms-asf', 'application/x-mplayer2', 'video/x-ms-asf-plugin'],
+        'atc': 'application/vnd.acucorp',
+        'atomcat': 'application/atomcat+xml',
+        'atomsvc': 'application/atomsvc+xml',
+        'atx': 'application/vnd.antix.game-component',
+        'au': ['audio/basic', 'audio/x-au'],
+        'avi': ['video/avi', 'video/msvideo', 'application/x-troff-msvideo', 'video/x-msvideo'],
+        'avs': 'video/avs-video',
+        'aw': 'application/applixware',
+        'axs': 'application/olescript',
+        'azf': 'application/vnd.airzip.filesecure.azf',
+        'azs': 'application/vnd.airzip.filesecure.azs',
+        'azw': 'application/vnd.amazon.ebook',
+        'bas': 'text/plain',
+        'bcpio': 'application/x-bcpio',
+        'bdf': 'application/x-font-bdf',
+        'bdm': 'application/vnd.syncml.dm+wbxml',
+        'bed': 'application/vnd.realvnc.bed',
+        'bh2': 'application/vnd.fujitsu.oasysprs',
+        'bin': ['application/octet-stream', 'application/mac-binary', 'application/macbinary', 'application/x-macbinary', 'application/x-binary'],
+        'bm': 'image/bmp',
+        'bmi': 'application/vnd.bmi',
+        'bmp': ['image/bmp', 'image/x-windows-bmp'],
+        'boo': 'application/book',
+        'book': 'application/book',
+        'box': 'application/vnd.previewsystems.box',
+        'boz': 'application/x-bzip2',
+        'bsh': 'application/x-bsh',
+        'btif': 'image/prs.btif',
+        'bz': 'application/x-bzip',
+        'bz2': 'application/x-bzip2',
+        'c': ['text/plain', 'text/x-c'],
+        'c++': 'text/plain',
+        'c11amc': 'application/vnd.cluetrust.cartomobile-config',
+        'c11amz': 'application/vnd.cluetrust.cartomobile-config-pkg',
+        'c4g': 'application/vnd.clonk.c4group',
+        'cab': 'application/vnd.ms-cab-compressed',
+        'car': 'application/vnd.curl.car',
+        'cat': ['application/vnd.ms-pkiseccat', 'application/vnd.ms-pki.seccat'],
+        'cc': ['text/plain', 'text/x-c'],
+        'ccad': 'application/clariscad',
+        'cco': 'application/x-cocoa',
+        'ccxml': 'application/ccxml+xml,',
+        'cdbcmsg': 'application/vnd.contact.cmsg',
+        'cdf': ['application/cdf', 'application/x-cdf', 'application/x-netcdf'],
+        'cdkey': 'application/vnd.mediastation.cdkey',
+        'cdmia': 'application/cdmi-capability',
+        'cdmic': 'application/cdmi-container',
+        'cdmid': 'application/cdmi-domain',
+        'cdmio': 'application/cdmi-object',
+        'cdmiq': 'application/cdmi-queue',
+        'cdx': 'chemical/x-cdx',
+        'cdxml': 'application/vnd.chemdraw+xml',
+        'cdy': 'application/vnd.cinderella',
+        'cer': ['application/pkix-cert', 'application/x-x509-ca-cert'],
+        'cgm': 'image/cgm',
+        'cha': 'application/x-chat',
+        'chat': 'application/x-chat',
+        'chm': 'application/vnd.ms-htmlhelp',
+        'chrt': 'application/vnd.kde.kchart',
+        'cif': 'chemical/x-cif',
+        'cii': 'application/vnd.anser-web-certificate-issue-initiation',
+        'cil': 'application/vnd.ms-artgalry',
+        'cla': 'application/vnd.claymore',
+        'class': ['application/octet-stream', 'application/java', 'application/java-byte-code', 'application/java-vm', 'application/x-java-class'],
+        'clkk': 'application/vnd.crick.clicker.keyboard',
+        'clkp': 'application/vnd.crick.clicker.palette',
+        'clkt': 'application/vnd.crick.clicker.template',
+        'clkw': 'application/vnd.crick.clicker.wordbank',
+        'clkx': 'application/vnd.crick.clicker',
+        'clp': 'application/x-msclip',
+        'cmc': 'application/vnd.cosmocaller',
+        'cmdf': 'chemical/x-cmdf',
+        'cml': 'chemical/x-cml',
+        'cmp': 'application/vnd.yellowriver-custom-menu',
+        'cmx': 'image/x-cmx',
+        'cod': ['image/cis-cod', 'application/vnd.rim.cod'],
+        'com': ['application/octet-stream', 'text/plain'],
+        'conf': 'text/plain',
+        'cpio': 'application/x-cpio',
+        'cpp': 'text/x-c',
+        'cpt': ['application/mac-compactpro', 'application/x-compactpro', 'application/x-cpt'],
+        'crd': 'application/x-mscardfile',
+        'crl': ['application/pkix-crl', 'application/pkcs-crl'],
+        'crt': ['application/pkix-cert', 'application/x-x509-user-cert', 'application/x-x509-ca-cert'],
+        'cryptonote': 'application/vnd.rig.cryptonote',
+        'csh': ['text/x-script.csh', 'application/x-csh'],
+        'csml': 'chemical/x-csml',
+        'csp': 'application/vnd.commonspace',
+        'css': ['text/css', 'application/x-pointplus'],
+        'csv': 'text/csv',
+        'cu': 'application/cu-seeme',
+        'curl': 'text/vnd.curl',
+        'cww': 'application/prs.cww',
+        'cxx': 'text/plain',
+        'dae': 'model/vnd.collada+xml',
+        'daf': 'application/vnd.mobius.daf',
+        'davmount': 'application/davmount+xml',
+        'dcr': 'application/x-director',
+        'dcurl': 'text/vnd.curl.dcurl',
+        'dd2': 'application/vnd.oma.dd2+xml',
+        'ddd': 'application/vnd.fujixerox.ddd',
+        'deb': 'application/x-debian-package',
+        'deepv': 'application/x-deepv',
+        'def': 'text/plain',
+        'der': 'application/x-x509-ca-cert',
+        'dfac': 'application/vnd.dreamfactory',
+        'dif': 'video/x-dv',
+        'dir': 'application/x-director',
+        'dis': 'application/vnd.mobius.dis',
+        'djvu': 'image/vnd.djvu',
+        'dl': ['video/dl', 'video/x-dl'],
+        'dll': 'application/x-msdownload',
+        'dms': 'application/octet-stream',
+        'dna': 'application/vnd.dna',
+        'doc': 'application/msword',
+        'docm': 'application/vnd.ms-word.document.macroenabled.12',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'dot': 'application/msword',
+        'dotm': 'application/vnd.ms-word.template.macroenabled.12',
+        'dotx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+        'dp': ['application/commonground', 'application/vnd.osgi.dp'],
+        'dpg': 'application/vnd.dpgraph',
+        'dra': 'audio/vnd.dra',
+        'drw': 'application/drafting',
+        'dsc': 'text/prs.lines.tag',
+        'dssc': 'application/dssc+der',
+        'dtb': 'application/x-dtbook+xml',
+        'dtd': 'application/xml-dtd',
+        'dts': 'audio/vnd.dts',
+        'dtshd': 'audio/vnd.dts.hd',
+        'dump': 'application/octet-stream',
+        'dv': 'video/x-dv',
+        'dvi': 'application/x-dvi',
+        'dwf': ['model/vnd.dwf', 'drawing/x-dwf'],
+        'dwg': ['application/acad', 'image/vnd.dwg', 'image/x-dwg'],
+        'dxf': ['application/dxf', 'image/vnd.dwg', 'image/vnd.dxf', 'image/x-dwg'],
+        'dxp': 'application/vnd.spotfire.dxp',
+        'dxr': 'application/x-director',
+        'ecelp4800': 'audio/vnd.nuera.ecelp4800',
+        'ecelp7470': 'audio/vnd.nuera.ecelp7470',
+        'ecelp9600': 'audio/vnd.nuera.ecelp9600',
+        'edm': 'application/vnd.novadigm.edm',
+        'edx': 'application/vnd.novadigm.edx',
+        'efif': 'application/vnd.picsel',
+        'ei6': 'application/vnd.pg.osasli',
+        'el': 'text/x-script.elisp',
+        'elc': ['application/x-elc', 'application/x-bytecode.elisp'],
+        'eml': 'message/rfc822',
+        'emma': 'application/emma+xml',
+        'env': 'application/x-envoy',
+        'eol': 'audio/vnd.digital-winds',
+        'eot': 'application/vnd.ms-fontobject',
+        'eps': 'application/postscript',
+        'epub': 'application/epub+zip',
+        'es': ['application/ecmascript', 'application/x-esrehber'],
+        'es3': 'application/vnd.eszigno3+xml',
+        'esf': 'application/vnd.epson.esf',
+        'etx': 'text/x-setext',
+        'evy': ['application/envoy', 'application/x-envoy'],
+        'exe': ['application/octet-stream', 'application/x-msdownload'],
+        'exi': 'application/exi',
+        'ext': 'application/vnd.novadigm.ext',
+        'ez2': 'application/vnd.ezpix-album',
+        'ez3': 'application/vnd.ezpix-package',
+        'f': ['text/plain', 'text/x-fortran'],
+        'f4v': 'video/x-f4v',
+        'f77': 'text/x-fortran',
+        'f90': ['text/plain', 'text/x-fortran'],
+        'fbs': 'image/vnd.fastbidsheet',
+        'fcs': 'application/vnd.isac.fcs',
+        'fdf': 'application/vnd.fdf',
+        'fe_launch': 'application/vnd.denovo.fcselayout-link',
+        'fg5': 'application/vnd.fujitsu.oasysgp',
+        'fh': 'image/x-freehand',
+        'fif': ['application/fractals', 'image/fif'],
+        'fig': 'application/x-xfig',
+        'fli': ['video/fli', 'video/x-fli'],
+        'flo': ['image/florian', 'application/vnd.micrografx.flo'],
+        'flr': 'x-world/x-vrml',
+        'flv': 'video/x-flv',
+        'flw': 'application/vnd.kde.kivio',
+        'flx': 'text/vnd.fmi.flexstor',
+        'fly': 'text/vnd.fly',
+        'fm': 'application/vnd.framemaker',
+        'fmf': 'video/x-atomic3d-feature',
+        'fnc': 'application/vnd.frogans.fnc',
+        'for': ['text/plain', 'text/x-fortran'],
+        'fpx': ['image/vnd.fpx', 'image/vnd.net-fpx'],
+        'frl': 'application/freeloader',
+        'fsc': 'application/vnd.fsc.weblaunch',
+        'fst': 'image/vnd.fst',
+        'ftc': 'application/vnd.fluxtime.clip',
+        'fti': 'application/vnd.anser-web-funds-transfer-initiation',
+        'funk': 'audio/make',
+        'fvt': 'video/vnd.fvt',
+        'fxp': 'application/vnd.adobe.fxp',
+        'fzs': 'application/vnd.fuzzysheet',
+        'g': 'text/plain',
+        'g2w': 'application/vnd.geoplan',
+        'g3': 'image/g3fax',
+        'g3w': 'application/vnd.geospace',
+        'gac': 'application/vnd.groove-account',
+        'gdl': 'model/vnd.gdl',
+        'geo': 'application/vnd.dynageo',
+        'gex': 'application/vnd.geometry-explorer',
+        'ggb': 'application/vnd.geogebra.file',
+        'ggt': 'application/vnd.geogebra.tool',
+        'ghf': 'application/vnd.groove-help',
+        'gif': 'image/gif',
+        'gim': 'application/vnd.groove-identity-message',
+        'gl': ['video/gl', 'video/x-gl'],
+        'gmx': 'application/vnd.gmx',
+        'gnumeric': 'application/x-gnumeric',
+        'gph': 'application/vnd.flographit',
+        'gqf': 'application/vnd.grafeq',
+        'gram': 'application/srgs',
+        'grv': 'application/vnd.groove-injector',
+        'grxml': 'application/srgs+xml',
+        'gsd': 'audio/x-gsm',
+        'gsf': 'application/x-font-ghostscript',
+        'gsm': 'audio/x-gsm',
+        'gsp': 'application/x-gsp',
+        'gss': 'application/x-gss',
+        'gtar': 'application/x-gtar',
+        'gtm': 'application/vnd.groove-tool-message',
+        'gtw': 'model/vnd.gtw',
+        'gv': 'text/vnd.graphviz',
+        'gxt': 'application/vnd.geonext',
+        'gz': ['application/x-gzip', 'application/x-compressed'],
+        'gzip': ['multipart/x-gzip', 'application/x-gzip'],
+        'h': ['text/plain', 'text/x-h'],
+        'h261': 'video/h261',
+        'h263': 'video/h263',
+        'h264': 'video/h264',
+        'hal': 'application/vnd.hal+xml',
+        'hbci': 'application/vnd.hbci',
+        'hdf': 'application/x-hdf',
+        'help': 'application/x-helpfile',
+        'hgl': 'application/vnd.hp-hpgl',
+        'hh': ['text/plain', 'text/x-h'],
+        'hlb': 'text/x-script',
+        'hlp': ['application/winhlp', 'application/hlp', 'application/x-helpfile', 'application/x-winhelp'],
+        'hpg': 'application/vnd.hp-hpgl',
+        'hpgl': 'application/vnd.hp-hpgl',
+        'hpid': 'application/vnd.hp-hpid',
+        'hps': 'application/vnd.hp-hps',
+        'hqx': ['application/mac-binhex40', 'application/binhex', 'application/binhex4', 'application/mac-binhex', 'application/x-binhex40', 'application/x-mac-binhex40'],
+        'hta': 'application/hta',
+        'htc': 'text/x-component',
+        'htke': 'application/vnd.kenameaapp',
+        'htm': 'text/html',
+        'html': 'text/html',
+        'htmls': 'text/html',
+        'htt': 'text/webviewhtml',
+        'htx': 'text/html',
+        'hvd': 'application/vnd.yamaha.hv-dic',
+        'hvp': 'application/vnd.yamaha.hv-voice',
+        'hvs': 'application/vnd.yamaha.hv-script',
+        'i2g': 'application/vnd.intergeo',
+        'icc': 'application/vnd.iccprofile',
+        'ice': 'x-conference/x-cooltalk',
+        'ico': 'image/x-icon',
+        'ics': 'text/calendar',
+        'idc': 'text/plain',
+        'ief': 'image/ief',
+        'iefs': 'image/ief',
+        'ifm': 'application/vnd.shana.informed.formdata',
+        'iges': ['application/iges', 'model/iges'],
+        'igl': 'application/vnd.igloader',
+        'igm': 'application/vnd.insors.igm',
+        'igs': ['application/iges', 'model/iges'],
+        'igx': 'application/vnd.micrografx.igx',
+        'iif': 'application/vnd.shana.informed.interchange',
+        'iii': 'application/x-iphone',
+        'ima': 'application/x-ima',
+        'imap': 'application/x-httpd-imap',
+        'imp': 'application/vnd.accpac.simply.imp',
+        'ims': 'application/vnd.ms-ims',
+        'inf': 'application/inf',
+        'ins': ['application/x-internet-signup', 'application/x-internett-signup'],
+        'ip': 'application/x-ip2',
+        'ipfix': 'application/ipfix',
+        'ipk': 'application/vnd.shana.informed.package',
+        'irm': 'application/vnd.ibm.rights-management',
+        'irp': 'application/vnd.irepository.package+xml',
+        'isp': 'application/x-internet-signup',
+        'isu': 'video/x-isvideo',
+        'it': 'audio/it',
+        'itp': 'application/vnd.shana.informed.formtemplate',
+        'iv': 'application/x-inventor',
+        'ivp': 'application/vnd.immervision-ivp',
+        'ivr': 'i-world/i-vrml',
+        'ivu': 'application/vnd.immervision-ivu',
+        'ivy': 'application/x-livescreen',
+        'jad': 'text/vnd.sun.j2me.app-descriptor',
+        'jam': ['application/vnd.jam', 'audio/x-jam'],
+        'jar': 'application/java-archive',
+        'jav': ['text/plain', 'text/x-java-source'],
+        'java': ['text/plain', 'text/x-java-source,java', 'text/x-java-source'],
+        'jcm': 'application/x-java-commerce',
+        'jfif': ['image/pipeg', 'image/jpeg', 'image/pjpeg'],
+        'jfif-tbnl': 'image/jpeg',
+        'jisp': 'application/vnd.jisp',
+        'jlt': 'application/vnd.hp-jlyt',
+        'jnlp': 'application/x-java-jnlp-file',
+        'joda': 'application/vnd.joost.joda-archive',
+        'jpe': ['image/jpeg', 'image/pjpeg'],
+        'jpeg': ['image/jpeg', 'image/pjpeg'],
+        'jpg': ['image/jpeg', 'image/pjpeg'],
+        'jpgv': 'video/jpeg',
+        'jpm': 'video/jpm',
+        'jps': 'image/x-jps',
+        'js': ['application/javascript', 'application/ecmascript', 'text/javascript', 'text/ecmascript', 'application/x-javascript'],
+        'json': 'application/json',
+        'jut': 'image/jutvision',
+        'kar': ['audio/midi', 'music/x-karaoke'],
+        'karbon': 'application/vnd.kde.karbon',
+        'kfo': 'application/vnd.kde.kformula',
+        'kia': 'application/vnd.kidspiration',
+        'kml': 'application/vnd.google-earth.kml+xml',
+        'kmz': 'application/vnd.google-earth.kmz',
+        'kne': 'application/vnd.kinar',
+        'kon': 'application/vnd.kde.kontour',
+        'kpr': 'application/vnd.kde.kpresenter',
+        'ksh': ['application/x-ksh', 'text/x-script.ksh'],
+        'ksp': 'application/vnd.kde.kspread',
+        'ktx': 'image/ktx',
+        'ktz': 'application/vnd.kahootz',
+        'kwd': 'application/vnd.kde.kword',
+        'la': ['audio/nspaudio', 'audio/x-nspaudio'],
+        'lam': 'audio/x-liveaudio',
+        'lasxml': 'application/vnd.las.las+xml',
+        'latex': 'application/x-latex',
+        'lbd': 'application/vnd.llamagraphics.life-balance.desktop',
+        'lbe': 'application/vnd.llamagraphics.life-balance.exchange+xml',
+        'les': 'application/vnd.hhe.lesson-player',
+        'lha': ['application/octet-stream', 'application/lha', 'application/x-lha'],
+        'lhx': 'application/octet-stream',
+        'link66': 'application/vnd.route66.link66+xml',
+        'list': 'text/plain',
+        'lma': ['audio/nspaudio', 'audio/x-nspaudio'],
+        'log': 'text/plain',
+        'lrm': 'application/vnd.ms-lrm',
+        'lsf': 'video/x-la-asf',
+        'lsp': ['application/x-lisp', 'text/x-script.lisp'],
+        'lst': 'text/plain',
+        'lsx': ['video/x-la-asf', 'text/x-la-asf'],
+        'ltf': 'application/vnd.frogans.ltf',
+        'ltx': 'application/x-latex',
+        'lvp': 'audio/vnd.lucent.voice',
+        'lwp': 'application/vnd.lotus-wordpro',
+        'lzh': ['application/octet-stream', 'application/x-lzh'],
+        'lzx': ['application/lzx', 'application/octet-stream', 'application/x-lzx'],
+        'm': ['text/plain', 'text/x-m'],
+        'm13': 'application/x-msmediaview',
+        'm14': 'application/x-msmediaview',
+        'm1v': 'video/mpeg',
+        'm21': 'application/mp21',
+        'm2a': 'audio/mpeg',
+        'm2v': 'video/mpeg',
+        'm3u': ['audio/x-mpegurl', 'audio/x-mpequrl'],
+        'm3u8': 'application/vnd.apple.mpegurl',
+        'm4v': 'video/x-m4v',
+        'ma': 'application/mathematica',
+        'mads': 'application/mads+xml',
+        'mag': 'application/vnd.ecowin.chart',
+        'man': 'application/x-troff-man',
+        'map': 'application/x-navimap',
+        'mar': 'text/plain',
+        'mathml': 'application/mathml+xml',
+        'mbd': 'application/mbedlet',
+        'mbk': 'application/vnd.mobius.mbk',
+        'mbox': 'application/mbox',
+        'mc$': 'application/x-magic-cap-package-1.0',
+        'mc1': 'application/vnd.medcalcdata',
+        'mcd': ['application/mcad', 'application/vnd.mcd', 'application/x-mathcad'],
+        'mcf': ['image/vasa', 'text/mcf'],
+        'mcp': 'application/netmc',
+        'mcurl': 'text/vnd.curl.mcurl',
+        'mdb': 'application/x-msaccess',
+        'mdi': 'image/vnd.ms-modi',
+        'me': 'application/x-troff-me',
+        'meta4': 'application/metalink4+xml',
+        'mets': 'application/mets+xml',
+        'mfm': 'application/vnd.mfmp',
+        'mgp': 'application/vnd.osgeo.mapguide.package',
+        'mgz': 'application/vnd.proteus.magazine',
+        'mht': 'message/rfc822',
+        'mhtml': 'message/rfc822',
+        'mid': ['audio/mid', 'audio/midi', 'music/crescendo', 'x-music/x-midi', 'audio/x-midi', 'application/x-midi', 'audio/x-mid'],
+        'midi': ['audio/midi', 'music/crescendo', 'x-music/x-midi', 'audio/x-midi', 'application/x-midi', 'audio/x-mid'],
+        'mif': ['application/vnd.mif', 'application/x-mif', 'application/x-frame'],
+        'mime': ['message/rfc822', 'www/mime'],
+        'mj2': 'video/mj2',
+        'mjf': 'audio/x-vnd.audioexplosion.mjuicemediafile',
+        'mjpg': 'video/x-motion-jpeg',
+        'mlp': 'application/vnd.dolby.mlp',
+        'mm': ['application/base64', 'application/x-meme'],
+        'mmd': 'application/vnd.chipnuts.karaoke-mmd',
+        'mme': 'application/base64',
+        'mmf': 'application/vnd.smaf',
+        'mmr': 'image/vnd.fujixerox.edmics-mmr',
+        'mny': 'application/x-msmoney',
+        'mod': ['audio/mod', 'audio/x-mod'],
+        'mods': 'application/mods+xml',
+        'moov': 'video/quicktime',
+        'mov': 'video/quicktime',
+        'movie': 'video/x-sgi-movie',
+        'mp2': ['video/mpeg', 'audio/mpeg', 'video/x-mpeg', 'audio/x-mpeg', 'video/x-mpeq2a'],
+        'mp3': ['audio/mpeg', 'audio/mpeg3', 'video/mpeg', 'audio/x-mpeg-3', 'video/x-mpeg'],
+        'mp4': ['video/mp4', 'application/mp4'],
+        'mp4a': 'audio/mp4',
+        'mpa': ['video/mpeg', 'audio/mpeg'],
+        'mpc': ['application/vnd.mophun.certificate', 'application/x-project'],
+        'mpe': 'video/mpeg',
+        'mpeg': 'video/mpeg',
+        'mpg': ['video/mpeg', 'audio/mpeg'],
+        'mpga': 'audio/mpeg',
+        'mpkg': 'application/vnd.apple.installer+xml',
+        'mpm': 'application/vnd.blueice.multipass',
+        'mpn': 'application/vnd.mophun.application',
+        'mpp': 'application/vnd.ms-project',
+        'mpt': 'application/x-project',
+        'mpv': 'application/x-project',
+        'mpv2': 'video/mpeg',
+        'mpx': 'application/x-project',
+        'mpy': 'application/vnd.ibm.minipay',
+        'mqy': 'application/vnd.mobius.mqy',
+        'mrc': 'application/marc',
+        'mrcx': 'application/marcxml+xml',
+        'ms': 'application/x-troff-ms',
+        'mscml': 'application/mediaservercontrol+xml',
+        'mseq': 'application/vnd.mseq',
+        'msf': 'application/vnd.epson.msf',
+        'msg': 'application/vnd.ms-outlook',
+        'msh': 'model/mesh',
+        'msl': 'application/vnd.mobius.msl',
+        'msty': 'application/vnd.muvee.style',
+        'mts': 'model/vnd.mts',
+        'mus': 'application/vnd.musician',
+        'musicxml': 'application/vnd.recordare.musicxml+xml',
+        'mv': 'video/x-sgi-movie',
+        'mvb': 'application/x-msmediaview',
+        'mwf': 'application/vnd.mfer',
+        'mxf': 'application/mxf',
+        'mxl': 'application/vnd.recordare.musicxml',
+        'mxml': 'application/xv+xml',
+        'mxs': 'application/vnd.triscape.mxs',
+        'mxu': 'video/vnd.mpegurl',
+        'my': 'audio/make',
+        'mzz': 'application/x-vnd.audioexplosion.mzz',
+        'n-gage': 'application/vnd.nokia.n-gage.symbian.install',
+        'n3': 'text/n3',
+        'nap': 'image/naplps',
+        'naplps': 'image/naplps',
+        'nbp': 'application/vnd.wolfram.player',
+        'nc': 'application/x-netcdf',
+        'ncm': 'application/vnd.nokia.configuration-message',
+        'ncx': 'application/x-dtbncx+xml',
+        'ngdat': 'application/vnd.nokia.n-gage.data',
+        'nif': 'image/x-niff',
+        'niff': 'image/x-niff',
+        'nix': 'application/x-mix-transfer',
+        'nlu': 'application/vnd.neurolanguage.nlu',
+        'nml': 'application/vnd.enliven',
+        'nnd': 'application/vnd.noblenet-directory',
+        'nns': 'application/vnd.noblenet-sealer',
+        'nnw': 'application/vnd.noblenet-web',
+        'npx': 'image/vnd.net-fpx',
+        'nsc': 'application/x-conference',
+        'nsf': 'application/vnd.lotus-notes',
+        'nvd': 'application/x-navidoc',
+        'nws': 'message/rfc822',
+        'o': 'application/octet-stream',
+        'oa2': 'application/vnd.fujitsu.oasys2',
+        'oa3': 'application/vnd.fujitsu.oasys3',
+        'oas': 'application/vnd.fujitsu.oasys',
+        'obd': 'application/x-msbinder',
+        'oda': 'application/oda',
+        'odb': 'application/vnd.oasis.opendocument.database',
+        'odc': 'application/vnd.oasis.opendocument.chart',
+        'odf': 'application/vnd.oasis.opendocument.formula',
+        'odft': 'application/vnd.oasis.opendocument.formula-template',
+        'odg': 'application/vnd.oasis.opendocument.graphics',
+        'odi': 'application/vnd.oasis.opendocument.image',
+        'odm': 'application/vnd.oasis.opendocument.text-master',
+        'odp': 'application/vnd.oasis.opendocument.presentation',
+        'ods': 'application/vnd.oasis.opendocument.spreadsheet',
+        'odt': 'application/vnd.oasis.opendocument.text',
+        'oga': 'audio/ogg',
+        'ogv': 'video/ogg',
+        'ogx': 'application/ogg',
+        'omc': 'application/x-omc',
+        'omcd': 'application/x-omcdatamaker',
+        'omcr': 'application/x-omcregerator',
+        'onetoc': 'application/onenote',
+        'opf': 'application/oebps-package+xml',
+        'org': 'application/vnd.lotus-organizer',
+        'osf': 'application/vnd.yamaha.openscoreformat',
+        'osfpvg': 'application/vnd.yamaha.openscoreformat.osfpvg+xml',
+        'otc': 'application/vnd.oasis.opendocument.chart-template',
+        'otf': 'application/x-font-otf',
+        'otg': 'application/vnd.oasis.opendocument.graphics-template',
+        'oth': 'application/vnd.oasis.opendocument.text-web',
+        'oti': 'application/vnd.oasis.opendocument.image-template',
+        'otp': 'application/vnd.oasis.opendocument.presentation-template',
+        'ots': 'application/vnd.oasis.opendocument.spreadsheet-template',
+        'ott': 'application/vnd.oasis.opendocument.text-template',
+        'oxt': 'application/vnd.openofficeorg.extension',
+        'p': 'text/x-pascal',
+        'p10': ['application/pkcs10', 'application/x-pkcs10'],
+        'p12': ['application/pkcs-12', 'application/x-pkcs12'],
+        'p7a': 'application/x-pkcs7-signature',
+        'p7b': 'application/x-pkcs7-certificates',
+        'p7c': ['application/pkcs7-mime', 'application/x-pkcs7-mime'],
+        'p7m': ['application/pkcs7-mime', 'application/x-pkcs7-mime'],
+        'p7r': 'application/x-pkcs7-certreqresp',
+        'p7s': ['application/pkcs7-signature', 'application/x-pkcs7-signature'],
+        'p8': 'application/pkcs8',
+        'par': 'text/plain-bas',
+        'part': 'application/pro_eng',
+        'pas': 'text/pascal',
+        'paw': 'application/vnd.pawaafile',
+        'pbd': 'application/vnd.powerbuilder6',
+        'pbm': 'image/x-portable-bitmap',
+        'pcf': 'application/x-font-pcf',
+        'pcl': ['application/vnd.hp-pcl', 'application/x-pcl'],
+        'pclxl': 'application/vnd.hp-pclxl',
+        'pct': 'image/x-pict',
+        'pcurl': 'application/vnd.curl.pcurl',
+        'pcx': 'image/x-pcx',
+        'pdb': ['application/vnd.palm', 'chemical/x-pdb'],
+        'pdf': 'application/pdf',
+        'pfa': 'application/x-font-type1',
+        'pfr': 'application/font-tdpfr',
+        'pfunk': ['audio/make', 'audio/make.my.funk'],
+        'pfx': 'application/x-pkcs12',
+        'pgm': ['image/x-portable-graymap', 'image/x-portable-greymap'],
+        'pgn': 'application/x-chess-pgn',
+        'pgp': 'application/pgp-signature',
+        'pic': ['image/pict', 'image/x-pict'],
+        'pict': 'image/pict',
+        'pkg': 'application/x-newton-compatible-pkg',
+        'pki': 'application/pkixcmp',
+        'pkipath': 'application/pkix-pkipath',
+        'pko': ['application/ynd.ms-pkipko', 'application/vnd.ms-pki.pko'],
+        'pl': ['text/plain', 'text/x-script.perl'],
+        'plb': 'application/vnd.3gpp.pic-bw-large',
+        'plc': 'application/vnd.mobius.plc',
+        'plf': 'application/vnd.pocketlearn',
+        'pls': 'application/pls+xml',
+        'plx': 'application/x-pixclscript',
+        'pm': ['text/x-script.perl-module', 'image/x-xpixmap'],
+        'pm4': 'application/x-pagemaker',
+        'pm5': 'application/x-pagemaker',
+        'pma': 'application/x-perfmon',
+        'pmc': 'application/x-perfmon',
+        'pml': ['application/vnd.ctc-posml', 'application/x-perfmon'],
+        'pmr': 'application/x-perfmon',
+        'pmw': 'application/x-perfmon',
+        'png': 'image/png',
+        'pnm': ['application/x-portable-anymap', 'image/x-portable-anymap'],
+        'portpkg': 'application/vnd.macports.portpkg',
+        'pot': ['application/vnd.ms-powerpoint', 'application/mspowerpoint'],
+        'potm': 'application/vnd.ms-powerpoint.template.macroenabled.12',
+        'potx': 'application/vnd.openxmlformats-officedocument.presentationml.template',
+        'pov': 'model/x-pov',
+        'ppa': 'application/vnd.ms-powerpoint',
+        'ppam': 'application/vnd.ms-powerpoint.addin.macroenabled.12',
+        'ppd': 'application/vnd.cups-ppd',
+        'ppm': 'image/x-portable-pixmap',
+        'pps': ['application/vnd.ms-powerpoint', 'application/mspowerpoint'],
+        'ppsm': 'application/vnd.ms-powerpoint.slideshow.macroenabled.12',
+        'ppsx': 'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+        'ppt': ['application/vnd.ms-powerpoint', 'application/mspowerpoint', 'application/powerpoint', 'application/x-mspowerpoint'],
+        'pptm': 'application/vnd.ms-powerpoint.presentation.macroenabled.12',
+        'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'ppz': 'application/mspowerpoint',
+        'prc': 'application/x-mobipocket-ebook',
+        'pre': ['application/vnd.lotus-freelance', 'application/x-freelance'],
+        'prf': 'application/pics-rules',
+        'prt': 'application/pro_eng',
+        'ps': 'application/postscript',
+        'psb': 'application/vnd.3gpp.pic-bw-small',
+        'psd': ['application/octet-stream', 'image/vnd.adobe.photoshop'],
+        'psf': 'application/x-font-linux-psf',
+        'pskcxml': 'application/pskc+xml',
+        'ptid': 'application/vnd.pvi.ptid1',
+        'pub': 'application/x-mspublisher',
+        'pvb': 'application/vnd.3gpp.pic-bw-var',
+        'pvu': 'paleovu/x-pv',
+        'pwn': 'application/vnd.3m.post-it-notes',
+        'pwz': 'application/vnd.ms-powerpoint',
+        'py': 'text/x-script.phyton',
+        'pya': 'audio/vnd.ms-playready.media.pya',
+        'pyc': 'applicaiton/x-bytecode.python',
+        'pyv': 'video/vnd.ms-playready.media.pyv',
+        'qam': 'application/vnd.epson.quickanime',
+        'qbo': 'application/vnd.intu.qbo',
+        'qcp': 'audio/vnd.qcelp',
+        'qd3': 'x-world/x-3dmf',
+        'qd3d': 'x-world/x-3dmf',
+        'qfx': 'application/vnd.intu.qfx',
+        'qif': 'image/x-quicktime',
+        'qps': 'application/vnd.publishare-delta-tree',
+        'qt': 'video/quicktime',
+        'qtc': 'video/x-qtc',
+        'qti': 'image/x-quicktime',
+        'qtif': 'image/x-quicktime',
+        'qxd': 'application/vnd.quark.quarkxpress',
+        'ra': ['audio/x-realaudio', 'audio/x-pn-realaudio', 'audio/x-pn-realaudio-plugin'],
+        'ram': 'audio/x-pn-realaudio',
+        'rar': 'application/x-rar-compressed',
+        'ras': ['image/cmu-raster', 'application/x-cmu-raster', 'image/x-cmu-raster'],
+        'rast': 'image/cmu-raster',
+        'rcprofile': 'application/vnd.ipunplugged.rcprofile',
+        'rdf': 'application/rdf+xml',
+        'rdz': 'application/vnd.data-vision.rdz',
+        'rep': 'application/vnd.businessobjects',
+        'res': 'application/x-dtbresource+xml',
+        'rexx': 'text/x-script.rexx',
+        'rf': 'image/vnd.rn-realflash',
+        'rgb': 'image/x-rgb',
+        'rif': 'application/reginfo+xml',
+        'rip': 'audio/vnd.rip',
+        'rl': 'application/resource-lists+xml',
+        'rlc': 'image/vnd.fujixerox.edmics-rlc',
+        'rld': 'application/resource-lists-diff+xml',
+        'rm': ['application/vnd.rn-realmedia', 'audio/x-pn-realaudio'],
+        'rmi': 'audio/mid',
+        'rmm': 'audio/x-pn-realaudio',
+        'rmp': ['audio/x-pn-realaudio-plugin', 'audio/x-pn-realaudio'],
+        'rms': 'application/vnd.jcp.javame.midlet-rms',
+        'rnc': 'application/relax-ng-compact-syntax',
+        'rng': ['application/ringing-tones', 'application/vnd.nokia.ringing-tone'],
+        'rnx': 'application/vnd.rn-realplayer',
+        'roff': 'application/x-troff',
+        'rp': 'image/vnd.rn-realpix',
+        'rp9': 'application/vnd.cloanto.rp9',
+        'rpm': 'audio/x-pn-realaudio-plugin',
+        'rpss': 'application/vnd.nokia.radio-presets',
+        'rpst': 'application/vnd.nokia.radio-preset',
+        'rq': 'application/sparql-query',
+        'rs': 'application/rls-services+xml',
+        'rsd': 'application/rsd+xml',
+        'rt': ['text/richtext', 'text/vnd.rn-realtext'],
+        'rtf': ['application/rtf', 'text/richtext', 'application/x-rtf'],
+        'rtx': ['text/richtext', 'application/rtf'],
+        'rv': 'video/vnd.rn-realvideo',
+        's': 'text/x-asm',
+        's3m': 'audio/s3m',
+        'saf': 'application/vnd.yamaha.smaf-audio',
+        'saveme': 'application/octet-stream',
+        'sbk': 'application/x-tbook',
+        'sbml': 'application/sbml+xml',
+        'sc': 'application/vnd.ibm.secure-container',
+        'scd': 'application/x-msschedule',
+        'scm': ['application/vnd.lotus-screencam', 'video/x-scm', 'text/x-script.guile', 'application/x-lotusscreencam', 'text/x-script.scheme'],
+        'scq': 'application/scvp-cv-request',
+        'scs': 'application/scvp-cv-response',
+        'sct': 'text/scriptlet',
+        'scurl': 'text/vnd.curl.scurl',
+        'sda': 'application/vnd.stardivision.draw',
+        'sdc': 'application/vnd.stardivision.calc',
+        'sdd': 'application/vnd.stardivision.impress',
+        'sdkm': 'application/vnd.solent.sdkm+xml',
+        'sdml': 'text/plain',
+        'sdp': ['application/sdp', 'application/x-sdp'],
+        'sdr': 'application/sounder',
+        'sdw': 'application/vnd.stardivision.writer',
+        'sea': ['application/sea', 'application/x-sea'],
+        'see': 'application/vnd.seemail',
+        'seed': 'application/vnd.fdsn.seed',
+        'sema': 'application/vnd.sema',
+        'semd': 'application/vnd.semd',
+        'semf': 'application/vnd.semf',
+        'ser': 'application/java-serialized-object',
+        'set': 'application/set',
+        'setpay': 'application/set-payment-initiation',
+        'setreg': 'application/set-registration-initiation',
+        'sfd-hdstx': 'application/vnd.hydrostatix.sof-data',
+        'sfs': 'application/vnd.spotfire.sfs',
+        'sgl': 'application/vnd.stardivision.writer-global',
+        'sgm': ['text/sgml', 'text/x-sgml'],
+        'sgml': ['text/sgml', 'text/x-sgml'],
+        'sh': ['application/x-shar', 'application/x-bsh', 'application/x-sh', 'text/x-script.sh'],
+        'shar': ['application/x-bsh', 'application/x-shar'],
+        'shf': 'application/shf+xml',
+        'shtml': ['text/html', 'text/x-server-parsed-html'],
+        'sid': 'audio/x-psid',
+        'sis': 'application/vnd.symbian.install',
+        'sit': ['application/x-stuffit', 'application/x-sit'],
+        'sitx': 'application/x-stuffitx',
+        'skd': 'application/x-koan',
+        'skm': 'application/x-koan',
+        'skp': ['application/vnd.koan', 'application/x-koan'],
+        'skt': 'application/x-koan',
+        'sl': 'application/x-seelogo',
+        'sldm': 'application/vnd.ms-powerpoint.slide.macroenabled.12',
+        'sldx': 'application/vnd.openxmlformats-officedocument.presentationml.slide',
+        'slt': 'application/vnd.epson.salt',
+        'sm': 'application/vnd.stepmania.stepchart',
+        'smf': 'application/vnd.stardivision.math',
+        'smi': ['application/smil', 'application/smil+xml'],
+        'smil': 'application/smil',
+        'snd': ['audio/basic', 'audio/x-adpcm'],
+        'snf': 'application/x-font-snf',
+        'sol': 'application/solids',
+        'spc': ['text/x-speech', 'application/x-pkcs7-certificates'],
+        'spf': 'application/vnd.yamaha.smaf-phrase',
+        'spl': ['application/futuresplash', 'application/x-futuresplash'],
+        'spot': 'text/vnd.in3d.spot',
+        'spp': 'application/scvp-vp-response',
+        'spq': 'application/scvp-vp-request',
+        'spr': 'application/x-sprite',
+        'sprite': 'application/x-sprite',
+        'src': 'application/x-wais-source',
+        'sru': 'application/sru+xml',
+        'srx': 'application/sparql-results+xml',
+        'sse': 'application/vnd.kodak-descriptor',
+        'ssf': 'application/vnd.epson.ssf',
+        'ssi': 'text/x-server-parsed-html',
+        'ssm': 'application/streamingmedia',
+        'ssml': 'application/ssml+xml',
+        'sst': ['application/vnd.ms-pkicertstore', 'application/vnd.ms-pki.certstore'],
+        'st': 'application/vnd.sailingtracker.track',
+        'stc': 'application/vnd.sun.xml.calc.template',
+        'std': 'application/vnd.sun.xml.draw.template',
+        'step': 'application/step',
+        'stf': 'application/vnd.wt.stf',
+        'sti': 'application/vnd.sun.xml.impress.template',
+        'stk': 'application/hyperstudio',
+        'stl': ['application/vnd.ms-pkistl', 'application/sla', 'application/vnd.ms-pki.stl', 'application/x-navistyle'],
+        'stm': 'text/html',
+        'stp': 'application/step',
+        'str': 'application/vnd.pg.format',
+        'stw': 'application/vnd.sun.xml.writer.template',
+        'sub': 'image/vnd.dvb.subtitle',
+        'sus': 'application/vnd.sus-calendar',
+        'sv4cpio': 'application/x-sv4cpio',
+        'sv4crc': 'application/x-sv4crc',
+        'svc': 'application/vnd.dvb.service',
+        'svd': 'application/vnd.svd',
+        'svf': ['image/vnd.dwg', 'image/x-dwg'],
+        'svg': 'image/svg+xml',
+        'svr': ['x-world/x-svr', 'application/x-world'],
+        'swf': 'application/x-shockwave-flash',
+        'swi': 'application/vnd.aristanetworks.swi',
+        'sxc': 'application/vnd.sun.xml.calc',
+        'sxd': 'application/vnd.sun.xml.draw',
+        'sxg': 'application/vnd.sun.xml.writer.global',
+        'sxi': 'application/vnd.sun.xml.impress',
+        'sxm': 'application/vnd.sun.xml.math',
+        'sxw': 'application/vnd.sun.xml.writer',
+        't': ['text/troff', 'application/x-troff'],
+        'talk': 'text/x-speech',
+        'tao': 'application/vnd.tao.intent-module-archive',
+        'tar': 'application/x-tar',
+        'tbk': ['application/toolbook', 'application/x-tbook'],
+        'tcap': 'application/vnd.3gpp2.tcap',
+        'tcl': ['text/x-script.tcl', 'application/x-tcl'],
+        'tcsh': 'text/x-script.tcsh',
+        'teacher': 'application/vnd.smart.teacher',
+        'tei': 'application/tei+xml',
+        'tex': 'application/x-tex',
+        'texi': 'application/x-texinfo',
+        'texinfo': 'application/x-texinfo',
+        'text': ['application/plain', 'text/plain'],
+        'tfi': 'application/thraud+xml',
+        'tfm': 'application/x-tex-tfm',
+        'tgz': ['application/gnutar', 'application/x-compressed'],
+        'thmx': 'application/vnd.ms-officetheme',
+        'tif': ['image/tiff', 'image/x-tiff'],
+        'tiff': ['image/tiff', 'image/x-tiff'],
+        'tmo': 'application/vnd.tmobile-livetv',
+        'torrent': 'application/x-bittorrent',
+        'tpl': 'application/vnd.groove-tool-template',
+        'tpt': 'application/vnd.trid.tpt',
+        'tr': 'application/x-troff',
+        'tra': 'application/vnd.trueapp',
+        'trm': 'application/x-msterminal',
+        'tsd': 'application/timestamped-data',
+        'tsi': 'audio/tsp-audio',
+        'tsp': ['application/dsptype', 'audio/tsplayer'],
+        'tsv': 'text/tab-separated-values',
+        'ttf': 'application/x-font-ttf',
+        'ttl': 'text/turtle',
+        'turbot': 'image/florian',
+        'twd': 'application/vnd.simtech-mindmapper',
+        'txd': 'application/vnd.genomatix.tuxedo',
+        'txf': 'application/vnd.mobius.txf',
+        'txt': 'text/plain',
+        'ufd': 'application/vnd.ufdl',
+        'uil': 'text/x-uil',
+        'uls': 'text/iuls',
+        'umj': 'application/vnd.umajin',
+        'uni': 'text/uri-list',
+        'unis': 'text/uri-list',
+        'unityweb': 'application/vnd.unity',
+        'unv': 'application/i-deas',
+        'uoml': 'application/vnd.uoml+xml',
+        'uri': 'text/uri-list',
+        'uris': 'text/uri-list',
+        'ustar': ['application/x-ustar', 'multipart/x-ustar'],
+        'utz': 'application/vnd.uiq.theme',
+        'uu': ['application/octet-stream', 'text/x-uuencode'],
+        'uue': 'text/x-uuencode',
+        'uva': 'audio/vnd.dece.audio',
+        'uvh': 'video/vnd.dece.hd',
+        'uvi': 'image/vnd.dece.graphic',
+        'uvm': 'video/vnd.dece.mobile',
+        'uvp': 'video/vnd.dece.pd',
+        'uvs': 'video/vnd.dece.sd',
+        'uvu': 'video/vnd.uvvu.mp4',
+        'uvv': 'video/vnd.dece.video',
+        'vcd': 'application/x-cdlink',
+        'vcf': 'text/x-vcard',
+        'vcg': 'application/vnd.groove-vcard',
+        'vcs': 'text/x-vcalendar',
+        'vcx': 'application/vnd.vcx',
+        'vda': 'application/vda',
+        'vdo': 'video/vdo',
+        'vew': 'application/groupwise',
+        'vis': 'application/vnd.visionary',
+        'viv': ['video/vivo', 'video/vnd.vivo'],
+        'vivo': ['video/vivo', 'video/vnd.vivo'],
+        'vmd': 'application/vocaltec-media-desc',
+        'vmf': 'application/vocaltec-media-file',
+        'voc': ['audio/voc', 'audio/x-voc'],
+        'vos': 'video/vosaic',
+        'vox': 'audio/voxware',
+        'vqe': 'audio/x-twinvq-plugin',
+        'vqf': 'audio/x-twinvq',
+        'vql': 'audio/x-twinvq-plugin',
+        'vrml': ['model/vrml', 'x-world/x-vrml', 'application/x-vrml'],
+        'vrt': 'x-world/x-vrt',
+        'vsd': ['application/vnd.visio', 'application/x-visio'],
+        'vsf': 'application/vnd.vsf',
+        'vst': 'application/x-visio',
+        'vsw': 'application/x-visio',
+        'vtu': 'model/vnd.vtu',
+        'vxml': 'application/voicexml+xml',
+        'w60': 'application/wordperfect6.0',
+        'w61': 'application/wordperfect6.1',
+        'w6w': 'application/msword',
+        'wad': 'application/x-doom',
+        'wav': ['audio/wav', 'audio/x-wav'],
+        'wax': 'audio/x-ms-wax',
+        'wb1': 'application/x-qpro',
+        'wbmp': 'image/vnd.wap.wbmp',
+        'wbs': 'application/vnd.criticaltools.wbs+xml',
+        'wbxml': 'application/vnd.wap.wbxml',
+        'wcm': 'application/vnd.ms-works',
+        'wdb': 'application/vnd.ms-works',
+        'web': 'application/vnd.xara',
+        'weba': 'audio/webm',
+        'webm': 'video/webm',
+        'webp': 'image/webp',
+        'wg': 'application/vnd.pmi.widget',
+        'wgt': 'application/widget',
+        'wiz': 'application/msword',
+        'wk1': 'application/x-123',
+        'wks': 'application/vnd.ms-works',
+        'wm': 'video/x-ms-wm',
+        'wma': 'audio/x-ms-wma',
+        'wmd': 'application/x-ms-wmd',
+        'wmf': ['windows/metafile', 'application/x-msmetafile'],
+        'wml': 'text/vnd.wap.wml',
+        'wmlc': 'application/vnd.wap.wmlc',
+        'wmls': 'text/vnd.wap.wmlscript',
+        'wmlsc': 'application/vnd.wap.wmlscriptc',
+        'wmv': 'video/x-ms-wmv',
+        'wmx': 'video/x-ms-wmx',
+        'wmz': 'application/x-ms-wmz',
+        'woff': 'application/x-font-woff',
+        'word': 'application/msword',
+        'wp': 'application/wordperfect',
+        'wp5': ['application/wordperfect', 'application/wordperfect6.0'],
+        'wp6': 'application/wordperfect',
+        'wpd': ['application/wordperfect', 'application/vnd.wordperfect', 'application/x-wpwin'],
+        'wpl': 'application/vnd.ms-wpl',
+        'wps': 'application/vnd.ms-works',
+        'wq1': 'application/x-lotus',
+        'wqd': 'application/vnd.wqd',
+        'wri': ['application/mswrite', 'application/x-wri', 'application/x-mswrite'],
+        'wrl': ['model/vrml', 'x-world/x-vrml', 'application/x-world'],
+        'wrz': ['model/vrml', 'x-world/x-vrml'],
+        'wsc': 'text/scriplet',
+        'wsdl': 'application/wsdl+xml',
+        'wspolicy': 'application/wspolicy+xml',
+        'wsrc': 'application/x-wais-source',
+        'wtb': 'application/vnd.webturbo',
+        'wtk': 'application/x-wintalk',
+        'wvx': 'video/x-ms-wvx',
+        'x-png': 'image/png',
+        'x3d': 'application/vnd.hzn-3d-crossword',
+        'xaf': 'x-world/x-vrml',
+        'xap': 'application/x-silverlight-app',
+        'xar': 'application/vnd.xara',
+        'xbap': 'application/x-ms-xbap',
+        'xbd': 'application/vnd.fujixerox.docuworks.binder',
+        'xbm': ['image/xbm', 'image/x-xbm', 'image/x-xbitmap'],
+        'xdf': 'application/xcap-diff+xml',
+        'xdm': 'application/vnd.syncml.dm+xml',
+        'xdp': 'application/vnd.adobe.xdp+xml',
+        'xdr': 'video/x-amt-demorun',
+        'xdssc': 'application/dssc+xml',
+        'xdw': 'application/vnd.fujixerox.docuworks',
+        'xenc': 'application/xenc+xml',
+        'xer': 'application/patch-ops-error+xml',
+        'xfdf': 'application/vnd.adobe.xfdf',
+        'xfdl': 'application/vnd.xfdl',
+        'xgz': 'xgl/drawing',
+        'xhtml': 'application/xhtml+xml',
+        'xif': 'image/vnd.xiff',
+        'xl': 'application/excel',
+        'xla': ['application/vnd.ms-excel', 'application/excel', 'application/x-msexcel', 'application/x-excel'],
+        'xlam': 'application/vnd.ms-excel.addin.macroenabled.12',
+        'xlb': ['application/excel', 'application/vnd.ms-excel', 'application/x-excel'],
+        'xlc': ['application/vnd.ms-excel', 'application/excel', 'application/x-excel'],
+        'xld': ['application/excel', 'application/x-excel'],
+        'xlk': ['application/excel', 'application/x-excel'],
+        'xll': ['application/excel', 'application/vnd.ms-excel', 'application/x-excel'],
+        'xlm': ['application/vnd.ms-excel', 'application/excel', 'application/x-excel'],
+        'xls': ['application/vnd.ms-excel', 'application/excel', 'application/x-msexcel', 'application/x-excel'],
+        'xlsb': 'application/vnd.ms-excel.sheet.binary.macroenabled.12',
+        'xlsm': 'application/vnd.ms-excel.sheet.macroenabled.12',
+        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'xlt': ['application/vnd.ms-excel', 'application/excel', 'application/x-excel'],
+        'xltm': 'application/vnd.ms-excel.template.macroenabled.12',
+        'xltx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
+        'xlv': ['application/excel', 'application/x-excel'],
+        'xlw': ['application/vnd.ms-excel', 'application/excel', 'application/x-msexcel', 'application/x-excel'],
+        'xm': 'audio/xm',
+        'xml': ['application/xml', 'text/xml', 'application/atom+xml', 'application/rss+xml'],
+        'xmz': 'xgl/movie',
+        'xo': 'application/vnd.olpc-sugar',
+        'xof': 'x-world/x-vrml',
+        'xop': 'application/xop+xml',
+        'xpi': 'application/x-xpinstall',
+        'xpix': 'application/x-vnd.ls-xpix',
+        'xpm': ['image/xpm', 'image/x-xpixmap'],
+        'xpr': 'application/vnd.is-xpr',
+        'xps': 'application/vnd.ms-xpsdocument',
+        'xpw': 'application/vnd.intercon.formnet',
+        'xslt': 'application/xslt+xml',
+        'xsm': 'application/vnd.syncml+xml',
+        'xspf': 'application/xspf+xml',
+        'xsr': 'video/x-amt-showrun',
+        'xul': 'application/vnd.mozilla.xul+xml',
+        'xwd': ['image/x-xwd', 'image/x-xwindowdump'],
+        'xyz': ['chemical/x-xyz', 'chemical/x-pdb'],
+        'yang': 'application/yang',
+        'yin': 'application/yin+xml',
+        'z': ['application/x-compressed', 'application/x-compress'],
+        'zaz': 'application/vnd.zzazz.deck+xml',
+        'zip': ['application/zip', 'multipart/x-zip', 'application/x-zip-compressed', 'application/x-compressed'],
+        'zir': 'application/vnd.zul',
+        'zmm': 'application/vnd.handheld-entertainment+xml',
+        'zoo': 'application/octet-stream',
+        'zsh': 'text/x-script.zsh'
+    };
+
+    return {
+        detectExtension: detectExtension,
+        detectMimeType: detectMimeType
+    };
+}));
+
+// Copyright (c) 2013 Andris Reinman
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+(function(root, factory) {
+    'use strict';
+
+    var encoding;
+
+    if (false) {
+        // amd for browser
+        define(['emailjs-stringencoding'], function(encoding) {
+            return factory(encoding.TextEncoder, encoding.TextDecoder, root.btoa);
+        });
+    } else if (false && typeof navigator !== 'undefined') {
+        // common.js for browser
+        encoding = global['emailjs-stringencoding'];
+        module.exports = factory(encoding.TextEncoder, encoding.TextDecoder, root.btoa);
+    } else if (false) {
+        // common.js for node.js
+        encoding = global['emailjs-stringencoding'];
+        module.exports = factory(encoding.TextEncoder, encoding.TextDecoder, function(str) {
+            var NodeBuffer = Buffer;
+            return new NodeBuffer(str, 'binary').toString("base64");
+        });
+    } else {
+        // global for browser
+        root['emailjs-mime-codec'] = factory(root.TextEncoder, root.TextDecoder, root.btoa);
+    }
+}(this, function(TextEncoder, TextDecoder, btoa) {
+    'use strict';
+
+    btoa = btoa || base64Encode;
+
+    var mimecodec = {
+        /**
+         * Encodes all non printable and non ascii bytes to =XX form, where XX is the
+         * byte value in hex. This function does not convert linebreaks etc. it
+         * only escapes character sequences
+         *
+         * @param {String|Uint8Array} data Either a string or an Uint8Array
+         * @param {String} [fromCharset='UTF-8'] Source encoding
+         * @return {String} Mime encoded string
+         */
+        mimeEncode: function(data, fromCharset) {
+            fromCharset = fromCharset || 'UTF-8';
+
+            var buffer = mimecodec.charset.convert(data || '', fromCharset),
+                ranges = [
+                    // https://tools.ietf.org/html/rfc2045#section-6.7
+                    [0x09], // <TAB>
+                    [0x0A], // <LF>
+                    [0x0D], // <CR>
+                    [0x20, 0x3C], // <SP>!"#$%&'()*+,-./0123456789:;
+                    [0x3E, 0x7E] // >?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}
+                ],
+                result = '',
+                ord;
+
+            for (var i = 0, len = buffer.length; i < len; i++) {
+                ord = buffer[i];
+                // if the char is in allowed range, then keep as is, unless it is a ws in the end of a line
+                if (mimecodec._checkRanges(ord, ranges) && !((ord === 0x20 || ord === 0x09) && (i === len - 1 || buffer[i + 1] === 0x0a || buffer[i + 1] === 0x0d))) {
+                    result += String.fromCharCode(ord);
+                    continue;
+                }
+                result += '=' + (ord < 0x10 ? '0' : '') + ord.toString(16).toUpperCase();
+            }
+
+            return result;
+        },
+
+        /**
+         * Decodes mime encoded string to an unicode string
+         *
+         * @param {String} str Mime encoded string
+         * @param {String} [fromCharset='UTF-8'] Source encoding
+         * @return {String} Decoded unicode string
+         */
+        mimeDecode: function(str, fromCharset) {
+            str = (str || '').toString();
+
+            fromCharset = fromCharset || 'UTF-8';
+
+            var encodedBytesCount = (str.match(/\=[\da-fA-F]{2}/g) || []).length,
+                bufferLength = str.length - encodedBytesCount * 2,
+                chr, hex,
+                buffer = new Uint8Array(bufferLength),
+                bufferPos = 0;
+
+            for (var i = 0, len = str.length; i < len; i++) {
+                chr = str.charAt(i);
+                if (chr === '=' && (hex = str.substr(i + 1, 2)) && /[\da-fA-F]{2}/.test(hex)) {
+                    buffer[bufferPos++] = parseInt(hex, 16);
+                    i += 2;
+                    continue;
+                }
+                buffer[bufferPos++] = chr.charCodeAt(0);
+            }
+
+            return mimecodec.charset.decode(buffer, fromCharset);
+        },
+
+        /**
+         * Encodes a string or an typed array of given charset into unicode
+         * base64 string. Also adds line breaks
+         *
+         * @param {String|Uint8Array} data String to be base64 encoded
+         * @param {String} [fromCharset='UTF-8']
+         * @return {String} Base64 encoded string
+         */
+        base64Encode: function(data, fromCharset) {
+            var buf, b64;
+
+            if (fromCharset !== 'binary' && typeof data !== 'string') {
+                buf = mimecodec.charset.convert(data || '', fromCharset);
+            } else {
+                buf = data;
+            }
+
+            b64 = mimecodec.base64.encode(buf);
+            return mimecodec._addSoftLinebreaks(b64, 'base64');
+        },
+
+        /**
+         * Decodes a base64 string of any charset into an unicode string
+         *
+         * @param {String} str Base64 encoded string
+         * @param {String} [fromCharset='UTF-8'] Original charset of the base64 encoded string
+         * @return {String} Decoded unicode string
+         */
+        base64Decode: function(str, fromCharset) {
+            var buf = mimecodec.base64.decode(str || '', 'buffer');
+            return mimecodec.charset.decode(buf, fromCharset);
+        },
+
+        /**
+         * Encodes a string or an Uint8Array into a quoted printable encoding
+         * This is almost the same as mimeEncode, except line breaks will be changed
+         * as well to ensure that the lines are never longer than allowed length
+         *
+         * @param {String|Uint8Array} data String or an Uint8Array to mime encode
+         * @param {String} [fromCharset='UTF-8'] Original charset of the string
+         * @return {String} Mime encoded string
+         */
+        quotedPrintableEncode: function(data, fromCharset) {
+            var mimeEncodedStr = mimecodec.mimeEncode(data, fromCharset);
+
+            mimeEncodedStr = mimeEncodedStr.
+                // fix line breaks, ensure <CR><LF>
+            replace(/\r?\n|\r/g, '\r\n').
+                // replace spaces in the end of lines
+            replace(/[\t ]+$/gm, function(spaces) {
+                return spaces.replace(/ /g, '=20').replace(/\t/g, '=09');
+            });
+
+            // add soft line breaks to ensure line lengths sjorter than 76 bytes
+            return mimecodec._addSoftLinebreaks(mimeEncodedStr, 'qp');
+        },
+
+        /**
+         * Decodes a string from a quoted printable encoding. This is almost the
+         * same as mimeDecode, except line breaks will be changed as well
+         *
+         * @param {String} str Mime encoded string to decode
+         * @param {String} [fromCharset='UTF-8'] Original charset of the string
+         * @return {String} Mime decoded string
+         */
+        quotedPrintableDecode: function(str, fromCharset) {
+            str = (str || '').toString();
+
+            str = str.
+                // remove invalid whitespace from the end of lines
+            replace(/[\t ]+$/gm, '').
+                // remove soft line breaks
+            replace(/\=(?:\r?\n|$)/g, '');
+
+            return mimecodec.mimeDecode(str, fromCharset);
+        },
+
+        /**
+         * Encodes a string or an Uint8Array to an UTF-8 MIME Word (rfc2047)
+         *
+         * @param {String|Uint8Array} data String to be encoded
+         * @param {String} mimeWordEncoding='Q' Encoding for the mime word, either Q or B
+         * @param {Number} [maxLength=0] If set, split mime words into several chunks if needed
+         * @param {String} [fromCharset='UTF-8'] Source sharacter set
+         * @return {String} Single or several mime words joined together
+         */
+        mimeWordEncode: function(data, mimeWordEncoding, maxLength, fromCharset) {
+            mimeWordEncoding = (mimeWordEncoding || 'Q').toString().toUpperCase().trim().charAt(0);
+
+            if (!fromCharset && typeof maxLength === 'string' && !maxLength.match(/^[0-9]+$/)) {
+                fromCharset = maxLength;
+                maxLength = undefined;
+            }
+
+            maxLength = maxLength || 0;
+
+            var encodedStr,
+                toCharset = 'UTF-8',
+                i, len, parts;
+
+            if (maxLength && maxLength > 7 + toCharset.length) {
+                maxLength -= (7 + toCharset.length);
+            }
+
+            if (mimeWordEncoding === 'Q') {
+                encodedStr = mimecodec.mimeEncode(data, fromCharset);
+                // https://tools.ietf.org/html/rfc2047#section-5 rule (3)
+                encodedStr = encodedStr.replace(/[^a-z0-9!*+\-\/=]/ig, function(chr) {
+                    var code = chr.charCodeAt(0);
+                    if(chr === ' '){
+                        return '_';
+                    }else{
+                        return '=' + (code < 0x10 ? '0' : '') + code.toString(16).toUpperCase();
+                    }
+                });
+            } else if (mimeWordEncoding === 'B') {
+                encodedStr = typeof data === 'string' ? data : mimecodec.decode(data, fromCharset);
+                maxLength = Math.max(3, (maxLength - maxLength % 4) / 4 * 3);
+            }
+
+            if (maxLength && encodedStr.length > maxLength) {
+                if (mimeWordEncoding === 'Q') {
+                    encodedStr = mimecodec._splitMimeEncodedString(encodedStr, maxLength).join('?= =?' + toCharset + '?' + mimeWordEncoding + '?');
+                } else {
+
+                    // RFC2047 6.3 (2) states that encoded-word must include an integral number of characters, so no chopping unicode sequences
+                    parts = [];
+                    for (i = 0, len = encodedStr.length; i < len; i += maxLength) {
+                        parts.push(mimecodec.base64.encode(encodedStr.substr(i, maxLength)));
+                    }
+
+                    if (parts.length > 1) {
+                        return '=?' + toCharset + '?' + mimeWordEncoding + '?' + parts.join('?= =?' + toCharset + '?' + mimeWordEncoding + '?') + '?=';
+                    } else {
+                        encodedStr = parts.join('');
+                    }
+                }
+            } else if (mimeWordEncoding === 'B') {
+                encodedStr = mimecodec.base64.encode(encodedStr);
+            }
+
+            return '=?' + toCharset + '?' + mimeWordEncoding + '?' + encodedStr + (encodedStr.substr(-2) === '?=' ? '' : '?=');
+        },
+
+        /**
+         * Finds word sequences with non ascii text and converts these to mime words
+         *
+         * @param {String|Uint8Array} data String to be encoded
+         * @param {String} mimeWordEncoding='Q' Encoding for the mime word, either Q or B
+         * @param {Number} [maxLength=0] If set, split mime words into several chunks if needed
+         * @param {String} [fromCharset='UTF-8'] Source sharacter set
+         * @return {String} String with possible mime words
+         */
+        mimeWordsEncode: function(data, mimeWordEncoding, maxLength, fromCharset) {
+            if (!fromCharset && typeof maxLength === 'string' && !maxLength.match(/^[0-9]+$/)) {
+                fromCharset = maxLength;
+                maxLength = undefined;
+            }
+
+            maxLength = maxLength || 0;
+
+            var decodedValue = mimecodec.charset.decode(mimecodec.charset.convert((data || ''), fromCharset)),
+                encodedValue;
+
+            encodedValue = decodedValue.replace(/([^\s\u0080-\uFFFF]*[\u0080-\uFFFF]+[^\s\u0080-\uFFFF]*(?:\s+[^\s\u0080-\uFFFF]*[\u0080-\uFFFF]+[^\s\u0080-\uFFFF]*\s*)?)+/g, function(match) {
+                return match.length ? mimecodec.mimeWordEncode(match, mimeWordEncoding || 'Q', maxLength) : '';
+            });
+
+            return encodedValue;
+        },
+
+        /**
+         * Decode a complete mime word encoded string
+         *
+         * @param {String} str Mime word encoded string
+         * @return {String} Decoded unicode string
+         */
+        mimeWordDecode: function(str) {
+            str = (str || '').toString().trim();
+
+            var fromCharset, encoding, match;
+
+            match = str.match(/^\=\?([\w_\-\*]+)\?([QqBb])\?([^\?]+)\?\=$/i);
+            if (!match) {
+                return str;
+            }
+
+            // RFC2231 added language tag to the encoding
+            // see: https://tools.ietf.org/html/rfc2231#section-5
+            // this implementation silently ignores this tag
+            fromCharset = match[1].split('*').shift();
+
+            encoding = (match[2] || 'Q').toString().toUpperCase();
+            str = (match[3] || '').replace(/_/g, ' ');
+
+            if (encoding === 'B') {
+                return mimecodec.base64Decode(str, fromCharset);
+            } else if (encoding === 'Q') {
+                return mimecodec.mimeDecode(str, fromCharset);
+            } else {
+                return str;
+            }
+
+        },
+
+        /**
+         * Decode a string that might include one or several mime words
+         *
+         * @param {String} str String including some mime words that will be encoded
+         * @return {String} Decoded unicode string
+         */
+        mimeWordsDecode: function(str) {
+            str = (str || '').toString();
+            str = str.
+            replace(/(=\?[^?]+\?[QqBb]\?[^?]+\?=)\s+(?==\?[^?]+\?[QqBb]\?[^?]+\?=)/g, '$1').
+            replace(/\=\?([\w_\-\*]+)\?([QqBb])\?[^\?]+\?\=/g, function(mimeWord) {
+                return mimecodec.mimeWordDecode(mimeWord);
+            });
+
+            return str;
+        },
+
+        /**
+         * Folds long lines, useful for folding header lines (afterSpace=false) and
+         * flowed text (afterSpace=true)
+         *
+         * @param {String} str String to be folded
+         * @param {Number} [lineLengthMax=76] Maximum length of a line
+         * @param {Boolean} afterSpace If true, leave a space in th end of a line
+         * @return {String} String with folded lines
+         */
+        foldLines: function(str, lineLengthMax, afterSpace) {
+            str = (str || '').toString();
+            lineLengthMax = lineLengthMax || 76;
+
+            var pos = 0,
+                len = str.length,
+                result = '',
+                line, match;
+
+            while (pos < len) {
+                line = str.substr(pos, lineLengthMax);
+                if (line.length < lineLengthMax) {
+                    result += line;
+                    break;
+                }
+                if ((match = line.match(/^[^\n\r]*(\r?\n|\r)/))) {
+                    line = match[0];
+                    result += line;
+                    pos += line.length;
+                    continue;
+                } else if ((match = line.match(/(\s+)[^\s]*$/)) && match[0].length - (afterSpace ? (match[1] || '').length : 0) < line.length) {
+                    line = line.substr(0, line.length - (match[0].length - (afterSpace ? (match[1] || '').length : 0)));
+                } else if ((match = str.substr(pos + line.length).match(/^[^\s]+(\s*)/))) {
+                    line = line + match[0].substr(0, match[0].length - (!afterSpace ? (match[1] || '').length : 0));
+                }
+
+                result += line;
+                pos += line.length;
+                if (pos < len) {
+                    result += '\r\n';
+                }
+            }
+
+            return result;
+        },
+
+        /**
+         * Encodes and folds a header line for a MIME message header.
+         * Shorthand for mimeWordsEncode + foldLines
+         *
+         * @param {String} key Key name, will not be encoded
+         * @param {String|Uint8Array} value Value to be encoded
+         * @param {String} [fromCharset='UTF-8'] Character set of the value
+         * @return {String} encoded and folded header line
+         */
+        headerLineEncode: function(key, value, fromCharset) {
+            var encodedValue = mimecodec.mimeWordsEncode(value, 'Q', 52, fromCharset);
+            return mimecodec.foldLines(key + ': ' + encodedValue, 76);
+        },
+
+        /**
+         * Splits a string by :
+         * The result is not mime word decoded, you need to do your own decoding based
+         * on the rules for the specific header key
+         *
+         * @param {String} headerLine Single header line, might include linebreaks as well if folded
+         * @return {Object} And object of {key, value}
+         */
+        headerLineDecode: function(headerLine) {
+            var line = (headerLine || '').toString().replace(/(?:\r?\n|\r)[ \t]*/g, ' ').trim(),
+                match = line.match(/^\s*([^:]+):(.*)$/),
+                key = (match && match[1] || '').trim(),
+                value = (match && match[2] || '').trim();
+
+            return {
+                key: key,
+                value: value
+            };
+        },
+
+        /**
+         * Parses a block of header lines. Does not decode mime words as every
+         * header might have its own rules (eg. formatted email addresses and such)
+         *
+         * @param {String} headers Headers string
+         * @return {Object} An object of headers, where header keys are object keys. NB! Several values with the same key make up an Array
+         */
+        headerLinesDecode: function(headers) {
+            var lines = headers.split(/\r?\n|\r/),
+                headersObj = {},
+                key, value,
+                header,
+                i, len;
+
+            for (i = lines.length - 1; i >= 0; i--) {
+                if (i && lines[i].match(/^\s/)) {
+                    lines[i - 1] += '\r\n' + lines[i];
+                    lines.splice(i, 1);
+                }
+            }
+
+            for (i = 0, len = lines.length; i < len; i++) {
+                header = mimecodec.headerLineDecode(lines[i]);
+                key = (header.key || '').toString().toLowerCase().trim();
+                value = header.value || '';
+
+                if (!headersObj[key]) {
+                    headersObj[key] = value;
+                } else {
+                    headersObj[key] = [].concat(headersObj[key], value);
+                }
+            }
+
+            return headersObj;
+        },
+
+        /**
+         * Converts 'binary' string to an Uint8Array
+         *
+         * @param {String} 'binary' string
+         * @return {Uint8Array} Octet stream buffer
+         */
+        toTypedArray: function(binaryString) {
+            var buf = new Uint8Array(binaryString.length);
+            for (var i = 0, len = binaryString.length; i < len; i++) {
+                buf[i] = binaryString.charCodeAt(i);
+            }
+            return buf;
+        },
+
+        /**
+         * Converts an Uint8Array to 'binary' string
+         *
+         * @param {Uint8Array} buf Octet stream buffer
+         * @return {String} 'binary' string
+         */
+        fromTypedArray: function(buf) {
+            var i, l;
+
+            // ensure the value is a Uint8Array, not ArrayBuffer if used
+            if (!buf.buffer) {
+                buf = new Uint8Array(buf);
+            }
+
+            var sbits = new Array(buf.length);
+            for (i = 0, l = buf.length; i < l; i++) {
+                sbits[i] = String.fromCharCode(buf[i]);
+            }
+
+            return sbits.join('');
+        },
+
+        /**
+         * Parses a header value with key=value arguments into a structured
+         * object.
+         *
+         *   parseHeaderValue('content-type: text/plain; CHARSET='UTF-8'') ->
+         *   {
+         *     'value': 'text/plain',
+         *     'params': {
+         *       'charset': 'UTF-8'
+         *     }
+         *   }
+         *
+         * @param {String} str Header value
+         * @return {Object} Header value as a parsed structure
+         */
+        parseHeaderValue: function(str) {
+            var response = {
+                    value: false,
+                    params: {}
+                },
+                key = false,
+                value = '',
+                type = 'value',
+                quote = false,
+                escaped = false,
+                chr;
+
+            for (var i = 0, len = str.length; i < len; i++) {
+                chr = str.charAt(i);
+                if (type === 'key') {
+                    if (chr === '=') {
+                        key = value.trim().toLowerCase();
+                        type = 'value';
+                        value = '';
+                        continue;
+                    }
+                    value += chr;
+                } else {
+                    if (escaped) {
+                        value += chr;
+                    } else if (chr === '\\') {
+                        escaped = true;
+                        continue;
+                    } else if (quote && chr === quote) {
+                        quote = false;
+                    } else if (!quote && chr === '"') {
+                        quote = chr;
+                    } else if (!quote && chr === ';') {
+                        if (key === false) {
+                            response.value = value.trim();
+                        } else {
+                            response.params[key] = value.trim();
+                        }
+                        type = 'key';
+                        value = '';
+                    } else {
+                        value += chr;
+                    }
+                    escaped = false;
+
+                }
+            }
+
+            if (type === 'value') {
+                if (key === false) {
+                    response.value = value.trim();
+                } else {
+                    response.params[key] = value.trim();
+                }
+            } else if (value.trim()) {
+                response.params[value.trim().toLowerCase()] = '';
+            }
+
+            // handle parameter value continuations
+            // https://tools.ietf.org/html/rfc2231#section-3
+
+            // preprocess values
+            Object.keys(response.params).forEach(function(key) {
+                var actualKey, nr, match, value;
+                if ((match = key.match(/(\*(\d+)|\*(\d+)\*|\*)$/))) {
+                    actualKey = key.substr(0, match.index);
+                    nr = Number(match[2] || match[3]) || 0;
+
+                    if (!response.params[actualKey] || typeof response.params[actualKey] !== 'object') {
+                        response.params[actualKey] = {
+                            charset: false,
+                            values: []
+                        };
+                    }
+
+                    value = response.params[key];
+
+                    if (nr === 0 && match[0].substr(-1) === '*' && (match = value.match(/^([^']*)'[^']*'(.*)$/))) {
+                        response.params[actualKey].charset = match[1] || 'iso-8859-1';
+                        value = match[2];
+                    }
+
+                    response.params[actualKey].values[nr] = value;
+
+                    // remove the old reference
+                    delete response.params[key];
+                }
+            });
+
+            // concatenate split rfc2231 strings and convert encoded strings to mime encoded words
+            Object.keys(response.params).forEach(function(key) {
+                var value;
+                if (response.params[key] && Array.isArray(response.params[key].values)) {
+                    value = response.params[key].values.map(function(val) {
+                        return val || '';
+                    }).join('');
+
+                    if (response.params[key].charset) {
+                        // convert "%AB" to "=?charset?Q?=AB?="
+                        response.params[key] = '=?' +
+                            response.params[key].charset +
+                            '?Q?' +
+                            value.
+                            // fix invalidly encoded chars
+                        replace(/[=\?_\s]/g, function(s) {
+                                var c = s.charCodeAt(0).toString(16);
+                                if (s === ' ') {
+                                    return '_';
+                                } else {
+                                    return '%' + (c.length < 2 ? '0' : '') + c;
+                                }
+                            }).
+                            // change from urlencoding to percent encoding
+                        replace(/%/g, '=') +
+                            '?=';
+                    } else {
+                        response.params[key] = value;
+                    }
+                }
+            }.bind(this));
+
+            return response;
+        },
+
+        /**
+         * Encodes a string or an Uint8Array to an UTF-8 Parameter Value Continuation encoding (rfc2231)
+         * Useful for splitting long parameter values.
+         *
+         * For example
+         *      title="unicode string"
+         * becomes
+         *     title*0*="utf-8''unicode"
+         *     title*1*="%20string"
+         *
+         * @param {String|Uint8Array} data String to be encoded
+         * @param {Number} [maxLength=50] Max length for generated chunks
+         * @param {String} [fromCharset='UTF-8'] Source sharacter set
+         * @return {Array} A list of encoded keys and headers
+         */
+        continuationEncode: function(key, data, maxLength, fromCharset) {
+            var list = [];
+            var encodedStr = typeof data === 'string' ? data : mimecodec.decode(data, fromCharset);
+            var chr;
+            var line;
+            var startPos = 0;
+            var isEncoded = false;
+
+            maxLength = maxLength || 50;
+
+            // process ascii only text
+            if (/^[\w.\- ]*$/.test(data)) {
+
+                // check if conversion is even needed
+                if (encodedStr.length <= maxLength) {
+                    return [{
+                        key: key,
+                        value: /[\s";=]/.test(encodedStr) ? '"' + encodedStr + '"' : encodedStr
+                    }];
+                }
+
+                encodedStr = encodedStr.replace(new RegExp('.{' + maxLength + '}', 'g'), function(str) {
+                    list.push({
+                        line: str
+                    });
+                    return '';
+                });
+
+                if (encodedStr) {
+                    list.push({
+                        line: encodedStr
+                    });
+                }
+
+            } else {
+
+                // first line includes the charset and language info and needs to be encoded
+                // even if it does not contain any unicode characters
+                line = 'utf-8\'\'';
+                isEncoded = true;
+                startPos = 0;
+                // process text with unicode or special chars
+                for (var i = 0, len = encodedStr.length; i < len; i++) {
+
+                    chr = encodedStr[i];
+
+                    if (isEncoded) {
+                        chr = encodeURIComponent(chr);
+                    } else {
+                        // try to urlencode current char
+                        chr = chr === ' ' ? chr : encodeURIComponent(chr);
+                        // By default it is not required to encode a line, the need
+                        // only appears when the string contains unicode or special chars
+                        // in this case we start processing the line over and encode all chars
+                        if (chr !== encodedStr[i]) {
+                            // Check if it is even possible to add the encoded char to the line
+                            // If not, there is no reason to use this line, just push it to the list
+                            // and start a new line with the char that needs encoding
+                            if ((encodeURIComponent(line) + chr).length >= maxLength) {
+                                list.push({
+                                    line: line,
+                                    encoded: isEncoded
+                                });
+                                line = '';
+                                startPos = i - 1;
+                            } else {
+                                isEncoded = true;
+                                i = startPos;
+                                line = '';
+                                continue;
+                            }
+                        }
+                    }
+
+                    // if the line is already too long, push it to the list and start a new one
+                    if ((line + chr).length >= maxLength) {
+                        list.push({
+                            line: line,
+                            encoded: isEncoded
+                        });
+                        line = chr = encodedStr[i] === ' ' ? ' ' : encodeURIComponent(encodedStr[i]);
+                        if (chr === encodedStr[i]) {
+                            isEncoded = false;
+                            startPos = i - 1;
+                        } else {
+                            isEncoded = true;
+                        }
+                    } else {
+                        line += chr;
+                    }
+                }
+
+                if (line) {
+                    list.push({
+                        line: line,
+                        encoded: isEncoded
+                    });
+                }
+            }
+
+            return list.map(function(item, i) {
+                return {
+                    // encoded lines: {name}*{part}*
+                    // unencoded lines: {name}*{part}
+                    // if any line needs to be encoded then the first line (part==0) is always encoded
+                    key: key + '*' + i + (item.encoded ? '*' : ''),
+                    value: /[\s";=]/.test(item.line) ? '"' + item.line + '"' : item.line
+                };
+            });
+        },
+
+        /**
+         * Splits a mime encoded string. Needed for dividing mime words into smaller chunks
+         *
+         * @param {String} str Mime encoded string to be split up
+         * @param {Number} maxlen Maximum length of characters for one part (minimum 12)
+         * @return {Array} Split string
+         */
+        _splitMimeEncodedString: function(str, maxlen) {
+            var curLine, match, chr, done,
+                lines = [];
+
+            // require at least 12 symbols to fit possible 4 octet UTF-8 sequences
+            maxlen = Math.max(maxlen || 0, 12);
+
+            while (str.length) {
+                curLine = str.substr(0, maxlen);
+
+                // move incomplete escaped char back to main
+                if ((match = curLine.match(/\=[0-9A-F]?$/i))) {
+                    curLine = curLine.substr(0, match.index);
+                }
+
+                done = false;
+                while (!done) {
+                    done = true;
+                    // check if not middle of a unicode char sequence
+                    if ((match = str.substr(curLine.length).match(/^\=([0-9A-F]{2})/i))) {
+                        chr = parseInt(match[1], 16);
+                        // invalid sequence, move one char back anc recheck
+                        if (chr < 0xC2 && chr > 0x7F) {
+                            curLine = curLine.substr(0, curLine.length - 3);
+                            done = false;
+                        }
+                    }
+                }
+
+                if (curLine.length) {
+                    lines.push(curLine);
+                }
+                str = str.substr(curLine.length);
+            }
+
+            return lines;
+        },
+
+        /**
+         * Adds soft line breaks (the ones that will be stripped out when decoding) to
+         * ensure that no line in the message is never longer than 76 symbols
+         *
+         * Lines can't be longer than 76 + <CR><LF> = 78 bytes
+         * http://tools.ietf.org/html/rfc2045#section-6.7
+         *
+         * @param {String} str Encoded string
+         * @param {String} encoding Either "qp" or "base64" (the default)
+         * @return {String} String with forced line breaks
+         */
+        _addSoftLinebreaks: function(str, encoding) {
+            var lineLengthMax = 76;
+
+            encoding = (encoding || 'base64').toString().toLowerCase().trim();
+
+            if (encoding === 'qp') {
+                return mimecodec._addQPSoftLinebreaks(str, lineLengthMax);
+            } else {
+                return mimecodec._addBase64SoftLinebreaks(str, lineLengthMax);
+            }
+        },
+
+        /**
+         * Adds soft line breaks (the ones that will be stripped out when decoding base64) to
+         * ensure that no line in the message is never longer than lineLengthMax
+         *
+         * @param {String} base64EncodedStr String in BASE64 encoding
+         * @param {Number} lineLengthMax Maximum length of a line
+         * @return {String} String with forced line breaks
+         */
+        _addBase64SoftLinebreaks: function(base64EncodedStr, lineLengthMax) {
+            base64EncodedStr = (base64EncodedStr || '').toString().trim();
+            return base64EncodedStr.replace(new RegExp('.{' + lineLengthMax + '}', 'g'), '$&\r\n').trim();
+        },
+
+        /**
+         * Adds soft line breaks(the ones that will be stripped out when decoding QP) to * ensure that no line in the message is never longer than lineLengthMax * * Not sure of how and why this works, but at least it seems to be working: /
+         *
+         * @param {String} qpEncodedStr String in Quoted-Printable encoding
+         * @param {Number} lineLengthMax Maximum length of a line
+         * @return {String} String with forced line breaks
+         */
+        _addQPSoftLinebreaks: function(qpEncodedStr, lineLengthMax) {
+            qpEncodedStr = (qpEncodedStr || '').toString();
+
+            lineLengthMax = lineLengthMax || 76;
+
+            var pos = 0,
+                len = qpEncodedStr.length,
+                match, code, line,
+                lineMargin = Math.floor(lineLengthMax / 3),
+                result = '';
+
+            // insert soft linebreaks where needed
+            while (pos < len) {
+                line = qpEncodedStr.substr(pos, lineLengthMax);
+                if ((match = line.match(/\r\n/))) {
+                    line = line.substr(0, match.index + match[0].length);
+                    result += line;
+                    pos += line.length;
+                    continue;
+                }
+
+                if (line.substr(-1) === '\n') {
+                    // nothing to change here
+                    result += line;
+                    pos += line.length;
+                    continue;
+                } else if ((match = line.substr(-lineMargin).match(/\n.*?$/))) {
+                    // truncate to nearest line break
+                    line = line.substr(0, line.length - (match[0].length - 1));
+                    result += line;
+                    pos += line.length;
+                    continue;
+                } else if (line.length > lineLengthMax - lineMargin && (match = line.substr(-lineMargin).match(/[ \t\.,!\?][^ \t\.,!\?]*$/))) {
+                    // truncate to nearest space
+                    line = line.substr(0, line.length - (match[0].length - 1));
+                } else if (line.substr(-1) === '\r') {
+                    line = line.substr(0, line.length - 1);
+                } else {
+                    if (line.match(/\=[\da-f]{0,2}$/i)) {
+
+                        // push incomplete encoding sequences to the next line
+                        if ((match = line.match(/\=[\da-f]{0,1}$/i))) {
+                            line = line.substr(0, line.length - match[0].length);
+                        }
+
+                        // ensure that utf-8 sequences are not split
+                        while (line.length > 3 && line.length < len - pos && !line.match(/^(?:=[\da-f]{2}){1,4}$/i) && (match = line.match(/\=[\da-f]{2}$/ig))) {
+                            code = parseInt(match[0].substr(1, 2), 16);
+                            if (code < 128) {
+                                break;
+                            }
+
+                            line = line.substr(0, line.length - 3);
+
+                            if (code >= 0xC0) {
+                                break;
+                            }
+                        }
+
+                    }
+                }
+
+                if (pos + line.length < len && line.substr(-1) !== '\n') {
+                    if (line.length === lineLengthMax && line.match(/\=[\da-f]{2}$/i)) {
+                        line = line.substr(0, line.length - 3);
+                    } else if (line.length === lineLengthMax) {
+                        line = line.substr(0, line.length - 1);
+                    }
+                    pos += line.length;
+                    line += '=\r\n';
+                } else {
+                    pos += line.length;
+                }
+
+                result += line;
+            }
+
+            return result;
+        },
+
+        /**
+         * Checks if a number is in specified ranges or not
+         *
+         * @param {Number} nr Number to check for
+         * @ranges {Array} ranges Array of range duples
+         * @return {Boolean} Returns true, if nr was found to be at least one of the specified ranges
+         */
+        _checkRanges: function(nr, ranges) {
+            for (var i = ranges.length - 1; i >= 0; i--) {
+                if (!ranges[i].length) {
+                    continue;
+                }
+                if (ranges[i].length === 1 && nr === ranges[i][0]) {
+                    return true;
+                }
+                if (ranges[i].length === 2 && nr >= ranges[i][0] && nr <= ranges[i][1]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    };
+
+    /**
+     * Character set encoding and decoding functions
+     */
+    mimecodec.charset = {
+
+        /**
+         * Encodes an unicode string into an Uint8Array object as UTF-8
+         *
+         * TextEncoder only supports unicode encodings (utf-8, utf16le/be) but no other,
+         * so we force UTF-8 here.
+         *
+         * @param {String} str String to be encoded
+         * @return {Uint8Array} UTF-8 encoded typed array
+         */
+        encode: function(str) {
+            return new TextEncoder('UTF-8').encode(str);
+        },
+
+        /**
+         * Decodes a string from Uint8Array to an unicode string using specified encoding
+         *
+         * @param {Uint8Array} buf Binary data to be decoded
+         * @param {String} [fromCharset='UTF-8'] Binary data is decoded into string using this charset
+         * @return {String} Decded string
+         */
+        decode: function(buf, fromCharset) {
+            fromCharset = mimecodec.charset.normalizeCharset(fromCharset || 'UTF-8');
+
+            // ensure the value is a Uint8Array, not ArrayBuffer if used
+            if (!buf.buffer) {
+                buf = new Uint8Array(buf);
+            }
+
+            try {
+                return new TextDecoder(fromCharset).decode(buf);
+            } catch (E) {
+                try {
+                    return new TextDecoder('utf-8', {
+                        fatal: true // if the input is not a valid utf-8 the decoder will throw
+                    }).decode(buf);
+                } catch (E) {
+                    try {
+                        return new TextDecoder('iso-8859-15').decode(buf);
+                    } catch (E) {
+                        // should not happen as there is something matching for every byte (non character bytes are allowed)
+                        return mimecodec.fromTypedArray(buf);
+                    }
+                }
+            }
+
+        },
+
+        /**
+         * Convert a string from specific encoding to UTF-8 Uint8Array
+         *
+         * @param {String|Uint8Array} str String to be encoded
+         * @param {String} [fromCharset='UTF-8'] Source encoding for the string
+         * @return {Uint8Array} UTF-8 encoded typed array
+         */
+        convert: function(data, fromCharset) {
+            fromCharset = mimecodec.charset.normalizeCharset(fromCharset || 'UTF-8');
+
+            var bufString;
+
+            if (typeof data !== 'string') {
+                if (fromCharset.match(/^utf[\-_]?8$/)) {
+                    return data;
+                }
+                bufString = mimecodec.charset.decode(data, fromCharset);
+                return mimecodec.charset.encode(bufString);
+            }
+            return mimecodec.charset.encode(data);
+        },
+
+        /**
+         * Converts well known invalid character set names to proper names.
+         * eg. win-1257 will be converted to WINDOWS-1257
+         *
+         * @param {String} charset Charset name to convert
+         * @return {String} Canoninicalized charset name
+         */
+        normalizeCharset: function(charset) {
+            var match;
+
+            if ((match = charset.match(/^utf[\-_]?(\d+)$/i))) {
+                return 'UTF-' + match[1];
+            }
+
+            if ((match = charset.match(/^win[\-_]?(\d+)$/i))) {
+                return 'WINDOWS-' + match[1];
+            }
+
+            if ((match = charset.match(/^latin[\-_]?(\d+)$/i))) {
+                return 'ISO-8859-' + match[1];
+            }
+
+            return charset;
+        }
+    };
+
+    /**
+     * Base64 encoding and decoding functions
+     */
+    mimecodec.base64 = {
+
+        /**
+         * Encodes input into base64
+         *
+         * @param {String|Uint8Array} data Data to be encoded into base64
+         * @return {String} Base64 encoded string
+         */
+        encode: function(data) {
+            if (!data) {
+                return '';
+            }
+
+            if (typeof data === 'string') {
+                // window.btoa uses pseudo binary encoding, so unicode strings
+                // need to be converted before encoding
+                return btoa(unescape(encodeURIComponent(data)));
+            }
+
+            var len = data.byteLength,
+                binStr = '';
+
+            if (!data.buffer) {
+                data.buffer = new Uint8Array(data);
+            }
+
+            for (var i = 0; i < len; i++) {
+                binStr += String.fromCharCode(data[i]);
+            }
+
+            return btoa(binStr);
+        },
+
+        /**
+         * Decodes base64 encoded string into an unicode string or Uint8Array
+         *
+         * @param {String} data Base64 encoded data
+         * @param {String} [outputEncoding='buffer'] Output encoding, either 'string' or 'buffer' (Uint8Array)
+         * @return {String|Uint8Array} Decoded string
+         */
+        decode: function(data, outputEncoding) {
+            outputEncoding = (outputEncoding || 'buffer').toLowerCase().trim();
+
+            var buf = mimecodec.base64.toTypedArray(data);
+
+            if (outputEncoding === 'string') {
+                return mimecodec.charset.decode(buf);
+            } else {
+                return buf;
+            }
+        },
+
+        /**
+         * Safe base64 decoding. Does not throw on unexpected input.
+         *
+         * Implementation from the MDN docs:
+         * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
+         * (MDN code samples are MIT licensed)
+         *
+         * @param {String} base64Str Base64 encoded string
+         * @returns {Uint8Array} Decoded binary blob
+         */
+        toTypedArray: function(base64Str) {
+            var bitsSoFar = 0;
+            var validBits = 0;
+            var iOut = 0;
+            var arr = new Uint8Array(Math.ceil(base64Str.length * 3 / 4));
+            var c;
+            var bits;
+
+            for (var i = 0, len = base64Str.length; i < len; i++) {
+                c = base64Str.charCodeAt(i);
+                if (c >= 0x41 && c <= 0x5a) { // [A-Z]
+                    bits = c - 0x41;
+                } else if (c >= 0x61 && c <= 0x7a) { // [a-z]
+                    bits = c - 0x61 + 0x1a;
+                } else if (c >= 0x30 && c <= 0x39) { // [0-9]
+                    bits = c - 0x30 + 0x34;
+                } else if (c === 0x2b) { // +
+                    bits = 0x3e;
+                } else if (c === 0x2f) { // /
+                    bits = 0x3f;
+                } else if (c === 0x3d) { // =
+                    validBits = 0;
+                    continue;
+                } else {
+                    // ignore all other characters!
+                    continue;
+                }
+                bitsSoFar = (bitsSoFar << 6) | bits;
+                validBits += 6;
+                if (validBits >= 8) {
+                    validBits -= 8;
+                    arr[iOut++] = bitsSoFar >> validBits;
+                    if (validBits === 2) {
+                        bitsSoFar &= 0x03;
+                    } else if (validBits === 4) {
+                        bitsSoFar &= 0x0f;
+                    }
+                }
+            }
+
+            if (iOut < arr.length) {
+                return arr.subarray(0, iOut);
+            }
+            return arr;
+        }
+    };
+
+    /*
+     * Encodes a string in base 64. DedicatedWorkerGlobalScope for Safari does not provide btoa.
+     * https://github.com/davidchambers/Base64.js
+     */
+    function base64Encode(input) {
+        var str = String(input);
+        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+        for (var block, charCode, idx = 0, map = chars, output = ''; str.charAt(idx | 0) || (map = '=', idx % 1); output += map.charAt(63 & block >> 8 - idx % 1 * 8)) {
+            charCode = str.charCodeAt(idx += 3 / 4);
+            if (charCode > 0xFF) {
+                throw new Error("'btoa' failed: The string to be encoded contains characters outside of the Latin1 range.");
+            }
+            block = block << 8 | charCode;
+        }
+        return output;
+    }
+
+    return mimecodec;
+}));
+
+// Copyright (c) 2013 Andris Reinman
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+(function(root, factory) {
     "use strict";
 
     if (false) {
@@ -20380,6 +20380,7 @@ try {
 // end emailjs
 })();
 (function(){
+console.debug = console.log;
 
 const dereq_minimalistic_assert =
 /******/ (function(modules) { // webpackBootstrap
@@ -35738,16 +35739,7 @@ KeyPair.prototype._importPublic = function _importPublic(key, enc) {
 
 // ECDH
 KeyPair.prototype.derive = function derive(pub) {
-  var x = pub.mul(this.priv).getX();
-  var len = x.byteLength();
-
-  // Note: this is not ideal, but the RFC's are unclear
-  // https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-02#appendix-B
-  if (this.ec.curve.type === 'mont') {
-    return x.toArray('le', len);
-  } else {
-    return x.toArray('be', len);
-  }
+  return pub.mul(this.priv).getX();
 };
 
 // ECDSA
@@ -37125,33 +37117,43 @@ utils.intFromLE = intFromLE;
 module.exports={
   "_args": [
     [
-      "github:openpgpjs/elliptic",
-      "/Users/sunny/Desktop/Protonmail/openpgpjs"
+      "elliptic@github:openpgpjs/elliptic#ad81845",
+      "/home/luke/git/openpgpjs-d60efff61d024421e7985e25e7156cb4856d9d9a"
     ]
   ],
-  "_from": "github:openpgpjs/elliptic",
-  "_id": "elliptic@github:openpgpjs/elliptic#e187e706e11fa51bcd20e46e5119054be4e2a4a6",
-  "_inBundle": false,
-  "_integrity": "",
+  "_from": "github:openpgpjs/elliptic#ad81845",
+  "_id": "elliptic@6.4.0",
+  "_inCache": true,
   "_location": "/elliptic",
   "_phantomChildren": {},
   "_requested": {
-    "type": "git",
-    "raw": "github:openpgpjs/elliptic",
-    "rawSpec": "github:openpgpjs/elliptic",
-    "saveSpec": "github:openpgpjs/elliptic",
-    "fetchSpec": null,
-    "gitCommittish": null
+    "hosted": {
+      "directUrl": "https://raw.githubusercontent.com/openpgpjs/elliptic/ad81845/package.json",
+      "gitUrl": "git://github.com/openpgpjs/elliptic.git#ad81845",
+      "httpsUrl": "git+https://github.com/openpgpjs/elliptic.git#ad81845",
+      "shortcut": "github:openpgpjs/elliptic#ad81845",
+      "ssh": "git@github.com:openpgpjs/elliptic.git#ad81845",
+      "sshUrl": "git+ssh://git@github.com/openpgpjs/elliptic.git#ad81845",
+      "type": "github"
+    },
+    "name": "elliptic",
+    "raw": "elliptic@github:openpgpjs/elliptic#ad81845",
+    "rawSpec": "github:openpgpjs/elliptic#ad81845",
+    "scope": null,
+    "spec": "github:openpgpjs/elliptic#ad81845",
+    "type": "hosted"
   },
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "github:openpgpjs/elliptic#e187e706e11fa51bcd20e46e5119054be4e2a4a6",
-  "_spec": "github:openpgpjs/elliptic",
-  "_where": "/Users/sunny/Desktop/Protonmail/openpgpjs",
+  "_resolved": "git://github.com/openpgpjs/elliptic.git#ad81845f693effa5b4b6d07db2e82112de222f48",
+  "_shasum": "b3ec9e89968fcf936840cf1439e5caa6ff7dca97",
+  "_shrinkwrap": null,
+  "_spec": "elliptic@github:openpgpjs/elliptic#ad81845",
+  "_where": "/home/luke/git/openpgpjs-d60efff61d024421e7985e25e7156cb4856d9d9a",
   "author": {
-    "name": "Fedor Indutny",
-    "email": "fedor@indutny.com"
+    "email": "fedor@indutny.com",
+    "name": "Fedor Indutny"
   },
   "bugs": {
     "url": "https://github.com/indutny/elliptic/issues"
@@ -37185,16 +37187,20 @@ module.exports={
   "files": [
     "lib"
   ],
+  "gitHead": "ad81845f693effa5b4b6d07db2e82112de222f48",
   "homepage": "https://github.com/indutny/elliptic",
   "keywords": [
+    "Cryptography",
     "EC",
     "Elliptic",
-    "curve",
-    "Cryptography"
+    "curve"
   ],
   "license": "MIT",
   "main": "lib/elliptic.js",
   "name": "elliptic",
+  "optionalDependencies": {},
+  "readme": "# Elliptic [![Build Status](https://secure.travis-ci.org/indutny/elliptic.png)](http://travis-ci.org/indutny/elliptic) [![Coverage Status](https://coveralls.io/repos/indutny/elliptic/badge.svg?branch=master&service=github)](https://coveralls.io/github/indutny/elliptic?branch=master) [![Code Climate](https://codeclimate.com/github/indutny/elliptic/badges/gpa.svg)](https://codeclimate.com/github/indutny/elliptic)\n\n[![Saucelabs Test Status](https://saucelabs.com/browser-matrix/gh-indutny-elliptic.svg)](https://saucelabs.com/u/gh-indutny-elliptic)\n\nFast elliptic-curve cryptography in a plain javascript implementation.\n\nNOTE: Please take a look at http://safecurves.cr.yp.to/ before choosing a curve\nfor your cryptography operations.\n\n## Incentive\n\nECC is much slower than regular RSA cryptography, the JS implementations are\neven more slower.\n\n## Benchmarks\n\n```bash\n$ node benchmarks/index.js\nBenchmarking: sign\nelliptic#sign x 262 ops/sec ±0.51% (177 runs sampled)\neccjs#sign x 55.91 ops/sec ±0.90% (144 runs sampled)\n------------------------\nFastest is elliptic#sign\n========================\nBenchmarking: verify\nelliptic#verify x 113 ops/sec ±0.50% (166 runs sampled)\neccjs#verify x 48.56 ops/sec ±0.36% (125 runs sampled)\n------------------------\nFastest is elliptic#verify\n========================\nBenchmarking: gen\nelliptic#gen x 294 ops/sec ±0.43% (176 runs sampled)\neccjs#gen x 62.25 ops/sec ±0.63% (129 runs sampled)\n------------------------\nFastest is elliptic#gen\n========================\nBenchmarking: ecdh\nelliptic#ecdh x 136 ops/sec ±0.85% (156 runs sampled)\n------------------------\nFastest is elliptic#ecdh\n========================\n```\n\n## API\n\n### ECDSA\n\n```javascript\nvar EC = require('elliptic').ec;\n\n// Create and initialize EC context\n// (better do it once and reuse it)\nvar ec = new EC('secp256k1');\n\n// Generate keys\nvar key = ec.genKeyPair();\n\n// Sign the message's hash (input must be an array, or a hex-string)\nvar msgHash = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ];\nvar signature = key.sign(msgHash);\n\n// Export DER encoded signature in Array\nvar derSign = signature.toDER();\n\n// Verify signature\nconsole.log(key.verify(msgHash, derSign));\n\n// CHECK WITH NO PRIVATE KEY\n\nvar pubPoint = key.getPublic();\nvar x = pubPoint.getX();\nvar y = pubPoint.getY();\n\n// Public Key MUST be either:\n// 1) '04' + hex string of x + hex string of y; or\n// 2) object with two hex string properties (x and y); or\n// 3) object with two buffer properties (x and y)\nvar pub = pubPoint.encode('hex');                                 // case 1\nvar pub = { x: x.toString('hex'), y: y.toString('hex') };         // case 2\nvar pub = { x: x.toBuffer(), y: y.toBuffer() };                   // case 3\nvar pub = { x: x.toArrayLike(Buffer), y: y.toArrayLike(Buffer) }; // case 3\n\n// Import public key\nvar key = ec.keyFromPublic(pub, 'hex');\n\n// Signature MUST be either:\n// 1) DER-encoded signature as hex-string; or\n// 2) DER-encoded signature as buffer; or\n// 3) object with two hex-string properties (r and s); or\n// 4) object with two buffer properties (r and s)\n\nvar signature = '3046022100...'; // case 1\nvar signature = new Buffer('...'); // case 2\nvar signature = { r: 'b1fc...', s: '9c42...' }; // case 3\n\n// Verify signature\nconsole.log(key.verify(msgHash, signature));\n```\n\n### EdDSA\n\n```javascript\nvar EdDSA = require('elliptic').eddsa;\n\n// Create and initialize EdDSA context\n// (better do it once and reuse it)\nvar ec = new EdDSA('ed25519');\n\n// Create key pair from secret\nvar key = ec.keyFromSecret('693e3c...'); // hex string, array or Buffer\n\n// Sign the message's hash (input must be an array, or a hex-string)\nvar msgHash = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ];\nvar signature = key.sign(msgHash).toHex();\n\n// Verify signature\nconsole.log(key.verify(msgHash, signature));\n\n// CHECK WITH NO PRIVATE KEY\n\n// Import public key\nvar pub = '0a1af638...';\nvar key = ec.keyFromPublic(pub, 'hex');\n\n// Verify signature\nvar signature = '70bed1...';\nconsole.log(key.verify(msgHash, signature));\n```\n\n### ECDH\n\n```javascript\nvar EC = require('elliptic').ec;\nvar ec = new EC('curve25519');\n\n// Generate keys\nvar key1 = ec.genKeyPair();\nvar key2 = ec.genKeyPair();\n\nvar shared1 = key1.derive(key2.getPublic());\nvar shared2 = key2.derive(key1.getPublic());\n\nconsole.log('Both shared secrets are BN instances');\nconsole.log(shared1.toString(16));\nconsole.log(shared2.toString(16));\n```\n\nthree and more members:\n```javascript\nvar EC = require('elliptic').ec;\nvar ec = new EC('curve25519');\n\nvar A = ec.genKeyPair();\nvar B = ec.genKeyPair();\nvar C = ec.genKeyPair();\n\nvar AB = A.getPublic().mul(B.getPrivate())\nvar BC = B.getPublic().mul(C.getPrivate())\nvar CA = C.getPublic().mul(A.getPrivate())\n\nvar ABC = AB.mul(C.getPrivate())\nvar BCA = BC.mul(A.getPrivate())\nvar CAB = CA.mul(B.getPrivate())\n\nconsole.log(ABC.getX().toString(16))\nconsole.log(BCA.getX().toString(16))\nconsole.log(CAB.getX().toString(16))\n```\n\nNOTE: `.derive()` returns a [BN][1] instance.\n\n## Supported curves\n\nElliptic.js support following curve types:\n\n* Short Weierstrass\n* Montgomery\n* Edwards\n* Twisted Edwards\n\nFollowing curve 'presets' are embedded into the library:\n\n* `secp256k1`\n* `p192`\n* `p224`\n* `p256`\n* `p384`\n* `p521`\n* `curve25519`\n* `ed25519`\n\nNOTE: That `curve25519` could not be used for ECDSA, use `ed25519` instead.\n\n### Implementation details\n\nECDSA is using deterministic `k` value generation as per [RFC6979][0]. Most of\nthe curve operations are performed on non-affine coordinates (either projective\nor extended), various windowing techniques are used for different cases.\n\nAll operations are performed in reduction context using [bn.js][1], hashing is\nprovided by [hash.js][2]\n\n### Related projects\n\n* [eccrypto][3]: isomorphic implementation of ECDSA, ECDH and ECIES for both\n  browserify and node (uses `elliptic` for browser and [secp256k1-node][4] for\n  node)\n\n#### LICENSE\n\nThis software is licensed under the MIT License.\n\nCopyright Fedor Indutny, 2014.\n\nPermission is hereby granted, free of charge, to any person obtaining a\ncopy of this software and associated documentation files (the\n\"Software\"), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to permit\npersons to whom the Software is furnished to do so, subject to the\nfollowing conditions:\n\nThe above copyright notice and this permission notice shall be included\nin all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS\nOR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN\nNO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,\nDAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR\nOTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE\nUSE OR OTHER DEALINGS IN THE SOFTWARE.\n\n[0]: http://tools.ietf.org/html/rfc6979\n[1]: https://github.com/indutny/bn.js\n[2]: https://github.com/indutny/hash.js\n[3]: https://github.com/bitchan/eccrypto\n[4]: https://github.com/wanderer/secp256k1-node\n",
+  "readmeFilename": "README.md",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/indutny/elliptic.git"
@@ -47520,32 +47526,42 @@ module.exports = Stream;
 module.exports={
   "_args": [
     [
-      "github:openpgpjs/seek-bzip",
-      "/Users/sunny/Desktop/Protonmail/openpgpjs"
+      "seek-bzip@github:openpgpjs/seek-bzip#3aca608",
+      "/home/luke/git/openpgpjs-d60efff61d024421e7985e25e7156cb4856d9d9a"
     ]
   ],
-  "_from": "github:openpgpjs/seek-bzip",
-  "_id": "seek-bzip@github:openpgpjs/seek-bzip#3aca608ffedc055a1da1d898ecb244804ef32209",
-  "_inBundle": false,
-  "_integrity": "",
+  "_from": "github:openpgpjs/seek-bzip#3aca608",
+  "_id": "seek-bzip@1.0.5-git",
+  "_inCache": true,
   "_location": "/seek-bzip",
   "_phantomChildren": {
     "graceful-readlink": "1.0.1"
   },
   "_requested": {
-    "type": "git",
-    "raw": "github:openpgpjs/seek-bzip",
-    "rawSpec": "github:openpgpjs/seek-bzip",
-    "saveSpec": "github:openpgpjs/seek-bzip",
-    "fetchSpec": null,
-    "gitCommittish": null
+    "hosted": {
+      "directUrl": "https://raw.githubusercontent.com/openpgpjs/seek-bzip/3aca608/package.json",
+      "gitUrl": "git://github.com/openpgpjs/seek-bzip.git#3aca608",
+      "httpsUrl": "git+https://github.com/openpgpjs/seek-bzip.git#3aca608",
+      "shortcut": "github:openpgpjs/seek-bzip#3aca608",
+      "ssh": "git@github.com:openpgpjs/seek-bzip.git#3aca608",
+      "sshUrl": "git+ssh://git@github.com/openpgpjs/seek-bzip.git#3aca608",
+      "type": "github"
+    },
+    "name": "seek-bzip",
+    "raw": "seek-bzip@github:openpgpjs/seek-bzip#3aca608",
+    "rawSpec": "github:openpgpjs/seek-bzip#3aca608",
+    "scope": null,
+    "spec": "github:openpgpjs/seek-bzip#3aca608",
+    "type": "hosted"
   },
   "_requiredBy": [
     "/"
   ],
-  "_resolved": "github:openpgpjs/seek-bzip#3aca608ffedc055a1da1d898ecb244804ef32209",
-  "_spec": "github:openpgpjs/seek-bzip",
-  "_where": "/Users/sunny/Desktop/Protonmail/openpgpjs",
+  "_resolved": "git://github.com/openpgpjs/seek-bzip.git#3aca608ffedc055a1da1d898ecb244804ef32209",
+  "_shasum": "27346aff9be494bed122a1f71fccf20885fca40e",
+  "_shrinkwrap": null,
+  "_spec": "seek-bzip@github:openpgpjs/seek-bzip#3aca608",
+  "_where": "/home/luke/git/openpgpjs-d60efff61d024421e7985e25e7156cb4856d9d9a",
   "bin": {
     "seek-bunzip": "./bin/seek-bunzip",
     "seek-table": "./bin/seek-bzip-table"
@@ -47580,10 +47596,14 @@ module.exports={
   "directories": {
     "test": "test"
   },
+  "gitHead": "3aca608ffedc055a1da1d898ecb244804ef32209",
   "homepage": "https://github.com/cscott/seek-bzip#readme",
   "license": "MIT",
   "main": "./lib/index.js",
   "name": "seek-bzip",
+  "optionalDependencies": {},
+  "readme": "# seek-bzip\n\n[![Build Status][1]][2] [![dependency status][3]][4] [![dev dependency status][5]][6]\n\n`seek-bzip` is a pure-javascript Node.JS module adapted from [node-bzip](https://github.com/skeggse/node-bzip) and before that [antimatter15's pure-javascript bzip2 decoder](https://github.com/antimatter15/bzip2.js).  Like these projects, `seek-bzip` only does decompression (see [compressjs](https://github.com/cscott/compressjs) if you need compression code).  Unlike those other projects, `seek-bzip` can seek to and decode single blocks from the bzip2 file.\n\n`seek-bzip` primarily decodes buffers into other buffers, synchronously.\nWith the help of the [fibers](https://github.com/laverdet/node-fibers)\npackage, it can operate on node streams; see `test/stream.js` for an\nexample.\n\n## How to Install\n\n```\nnpm install seek-bzip\n```\n\nThis package uses\n[Typed Arrays](https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays), which are present in node.js >= 0.5.5.\n\n## Usage\n\nAfter compressing some example data into `example.bz2`, the following will recreate that original data and save it to `example`:\n\n```\nvar Bunzip = require('seek-bzip');\nvar fs = require('fs');\n\nvar compressedData = fs.readFileSync('example.bz2');\nvar data = Bunzip.decode(compressedData);\n\nfs.writeFileSync('example', data);\n```\n\nSee the tests in the `tests/` directory for further usage examples.\n\nFor uncompressing single blocks of bzip2-compressed data, you will need\nan out-of-band index listing the start of each bzip2 block.  (Presumably\nyou generate this at the same time as you index the start of the information\nyou wish to seek to inside the compressed file.)  The `seek-bzip` module\nhas been designed to be compatible with the C implementation `seek-bzip2`\navailable from https://bitbucket.org/james_taylor/seek-bzip2.  That codebase\ncontains a `bzip-table` tool which will generate bzip2 block start indices.\nThere is also a pure-JavaScript `seek-bzip-table` tool in this package's\n`bin` directory.\n\n## Documentation\n\n`require('seek-bzip')` returns a `Bunzip` object.  It contains three static\nmethods.  The first is a function accepting one or two parameters:\n\n`Bunzip.decode = function(input, [Number expectedSize] or [output], [boolean multistream])`\n\nThe `input` argument can be a \"stream\" object (which must implement the\n`readByte` method), or a `Buffer`.\n\nIf `expectedSize` is not present, `decodeBzip` simply decodes `input` and\nreturns the resulting `Buffer`.\n\nIf `expectedSize` is present (and numeric), `decodeBzip` will store\nthe results in a `Buffer` of length `expectedSize`, and throw an error\nin the case that the size of the decoded data does not match\n`expectedSize`.\n\nIf you pass a non-numeric second parameter, it can either be a `Buffer`\nobject (which must be of the correct length; an error will be thrown if\nthe size of the decoded data does not match the buffer length) or\na \"stream\" object (which must implement a `writeByte` method).\n\nThe optional third `multistream` parameter, if true, attempts to continue\nreading past the end of the bzip2 file.  This supports \"multistream\"\nbzip2 files, which are simply multiple bzip2 files concatenated together.\nIf this argument is true, the input stream must have an `eof` method\nwhich returns true when the end of the input has been reached.\n\nThe second exported method is a function accepting two or three parameters:\n\n`Bunzip.decodeBlock = function(input, Number blockStartBits, [Number expectedSize] or [output])`\n\nThe `input` and `expectedSize`/`output` parameters are as above.\nThe `blockStartBits` parameter gives the start of the desired block, in bits.\n\nIf passing a stream as the `input` parameter, it must implement the\n`seek` method.\n\nThe final exported method is a function accepting two or three parameters:\n\n`Bunzip.table = function(input, Function callback, [boolean multistream])`\n\nThe `input` and `multistream` parameters are identical to those for the\n`decode` method.\n\nThis function will invoke `callback(position, size)` once per bzip2 block,\nwhere `position` gives the starting position of the block (in *bits*), and\n`size` gives the uncompressed size of the block (in bytes).\n\nThis can be used to construct an index allowing direct access to a particular\nblock inside a bzip2 file, using the `decodeBlock` method.\n\n## Command-line\nThere are binaries available in bin.  The first generates an index of all\nthe blocks in a bzip2-compressed file:\n```\n$ bin/seek-bzip-table test/sample4.bz2\n32\t99981\n320555\t99981\n606348\t99981\n847568\t99981\n1089094\t99981\n1343625\t99981\n1596228\t99981\n1843336\t99981\n2090919\t99981\n2342106\t39019\n$\n```\nThe first field is the starting position of the block, in bits, and the\nsecond field is the length of the block, in bytes.\n\nThe second binary decodes an arbitrary block of a bzip2 file:\n```\n$ bin/seek-bunzip -d -b 2342106 test/sample4.bz2 | tail\nélan's\némigré\némigré's\némigrés\népée\népée's\népées\nétude\nétude's\nétudes\n$\n```\n\nUse `--help` to see other options.\n\n## Help wanted\n\nImprovements to this module would be generally useful.\nFeel free to fork on github and submit pull requests!\n\n## Related projects\n\n* https://github.com/skeggse/node-bzip node-bzip (original upstream source)\n* https://github.com/cscott/compressjs\n  Lots of compression/decompression algorithms from the same author as this\n  module, including bzip2 compression code.\n* https://github.com/cscott/lzjb fast LZJB compression/decompression\n\n## License\n\n#### MIT License\n\n> Copyright &copy; 2013-2015 C. Scott Ananian\n>\n> Copyright &copy; 2012-2015 Eli Skeggs\n>\n> Copyright &copy; 2011 Kevin Kwok\n>\n> Permission is hereby granted, free of charge, to any person obtaining\n> a copy of this software and associated documentation files (the\n> \"Software\"), to deal in the Software without restriction, including\n> without limitation the rights to use, copy, modify, merge, publish,\n> distribute, sublicense, and/or sell copies of the Software, and to\n> permit persons to whom the Software is furnished to do so, subject to\n> the following conditions:\n>\n> The above copyright notice and this permission notice shall be\n> included in all copies or substantial portions of the Software.\n>\n> THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n> EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\n> MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\n> NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE\n> LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION\n> OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\n> WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n[1]: https://travis-ci.org/cscott/seek-bzip.png\n[2]: https://travis-ci.org/cscott/seek-bzip\n[3]: https://david-dm.org/cscott/seek-bzip.png\n[4]: https://david-dm.org/cscott/seek-bzip\n[5]: https://david-dm.org/cscott/seek-bzip/dev-status.png\n[6]: https://david-dm.org/cscott/seek-bzip#info=devDependencies\n",
+  "readmeFilename": "README.md",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/cscott/seek-bzip.git"
@@ -48387,7 +48407,10 @@ function Reader(input) {
   if (streamType) {
     const reader = input.getReader();
     this._read = reader.read.bind(reader);
-    this._releaseLock = reader.releaseLock.bind(reader);
+    this._releaseLock = () => {
+      reader.closed.catch(function () {});
+      reader.releaseLock();
+    };
     return;
   }
   let doneReading = false;
@@ -48642,7 +48665,13 @@ function getReader(input) {
  * @returns {WritableStreamDefaultWriter}
  */
 function getWriter(input) {
-  return input.getWriter();
+  const writer = input.getWriter();
+  const releaseLock = writer.releaseLock;
+  writer.releaseLock = () => {
+    writer.closed.catch(function () {});
+    releaseLock.call(writer);
+  };
+  return writer;
 }
 
 /**
@@ -48657,7 +48686,7 @@ async function pipe(input, target, options) {
   input = toStream(input);
   try {
     if (input[_reader.externalBuffer]) {
-      const writer = target.getWriter();
+      const writer = getWriter(target);
       for (let i = 0; i < input[_reader.externalBuffer].length; i++) {
         await writer.ready;
         await writer.write(input[_reader.externalBuffer][i]);
@@ -48953,8 +48982,8 @@ function slice(input, begin = 0, end = Infinity) {
   if (input[_reader.externalBuffer]) {
     input = concat(input[_reader.externalBuffer].concat([input]));
   }
-  if ((0, _util.isUint8Array)(input) && !(NodeBuffer && NodeBuffer.isBuffer(input)) && !_util.isIE11) {
-    // IE11 subarray is buggy
+  if ((0, _util.isUint8Array)(input) && !(NodeBuffer && NodeBuffer.isBuffer(input))) {
+    if (end === Infinity) end = input.length;
     return input.subarray(begin, end);
   }
   return input.slice(begin, end);
@@ -49014,8 +49043,6 @@ exports.default = { isStream: _util.isStream, isUint8Array: _util.isUint8Array, 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-const isIE11 = typeof navigator !== 'undefined' && !!navigator.userAgent.match(/Trident\/7\.0.*rv:([0-9.]+).*\).*Gecko$/);
-
 const NodeReadableStream = typeof window === 'undefined' && require('stream').Readable;
 
 /**
@@ -49069,7 +49096,6 @@ function concatUint8Array(arrays) {
   return result;
 }
 
-exports.isIE11 = isIE11;
 exports.isStream = isStream;
 exports.isUint8Array = isUint8Array;
 exports.concatUint8Array = concatUint8Array;
@@ -49473,7 +49499,7 @@ exports.default = {
    * @memberof module:config
    * @property {String} versionstring A version string to be included in armored messages
    */
-  versionstring: "OpenPGP.js v4.4.1",
+  versionstring: "OpenPGP.js v4.4.7",
   /**
    * @memberof module:config
    * @property {String} commentstring A comment string to be included in armored messages
@@ -49713,284 +49739,27 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _cfb = require('asmcrypto.js/dist_es5/aes/cfb');
+
+var _webStreamTools = require('web-stream-tools');
+
+var _webStreamTools2 = _interopRequireDefault(_webStreamTools);
+
 var _cipher = require('./cipher');
 
 var _cipher2 = _interopRequireDefault(_cipher);
 
+var _config = require('../config');
+
+var _config2 = _interopRequireDefault(_config);
+
+var _util = require('../util');
+
+var _util2 = _interopRequireDefault(_util);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-exports.default = {
-
-  /**
-   * This function encrypts a given plaintext with the specified prefixrandom
-   * using the specified blockcipher
-   * @param {Uint8Array} prefixrandom random bytes of block_size length
-   *  to be used in prefixing the data
-   * @param {String} cipherfn the algorithm cipher class to encrypt
-   *  data in one block_size encryption, {@link module:crypto/cipher}.
-   * @param {Uint8Array} plaintext data to be encrypted
-   * @param {Uint8Array} key key to be used to encrypt the plaintext.
-   * This will be passed to the cipherfn
-   * @param {Boolean} resync a boolean value specifying if a resync of the
-   *  IV should be used or not. The encrypteddatapacket uses the
-   *  "old" style with a resync. Encryption within an
-   *  encryptedintegrityprotecteddata packet is not resyncing the IV.
-   * @returns {Uint8Array} encrypted data
-   */
-  encrypt: function encrypt(prefixrandom, cipherfn, plaintext, key, resync) {
-    cipherfn = new _cipher2.default[cipherfn](key);
-    const block_size = cipherfn.blockSize;
-
-    const FR = new Uint8Array(block_size);
-    let FRE = new Uint8Array(block_size);
-
-    const new_prefix = new Uint8Array(prefixrandom.length + 2);
-    new_prefix.set(prefixrandom);
-    new_prefix[prefixrandom.length] = prefixrandom[block_size - 2];
-    new_prefix[prefixrandom.length + 1] = prefixrandom[block_size - 1];
-    prefixrandom = new_prefix;
-
-    let ciphertext = new Uint8Array(plaintext.length + 2 + block_size * 2);
-    let i;
-    let n;
-    let begin;
-    const offset = resync ? 0 : 2;
-
-    // 1.  The feedback register (FR) is set to the IV, which is all zeros.
-    for (i = 0; i < block_size; i++) {
-      FR[i] = 0;
-    }
-
-    // 2.  FR is encrypted to produce FRE (FR Encrypted).  This is the
-    //     encryption of an all-zero value.
-    FRE = cipherfn.encrypt(FR);
-    // 3.  FRE is xored with the first BS octets of random data prefixed to
-    //     the plaintext to produce C[1] through C[BS], the first BS octets
-    //     of ciphertext.
-    for (i = 0; i < block_size; i++) {
-      ciphertext[i] = FRE[i] ^ prefixrandom[i];
-    }
-
-    // 4.  FR is loaded with C[1] through C[BS].
-    FR.set(ciphertext.subarray(0, block_size));
-
-    // 5.  FR is encrypted to produce FRE, the encryption of the first BS
-    //     octets of ciphertext.
-    FRE = cipherfn.encrypt(FR);
-
-    // 6.  The left two octets of FRE get xored with the next two octets of
-    //     data that were prefixed to the plaintext.  This produces C[BS+1]
-    //     and C[BS+2], the next two octets of ciphertext.
-    ciphertext[block_size] = FRE[0] ^ prefixrandom[block_size];
-    ciphertext[block_size + 1] = FRE[1] ^ prefixrandom[block_size + 1];
-
-    if (resync) {
-      // 7.  (The resync step) FR is loaded with C[3] through C[BS+2].
-      FR.set(ciphertext.subarray(2, block_size + 2));
-    } else {
-      FR.set(ciphertext.subarray(0, block_size));
-    }
-    // 8.  FR is encrypted to produce FRE.
-    FRE = cipherfn.encrypt(FR);
-
-    // 9.  FRE is xored with the first BS octets of the given plaintext, now
-    //     that we have finished encrypting the BS+2 octets of prefixed
-    //     data.  This produces C[BS+3] through C[BS+(BS+2)], the next BS
-    //     octets of ciphertext.
-    for (i = 0; i < block_size; i++) {
-      ciphertext[block_size + 2 + i] = FRE[i + offset] ^ plaintext[i];
-    }
-    for (n = block_size; n < plaintext.length + offset; n += block_size) {
-      // 10. FR is loaded with C[BS+3] to C[BS + (BS+2)] (which is C11-C18 for
-      // an 8-octet block).
-      begin = n + 2 - offset;
-      FR.set(ciphertext.subarray(begin, begin + block_size));
-
-      // 11. FR is encrypted to produce FRE.
-      FRE = cipherfn.encrypt(FR);
-
-      // 12. FRE is xored with the next BS octets of plaintext, to produce
-      // the next BS octets of ciphertext.  These are loaded into FR, and
-      // the process is repeated until the plaintext is used up.
-      for (i = 0; i < block_size; i++) {
-        ciphertext[block_size + begin + i] = FRE[i] ^ plaintext[n + i - offset];
-      }
-    }
-
-    ciphertext = ciphertext.subarray(0, plaintext.length + 2 + block_size);
-    return ciphertext;
-  },
-
-  /**
-   * Decrypts the prefixed data for the Modification Detection Code (MDC) computation
-   * @param {String} cipherfn.encrypt Cipher function to use,
-   *  @see module:crypto/cipher.
-   * @param {Uint8Array} key Uint8Array representation of key to be used to check the mdc
-   * This will be passed to the cipherfn
-   * @param {Uint8Array} ciphertext The encrypted data
-   * @returns {Uint8Array} plaintext Data of D(ciphertext) with blocksize length +2
-   */
-  mdc: function mdc(cipherfn, key, ciphertext) {
-    cipherfn = new _cipher2.default[cipherfn](key);
-    const block_size = cipherfn.blockSize;
-
-    let iblock = new Uint8Array(block_size);
-    let ablock = new Uint8Array(block_size);
-    let i;
-
-    // initialisation vector
-    for (i = 0; i < block_size; i++) {
-      iblock[i] = 0;
-    }
-
-    iblock = cipherfn.encrypt(iblock);
-    for (i = 0; i < block_size; i++) {
-      ablock[i] = ciphertext[i];
-      iblock[i] ^= ablock[i];
-    }
-
-    ablock = cipherfn.encrypt(ablock);
-
-    const result = new Uint8Array(iblock.length + 2);
-    result.set(iblock);
-    result[iblock.length] = ablock[0] ^ ciphertext[block_size];
-    result[iblock.length + 1] = ablock[1] ^ ciphertext[block_size + 1];
-    return result;
-  },
-
-  /**
-   * This function decrypts a given ciphertext using the specified blockcipher
-   * @param {String} cipherfn the algorithm cipher class to decrypt
-   *  data in one block_size encryption, {@link module:crypto/cipher}.
-   * @param {Uint8Array} key Uint8Array representation of key to be used to decrypt the ciphertext.
-   * This will be passed to the cipherfn
-   * @param {Uint8Array} ciphertext to be decrypted
-   * @param {Boolean} resync a boolean value specifying if a resync of the
-   *  IV should be used or not. The encrypteddatapacket uses the
-   *  "old" style with a resync. Decryption within an
-   *  encryptedintegrityprotecteddata packet is not resyncing the IV.
-   * @returns {Uint8Array} the plaintext data
-   */
-  decrypt: function decrypt(cipherfn, key, ciphertext, resync) {
-    cipherfn = new _cipher2.default[cipherfn](key);
-    const block_size = cipherfn.blockSize;
-
-    const iblock = new Uint8Array(block_size);
-    let ablock = new Uint8Array(block_size);
-
-    let i;
-    let j;
-    let n;
-    let text = new Uint8Array(ciphertext.length - block_size);
-
-    /*  RFC4880: Tag 18 and Resync:
-     *  [...] Unlike the Symmetrically Encrypted Data Packet, no
-     *  special CFB resynchronization is done after encrypting this prefix
-     *  data.  See "OpenPGP CFB Mode" below for more details.
-     */
-
-    j = 0;
-    if (resync) {
-      for (i = 0; i < block_size; i++) {
-        iblock[i] = ciphertext[i + 2];
-      }
-      for (n = block_size + 2; n < ciphertext.length; n += block_size) {
-        ablock = cipherfn.encrypt(iblock);
-
-        for (i = 0; i < block_size && i + n < ciphertext.length; i++) {
-          iblock[i] = ciphertext[n + i];
-          if (j < text.length) {
-            text[j] = ablock[i] ^ iblock[i];
-            j++;
-          }
-        }
-      }
-    } else {
-      for (i = 0; i < block_size; i++) {
-        iblock[i] = ciphertext[i];
-      }
-      for (n = block_size; n < ciphertext.length; n += block_size) {
-        ablock = cipherfn.encrypt(iblock);
-        for (i = 0; i < block_size && i + n < ciphertext.length; i++) {
-          iblock[i] = ciphertext[n + i];
-          if (j < text.length) {
-            text[j] = ablock[i] ^ iblock[i];
-            j++;
-          }
-        }
-      }
-    }
-
-    n = resync ? 0 : 2;
-
-    text = text.subarray(n, ciphertext.length - block_size - 2 + n);
-
-    return text;
-  },
-
-  normalEncrypt: function normalEncrypt(cipherfn, key, plaintext, iv) {
-    cipherfn = new _cipher2.default[cipherfn](key);
-    const block_size = cipherfn.blockSize;
-
-    let blocki = new Uint8Array(block_size);
-    const blockc = new Uint8Array(block_size);
-    let pos = 0;
-    const cyphertext = new Uint8Array(plaintext.length);
-    let i;
-    let j = 0;
-
-    if (iv === null) {
-      for (i = 0; i < block_size; i++) {
-        blockc[i] = 0;
-      }
-    } else {
-      for (i = 0; i < block_size; i++) {
-        blockc[i] = iv[i];
-      }
-    }
-    while (plaintext.length > block_size * pos) {
-      const encblock = cipherfn.encrypt(blockc);
-      blocki = plaintext.subarray(pos * block_size, pos * block_size + block_size);
-      for (i = 0; i < blocki.length; i++) {
-        blockc[i] = blocki[i] ^ encblock[i];
-        cyphertext[j++] = blockc[i];
-      }
-      pos++;
-    }
-    return cyphertext;
-  },
-
-  normalDecrypt: function normalDecrypt(cipherfn, key, ciphertext, iv) {
-    cipherfn = new _cipher2.default[cipherfn](key);
-    const block_size = cipherfn.blockSize;
-
-    let blockp;
-    let pos = 0;
-    const plaintext = new Uint8Array(ciphertext.length);
-    const offset = 0;
-    let i;
-    let j = 0;
-
-    if (iv === null) {
-      blockp = new Uint8Array(block_size);
-      for (i = 0; i < block_size; i++) {
-        blockp[i] = 0;
-      }
-    } else {
-      blockp = iv.subarray(0, block_size);
-    }
-    while (ciphertext.length > block_size * pos) {
-      const decblock = cipherfn.encrypt(blockp);
-      blockp = ciphertext.subarray(pos * block_size + offset, pos * block_size + block_size + offset);
-      for (i = 0; i < blockp.length; i++) {
-        plaintext[j++] = blockp[i] ^ decblock[i];
-      }
-      pos++;
-    }
-
-    return plaintext;
-  }
-}; // Modified by ProtonTech AG
+const webCrypto = _util2.default.getWebCrypto(); // Modified by ProtonTech AG
 
 // Modified by Recurity Labs GmbH
 
@@ -50010,11 +49779,133 @@ exports.default = {
  */
 
 /**
+ * @requires web-stream-tools
  * @requires crypto/cipher
+ * @requires util
  * @module crypto/cfb
  */
 
-},{"./cipher":88}],84:[function(require,module,exports){
+const nodeCrypto = _util2.default.getNodeCrypto();
+const Buffer = _util2.default.getNodeBuffer();
+
+exports.default = {
+  encrypt: function encrypt(algo, key, plaintext, iv) {
+    if (algo.substr(0, 3) === 'aes') {
+      return aesEncrypt(algo, key, plaintext, iv);
+    }
+
+    const cipherfn = new _cipher2.default[algo](key);
+    const block_size = cipherfn.blockSize;
+
+    let blocki = new Uint8Array(block_size);
+    const blockc = iv;
+    let pos = 0;
+    const ciphertext = new Uint8Array(plaintext.length);
+    let i;
+    let j = 0;
+
+    while (plaintext.length > block_size * pos) {
+      const encblock = cipherfn.encrypt(blockc);
+      blocki = plaintext.subarray(pos * block_size, pos * block_size + block_size);
+      for (i = 0; i < blocki.length; i++) {
+        blockc[i] = blocki[i] ^ encblock[i];
+        ciphertext[j++] = blockc[i];
+      }
+      pos++;
+    }
+    return ciphertext;
+  },
+
+  decrypt: async function decrypt(algo, key, ciphertext, iv) {
+    if (algo.substr(0, 3) === 'aes') {
+      return aesDecrypt(algo, key, ciphertext, iv);
+    }
+
+    ciphertext = await _webStreamTools2.default.readToEnd(ciphertext);
+
+    const cipherfn = new _cipher2.default[algo](key);
+    const block_size = cipherfn.blockSize;
+
+    let blockp = iv;
+    let pos = 0;
+    const plaintext = new Uint8Array(ciphertext.length);
+    const offset = 0;
+    let i;
+    let j = 0;
+
+    while (ciphertext.length > block_size * pos) {
+      const decblock = cipherfn.encrypt(blockp);
+      blockp = ciphertext.subarray(pos * block_size + offset, pos * block_size + block_size + offset);
+      for (i = 0; i < blockp.length; i++) {
+        plaintext[j++] = blockp[i] ^ decblock[i];
+      }
+      pos++;
+    }
+
+    return plaintext;
+  }
+};
+
+
+function aesEncrypt(algo, key, pt, iv) {
+  if (_util2.default.getWebCrypto() && key.length !== 24 && // Chrome doesn't support 192 bit keys, see https://www.chromium.org/blink/webcrypto#TOC-AES-support
+  !_util2.default.isStream(pt) && pt.length >= 3000 * _config2.default.min_bytes_for_web_crypto // Default to a 3MB minimum. Chrome is pretty slow for small messages, see: https://bugs.chromium.org/p/chromium/issues/detail?id=701188#c2
+  ) {
+      // Web Crypto
+      return webEncrypt(algo, key, pt, iv);
+    }
+  if (nodeCrypto) {
+    // Node crypto library.
+    return nodeEncrypt(algo, key, pt, iv);
+  } // asm.js fallback
+  const cfb = new _cfb.AES_CFB(key, iv);
+  return _webStreamTools2.default.transform(pt, value => cfb.AES_Encrypt_process(value), () => cfb.AES_Encrypt_finish());
+}
+
+function aesDecrypt(algo, key, ct, iv) {
+  if (nodeCrypto) {
+    // Node crypto library.
+    return nodeDecrypt(algo, key, ct, iv);
+  }
+  if (_util2.default.isStream(ct)) {
+    const cfb = new _cfb.AES_CFB(key, iv);
+    return _webStreamTools2.default.transform(ct, value => cfb.AES_Decrypt_process(value), () => cfb.AES_Decrypt_finish());
+  }
+  return _cfb.AES_CFB.decrypt(ct, key, iv);
+}
+
+function xorMut(a, b) {
+  for (let i = 0; i < a.length; i++) {
+    a[i] = a[i] ^ b[i];
+  }
+}
+
+async function webEncrypt(algo, key, pt, iv) {
+  const ALGO = 'AES-CBC';
+  const _key = await webCrypto.importKey('raw', key, { name: ALGO }, false, ['encrypt']);
+  const blockSize = _cipher2.default[algo].blockSize;
+
+  const cbc_pt = _util2.default.concatUint8Array([new Uint8Array(blockSize), pt]);
+  const ct = new Uint8Array((await webCrypto.encrypt({ name: ALGO, iv }, _key, cbc_pt))).subarray(0, pt.length);
+  xorMut(ct, pt);
+  return ct;
+}
+
+function nodeEncrypt(algo, key, pt, iv) {
+  key = new Buffer(key);
+  iv = new Buffer(iv);
+  const cipherObj = new nodeCrypto.createCipheriv('aes-' + algo.substr(3, 3) + '-cfb', key, iv);
+  return _webStreamTools2.default.transform(pt, value => new Uint8Array(cipherObj.update(new Buffer(value))));
+}
+
+function nodeDecrypt(algo, key, ct, iv) {
+  key = new Buffer(key);
+  iv = new Buffer(iv);
+  const decipherObj = new nodeCrypto.createDecipheriv('aes-' + algo.substr(3, 3) + '-cfb', key, iv);
+  return _webStreamTools2.default.transform(ct, value => new Uint8Array(decipherObj.update(new Buffer(value))));
+}
+
+},{"../config":81,"../util":154,"./cipher":88,"asmcrypto.js/dist_es5/aes/cfb":6,"web-stream-tools":77}],84:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -51544,6 +51435,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _bn = dereq_bn;
+
+var _bn2 = _interopRequireDefault(_bn);
+
 var _public_key = require('./public_key');
 
 var _public_key2 = _interopRequireDefault(_public_key);
@@ -51576,6 +51471,10 @@ var _enums = require('../enums');
 
 var _enums2 = _interopRequireDefault(_enums);
 
+var _util = require('../util');
+
+var _util2 = _interopRequireDefault(_util);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // GPG4Browsers - An OpenPGP implementation in javascript
@@ -51600,6 +51499,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * @fileoverview Provides functions for asymmetric encryption and decryption as
  * well as key generation and parameter handling for all public-key cryptosystems.
+ * @requires bn.js
  * @requires crypto/public_key
  * @requires crypto/cipher
  * @requires crypto/random
@@ -51608,6 +51508,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @requires type/mpi
  * @requires type/oid
  * @requires enums
+ * @requires util
  * @module crypto/crypto
  */
 
@@ -51661,8 +51562,13 @@ exports.default = {
             const oid = pub_params[0];
             const Q = pub_params[1].toUint8Array();
             const kdf_params = pub_params[2];
-            const res = await _public_key2.default.elliptic.ecdh.encrypt(oid, kdf_params.cipher, kdf_params.hash, data, Q, fingerprint);
-            return constructParams(types, [res.V, res.C]);
+
+            var _ref = await _public_key2.default.elliptic.ecdh.encrypt(oid, kdf_params.cipher, kdf_params.hash, data, Q, fingerprint);
+
+            const V = _ref.V,
+                  C = _ref.C;
+
+            return constructParams(types, [new _bn2.default(V), C]);
           }
         default:
           return [];
@@ -51865,11 +51771,13 @@ exports.default = {
    * Generates a random byte prefix for the specified algorithm
    * See {@link https://tools.ietf.org/html/rfc4880#section-9.2|RFC 4880 9.2} for algorithms.
    * @param {module:enums.symmetric} algo Symmetric encryption algorithm
-   * @returns {Uint8Array}                Random bytes with length equal to the block size of the cipher
+   * @returns {Uint8Array}                Random bytes with length equal to the block size of the cipher, plus the last two bytes repeated.
    * @async
    */
-  getPrefixRandom: function getPrefixRandom(algo) {
-    return _random2.default.getRandomBytes(_cipher2.default[algo].blockSize);
+  getPrefixRandom: async function getPrefixRandom(algo) {
+    const prefixrandom = await _random2.default.getRandomBytes(_cipher2.default[algo].blockSize);
+    const repeat = new Uint8Array([prefixrandom[prefixrandom.length - 2], prefixrandom[prefixrandom.length - 1]]);
+    return _util2.default.concat([prefixrandom, repeat]);
   },
 
   /**
@@ -51886,7 +51794,7 @@ exports.default = {
   constructParams: constructParams
 };
 
-},{"../enums":115,"../type/ecdh_symkey":148,"../type/kdf_params":149,"../type/mpi":151,"../type/oid":152,"./cipher":88,"./public_key":108,"./random":111}],92:[function(require,module,exports){
+},{"../enums":115,"../type/ecdh_symkey":148,"../type/kdf_params":149,"../type/mpi":151,"../type/oid":152,"../util":154,"./cipher":88,"./public_key":108,"./random":111,"bn.js":17}],92:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -52361,7 +52269,7 @@ exports.default = {
    * Create a hash on the specified data using the specified algorithm
    * @param {module:enums.hash} algo Hash algorithm type (see {@link https://tools.ietf.org/html/rfc4880#section-9.4|RFC 4880 9.4})
    * @param {Uint8Array} data Data to be hashed
-   * @returns {Uint8Array} hash value
+   * @returns {Promise<Uint8Array>} hash value
    */
   digest: function digest(algo, data) {
     switch (algo) {
@@ -53844,6 +53752,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 /**
  * @fileoverview Key encryption and decryption for RFC 6637 ECDH
+ * @requires bn.js
  * @requires crypto/public_key/elliptic/curve
  * @requires crypto/aes_kw
  * @requires crypto/cipher
@@ -53860,9 +53769,29 @@ function buildEcdhParam(public_algo, oid, cipher_algo, hash_algo, fingerprint) {
 }
 
 // Key Derivation Function (RFC 6637)
-async function kdf(hash_algo, X, length, param) {
-  const digest = await _hash2.default.digest(hash_algo, _util2.default.concatUint8Array([new Uint8Array([0, 0, 0, 1]), new Uint8Array(X), param]));
+async function kdf(hash_algo, S, length, param, curve, compat) {
+  const len = compat ? S.byteLength() : curve.curve.curve.p.byteLength();
+  // Note: this is not ideal, but the RFC's are unclear
+  // https://tools.ietf.org/html/draft-ietf-openpgp-rfc4880bis-02#appendix-B
+  const X = curve.curve.curve.type === 'mont' ? S.toArrayLike(Uint8Array, 'le', len) : S.toArrayLike(Uint8Array, 'be', len);
+  const digest = await _hash2.default.digest(hash_algo, _util2.default.concatUint8Array([new Uint8Array([0, 0, 0, 1]), X, param]));
   return digest.subarray(0, length);
+}
+
+/**
+ * Generate ECDHE ephemeral key and secret from public key
+ *
+ * @param  {Curve}                  curve        Elliptic curve object
+ * @param  {Uint8Array}             Q                   Recipient public key
+ * @returns {Promise<{V: Uint8Array, S: BN}>}   Returns public part of ephemeral key and generated ephemeral secret
+ * @async
+ */
+async function genPublicEphemeralKey(curve, Q) {
+  const v = await curve.genKeyPair();
+  Q = curve.keyFromPublic(Q);
+  const V = new Uint8Array(v.getPublic());
+  const S = v.derive(Q);
+  return { V, S };
 }
 
 /**
@@ -53874,22 +53803,37 @@ async function kdf(hash_algo, X, length, param) {
  * @param  {module:type/mpi}        m            Value derived from session key (RFC 6637)
  * @param  {Uint8Array}             Q            Recipient public key
  * @param  {String}                 fingerprint  Recipient fingerprint
- * @returns {Promise<{V: BN, C: BN}>}            Returns ephemeral key and encoded session key
+ * @returns {Promise<{V: BN, C: BN}>}            Returns public part of ephemeral key and encoded session key
  * @async
  */
 async function encrypt(oid, cipher_algo, hash_algo, m, Q, fingerprint) {
   const curve = new _curves2.default(oid);
+
+  var _ref = await genPublicEphemeralKey(curve, Q);
+
+  const V = _ref.V,
+        S = _ref.S;
+
   const param = buildEcdhParam(_enums2.default.publicKey.ecdh, oid, cipher_algo, hash_algo, fingerprint);
   cipher_algo = _enums2.default.read(_enums2.default.symmetric, cipher_algo);
-  const v = await curve.genKeyPair();
-  Q = curve.keyFromPublic(Q);
-  const S = v.derive(Q);
-  const Z = await kdf(hash_algo, S, _cipher2.default[cipher_algo].keySize, param);
+  const Z = await kdf(hash_algo, S, _cipher2.default[cipher_algo].keySize, param, curve, false);
   const C = _aes_kw2.default.wrap(Z, m.toString());
-  return {
-    V: new _bn2.default(v.getPublic()),
-    C: C
-  };
+  return { V, C };
+}
+
+/**
+ * Generate ECDHE secret from private key and public part of ephemeral key
+ *
+ * @param  {Curve}                  curve        Elliptic curve object
+ * @param  {Uint8Array}             V            Public part of ephemeral key
+ * @param  {Uint8Array}             d            Recipient private key
+ * @returns {Promise<BN>}                        Generated ephemeral secret
+ * @async
+ */
+async function genPrivateEphemeralKey(curve, V, d) {
+  V = curve.keyFromPublic(V);
+  d = curve.keyFromPrivate(d);
+  return d.derive(V);
 }
 
 /**
@@ -53898,25 +53842,28 @@ async function encrypt(oid, cipher_algo, hash_algo, m, Q, fingerprint) {
  * @param  {module:type/oid}        oid          Elliptic curve object identifier
  * @param  {module:enums.symmetric} cipher_algo  Symmetric cipher to use
  * @param  {module:enums.hash}      hash_algo    Hash algorithm to use
- * @param  {BN}                     V            Public part of ephemeral key
+ * @param  {Uint8Array}             V            Public part of ephemeral key
  * @param  {Uint8Array}             C            Encrypted and wrapped value derived from session key
  * @param  {Uint8Array}             d            Recipient private key
  * @param  {String}                 fingerprint  Recipient fingerprint
- * @returns {Promise<Uint8Array>}                Value derived from session
+ * @returns {Promise<BN>}                        Value derived from session
  * @async
  */
 async function decrypt(oid, cipher_algo, hash_algo, V, C, d, fingerprint) {
   const curve = new _curves2.default(oid);
+  const S = await genPrivateEphemeralKey(curve, V, d);
   const param = buildEcdhParam(_enums2.default.publicKey.ecdh, oid, cipher_algo, hash_algo, fingerprint);
   cipher_algo = _enums2.default.read(_enums2.default.symmetric, cipher_algo);
-  V = curve.keyFromPublic(V);
-  d = curve.keyFromPrivate(d);
-  const S = d.derive(V);
-  const Z = await kdf(hash_algo, S, _cipher2.default[cipher_algo].keySize, param);
+  try {
+    const Z = await kdf(hash_algo, S, _cipher2.default[cipher_algo].keySize, param, curve, false);
+    return new _bn2.default(_aes_kw2.default.unwrap(Z, C));
+  } catch (e) {}
+  // Work around old OpenPGP.js bug.
+  const Z = await kdf(hash_algo, S, _cipher2.default[cipher_algo].keySize, param, curve, true);
   return new _bn2.default(_aes_kw2.default.unwrap(Z, C));
 }
 
-exports.default = { encrypt, decrypt };
+exports.default = { encrypt, decrypt, genPublicEphemeralKey, genPrivateEphemeralKey, buildEcdhParam, kdf };
 
 },{"../../../enums":115,"../../../type/kdf_params":149,"../../../util":154,"../../aes_kw":82,"../../cipher":88,"../../hash":94,"./curves":102,"bn.js":17}],104:[function(require,module,exports){
 'use strict';
@@ -55446,7 +55393,7 @@ function dearmor(input) {
               throw new Error('Misformed armored text');
             }
             // remove trailing whitespace at end of lines
-            line = line.replace(/[\t\r\n ]+$/, '');
+            line = _util2.default.removeTrailingSpaces(line.replace(/[\r\n]/g, ''));
             if (!type) {
               if (reSplit.test(line)) {
                 type = getType(line);
@@ -55502,7 +55449,7 @@ function dearmor(input) {
               let remainder = await reader.readToEnd();
               if (!remainder.length) remainder = '';
               remainder = line + remainder;
-              remainder = remainder.replace(/[\t\r ]+$/mg, '');
+              remainder = _util2.default.removeTrailingSpaces(remainder.replace(/\r/g, ''));
               const parts = remainder.split(reSplit);
               if (parts.length === 1) {
                 throw new Error('Misformed armored text');
@@ -55659,6 +55606,13 @@ const b64s = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 const b64u = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'; // URL-safe radix-64
 
+const b64toByte = [];
+for (let i = 0; i < b64s.length; i++) {
+  b64toByte[b64s.charCodeAt(i)] = i;
+}
+b64toByte[b64u.charCodeAt(62)] = 62;
+b64toByte[b64u.charCodeAt(63)] = 63;
+
 /**
  * Convert binary array to radix-64
  * @param {Uint8Array | ReadableStream<Uint8Array>} t Uint8Array to convert
@@ -55736,7 +55690,6 @@ function s2r(t, u = false) {
  */
 function r2s(t, u) {
   // TODO check atob alternative
-  const b64 = u ? b64u : b64s;
   let c;
 
   let s = 0;
@@ -55747,7 +55700,7 @@ function r2s(t, u) {
     const r = new Uint8Array(Math.ceil(0.75 * tl));
     let index = 0;
     for (let n = 0; n < tl; n++) {
-      c = b64.indexOf(value.charAt(n));
+      c = b64toByte[value.charCodeAt(n)];
       if (c >= 0) {
         if (s) {
           r[index++] = a | c >> 6 - s & 255;
@@ -56281,7 +56234,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * Initialize the HKP client and configure it with the key server url and fetch function.
  * @constructor
  * @param {String}    keyServerBaseUrl  (optional) The HKP key server base url including
- *   the protocol to use e.g. https://pgp.mit.edu
+ *   the protocol to use, e.g. 'https://pgp.mit.edu'; defaults to
+ *   openpgp.config.keyserver (https://keyserver.ubuntu.com)
  */
 function HKP(keyServerBaseUrl) {
   this._baseUrl = keyServerBaseUrl || _config2.default.keyserver;
@@ -59636,7 +59590,7 @@ async function read(input, fromStream = _util2.default.isStream(input)) {
     input = _webStreamTools2.default.nodeToWeb(input);
   }
   const packetlist = new _packet2.default.List();
-  await packetlist.read(input);
+  await packetlist.read(input, fromStream);
   const message = new Message(packetlist);
   message.fromStream = fromStream;
   return message;
@@ -60423,7 +60377,13 @@ function linkStreams(result, message, erroringStream) {
 async function prepareSignatures(signatures) {
   await Promise.all(signatures.map(async signature => {
     signature.signature = await signature.signature;
-    signature.valid = await signature.verified;
+    try {
+      signature.valid = await signature.verified;
+    } catch (e) {
+      signature.valid = null;
+      signature.error = e;
+      _util2.default.print_debug_error(e);
+    }
   }));
 }
 
@@ -60960,7 +60920,7 @@ function Compressed() {
  * Parsing function for the packet.
  * @param {Uint8Array | ReadableStream<Uint8Array>} bytes Payload of a tag 8 packet
  */
-Compressed.prototype.read = async function (bytes) {
+Compressed.prototype.read = async function (bytes, streaming) {
   await _webStreamTools2.default.parse(bytes, async reader => {
 
     // One octet that gives the algorithm used to compress the packet.
@@ -60969,7 +60929,7 @@ Compressed.prototype.read = async function (bytes) {
     // Compressed data, which makes up the remainder of the packet.
     this.compressed = reader.remainder();
 
-    await this.decompress();
+    await this.decompress(streaming);
   });
 };
 
@@ -60989,13 +60949,13 @@ Compressed.prototype.write = function () {
  * Decompression method for decompressing the compressed data
  * read by read_packet
  */
-Compressed.prototype.decompress = async function () {
+Compressed.prototype.decompress = async function (streaming) {
 
   if (!decompress_fns[this.algorithm]) {
     throw new Error(this.algorithm + ' decompression not supported');
   }
 
-  await this.packets.read(decompress_fns[this.algorithm](this.compressed));
+  await this.packets.read(decompress_fns[this.algorithm](this.compressed), streaming);
 };
 
 /**
@@ -61036,8 +60996,10 @@ function pako_zlib(constructor, options = {}) {
         return obj.result;
       }
     }, () => {
-      obj.push([], _pako2.default.Z_FINISH);
-      return obj.result;
+      if (constructor === _pako2.default.Deflate) {
+        obj.push([], _pako2.default.Z_FINISH);
+        return obj.result;
+      }
     });
   };
 }
@@ -61687,7 +61649,7 @@ exports.default = {
    * @param {Function} callback Function to call with the parsed packet
    * @returns {Boolean} Returns false if the stream was empty and parsing is done, and true otherwise.
    */
-  read: async function read(input, callback) {
+  read: async function read(input, streaming, callback) {
     const reader = _webStreamTools2.default.getReader(input);
     let writer;
     try {
@@ -61716,14 +61678,16 @@ exports.default = {
         packet_length_type = headerByte & 0x03; // bit 1-0
       }
 
-      const streaming = this.supportsStreaming(tag);
+      const supportsStreaming = this.supportsStreaming(tag);
       let packet = null;
       let callbackReturned;
-      if (streaming) {
+      if (streaming && supportsStreaming) {
         const transform = new TransformStream();
         writer = _webStreamTools2.default.getWriter(transform.writable);
         packet = transform.readable;
         callbackReturned = callback({ tag, packet });
+      } else {
+        packet = [];
       }
 
       let wasPartialLength;
@@ -61774,7 +61738,7 @@ exports.default = {
           } else if (lengthByte > 223 && lengthByte < 255) {
             packet_length = 1 << (lengthByte & 0x1F);
             wasPartialLength = true;
-            if (!streaming) {
+            if (!supportsStreaming) {
               throw new TypeError('This packet type does not support partial lengths.');
             }
             // 4.2.2.3. Five-Octet Lengths
@@ -61782,10 +61746,10 @@ exports.default = {
             packet_length = (await reader.readByte()) << 24 | (await reader.readByte()) << 16 | (await reader.readByte()) << 8 | (await reader.readByte());
           }
         }
-        if (writer && packet_length > 0) {
+        if (packet_length >= 0) {
           let bytesRead = 0;
           while (true) {
-            await writer.ready;
+            if (writer) await writer.ready;
 
             var _ref = await reader.read();
 
@@ -61796,26 +61760,27 @@ exports.default = {
               if (packet_length === Infinity) break;
               throw new Error('Unexpected end of packet');
             }
-            await writer.write(value.slice(0, packet_length - bytesRead));
+            const chunk = value.subarray(0, packet_length - bytesRead);
+            if (writer) await writer.write(chunk);else packet.push(chunk);
             bytesRead += value.length;
             if (bytesRead >= packet_length) {
-              reader.unshift(value.slice(packet_length - bytesRead + value.length));
+              reader.unshift(value.subarray(packet_length - bytesRead + value.length));
               break;
             }
           }
         }
       } while (wasPartialLength);
 
-      if (!streaming) {
-        packet = await reader.readBytes(packet_length);
+      if (!writer) {
+        packet = _util2.default.concatUint8Array(packet);
         await callback({ tag, packet });
       }
       const nextPacket = await reader.peekBytes(2);
       if (writer) {
         await writer.ready;
         await writer.close();
+        await callbackReturned;
       }
-      if (streaming) await callbackReturned;
       return !nextPacket || !nextPacket.length;
     } catch (e) {
       if (writer) {
@@ -61898,19 +61863,19 @@ List.prototype = [];
  * Reads a stream of binary data and interprents it as a list of packets.
  * @param {Uint8Array | ReadableStream<Uint8Array>} A Uint8Array of bytes.
  */
-List.prototype.read = async function (bytes) {
+List.prototype.read = async function (bytes, streaming) {
   this.stream = _webStreamTools2.default.transformPair(bytes, async (readable, writable) => {
     const writer = _webStreamTools2.default.getWriter(writable);
     try {
       while (true) {
         await writer.ready;
-        const done = await _packet2.default.read(readable, async parsed => {
+        const done = await _packet2.default.read(readable, streaming, async parsed => {
           try {
             const tag = _enums2.default.read(_enums2.default.packet, parsed.tag);
             const packet = packets.newPacketFromTag(tag);
             packet.packets = new List();
             packet.fromStream = _util2.default.isStream(parsed.packet);
-            await packet.read(parsed.packet);
+            await packet.read(parsed.packet, streaming);
             await writer.write(packet);
           } catch (e) {
             if (!_config2.default.tolerant || _packet2.default.supportsStreaming(parsed.tag)) {
@@ -61946,7 +61911,7 @@ List.prototype.read = async function (bytes) {
     } else {
       this.stream = null;
     }
-    if (done || value.fromStream) {
+    if (done || _packet2.default.supportsStreaming(value.tag)) {
       break;
     }
   }
@@ -62878,7 +62843,7 @@ SecretKey.prototype.encrypt = async function (passphrase) {
     arr = [new Uint8Array([254, _enums2.default.write(_enums2.default.symmetric, symmetric)])];
     arr.push(s2k.write());
     arr.push(iv);
-    arr.push(_crypto2.default.cfb.normalEncrypt(symmetric, key, _util2.default.concatUint8Array([cleartext, await _crypto2.default.hash.sha1(cleartext)]), iv));
+    arr.push(_crypto2.default.cfb.encrypt(symmetric, key, _util2.default.concatUint8Array([cleartext, await _crypto2.default.hash.sha1(cleartext)]), iv));
   }
 
   this.encrypted = _util2.default.concatUint8Array(arr);
@@ -62934,6 +62899,9 @@ SecretKey.prototype.decrypt = async function (passphrase) {
     const s2k = new _s2k2.default();
     i += s2k.read(this.encrypted.subarray(i, this.encrypted.length));
 
+    if (s2k.type === 'gnu-dummy') {
+      return true;
+    }
     key = await produceEncryptionKey(s2k, passphrase, symmetric);
   } else {
     symmetric = s2k_usage;
@@ -62967,7 +62935,7 @@ SecretKey.prototype.decrypt = async function (passphrase) {
       }
     }
   } else {
-    const cleartextWithHash = _crypto2.default.cfb.normalDecrypt(symmetric, key, ciphertext, iv);
+    const cleartextWithHash = await _crypto2.default.cfb.decrypt(symmetric, key, ciphertext, iv);
 
     let hash;
     let hashlen;
@@ -63978,7 +63946,7 @@ SymEncryptedAEADProtected.prototype.decrypt = async function (sessionKeyAlgorith
   if (_config2.default.aead_protect_version !== 4) {
     this.cipherAlgo = _enums2.default.write(_enums2.default.symmetric, sessionKeyAlgorithm);
   }
-  await this.packets.read((await this.crypt('decrypt', key, _webStreamTools2.default.clone(this.encrypted), streaming)));
+  await this.packets.read((await this.crypt('decrypt', key, _webStreamTools2.default.clone(this.encrypted), streaming)), streaming);
   return true;
 };
 
@@ -64086,8 +64054,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _cfb = require('asmcrypto.js/dist_es5/aes/cfb');
-
 var _webStreamTools = require('web-stream-tools');
 
 var _webStreamTools2 = _interopRequireDefault(_webStreamTools);
@@ -64110,6 +64076,20 @@ var _util2 = _interopRequireDefault(_util);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+const VERSION = 1; // A one-octet version number of the data packet.
+
+/**
+ * Implementation of the Sym. Encrypted Integrity Protected Data Packet (Tag 18)
+ *
+ * {@link https://tools.ietf.org/html/rfc4880#section-5.13|RFC4880 5.13}:
+ * The Symmetrically Encrypted Integrity Protected Data packet is
+ * a variant of the Symmetrically Encrypted Data packet. It is a new feature
+ * created for OpenPGP that addresses the problem of detecting a modification to
+ * encrypted data. It is used in combination with a Modification Detection Code
+ * packet.
+ * @memberof module:packet
+ * @constructor
+ */
 // GPG4Browsers - An OpenPGP implementation in javascript
 // Copyright (C) 2011 Recurity Labs GmbH
 //
@@ -64136,23 +64116,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @requires util
  */
 
-const nodeCrypto = _util2.default.getNodeCrypto();
-const Buffer = _util2.default.getNodeBuffer();
-
-const VERSION = 1; // A one-octet version number of the data packet.
-
-/**
- * Implementation of the Sym. Encrypted Integrity Protected Data Packet (Tag 18)
- *
- * {@link https://tools.ietf.org/html/rfc4880#section-5.13|RFC4880 5.13}:
- * The Symmetrically Encrypted Integrity Protected Data packet is
- * a variant of the Symmetrically Encrypted Data packet. It is a new feature
- * created for OpenPGP that addresses the problem of detecting a modification to
- * encrypted data. It is used in combination with a Modification Detection Code
- * packet.
- * @memberof module:packet
- * @constructor
- */
 function SymEncryptedIntegrityProtected() {
   this.tag = _enums2.default.packet.symEncryptedIntegrityProtected;
   this.version = VERSION;
@@ -64198,23 +64161,14 @@ SymEncryptedIntegrityProtected.prototype.write = function () {
 SymEncryptedIntegrityProtected.prototype.encrypt = async function (sessionKeyAlgorithm, key, streaming) {
   let bytes = this.packets.write();
   if (!streaming) bytes = await _webStreamTools2.default.readToEnd(bytes);
-  const prefixrandom = await _crypto2.default.getPrefixRandom(sessionKeyAlgorithm);
-  const repeat = new Uint8Array([prefixrandom[prefixrandom.length - 2], prefixrandom[prefixrandom.length - 1]]);
-  const prefix = _util2.default.concat([prefixrandom, repeat]);
+  const prefix = await _crypto2.default.getPrefixRandom(sessionKeyAlgorithm);
   const mdc = new Uint8Array([0xD3, 0x14]); // modification detection code packet
 
-  let tohash = _util2.default.concat([bytes, mdc]);
-  const hash = await _crypto2.default.hash.sha1(_util2.default.concat([prefix, _webStreamTools2.default.passiveClone(tohash)]));
-  tohash = _util2.default.concat([tohash, hash]);
+  const tohash = _util2.default.concat([prefix, bytes, mdc]);
+  const hash = await _crypto2.default.hash.sha1(_webStreamTools2.default.passiveClone(tohash));
+  const plaintext = _util2.default.concat([tohash, hash]);
 
-  if (sessionKeyAlgorithm.substr(0, 3) === 'aes') {
-    // AES optimizations. Native code for node, asmCrypto for browser.
-    this.encrypted = aesEncrypt(sessionKeyAlgorithm, _util2.default.concat([prefix, tohash]), key);
-  } else {
-    tohash = await _webStreamTools2.default.readToEnd(tohash);
-    this.encrypted = _crypto2.default.cfb.encrypt(prefixrandom, sessionKeyAlgorithm, tohash, key, false);
-    this.encrypted = _webStreamTools2.default.slice(this.encrypted, 0, prefix.length + tohash.length);
-  }
+  this.encrypted = await _crypto2.default.cfb.encrypt(sessionKeyAlgorithm, key, plaintext, new Uint8Array(_crypto2.default.cipher[sessionKeyAlgorithm].blockSize));
   return true;
 };
 
@@ -64229,87 +64183,31 @@ SymEncryptedIntegrityProtected.prototype.encrypt = async function (sessionKeyAlg
 SymEncryptedIntegrityProtected.prototype.decrypt = async function (sessionKeyAlgorithm, key, streaming) {
   if (!streaming) this.encrypted = await _webStreamTools2.default.readToEnd(this.encrypted);
   const encrypted = _webStreamTools2.default.clone(this.encrypted);
-  const encryptedClone = _webStreamTools2.default.passiveClone(encrypted);
-  let decrypted;
-  if (sessionKeyAlgorithm.substr(0, 3) === 'aes') {
-    // AES optimizations. Native code for node, asmCrypto for browser.
-    decrypted = aesDecrypt(sessionKeyAlgorithm, encrypted, key, streaming);
-  } else {
-    decrypted = _crypto2.default.cfb.decrypt(sessionKeyAlgorithm, key, (await _webStreamTools2.default.readToEnd(encrypted)), false);
-  }
+  const decrypted = await _crypto2.default.cfb.decrypt(sessionKeyAlgorithm, key, encrypted, new Uint8Array(_crypto2.default.cipher[sessionKeyAlgorithm].blockSize));
 
   // there must be a modification detection code packet as the
   // last packet and everything gets hashed except the hash itself
-  const encryptedPrefix = await _webStreamTools2.default.readToEnd(_webStreamTools2.default.slice(encryptedClone, 0, _crypto2.default.cipher[sessionKeyAlgorithm].blockSize + 2));
-  const prefix = _crypto2.default.cfb.mdc(sessionKeyAlgorithm, key, encryptedPrefix);
   const realHash = _webStreamTools2.default.slice(_webStreamTools2.default.passiveClone(decrypted), -20);
-  const bytes = _webStreamTools2.default.slice(decrypted, 0, -20);
-  const tohash = _util2.default.concat([prefix, _webStreamTools2.default.passiveClone(bytes)]);
-  const verifyHash = Promise.all([_webStreamTools2.default.readToEnd((await _crypto2.default.hash.sha1(tohash))), _webStreamTools2.default.readToEnd(realHash)]).then(([hash, mdc]) => {
+  const tohash = _webStreamTools2.default.slice(decrypted, 0, -20);
+  const verifyHash = Promise.all([_webStreamTools2.default.readToEnd((await _crypto2.default.hash.sha1(_webStreamTools2.default.passiveClone(tohash)))), _webStreamTools2.default.readToEnd(realHash)]).then(([hash, mdc]) => {
     if (!_util2.default.equalsUint8Array(hash, mdc)) {
       throw new Error('Modification detected.');
     }
     return new Uint8Array();
   });
-  let packetbytes = _webStreamTools2.default.slice(bytes, 0, -2);
+  const bytes = _webStreamTools2.default.slice(tohash, _crypto2.default.cipher[sessionKeyAlgorithm].blockSize + 2); // Remove random prefix
+  let packetbytes = _webStreamTools2.default.slice(bytes, 0, -2); // Remove MDC packet
   packetbytes = _webStreamTools2.default.concat([packetbytes, _webStreamTools2.default.fromAsync(() => verifyHash)]);
   if (!_util2.default.isStream(encrypted) || !_config2.default.allow_unauthenticated_stream) {
     packetbytes = await _webStreamTools2.default.readToEnd(packetbytes);
   }
-  await this.packets.read(packetbytes);
+  await this.packets.read(packetbytes, streaming);
   return true;
 };
 
 exports.default = SymEncryptedIntegrityProtected;
 
-//////////////////////////
-//                      //
-//   Helper functions   //
-//                      //
-//////////////////////////
-
-
-function aesEncrypt(algo, pt, key) {
-  if (nodeCrypto) {
-    // Node crypto library.
-    return nodeEncrypt(algo, pt, key);
-  } // asm.js fallback
-  const cfb = new _cfb.AES_CFB(key);
-  return _webStreamTools2.default.transform(pt, value => cfb.AES_Encrypt_process(value), () => cfb.AES_Encrypt_finish());
-}
-
-function aesDecrypt(algo, ct, key) {
-  let pt;
-  if (nodeCrypto) {
-    // Node crypto library.
-    pt = nodeDecrypt(algo, ct, key);
-  } else {
-    // asm.js fallback
-    if (_util2.default.isStream(ct)) {
-      const cfb = new _cfb.AES_CFB(key);
-      pt = _webStreamTools2.default.transform(ct, value => cfb.AES_Decrypt_process(value), () => cfb.AES_Decrypt_finish());
-    } else {
-      pt = _cfb.AES_CFB.decrypt(ct, key);
-    }
-  }
-  return _webStreamTools2.default.slice(pt, _crypto2.default.cipher[algo].blockSize + 2); // Remove random prefix
-}
-
-function nodeEncrypt(algo, pt, key) {
-  key = new Buffer(key);
-  const iv = new Buffer(new Uint8Array(_crypto2.default.cipher[algo].blockSize));
-  const cipherObj = new nodeCrypto.createCipheriv('aes-' + algo.substr(3, 3) + '-cfb', key, iv);
-  return _webStreamTools2.default.transform(pt, value => new Uint8Array(cipherObj.update(new Buffer(value))));
-}
-
-function nodeDecrypt(algo, ct, key) {
-  key = new Buffer(key);
-  const iv = new Buffer(new Uint8Array(_crypto2.default.cipher[algo].blockSize));
-  const decipherObj = new nodeCrypto.createDecipheriv('aes-' + algo.substr(3, 3) + '-cfb', key, iv);
-  return _webStreamTools2.default.transform(ct, value => new Uint8Array(decipherObj.update(new Buffer(value))));
-}
-
-},{"../config":81,"../crypto":96,"../enums":115,"../util":154,"asmcrypto.js/dist_es5/aes/cfb":6,"web-stream-tools":77}],141:[function(require,module,exports){
+},{"../config":81,"../crypto":96,"../enums":115,"../util":154,"web-stream-tools":77}],141:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -64475,7 +64373,7 @@ SymEncryptedSessionKey.prototype.decrypt = async function (passphrase) {
     const modeInstance = await mode(algo, key);
     this.sessionKey = await modeInstance.decrypt(this.encrypted, this.iv, adata);
   } else if (this.encrypted !== null) {
-    const decrypted = _crypto2.default.cfb.normalDecrypt(algo, key, this.encrypted, null);
+    const decrypted = await _crypto2.default.cfb.decrypt(algo, key, this.encrypted, new Uint8Array(_crypto2.default.cipher[algo].blockSize));
 
     this.sessionKeyAlgorithm = _enums2.default.read(_enums2.default.symmetric, decrypted[0]);
     this.sessionKey = decrypted.subarray(1, decrypted.length);
@@ -64516,7 +64414,7 @@ SymEncryptedSessionKey.prototype.encrypt = async function (passphrase) {
   } else {
     const algo_enum = new Uint8Array([_enums2.default.write(_enums2.default.symmetric, this.sessionKeyAlgorithm)]);
     const private_key = _util2.default.concatUint8Array([algo_enum, this.sessionKey]);
-    this.encrypted = _crypto2.default.cfb.normalEncrypt(algo, key, private_key, null);
+    this.encrypted = await _crypto2.default.cfb.encrypt(algo, key, private_key, new Uint8Array(_crypto2.default.cipher[algo].blockSize));
   }
 
   return true;
@@ -64554,6 +64452,10 @@ var _enums = require('../enums');
 
 var _enums2 = _interopRequireDefault(_enums);
 
+var _util = require('../util');
+
+var _util2 = _interopRequireDefault(_util);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
@@ -64568,7 +64470,27 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @memberof module:packet
  * @constructor
  */
-// GPG4Browsers - An OpenPGP implementation in javascript
+function SymmetricallyEncrypted() {
+  /**
+   * Packet type
+   * @type {module:enums.packet}
+   */
+  this.tag = _enums2.default.packet.symmetricallyEncrypted;
+  /**
+   * Encrypted secret-key data
+   */
+  this.encrypted = null;
+  /**
+   * Decrypted packets contained within.
+   * @type {module:packet.List}
+   */
+  this.packets = null;
+  /**
+   * When true, decrypt fails if message is not integrity protected
+   * @see module:config.ignore_mdc_error
+   */
+  this.ignore_mdc_error = _config2.default.ignore_mdc_error;
+} // GPG4Browsers - An OpenPGP implementation in javascript
 // Copyright (C) 2011 Recurity Labs GmbH
 //
 // This library is free software; you can redistribute it and/or
@@ -64590,29 +64512,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @requires config
  * @requires crypto
  * @requires enums
+ * @requires util
  */
-
-function SymmetricallyEncrypted() {
-  /**
-   * Packet type
-   * @type {module:enums.packet}
-   */
-  this.tag = _enums2.default.packet.symmetricallyEncrypted;
-  /**
-   * Encrypted secret-key data
-   */
-  this.encrypted = null;
-  /**
-   * Decrypted packets contained within.
-   * @type {module:packet.List}
-   */
-  this.packets = null;
-  /**
-   * When true, decrypt fails if message is not integrity protected
-   * @see module:config.ignore_mdc_error
-   */
-  this.ignore_mdc_error = _config2.default.ignore_mdc_error;
-}
 
 SymmetricallyEncrypted.prototype.read = function (bytes) {
   this.encrypted = bytes;
@@ -64631,12 +64532,14 @@ SymmetricallyEncrypted.prototype.write = function () {
  * @async
  */
 SymmetricallyEncrypted.prototype.decrypt = async function (sessionKeyAlgorithm, key) {
-  this.encrypted = await _webStreamTools2.default.readToEnd(this.encrypted);
-  const decrypted = _crypto2.default.cfb.decrypt(sessionKeyAlgorithm, key, this.encrypted, true);
   // If MDC errors are not being ignored, all missing MDC packets in symmetrically encrypted data should throw an error
   if (!this.ignore_mdc_error) {
     throw new Error('Decryption failed due to missing MDC.');
   }
+
+  this.encrypted = await _webStreamTools2.default.readToEnd(this.encrypted);
+  const decrypted = await _crypto2.default.cfb.decrypt(sessionKeyAlgorithm, key, this.encrypted.subarray(_crypto2.default.cipher[sessionKeyAlgorithm].blockSize + 2), this.encrypted.subarray(2, _crypto2.default.cipher[sessionKeyAlgorithm].blockSize + 2));
+
   await this.packets.read(decrypted);
 
   return true;
@@ -64653,14 +64556,17 @@ SymmetricallyEncrypted.prototype.decrypt = async function (sessionKeyAlgorithm, 
 SymmetricallyEncrypted.prototype.encrypt = async function (algo, key) {
   const data = this.packets.write();
 
-  this.encrypted = _crypto2.default.cfb.encrypt((await _crypto2.default.getPrefixRandom(algo)), algo, (await _webStreamTools2.default.readToEnd(data)), key, true);
+  const prefix = await _crypto2.default.getPrefixRandom(algo);
+  const FRE = await _crypto2.default.cfb.encrypt(algo, key, prefix, new Uint8Array(_crypto2.default.cipher[algo].blockSize));
+  const ciphertext = await _crypto2.default.cfb.encrypt(algo, key, data, FRE.subarray(2));
+  this.encrypted = _util2.default.concat([FRE, ciphertext]);
 
   return true;
 };
 
 exports.default = SymmetricallyEncrypted;
 
-},{"../config":81,"../crypto":96,"../enums":115,"web-stream-tools":77}],143:[function(require,module,exports){
+},{"../config":81,"../crypto":96,"../enums":115,"../util":154,"web-stream-tools":77}],143:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -65733,7 +65639,10 @@ S2K.prototype.get_count = function () {
 S2K.prototype.read = function (bytes) {
   let i = 0;
   this.type = _enums2.default.read(_enums2.default.s2k, bytes[i++]);
-  this.algorithm = _enums2.default.read(_enums2.default.hash, bytes[i++]);
+  this.algorithm = bytes[i++];
+  if (this.type !== 'gnu') {
+    this.algorithm = _enums2.default.read(_enums2.default.hash, this.algorithm);
+  }
 
   switch (this.type) {
     case 'simple':
@@ -65753,11 +65662,11 @@ S2K.prototype.read = function (bytes) {
       break;
 
     case 'gnu':
-      if (_util2.default.Uint8Array_to_str(bytes.subarray(i, 3)) === "GNU") {
+      if (_util2.default.Uint8Array_to_str(bytes.subarray(i, i + 3)) === "GNU") {
         i += 3; // GNU
         const gnuExtType = 1000 + bytes[i++];
         if (gnuExtType === 1001) {
-          this.type = gnuExtType;
+          this.type = 'gnu-dummy';
           // GnuPG extension mode 1001 -- don't write secret key at all
         } else {
           throw new Error("Unknown s2k gnu protection mode.");
@@ -65950,19 +65859,21 @@ exports.default = {
    * @param  {Object} obj           the options object to be passed to the web worker
    * @returns {Array<ArrayBuffer>}   an array of binary data to be passed
    */
-  getTransferables: function getTransferables(obj) {
+  getTransferables: function getTransferables(obj, zero_copy) {
     const transferables = [];
-    _util2.default.collectTransferables(obj, transferables);
+    _util2.default.collectTransferables(obj, transferables, zero_copy);
     return transferables.length ? transferables : undefined;
   },
 
-  collectTransferables: function collectTransferables(obj, collection) {
+  collectTransferables: function collectTransferables(obj, collection, zero_copy) {
     if (!obj) {
       return;
     }
 
-    if (_util2.default.isUint8Array(obj) && collection.indexOf(obj.buffer) === -1) {
-      if (_config2.default.zero_copy) {
+    if (_util2.default.isUint8Array(obj)) {
+      if (zero_copy && collection.indexOf(obj.buffer) === -1 && !(navigator.userAgent.indexOf('Version/11.1') !== -1 || // Safari 11.1
+      (navigator.userAgent.match(/Chrome\/(\d+)/) || [])[1] < 56 && navigator.userAgent.indexOf('Edge') === -1 // Chrome < 56
+      )) {
         collection.push(obj.buffer);
       }
       return;
@@ -65983,7 +65894,12 @@ exports.default = {
                     port2 = _ref.port2;
 
               port1.onmessage = async function ({ data: { action } }) {
-                if (action === 'read') port1.postMessage((await reader.read()));else if (action === 'cancel') port1.postMessage((await transformed.cancel()));
+                if (action === 'read') {
+                  const result = await reader.read();
+                  port1.postMessage(result, _util2.default.getTransferables(result, true));
+                } else if (action === 'cancel') {
+                  port1.postMessage((await transformed.cancel()));
+                }
               };
               obj[key] = port2;
               collection.push(port2);
@@ -65991,10 +65907,10 @@ exports.default = {
           }
           return;
         }
-        if (typeof MessagePort !== 'undefined' && MessagePort.prototype.isPrototypeOf(value)) {
+        if (Object.prototype.toString.call(value) === '[object MessagePort]') {
           throw new Error("Can't transfer the same stream twice.");
         }
-        _util2.default.collectTransferables(value, collection);
+        _util2.default.collectTransferables(value, collection, zero_copy);
       });
     }
   },
@@ -66008,7 +65924,7 @@ exports.default = {
     if (Object.prototype.isPrototypeOf(obj) && !Uint8Array.prototype.isPrototypeOf(obj)) {
       Object.entries(obj).forEach(([key, value]) => {
         // recursively search all children
-        if (MessagePort.prototype.isPrototypeOf(value)) {
+        if (Object.prototype.toString.call(value) === '[object MessagePort]') {
           obj[key] = new ReadableStream({
             pull(controller) {
               return new Promise(resolve => {
@@ -66246,15 +66162,15 @@ exports.default = {
   /**
    * Concat a list of Uint8Arrays, Strings or Streams
    * The caller must not mix Uint8Arrays with Strings, but may mix Streams with non-Streams.
-   * @param {Array<Uint8array|String|ReadableStream>} Array of Uint8Arrays/Strings/Streams to concatenate
-   * @returns {Uint8array|String|ReadableStream} Concatenated array
+   * @param {Array<Uint8Array|String|ReadableStream>} Array of Uint8Arrays/Strings/Streams to concatenate
+   * @returns {Uint8Array|String|ReadableStream} Concatenated array
    */
   concat: _webStreamTools2.default.concat,
 
   /**
    * Concat Uint8Arrays
-   * @param {Array<Uint8array>} Array of Uint8Arrays to concatenate
-   * @returns {Uint8array} Concatenated array
+   * @param {Array<Uint8Array>} Array of Uint8Arrays to concatenate
+   * @returns {Uint8Array} Concatenated array
    */
   concatUint8Array: _webStreamTools2.default.concatUint8Array,
 
@@ -66410,13 +66326,13 @@ exports.default = {
    * @param {Uint8Array} data
    */
   double: function double(data) {
-    const double = new Uint8Array(data.length);
+    const double_var = new Uint8Array(data.length);
     const last = data.length - 1;
     for (let i = 0; i < last; i++) {
-      double[i] = data[i] << 1 ^ data[i + 1] >> 7;
+      double_var[i] = data[i] << 1 ^ data[i + 1] >> 7;
     }
-    double[last] = data[last] << 1 ^ (data[0] >> 7) * 0x87;
-    return double;
+    double_var[last] = data[last] << 1 ^ (data[0] >> 7) * 0x87;
+    return double_var;
   },
 
   /**
@@ -66609,7 +66525,11 @@ exports.default = {
    * Remove trailing spaces and tabs from each line
    */
   removeTrailingSpaces: function removeTrailingSpaces(text) {
-    return text.replace(/[ \t]+$/mg, "");
+    return text.split('\n').map(line => {
+      let i = line.length - 1;
+      for (; i >= 0 && (line[i] === ' ' || line[i] === '\t'); i--);
+      return line.substr(0, i + 1);
+    }).join('\n');
   },
 
   /**
@@ -66762,6 +66682,10 @@ var _util = require('../util.js');
 
 var _util2 = _interopRequireDefault(_util);
 
+var _config = require('../config');
+
+var _config2 = _interopRequireDefault(_config);
+
 var _crypto = require('../crypto');
 
 var _crypto2 = _interopRequireDefault(_crypto);
@@ -66780,6 +66704,36 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @param {Array<Object>} worker   alternative to path parameter: web worker initialized with 'openpgp.worker.js'
  * @constructor
  */
+// GPG4Browsers - An OpenPGP implementation in javascript
+// Copyright (C) 2011 Recurity Labs GmbH
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 3.0 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+/**
+ * @fileoverview Provides functions for maintaining browser workers
+ * @see module:openpgp.initWorker
+ * @see module:openpgp.getWorker
+ * @see module:openpgp.destroyWorker
+ * @see module:worker/worker
+ * @requires util
+ * @requires config
+ * @requires crypto
+ * @requires packet
+ * @module worker/async_proxy
+ */
+
 function AsyncProxy({ path = 'openpgp.worker.js', n = 1, workers = [], config } = {}) {
   /**
    * Message handling
@@ -66840,35 +66794,6 @@ function AsyncProxy({ path = 'openpgp.worker.js', n = 1, workers = [], config } 
  * Get new request ID
  * @returns {integer}          New unique request ID
 */
-// GPG4Browsers - An OpenPGP implementation in javascript
-// Copyright (C) 2011 Recurity Labs GmbH
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 3.0 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-
-/**
- * @fileoverview Provides functions for maintaining browser workers
- * @see module:openpgp.initWorker
- * @see module:openpgp.getWorker
- * @see module:openpgp.destroyWorker
- * @see module:worker/worker
- * @requires util
- * @requires crypto
- * @requires packet
- * @module worker/async_proxy
- */
-
 AsyncProxy.prototype.getID = function () {
   return this.currentID++;
 };
@@ -66880,7 +66805,7 @@ AsyncProxy.prototype.getID = function () {
  */
 AsyncProxy.prototype.seedRandom = async function (workerId, size) {
   const buf = await _crypto2.default.random.getRandomBytes(size);
-  this.workers[workerId].postMessage({ event: 'seed-random', buf }, _util2.default.getTransferables(buf));
+  this.workers[workerId].postMessage({ event: 'seed-random', buf }, _util2.default.getTransferables(buf, true));
 };
 
 /**
@@ -66911,9 +66836,9 @@ AsyncProxy.prototype.delegate = function (method, options) {
     }
   }
 
-  return new Promise(async (_resolve, reject) => {
+  return new Promise((_resolve, reject) => {
     // clone packets (for web worker structured cloning algorithm)
-    this.workers[workerId].postMessage({ id: id, event: method, options: _packet2.default.clone.clonePackets(options) }, _util2.default.getTransferables(options));
+    this.workers[workerId].postMessage({ id: id, event: method, options: _packet2.default.clone.clonePackets(options) }, _util2.default.getTransferables(options, _config2.default.zero_copy));
     this.workers[workerId].requests++;
 
     // remember to handle parsing cloned packets from worker
@@ -66923,7 +66848,7 @@ AsyncProxy.prototype.delegate = function (method, options) {
 
 exports.default = AsyncProxy;
 
-},{"../crypto":96,"../packet":127,"../util.js":154}]},{},[117])(117)
+},{"../config":81,"../crypto":96,"../packet":127,"../util.js":154}]},{},[117])(117)
 });
 
 
@@ -67050,6 +66975,7 @@ const util_1 = __webpack_require__(10);
 
 util_1.setGlobals();
 const doPrintDebug = Boolean(NODE_DEBUG === 'true');
+const doProfile = Boolean(APP_PROFILE === 'true');
 const endpoints = new endpoints_1.Endpoints();
 
 const delegateReqToEndpoint = async (endpointName, uncheckedReq, data) => {
@@ -67062,7 +66988,11 @@ const delegateReqToEndpoint = async (endpointName, uncheckedReq, data) => {
   throw new fmt_1.HttpClientErr(`unknown endpoint: ${endpointName}`);
 };
 
-const handleReq = async (req, res) => {
+const handleReq = async (req, res, receivedAt) => {
+  if (doProfile) {
+    console.debug(`PROFILE[${Date.now() - receivedAt}ms] new request ${req.url}`);
+  }
+
   if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT || !NODE_SSL_CA) {
     throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_CA, NODE_SSL_KEY or NODE_SSL_CRT');
   }
@@ -67083,12 +67013,22 @@ const handleReq = async (req, res) => {
       data
     } = await parse_1.parseReq(req, doPrintDebug);
 
-    if (doPrintDebug) {
-      console.log(`parsed endpoint:`, endpoint);
-      console.log(`parsed request:`, request);
+    if (doProfile) {
+      console.debug(`PROFILE[${Date.now() - receivedAt}ms] finished receiving and parsing request+data`);
     }
 
-    return await delegateReqToEndpoint(endpoint, request, data);
+    if (doPrintDebug) {
+      console.debug(`parsed endpoint:`, endpoint);
+      console.debug(`parsed request:`, request);
+    }
+
+    const endpointResponse = await delegateReqToEndpoint(endpoint, request, data);
+
+    if (doProfile) {
+      console.debug(`PROFILE[${Date.now() - receivedAt}ms] finished processing request`);
+    }
+
+    return endpointResponse;
   }
 
   throw new fmt_1.HttpClientErr(`unknown path ${req.url}`);
@@ -67112,7 +67052,18 @@ const sendRes = (res, buffers) => {
 };
 
 const server = https.createServer(serverOptins, (request, res) => {
-  handleReq(request, res).then(buffers => sendRes(res, buffers)).catch(e => {
+  const receivedAt = Date.now();
+  handleReq(request, res, receivedAt).then(buffers => {
+    if (doProfile) {
+      console.debug(`PROFILE[${Date.now() - receivedAt}ms] begin sending response`);
+    }
+
+    sendRes(res, buffers);
+
+    if (doProfile) {
+      console.debug(`PROFILE[${Date.now() - receivedAt}ms] response sent, DONE`);
+    }
+  }).catch(e => {
     res.statusCode = 200;
 
     if (e instanceof fmt_1.HttpAuthErr) {
@@ -67330,6 +67281,61 @@ class Endpoints {
       return fmt_1.fmtRes({}, Buffer.from(encrypted.data));
     };
 
+    this.generateKey = async (uncheckedReq, data) => {
+      const {
+        passphrase,
+        userIds,
+        variant
+      } = validate_1.Validate.generateKey(uncheckedReq);
+
+      if (passphrase.length < 12) {
+        throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
+      }
+
+      let k;
+
+      if (variant === 'rsa2048') {
+        k = await pgp_1.Pgp.key.create(userIds, 2048, passphrase);
+      } else {
+        throw new Error(`Unknown generateKey variant: ${variant}`);
+      }
+
+      return fmt_1.fmtRes({
+        key: await pgp_1.Pgp.key.serialize((await pgp_1.Pgp.key.read(k.private)))
+      });
+    };
+
+    this.composeEmail = async (uncheckedReq, data) => {
+      const req = validate_1.Validate.composeEmail(uncheckedReq);
+      const mimeHeaders = {
+        to: req.to,
+        from: req.from,
+        subject: req.subject,
+        cc: req.cc,
+        bcc: req.bcc
+      };
+
+      if (req.replyToMimeMsg) {
+        const previousMsg = await mime_1.Mime.decode(buf_1.Buf.fromUtfStr((req.replyToMimeMsg.substr(0, 10000).split('\n\n')[0] || '') + `\n\nno content`));
+        const replyHeaders = mime_1.Mime.replyHeaders(previousMsg);
+        mimeHeaders['in-reply-to'] = replyHeaders['in-reply-to'];
+        mimeHeaders['references'] = replyHeaders['references'];
+      }
+
+      if (req.format === 'plain') {
+        return fmt_1.fmtRes({}, buf_1.Buf.fromUtfStr((await mime_1.Mime.encode(req.text, mimeHeaders))));
+      } else if (req.format === 'encrypt-inline') {
+        const encrypted = await pgp_1.PgpMsg.encrypt({
+          pubkeys: req.pubKeys,
+          data: buf_1.Buf.fromUtfStr(req.text),
+          armor: true
+        });
+        return fmt_1.fmtRes({}, buf_1.Buf.fromUtfStr((await mime_1.Mime.encode(encrypted.data, mimeHeaders))));
+      } else {
+        throw new Error(`Unknown format: ${req.format}`);
+      }
+    };
+
     this.encryptFile = async (uncheckedReq, data) => {
       const req = validate_1.Validate.encryptFile(uncheckedReq);
       const encrypted = await pgp_1.PgpMsg.encrypt({
@@ -67341,18 +67347,18 @@ class Endpoints {
       return fmt_1.fmtRes({}, encrypted.message.packets.write());
     };
 
-    this.decryptMsg = async (uncheckedReq, data) => {
+    this.parseDecryptMsg = async (uncheckedReq, data) => {
       const {
         keys,
         passphrases,
         msgPwd,
         isEmail
-      } = validate_1.Validate.decryptMsg(uncheckedReq);
+      } = validate_1.Validate.parseDecryptMsg(uncheckedReq);
       const kisWithPp = {
         keys,
         passphrases
       };
-      const rawBlocks = [];
+      const rawBlocks = []; // contains parsed, unprocessed / possibly encrypted data
 
       if (isEmail) {
         const {
@@ -67360,39 +67366,48 @@ class Endpoints {
         } = await mime_1.Mime.process(Buffer.concat(data));
         rawBlocks.push(...blocks);
       } else {
-        rawBlocks.push(pgp_1.Pgp.internal.msgBlockObj('message', new buf_1.Buf(Buffer.concat(data))));
+        rawBlocks.push(pgp_1.Pgp.internal.msgBlockObj('encryptedMsg', new buf_1.Buf(Buffer.concat(data))));
       }
 
       const blocks = []; // contains decrypted or otherwise formatted data
 
       for (const rawBlock of rawBlocks) {
-        if (rawBlock.type === 'message') {
-          const decrypted = await pgp_1.PgpMsg.decrypt({
+        if (rawBlock.type === 'encryptedMsg') {
+          const decryptRes = await pgp_1.PgpMsg.decrypt({
             kisWithPp,
             msgPwd,
             encryptedData: rawBlock.content instanceof Uint8Array ? rawBlock.content : Buffer.from(rawBlock.content)
           });
 
-          if (!decrypted.success) {
-            decrypted.message = undefined;
-            return fmt_1.fmtRes(decrypted); // not ideal. If decryption of one block fails, no other blocks will make it to the client
+          if (decryptRes.success) {
+            blocks.push(...(await pgp_1.PgpMsg.fmtDecrypted(decryptRes.content, 'decryptedText')));
+          } else {
+            decryptRes.message = undefined;
+            blocks.push(pgp_1.Pgp.internal.msgBlockDecryptErrObj(decryptRes.error.type === pgp_1.DecryptErrTypes.noMdc ? decryptRes.content : rawBlock.content, decryptRes));
           }
-
-          blocks.push(...(await pgp_1.PgpMsg.fmtDecrypted(decrypted.content)));
         } else {
           blocks.push(rawBlock);
         }
       }
 
-      const blockMetas = blocks.map(b => ({
-        type: b.type,
-        length: b.content.length
-      })); // first line is a blockMetas JSON. Data below represent one JSON-stringified block per line. This is so that it can be read as a stream later
+      for (const block of blocks) {
+        if (block.content instanceof buf_1.Buf) {
+          // cannot JSON-serialize Buf
+          if (block.type === 'plainText' || block.type === 'decryptedText' || block.type === 'plainHtml' || block.type === 'decryptedHtml' || block.type === 'signedMsg') {
+            block.content = block.content.toUtfStr();
+          } else {
+            block.content = block.content.toRawBytesStr();
+          }
+        }
 
-      return fmt_1.fmtRes({
-        success: true,
-        blockMetas
-      }, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
+        if (block.type === 'publicKey' && !block.keyDetails) {
+          // this could eventually be moved into detectBlocks, which would make it async
+          block.keyDetails = await pgp_1.Pgp.key.serialize((await pgp_1.Pgp.key.read(block.content)));
+        }
+      } // data represent one JSON-stringified block per line. This is so that it can be read as a stream later
+
+
+      return fmt_1.fmtRes({}, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
     };
 
     this.decryptFile = async (uncheckedReq, data) => {
@@ -67428,6 +67443,19 @@ class Endpoints {
       return fmt_1.fmtRes({
         timestamp: String(Date.parse(dateStr) || -1)
       });
+    };
+
+    this.zxcvbnStrengthBar = async (uncheckedReq, data) => {
+      const {
+        guesses,
+        purpose
+      } = validate_1.Validate.zxcvbnStrengthBar(uncheckedReq);
+
+      if (purpose === 'passphrase') {
+        return fmt_1.fmtRes(pgp_1.Pgp.password.estimateStrength(guesses));
+      } else {
+        throw new Error(`Unknown purpose: ${purpose}`);
+      }
     };
 
     this.gmailBackupSearch = async (uncheckedReq, data) => {
@@ -67524,7 +67552,7 @@ class Endpoints {
       } = validate_1.Validate.encryptKey(uncheckedReq);
       const key = await readArmoredKeyOrThrow(armored);
 
-      if (!passphrase || passphrase.length < 10) {
+      if (!passphrase || passphrase.length < 12) {
         // last resort check, this should never happen
         throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
       }
@@ -67630,7 +67658,9 @@ const openpgp = require_js_1.requireOpenpgp();
 if (typeof openpgp !== 'undefined') {
   // in certain environments, eg browser content scripts, openpgp is not included (not all functions below need it)
   openpgp.config.versionstring = `FlowCrypt ${const_js_1.VERSION} Gmail Encryption`;
-  openpgp.config.commentstring = 'Seamlessly send and receive encrypted email'; // openpgp.config.require_uid_self_cert = false;
+  openpgp.config.commentstring = 'Seamlessly send and receive encrypted email';
+  openpgp.config.ignore_mdc_error = true; // we manually check for missing MDC and show loud warning to user (no auto-decrypt)
+  // openpgp.config.require_uid_self_cert = false;
 }
 
 var DecryptErrTypes;
@@ -67695,12 +67725,12 @@ Pgp.ARMOR_HEADER_DICT = {
     end: '-----END PGP SIGNATURE-----',
     replace: false
   },
-  message: {
+  encryptedMsg: {
     begin: '-----BEGIN PGP MESSAGE-----',
     end: '-----END PGP MESSAGE-----',
     replace: true
   },
-  passwordMsg: {
+  encryptedMsgLink: {
     begin: 'This message is encrypted: Open Message',
     end: /https:(\/|&#x2F;){2}(cryptup\.org|flowcrypt\.com)(\/|&#x2F;)[a-zA-Z0-9]{10}(\n|$)/,
     replace: true
@@ -67795,7 +67825,7 @@ Pgp.armor = {
   normalize: (armored, type) => {
     armored = common_js_1.Str.normalize(armored);
 
-    if (common_js_1.Value.is(type).in(['message', 'publicKey', 'privateKey', 'key'])) {
+    if (common_js_1.Value.is(type).in(['encryptedMsg', 'publicKey', 'privateKey', 'key'])) {
       armored = armored.replace(/\r?\n/g, '\n').trim();
       const nl2 = armored.match(/\n\n/g);
       const nl3 = armored.match(/\n\n\n/g);
@@ -67883,7 +67913,7 @@ Pgp.key = {
         keys = (await openpgp.key.readArmored(armored)).keys;
       } else if (RegExp(Pgp.armor.headers('privateKey', 're').begin).test(armored)) {
         keys = (await openpgp.key.readArmored(armored)).keys;
-      } else if (RegExp(Pgp.armor.headers('message', 're').begin).test(armored)) {
+      } else if (RegExp(Pgp.armor.headers('encryptedMsg', 're').begin).test(armored)) {
         keys = [new openpgp.key.Key((await openpgp.message.readArmored(armored)).packets)];
       }
 
@@ -68084,6 +68114,12 @@ Pgp.internal = {
     content,
     complete: !missingEnd
   }),
+  msgBlockDecryptErrObj: (encryptedContent, decryptErr) => ({
+    type: 'decryptErr',
+    content: encryptedContent,
+    decryptErr,
+    complete: true
+  }),
   msgBlockAttObj: (type, content, attMeta) => ({
     type,
     content,
@@ -68113,13 +68149,13 @@ Pgp.internal = {
         if (blockHeaderDef.replace) {
           const indexOfConfirmedBegin = potentialBeginHeader.indexOf(blockHeaderDef.begin);
 
-          if (indexOfConfirmedBegin === 0 || type === 'passwordMsg' && indexOfConfirmedBegin >= 0 && indexOfConfirmedBegin < 15) {
+          if (indexOfConfirmedBegin === 0 || type === 'encryptedMsgLink' && indexOfConfirmedBegin >= 0 && indexOfConfirmedBegin < 15) {
             // identified beginning of a specific block
             if (begin > startAt) {
               const potentialTextBeforeBlockBegun = origText.substring(startAt, begin).trim();
 
               if (potentialTextBeforeBlockBegun) {
-                result.found.push(Pgp.internal.msgBlockObj('text', potentialTextBeforeBlockBegun));
+                result.found.push(Pgp.internal.msgBlockObj('plainText', potentialTextBeforeBlockBegun));
               }
             }
 
@@ -68142,7 +68178,7 @@ Pgp.internal = {
 
             if (endIndex !== -1) {
               // identified end of the same block
-              if (type !== 'passwordMsg') {
+              if (type !== 'encryptedMsgLink') {
                 result.found.push(Pgp.internal.msgBlockObj(type, origText.substring(begin, endIndex + foundBlockEndHeaderLength).trim()));
               } else {
                 const pwdMsgFullText = origText.substring(begin, endIndex + foundBlockEndHeaderLength).trim();
@@ -68151,7 +68187,7 @@ Pgp.internal = {
                 if (pwdMsgShortIdMatch) {
                   result.found.push(Pgp.internal.msgBlockObj(type, pwdMsgShortIdMatch[0]));
                 } else {
-                  result.found.push(Pgp.internal.msgBlockObj('text', pwdMsgFullText));
+                  result.found.push(Pgp.internal.msgBlockObj('plainText', pwdMsgFullText));
                 }
               }
 
@@ -68172,7 +68208,7 @@ Pgp.internal = {
       const potentialText = origText.substr(startAt).trim();
 
       if (potentialText) {
-        result.found.push(Pgp.internal.msgBlockObj('text', potentialText));
+        result.found.push(Pgp.internal.msgBlockObj('plainText', potentialText));
       }
     }
 
@@ -68192,7 +68228,7 @@ Pgp.internal = {
 
     const utfChunk = new buf_js_1.Buf(encrypted.slice(0, 100)).toUtfStr('ignore'); // ignore errors - this may not be utf string, just testing
 
-    const isArmoredEncrypted = common_js_1.Value.is(Pgp.armor.headers('message').begin).in(utfChunk);
+    const isArmoredEncrypted = common_js_1.Value.is(Pgp.armor.headers('encryptedMsg').begin).in(utfChunk);
     const isArmoredSignedOnly = common_js_1.Value.is(Pgp.armor.headers('signedMsg').begin).in(utfChunk);
     const isArmored = isArmoredEncrypted || isArmoredSignedOnly;
 
@@ -68244,13 +68280,30 @@ Pgp.internal = {
     };
     keys.encryptedFor = await Pgp.internal.longids(msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : []);
     keys.signedBy = await Pgp.internal.longids(msg.getSigningKeyIds ? msg.getSigningKeyIds() : []);
-    keys.prvMatching = kiWithPp.keys.filter(ki => common_js_1.Value.is(ki.longid).in(keys.encryptedFor));
+
+    for (const ki of kiWithPp.keys) {
+      // this is inefficient because we are doing unnecessary parsing of all keys here
+      // better would be to compare to already stored KeyInfo, however KeyInfo currently only holds primary longid, not longids of subkeys
+      // while messages are typically encrypted for subkeys, thus we have to parse the key to get the info
+      // we are filtering here to avoid a significant performance issue of having to attempt decrypting with all keys simultaneously
+      const {
+        ids
+      } = await Pgp.key.serialize((await Pgp.key.read(ki.private)));
+
+      for (const {
+        longid
+      } of ids) {
+        if (keys.encryptedFor.includes(longid)) {
+          keys.prvMatching.push(ki);
+          break;
+        }
+      }
+    }
+
     keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp.keys;
 
     for (const prvForDecrypt of keys.prvForDecrypt) {
-      const {
-        keys: [prv]
-      } = await openpgp.key.readArmored(prvForDecrypt.private);
+      const prv = await Pgp.key.read(prvForDecrypt.private);
 
       if (prv.isDecrypted() || kiWithPp.passphrases.length && (await Pgp.key.decrypt(prv, kiWithPp.passphrases)) === true) {
         prvForDecrypt.decrypted = prv;
@@ -68289,7 +68342,7 @@ Pgp.internal = {
         type: DecryptErrTypes.wrongPwd,
         message: e
       };
-    } else if (e === 'Decryption failed due to missing MDC in combination with modern cipher.') {
+    } else if (e === 'Decryption failed due to missing MDC in combination with modern cipher.' || e === 'Decryption failed due to missing MDC.') {
       return {
         type: DecryptErrTypes.noMdc,
         message: e
@@ -68394,7 +68447,7 @@ PgpMsg.type = async ({
       const msgTpes = [t.symEncryptedIntegrityProtected, t.modificationDetectionCode, t.symEncryptedAEADProtected, t.symmetricallyEncrypted, t.compressed];
       return {
         armored: false,
-        type: common_js_1.Value.is(tagNumber).in(msgTpes) ? 'message' : 'publicKey'
+        type: common_js_1.Value.is(tagNumber).in(msgTpes) ? 'encryptedMsg' : 'publicKey'
       };
     }
   }
@@ -68403,7 +68456,7 @@ PgpMsg.type = async ({
     blocks
   } = Pgp.armor.detectBlocks(new buf_js_1.Buf(data.slice(0, 50)).toUtfStr().trim()); // only interested in first 50 bytes
 
-  if (blocks.length === 1 && blocks[0].complete === false && common_js_1.Value.is(blocks[0].type).in(['message', 'privateKey', 'publicKey', 'signedMsg'])) {
+  if (blocks.length === 1 && blocks[0].complete === false && common_js_1.Value.is(blocks[0].type).in(['encryptedMsg', 'privateKey', 'publicKey', 'signedMsg'])) {
     return {
       armored: true,
       type: blocks[0].type
@@ -68550,6 +68603,22 @@ PgpMsg.decrypt = async ({
     const decrypted = await prepared.message.decrypt(privateKeys, passwords, undefined, false); // const signature = keys.signed_by.length ? Pgp.message.verify(message, keys.for_verification, keys.verification_contacts[0]) : false;
 
     const content = new buf_js_1.Buf((await openpgp.stream.readToEnd(decrypted.getLiteralData())));
+
+    if (!prepared.isCleartext && prepared.message.packets.filterByTag(openpgp.enums.packet.symmetricallyEncrypted).length) {
+      const noMdc = 'Security threat!\n\nMessage is missing integrity checks (MDC). The sender should update their outdated software.\n\nDisplay the message at your own risk.';
+      return {
+        success: false,
+        content,
+        error: {
+          type: DecryptErrTypes.noMdc,
+          message: noMdc
+        },
+        message: prepared.message,
+        longids,
+        isEncrypted
+      };
+    }
+
     return {
       success: true,
       content,
@@ -68638,8 +68707,12 @@ PgpMsg.diagnosePubkeys = async ({
 
   return diagnosis;
 };
+/**
+ * textBlockType - choose if textual block should be returned as escaped html (for direct browser rendering) or text (other platforms)
+ */
 
-PgpMsg.fmtDecrypted = async decryptedContent => {
+
+PgpMsg.fmtDecrypted = async (decryptedContent, textBlockType = 'decryptedHtml') => {
   const blocks = [];
 
   if (!mime_js_1.Mime.resemblesMsg(decryptedContent)) {
@@ -68648,24 +68721,24 @@ PgpMsg.fmtDecrypted = async decryptedContent => {
     utf = PgpMsg.stripFcTeplyToken(utf);
     const armoredPubKeys = [];
     utf = PgpMsg.stripPublicKeys(utf, armoredPubKeys);
-    blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(utf)));
+    blocks.push(PgpMsg.textAsTextOrHtmlBlock(textBlockType, utf));
     await PgpMsg.pushArmoredPubkeysToBlocks(armoredPubKeys, blocks);
   } else {
     const decoded = await mime_js_1.Mime.decode(decryptedContent);
 
     if (typeof decoded.html !== 'undefined') {
-      blocks.push(Pgp.internal.msgBlockObj('html', decoded.html));
+      blocks.push(Pgp.internal.msgBlockObj('decryptedHtml', decoded.html));
     } else if (typeof decoded.text !== 'undefined') {
-      blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(decoded.text)));
+      blocks.push(PgpMsg.textAsTextOrHtmlBlock(textBlockType, decoded.text));
     } else {
-      blocks.push(Pgp.internal.msgBlockObj('html', common_js_1.Str.asEscapedHtml(buf_js_1.Buf.fromUint8(decryptedContent).toUtfStr())));
+      blocks.push(PgpMsg.textAsTextOrHtmlBlock(textBlockType, buf_js_1.Buf.fromUint8(decryptedContent).toUtfStr()));
     }
 
     for (const att of decoded.atts) {
       if (att.treatAs() === 'publicKey') {
         await PgpMsg.pushArmoredPubkeysToBlocks([att.getData().toUtfStr()], blocks);
       } else {
-        blocks.push(Pgp.internal.msgBlockAttObj('attachment', '', {
+        blocks.push(Pgp.internal.msgBlockAttObj('decryptedAtt', '', {
           name: att.name,
           data: att.getData()
         }));
@@ -68674,6 +68747,10 @@ PgpMsg.fmtDecrypted = async decryptedContent => {
   }
 
   return blocks;
+};
+
+PgpMsg.textAsTextOrHtmlBlock = (textBlockType, textContent) => {
+  return Pgp.internal.msgBlockObj(textBlockType, textBlockType === 'decryptedText' ? textContent : common_js_1.Str.asEscapedHtml(textContent));
 };
 
 PgpMsg.extractFcAtts = (decryptedContent, blocks) => {
@@ -68685,7 +68762,7 @@ PgpMsg.extractFcAtts = (decryptedContent, blocks) => {
       const a = common_js_1.Str.htmlAttrDecode(String(fcData));
 
       if (PgpMsg.isFcAttLinkData(a)) {
-        blocks.push(Pgp.internal.msgBlockAttObj('attachment', '', {
+        blocks.push(Pgp.internal.msgBlockAttObj('encryptedAttLink', '', {
           type: a.type,
           name: a.name,
           length: a.size,
@@ -68833,19 +68910,21 @@ const util_js_1 = __webpack_require__(10);
 
 class Str {}
 
-Str.parseEmail = emailStr => {
-  if (Value.is('<').in(emailStr) && Value.is('>').in(emailStr)) {
+Str.parseEmail = full => {
+  if (Value.is('<').in(full) && Value.is('>').in(full)) {
+    const email = full.substr(full.indexOf('<') + 1, full.indexOf('>') - full.indexOf('<') - 1).replace(/["']/g, '').trim().toLowerCase();
+    const name = full.substr(0, full.indexOf('<')).replace(/["']/g, '').trim();
     return {
-      email: emailStr.substr(emailStr.indexOf('<') + 1, emailStr.indexOf('>') - emailStr.indexOf('<') - 1).replace(/["']/g, '').trim().toLowerCase(),
-      name: emailStr.substr(0, emailStr.indexOf('<')).replace(/["']/g, '').trim(),
-      full: emailStr
+      email,
+      name,
+      full
     };
   }
 
   return {
-    email: emailStr.replace(/["']/g, '').trim().toLowerCase(),
+    email: full.replace(/["']/g, '').trim().toLowerCase(),
     name: undefined,
-    full: emailStr
+    full
   };
 };
 
@@ -69070,16 +69149,18 @@ Mime.process = async mimeMsg => {
   if (decoded.text) {
     // may be undefined or empty
     blocks.push(...pgp_js_1.Pgp.armor.detectBlocks(decoded.text).blocks);
+  } else if (decoded.html) {
+    blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('plainHtml', decoded.html));
   }
 
   for (const file of decoded.atts) {
     const treatAs = file.treatAs();
 
-    if (treatAs === 'message') {
+    if (treatAs === 'encryptedMsg') {
       const armored = pgp_js_1.Pgp.armor.clip(file.getData().toUtfStr());
 
       if (armored) {
-        blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('message', armored));
+        blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('encryptedMsg', armored));
       }
     } else if (treatAs === 'signature') {
       decoded.signature = decoded.signature || file.getData().toUtfStr();
@@ -69090,7 +69171,7 @@ Mime.process = async mimeMsg => {
 
   if (decoded.signature) {
     for (const block of blocks) {
-      if (block.type === 'text') {
+      if (block.type === 'plainText') {
         block.type = 'signedMsg';
         block.signature = decoded.signature;
       }
@@ -69128,8 +69209,8 @@ Mime.headersToFrom = parsedMimeMsg => {
 };
 
 Mime.replyHeaders = parsedMimeMsg => {
-  const msgId = parsedMimeMsg.headers['message-id'] || '';
-  const refs = parsedMimeMsg.headers['in-reply-to'] || '';
+  const msgId = String(parsedMimeMsg.headers['message-id'] || '');
+  const refs = String(parsedMimeMsg.headers['in-reply-to'] || '');
   return {
     'in-reply-to': msgId,
     'references': refs + ' ' + msgId
@@ -69219,6 +69300,7 @@ Mime.decode = mimeMsg => {
 
       parser.end(); // tslint:disable-line:no-unsafe-any
     } catch (e) {
+      // todo - on Android we may want to fail when this happens, evaluate effect on browser extension
       catch_js_1.Catch.handleErr(e);
       resolve(mimeContent);
     }
@@ -69483,12 +69565,12 @@ class Att {
         return 'signature';
       } else if (!this.name && !common_js_1.Value.is('image/').in(this.type)) {
         // this.name may be '' or undefined - catch either
-        return this.length < 100 ? 'hidden' : 'message';
-      } else if (common_js_1.Value.is(this.name).in(['message', 'msg.asc', 'message.asc', 'encrypted.asc', 'encrypted.eml.pgp', 'Message.pgp'])) {
-        return 'message';
+        return this.length < 100 ? 'hidden' : 'encryptedMsg';
+      } else if (common_js_1.Value.is(this.name).in(['encryptedMsg', 'msg.asc', 'message.asc', 'encrypted.asc', 'encrypted.eml.pgp', 'Message.pgp'])) {
+        return 'encryptedMsg';
       } else if (this.name.match(/(\.pgp$)|(\.gpg$)|(\.[a-zA-Z0-9]{3,4}\.asc$)/g)) {
         // ends with one of .gpg, .pgp, .???.asc, .????.asc
-        return 'encrypted';
+        return 'encryptedFile';
       } else if (this.name.match(/^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\.asc$/g)) {
         // name starts with a key id
         return 'publicKey';
@@ -69496,9 +69578,9 @@ class Att {
         // name contains the word "public", any key id and ends with .asc
         return 'publicKey';
       } else if (this.name.match(/\.asc$/) && this.length < 100000 && !this.inline) {
-        return 'message';
+        return 'encryptedMsg';
       } else {
-        return 'standard';
+        return 'plainFile';
       }
     };
 
@@ -69832,8 +69914,23 @@ exports.mnemonic = hex => {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+var NodeRequest;
+
+(function (NodeRequest) {
+  ;
+  ;
+  ;
+})(NodeRequest = exports.NodeRequest || (exports.NodeRequest = {}));
 
 class Validate {}
+
+Validate.generateKey = v => {
+  if (isObj(v) && hasProp(v, 'userIds', 'Userid[]') && v.userIds.length && v.variant === 'rsa2048' && hasProp(v, 'passphrase', 'string')) {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.generateKey');
+};
 
 Validate.encryptMsg = v => {
   if (isObj(v) && hasProp(v, 'pubKeys', 'string[]')) {
@@ -69843,12 +69940,28 @@ Validate.encryptMsg = v => {
   throw new Error('Wrong request structure for NodeRequest.encryptMsg');
 };
 
-Validate.decryptMsg = v => {
+Validate.composeEmail = v => {
+  if (!(isObj(v) && hasProp(v, 'text', 'string') && hasProp(v, 'from', 'string') && hasProp(v, 'subject', 'string') && hasProp(v, 'to', 'string[]') && hasProp(v, 'cc', 'string[]') && hasProp(v, 'bcc', 'string[]'))) {
+    throw new Error('Wrong request structure for NodeRequest.composeEmail, need: text,from,subject,to,cc,bcc (can use empty arr for cc/bcc)');
+  }
+
+  if (hasProp(v, 'pubKeys', 'string[]') && v.pubKeys.length && (v.format === 'encrypt-inline' || v.format === 'encrypt-pgpmime')) {
+    return v;
+  }
+
+  if (!v.pubKeys && v.format === 'plain') {
+    return v;
+  }
+
+  throw new Error('Wrong choice of pubKeys and format. Either pubKeys:[..]+format:encrypt-inline OR format:plain allowed');
+};
+
+Validate.parseDecryptMsg = v => {
   if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'isEmail', 'boolean?')) {
     return v;
   }
 
-  throw new Error('Wrong request structure for NodeRequest.decryptMsg');
+  throw new Error('Wrong request structure for NodeRequest.parseDecryptMsg');
 };
 
 Validate.encryptFile = v => {
@@ -69873,6 +69986,14 @@ Validate.parseDateStr = v => {
   }
 
   throw new Error('Wrong request structure for NodeRequest.dateStrParse');
+};
+
+Validate.zxcvbnStrengthBar = v => {
+  if (isObj(v) && hasProp(v, 'guesses', 'number') && hasProp(v, 'purpose', 'string') && v.purpose === 'passphrase') {
+    return v;
+  }
+
+  throw new Error('Wrong request structure for NodeRequest.zxcvbnStrengthBar');
 };
 
 Validate.gmailBackupSearch = v => {
@@ -69938,6 +70059,10 @@ const hasProp = (v, name, type) => {
 
   if (type === 'PrvKeyInfo[]') {
     return Array.isArray(value) && value.filter(ki => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string')).length === value.length;
+  }
+
+  if (type === 'Userid[]') {
+    return Array.isArray(value) && value.filter(ui => hasProp(ui, 'name', 'string') && hasProp(ui, 'email', 'string')).length === value.length;
   }
 
   if (type === 'object') {

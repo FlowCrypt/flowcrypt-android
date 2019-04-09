@@ -26,14 +26,12 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper;
 import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
+import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
+import com.flowcrypt.email.api.retrofit.response.node.ComposeEmailResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKey;
-import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -178,37 +176,6 @@ public class EmailUtil {
   }
 
   /**
-   * Generate {@link AttachmentInfo} using the sender public key.
-   *
-   * @param pubKey The sender public key
-   * @return A generated {@link AttachmentInfo}.
-   */
-  @Nullable
-  public static AttachmentInfo genAttInfoFromPubKey(PgpKey pubKey) {
-    if (pubKey != null) {
-      String fileName = "0x" + pubKey.getLongid().toUpperCase() + ".asc";
-      String pubKeyValue = pubKey.armor();
-
-      if (!TextUtils.isEmpty(pubKeyValue)) {
-        AttachmentInfo attachmentInfo = new AttachmentInfo();
-
-        attachmentInfo.setName(fileName);
-        attachmentInfo.setEncodedSize(pubKeyValue.length());
-        attachmentInfo.setRawData(pubKeyValue);
-        attachmentInfo.setType(Constants.MIME_TYPE_PGP_KEY);
-        attachmentInfo.setEmail(pubKey.getPrimaryUserId().getEmail());
-        attachmentInfo.setId(EmailUtil.generateContentId());
-
-        return attachmentInfo;
-      } else {
-        return null;
-      }
-    } else {
-      return null;
-    }
-  }
-
-  /**
    * Generate {@link AttachmentInfo} using the given key details.
    *
    * @param nodeKeyDetails The key details
@@ -261,14 +228,13 @@ public class EmailUtil {
    * @param context Interface to global information about an application environment;
    * @param account The given account;
    * @param session The current sess.
-   * @param js      An instance of {@link Js}
    * @return Generated {@link Message} object.
    * @throws Exception will occur when generate this message.
    */
   @NonNull
   public static Message genMsgWithAllPrivateKeys(Context context, AccountDao account,
-                                                 Session session, Js js) throws Exception {
-    String keys = SecurityUtils.genPrivateKeysBackup(context, js, account);
+                                                 Session session) throws Exception {
+    String keys = SecurityUtils.genPrivateKeysBackup(context, account);
 
     Multipart multipart = new MimeMultipart();
     multipart.addBodyPart(getBodyPartWithBackupText(context));
@@ -735,51 +701,32 @@ public class EmailUtil {
   }
 
   /**
-   * Generate a raw MIME message using {@link Js} tools. Don't call it in the main thread.
+   * Generate a raw MIME message. Don't call it in the main thread.
    *
    * @param info    The given {@link OutgoingMessageInfo} which contains information about an outgoing
    *                message.
-   * @param js      An instance of {@link Js}
    * @param pubKeys The public keys which will be used to generate an encrypted part.
    * @return The generated raw MIME message.
    */
   @NonNull
-  public static String genRawMsgWithoutAtts(OutgoingMessageInfo info, Js js, String[] pubKeys) throws IOException,
+  public static String genRawMsgWithoutAtts(OutgoingMessageInfo info, String[] pubKeys) throws IOException,
       NodeEncryptException {
-    String msgText = null;
 
-    switch (info.getEncryptionType()) {
-      case ENCRYPTED:
-        NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
-        EncryptMsgRequest request = new EncryptMsgRequest(info.getMsg(), pubKeys);
+    NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    ComposeEmailRequest request = new ComposeEmailRequest(info, pubKeys == null ? null : Arrays.asList(pubKeys));
 
-        retrofit2.Response<EncryptedMsgResult> response = nodeService.encryptMsg(request).execute();
-        EncryptedMsgResult result = response.body();
+    retrofit2.Response<ComposeEmailResult> response = nodeService.composeEmail(request).execute();
+    ComposeEmailResult result = response.body();
 
-        if (result == null) {
-          throw new NullPointerException("encryptedMsgResult == null");
-        }
-
-        if (result.getError() != null) {
-          throw new NodeEncryptException(result.getError().getMsg());
-        }
-
-        msgText = result.getEncryptedMsg();
-        break;
-
-      case STANDARD:
-        msgText = info.getMsg();
-        break;
+    if (result == null) {
+      throw new NullPointerException("ComposeEmailResult == null");
     }
 
-    return js.mime_encode(msgText,
-        info.getToPgpContacts(),
-        info.getCcPgpContacts(),
-        info.getBccPgpContacts(),
-        info.getFromPgpContact(),
-        info.getSubject(),
-        null,
-        js.mime_decode(info.getRawReplyMsg()));
+    if (result.getError() != null) {
+      throw new NodeEncryptException(result.getError().getMsg());
+    }
+
+    return result.getMimeMsg();
   }
 
   /**

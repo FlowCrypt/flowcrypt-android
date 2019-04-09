@@ -11,7 +11,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.3.1'
+        classpath 'com.android.tools.build:gradle:3.3.2'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -53,8 +53,8 @@ allprojects {
 
 ext {
     /*Global*/
-    appVersionCode = 73
-    appVersionName = '0.7.3'
+    appVersionCode = 74
+    appVersionName = '0.7.4'
     buildToolsVersion = '28.0.3'
     compileSdkVersion = 28
     targetSdkVersion = 28

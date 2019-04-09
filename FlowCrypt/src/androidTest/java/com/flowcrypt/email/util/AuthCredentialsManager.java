@@ -23,10 +23,6 @@ import java.nio.charset.StandardCharsets;
  */
 
 public class AuthCredentialsManager {
-  public static AuthCredentials getOutLookWithBackupAuthCreds() {
-    return readAuthCredsFromResources("outlook.json");
-  }
-
   public static AuthCredentials getLocalWithOneBackupAuthCreds() {
     return readAuthCredsFromResources("user_with_one_backup.json");
   }

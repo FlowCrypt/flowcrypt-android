@@ -6,6 +6,7 @@
 package com.flowcrypt.email.node;
 
 import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 /**
@@ -46,7 +47,10 @@ final class NativeNode {
     if (msg.startsWith("listening on ")) {
       isReady = true;
     }
-    System.out.println("NODEJS-NATIVE-MSG[" + msg + "]");
+
+    if (GeneralUtil.isDebugBuild()) {
+      System.out.println("NODEJS-NATIVE-MSG[" + msg + "]");
+    }
   }
 
   /**
@@ -109,6 +113,7 @@ final class NativeNode {
     src += genConst("NODE_DEBUG", "false");
     src += genConst("APP_ENV", "prod");
     src += genConst("APP_VERSION", BuildConfig.VERSION_NAME.split("_")[0]);
+    src += genConst("APP_PROFILE", "false");
     src += jsCode;
     return src;
   }

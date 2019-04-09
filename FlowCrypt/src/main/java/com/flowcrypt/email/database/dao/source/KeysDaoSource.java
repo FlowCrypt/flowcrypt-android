@@ -13,9 +13,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.text.TextUtils;
 
 import com.flowcrypt.email.database.dao.KeysDao;
-import com.flowcrypt.email.js.PgpKey;
 import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -128,18 +128,18 @@ public class KeysDaoSource extends BaseDaoSource {
   }
 
   /**
-   * Delete information about a private {@link PgpKey}.
+   * Delete information about a private by longid.
    *
-   * @param context Interface to global information about an application environment.
-   * @param pgpKey  The object which contains information about the private {@link PgpKey}.
-   * @return The count of deleted rows. Will be 1 if information about {@link PgpKey} was deleted or -1 otherwise.
+   * @param context   Interface to global information about an application environment.
+   * @param keyLognId The key longid.
+   * @return The count of deleted rows. Will be 1 if information about the key was deleted or -1 otherwise.
    */
-  public int removeKey(Context context, PgpKey pgpKey) {
-    if (pgpKey != null) {
+  public int removeKey(Context context, String keyLognId) {
+    if (!TextUtils.isEmpty(keyLognId)) {
 
       ContentResolver contentResolver = context.getContentResolver();
       if (contentResolver != null) {
-        return contentResolver.delete(getBaseContentUri(), COL_LONG_ID + " = ?", new String[]{pgpKey.getLongid()});
+        return contentResolver.delete(getBaseContentUri(), COL_LONG_ID + " = ?", new String[]{keyLognId});
       } else return -1;
     } else return -1;
   }

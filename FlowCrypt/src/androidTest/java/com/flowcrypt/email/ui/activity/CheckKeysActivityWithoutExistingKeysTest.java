@@ -14,7 +14,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.util.TestGeneralUtil;
+import com.flowcrypt.email.util.PrivateKeysManager;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,8 +58,8 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
     protected Intent getActivityIntent() {
       Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
       try {
-        ArrayList<NodeKeyDetails> privateKeys = TestGeneralUtil.getKeyDetailsListFromAssets(
-            new String[]{"node/default@denbond7.com_sec.json"});
+        ArrayList<NodeKeyDetails> privateKeys = PrivateKeysManager.getKeysFromAssets(
+            new String[]{"node/default@denbond7.com_fisrtKey_prv_default.json"});
         return CheckKeysActivity.newIntent(targetContext,
             privateKeys,
             KeyDetails.Type.EMAIL,
@@ -88,7 +88,7 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
   public void testShowMsgEmptyWarning() {
     Espresso.closeSoftKeyboard();
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext()
+    checkIsSnackbarDisplayedAndClick(InstrumentationRegistry.getInstrumentation().getTargetContext()
         .getString(R.string.passphrase_must_be_non_empty));
   }
 
@@ -97,7 +97,7 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
     onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
         .perform(typeText("some pass phrase"), closeSoftKeyboard());
     onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
+    checkIsSnackbarDisplayedAndClick(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
         .password_is_incorrect));
   }
 

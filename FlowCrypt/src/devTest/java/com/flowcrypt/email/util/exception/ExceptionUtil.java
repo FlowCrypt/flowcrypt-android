@@ -18,11 +18,4 @@ public class ExceptionUtil extends ExceptionResolver {
   public static void handleError(Exception e) {
     //Don't modify it
   }
-
-  /**
-   * Handle an error from Js.
-   */
-  public static void handleError(Boolean isError, String title, String stack_trace, String details) {
-    //Don't modify it
-  }
 }

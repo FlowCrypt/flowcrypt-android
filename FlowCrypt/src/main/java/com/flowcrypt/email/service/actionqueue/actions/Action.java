@@ -8,6 +8,7 @@ package com.flowcrypt.email.service.actionqueue.actions;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -21,10 +22,8 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class Action implements Parcelable {
-
   public static final String TAG_NAME_ACTION_TYPE = "actionType";
   public static final String USER_SYSTEM = "system";
-
   public static final Creator<Action> CREATOR = new Creator<Action>() {
     @Override
     public Action createFromParcel(Parcel source) {
@@ -37,12 +36,15 @@ public class Action implements Parcelable {
     }
   };
 
+  private static final String TAG = Action.class.getSimpleName();
 
   protected long id;
   protected String email;
   protected int version;
+
   @SerializedName(TAG_NAME_ACTION_TYPE)
   private final ActionType actionType;
+
 
   public Action(String email, ActionType actionType) {
     this.email = email;
@@ -73,6 +75,7 @@ public class Action implements Parcelable {
   }
 
   public void run(Context context) throws Exception {
+    Log.d(TAG, getClass().getSimpleName() + " is running");
   }
 
   public long getId() {

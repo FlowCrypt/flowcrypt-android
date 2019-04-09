@@ -14,7 +14,7 @@ import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.api.services.gmail.Gmail;

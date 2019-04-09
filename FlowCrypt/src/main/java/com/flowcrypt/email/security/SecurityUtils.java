@@ -13,13 +13,12 @@ import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
+import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.js.PasswordStrength;
-import com.flowcrypt.email.js.PgpContact;
-import com.flowcrypt.email.js.PgpKeyInfo;
-import com.flowcrypt.email.js.core.Js;
+import com.flowcrypt.email.model.PgpContact;
+import com.flowcrypt.email.model.PgpKeyInfo;
 import com.flowcrypt.email.security.model.PrivateKeyInfo;
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException;
 import com.flowcrypt.email.util.exception.NoKeyAvailableException;
@@ -31,6 +30,7 @@ import com.nulabinc.zxcvbn.Zxcvbn;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -59,15 +59,16 @@ public class SecurityUtils {
     if (cursor != null && cursor.moveToFirst()) {
       do {
         String longId = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_LONG_ID));
+        String pubKey = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_PUBLIC_KEY));
 
         String randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(longId);
 
-        String privateKey = keyStoreCryptoManager.decrypt(cursor.getString(
+        String prvKey = keyStoreCryptoManager.decrypt(cursor.getString(
             cursor.getColumnIndex(KeysDaoSource.COL_PRIVATE_KEY)), randomVector);
         String passphrase = keyStoreCryptoManager.decrypt(cursor.getString(
             cursor.getColumnIndex(KeysDaoSource.COL_PASSPHRASE)), randomVector);
 
-        PgpKeyInfo pgpKeyInfo = new PgpKeyInfo(privateKey, longId);
+        PgpKeyInfo pgpKeyInfo = new PgpKeyInfo(longId, prvKey, pubKey);
         PrivateKeyInfo privateKeyInfo = new PrivateKeyInfo(pgpKeyInfo, passphrase);
 
         privateKeysInfo.add(privateKeyInfo);
@@ -115,31 +116,29 @@ public class SecurityUtils {
    * Generate a private keys backup for the given account.
    *
    * @param context Interface to global information about an application environment.
-   * @param js      An instance of {@link Js}
    * @param account The given account
    * @return A string which includes private keys
    */
-  public static String genPrivateKeysBackup(Context context, Js js, AccountDao account)
+  public static String genPrivateKeysBackup(Context context, AccountDao account)
       throws PrivateKeyStrengthException, DifferentPassPhrasesException,
       NoPrivateKeysAvailableException, IOException, NodeException {
     StringBuilder builder = new StringBuilder();
-    Zxcvbn zxcvbn = new Zxcvbn();
     String email = account.getEmail();
     List<String> longIdsByEmail = new UserIdEmailsKeysDaoSource().getLongIdsByEmail(context, email);
     String[] longids = longIdsByEmail.toArray(new String[0]);
-    js.getStorageConnector().refresh(context);
-    PgpKeyInfo[] pgpKeyInfoArray = js.getStorageConnector().getFilteredPgpPrivateKeys(longids);
+    KeysStorageImpl keysStorage = KeysStorageImpl.getInstance(context);
+    List<PgpKeyInfo> pgpKeyInfoList = keysStorage.getFilteredPgpPrivateKeys(longids);
 
-    if (pgpKeyInfoArray == null || pgpKeyInfoArray.length == 0) {
+    if (CollectionUtils.isEmpty(pgpKeyInfoList)) {
       throw new NoPrivateKeysAvailableException(context, account.getEmail());
     }
 
     String firstPassPhrase = null;
 
-    for (int i = 0; i < pgpKeyInfoArray.length; i++) {
-      PgpKeyInfo pgpKeyInfo = pgpKeyInfoArray[i];
+    for (int i = 0; i < pgpKeyInfoList.size(); i++) {
+      PgpKeyInfo pgpKeyInfo = pgpKeyInfoList.get(i);
 
-      String passPhrase = js.getStorageConnector().getPassphrase(pgpKeyInfo.getLongid());
+      String passPhrase = keysStorage.getPassphrase(pgpKeyInfo.getLongid());
 
       if (i == 0) {
         firstPassPhrase = passPhrase;
@@ -151,11 +150,12 @@ public class SecurityUtils {
         throw new PrivateKeyStrengthException("Empty pass phrase");
       }
 
-      PasswordStrength passwordStrength = js.crypto_password_estimate_strength(
-          zxcvbn.measure(passPhrase, js.crypto_password_weak_words()).getGuesses());
+      Zxcvbn zxcvbn = new Zxcvbn();
+      double measure = zxcvbn.measure(passPhrase, Arrays.asList(Constants.PASSWORD_WEAK_WORDS)).getGuesses();
+      ZxcvbnStrengthBarResult passwordStrength = NodeCallsExecutor.zxcvbnStrengthBar(measure);
 
       if (passwordStrength != null) {
-        switch (passwordStrength.getWord()) {
+        switch (passwordStrength.getWord().getWord()) {
           case Constants.PASSWORD_QUALITY_WEAK:
           case Constants.PASSWORD_QUALITY_POOR:
             throw new PrivateKeyStrengthException("Pass phrase too weak");
@@ -184,14 +184,13 @@ public class SecurityUtils {
    * Get public keys for recipients + keys of the sender;
    *
    * @param context     Interface to global information about an application environment.
-   * @param js          An instance of {@link Js}
    * @param pgpContacts An array which contains recipients
    * @param account     The given account
    * @param senderEmail The sender email
    * @return <tt>String[]</tt> An array of public keys.
    * @throws NoKeyAvailableException
    */
-  public static String[] getRecipientsPubKeys(Context context, Js js, PgpContact[] pgpContacts, AccountDao account,
+  public static String[] getRecipientsPubKeys(Context context, PgpContact[] pgpContacts, AccountDao account,
                                               String senderEmail) throws NoKeyAvailableException, IOException,
       NodeException {
     ArrayList<String> publicKeys = new ArrayList<>();
@@ -201,7 +200,7 @@ public class SecurityUtils {
       }
     }
 
-    publicKeys.add(getSenderPublicKey(context, js, account, senderEmail));
+    publicKeys.add(getSenderPublicKey(context, account, senderEmail));
 
     return publicKeys.toArray(new String[0]);
   }
@@ -210,13 +209,12 @@ public class SecurityUtils {
    * Get a public key of the sender;
    *
    * @param context     Interface to global information about an application environment.
-   * @param js          An instance of {@link Js}
    * @param account     The given account
    * @param senderEmail The sender email
    * @return <tt>String</tt> The sender public key.
    * @throws NoKeyAvailableException
    */
-  public static String getSenderPublicKey(Context context, Js js, AccountDao account, String senderEmail) throws
+  public static String getSenderPublicKey(Context context, AccountDao account, String senderEmail) throws
       NoKeyAvailableException, IOException, NodeException {
     UserIdEmailsKeysDaoSource userIdEmailsKeysDaoSource = new UserIdEmailsKeysDaoSource();
     List<String> longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(context, senderEmail);
@@ -232,7 +230,7 @@ public class SecurityUtils {
       }
     }
 
-    PgpKeyInfo pgpKeyInfo = js.getStorageConnector().getPgpPrivateKey(longIds.get(0));
+    PgpKeyInfo pgpKeyInfo = KeysStorageImpl.getInstance(context).getPgpPrivateKey(longIds.get(0));
     if (pgpKeyInfo != null) {
       List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(pgpKeyInfo.getPrivate());
       if (CollectionUtils.isEmpty(details)) {

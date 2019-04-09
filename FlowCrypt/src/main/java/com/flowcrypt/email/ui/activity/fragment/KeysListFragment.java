@@ -63,9 +63,6 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    PrivateKeysViewModel viewModel = ViewModelProviders.of(this).get(PrivateKeysViewModel.class);
-    viewModel.init(new NodeRepository());
-    viewModel.getResponsesLiveData().observe(this, this);
     recyclerViewAdapter = new PrivateKeysRecyclerViewAdapter(getContext(), new ArrayList<NodeKeyDetails>(), this);
   }
 
@@ -158,6 +155,12 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
         }
         break;
     }
+  }
+
+  public void fetchKeys() {
+    PrivateKeysViewModel viewModel = ViewModelProviders.of(this).get(PrivateKeysViewModel.class);
+    viewModel.init(new NodeRepository());
+    viewModel.getResponsesLiveData().observe(this, this);
   }
 
   private void runCreateOrImportKeyActivity() {

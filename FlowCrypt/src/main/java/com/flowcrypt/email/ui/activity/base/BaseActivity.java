@@ -6,13 +6,11 @@
 package com.flowcrypt.email.ui.activity.base;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -24,7 +22,6 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.node.Node;
 import com.flowcrypt.email.service.BaseService;
-import com.flowcrypt.email.service.JsBackgroundService;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.idling.NodeIdlingResource;
@@ -51,39 +48,14 @@ import androidx.loader.content.Loader;
  */
 public abstract class BaseActivity extends AppCompatActivity implements BaseService.OnServiceCallback {
   protected final String tag;
-
-  protected Messenger jsMessenger;
-  protected Messenger jsReplyMessenger;
   protected NodeIdlingResource nodeIdlingResource;
-  /**
-   * Flag indicating whether we have called bind on the {@link JsBackgroundService}.
-   */
-  protected boolean isJsServiceBound;
+
   private Snackbar snackbar;
   private Toolbar toolbar;
   private AppBarLayout appBarLayout;
-  private ServiceConnection jsServiceConn = new ServiceConnection() {
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-      Log.d(tag, "Activity connected to " + name.getClassName());
-      jsMessenger = new Messenger(service);
-      isJsServiceBound = true;
-
-      registerReplyMessenger(JsBackgroundService.MESSAGE_ADD_REPLY_MESSENGER, jsMessenger, jsReplyMessenger);
-      onJsServiceConnected();
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-      Log.d(tag, "Activity disconnected from " + name.getClassName());
-      jsMessenger = null;
-      isJsServiceBound = false;
-    }
-  };
 
   public BaseActivity() {
     tag = getClass().getSimpleName();
-    jsReplyMessenger = new Messenger(new ReplyHandler(this));
   }
 
   /**
@@ -106,8 +78,6 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    */
   public abstract View getRootView();
 
-  public abstract void onJsServiceConnected();
-
   @Override
   public void onReplyReceived(int requestCode, int resultCode, Object obj) {
 
@@ -128,10 +98,10 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     super.onCreate(savedInstanceState);
     registerNodeIdlingResources();
     Log.d(tag, "onCreate");
-    setContentView(getContentViewResourceId());
-    initScreenViews();
-
-    bindService(JsBackgroundService.class, jsServiceConn);
+    if (getContentViewResourceId() != 0) {
+      setContentView(getContentViewResourceId());
+      initScreenViews();
+    }
   }
 
   @Override
@@ -156,15 +126,6 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   public void onDestroy() {
     super.onDestroy();
     Log.d(tag, "onDestroy");
-
-    if (isJsServiceBound) {
-      if (jsMessenger != null) {
-        unregisterReplyMessenger(JsBackgroundService.MESSAGE_REMOVE_REPLY_MESSENGER, jsMessenger, jsReplyMessenger);
-      }
-
-      unbindService(JsBackgroundService.class, jsServiceConn);
-      isJsServiceBound = false;
-    }
   }
 
   @Override
@@ -282,46 +243,6 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
 
   public String getReplyMessengerName() {
     return getClass().getSimpleName() + "_" + hashCode();
-  }
-
-  /**
-   * Start a job to decrypt a raw MIME message.
-   *
-   * @param requestCode The unique request code for identify the current action.
-   * @param rawMimeMsg  The raw MIME message.
-   */
-  public void decryptMsg(int requestCode, String rawMimeMsg) {
-    if (checkServiceBound(isJsServiceBound)) return;
-
-    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), requestCode, rawMimeMsg);
-
-    Message message = Message.obtain(null, JsBackgroundService.MESSAGE_DECRYPT_MESSAGE, 0, 0, action);
-
-    message.replyTo = jsReplyMessenger;
-    try {
-      jsMessenger.send(message);
-    } catch (RemoteException e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
-    }
-  }
-
-  /**
-   * Start a job to decrypt a raw MIME message.
-   */
-  public void restartJsService() {
-    if (checkServiceBound(isJsServiceBound)) return;
-
-    BaseService.Action action = new BaseService.Action(getReplyMessengerName(),
-        R.id.js_refresh_storage_connector, null);
-    Message message = Message.obtain(null, JsBackgroundService.MESSAGE_REFRESH_STORAGE_CONNECTOR, 0, 0, action);
-    message.replyTo = jsReplyMessenger;
-    try {
-      jsMessenger.send(message);
-    } catch (RemoteException e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
-    }
   }
 
   /**

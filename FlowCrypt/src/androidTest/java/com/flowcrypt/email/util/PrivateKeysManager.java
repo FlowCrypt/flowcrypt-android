@@ -7,17 +7,23 @@ package com.flowcrypt.email.util;
 
 import android.content.Context;
 
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
+import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.database.dao.KeysDao;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
+import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.security.model.PrivateKeySourceType;
+import com.flowcrypt.email.security.KeysStorageImpl;
+import com.flowcrypt.email.ui.activity.base.BaseActivity;
+import com.google.gson.Gson;
 
-import org.apache.commons.io.IOUtils;
+import java.io.IOException;
+import java.util.ArrayList;
 
-import java.util.List;
-
+import androidx.annotation.NonNull;
+import androidx.test.internal.runner.junit4.statement.UiThreadStatement;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 /**
@@ -31,31 +37,66 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 public class PrivateKeysManager {
 
-  private static final String TEMP_PASSPHRASE = "android";
-  private static final String TEMP_PRIVATE_KEY_LONGID = "6C0DD31D159DF3EF";
+  public static void saveKeyFromAssetsToDatabase(String keyPath, String passphrase, KeyDetails.Type type,
+                                                 BaseActivity baseActivity) throws Throwable {
+    NodeKeyDetails nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath);
+    saveKeyToDatabase(nodeKeyDetails, passphrase, type, baseActivity);
+  }
 
-  public static void addTempPrivateKey() throws Exception {
-    String armoredPrivateKey = IOUtils.toString(InstrumentationRegistry.getInstrumentation().getContext().getAssets()
-        .open("pgp/temp-sec.asc"), "UTF-8");
-    Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-    List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(armoredPrivateKey);
+  public static void saveKeyToDatabase(NodeKeyDetails nodeKeyDetails, String passphrase, KeyDetails.Type type,
+                                       final BaseActivity baseActivity) throws Throwable {
+    final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-    NodeKeyDetails nodeKeyDetails = details.get(0);
+    KeysDaoSource keysDaoSource = new KeysDaoSource();
+    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(InstrumentationRegistry.getInstrumentation()
+        .getTargetContext());
 
-    KeysDao keysDao = new KeysDao();
-    keysDao.setLongId(nodeKeyDetails.getLongId());
-    keysDao.setPrivateKeySourceType(PrivateKeySourceType.NEW);
+    keysDaoSource.addRow(context, KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase));
 
-    String randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(nodeKeyDetails.getLongId());
+    new UserIdEmailsKeysDaoSource().addRow(context, nodeKeyDetails.getLongId(),
+        nodeKeyDetails.getPrimaryPgpContact().getEmail());
 
-    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(appContext);
+    UiThreadStatement.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        KeysStorageImpl.getInstance(context).refresh(context);
+      }
+    });
+    // Added timeout for a better sync between threads.
+    Thread.sleep(3000);
+  }
 
-    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(nodeKeyDetails.getPrivateKey(), randomVector);
-    keysDao.setPrivateKey(encryptedPrivateKey);
-    keysDao.setPublicKey(nodeKeyDetails.getPublicKey());
+  public static NodeKeyDetails getNodeKeyDetailsFromAssets(String assetsPath) throws IOException {
+    Gson gson = NodeGson.getInstance().getGson();
+    String json = TestGeneralUtil.readFileFromAssetsAsString(BaseTest.getContext(), assetsPath);
+    return gson.fromJson(json, NodeKeyDetails.class);
+  }
 
-    String encryptedPassphrase = keyStoreCryptoManager.encrypt(TEMP_PASSPHRASE, randomVector);
-    keysDao.setPassphrase(encryptedPassphrase);
-    new KeysDaoSource().addRow(appContext, keysDao);
+  @NonNull
+  public static ArrayList<NodeKeyDetails> getKeysFromAssets(String[] keysPaths) throws IOException {
+    ArrayList<NodeKeyDetails> privateKeys = new ArrayList<>();
+    for (String path : keysPaths) {
+      privateKeys.add(getNodeKeyDetailsFromAssets(path));
+    }
+    return privateKeys;
+  }
+
+  public static void deleteKey(String keyPath, final BaseActivity baseActivity) throws Throwable {
+    NodeKeyDetails nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath);
+    KeysDaoSource keysDaoSource = new KeysDaoSource();
+
+    final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+
+    keysDaoSource.removeKey(context, nodeKeyDetails.getLongId());
+    new UserIdEmailsKeysDaoSource().removeKey(context, nodeKeyDetails.getLongId());
+
+    UiThreadStatement.runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        KeysStorageImpl.getInstance(context).refresh(context);
+      }
+    });
+    // Added timeout for a better sync between threads.
+    Thread.sleep(3000);
   }
 }

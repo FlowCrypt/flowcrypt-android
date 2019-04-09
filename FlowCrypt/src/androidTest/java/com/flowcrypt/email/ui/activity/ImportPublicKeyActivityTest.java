@@ -15,7 +15,7 @@ import android.os.Parcelable;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.js.PgpContact;
+import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
@@ -138,7 +138,7 @@ public class ImportPublicKeyActivityTest extends BaseTest {
         .ACTION_GET_CONTENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
     onView(withId(R.id.buttonLoadFromFile)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
+    checkIsSnackbarDisplayedAndClick(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
         R.string.file_has_wrong_pgp_structure,
         InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.public_)));
   }
@@ -154,7 +154,7 @@ public class ImportPublicKeyActivityTest extends BaseTest {
   public void testShowErrorWhenImportKeyFromClipboard() throws Throwable {
     addTextToClipboard("not public key", SOME_TEXT);
     onView(withId(R.id.buttonLoadFromClipboard)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayed(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
+    checkIsSnackbarDisplayedAndClick(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(
         R.string.clipboard_has_wrong_structure,
         InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.public_)));
   }
