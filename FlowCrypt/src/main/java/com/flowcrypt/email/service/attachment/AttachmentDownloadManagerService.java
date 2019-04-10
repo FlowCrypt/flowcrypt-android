@@ -40,6 +40,7 @@ import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.FlowCryptLimitException;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.common.util.CollectionUtils;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -552,7 +553,7 @@ public class AttachmentDownloadManagerService extends Service {
         javax.mail.Message msg = remoteFolder.getMessageByUID(att.getUid());
 
         if (msg == null) {
-          throw new NullPointerException(context.getString(R.string.no_message_with_this_attachment));
+          throw new ManualHandledException(context.getString(R.string.no_message_with_this_attachment));
         }
 
         Part att = ImapProtocolUtil.getAttPartById(remoteFolder, msg.getMessageNumber(), msg, this.att.getId());
@@ -573,7 +574,7 @@ public class AttachmentDownloadManagerService extends Service {
               listener.onAttDownloaded(this.att, uri);
             }
           }
-        } else throw new IOException(context.getString(R.string.attachment_not_found));
+        } else throw new ManualHandledException(context.getString(R.string.attachment_not_found));
 
         remoteFolder.close(false);
         store.close();
