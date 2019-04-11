@@ -159,11 +159,19 @@ public class EmailUtil {
       attInfo.setType(GeneralUtil.getFileMimeTypeFromUri(context, uri));
       attInfo.setId(EmailUtil.generateContentId());
 
-      Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+      Cursor cursor = context.getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME,
+          OpenableColumns.SIZE}, null, null, null);
       if (cursor != null) {
         if (cursor.moveToFirst()) {
-          attInfo.setName(cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
-          attInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(OpenableColumns.SIZE)));
+          int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+          if (nameIndex != -1) {
+            attInfo.setName(cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)));
+          }
+
+          int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+          if (sizeIndex != -1) {
+            attInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(OpenableColumns.SIZE)));
+          }
         }
         cursor.close();
       } else if (ContentResolver.SCHEME_FILE.equalsIgnoreCase(uri.getScheme())) {
