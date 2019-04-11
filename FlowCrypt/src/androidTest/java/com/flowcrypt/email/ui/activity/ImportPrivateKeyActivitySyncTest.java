@@ -183,7 +183,7 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
     Intent resultData = new Intent();
     resultData.setData(Uri.fromFile(file));
     intending(allOf(hasAction(Intent.ACTION_CHOOSER), hasExtra(is(Intent.EXTRA_INTENT), allOf(hasAction(Intent
-        .ACTION_GET_CONTENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
+        .ACTION_OPEN_DOCUMENT), hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))), hasType("*/*")))))
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
   }
 
