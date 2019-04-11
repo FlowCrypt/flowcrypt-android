@@ -525,16 +525,6 @@ public class MessagesSenderJobService extends JobService {
       LocalFolder sentLocalFolder = foldersManager.getFolderSent();
 
       try {
-        if (sentLocalFolder == null) {
-          AccountDao accountDaoTemp = new AccountDaoSource().getAccountInformation(context, account.getEmail());
-          if (accountDaoTemp == null) {
-            throw new IllegalArgumentException("The SENT folder is not defined. The account is null!");
-          } else {
-            throw new IllegalArgumentException("An error occurred during saving a copy of the outgoing message. " +
-                "Provider: " + account.getEmail().substring(account.getEmail().indexOf("@")));
-          }
-        }
-
         if (sentLocalFolder != null) {
           IMAPFolder sentRemoteFolder = (IMAPFolder) store.getFolder(sentLocalFolder.getFullName());
 
@@ -549,7 +539,13 @@ public class MessagesSenderJobService extends JobService {
           sentRemoteFolder.close(false);
           return true;
         } else {
-          throw new IllegalArgumentException("The SENT folder is not defined");
+          AccountDao accountDao = new AccountDaoSource().getAccountInformation(context, account.getEmail());
+          if (accountDao == null) {
+            throw new IllegalArgumentException("The SENT folder is not defined. The account is null!");
+          } else {
+            throw new IllegalArgumentException("An error occurred during saving a copy of the outgoing message. " +
+                "Provider: " + account.getEmail().substring(account.getEmail().indexOf("@")));
+          }
         }
       } catch (MessagingException e) {
         e.printStackTrace();
