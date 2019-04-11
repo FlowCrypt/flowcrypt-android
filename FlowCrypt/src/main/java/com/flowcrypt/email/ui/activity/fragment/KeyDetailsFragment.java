@@ -31,8 +31,6 @@ import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.material.snackbar.Snackbar;
 
-import org.apache.commons.io.FilenameUtils;
-
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -144,17 +142,6 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
   private void saveKey(Intent data) {
     try {
       GeneralUtil.writeFileFromStringToUri(getContext(), data.getData(), details.getPublicKey());
-      String fileName = GeneralUtil.getFileNameFromUri(getContext(), data.getData());
-      String newFileName = null;
-
-      if (!TextUtils.isEmpty(fileName)) {
-        newFileName = FilenameUtils.removeExtension(fileName) + ".asc";
-      }
-
-      if (!fileName.equals(newFileName)) {
-        DocumentsContract.renameDocument(getContext().getContentResolver(), data.getData(), fileName);
-      }
-
       Toast.makeText(getContext(), getString(R.string.saved), Toast.LENGTH_SHORT).show();
     } catch (Exception e) {
       e.printStackTrace();
@@ -233,7 +220,7 @@ public class KeyDetailsFragment extends BaseFragment implements View.OnClickList
     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
     intent.addCategory(Intent.CATEGORY_OPENABLE);
     intent.setType(Constants.MIME_TYPE_PGP_KEY);
-    intent.putExtra(Intent.EXTRA_TITLE, "0x" + details.getLongId());
+    intent.putExtra(Intent.EXTRA_TITLE, "0x" + details.getLongId() + ".asc");
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_KEY);
   }
 }
