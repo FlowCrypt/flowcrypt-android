@@ -7,10 +7,8 @@ package com.flowcrypt.email.api.retrofit.request.node;
 
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.model.PgpContact;
 import com.google.gson.annotations.Expose;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -58,10 +56,10 @@ public class ComposeEmailRequest extends BaseNodeRequest {
     if (info != null) {
       format = info.getEncryptionType() == MessageEncryptionType.ENCRYPTED ? FORMAT_ENCRYPT_INLINE : FORMAT_PLAIN;
       text = info.getMsg();
-      to = prepareRecipientsArray(info.getToPgpContacts());
-      cc = prepareRecipientsArray(info.getCcPgpContacts());
-      bcc = prepareRecipientsArray(info.getBccPgpContacts());
-      from = info.getFromPgpContact().getEmail();
+      to = info.getToRecipients();
+      cc = info.getCcRecipients();
+      bcc = info.getBccRecipients();
+      from = info.getFrom();
       subject = info.getSubject();
       replyToMimeMsg = info.getRawReplyMsg();
     }
@@ -70,13 +68,5 @@ public class ComposeEmailRequest extends BaseNodeRequest {
   @Override
   public String getEndpoint() {
     return "composeEmail";
-  }
-
-  private List<String> prepareRecipientsArray(PgpContact[] pgpContacts) {
-    List<String> recipients = new ArrayList<>();
-    for (PgpContact pgpContact : pgpContacts) {
-      recipients.add(pgpContact.getEmail());
-    }
-    return recipients;
   }
 }

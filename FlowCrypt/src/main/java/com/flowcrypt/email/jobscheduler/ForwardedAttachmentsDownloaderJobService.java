@@ -32,7 +32,6 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -48,7 +47,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -230,11 +228,10 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
         String detLabel = details.getLabel();
         File msgAttsDir = new File(attCacheDir, details.getAttsDir());
         try {
-          String[] pubKeys = null;
+          List<String> pubKeys = null;
           if (details.isEncrypted()) {
-            PgpContact[] pgpContacts = EmailUtil.getAllRecipients(context, details);
             String senderEmail = EmailUtil.getFirstAddressString(details.getFrom());
-            pubKeys = SecurityUtils.getRecipientsPubKeys(context, pgpContacts, account, senderEmail);
+            pubKeys = SecurityUtils.getRecipientsPubKeys(context, details.getAllRecipients(), account, senderEmail);
           }
 
           List<AttachmentInfo> atts = attDaoSource.getAttInfoList(context, account.getEmail(),
@@ -264,7 +261,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
     }
 
     private MessageState getNewMsgState(Context context, AttachmentDaoSource attDaoSource,
-                                        GeneralMessageDetails details, File msgAttsDir, String[] pubKeys,
+                                        GeneralMessageDetails details, File msgAttsDir, List<String> pubKeys,
                                         List<AttachmentInfo> atts) throws IOException, MessagingException {
       IMAPFolder folder = null;
       Message fwdMsg = null;
@@ -339,13 +336,13 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
       return msgState;
     }
 
-    private void downloadFile(GeneralMessageDetails details, String[] pubKeys, AttachmentInfo att,
+    private void downloadFile(GeneralMessageDetails details, List<String> pubKeys, AttachmentInfo att,
                               File tempFile, InputStream inputStream) throws IOException {
       if (details.isEncrypted()) {
         byte[] originalBytes = IOUtils.toByteArray(inputStream);
         String fileName = FilenameUtils.removeExtension(att.getName());
         NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
-        EncryptFileRequest request = new EncryptFileRequest(originalBytes, fileName, Arrays.asList(pubKeys));
+        EncryptFileRequest request = new EncryptFileRequest(originalBytes, fileName, pubKeys);
 
         Response<EncryptedFileResult> response = nodeService.encryptFile(request).execute();
         EncryptedFileResult encryptedFileResult = response.body();

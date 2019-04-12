@@ -104,8 +104,8 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
             if (!localPgpContact.getHasPgp()) {
               PgpContact remotePgpContact = getPgpContactInfoFromServer(email);
               if (remotePgpContact != null) {
-                contactsDaoSource.updatePgpContact(getContext(), remotePgpContact);
-                localPgpContact = remotePgpContact;
+                contactsDaoSource.updatePgpContact(getContext(), localPgpContact, remotePgpContact);
+                localPgpContact = contactsDaoSource.getPgpContact(getContext(), email);
               }
             }
           } catch (Exception e) {

@@ -10,7 +10,9 @@ import android.os.Parcelable;
 
 import com.flowcrypt.email.database.MessageState;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import javax.mail.internet.InternetAddress;
@@ -288,5 +290,28 @@ public class GeneralMessageDetails implements Parcelable {
 
   public void setErrorMsg(String errorMsg) {
     this.errorMsg = errorMsg;
+  }
+
+  /**
+   * Generate a list of the all recipients.
+   *
+   * @return A list of the all recipients
+   */
+  public List<String> getAllRecipients() {
+    List<String> emails = new ArrayList<>();
+
+    if (to != null) {
+      for (InternetAddress internetAddress : to) {
+        emails.add(internetAddress.getAddress());
+      }
+    }
+
+    if (cc != null) {
+      for (InternetAddress internetAddress : cc) {
+        emails.add(internetAddress.getAddress());
+      }
+    }
+
+    return emails;
   }
 }

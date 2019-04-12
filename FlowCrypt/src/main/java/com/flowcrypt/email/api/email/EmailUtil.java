@@ -21,7 +21,6 @@ import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper;
@@ -30,8 +29,6 @@ import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.ComposeEmailResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
@@ -717,11 +714,11 @@ public class EmailUtil {
    * @return The generated raw MIME message.
    */
   @NonNull
-  public static String genRawMsgWithoutAtts(OutgoingMessageInfo info, String[] pubKeys) throws IOException,
+  public static String genRawMsgWithoutAtts(OutgoingMessageInfo info, List<String> pubKeys) throws IOException,
       NodeEncryptException {
 
     NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
-    ComposeEmailRequest request = new ComposeEmailRequest(info, pubKeys == null ? null : Arrays.asList(pubKeys));
+    ComposeEmailRequest request = new ComposeEmailRequest(info, pubKeys);
 
     retrofit2.Response<ComposeEmailResult> response = nodeService.composeEmail(request).execute();
     ComposeEmailResult result = response.body();
@@ -735,54 +732,6 @@ public class EmailUtil {
     }
 
     return result.getMimeMsg();
-  }
-
-  /**
-   * Generate a list of the all recipients.
-   *
-   * @return A list of the all recipients
-   */
-  public static PgpContact[] getAllRecipients(OutgoingMessageInfo info) {
-    List<PgpContact> pgpContacts = new ArrayList<>();
-
-    if (info.getToPgpContacts() != null) {
-      pgpContacts.addAll(Arrays.asList(info.getToPgpContacts()));
-    }
-
-    if (info.getCcPgpContacts() != null) {
-      pgpContacts.addAll(Arrays.asList(info.getCcPgpContacts()));
-    }
-
-    if (info.getBccPgpContacts() != null) {
-      pgpContacts.addAll(Arrays.asList(info.getBccPgpContacts()));
-    }
-
-    return pgpContacts.toArray(new PgpContact[0]);
-  }
-
-  /**
-   * Generate a list of the all recipients.
-   *
-   * @return A list of the all recipients
-   */
-  public static PgpContact[] getAllRecipients(Context context, GeneralMessageDetails details) {
-    List<String> emails = new ArrayList<>();
-
-    if (details.getTo() != null) {
-      for (InternetAddress internetAddress : details.getTo()) {
-        emails.add(internetAddress.getAddress());
-      }
-    }
-
-    if (details.getCc() != null) {
-      for (InternetAddress internetAddress : details.getCc()) {
-        emails.add(internetAddress.getAddress());
-      }
-    }
-
-    //todo-denbond7 need to add support BCC
-
-    return new ContactsDaoSource().getPgpContacts(context, emails).toArray(new PgpContact[0]);
   }
 
   /**
