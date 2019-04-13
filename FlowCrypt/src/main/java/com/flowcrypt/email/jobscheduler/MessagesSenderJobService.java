@@ -263,7 +263,7 @@ public class MessagesSenderJobService extends JobService {
 
           msgDetails = msgDaoSource.getMsg(context, email, JavaEmailConstants.FOLDER_OUTBOX, msgUid);
 
-          if (msgDetails.getMsgState() == MessageState.SENT) {
+          if (msgDetails != null && msgDetails.getMsgState() == MessageState.SENT) {
             msgDaoSource.deleteMsg(context, email, JavaEmailConstants.FOLDER_OUTBOX, msgUid);
 
             if (!CollectionUtils.isEmpty(attInfoList)) {

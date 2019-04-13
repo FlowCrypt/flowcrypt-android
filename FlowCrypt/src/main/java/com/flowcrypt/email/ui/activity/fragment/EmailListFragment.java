@@ -736,9 +736,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     String selection = MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
         + (isEncryptedModeEnabled ? " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" : "");
 
-    boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder()
-        .getFolderAlias());
-    if (!GeneralUtil.isDebugBuild() && isOutbox) {
+    if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFolderAlias())) {
       selection += " AND " + MessageDaoSource.COL_STATE + " NOT IN (" + MessageState.SENT.getValue()
           + ", " + MessageState.SENT_WITHOUT_LOCAL_COPY.getValue() + ")";
     }
