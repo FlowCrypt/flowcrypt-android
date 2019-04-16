@@ -376,7 +376,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
 
         LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
         DatabaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
-            listener.getCurrentFolder().getFolderAlias());
+            listener.getCurrentFolder().getFullName());
 
         switch (errorType) {
           case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
@@ -507,7 +507,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         boolean isEmptyFolferAliases = TextUtils.isEmpty(listener.getCurrentFolder().getFolderAlias());
         if (isEmptyFolferAliases || !isItSyncOrOutboxFolder(listener.getCurrentFolder()) || isForceClearCacheNeeded) {
           DatabaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
-              listener.getCurrentFolder().getFolderAlias());
+              listener.getCurrentFolder().getFullName());
         }
       }
 
@@ -578,7 +578,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   public void reloadMsgs() {
     LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
     DatabaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
-        listener.getCurrentFolder().getFolderAlias());
+        listener.getCurrentFolder().getFullName());
     UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
     loadNextMsgs(0);
   }

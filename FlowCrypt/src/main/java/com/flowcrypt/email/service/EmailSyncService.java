@@ -612,7 +612,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
                               IMAPFolder imapFolder, javax.mail.Message msg)
       throws MessagingException, IOException {
     String email = account.getEmail();
-    String folderAlias = localFolder.getFolderAlias();
+    String folder = localFolder.getFullName();
 
     AttachmentDaoSource attachmentDaoSource = new AttachmentDaoSource();
     ArrayList<ContentValues> contentValuesList = new ArrayList<>();
@@ -621,8 +621,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
     if (!attachmentInfoList.isEmpty()) {
       for (AttachmentInfo att : attachmentInfoList) {
-        ContentValues cV = AttachmentDaoSource.prepareContentValues(email, folderAlias, imapFolder.getUID(msg), att);
-        contentValuesList.add(cV);
+        ContentValues values = AttachmentDaoSource.prepareContentValues(email, folder, imapFolder.getUID(msg), att);
+        contentValuesList.add(values);
       }
     }
 

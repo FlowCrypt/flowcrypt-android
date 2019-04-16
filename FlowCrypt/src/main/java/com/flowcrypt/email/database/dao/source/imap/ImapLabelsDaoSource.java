@@ -143,16 +143,16 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
   }
 
   /**
-   * Get a {@link LocalFolder} from the database by an email and an alias.
+   * Get a {@link LocalFolder} from the database by an email and a name.
    *
-   * @param email       The email of the {@link LocalFolder}.
-   * @param folderAlias The folder alias.
+   * @param email      The email of the {@link LocalFolder}.
+   * @param folderName The folder name.
    * @return {@link LocalFolder} or null if such folder not found.
    */
-  public LocalFolder getFolderByAlias(Context context, String email, String folderAlias) {
+  public LocalFolder getFolder(Context context, String email, String folderName) {
     ContentResolver contentResolver = context.getContentResolver();
     Cursor cursor = contentResolver.query(getBaseContentUri(), null, COL_EMAIL + " = ?" + " AND " +
-        COL_FOLDER_ALIAS + " = ?", new String[]{email, folderAlias}, null);
+        COL_FOLDER_NAME + " = ?", new String[]{email, folderName}, null);
 
     LocalFolder localFolder = null;
 

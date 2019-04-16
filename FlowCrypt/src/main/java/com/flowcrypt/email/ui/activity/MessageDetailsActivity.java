@@ -135,9 +135,9 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
 
       case R.id.loader_id_load_attachments:
         Uri uriAtt = new AttachmentDaoSource().getBaseContentUri();
-        String selectionAtt = AttachmentDaoSource.COL_EMAIL + " = ?" + " AND " + AttachmentDaoSource.COL_FOLDER
-            + " = ?" + " AND " + AttachmentDaoSource.COL_UID + " = ?";
-        String[] selectionArgsAtt = new String[]{details.getEmail(), localFolder.getFolderAlias(),
+        String selectionAtt = AttachmentDaoSource.COL_EMAIL + " = ?" + " AND "
+            + AttachmentDaoSource.COL_FOLDER + " = ? AND " + AttachmentDaoSource.COL_UID + " = ?";
+        String[] selectionArgsAtt = new String[]{details.getEmail(), localFolder.getFullName(),
             String.valueOf(details.getUid())};
         return new CursorLoader(this, uriAtt, null, selectionAtt, selectionArgsAtt, null);
 

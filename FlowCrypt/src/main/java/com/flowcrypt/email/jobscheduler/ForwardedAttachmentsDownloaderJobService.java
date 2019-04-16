@@ -30,7 +30,6 @@ import com.flowcrypt.email.database.MessageState;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
@@ -282,9 +281,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
           FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir);
 
           if (folder == null) {
-            String folderName = new ImapLabelsDaoSource().getFolderByAlias(context, att.getEmail(),
-                att.getFwdFolder()).getFullName();
-            folder = (IMAPFolder) store.getFolder(folderName);
+            folder = (IMAPFolder) store.getFolder(att.getFwdFolder());
             folder.open(Folder.READ_ONLY);
           }
 
@@ -329,7 +326,6 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
         if (att.getUri() != null) {
           ContentValues contentValues = new ContentValues();
           contentValues.put(AttachmentDaoSource.COL_FILE_URI, att.getUri().toString());
-
           attDaoSource.update(context, att.getEmail(), att.getFolder(), att.getUid(), att.getId(), contentValues);
         }
       }

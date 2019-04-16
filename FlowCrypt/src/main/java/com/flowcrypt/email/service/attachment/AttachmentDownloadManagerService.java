@@ -530,8 +530,7 @@ public class AttachmentDownloadManagerService extends Service {
         Session session = OpenStoreHelper.getAttsSess(context, account);
         Store store = OpenStoreHelper.openStore(context, account, session);
 
-        LocalFolder localFolder = new ImapLabelsDaoSource().getFolderByAlias(context, att.getEmail(), att.getFolder());
-
+        LocalFolder localFolder = new ImapLabelsDaoSource().getFolder(context, att.getEmail(), att.getFolder());
         if (localFolder == null) {
           if (source.getAccountInformation(context, att.getEmail()) == null) {
             if (listener != null) {
@@ -543,7 +542,7 @@ public class AttachmentDownloadManagerService extends Service {
             }
             return;
           } else {
-            throw new IllegalArgumentException("Folder \"" + att.getFolder() + "\" not found in the local cache");
+            throw new ManualHandledException("Folder \"" + att.getFolder() + "\" not found in the local cache");
           }
         }
 
