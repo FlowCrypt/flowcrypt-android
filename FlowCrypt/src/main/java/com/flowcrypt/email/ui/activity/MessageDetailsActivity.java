@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
+import com.flowcrypt.email.api.email.EmailUtil;
 import com.flowcrypt.email.api.email.FoldersManager;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.api.email.LocalFolder;
@@ -345,9 +346,11 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
       FoldersManager foldersManager = FoldersManager.fromDatabase(this, details.getEmail());
       LocalFolder trash = foldersManager.getFolderTrash();
       if (trash == null) {
-        ExceptionUtil.handleError(new IllegalArgumentException("Folder 'Trash' not found"));
+        ExceptionUtil.handleError(new IllegalArgumentException("Folder 'Trash' not found, provider: "
+            + EmailUtil.getDomain(details.getEmail())));
+      } else {
+        moveMsg(R.id.syns_request_delete_message, localFolder, trash, details.getUid());
       }
-      moveMsg(R.id.syns_request_delete_message, localFolder, trash, details.getUid());
     }
   }
 
