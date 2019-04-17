@@ -85,6 +85,8 @@ public class KeyStoreCryptoManager {
   private PublicKey publicKey;
   private SecretKey secretKey;
 
+  private final Object decryptLock = new Object();
+
   private boolean isOldLogicUsed;
 
   /**
@@ -112,7 +114,7 @@ public class KeyStoreCryptoManager {
 
   public static KeyStoreCryptoManager getInstance(Context context) {
     if (ourInstance == null) {
-      synchronized (KeysStorageImpl.class) {
+      synchronized (KeyStoreCryptoManager.class) {
         if (ourInstance == null) {
           try {
             ourInstance = new KeyStoreCryptoManager(context);
@@ -266,32 +268,34 @@ public class KeyStoreCryptoManager {
   public String decryptWithRSAOrAES(Context context, String encryptedData) throws Exception {
     if (!TextUtils.isEmpty(encryptedData)) {
       if (isOldLogicUsed) {
-        Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING);
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        synchronized (decryptLock) {
+          Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING);
+          cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
-        byte[] encryptedBytes = Base64.decode(encryptedData, Base64.DEFAULT);
-        byte[] decryptedBytes;
-        try {
-          decryptedBytes = cipher.doFinal(encryptedBytes);
-        } catch (BadPaddingException | RuntimeException e) {
-          e.printStackTrace();
+          byte[] encryptedBytes = Base64.decode(encryptedData, Base64.DEFAULT);
+          byte[] decryptedBytes;
+          try {
+            decryptedBytes = cipher.doFinal(encryptedBytes);
+          } catch (BadPaddingException | RuntimeException e) {
+            e.printStackTrace();
 
-          String runtimeMsg = "error:04000044:RSA routines:OPENSSL_internal:internal error";
-          if (e instanceof RuntimeException && runtimeMsg.equals(e.getMessage())) {
-            context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
-            throw new RuntimeException("Storage was corrupted", e);
+            String runtimeMsg = "error:04000044:RSA routines:OPENSSL_internal:internal error";
+            if (e instanceof RuntimeException && runtimeMsg.equals(e.getMessage())) {
+              context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
+              throw new RuntimeException("Storage was corrupted", e);
+            }
+
+            String badPaddingMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error";
+            if (e instanceof BadPaddingException && badPaddingMsg.equals(e.getMessage())) {
+              context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
+              throw new GeneralSecurityException("Storage was corrupted", e);
+            }
+
+            throw e;
           }
 
-          String badPaddingMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error";
-          if (e instanceof BadPaddingException && badPaddingMsg.equals(e.getMessage())) {
-            context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
-            throw new GeneralSecurityException("Storage was corrupted", e);
-          }
-
-          throw e;
+          return new String(decryptedBytes, StandardCharsets.UTF_8);
         }
-
-        return new String(decryptedBytes, StandardCharsets.UTF_8);
       } else {
         return decrypt(encryptedData, null);
       }
