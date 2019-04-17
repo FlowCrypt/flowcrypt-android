@@ -12,6 +12,7 @@ import android.content.Context;
 import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.jobscheduler.SyncJobService;
 import com.flowcrypt.email.node.Node;
+import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -35,6 +36,7 @@ public abstract class BaseApplication extends Application {
   @Override
   public void onCreate() {
     super.onCreate();
+    KeyStoreCryptoManager.init(this);
     KeysStorageImpl.init(this);
     NotificationChannelManager.registerNotificationChannels(this);
 

@@ -55,7 +55,7 @@ public class SecurityUtils {
     ArrayList<PrivateKeyInfo> privateKeysInfo = new ArrayList<>();
     Cursor cursor = context.getContentResolver().query(new KeysDaoSource().getBaseContentUri(), null, null, null, null);
 
-    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
+    KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context);
 
     if (cursor != null && cursor.moveToFirst()) {
       do {

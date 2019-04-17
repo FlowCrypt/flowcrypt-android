@@ -71,7 +71,7 @@ public class EncryptPrivateKeysIfNeededAction extends Action {
       return;
     }
 
-    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
+    KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context);
     List<KeysDao> keysDaoList = new ArrayList<>();
 
     for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoList) {

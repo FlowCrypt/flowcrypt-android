@@ -110,8 +110,8 @@ public class AccountDaoSource extends BaseDaoSource {
   public static AccountDao getCurrentAccountDao(Context context, Cursor cursor) {
     AuthCredentials authCreds = null;
     try {
-      KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
-      authCreds = getCurrentAuthCredsFromCursor(keyStoreCryptoManager, cursor);
+      KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context);
+      authCreds = getCurrentAuthCredsFromCursor(context, keyStoreCryptoManager, cursor);
     } catch (Exception e) {
       e.printStackTrace();
       ExceptionUtil.handleError(e);
@@ -130,12 +130,13 @@ public class AccountDaoSource extends BaseDaoSource {
   /**
    * Get the current {@link AuthCredentials} object from the current {@link Cursor} position.
    *
+   * @param context Interface to global information about an application environment;
    * @param manager The manager which does encryption/decryption work.
    * @param cursor  The cursor from which to get the data.
    * @return Generated {@link AuthCredentials} object.
    * @throws GeneralSecurityException
    */
-  public static AuthCredentials getCurrentAuthCredsFromCursor(KeyStoreCryptoManager manager,
+  public static AuthCredentials getCurrentAuthCredsFromCursor(Context context, KeyStoreCryptoManager manager,
                                                               Cursor cursor) throws Exception {
 
     SecurityType.Option imapOpt = SecurityType.Option.NONE;
@@ -164,7 +165,7 @@ public class AccountDaoSource extends BaseDaoSource {
 
     return new AuthCredentials.Builder().setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)))
         .setUsername(cursor.getString(cursor.getColumnIndex(COL_USERNAME)))
-        .setPassword(manager.decryptWithRSAOrAES(originalPassword))
+        .setPassword(manager.decryptWithRSAOrAES(context, originalPassword))
         .setImapServer(cursor.getString(cursor.getColumnIndex(COL_IMAP_SERVER)))
         .setImapPort(cursor.getInt(cursor.getColumnIndex(COL_IMAP_PORT)))
         .setImapSecurityTypeOpt(imapOpt)
@@ -173,7 +174,8 @@ public class AccountDaoSource extends BaseDaoSource {
         .setSmtpSecurityTypeOpt(smtpOpt)
         .setIsUseCustomSignInForSmtp(cursor.getInt(cursor.getColumnIndex(COL_SMTP_IS_USE_CUSTOM_SIGN)) == 1)
         .setSmtpSigInUsername(cursor.getString(cursor.getColumnIndex(COL_SMTP_USERNAME)))
-        .setSmtpSignInPassword(manager.decryptWithRSAOrAES(cursor.getString(cursor.getColumnIndex(COL_SMTP_PASSWORD))))
+        .setSmtpSignInPassword(manager.decryptWithRSAOrAES(context,
+            cursor.getString(cursor.getColumnIndex(COL_SMTP_PASSWORD))))
         .build();
   }
 
@@ -202,7 +204,7 @@ public class AccountDaoSource extends BaseDaoSource {
   /**
    * Save information about an account using the {@link AuthCredentials};
    *
-   * @param context         Interface to global information about an application environment;
+   * @param context   Interface to global information about an application environment;
    * @param authCreds The sign-in settings of IMAP and SMTP servers.
    * @return The created {@link Uri} or null;
    * @throws Exception An exception maybe occurred when encrypt the user password.
@@ -494,7 +496,7 @@ public class AccountDaoSource extends BaseDaoSource {
   /**
    * Generate a {@link ContentValues} using {@link AuthCredentials}.
    *
-   * @param context         Interface to global information about an application environment;
+   * @param context   Interface to global information about an application environment;
    * @param authCreds The {@link AuthCredentials} object;
    * @return The generated {@link ContentValues}.
    */
@@ -505,7 +507,7 @@ public class AccountDaoSource extends BaseDaoSource {
       contentValues.put(COL_EMAIL, email.toLowerCase());
     } else return null;
 
-    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
+    KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context);
 
     contentValues.put(COL_ACCOUNT_TYPE, email.substring(email.indexOf('@') + 1));
     contentValues.put(COL_USERNAME, authCreds.getUsername());

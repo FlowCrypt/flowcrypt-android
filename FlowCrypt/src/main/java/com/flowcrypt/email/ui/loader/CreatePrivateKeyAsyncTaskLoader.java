@@ -87,7 +87,7 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
     isActionStarted = true;
     NodeKeyDetails nodeKeyDetails = null;
     try {
-      KeyStoreCryptoManager manager = new KeyStoreCryptoManager(getContext());
+      KeyStoreCryptoManager manager = KeyStoreCryptoManager.getInstance(getContext());
 
       GenerateKeyResult result = NodeCallsExecutor.genKey(passphrase, genContacts());
       nodeKeyDetails = result.getKey();
