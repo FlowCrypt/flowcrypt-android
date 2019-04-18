@@ -614,24 +614,8 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   private void updateMsgView() {
     layoutMsgParts.removeAllViews();
     if (msgInfo.hasHtmlText()) {
-      EmailWebView emailWebView = new EmailWebView(getContext());
-      emailWebView.configure();
-
-      int margin = getResources().getDimensionPixelOffset(R.dimen.default_margin_content);
-      LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-          ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-      layoutParams.setMargins(margin, 0, margin, 0);
-      emailWebView.setLayoutParams(layoutParams);
-
-      emailWebView.loadDataWithBaseURL(null, EmailUtil.genViewportHtml(msgInfo.getHtmlMsg()),
-          "text/html", StandardCharsets.UTF_8.displayName(), null);
-
-      layoutMsgParts.addView(emailWebView);
-      emailWebView.setOnPageFinishedListener(new EmailWebView.OnPageFinishedListener() {
-        public void onPageFinished() {
-          updateReplyButtons();
-        }
-      });
+      MsgBlock block = msgInfo.getHtmlMsgBlock();
+      addWebView(block);
     } else if (msgInfo.getMsgBlocks() != null && !msgInfo.getMsgBlocks().isEmpty()) {
       boolean isFirstMsgPartText = true;
       for (MsgBlock block : msgInfo.getMsgBlocks()) {
@@ -659,6 +643,10 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
               layoutMsgParts.addView(genDecryptErrorPart((DecryptErrorMsgBlock) block, layoutInflater));
               break;
 
+            case DECRYPTED_ATT:
+              //Todo-denbond7 Add support of that
+              break;
+
             default:
               layoutMsgParts.addView(genDefPart(block, layoutInflater, R.layout.message_part_other,
                   layoutMsgParts));
@@ -672,6 +660,34 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
       layoutMsgParts.removeAllViews();
       updateReplyButtons();
     }
+  }
+
+  private void addWebView(MsgBlock block) {
+    final EmailWebView emailWebView = new EmailWebView(getContext());
+    emailWebView.configure();
+
+    int margin = getResources().getDimensionPixelOffset(R.dimen.default_margin_content);
+    LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    layoutParams.setMargins(margin, 0, margin, 0);
+    emailWebView.setLayoutParams(layoutParams);
+
+    String html = EmailUtil.genViewportHtml(block.getContent());
+
+    if (block.getType() == MsgBlock.Type.DECRYPTED_HTML) {
+      html = html.replaceFirst("(<body.*)(bgcolor=\".*\")(>)", "$1$3");
+      emailWebView.setBackgroundColor(0);
+      emailWebView.setBackgroundResource(R.drawable.bg_message_part_pgp_message);
+    }
+
+    emailWebView.loadDataWithBaseURL(null, html, "text/html", StandardCharsets.UTF_8.displayName(), null);
+
+    layoutMsgParts.addView(emailWebView);
+    emailWebView.setOnPageFinishedListener(new EmailWebView.OnPageFinishedListener() {
+      public void onPageFinished() {
+        updateReplyButtons();
+      }
+    });
   }
 
   /**

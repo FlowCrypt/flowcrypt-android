@@ -924,7 +924,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    */
   private OutgoingMessageInfo getOutgoingMsgInfo() {
     OutgoingMessageInfo messageInfo = new OutgoingMessageInfo();
-    /*if (msgInfo != null && !TextUtils.isEmpty(msgInfo.getHtmlMsg())) {
+    /*if (msgInfo != null && !TextUtils.isEmpty(msgInfo.getHtmlMsgBlock())) {
       //todo-denbond7 Need to think how forward HTML
     }*/
     messageInfo.setMsg(editTextEmailMsg.getText().toString());
@@ -1292,7 +1292,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
           }
         }
       }
-    } else if (!msgInfo.hasPlainText() && !TextUtils.isEmpty(msgInfo.getHtmlMsg())) {
+    } else if (!msgInfo.hasPlainText() && msgInfo.getHtmlMsgBlock() != null) {
       Toast.makeText(getContext(), R.string.cannot_forward_html_emails, Toast.LENGTH_LONG).show();
     }
   }
