@@ -68,7 +68,7 @@ import javax.crypto.spec.SecretKeySpec;
  * @version 2.0 Added using AES cipher for encryption/decryption which uses AndroidKeyStore for storing keys.
  */
 
-public class KeyStoreCryptoManager {
+public final class KeyStoreCryptoManager {
   private static final int SIZE_OF_ALGORITHM_PARAMETER_SPEC = 16;
   private static final String PREFERENCE_KEY_SECRET = "preference_key_secret";
   private static final String TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING = "RSA/ECB/PKCS1Padding";

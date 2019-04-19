@@ -401,7 +401,7 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             if (!idlingForDecryption.isIdleNow()) {
               idlingForDecryption.decrement();
             }
-            ExceptionUtil.handleError(new ManualHandledException(nodeResponseWrapper.getResult().getError().toString()));
+            ExceptionUtil.handleError(new ManualHandledException("" + nodeResponseWrapper.getResult().getError()));
             break;
 
           case EXCEPTION:

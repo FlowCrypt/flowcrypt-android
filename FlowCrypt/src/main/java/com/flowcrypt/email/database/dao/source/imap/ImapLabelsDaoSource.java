@@ -104,22 +104,6 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
   }
 
   /**
-   * Generate a {@link LocalFolder} object from the current cursor position.
-   *
-   * @param cursor The {@link Cursor} which contains information about {@link LocalFolder}.
-   * @return A generated {@link LocalFolder}.
-   */
-  public LocalFolder getFolder(Cursor cursor) {
-    return new LocalFolder(
-        cursor.getString(cursor.getColumnIndex(COL_FOLDER_NAME)),
-        cursor.getString(cursor.getColumnIndex(COL_FOLDER_ALIAS)),
-        cursor.getInt(cursor.getColumnIndex(COL_MESSAGE_COUNT)),
-        parseAttributes(cursor.getString(cursor.getColumnIndex(COL_FOLDER_ATTRIBUTES))),
-        cursor.getInt(cursor.getColumnIndex(COL_IS_CUSTOM_LABEL)) == 1
-    );
-  }
-
-  /**
    * Get all {@link LocalFolder} objects from the database by an email.
    *
    * @param email The email of the {@link LocalFolder}.
@@ -140,6 +124,22 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     }
 
     return localFolders;
+  }
+
+  /**
+   * Generate a {@link LocalFolder} object from the current cursor position.
+   *
+   * @param cursor The {@link Cursor} which contains information about {@link LocalFolder}.
+   * @return A generated {@link LocalFolder}.
+   */
+  public LocalFolder getFolder(Cursor cursor) {
+    return new LocalFolder(
+        cursor.getString(cursor.getColumnIndex(COL_FOLDER_NAME)),
+        cursor.getString(cursor.getColumnIndex(COL_FOLDER_ALIAS)),
+        cursor.getInt(cursor.getColumnIndex(COL_MESSAGE_COUNT)),
+        parseAttributes(cursor.getString(cursor.getColumnIndex(COL_FOLDER_ATTRIBUTES))),
+        cursor.getInt(cursor.getColumnIndex(COL_IS_CUSTOM_LABEL)) == 1
+    );
   }
 
   /**
