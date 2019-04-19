@@ -56,5 +56,5 @@
         android:id="@+id/groupContent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:constraint_referenced_ids="listViewKeys,floatActionButtonAddKey" />
+        app:constraint_referenced_ids="recyclerViewKeys,floatActionButtonAddKey" />
 </androidx.constraintlayout.widget.ConstraintLayout>
