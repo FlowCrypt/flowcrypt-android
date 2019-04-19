@@ -48,7 +48,8 @@ public class PrivateKeysManager {
     final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
     KeysDaoSource keysDaoSource = new KeysDaoSource();
-    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(InstrumentationRegistry.getInstrumentation()
+    KeyStoreCryptoManager keyStoreCryptoManager =
+        KeyStoreCryptoManager.getInstance(InstrumentationRegistry.getInstrumentation()
         .getTargetContext());
 
     keysDaoSource.addRow(context, KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase));
