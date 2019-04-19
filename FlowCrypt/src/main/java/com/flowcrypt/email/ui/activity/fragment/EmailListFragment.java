@@ -38,6 +38,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
+import com.flowcrypt.email.ui.activity.SearchMessagesActivity;
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
@@ -506,8 +507,11 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
         boolean isEmptyFolferAliases = TextUtils.isEmpty(listener.getCurrentFolder().getFolderAlias());
         if (isEmptyFolferAliases || !isItSyncOrOutboxFolder(listener.getCurrentFolder()) || isForceClearCacheNeeded) {
-          DatabaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
-              listener.getCurrentFolder().getFullName());
+          LocalFolder folder = listener.getCurrentFolder();
+
+          String folderName = TextUtils.isEmpty(folder.getSearchQuery()) ? folder.getFullName() :
+              SearchMessagesActivity.SEARCH_FOLDER_NAME;
+          DatabaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(), folderName);
         }
       }
 
