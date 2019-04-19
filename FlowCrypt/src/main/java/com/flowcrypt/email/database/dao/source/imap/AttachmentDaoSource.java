@@ -60,6 +60,11 @@ public class AttachmentDaoSource extends BaseDaoSource {
       "_" + COL_FOLDER + "_in_" + TABLE_NAME_ATTACHMENT + " ON " + TABLE_NAME_ATTACHMENT +
       " (" + COL_EMAIL + ", " + COL_UID + ", " + COL_FOLDER + ")";
 
+  public static final String CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT =
+      UNIQUE_INDEX_PREFIX + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER + "_" + COL_ATTACHMENT_ID + "_in_"
+          + TABLE_NAME_ATTACHMENT + " ON " + TABLE_NAME_ATTACHMENT + " (" + COL_EMAIL + ", " + COL_UID
+          + ", " + COL_FOLDER + ", " + COL_ATTACHMENT_ID + ")";
+
   /**
    * Prepare content values for insert to the database.
    *
@@ -70,8 +75,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @return generated {@link ContentValues}
    */
   @NonNull
-  public static ContentValues prepareContentValues(String email, String label, long uid,
-                                                   AttachmentInfo attInfo) {
+  public static ContentValues prepareContentValues(String email, String label, long uid, AttachmentInfo attInfo) {
     ContentValues contentValues = prepareContentValuesFromAttInfo(attInfo);
     contentValues.put(COL_EMAIL, email);
     contentValues.put(COL_FOLDER, label);
@@ -186,8 +190,7 @@ public class AttachmentDaoSource extends BaseDaoSource {
    *
    * @param context     Interface to global information about an application environment.
    * @param email       The email that the message linked.
-   * @param label       The folder label where exists message which contains the current
-   *                    attachments.
+   * @param label       The folder label where exists a message which contains the current attachments.
    * @param uid         The message UID.
    * @param attInfoList The attachments list.
    * @return the number of newly created rows.

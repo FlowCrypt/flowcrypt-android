@@ -118,7 +118,7 @@ public final class Node {
     Gson gson = NodeGson.getInstance().getGson();
     String data = gson.toJson(nodeSecretCerts);
     try (FileOutputStream outputStream = context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE)) {
-      KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
+      KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context);
       String spec = KeyStoreCryptoManager.generateAlgorithmParameterSpecString();
       String encryptedData = keyStoreCryptoManager.encrypt(data, spec);
       outputStream.write(spec.getBytes());
@@ -142,7 +142,7 @@ public final class Node {
 
       String spec = rawData.substring(0, splitPosition);
 
-      KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
+      KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context);
       String decryptedData = keyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1), spec);
       return gson.fromJson(decryptedData, NodeSecretCerts.class);
     } catch (FileNotFoundException e) {

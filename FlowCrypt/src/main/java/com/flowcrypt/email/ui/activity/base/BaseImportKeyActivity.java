@@ -450,7 +450,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
 
   private void selectFile() {
     Intent intent = new Intent();
-    intent.setAction(Intent.ACTION_GET_CONTENT);
+    intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
     intent.addCategory(Intent.CATEGORY_OPENABLE);
     intent.setType("*/*");
     startActivityForResult(Intent.createChooser(intent, getString(R.string.select_key_to_import)),

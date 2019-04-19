@@ -15,6 +15,7 @@ import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
+import com.flowcrypt.email.ui.activity.SignInActivity;
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment;
 import com.flowcrypt.email.util.SharedPreferencesHelper;
 
@@ -46,23 +47,30 @@ public class NotificationsSettingsFragment extends BasePreferenceFragment
     AccountDaoSource accountDaoSource = new AccountDaoSource();
     AccountDao account = accountDaoSource.getActiveAccountInformation(getContext());
 
-    boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(getContext(), account.getEmail());
+    if (account != null) {
+      boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(getContext(), account.getEmail());
 
-    if (isEncryptedModeEnabled) {
-      levels = new CharSequence[]{NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
-          NOTIFICATION_LEVEL_NEVER
-      };
-      entries = getResources().getStringArray(R.array.notification_level_encrypted_entries);
+      if (isEncryptedModeEnabled) {
+        levels = new CharSequence[]{NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
+            NOTIFICATION_LEVEL_NEVER
+        };
+        entries = getResources().getStringArray(R.array.notification_level_encrypted_entries);
+      } else {
+        levels = new CharSequence[]{NOTIFICATION_LEVEL_ALL_MESSAGES,
+            NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
+            NOTIFICATION_LEVEL_NEVER
+        };
+
+        entries = getResources().getStringArray(R.array.notification_level_entries);
+      }
+
+      initPreferences(isEncryptedModeEnabled);
     } else {
-      levels = new CharSequence[]{NOTIFICATION_LEVEL_ALL_MESSAGES,
-          NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
-          NOTIFICATION_LEVEL_NEVER
-      };
-
-      entries = getResources().getStringArray(R.array.notification_level_entries);
+      Intent intent = new Intent(getContext(), SignInActivity.class);
+      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+      startActivity(intent);
+      getActivity().finish();
     }
-
-    initPreferences(isEncryptedModeEnabled);
   }
 
   @Override

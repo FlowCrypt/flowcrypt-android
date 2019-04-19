@@ -64,7 +64,7 @@ public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<Lo
   public LoaderResult loadInBackground() {
     List<NodeKeyDetails> acceptedKeysList = new ArrayList<>();
     try {
-      KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
+      KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(getContext());
       for (NodeKeyDetails keyDetails : details) {
         String tempPassphrase = passphrase;
         if (keyDetails.isPrivate()) {

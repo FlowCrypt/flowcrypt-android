@@ -23,14 +23,14 @@ public class DatabaseUtil {
   /**
    * Clean the cache information about some folder.
    *
-   * @param context     Interface to global information about an application environment.
-   * @param email       An owner of the folder;
-   * @param folderAlias A folder alias in the local cache
+   * @param context Interface to global information about an application environment.
+   * @param email   An owner of the folder;
+   * @param folder  A folder in a local database.
    */
-  public static void cleanFolderCache(Context context, String email, String folderAlias) {
-    if (!JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folderAlias)) {
-      new MessageDaoSource().deleteCachedMsgs(context, email, folderAlias);
-      new AttachmentDaoSource().deleteCachedAttInfo(context, email, folderAlias);
+  public static void cleanFolderCache(Context context, String email, String folder) {
+    if (!JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder)) {
+      new MessageDaoSource().deleteCachedMsgs(context, email, folder);
+      new AttachmentDaoSource().deleteCachedAttInfo(context, email, folder);
     }
   }
 }

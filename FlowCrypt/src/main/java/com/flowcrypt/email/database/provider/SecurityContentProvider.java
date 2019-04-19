@@ -13,10 +13,10 @@ import android.content.ContentValues;
 import android.content.OperationApplicationException;
 import android.content.UriMatcher;
 import android.database.Cursor;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.BaseColumns;
+import android.util.Log;
 
 import com.flowcrypt.email.database.FlowCryptDatabaseManager;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
@@ -46,6 +46,8 @@ import androidx.annotation.NonNull;
  * E-mail: DenBond7@gmail.com
  */
 public class SecurityContentProvider extends ContentProvider {
+  private static final String TAG = SecurityContentProvider.class.getSimpleName();
+
   private static final int MATCHED_CODE_KEYS_TABLE = 1;
   private static final int MATCHED_CODE_KEYS_TABLE_SINGLE_ROW = 2;
   private static final int MATCHED_CODE_KEY_CLEAN_DATABASE = 3;
@@ -218,7 +220,7 @@ public class SecurityContentProvider extends ContentProvider {
               }
 
               if (id <= 0) {
-                throw new SQLException("Failed to insert row into " + uri);
+                Log.d(TAG, "Failed to insert row into " + uri);
               }
             }
             break;
@@ -227,7 +229,7 @@ public class SecurityContentProvider extends ContentProvider {
             for (ContentValues contentValues : values) {
               long id = sqLiteDatabase.insert(getMatchedTableName(uri), null, contentValues);
               if (id <= 0) {
-                throw new SQLException("Failed to insert row into " + uri);
+                Log.d(TAG, "Failed to insert row into " + uri);
               } else {
                 insertedRowsCount++;
               }

@@ -8,9 +8,9 @@ package com.flowcrypt.email.api.email.model;
 import android.os.Parcel;
 
 import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.model.PgpContact;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Simple POJO class which describe an outgoing message model.
@@ -34,10 +34,11 @@ public class OutgoingMessageInfo extends MessageInfo {
       return new OutgoingMessageInfo[size];
     }
   };
-  private PgpContact[] toPgpContacts;
-  private PgpContact[] ccPgpContacts;
-  private PgpContact[] bccPgpContacts;
-  private PgpContact fromPgpContact;
+
+  private List<String> toRecipients;
+  private List<String> ccRecipients;
+  private List<String> bccRecipients;
+  private String from;
   private String rawReplyMsg;
   private ArrayList<AttachmentInfo> atts;
   private ArrayList<AttachmentInfo> fwdAtts;
@@ -50,10 +51,10 @@ public class OutgoingMessageInfo extends MessageInfo {
 
   protected OutgoingMessageInfo(Parcel in) {
     super(in);
-    this.toPgpContacts = in.createTypedArray(PgpContact.CREATOR);
-    this.ccPgpContacts = in.createTypedArray(PgpContact.CREATOR);
-    this.bccPgpContacts = in.createTypedArray(PgpContact.CREATOR);
-    this.fromPgpContact = in.readParcelable(PgpContact.class.getClassLoader());
+    this.toRecipients = in.createStringArrayList();
+    this.ccRecipients = in.createStringArrayList();
+    this.bccRecipients = in.createStringArrayList();
+    this.from = in.readString();
     this.rawReplyMsg = in.readString();
     this.atts = in.createTypedArrayList(AttachmentInfo.CREATOR);
     this.fwdAtts = in.createTypedArrayList(AttachmentInfo.CREATOR);
@@ -71,10 +72,10 @@ public class OutgoingMessageInfo extends MessageInfo {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     super.writeToParcel(dest, flags);
-    dest.writeTypedArray(this.toPgpContacts, flags);
-    dest.writeTypedArray(this.ccPgpContacts, flags);
-    dest.writeTypedArray(this.bccPgpContacts, flags);
-    dest.writeParcelable(this.fromPgpContact, flags);
+    dest.writeStringList(this.toRecipients);
+    dest.writeStringList(this.ccRecipients);
+    dest.writeStringList(this.bccRecipients);
+    dest.writeString(this.from);
     dest.writeString(this.rawReplyMsg);
     dest.writeTypedList(this.atts);
     dest.writeTypedList(this.fwdAtts);
@@ -83,36 +84,36 @@ public class OutgoingMessageInfo extends MessageInfo {
     dest.writeLong(this.uid);
   }
 
-  public PgpContact[] getCcPgpContacts() {
-    return ccPgpContacts;
+  public List<String> getToRecipients() {
+    return toRecipients;
   }
 
-  public void setCcPgpContacts(PgpContact[] ccPgpContacts) {
-    this.ccPgpContacts = ccPgpContacts;
+  public void setToRecipients(List<String> toRecipients) {
+    this.toRecipients = toRecipients;
   }
 
-  public PgpContact[] getBccPgpContacts() {
-    return bccPgpContacts;
+  public List<String> getCcRecipients() {
+    return ccRecipients;
   }
 
-  public void setBccPgpContacts(PgpContact[] bccPgpContacts) {
-    this.bccPgpContacts = bccPgpContacts;
+  public void setCcRecipients(List<String> ccRecipients) {
+    this.ccRecipients = ccRecipients;
   }
 
-  public PgpContact[] getToPgpContacts() {
-    return toPgpContacts;
+  public List<String> getBccRecipients() {
+    return bccRecipients;
   }
 
-  public void setToPgpContacts(PgpContact[] toPgpContacts) {
-    this.toPgpContacts = toPgpContacts;
+  public void setBccRecipients(List<String> bccRecipients) {
+    this.bccRecipients = bccRecipients;
   }
 
-  public PgpContact getFromPgpContact() {
-    return fromPgpContact;
+  public String getFrom() {
+    return from;
   }
 
-  public void setFromPgpContact(PgpContact fromPgpContact) {
-    this.fromPgpContact = fromPgpContact;
+  public void setFrom(String from) {
+    this.from = from;
   }
 
   public String getRawReplyMsg() {
@@ -161,5 +162,28 @@ public class OutgoingMessageInfo extends MessageInfo {
 
   public void setUid(long uid) {
     this.uid = uid;
+  }
+
+  /**
+   * Generate a list of the all recipients.
+   *
+   * @return A list of the all recipients
+   */
+  public List<String> getAllRecipients() {
+    List<String> recipients = new ArrayList<>();
+
+    if (toRecipients != null) {
+      recipients.addAll(toRecipients);
+    }
+
+    if (ccRecipients != null) {
+      recipients.addAll(ccRecipients);
+    }
+
+    if (bccRecipients != null) {
+      recipients.addAll(bccRecipients);
+    }
+
+    return recipients;
   }
 }

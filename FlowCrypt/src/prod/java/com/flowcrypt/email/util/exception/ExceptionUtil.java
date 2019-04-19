@@ -22,7 +22,7 @@ public class ExceptionUtil extends ExceptionResolver {
    *
    * @param e An input {@link Exception}
    */
-  public static void handleError(Exception e) {
+  public static void handleError(Throwable e) {
     if (ExceptionResolver.isHandlingNeeded(e)) {
       if (ACRA.isInitialised()) {
         ACRA.getErrorReporter().handleException(new ManualHandledException(e));

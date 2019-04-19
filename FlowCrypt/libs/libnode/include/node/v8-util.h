@@ -215,16 +215,6 @@ namespace v8 {
         }
 
         /**
-         * Call Isolate::SetReference with the given parent and the map value.
-         */
-        void SetReference(const K &key,
-                          const Persistent<Object> &parent) {
-            GetIsolate()->SetReference(
-                    reinterpret_cast<internal::Object **>(parent.val_),
-                    reinterpret_cast<internal::Object **>(FromVal(Traits::Get(&impl_, key))));
-        }
-
-        /**
          * Call V8::RegisterExternallyReferencedObject with the map value for given
          * key.
          */
@@ -420,9 +410,14 @@ namespace v8 {
          */
         Global<V> SetUnique(const K &key, Global<V> *persistent) {
             if (Traits::kCallbackType != kNotWeak) {
+                WeakCallbackType callback_type =
+                        Traits::kCallbackType == kWeakWithInternalFields
+                        ? WeakCallbackType::kInternalFields
+                        : WeakCallbackType::kParameter;
                 Local<V> value(Local<V>::New(this->isolate(), *persistent));
                 persistent->template SetWeak<typename Traits::WeakCallbackDataType>(
-                        Traits::WeakCallbackParameter(this, key, value), WeakCallback);
+                        Traits::WeakCallbackParameter(this, key, value), WeakCallback,
+                        callback_type);
             }
             PersistentContainerValue old_value =
                     Traits::Set(this->impl(), key, this->ClearAndLeak(persistent));

@@ -139,11 +139,10 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         setupIfNeeded();
         updateContactsLastUseDateTime(outgoingMsgInfo);
 
-        String[] pubKeys = null;
+        List<String> pubKeys = null;
         if (outgoingMsgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-          PgpContact[] pgpContacts = EmailUtil.getAllRecipients(outgoingMsgInfo);
-          String senderEmail = outgoingMsgInfo.getFromPgpContact().getEmail();
-          pubKeys = SecurityUtils.getRecipientsPubKeys(this, pgpContacts, account, senderEmail);
+          String senderEmail = outgoingMsgInfo.getFrom();
+          pubKeys = SecurityUtils.getRecipientsPubKeys(this, outgoingMsgInfo.getAllRecipients(), account, senderEmail);
         }
 
         String rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys);
@@ -231,7 +230,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     return contentValues;
   }
 
-  private void addAttsToCache(OutgoingMessageInfo msgInfo, long uid, String[] pubKeys, File attsCacheDir) {
+  private void addAttsToCache(OutgoingMessageInfo msgInfo, long uid, List<String> pubKeys, File attsCacheDir) {
     AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
     List<AttachmentInfo> cachedAtts = new ArrayList<>();
 
@@ -335,10 +334,10 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
   private void updateContactsLastUseDateTime(OutgoingMessageInfo msgInfo) {
     ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
 
-    for (PgpContact pgpContact : EmailUtil.getAllRecipients(msgInfo)) {
-      int updateResult = contactsDaoSource.updateLastUseOfPgpContact(this, pgpContact);
+    for (String contact : msgInfo.getAllRecipients()) {
+      int updateResult = contactsDaoSource.updateLastUse(this, contact);
       if (updateResult == -1) {
-        contactsDaoSource.addRow(this, pgpContact);
+        contactsDaoSource.addRow(this, new PgpContact(contact, null));
       }
     }
   }

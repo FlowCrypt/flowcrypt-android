@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.api.retrofit.node;
 
+import android.util.Log;
+
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
 import com.flowcrypt.email.node.NodeSecret;
 import com.flowcrypt.email.util.GeneralUtil;
@@ -63,6 +65,7 @@ public final class NodeRetrofitHelper {
   }
 
   public Retrofit getRetrofit() {
+    checkAndWaitNode();
     return retrofit;
   }
 
@@ -92,6 +95,27 @@ public final class NodeRetrofitHelper {
   @NonNull
   private Interceptor getHttpLoggingInterceptor() {
     return new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY);
+  }
+
+  /**
+   * This method does 5 attempts to check is Node.js server started.
+   */
+  private void checkAndWaitNode() {
+    int attemptCount = 5;
+
+    while (attemptCount != 0) {
+      if (retrofit == null) {
+        attemptCount--;
+        try {
+          Log.d(NodeRetrofitHelper.class.getSimpleName(), "Node.js server is not run yet. Trying to wait...");
+          Thread.sleep(1000);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      } else {
+        return;
+      }
+    }
   }
 
   private Interceptor headersInterceptor(final NodeSecret nodeSecret) {

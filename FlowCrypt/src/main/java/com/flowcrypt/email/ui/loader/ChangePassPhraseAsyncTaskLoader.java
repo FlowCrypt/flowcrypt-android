@@ -78,7 +78,7 @@ public class ChangePassPhraseAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
         throw new NoPrivateKeysAvailableException(getContext(), account.getEmail());
       }
 
-      KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(getContext());
+      KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(getContext());
       List<KeysDao> keysDaoList = new ArrayList<>();
 
       for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoList) {

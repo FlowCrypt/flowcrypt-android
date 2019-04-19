@@ -14,7 +14,6 @@ import android.security.keystore.KeyProperties;
 import android.text.TextUtils;
 import android.util.Base64;
 
-import com.flowcrypt.email.R;
 import com.flowcrypt.email.broadcastreceivers.CorruptedStorageBroadcastReceiver;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 
@@ -69,7 +68,7 @@ import javax.crypto.spec.SecretKeySpec;
  * @version 2.0 Added using AES cipher for encryption/decryption which uses AndroidKeyStore for storing keys.
  */
 
-public class KeyStoreCryptoManager {
+public final class KeyStoreCryptoManager {
   private static final int SIZE_OF_ALGORITHM_PARAMETER_SPEC = 16;
   private static final String PREFERENCE_KEY_SECRET = "preference_key_secret";
   private static final String TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING = "RSA/ECB/PKCS1Padding";
@@ -79,33 +78,53 @@ public class KeyStoreCryptoManager {
   private static final String ANDROID_KEY_STORE_RSA_ALIAS = "flowcrypt_main";
   private static final String ANDROID_KEY_STORE_AES_ALIAS = "flowcrypt_main_aes";
 
-  private Context context;
+  private static KeyStoreCryptoManager ourInstance;
+
   private KeyStore keyStore;
   private PrivateKey privateKey;
   private PublicKey publicKey;
   private SecretKey secretKey;
 
+  private final Object decryptLock = new Object();
+
   private boolean isOldLogicUsed;
 
   /**
-   * This constructor do initialization of symmetric (AES) and asymmetric keys (RSA).
+   * This constructor does initialization of symmetric (AES) and asymmetric keys (RSA).
    *
-   * @param context Interface to global information about an application environment. Need to use the app context.
    * @throws Exception Initialization can throw exceptions.
    */
-  public KeyStoreCryptoManager(Context context) throws Exception {
-    if (context != null) {
-      this.context = context.getApplicationContext();
-    } else {
-      throw new IllegalArgumentException("The context can not be null!");
-    }
-
+  private KeyStoreCryptoManager(Context context) throws Exception {
     keyStore = KeyStore.getInstance(PROVIDER_ANDROID_KEY_STORE);
     keyStore.load(null);
 
     isOldLogicUsed = keyStore.containsAlias(ANDROID_KEY_STORE_RSA_ALIAS);
 
-    init();
+    if (context == null) {
+      throw new NullPointerException("The context is null!");
+    }
+
+    Context appContext = context.getApplicationContext();
+    setup(appContext);
+  }
+
+  public static void init(Context context) {
+    KeyStoreCryptoManager.getInstance(context);
+  }
+
+  public static KeyStoreCryptoManager getInstance(Context context) {
+    if (ourInstance == null) {
+      synchronized (KeyStoreCryptoManager.class) {
+        if (ourInstance == null) {
+          try {
+            ourInstance = new KeyStoreCryptoManager(context);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      }
+    }
+    return ourInstance;
   }
 
   /**
@@ -241,51 +260,54 @@ public class KeyStoreCryptoManager {
    * This method decrypts an input encrypted text and returns decrypted data.
    * It uses RSA for the older versions (which have such support) or AES.
    *
+   * @param context       Interface to global information about an application environment;
    * @param encryptedData - The input encrypted text, which must be encrypted and encoded in base64.
    * @return <tt>String</tt> Return decrypt
    * @throws Exception The decryption process can throw a lot of exceptions.
    */
-  public String decryptWithRSAOrAES(String encryptedData) throws Exception {
+  public String decryptWithRSAOrAES(Context context, String encryptedData) throws Exception {
     if (!TextUtils.isEmpty(encryptedData)) {
       if (isOldLogicUsed) {
-        Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING);
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        synchronized (decryptLock) {
+          Cipher cipher = Cipher.getInstance(TRANSFORMATION_TYPE_RSA_ECB_PKCS1_PADDING);
+          cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
-        byte[] encryptedBytes = Base64.decode(encryptedData, Base64.DEFAULT);
-        byte[] decryptedBytes;
-        try {
-          decryptedBytes = cipher.doFinal(encryptedBytes);
-        } catch (BadPaddingException | RuntimeException e) {
-          e.printStackTrace();
+          byte[] encryptedBytes = Base64.decode(encryptedData, Base64.DEFAULT);
+          byte[] decryptedBytes;
+          try {
+            decryptedBytes = cipher.doFinal(encryptedBytes);
+          } catch (BadPaddingException | RuntimeException e) {
+            e.printStackTrace();
 
-          String runtimeMsg = "error:04000044:RSA routines:OPENSSL_internal:internal error";
-          if (e instanceof RuntimeException && runtimeMsg.equals(e.getMessage())) {
-            context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
-            throw new RuntimeException("Storage was corrupted", e);
+            String runtimeMsg = "error:04000044:RSA routines:OPENSSL_internal:internal error";
+            if (e instanceof RuntimeException && runtimeMsg.equals(e.getMessage())) {
+              context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
+              throw new RuntimeException("Storage was corrupted", e);
+            }
+
+            String badPaddingMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error";
+            if (e instanceof BadPaddingException && badPaddingMsg.equals(e.getMessage())) {
+              context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
+              throw new GeneralSecurityException("Storage was corrupted", e);
+            }
+
+            throw e;
           }
 
-          String badPaddingMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error";
-          if (e instanceof BadPaddingException && badPaddingMsg.equals(e.getMessage())) {
-            context.sendBroadcast(new Intent(context, CorruptedStorageBroadcastReceiver.class));
-            throw new GeneralSecurityException("Storage was corrupted", e);
-          }
-
-          throw e;
+          return new String(decryptedBytes, StandardCharsets.UTF_8);
         }
-
-        return new String(decryptedBytes, StandardCharsets.UTF_8);
       } else {
         return decrypt(encryptedData, null);
       }
     } else return encryptedData;
   }
 
-  private void init() throws Exception {
+  private void setup(Context context) throws Exception {
     if (isOldLogicUsed) {
       initRSAKeys();
-      initAESSecretKey();
+      initAESSecretKey(context);
     } else {
-      initAESSecretKey();
+      initAESSecretKey(context);
     }
   }
 
@@ -299,13 +321,13 @@ public class KeyStoreCryptoManager {
       this.privateKey = (PrivateKey) keyStore.getKey(ANDROID_KEY_STORE_RSA_ALIAS, null);
     } catch (UnrecoverableKeyException e) {
       e.printStackTrace();
-      throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
+      throw new ManualHandledException("Your device is currently not supported: KeystoreService not available.");
     }
 
     if (privateKey != null) {
       Certificate certificate = keyStore.getCertificate(ANDROID_KEY_STORE_RSA_ALIAS);
       if (certificate == null) {
-        throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
+        throw new ManualHandledException("Your device is currently not supported: KeystoreService not available.");
       }
       this.publicKey = certificate.getPublicKey();
     }
@@ -314,11 +336,12 @@ public class KeyStoreCryptoManager {
   /**
    * Do initialization of AES {@link SecretKey} object.
    *
+   * @param context Interface to global information about an application environment;
    * @throws Exception The initialization can throw a lot of exceptions.
    */
-  private void initAESSecretKey() throws Exception {
+  private void initAESSecretKey(Context context) throws Exception {
     if (isOldLogicUsed) {
-      initAESSecretKeyFromSharedPreferences();
+      initAESSecretKeyFromSharedPreferences(context);
     } else {
       if (!keyStore.containsAlias(ANDROID_KEY_STORE_AES_ALIAS)) {
         genAESSecretKey();
@@ -328,7 +351,7 @@ public class KeyStoreCryptoManager {
         this.secretKey = (SecretKey) keyStore.getKey(ANDROID_KEY_STORE_AES_ALIAS, null);
       } catch (UnrecoverableKeyException e) {
         e.printStackTrace();
-        throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
+        throw new ManualHandledException("Your device is currently not supported: KeystoreService not available.");
       }
     }
   }
@@ -336,11 +359,12 @@ public class KeyStoreCryptoManager {
   /**
    * Do initialization of AES {@link SecretKey} from the shared preferences.
    *
+   * @param context Interface to global information about an application environment;
    * @throws Exception The initialization can throw a lot of exceptions.
    */
-  private void initAESSecretKeyFromSharedPreferences() throws Exception {
-    String encryptedSecretKey = getSecretKeyFromSharedPreferences();
-    String decryptedSecretKey = decryptWithRSAOrAES(encryptedSecretKey);
+  private void initAESSecretKeyFromSharedPreferences(Context context) throws Exception {
+    String encryptedSecretKey = getSecretKeyFromSharedPreferences(context);
+    String decryptedSecretKey = decryptWithRSAOrAES(context, encryptedSecretKey);
 
     secretKey = new SecretKeySpec(Base64.decode(decryptedSecretKey, Base64.DEFAULT), KeyProperties.KEY_ALGORITHM_AES);
   }
@@ -348,9 +372,10 @@ public class KeyStoreCryptoManager {
   /**
    * Get an encrypted secret key from SharedPreferences.
    *
+   * @param context Interface to global information about an application environment;
    * @return <tt>{@link String}</tt> An encrypted secret key or null if it not found.
    */
-  private String getSecretKeyFromSharedPreferences() {
+  private String getSecretKeyFromSharedPreferences(Context context) {
     SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     return sharedPreferences.getString(PREFERENCE_KEY_SECRET, null);
   }
@@ -374,7 +399,7 @@ public class KeyStoreCryptoManager {
       keyPairGenerator.generateKey();
     } catch (ProviderException e) {
       e.printStackTrace();
-      throw new ManualHandledException(context.getString(R.string.device_not_supported_key_store_error));
+      throw new ManualHandledException("Your device is currently not supported: KeystoreService not available.");
     }
   }
 }

@@ -302,6 +302,39 @@ public class ContactsDaoSource extends BaseDaoSource {
   }
 
   /**
+   * Update information about the given {@link PgpContact} in the local database.
+   *
+   * @param context       Interface to global information about an application environment.
+   * @param localContact  A local copy of {@link PgpContact} in the database.
+   * @param remoteContact A new information of {@link PgpContact} from the attester sever.
+   * @return The count of updated rows. Will be 1 if information about {@link PgpContact} was
+   * updated or -1 otherwise.
+   */
+  public int updatePgpContact(Context context, PgpContact localContact, PgpContact remoteContact) {
+    ContentResolver contentResolver = context.getContentResolver();
+    if (localContact != null && remoteContact != null && contentResolver != null) {
+      ContentValues contentValues = new ContentValues();
+      if (TextUtils.isEmpty(localContact.getName())) {
+        if (localContact.getEmail().equalsIgnoreCase(remoteContact.getEmail())) {
+          contentValues.put(COL_NAME, remoteContact.getName());
+        }
+      }
+
+      contentValues.put(COL_PUBLIC_KEY, remoteContact.getPubkey());
+      contentValues.put(COL_HAS_PGP, remoteContact.getHasPgp());
+      contentValues.put(COL_CLIENT, remoteContact.getClient());
+      contentValues.put(COL_ATTESTED, remoteContact.getAttested());
+      contentValues.put(COL_FINGERPRINT, remoteContact.getFingerprint());
+      contentValues.put(COL_LONG_ID, remoteContact.getLongid());
+      contentValues.put(COL_KEYWORDS, remoteContact.getKeywords());
+
+      String selection = COL_EMAIL + " = ?";
+      String[] selectionArgs = new String[]{localContact.getEmail().toLowerCase()};
+      return contentResolver.update(getBaseContentUri(), contentValues, selection, selectionArgs);
+    } else return -1;
+  }
+
+  /**
    * This method update cached contacts.
    *
    * @param context Interface to global information about an application environment.
@@ -358,19 +391,19 @@ public class ContactsDaoSource extends BaseDaoSource {
   /**
    * Update a last use entry of {@link PgpContact}.
    *
-   * @param context    Interface to global information about an application environment.
-   * @param pgpContact A new information of {@link PgpContact} in the database.
+   * @param context Interface to global information about an application environment.
+   * @param contact A contact email in the database.
    * @return The count of updated rows. Will be 1 if information about {@link PgpContact} was
    * updated or -1 otherwise.
    */
-  public int updateLastUseOfPgpContact(Context context, PgpContact pgpContact) {
+  public int updateLastUse(Context context, String contact) {
     ContentResolver contentResolver = context.getContentResolver();
-    if (pgpContact != null && contentResolver != null) {
+    if (!TextUtils.isEmpty(contact) && contentResolver != null) {
       ContentValues contentValues = new ContentValues();
       contentValues.put(COL_LAST_USE, System.currentTimeMillis());
 
       String where = COL_EMAIL + " = ?";
-      String[] selectionArgs = new String[]{pgpContact.getEmail().toLowerCase()};
+      String[] selectionArgs = new String[]{contact.toLowerCase()};
       return contentResolver.update(getBaseContentUri(), contentValues, where, selectionArgs);
     } else return -1;
   }

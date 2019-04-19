@@ -1035,17 +1035,17 @@ public class MessageDaoSource extends BaseDaoSource {
    * @return The number of rows deleted.
    */
   public int deleteOutgoingMsg(Context context, GeneralMessageDetails details) {
-    int deletedRows;
+    int deletedRows = -1;
     ContentResolver contentResolver = context.getContentResolver();
 
-    if (details.getEmail() != null && details.getLabel() != null && contentResolver
-        != null) {
-      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND" +
-          " " + COL_UID + " = ? AND " + COL_STATE + " != " + MessageState.SENDING.getValue();
+    if (details.getEmail() != null && details.getLabel() != null && contentResolver != null) {
+      String where = COL_EMAIL + "= ? AND "
+          + COL_FOLDER + " = ? AND "
+          + COL_UID + " = ? AND "
+          + COL_STATE + " != " + MessageState.SENDING.getValue() + " AND "
+          + COL_STATE + " != " + MessageState.SENT_WITHOUT_LOCAL_COPY.getValue();
       String[] selectionArgs = new String[]{details.getEmail(), details.getLabel(), String.valueOf(details.getUid())};
       deletedRows = contentResolver.delete(getBaseContentUri(), where, selectionArgs);
-    } else {
-      deletedRows = -1;
     }
 
     if (deletedRows > 0) {

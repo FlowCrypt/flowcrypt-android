@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult;
 import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.database.dao.source.KeysDaoSource;
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.model.PgpContact;
@@ -54,7 +55,7 @@ public class SecurityUtils {
     ArrayList<PrivateKeyInfo> privateKeysInfo = new ArrayList<>();
     Cursor cursor = context.getContentResolver().query(new KeysDaoSource().getBaseContentUri(), null, null, null, null);
 
-    KeyStoreCryptoManager keyStoreCryptoManager = new KeyStoreCryptoManager(context);
+    KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context);
 
     if (cursor != null && cursor.moveToFirst()) {
       do {
@@ -184,25 +185,27 @@ public class SecurityUtils {
    * Get public keys for recipients + keys of the sender;
    *
    * @param context     Interface to global information about an application environment.
-   * @param pgpContacts An array which contains recipients
+   * @param contacts    A list which contains recipients
    * @param account     The given account
    * @param senderEmail The sender email
-   * @return <tt>String[]</tt> An array of public keys.
+   * @return A list of public keys.
    * @throws NoKeyAvailableException
    */
-  public static String[] getRecipientsPubKeys(Context context, PgpContact[] pgpContacts, AccountDao account,
-                                              String senderEmail) throws NoKeyAvailableException, IOException,
-      NodeException {
+  public static List<String> getRecipientsPubKeys(Context context, List<String> contacts,
+                                                  AccountDao account, String senderEmail)
+      throws NoKeyAvailableException, IOException, NodeException {
     ArrayList<String> publicKeys = new ArrayList<>();
+    List<PgpContact> pgpContacts = new ContactsDaoSource().getPgpContacts(context, contacts);
+
     for (PgpContact pgpContact : pgpContacts) {
-      if (!TextUtils.isEmpty(pgpContact.getPubkey())) {
+      if (pgpContact != null && !TextUtils.isEmpty(pgpContact.getPubkey())) {
         publicKeys.add(pgpContact.getPubkey());
       }
     }
 
     publicKeys.add(getSenderPublicKey(context, account, senderEmail));
 
-    return publicKeys.toArray(new String[0]);
+    return publicKeys;
   }
 
   /**

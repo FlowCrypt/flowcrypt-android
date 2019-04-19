@@ -130,14 +130,14 @@ public class IncomingMessageInfo extends MessageInfo {
     return hasSomePart(MsgBlock.Type.PLAIN_HTML) || hasSomePart(MsgBlock.Type.DECRYPTED_HTML);
   }
 
-  public String getHtmlMsg() {
+  public MsgBlock getHtmlMsgBlock() {
     for (MsgBlock part : msgBlocks) {
-      if (part.getType() == MsgBlock.Type.PLAIN_HTML) {
-        return part.getContent();
+      if (part.getType() == MsgBlock.Type.PLAIN_HTML || part.getType() == MsgBlock.Type.DECRYPTED_HTML) {
+        return part;
       }
     }
 
-    return "";
+    return null;
   }
 
   public boolean hasPlainText() {

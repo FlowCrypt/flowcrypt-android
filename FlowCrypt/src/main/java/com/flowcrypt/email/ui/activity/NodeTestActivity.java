@@ -272,14 +272,14 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
     } else if (r.getMsgBlocks().get(0).getContent().length() != TEST_MSG_HTML.length()) {
       addResultLine(actionName, r.getExecutionTime(),
           "wrong meta block len " + r.getMsgBlocks().size() + "!=" + TEST_MSG_HTML.length(), false);
-    } else if (r.getMsgBlocks().get(0).getType() != MsgBlock.Type.PLAIN_TEXT) {
+    } else if (r.getMsgBlocks().get(0).getType() != MsgBlock.Type.DECRYPTED_TEXT) {
       addResultLine(actionName, r.getExecutionTime(), "wrong meta block type: " + r.getMsgBlocks().get(0).getType(),
           false);
     } else {
       MsgBlock block = r.getMsgBlocks().get(0);
       if (block == null) {
         addResultLine(actionName, r.getExecutionTime(), "getNextBlock unexpectedly null", false);
-      } else if (block.getType() != MsgBlock.Type.PLAIN_TEXT) {
+      } else if (block.getType() != MsgBlock.Type.DECRYPTED_TEXT) {
         addResultLine(actionName, r.getExecutionTime(), "wrong block type: " + r.getMsgBlocks().size(), false);
       } else if (!block.getContent().equals(TEST_MSG_HTML)) {
         addResultLine(actionName, r.getExecutionTime(), "block content mismatch", false);
@@ -306,7 +306,7 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   private void runAllTests() {
     resultText = "";
     hasTestFailure = false;
-    requestsManager.encryptMsg(R.id.req_id_encrypt_msg, TEST_MSG);
+    requestsManager.encryptMsg(R.id.req_id_encrypt_msg, TEST_MSG_HTML);
   }
 
   private void chooseFile() {
