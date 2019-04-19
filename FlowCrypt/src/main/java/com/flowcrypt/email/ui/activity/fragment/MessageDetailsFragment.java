@@ -43,6 +43,7 @@ import com.flowcrypt.email.api.email.model.ServiceInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptError;
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock;
+import com.flowcrypt.email.api.retrofit.response.model.node.Error;
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock;
@@ -325,6 +326,21 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     msgInfo.setLocalFolder(localFolder);
     updateMsgBody();
     UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMsgContainer);
+  }
+
+  /**
+   * Show info about an error.
+   */
+  public void showErrorInfo(Error error, Throwable e) {
+    if (error != null) {
+      textViewStatusInfo.setText(error.getMsg());
+    } else if (e != null) {
+      textViewStatusInfo.setText(e.getMessage());
+    } else {
+      textViewStatusInfo.setText(R.string.unknown_error);
+    }
+
+    UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
   }
 
   /**

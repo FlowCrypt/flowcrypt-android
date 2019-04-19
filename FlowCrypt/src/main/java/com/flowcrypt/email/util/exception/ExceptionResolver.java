@@ -44,7 +44,7 @@ public class ExceptionResolver {
    * @param e A happened error
    * @return true if need to handle such exception with ACRA and send logs to the backend, false - otherwise.
    */
-  public static boolean isHandlingNeeded(Exception e) {
+  public static boolean isHandlingNeeded(Throwable e) {
     if ((e instanceof MailConnectException)
         || (e instanceof SMTPSendFailedException)
         || (e instanceof UnknownHostException)

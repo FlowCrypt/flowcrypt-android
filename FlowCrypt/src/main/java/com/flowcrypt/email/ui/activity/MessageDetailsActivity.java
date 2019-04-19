@@ -24,6 +24,7 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
 import com.flowcrypt.email.api.retrofit.node.NodeRepository;
+import com.flowcrypt.email.api.retrofit.response.model.node.Error;
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult;
 import com.flowcrypt.email.database.MessageState;
@@ -35,6 +36,7 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.util.exception.ManualHandledException;
 
 import java.util.ArrayList;
 
@@ -395,17 +397,19 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
             break;
 
           case ERROR:
-            Toast.makeText(this, nodeResponseWrapper.getResult().getError().toString(), Toast.LENGTH_SHORT).show();
+            showErrorInfo(nodeResponseWrapper.getResult().getError(), null);
             if (!idlingForDecryption.isIdleNow()) {
               idlingForDecryption.decrement();
             }
+            ExceptionUtil.handleError(new ManualHandledException(nodeResponseWrapper.getResult().getError().toString()));
             break;
 
           case EXCEPTION:
-            Toast.makeText(this, nodeResponseWrapper.getException().getMessage(), Toast.LENGTH_SHORT).show();
+            showErrorInfo(null, nodeResponseWrapper.getException());
             if (!idlingForDecryption.isIdleNow()) {
               idlingForDecryption.decrement();
             }
+            ExceptionUtil.handleError(nodeResponseWrapper.getException());
             break;
         }
         break;
@@ -420,6 +424,15 @@ public class MessageDetailsActivity extends BaseBackStackSyncActivity implements
   public void decryptMsg() {
     idlingForDecryption.increment();
     viewModel.decryptMessage(details.getRawMsgWithoutAtts());
+  }
+
+  private void showErrorInfo(Error error, Throwable e) {
+    MessageDetailsFragment fragment = (MessageDetailsFragment) getSupportFragmentManager()
+        .findFragmentById(R.id.messageDetailsFragment);
+
+    if (fragment != null) {
+      fragment.showErrorInfo(error, e);
+    }
   }
 
   private void messageNotAvailableInFolder() {
