@@ -20380,8 +20380,6 @@ try {
 // end emailjs
 })();
 (function(){
-console.debug = console.log;
-
 const dereq_minimalistic_assert =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
