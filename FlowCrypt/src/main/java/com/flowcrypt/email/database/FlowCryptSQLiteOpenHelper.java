@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
@@ -37,6 +38,8 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
 
   private static final String TAG = FlowCryptSQLiteOpenHelper.class.getSimpleName();
   private static final String DROP_TABLE = "DROP TABLE IF EXISTS ";
+  private static final String CREATE_TABLE_IF_NOT_EXISTS = "CREATE TABLE IF NOT EXISTS ";
+  private static final String CREATE_TEMP_TABLE_IF_NOT_EXISTS = "CREATE TEMP TABLE IF NOT EXISTS ";
 
   private Context context;
 
@@ -200,8 +203,8 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         break;
     }
 
-    Log.d(TAG, "Database updated from OLD_VERSION = " + Integer.toString(oldVersion)
-        + " to NEW_VERSION = " + Integer.toString(newVersion));
+    Log.d(TAG, "Database updated from OLD_VERSION = " + oldVersion
+        + " to NEW_VERSION = " + newVersion);
   }
 
   private void upgradeDatabaseFrom1To2Version(SQLiteDatabase sqLiteDatabase) {
@@ -384,7 +387,25 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
   private void upgradeDatabaseFrom12To13Version(SQLiteDatabase sqLiteDatabase) {
     sqLiteDatabase.beginTransaction();
     try {
-      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT);
+      //delete attachments from non-INBOX folders. OUTBOX is excluded too. We can easy delete such attachments
+      // because it's just a cache.
+      sqLiteDatabase.delete(AttachmentDaoSource.TABLE_NAME_ATTACHMENT, AttachmentDaoSource.COL_FOLDER
+          + " NOT IN (?, ?)", new String[]{JavaEmailConstants.FOLDER_INBOX, JavaEmailConstants.FOLDER_OUTBOX});
+
+      String tempTableName = "att";
+
+      sqLiteDatabase.execSQL(CREATE_TEMP_TABLE_IF_NOT_EXISTS + tempTableName + " AS SELECT * FROM " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT + " GROUP BY " +
+          AttachmentDaoSource.COL_EMAIL + ", " +
+          AttachmentDaoSource.COL_UID + ", " +
+          AttachmentDaoSource.COL_FOLDER + ", " +
+          AttachmentDaoSource.COL_ATTACHMENT_ID);
+
+      sqLiteDatabase.execSQL(DROP_TABLE + AttachmentDaoSource.TABLE_NAME_ATTACHMENT);
+      sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
+      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT);
+
+      sqLiteDatabase.execSQL("INSERT INTO " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT + " SELECT * FROM " + tempTableName);
+      sqLiteDatabase.execSQL(DROP_TABLE + tempTableName);
       sqLiteDatabase.setTransactionSuccessful();
     } finally {
       sqLiteDatabase.endTransaction();
