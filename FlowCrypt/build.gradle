@@ -6,6 +6,8 @@
 import java.text.SimpleDateFormat
 
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 def keystoreProperties = new Properties()
 File propertiesFile = project.file("keystore.properties")
@@ -260,4 +262,5 @@ dependencies {
     implementation 'com.hootsuite.android:nachos:1.1.1'
     implementation 'com.nulab-inc:zxcvbn:1.2.5'
     implementation 'com.madgag.spongycastle:pkix:1.54.0.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
 }
