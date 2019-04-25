@@ -310,3 +310,11 @@
 
 ########################################## Google API client ##########################################################
 -dontnote io.grpc.Context
+# Needed by google-api-client to keep generic types and @Key annotations accessed via reflection.
+# See details here https://developers.google.com/api-client-library/java/google-http-java-client/setup#proguard
+
+-keepclassmembers class * {
+  @com.google.api.client.util.Key <fields>;
+}
+
+-keepattributes Signature,RuntimeVisibleAnnotations,AnnotationDefault
