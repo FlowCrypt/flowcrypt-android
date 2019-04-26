@@ -34,7 +34,7 @@ import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTable
 public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
   public static final String COLUMN_NAME_COUNT = "COUNT(*)";
   public static final String DB_NAME = "flowcrypt.db";
-  public static final int DB_VERSION = 13;
+  public static final int DB_VERSION = 14;
 
   private static final String TAG = FlowCryptSQLiteOpenHelper.class.getSimpleName();
   private static final String DROP_TABLE = "DROP TABLE IF EXISTS ";
@@ -74,7 +74,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     sqLiteDatabase.execSQL(AccountDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS);
 
     sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
-    sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT);
+    sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT);
 
     sqLiteDatabase.execSQL(AccountAliasesDaoSource.ACCOUNTS_ALIASES_TABLE_SQL_CREATE);
     sqLiteDatabase.execSQL(AccountAliasesDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES);
@@ -101,6 +101,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         upgradeDatabaseFrom10To11Version(sqLiteDatabase);
         upgradeDatabaseFrom11To12Version(sqLiteDatabase);
         upgradeDatabaseFrom12To13Version(sqLiteDatabase);
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
         break;
 
       case 2:
@@ -115,6 +116,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         upgradeDatabaseFrom10To11Version(sqLiteDatabase);
         upgradeDatabaseFrom11To12Version(sqLiteDatabase);
         upgradeDatabaseFrom12To13Version(sqLiteDatabase);
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
         break;
 
       case 3:
@@ -128,6 +130,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         upgradeDatabaseFrom10To11Version(sqLiteDatabase);
         upgradeDatabaseFrom11To12Version(sqLiteDatabase);
         upgradeDatabaseFrom12To13Version(sqLiteDatabase);
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
         break;
 
       case 4:
@@ -140,6 +143,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         upgradeDatabaseFrom10To11Version(sqLiteDatabase);
         upgradeDatabaseFrom11To12Version(sqLiteDatabase);
         upgradeDatabaseFrom12To13Version(sqLiteDatabase);
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
         break;
 
       case 5:
@@ -151,6 +155,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         upgradeDatabaseFrom10To11Version(sqLiteDatabase);
         upgradeDatabaseFrom11To12Version(sqLiteDatabase);
         upgradeDatabaseFrom12To13Version(sqLiteDatabase);
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
         break;
 
       case 6:
@@ -161,6 +166,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         upgradeDatabaseFrom10To11Version(sqLiteDatabase);
         upgradeDatabaseFrom11To12Version(sqLiteDatabase);
         upgradeDatabaseFrom12To13Version(sqLiteDatabase);
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
         break;
 
       case 7:
@@ -170,6 +176,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         upgradeDatabaseFrom10To11Version(sqLiteDatabase);
         upgradeDatabaseFrom11To12Version(sqLiteDatabase);
         upgradeDatabaseFrom12To13Version(sqLiteDatabase);
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
         break;
 
       case 8:
@@ -178,6 +185,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         upgradeDatabaseFrom10To11Version(sqLiteDatabase);
         upgradeDatabaseFrom11To12Version(sqLiteDatabase);
         upgradeDatabaseFrom12To13Version(sqLiteDatabase);
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
         break;
 
       case 9:
@@ -185,21 +193,29 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         upgradeDatabaseFrom10To11Version(sqLiteDatabase);
         upgradeDatabaseFrom11To12Version(sqLiteDatabase);
         upgradeDatabaseFrom12To13Version(sqLiteDatabase);
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
         break;
 
       case 10:
         upgradeDatabaseFrom10To11Version(sqLiteDatabase);
         upgradeDatabaseFrom11To12Version(sqLiteDatabase);
         upgradeDatabaseFrom12To13Version(sqLiteDatabase);
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
         break;
 
       case 11:
         upgradeDatabaseFrom11To12Version(sqLiteDatabase);
         upgradeDatabaseFrom12To13Version(sqLiteDatabase);
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
         break;
 
       case 12:
         upgradeDatabaseFrom12To13Version(sqLiteDatabase);
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
+        break;
+
+      case 13:
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase);
         break;
     }
 
@@ -211,7 +227,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     sqLiteDatabase.beginTransaction();
     try {
       sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
-      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT);
+      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT);
 
       sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
           " ADD COLUMN " + MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS + " INTEGER DEFAULT 0;");
@@ -232,7 +248,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
     try {
       dropTable(sqLiteDatabase, AttachmentDaoSource.TABLE_NAME_ATTACHMENT);
       sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
-      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT);
+      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT);
 
       sqLiteDatabase.setTransactionSuccessful();
     } finally {
@@ -394,7 +410,8 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
 
       String tempTableName = "att";
 
-      sqLiteDatabase.execSQL(CREATE_TEMP_TABLE_IF_NOT_EXISTS + tempTableName + " AS SELECT * FROM " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT + " GROUP BY " +
+      sqLiteDatabase.execSQL(CREATE_TEMP_TABLE_IF_NOT_EXISTS + tempTableName + " AS SELECT * FROM "
+          + AttachmentDaoSource.TABLE_NAME_ATTACHMENT + " GROUP BY " +
           AttachmentDaoSource.COL_EMAIL + ", " +
           AttachmentDaoSource.COL_UID + ", " +
           AttachmentDaoSource.COL_FOLDER + ", " +
@@ -402,13 +419,26 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
 
       sqLiteDatabase.execSQL(DROP_TABLE + AttachmentDaoSource.TABLE_NAME_ATTACHMENT);
       sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE);
-      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT);
+      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT);
 
-      sqLiteDatabase.execSQL("INSERT INTO " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT + " SELECT * FROM " + tempTableName);
+      sqLiteDatabase.execSQL("INSERT INTO " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT
+          + " SELECT * FROM " + tempTableName);
       sqLiteDatabase.execSQL(DROP_TABLE + tempTableName);
       sqLiteDatabase.setTransactionSuccessful();
     } finally {
       sqLiteDatabase.endTransaction();
+    }
+  }
+
+  /**
+   * This method makes changes in the database only if we are upgrading from version 13 to 14. Because upgrading to
+   * 13 version had a wrong index.
+   *
+   * @param sqLiteDatabase The given {@link SQLiteDatabase} object.
+   */
+  private void upgradeDatabaseFrom13To14Version(SQLiteDatabase sqLiteDatabase) {
+    if (sqLiteDatabase.getVersion() == 13) {
+      upgradeDatabaseFrom12To13Version(sqLiteDatabase);
     }
   }
 }
