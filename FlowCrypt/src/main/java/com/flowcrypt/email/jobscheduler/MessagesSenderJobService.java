@@ -34,6 +34,7 @@ import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.util.FileAndDirectoryUtils;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.LogsUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.common.util.CollectionUtils;
@@ -96,14 +97,14 @@ public class MessagesSenderJobService extends JobService {
       for (JobInfo jobInfo : scheduler.getAllPendingJobs()) {
         if (jobInfo.getId() == JobIdManager.JOB_TYPE_SEND_MESSAGES) {
           //skip schedule a new job if we already have another one
-          Log.d(TAG, "A job has already scheduled! Skip scheduling a new job.");
+          LogsUtil.d(TAG, "A job has already scheduled! Skip scheduling a new job.");
           return;
         }
       }
 
       int result = scheduler.schedule(jobInfoBuilder.build());
       if (result == JobScheduler.RESULT_SUCCESS) {
-        Log.d(TAG, "A job has scheduled successfully");
+        LogsUtil.d(TAG, "A job has scheduled successfully");
       } else {
         String errorMsg = "Error. Can't schedule a job";
         Log.e(TAG, errorMsg);
@@ -115,25 +116,25 @@ public class MessagesSenderJobService extends JobService {
   @Override
   public void onCreate() {
     super.onCreate();
-    Log.d(TAG, "onCreate");
+    LogsUtil.d(TAG, "onCreate");
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    Log.d(TAG, "onDestroy");
+    LogsUtil.d(TAG, "onDestroy");
   }
 
   @Override
   public boolean onStartJob(JobParameters jobParameters) {
-    Log.d(TAG, "onStartJob");
+    LogsUtil.d(TAG, "onStartJob");
     new SendMessagesAsyncTask(this).execute(jobParameters);
     return true;
   }
 
   @Override
   public boolean onStopJob(JobParameters jobParameters) {
-    Log.d(TAG, "onStopJob");
+    LogsUtil.d(TAG, "onStopJob");
     jobFinished(jobParameters, true);
     return false;
   }
@@ -154,7 +155,7 @@ public class MessagesSenderJobService extends JobService {
 
     @Override
     protected JobParameters doInBackground(JobParameters... params) {
-      Log.d(TAG, "doInBackground");
+      LogsUtil.d(TAG, "doInBackground");
       try {
         if (weakRef.get() != null) {
           Context context = weakRef.get().getApplicationContext();
@@ -203,7 +204,7 @@ public class MessagesSenderJobService extends JobService {
 
     @Override
     protected void onPostExecute(JobParameters jobParameters) {
-      Log.d(TAG, "onPostExecute");
+      LogsUtil.d(TAG, "onPostExecute");
       try {
         if (weakRef.get() != null) {
           weakRef.get().jobFinished(jobParameters, isFailed);

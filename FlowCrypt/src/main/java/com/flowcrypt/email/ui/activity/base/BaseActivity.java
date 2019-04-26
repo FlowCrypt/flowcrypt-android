@@ -14,7 +14,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -23,6 +22,7 @@ import com.flowcrypt.email.model.results.LoaderResult;
 import com.flowcrypt.email.node.Node;
 import com.flowcrypt.email.service.BaseService;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.LogsUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.idling.NodeIdlingResource;
 import com.google.android.material.appbar.AppBarLayout;
@@ -97,7 +97,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     registerNodeIdlingResources();
-    Log.d(tag, "onCreate");
+    LogsUtil.d(tag, "onCreate");
     if (getContentViewResourceId() != 0) {
       setContentView(getContentViewResourceId());
       initScreenViews();
@@ -107,25 +107,25 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   @Override
   public void onStart() {
     super.onStart();
-    Log.d(tag, "onStart");
+    LogsUtil.d(tag, "onStart");
   }
 
   @Override
   public void onResume() {
     super.onResume();
-    Log.d(tag, "onResume");
+    LogsUtil.d(tag, "onResume");
   }
 
   @Override
   public void onStop() {
     super.onStop();
-    Log.d(tag, "onStop");
+    LogsUtil.d(tag, "onStop");
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    Log.d(tag, "onDestroy");
+    LogsUtil.d(tag, "onDestroy");
   }
 
   @Override
@@ -253,7 +253,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
   protected boolean checkServiceBound(boolean isBound) {
     if (!isBound) {
       if (GeneralUtil.isDebugBuild()) {
-        Log.d(tag, "Activity not connected to the service");
+        LogsUtil.d(tag, "Activity not connected to the service");
       }
       return true;
     }
@@ -262,7 +262,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
 
   protected void bindService(Class<?> cls, ServiceConnection conn) {
     bindService(new Intent(this, cls), conn, Context.BIND_AUTO_CREATE);
-    Log.d(tag, "bind to " + cls.getSimpleName());
+    LogsUtil.d(tag, "bind to " + cls.getSimpleName());
   }
 
   /**
@@ -270,7 +270,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    */
   protected void unbindService(Class<?> cls, ServiceConnection conn) {
     unbindService(conn);
-    Log.d(tag, "unbind from " + cls.getSimpleName());
+    LogsUtil.d(tag, "unbind from " + cls.getSimpleName());
   }
 
   /**

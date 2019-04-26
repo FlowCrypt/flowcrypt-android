@@ -12,13 +12,13 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.util.Log;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.service.BaseService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.BaseNodeActivity;
+import com.flowcrypt.email.util.LogsUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import androidx.annotation.Nullable;
@@ -45,7 +45,7 @@ public abstract class BaseSyncActivity extends BaseNodeActivity {
   private ServiceConnection syncConn = new ServiceConnection() {
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-      Log.d(tag, "Activity connected to " + name.getClassName());
+      LogsUtil.d(tag, "Activity connected to " + name.getClassName());
       syncMessenger = new Messenger(service);
       isSyncServiceBound = true;
 
@@ -55,7 +55,7 @@ public abstract class BaseSyncActivity extends BaseNodeActivity {
 
     @Override
     public void onServiceDisconnected(ComponentName name) {
-      Log.d(tag, "Activity disconnected from " + name.getClassName());
+      LogsUtil.d(tag, "Activity disconnected from " + name.getClassName());
       syncMessenger = null;
       isSyncServiceBound = false;
     }

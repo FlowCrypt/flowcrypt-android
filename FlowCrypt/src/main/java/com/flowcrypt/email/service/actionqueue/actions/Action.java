@@ -8,8 +8,8 @@ package com.flowcrypt.email.service.actionqueue.actions;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 
+import com.flowcrypt.email.util.LogsUtil;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -75,7 +75,7 @@ public class Action implements Parcelable {
   }
 
   public void run(Context context) throws Exception {
-    Log.d(TAG, getClass().getSimpleName() + " is running");
+    LogsUtil.d(TAG, getClass().getSimpleName() + " is running");
   }
 
   public long getId() {

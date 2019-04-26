@@ -43,6 +43,7 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.model.EmailAndNamePair;
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.LogsUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.common.util.CollectionUtils;
 import com.sun.mail.imap.IMAPFolder;
@@ -152,7 +153,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
   @Override
   public void onCreate() {
     super.onCreate();
-    Log.d(TAG, "onCreate");
+    LogsUtil.d(TAG, "onCreate");
 
     this.notificationManager = new MessagesNotificationManager(this);
 
@@ -173,7 +174,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
-    Log.d(TAG, "onStartCommand |intent =" + intent + "|flags = " + flags + "|startId = " + startId);
+    LogsUtil.d(TAG, "onStartCommand |intent =" + intent + "|flags = " + flags + "|startId = " + startId);
     isServiceStarted = true;
 
     if (intent != null && intent.getAction() != null) {
@@ -196,7 +197,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
   @Override
   public void onDestroy() {
     super.onDestroy();
-    Log.d(TAG, "onDestroy");
+    LogsUtil.d(TAG, "onDestroy");
 
     if (emailSyncManager != null) {
       emailSyncManager.stopSync();
@@ -207,19 +208,19 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
   @Override
   public boolean onUnbind(Intent intent) {
-    Log.d(TAG, "onUnbind:" + intent);
+    LogsUtil.d(TAG, "onUnbind:" + intent);
     return super.onUnbind(intent);
   }
 
   @Override
   public void onRebind(Intent intent) {
     super.onRebind(intent);
-    Log.d(TAG, "onRebind:" + intent);
+    LogsUtil.d(TAG, "onRebind:" + intent);
   }
 
   @Override
   public IBinder onBind(Intent intent) {
-    Log.d(TAG, "onBind:" + intent);
+    LogsUtil.d(TAG, "onBind:" + intent);
 
     if (!isServiceStarted) {
       EmailSyncService.startEmailSyncService(getContext());
@@ -318,7 +319,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
   @Override
   public void onMsgsReceived(AccountDao account, LocalFolder localFolder,
                              IMAPFolder remoteFolder, javax.mail.Message[] msgs, String ownerKey, int requestCode) {
-    Log.d(TAG, "onMessagesReceived: imapFolder = " + remoteFolder.getFullName() + " message " +
+    LogsUtil.d(TAG, "onMessagesReceived: imapFolder = " + remoteFolder.getFullName() + " message " +
         "count: " + msgs.length);
     try {
       String email = account.getEmail();
@@ -351,7 +352,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
   public void onNewMsgsReceived(AccountDao account, LocalFolder localFolder,
                                 IMAPFolder remoteFolder, javax.mail.Message[] newMsgs,
                                 LongSparseArray<Boolean> msgsEncryptionStates, String ownerKey, int requestCode) {
-    Log.d(TAG, "onMessagesReceived:message count: " + newMsgs.length);
+    LogsUtil.d(TAG, "onMessagesReceived:message count: " + newMsgs.length);
     try {
       String email = account.getEmail();
       String folderAlias = localFolder.getFolderAlias();
@@ -382,7 +383,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
   @Override
   public void onSearchMsgsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
                                    javax.mail.Message[] msgs, String ownerKey, int requestCode) {
-    Log.d(TAG, "onSearchMessagesReceived: message count: " + msgs.length);
+    LogsUtil.d(TAG, "onSearchMessagesReceived: message count: " + msgs.length);
     String email = account.getEmail();
     try {
       boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(this, email);
@@ -413,7 +414,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
   public void onRefreshMsgsReceived(AccountDao account, LocalFolder localFolder,
                                     IMAPFolder remoteFolder, javax.mail.Message[] newMsgs,
                                     javax.mail.Message[] updatedMsgs, String key, int requestCode) {
-    Log.d(TAG, "onRefreshMessagesReceived: imapFolder = " + remoteFolder.getFullName() + " newMessages " +
+    LogsUtil.d(TAG, "onRefreshMessagesReceived: imapFolder = " + remoteFolder.getFullName() + " newMessages " +
         "count: " + newMsgs.length + ", updateMessages count = " + updatedMsgs.length);
     String email = account.getEmail();
     String folderAlias = localFolder.getFolderAlias();
@@ -472,7 +473,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
   @Override
   public void onFolderInfoReceived(AccountDao account, Folder[] folders, String key, int requestCode) {
-    Log.d(TAG, "onFolderInfoReceived:" + Arrays.toString(folders));
+    LogsUtil.d(TAG, "onFolderInfoReceived:" + Arrays.toString(folders));
     String email = account.getEmail();
 
     FoldersManager foldersManager = new FoldersManager();
@@ -528,7 +529,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
   @Override
   public void onActionProgress(AccountDao account, String ownerKey, int requestCode, int resultCode) {
-    Log.d(TAG, "onActionProgress: account" + account + "| ownerKey =" + ownerKey + "| requestCode =" + requestCode);
+    LogsUtil.d(TAG,
+        "onActionProgress: account" + account + "| ownerKey =" + ownerKey + "| requestCode =" + requestCode);
     try {
       if (replyToMessengers.containsKey(ownerKey)) {
         Messenger messenger = replyToMessengers.get(ownerKey);
@@ -591,7 +593,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
       if (connectivityManager != null) {
         NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
         if (GeneralUtil.isConnected(this)) {
-          Log.d(TAG, "networkInfo = " + networkInfo);
+          LogsUtil.d(TAG, "networkInfo = " + networkInfo);
           if (emailSyncManager != null) {
             emailSyncManager.beginSync(false);
           }

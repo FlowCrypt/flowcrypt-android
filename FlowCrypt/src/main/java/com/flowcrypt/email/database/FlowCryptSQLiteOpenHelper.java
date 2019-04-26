@@ -8,7 +8,6 @@ package com.flowcrypt.email.database;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import com.flowcrypt.email.api.email.JavaEmailConstants;
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource;
@@ -21,6 +20,7 @@ import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTableAction;
+import com.flowcrypt.email.util.LogsUtil;
 
 
 /**
@@ -219,7 +219,7 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
         break;
     }
 
-    Log.d(TAG, "Database updated from OLD_VERSION = " + oldVersion
+    LogsUtil.d(TAG, "Database updated from OLD_VERSION = " + oldVersion
         + " to NEW_VERSION = " + newVersion);
   }
 

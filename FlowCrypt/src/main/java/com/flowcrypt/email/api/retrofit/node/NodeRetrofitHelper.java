@@ -5,11 +5,10 @@
 
 package com.flowcrypt.email.api.retrofit.node;
 
-import android.util.Log;
-
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
 import com.flowcrypt.email.node.NodeSecret;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.LogsUtil;
 import com.google.gson.Gson;
 
 import java.io.IOException;
@@ -107,7 +106,7 @@ public final class NodeRetrofitHelper {
       if (retrofit == null) {
         attemptCount--;
         try {
-          Log.d(NodeRetrofitHelper.class.getSimpleName(), "Node.js server is not run yet. Trying to wait...");
+          LogsUtil.d(NodeRetrofitHelper.class.getSimpleName(), "Node.js server is not run yet. Trying to wait...");
           Thread.sleep(1000);
         } catch (InterruptedException e) {
           e.printStackTrace();

@@ -8,11 +8,11 @@ package com.flowcrypt.email.broadcastreceivers;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.MessagesNotificationManager;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.LogsUtil;
 import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ public class MarkMessagesAsOldBroadcastReceiver extends BroadcastReceiver {
 
   @Override
   public void onReceive(Context context, Intent intent) {
-    Log.d(TAG, "onReceive");
+    LogsUtil.d(TAG, "onReceive");
     if (intent == null || !ACTION_MARK_MESSAGES_AS_OLD.equals(intent.getAction())) {
       return;
     }

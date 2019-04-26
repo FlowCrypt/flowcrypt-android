@@ -11,11 +11,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
-import android.util.Log;
 
 import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.service.actionqueue.actions.Action;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.LogsUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.ArrayList;
@@ -69,12 +69,12 @@ public class ActionQueueIntentService extends JobIntentService {
   @Override
   public void onCreate() {
     super.onCreate();
-    Log.d(TAG, "onCreate");
+    LogsUtil.d(TAG, "onCreate");
   }
 
   @Override
   public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
-    Log.d(TAG, "onStartCommand");
+    LogsUtil.d(TAG, "onStartCommand");
     return super.onStartCommand(intent, flags, startId);
   }
 
@@ -86,21 +86,21 @@ public class ActionQueueIntentService extends JobIntentService {
       final ResultReceiver resultReceiver = intent.getParcelableExtra(EXTRA_KEY_RESULTS_RECEIVER);
 
       if (actions != null && !actions.isEmpty()) {
-        Log.d(TAG, "Received " + actions.size() + " action(s) for run in the queue");
+        LogsUtil.d(TAG, "Received " + actions.size() + " action(s) for run in the queue");
         for (Action action : actions) {
           if (action != null) {
-            Log.d(TAG, "Run " + action.getClass().getSimpleName());
+            LogsUtil.d(TAG, "Run " + action.getClass().getSimpleName());
             try {
               action.run(getApplicationContext());
               Bundle successBundle = ActionResultReceiver.generateSuccessBundle(action);
               resultReceiver.send(ActionResultReceiver.RESULT_CODE_OK, successBundle);
-              Log.d(TAG, action.getClass().getSimpleName() + ": success");
+              LogsUtil.d(TAG, action.getClass().getSimpleName() + ": success");
             } catch (Exception e) {
               e.printStackTrace();
               ExceptionUtil.handleError(e);
               Bundle errorBundle = ActionResultReceiver.generateErrorBundle(action, e);
               resultReceiver.send(ActionResultReceiver.RESULT_CODE_ERROR, errorBundle);
-              Log.d(TAG, action.getClass().getSimpleName() + ": an error occurred");
+              LogsUtil.d(TAG, action.getClass().getSimpleName() + ": an error occurred");
             }
           }
         }
