@@ -8,6 +8,7 @@ package com.flowcrypt.email.util;
 import android.content.Context;
 import android.os.Environment;
 
+import com.flowcrypt.email.BuildConfig;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.util.gson.GsonHelper;
 import com.google.gson.Gson;
@@ -76,5 +77,10 @@ public class TestGeneralUtil {
       e.printStackTrace();
     }
     return null;
+  }
+
+  public static String replaceVersionInKey(String key) {
+    return key.replaceFirst("Version: FlowCrypt \\d*.\\d*.\\d* Gmail",
+        "Version: FlowCrypt " + BuildConfig.VERSION_NAME.split("_")[0] + " Gmail");
   }
 }

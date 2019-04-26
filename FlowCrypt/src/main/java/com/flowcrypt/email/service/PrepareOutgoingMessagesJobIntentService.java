@@ -37,6 +37,7 @@ import com.flowcrypt.email.model.MessageEncryptionType;
 import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.security.SecurityUtils;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.LogsUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.NoKeyAvailableException;
 import com.google.android.gms.common.util.CollectionUtils;
@@ -99,7 +100,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
   @Override
   public void onCreate() {
     super.onCreate();
-    Log.d(TAG, "onCreate");
+    LogsUtil.d(TAG, "onCreate");
     msgDaoSource = new MessageDaoSource();
     account = new AccountDaoSource().getActiveAccountInformation(getApplicationContext());
     sess = OpenStoreHelper.getAccountSess(getApplicationContext(), account);
@@ -108,18 +109,18 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
   @Override
   public void onDestroy() {
     super.onDestroy();
-    Log.d(TAG, "onDestroy");
+    LogsUtil.d(TAG, "onDestroy");
   }
 
   @Override
   public boolean onStopCurrentWork() {
-    Log.d(TAG, "onStopCurrentWork");
+    LogsUtil.d(TAG, "onStopCurrentWork");
     return super.onStopCurrentWork();
   }
 
   @Override
   protected void onHandleWork(@NonNull Intent intent) {
-    Log.d(TAG, "onHandleWork");
+    LogsUtil.d(TAG, "onHandleWork");
     if (intent.hasExtra(EXTRA_KEY_OUTGOING_MESSAGE_INFO)) {
       OutgoingMessageInfo outgoingMsgInfo = intent.getParcelableExtra(EXTRA_KEY_OUTGOING_MESSAGE_INFO);
       long uid = outgoingMsgInfo.getUid();
@@ -132,7 +133,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         return;
       }
 
-      Log.d(TAG, "Received a new job: " + outgoingMsgInfo);
+      LogsUtil.d(TAG, "Received a new job: " + outgoingMsgInfo);
       Uri newMsgUri = null;
 
       try {

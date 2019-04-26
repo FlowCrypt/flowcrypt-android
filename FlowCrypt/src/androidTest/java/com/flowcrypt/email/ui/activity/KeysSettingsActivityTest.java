@@ -28,6 +28,7 @@ import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.PrivateKeysManager;
+import com.flowcrypt.email.util.TestGeneralUtil;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -120,7 +121,7 @@ public class KeysSettingsActivityTest extends BaseTest {
     selectFirstKey();
     NodeKeyDetails keyDetails = addPrivateKeyToDatabaseRule.getNodeKeyDetails();
     onView(withId(R.id.btnShowPubKey)).check(matches(isDisplayed())).perform(click());
-    onView(withText(keyDetails.getPublicKey())).check(matches(isDisplayed()));
+    onView(withText(TestGeneralUtil.replaceVersionInKey(keyDetails.getPublicKey())));
   }
 
   @Test
@@ -129,7 +130,7 @@ public class KeysSettingsActivityTest extends BaseTest {
     NodeKeyDetails details = addPrivateKeyToDatabaseRule.getNodeKeyDetails();
     onView(withId(R.id.btnCopyToClipboard)).check(matches(isDisplayed())).perform(click());
     onView(withText(getResString(R.string.copied))).inRoot(new ToastMatcher()).check(matches(isDisplayed()));
-    checkClipboardText(details.getPublicKey());
+    checkClipboardText(TestGeneralUtil.replaceVersionInKey(details.getPublicKey()));
   }
 
   @Test

@@ -6,7 +6,6 @@
 package com.flowcrypt.email.api.email.sync;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.FoldersManager;
@@ -30,6 +29,7 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService;
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.LogsUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.ManualHandledException;
 import com.google.android.gms.auth.GoogleAuthException;
@@ -106,7 +106,7 @@ public class EmailSyncManager {
    * @param isResetNeeded true if need a reconnect, false otherwise.
    */
   public void beginSync(boolean isResetNeeded) {
-    Log.d(TAG, "beginSync | isResetNeeded = " + isResetNeeded);
+    LogsUtil.d(TAG, "beginSync | isResetNeeded = " + isResetNeeded);
     if (isResetNeeded) {
       cancelAllSyncTasks();
       updateLabels(null, 0, activeQueue);
@@ -208,7 +208,7 @@ public class EmailSyncManager {
    *
    * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
    * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-   * @param localFolder      A local implementation of the remote localFolder.
+   * @param localFolder A local implementation of the remote localFolder.
    * @param start       The position of the start.
    * @param end         The position of the end.
    */
@@ -226,7 +226,7 @@ public class EmailSyncManager {
    *
    * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
    * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-   * @param localFolder      A local implementation of the remote localFolder.
+   * @param localFolder A local implementation of the remote localFolder.
    */
   public void loadNewMsgs(String ownerKey, int requestCode, LocalFolder localFolder) {
     try {
@@ -244,7 +244,7 @@ public class EmailSyncManager {
    *
    * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
    * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-   * @param localFolder      The local implementation of the remote localFolder.
+   * @param localFolder The local implementation of the remote localFolder.
    * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link Message ).
    */
   public void loadMsgDetails(String ownerKey, int requestCode, LocalFolder localFolder, int uid) {
@@ -261,10 +261,10 @@ public class EmailSyncManager {
    * {@link LoadMessagesToCacheSyncTask} object and added it to the current synchronization
    * BlockingQueue.
    *
-   * @param ownerKey                   The name of the reply to {@link android.os.Messenger}.
-   * @param requestCode                The unique request code for the reply to
-   *                                   {@link android.os.Messenger}.
-   * @param localFolder                     A local implementation of the remote localFolder.
+   * @param ownerKey               The name of the reply to {@link android.os.Messenger}.
+   * @param requestCode            The unique request code for the reply to
+   *                               {@link android.os.Messenger}.
+   * @param localFolder            A local implementation of the remote localFolder.
    * @param alreadyLoadedMsgsCount The count of already cached messages in the localFolder.
    */
   public void loadNextMsgs(String ownerKey, int requestCode, LocalFolder localFolder, int alreadyLoadedMsgsCount) {
@@ -300,7 +300,7 @@ public class EmailSyncManager {
    *
    * @param ownerKey          The name of the reply to {@link android.os.Messenger}.
    * @param requestCode       The unique request code for the reply to {@link android.os.Messenger}.
-   * @param localFolder            A local implementation of the remote localFolder.
+   * @param localFolder       A local implementation of the remote localFolder.
    * @param isActiveQueueUsed true if the current call will be ran in the active queue, otherwise false.
    */
   public void refreshMsgs(String ownerKey, int requestCode, LocalFolder localFolder, boolean isActiveQueueUsed) {
@@ -395,9 +395,9 @@ public class EmailSyncManager {
    * {@link SearchMessagesSyncTask} object and added it to the current synchronization
    * BlockingQueue.
    *
-   * @param ownerKey                   The name of the reply to {@link android.os.Messenger}.
-   * @param requestCode                The unique request code for the reply to {@link android.os.Messenger}.
-   * @param localFolder                     A localFolder where we do a search.
+   * @param ownerKey               The name of the reply to {@link android.os.Messenger}.
+   * @param requestCode            The unique request code for the reply to {@link android.os.Messenger}.
+   * @param localFolder            A localFolder where we do a search.
    * @param alreadyLoadedMsgsCount The count of already cached messages in the database.
    */
   public void searchMsgs(String ownerKey, int requestCode, LocalFolder localFolder, int alreadyLoadedMsgsCount) {
@@ -484,7 +484,7 @@ public class EmailSyncManager {
       if (store != null && account != null) {
         if (account.getAuthCreds() != null) {
           if (!store.getURLName().getUsername().equalsIgnoreCase(account.getAuthCreds().getUsername())) {
-            Log.d(tag, "Connection was reset!");
+            LogsUtil.d(tag, "Connection was reset!");
 
             if (task != null) {
               notifyActionProgress(task.getOwnerKey(), task.getRequestCode(), R.id.progress_id_resetting_connection);
@@ -512,7 +512,7 @@ public class EmailSyncManager {
       } catch (MessagingException e) {
         e.printStackTrace();
         ExceptionUtil.handleError(e);
-        Log.d(tag, "This exception occurred when we try disconnect from the store.");
+        LogsUtil.d(tag, "This exception occurred when we try disconnect from the store.");
       }
     }
 
@@ -545,13 +545,13 @@ public class EmailSyncManager {
         resetConnIfNeeded(task);
 
         if (!isConnected()) {
-          Log.d(tag, "Not connected. Start a reconnection ...");
+          LogsUtil.d(tag, "Not connected. Start a reconnection ...");
           notifyActionProgress(task.getOwnerKey(), task.getRequestCode(), R.id.progress_id_connecting_to_email_server);
           openConnToStore();
-          Log.d(tag, "Reconnection done");
+          LogsUtil.d(tag, "Reconnection done");
         }
 
-        Log.d(tag, "Start a new task = " + task.getClass().getSimpleName() + " for store " + store.toString());
+        LogsUtil.d(tag, "Start a new task = " + task.getClass().getSimpleName() + " for store " + store.toString());
 
         if (task.isSMTPRequired()) {
           notifyActionProgress(task.getOwnerKey(), task.getRequestCode(), R.id.progress_id_running_smtp_action);
@@ -560,7 +560,7 @@ public class EmailSyncManager {
           notifyActionProgress(task.getOwnerKey(), task.getRequestCode(), R.id.progress_id_running_imap_action);
           task.runIMAPAction(account, sess, store, listener);
         }
-        Log.d(tag, "The task = " + task.getClass().getSimpleName() + " completed");
+        LogsUtil.d(tag, "The task = " + task.getClass().getSimpleName() + " completed");
       } catch (Exception e) {
         e.printStackTrace();
         if (e instanceof ConnectionException) {
@@ -612,17 +612,17 @@ public class EmailSyncManager {
 
     @Override
     public void run() {
-      Log.d(tag, " run!");
+      LogsUtil.d(tag, " run!");
       Thread.currentThread().setName(getClass().getSimpleName());
 
       while (!Thread.interrupted()) {
         try {
-          Log.d(tag, "PassiveSyncTaskBlockingQueue size = " + passiveQueue.size());
+          LogsUtil.d(tag, "PassiveSyncTaskBlockingQueue size = " + passiveQueue.size());
           SyncTask syncTask = passiveQueue.poll(TIMEOUT_WAIT_NEXT_TASK, TimeUnit.SECONDS);
 
           if (syncTask == null) {
             closeConn();
-            Log.d(tag, "Disconnected. Wait new tasks.");
+            LogsUtil.d(tag, "Disconnected. Wait new tasks.");
             syncTask = passiveQueue.take();
           }
 
@@ -640,18 +640,18 @@ public class EmailSyncManager {
       }
 
       closeConn();
-      Log.d(tag, " stopped!");
+      LogsUtil.d(tag, " stopped!");
     }
   }
 
   private class ActiveSyncTaskRunnable extends BaseSyncRunnable {
     @Override
     public void run() {
-      Log.d(tag, " run!");
+      LogsUtil.d(tag, " run!");
       Thread.currentThread().setName(getClass().getSimpleName());
       while (!Thread.interrupted()) {
         try {
-          Log.d(tag, "ActiveSyncTaskBlockingQueue size = " + activeQueue.size());
+          LogsUtil.d(tag, "ActiveSyncTaskBlockingQueue size = " + activeQueue.size());
           SyncTask syncTask = activeQueue.take();
 
           runIdleInboxIfNeeded();
@@ -668,7 +668,7 @@ public class EmailSyncManager {
       }
 
       closeConn();
-      Log.d(tag, " stopped!");
+      LogsUtil.d(tag, " stopped!");
     }
   }
 
@@ -688,7 +688,7 @@ public class EmailSyncManager {
 
     @Override
     public void run() {
-      Log.d(tag, " run!");
+      LogsUtil.d(tag, " run!");
       Thread.currentThread().setName(getClass().getSimpleName());
 
       FoldersManager foldersManager = FoldersManager.fromDatabase(listener.getContext(), account.getEmail());
@@ -701,24 +701,24 @@ public class EmailSyncManager {
       idle();
       closeConn();
 
-      Log.d(tag, " stopped!");
+      LogsUtil.d(tag, " stopped!");
     }
 
     @Override
     public void messagesAdded(MessageCountEvent e) {
-      Log.d(tag, "messagesAdded: " + e.getMessages().length);
+      LogsUtil.d(tag, "messagesAdded: " + e.getMessages().length);
       loadNewMsgs(null, 0, localFolder);
     }
 
     @Override
     public void messagesRemoved(MessageCountEvent messageCountEvent) {
-      Log.d(tag, "messagesRemoved");
+      LogsUtil.d(tag, "messagesRemoved");
       syncFolderState();
     }
 
     @Override
     public void messageChanged(MessageChangedEvent e) {
-      Log.d(tag, "messageChanged");
+      LogsUtil.d(tag, "messageChanged");
       Message msg = e.getMessage();
       if (msg != null && e.getMessageChangeType() == MessageChangedEvent.FLAGS_CHANGED) {
         try {
@@ -751,12 +751,12 @@ public class EmailSyncManager {
         }
 
         if (!isConnected()) {
-          Log.d(tag, "Not connected. Start a reconnection ...");
+          LogsUtil.d(tag, "Not connected. Start a reconnection ...");
           openConnToStore();
-          Log.d(tag, "Reconnection done");
+          LogsUtil.d(tag, "Reconnection done");
         }
 
-        Log.d(tag, "Start idling for store " + store.toString());
+        LogsUtil.d(tag, "Start idling for store " + store.toString());
 
         remoteFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
         remoteFolder.open(javax.mail.Folder.READ_ONLY);
@@ -777,7 +777,7 @@ public class EmailSyncManager {
           idle();
         } else if (e instanceof MessagingException) {
           if ("IDLE not supported".equals(e.getMessage())) {
-            Log.d(tag, "IDLE not supported!");
+            LogsUtil.d(tag, "IDLE not supported!");
             isIdleSupported = false;
           }
         } else {

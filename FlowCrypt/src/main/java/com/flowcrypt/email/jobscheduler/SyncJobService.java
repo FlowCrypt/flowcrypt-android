@@ -31,6 +31,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
 import com.flowcrypt.email.service.MessagesNotificationManager;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.LogsUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.sun.mail.imap.IMAPFolder;
 
@@ -75,7 +76,7 @@ public class SyncJobService extends JobService implements SyncListener {
     if (scheduler != null) {
       int result = scheduler.schedule(jobInfoBuilder.build());
       if (result == JobScheduler.RESULT_SUCCESS) {
-        Log.d(TAG, "A job scheduled successfully");
+        LogsUtil.d(TAG, "A job scheduled successfully");
       } else {
         String errorMsg = "Error. Can't schedule a job";
         Log.e(TAG, errorMsg);
@@ -87,26 +88,26 @@ public class SyncJobService extends JobService implements SyncListener {
   @Override
   public void onCreate() {
     super.onCreate();
-    Log.d(TAG, "onCreate");
+    LogsUtil.d(TAG, "onCreate");
     this.messagesNotificationManager = new MessagesNotificationManager(this);
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    Log.d(TAG, "onDestroy");
+    LogsUtil.d(TAG, "onDestroy");
   }
 
   @Override
   public boolean onStartJob(JobParameters jobParameters) {
-    Log.d(TAG, "onStartJob");
+    LogsUtil.d(TAG, "onStartJob");
     new CheckNewMessagesJobTask(this).execute(jobParameters);
     return true;
   }
 
   @Override
   public boolean onStopJob(JobParameters jobParameters) {
-    Log.d(TAG, "onStopJob");
+    LogsUtil.d(TAG, "onStopJob");
     jobFinished(jobParameters, true);
     return false;
   }
@@ -292,7 +293,7 @@ public class SyncJobService extends JobService implements SyncListener {
 
     @Override
     protected JobParameters doInBackground(JobParameters... params) {
-      Log.d(TAG, "doInBackground");
+      LogsUtil.d(TAG, "doInBackground");
 
       try {
         if (weakRef.get() != null) {
@@ -326,7 +327,7 @@ public class SyncJobService extends JobService implements SyncListener {
 
     @Override
     protected void onPostExecute(JobParameters jobParameters) {
-      Log.d(TAG, "onPostExecute");
+      LogsUtil.d(TAG, "onPostExecute");
       try {
         if (weakRef.get() != null) {
           weakRef.get().jobFinished(jobParameters, isFailed);

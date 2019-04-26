@@ -56,10 +56,6 @@ public class AttachmentDaoSource extends BaseDaoSource {
       COL_FORWARDED_FOLDER + " TEXT, " +
       COL_FORWARDED_UID + " INTEGER DEFAULT -1 " + ");";
 
-  public static final String CREATE_INDEX_EMAIL_UID_FOLDER_IN_ATTACHMENT = INDEX_PREFIX + COL_EMAIL + "_" + COL_UID +
-      "_" + COL_FOLDER + "_in_" + TABLE_NAME_ATTACHMENT + " ON " + TABLE_NAME_ATTACHMENT +
-      " (" + COL_EMAIL + ", " + COL_UID + ", " + COL_FOLDER + ")";
-
   public static final String CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT =
       UNIQUE_INDEX_PREFIX + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER + "_" + COL_ATTACHMENT_ID + "_in_"
           + TABLE_NAME_ATTACHMENT + " ON " + TABLE_NAME_ATTACHMENT + " (" + COL_EMAIL + ", " + COL_UID

@@ -19,12 +19,12 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.KeyImportModel;
+import com.flowcrypt.email.util.LogsUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.common.util.CollectionUtils;
 
@@ -63,7 +63,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
   @Override
   public void onCreate() {
     super.onCreate();
-    Log.d(TAG, "onCreate");
+    LogsUtil.d(TAG, "onCreate");
 
     clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
     if (clipboardManager != null) {
@@ -82,14 +82,14 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
   @Nullable
   @Override
   public IBinder onBind(Intent intent) {
-    Log.d(TAG, "onBind:" + intent);
+    LogsUtil.d(TAG, "onBind:" + intent);
     return localBinder;
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    Log.d(TAG, "onDestroy");
+    LogsUtil.d(TAG, "onDestroy");
 
     serviceWorkerLooper.quit();
 
@@ -158,7 +158,7 @@ public class CheckClipboardToFindKeyService extends Service implements Clipboard
 
             checkClipboardToFindKeyService.keyImportModel = new KeyImportModel(null, key,
                 weakRef.get().isPrivateKeyMode, KeyDetails.Type.CLIPBOARD);
-            Log.d(TAG, "Found a valid private key in clipboard");
+            LogsUtil.d(TAG, "Found a valid private key in clipboard");
           }
           break;
       }

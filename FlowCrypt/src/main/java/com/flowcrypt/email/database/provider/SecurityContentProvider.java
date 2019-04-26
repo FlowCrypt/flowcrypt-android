@@ -16,7 +16,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.provider.BaseColumns;
-import android.util.Log;
 
 import com.flowcrypt.email.database.FlowCryptDatabaseManager;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
@@ -29,6 +28,7 @@ import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.util.LogsUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 
 import java.util.ArrayList;
@@ -220,7 +220,7 @@ public class SecurityContentProvider extends ContentProvider {
               }
 
               if (id <= 0) {
-                Log.d(TAG, "Failed to insert row into " + uri);
+                LogsUtil.d(TAG, "Failed to insert row into " + uri);
               }
             }
             break;
@@ -229,7 +229,7 @@ public class SecurityContentProvider extends ContentProvider {
             for (ContentValues contentValues : values) {
               long id = sqLiteDatabase.insert(getMatchedTableName(uri), null, contentValues);
               if (id <= 0) {
-                Log.d(TAG, "Failed to insert row into " + uri);
+                LogsUtil.d(TAG, "Failed to insert row into " + uri);
               } else {
                 insertedRowsCount++;
               }

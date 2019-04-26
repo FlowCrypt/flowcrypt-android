@@ -18,7 +18,6 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.flowcrypt.email.BuildConfig;
@@ -38,6 +37,7 @@ import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.flowcrypt.email.model.PgpKeyInfo;
 import com.flowcrypt.email.security.KeysStorageImpl;
 import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.util.LogsUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.flowcrypt.email.util.exception.FlowCryptLimitException;
 import com.flowcrypt.email.util.exception.ManualHandledException;
@@ -121,7 +121,7 @@ public class AttachmentDownloadManagerService extends Service {
   @Override
   public void onCreate() {
     super.onCreate();
-    Log.d(TAG, "onCreate");
+    LogsUtil.d(TAG, "onCreate");
 
     HandlerThread handlerThread = new HandlerThread(TAG);
     handlerThread.start();
@@ -133,7 +133,7 @@ public class AttachmentDownloadManagerService extends Service {
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
-    Log.d(TAG, "onStartCommand |intent =" + intent + "|flags = " + flags + "|startId = " + startId);
+    LogsUtil.d(TAG, "onStartCommand |intent =" + intent + "|flags = " + flags + "|startId = " + startId);
     if (intent != null && !TextUtils.isEmpty(intent.getAction())) {
       AttachmentInfo attInfo = intent.getParcelableExtra(EXTRA_KEY_ATTACHMENT_INFO);
       switch (intent.getAction()) {
@@ -160,7 +160,7 @@ public class AttachmentDownloadManagerService extends Service {
   @Override
   public void onDestroy() {
     super.onDestroy();
-    Log.d(TAG, "onDestroy");
+    LogsUtil.d(TAG, "onDestroy");
     releaseResources();
   }
 
@@ -172,7 +172,7 @@ public class AttachmentDownloadManagerService extends Service {
 
   private void stopService() {
     stopSelf();
-    Log.d(TAG, "Trying to stop the service");
+    LogsUtil.d(TAG, "Trying to stop the service");
   }
 
   private void releaseResources() {
@@ -256,7 +256,7 @@ public class AttachmentDownloadManagerService extends Service {
 
           case MESSAGE_ATTACHMENT_DOWNLOAD:
             notificationManager.downloadCompleted(attDownloadManagerService, attInfo, uri);
-            Log.d(TAG, attInfo.getName() + " is downloaded");
+            LogsUtil.d(TAG, attInfo.getName() + " is downloaded");
             break;
 
           case MESSAGE_ATTACHMENT_ADDED_TO_QUEUE:
@@ -274,7 +274,7 @@ public class AttachmentDownloadManagerService extends Service {
 
           case MESSAGE_DOWNLOAD_CANCELED:
             notificationManager.loadingCanceledByUser(attInfo);
-            Log.d(TAG, attInfo.getName() + " was canceled");
+            LogsUtil.d(TAG, attInfo.getName() + " was canceled");
             break;
 
           case MESSAGE_STOP_SERVICE:
@@ -677,7 +677,7 @@ public class AttachmentDownloadManagerService extends Service {
           return decryptedFile;
         } catch (IOException e) {
           if (!decryptedFile.delete()) {
-            Log.d(TAG, "Cannot delete file: " + file);
+            LogsUtil.d(TAG, "Cannot delete file: " + file);
           }
 
           isInnerExceptionHappened = true;
@@ -685,7 +685,7 @@ public class AttachmentDownloadManagerService extends Service {
         } finally {
           if (!isInnerExceptionHappened) {
             if (!file.delete()) {
-              Log.d(TAG, "Cannot delete file: " + file);
+              LogsUtil.d(TAG, "Cannot delete file: " + file);
             }
           }
         }
@@ -727,9 +727,9 @@ public class AttachmentDownloadManagerService extends Service {
     private void removeNotCompletedAtt(File attachmentFile) {
       if (attachmentFile != null && attachmentFile.exists()) {
         if (!attachmentFile.delete()) {
-          Log.d(TAG, "Cannot delete a file: " + attachmentFile);
+          LogsUtil.d(TAG, "Cannot delete a file: " + attachmentFile);
         } else {
-          Log.d(TAG, "Canceled attachment \"" + attachmentFile + "\" was deleted");
+          LogsUtil.d(TAG, "Canceled attachment \"" + attachmentFile + "\" was deleted");
         }
       }
     }
