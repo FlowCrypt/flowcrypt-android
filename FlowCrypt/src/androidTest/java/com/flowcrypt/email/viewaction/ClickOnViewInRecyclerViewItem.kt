@@ -3,14 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.viewaction;
+package com.flowcrypt.email.viewaction
 
-import android.view.View;
-
-import org.hamcrest.Matcher;
-
-import androidx.test.espresso.UiController;
-import androidx.test.espresso.ViewAction;
+import android.view.View
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
+import org.hamcrest.Matcher
 
 /**
  * Find a view by id in a recycler view item and click on it.
@@ -20,26 +18,17 @@ import androidx.test.espresso.ViewAction;
  * Time: 6:07 PM
  * E-mail: DenBond7@gmail.com
  */
-public class ClickOnViewInRecyclerViewItem implements ViewAction {
-  private int viewId;
+class ClickOnViewInRecyclerViewItem(private val viewId: Int) : ViewAction {
 
-  public ClickOnViewInRecyclerViewItem(int viewId) {
-    this.viewId = viewId;
+  override fun getConstraints(): Matcher<View>? {
+    return null
   }
 
-  @Override
-  public Matcher<View> getConstraints() {
-    return null;
+  override fun getDescription(): String {
+    return "Click on a child view with id = ${viewId}"
   }
 
-  @Override
-  public String getDescription() {
-    return "Click on a child view with id = " + viewId;
-  }
-
-  @Override
-  public void perform(UiController uiController, View view) {
-    View v = view.findViewById(viewId);
-    v.performClick();
+  override fun perform(uiController: UiController, view: View) {
+    view.findViewById<View>(viewId)?.performClick()
   }
 }
