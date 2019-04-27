@@ -3,40 +3,34 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.assertions;
+package com.flowcrypt.email.assertions
 
-import android.view.View;
+import android.view.View
 
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.test.espresso.NoMatchingViewException;
-import androidx.test.espresso.ViewAssertion;
+import androidx.recyclerview.widget.RecyclerView
+import androidx.test.espresso.NoMatchingViewException
+import androidx.test.espresso.ViewAssertion
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.`is`
 
 /**
- * This {@link ViewAssertion} implementation asserts the {@link RecyclerView} size.
+ * This [ViewAssertion] implementation asserts the [RecyclerView] size.
  *
  * @author Denis Bondarenko
  * Date: 21.05.2018
  * Time: 15:43
  * E-mail: DenBond7@gmail.com
  */
-public class RecyclerViewItemCountAssertion implements ViewAssertion {
-  private final int expectedCount;
+class RecyclerViewItemCountAssertion(private val expectedCount: Int) : ViewAssertion {
 
-  public RecyclerViewItemCountAssertion(int expectedCount) {
-    this.expectedCount = expectedCount;
-  }
-
-  @Override
-  public void check(View view, NoMatchingViewException noViewFoundException) {
+  override fun check(view: View, noViewFoundException: NoMatchingViewException?) {
     if (noViewFoundException != null) {
-      throw noViewFoundException;
+      throw noViewFoundException
     }
 
-    RecyclerView recyclerView = (RecyclerView) view;
-    RecyclerView.Adapter adapter = recyclerView.getAdapter();
-    assertThat(adapter.getItemCount(), is(expectedCount));
+    val recyclerView = view as RecyclerView
+    val adapter = recyclerView.adapter
+    assertThat(adapter?.itemCount, `is`(expectedCount))
   }
 }
