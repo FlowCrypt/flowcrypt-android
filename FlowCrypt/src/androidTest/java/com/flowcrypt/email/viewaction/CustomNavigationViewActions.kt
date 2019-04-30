@@ -3,46 +3,43 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.viewaction;
+package com.flowcrypt.email.viewaction
 
-import com.google.android.material.navigation.NavigationView;
-
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.test.espresso.ViewAction;
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.test.espresso.ViewAction
+import com.google.android.material.navigation.NavigationView
 
 /**
- * View actions for interacting with {@link NavigationView}
- * <p>
- * See {@link androidx.test.espresso.contrib.NavigationViewActions} for more details
+ * View actions for interacting with [NavigationView]
+ *
+ *
+ * See [androidx.test.espresso.contrib.NavigationViewActions] for more details
  *
  * @author Denis Bondarenko
  * Date: 16.08.2018
  * Time: 12:11
  * E-mail: DenBond7@gmail.com
  */
-public final class CustomNavigationViewActions {
 
-  private CustomNavigationViewActions() {
-    // no Instance
-  }
-
-  /**
-   * Returns a {@link ViewAction} that navigates to a menu item in {@link NavigationView} using a
-   * menu item title.
-   * <p>
-   * <p>View constraints:
-   * <p>
-   * <ul>
-   * <li>View must be a child of a {@link DrawerLayout}
-   * <li>View must be of type {@link NavigationView}
-   * <li>View must be visible on screen
-   * <li>View must be displayed on screen
-   * <ul>
-   *
-   * @param menuItemName the name of the menu item title
-   * @return a {@link ViewAction} that navigates on a menu item
-   */
-  public static ViewAction navigateTo(final String menuItemName) {
-    return new NavigateToItemViewAction(menuItemName);
-  }
+/**
+ * Returns a [ViewAction] that navigates to a menu item in [NavigationView] using a
+ * menu item title.
+ *
+ *
+ *
+ * View constraints:
+ *
+ *
+ *
+ *  * View must be a child of a [DrawerLayout]
+ *  * View must be of type [NavigationView]
+ *  * View must be visible on screen
+ *  * View must be displayed on screen
+ *
+ *
+ * @param menuItemName the name of the menu item title
+ * @return a [ViewAction] that navigates on a menu item
+ */
+fun navigateTo(menuItemName: String): ViewAction {
+  return NavigateToItemViewAction(menuItemName)
 }
