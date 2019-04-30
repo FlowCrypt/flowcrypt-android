@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email;
+package com.flowcrypt.email
 
 /**
  * @author Denis Bondarenko
@@ -11,16 +11,16 @@ package com.flowcrypt.email;
  * Time: 15:15
  * E-mail: DenBond7@gmail.com
  */
-public class TestConstants {
-  public static final String IMAP = "IMAP";
-  public static final String SMTP = "SMTP";
+object TestConstants {
+  const val IMAP = "IMAP"
+  const val SMTP = "SMTP"
 
-  public static final char COMMERCIAL_AT_SYMBOL = '@';
+  const val COMMERCIAL_AT_SYMBOL = '@'
 
-  public static final String RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER = "test@denbond7.com";
-  public static final String RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER = "not_attester_user@denbond7.com";
+  const val RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER = "test@denbond7.com"
+  const val RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER = "not_attester_user@denbond7.com"
 
-  public static final String DEFAULT_STRONG_PASSWORD = "My super strong password 2018";
-  public static final String DEFAULT_SECOND_STRONG_PASSWORD = "My super strong passphrase 2019";
-  public static final String DEFAULT_PASSWORD = "android";
+  const val DEFAULT_STRONG_PASSWORD = "My super strong password 2018"
+  const val DEFAULT_SECOND_STRONG_PASSWORD = "My super strong passphrase 2019"
+  const val DEFAULT_PASSWORD = "android"
 }
