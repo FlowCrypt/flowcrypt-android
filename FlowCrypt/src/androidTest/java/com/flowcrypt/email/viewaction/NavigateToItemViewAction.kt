@@ -3,118 +3,104 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.viewaction;
+package com.flowcrypt.email.viewaction
 
-import android.content.res.Resources;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.SubMenu;
-import android.view.View;
-
-import com.google.android.material.internal.NavigationMenu;
-import com.google.android.material.navigation.NavigationView;
-
-import org.hamcrest.Matcher;
-
-import androidx.test.espresso.PerformException;
-import androidx.test.espresso.UiController;
-import androidx.test.espresso.ViewAction;
-import androidx.test.espresso.matcher.ViewMatchers;
-import androidx.test.espresso.util.HumanReadables;
-
-import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayingAtLeast;
-import static androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility;
-import static org.hamcrest.Matchers.allOf;
+import android.content.res.Resources
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import androidx.test.espresso.PerformException
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
+import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayingAtLeast
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
+import androidx.test.espresso.util.HumanReadables
+import com.google.android.material.internal.NavigationMenu
+import com.google.android.material.navigation.NavigationView
+import org.hamcrest.Matcher
+import org.hamcrest.Matchers.allOf
 
 /**
- * Create a {@link ViewAction} that navigates to a menu item in {@link NavigationView} using a menu item title.
+ * Create a [ViewAction] that navigates to a menu item in [NavigationView] using a menu item title.
  *
  * @author Denis Bondarenko
  * Date: 11/28/18
  * Time: 11:16 AM
  * E-mail: DenBond7@gmail.com
  */
-public class NavigateToItemViewAction implements ViewAction {
-  private final String menuItemName;
+class NavigateToItemViewAction(private val menuItemName: String) : ViewAction {
 
-  public NavigateToItemViewAction(String menuItemName) {
-    this.menuItemName = menuItemName;
-  }
+  override fun perform(uiController: UiController, view: View) {
+    val navigationView = view as NavigationView
+    val navigationMenu = navigationView.menu as NavigationMenu
 
-  @Override
-  public void perform(UiController uiController, View view) {
-    NavigationView navigationView = (NavigationView) view;
-    NavigationMenu navigationMenu = (NavigationMenu) navigationView.getMenu();
+    var matchedMenuItem: MenuItem? = null
 
-    MenuItem matchedMenuItem = null;
-
-    for (int i = 0; i < navigationMenu.size(); i++) {
-      MenuItem menuItem = navigationMenu.getItem(i);
+    for (i in 0 until navigationMenu.size()) {
+      val menuItem = navigationMenu.getItem(i)
       if (menuItem.hasSubMenu()) {
-        SubMenu subMenu = menuItem.getSubMenu();
-        for (int j = 0; j < subMenu.size(); j++) {
-          MenuItem subMenuItem = subMenu.getItem(j);
-          if (subMenuItem.getTitle().equals(menuItemName)) {
-            matchedMenuItem = subMenuItem;
+        val subMenu = menuItem.subMenu
+        for (j in 0 until subMenu.size()) {
+          val subMenuItem = subMenu.getItem(j)
+          if (subMenuItem.title == menuItemName) {
+            matchedMenuItem = subMenuItem
           }
         }
       } else {
-        if (menuItem.getTitle().equals(menuItemName)) {
-          matchedMenuItem = menuItem;
+        if (menuItem.title == menuItemName) {
+          matchedMenuItem = menuItem
         }
       }
     }
 
     if (matchedMenuItem == null) {
-      throw new PerformException.Builder()
-          .withActionDescription(this.getDescription())
+      throw PerformException.Builder()
+          .withActionDescription(this.description)
           .withViewDescription(HumanReadables.describe(view))
-          .withCause(new RuntimeException(getErrorMsg(navigationMenu, view)))
-          .build();
+          .withCause(RuntimeException(getErrorMsg(navigationMenu, view)))
+          .build()
     }
-    navigationMenu.performItemAction(matchedMenuItem, 0);
+    navigationMenu.performItemAction(matchedMenuItem, 0)
   }
 
-  @Override
-  public String getDescription() {
-    return "click on menu item with id";
+  override fun getDescription(): String {
+    return "click on menu item with id"
   }
 
-  @Override
-  public Matcher<View> getConstraints() {
+  override fun getConstraints(): Matcher<View> {
     return allOf(
-        isAssignableFrom(NavigationView.class),
+        isAssignableFrom(NavigationView::class.java),
         withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE),
-        isDisplayingAtLeast(90));
+        isDisplayingAtLeast(90))
   }
 
-  private String getErrorMsg(Menu menu, View view) {
-    String newLine = System.getProperty("line.separator");
-    StringBuilder errorMsg =
-        new StringBuilder("Menu item was not found, " + "available menu items:")
-            .append(newLine);
-    for (int position = 0; position < menu.size(); position++) {
-      errorMsg.append("[MenuItem] position=").append(position);
-      MenuItem menuItem = menu.getItem(position);
+  private fun getErrorMsg(menu: Menu, view: View): String {
+    val newLine = System.getProperty("line.separator")
+    val errorMsg = StringBuilder("Menu item was not found, available menu items:").append(newLine)
+    for (position in 0 until menu.size()) {
+      errorMsg.append("[MenuItem] position=").append(position)
+      val menuItem = menu.getItem(position)
       if (menuItem != null) {
-        CharSequence itemTitle = menuItem.getTitle();
+        val itemTitle = menuItem.title
         if (itemTitle != null) {
-          errorMsg.append(", title=").append(itemTitle);
+          errorMsg.append(", title=").append(itemTitle)
         }
-        if (view.getResources() != null) {
-          int itemId = menuItem.getItemId();
+        if (view.resources != null) {
+          val itemId = menuItem.itemId
           try {
-            errorMsg.append(", id=");
-            String menuItemResourceName = view.getResources().getResourceName(itemId);
-            errorMsg.append(menuItemResourceName);
-          } catch (Resources.NotFoundException nfe) {
-            errorMsg.append("not found");
+            errorMsg.append(", id=")
+            val menuItemResourceName = view.resources.getResourceName(itemId)
+            errorMsg.append(menuItemResourceName)
+          } catch (nfe: Resources.NotFoundException) {
+            errorMsg.append("not found")
           }
+
         }
-        errorMsg.append(newLine);
+        errorMsg.append(newLine)
       }
     }
-    return errorMsg.toString();
+    return errorMsg.toString()
   }
 }
