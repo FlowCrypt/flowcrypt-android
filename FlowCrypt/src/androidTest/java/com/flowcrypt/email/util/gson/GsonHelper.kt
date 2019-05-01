@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.gson;
+package com.flowcrypt.email.util.gson
 
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 
 /**
  * @author Denis Bondarenko
@@ -15,21 +15,12 @@ import com.google.gson.GsonBuilder;
  * Time: 2:55 PM
  * E-mail: DenBond7@gmail.com
  */
-public final class GsonHelper {
-  private static final GsonHelper OUR_INSTANCE = new GsonHelper();
-  private Gson gson;
+object GsonHelper {
+  val gson: Gson
 
-  private GsonHelper() {
-    GsonBuilder gsonBuilder = new GsonBuilder();
-    gsonBuilder.registerTypeAdapter(MsgBlock.class, new MsgBlockAdapter());
-    gson = gsonBuilder.create();
-  }
-
-  public static GsonHelper getInstance() {
-    return OUR_INSTANCE;
-  }
-
-  public Gson getGson() {
-    return gson;
+  init {
+    val gsonBuilder = GsonBuilder()
+    gsonBuilder.registerTypeAdapter(MsgBlock::class.java, MsgBlockAdapter())
+    gson = gsonBuilder.create()
   }
 }

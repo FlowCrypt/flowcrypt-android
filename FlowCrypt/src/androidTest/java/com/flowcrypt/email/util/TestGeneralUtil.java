@@ -69,7 +69,7 @@ public class TestGeneralUtil {
   public static <T> T getObjectFromJson(String jsonPathInAssets, Class<T> classOfT) {
     try {
       if (jsonPathInAssets != null) {
-        Gson gson = GsonHelper.getInstance().getGson();
+        Gson gson = GsonHelper.INSTANCE.getGson();
         String json = readFileFromAssetsAsString(BaseTest.getContext(), jsonPathInAssets);
         return gson.fromJson(json, classOfT);
       }
