@@ -22,7 +22,6 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.AccountDaoManagerKt;
-import com.flowcrypt.email.viewaction.CustomViewActionsKt;
 
 import org.junit.After;
 import org.junit.Before;
@@ -59,6 +58,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withParent;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static com.flowcrypt.email.matchers.CustomMatchers.withToolBarText;
+import static com.flowcrypt.email.viewaction.CustomViewActions.navigateToItemWithName;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
@@ -176,7 +176,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
             .string.loading)))));
 
     onView(withId(R.id.drawer_layout)).perform(open());
-    onView(withId(R.id.navigationView)).perform(CustomViewActionsKt.navigateTo(menuItem));
+    onView(withId(R.id.navigationView)).perform(navigateToItemWithName(menuItem));
     onView(withId(R.id.toolbar)).check(matches(withToolBarText(menuItem)));
   }
 

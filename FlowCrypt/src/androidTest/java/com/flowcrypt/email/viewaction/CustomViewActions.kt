@@ -40,6 +40,12 @@ import com.google.android.material.navigation.NavigationView
  * @param menuItemName the name of the menu item title
  * @return a [ViewAction] that navigates on a menu item
  */
-fun navigateTo(menuItemName: String): ViewAction {
-  return NavigateToItemViewAction(menuItemName)
+
+class CustomViewActions {
+  companion object {
+    @JvmStatic
+    fun navigateToItemWithName(menuItemName: String): ViewAction {
+      return NavigateToItemViewAction(menuItemName)
+    }
+  }
 }
