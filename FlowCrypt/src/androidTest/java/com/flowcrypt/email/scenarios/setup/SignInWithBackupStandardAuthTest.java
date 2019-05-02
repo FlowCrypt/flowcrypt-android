@@ -9,8 +9,7 @@ package com.flowcrypt.email.scenarios.setup;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.ui.activity.base.BaseActivity;
-import com.flowcrypt.email.util.PrivateKeysManager;
+import com.flowcrypt.email.util.PrivateKeysManagerKt;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -74,10 +73,9 @@ public abstract class SignInWithBackupStandardAuthTest extends SignInWithStandar
   }
 
   @Test
-  public void testUseExistingKey() throws Throwable {
-    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_default.json",
-        TestConstants.DEFAULT_PASSWORD,
-        KeyDetails.Type.EMAIL, (BaseActivity) getActivityTestRule().getActivity());
+  public void testUseExistingKey() {
+    PrivateKeysManagerKt.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_default.json",
+        TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
 
     onView(withId(R.id.buttonOtherEmailProvider)).perform(click());
     fillAllFields();

@@ -14,7 +14,7 @@ import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
-import com.flowcrypt.email.util.PrivateKeysManager;
+import com.flowcrypt.email.util.PrivateKeysManagerKt;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -338,7 +338,7 @@ public class CheckKeysActivityTestMultiBackups extends BaseTest {
   private Intent getStartCheckKeysActivityIntent(String[] keysPaths) throws IOException {
     Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
     return CheckKeysActivity.newIntent(targetContext,
-        PrivateKeysManager.getKeysFromAssets(keysPaths),
+        PrivateKeysManagerKt.getKeysFromAssets(keysPaths),
         KeyDetails.Type.EMAIL,
         targetContext.getResources().getQuantityString(
             R.plurals.found_backup_of_your_account_key, keysPaths.length, keysPaths.length),

@@ -23,8 +23,8 @@ import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.util.PrivateKeysManager;
-import com.flowcrypt.email.util.TestGeneralUtil;
+import com.flowcrypt.email.util.PrivateKeysManagerKt;
+import com.flowcrypt.email.util.TestGeneralUtilKt;
 import com.flowcrypt.email.util.UIUtil;
 
 import org.junit.AfterClass;
@@ -110,7 +110,7 @@ public class CreateMessageActivityTest extends BaseTest {
 
   @AfterClass
   public static void cleanResources() {
-    TestGeneralUtil.deleteFiles(Arrays.asList(atts));
+    TestGeneralUtilKt.deleteFiles(Arrays.asList(atts));
   }
 
   @Override
@@ -365,7 +365,7 @@ public class CreateMessageActivityTest extends BaseTest {
   private static void createFilesForAtts() {
     atts = new File[ATTACHMENTS_COUNT];
     for (int i = 0; i < atts.length; i++) {
-      atts[i] = TestGeneralUtil.createFile(i + ".txt", "Text for filling the attached file");
+      atts[i] = TestGeneralUtilKt.createFile(i + ".txt", "Text for filling the attached file");
     }
   }
 
@@ -384,7 +384,7 @@ public class CreateMessageActivityTest extends BaseTest {
   @NonNull
   private PgpContact getPgpContact() throws IOException {
     NodeKeyDetails nodeKeyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/not_attester_user@denbond7.com_prv_default.json");
+        PrivateKeysManagerKt.getNodeKeyDetailsFromAssets("node/not_attester_user@denbond7.com_prv_default.json");
     return nodeKeyDetails.getPrimaryPgpContact();
   }
 

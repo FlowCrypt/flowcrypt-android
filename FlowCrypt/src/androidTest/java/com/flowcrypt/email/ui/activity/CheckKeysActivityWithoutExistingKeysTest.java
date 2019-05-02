@@ -14,7 +14,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.util.PrivateKeysManager;
+import com.flowcrypt.email.util.PrivateKeysManagerKt;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,7 +22,6 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import androidx.test.espresso.Espresso;
@@ -57,20 +56,15 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
     @Override
     protected Intent getActivityIntent() {
       Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-      try {
-        ArrayList<NodeKeyDetails> privateKeys = PrivateKeysManager.getKeysFromAssets(
-            new String[]{"node/default@denbond7.com_fisrtKey_prv_default.json"});
-        return CheckKeysActivity.newIntent(targetContext,
-            privateKeys,
-            KeyDetails.Type.EMAIL,
-            targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
-                privateKeys.size(), privateKeys.size()),
-            targetContext.getString(R.string.continue_),
-            targetContext.getString(R.string.use_another_account));
-      } catch (IOException e) {
-        e.printStackTrace();
-        throw new IllegalStateException("Wrong initialization");
-      }
+      ArrayList<NodeKeyDetails> privateKeys = PrivateKeysManagerKt.getKeysFromAssets(
+          new String[]{"node/default@denbond7.com_fisrtKey_prv_default.json"});
+      return CheckKeysActivity.newIntent(targetContext,
+          privateKeys,
+          KeyDetails.Type.EMAIL,
+          targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
+              privateKeys.size(), privateKeys.size()),
+          targetContext.getString(R.string.continue_),
+          targetContext.getString(R.string.use_another_account));
     }
   };
 

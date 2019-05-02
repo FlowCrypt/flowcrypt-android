@@ -16,7 +16,7 @@ import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
-import com.flowcrypt.email.util.AccountDaoManager;
+import com.flowcrypt.email.util.AccountDaoManagerKt;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,7 +57,7 @@ public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
         @Override
         protected Intent getActivityIntent() {
           Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-          return CreateOrImportKeyActivity.newIntent(targetContext, AccountDaoManager.getDefaultAccountDao(), true);
+          return CreateOrImportKeyActivity.newIntent(targetContext, AccountDaoManagerKt.getDefaultAccountDao(), true);
         }
       };
 

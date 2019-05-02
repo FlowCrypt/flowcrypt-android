@@ -7,7 +7,7 @@ package com.flowcrypt.email.rules;
 
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.util.AccountDaoManager;
+import com.flowcrypt.email.util.AccountDaoManagerKt;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -25,7 +25,7 @@ public class AddAccountToDatabaseRule implements TestRule {
   protected AccountDao account;
 
   public AddAccountToDatabaseRule() {
-    account = AccountDaoManager.getDefaultAccountDao();
+    account = AccountDaoManagerKt.getDefaultAccountDao();
   }
 
   public AddAccountToDatabaseRule(AccountDao account) {

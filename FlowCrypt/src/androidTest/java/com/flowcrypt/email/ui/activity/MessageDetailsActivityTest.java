@@ -32,8 +32,8 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseActivity;
 import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.PrivateKeysManager;
-import com.flowcrypt.email.util.TestGeneralUtil;
+import com.flowcrypt.email.util.PrivateKeysManagerKt;
+import com.flowcrypt.email.util.TestGeneralUtilKt;
 
 import org.junit.After;
 import org.junit.Before;
@@ -77,15 +77,15 @@ import static org.hamcrest.Matchers.notNullValue;
 public class MessageDetailsActivityTest extends BaseTest {
   private IntentsTestRule intentsTestRule = new IntentsTestRule<>(MessageDetailsActivity.class, false, false);
   private AddAttachmentToDatabaseRule simpleAttachmentRule =
-      new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/simple_att.json",
+      new AddAttachmentToDatabaseRule(TestGeneralUtilKt.getObjectFromJson("messages/attachments/simple_att.json",
           AttachmentInfo.class));
 
   private AddAttachmentToDatabaseRule encryptedAttachmentRule =
-      new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/encrypted_att.json",
+      new AddAttachmentToDatabaseRule(TestGeneralUtilKt.getObjectFromJson("messages/attachments/encrypted_att.json",
           AttachmentInfo.class));
 
   private AddAttachmentToDatabaseRule pubKeyAttachmentRule =
-      new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/pub_key.json",
+      new AddAttachmentToDatabaseRule(TestGeneralUtilKt.getObjectFromJson("messages/attachments/pub_key.json",
           AttachmentInfo.class));
   @Rule
   public TestRule ruleChain = RuleChain
@@ -146,14 +146,15 @@ public class MessageDetailsActivityTest extends BaseTest {
   @Test
   public void testStandardMsgPlaneText() {
     IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text.json", IncomingMessageInfo.class);
+        TestGeneralUtilKt.getObjectFromJson("messages/info/standard_msg_info_plane_text.json",
+            IncomingMessageInfo.class);
     baseCheck(incomingMsgInfo);
   }
 
   @Test
   public void testStandardMsgPlaneTextWithOneAttachment() {
     IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text_with_one_att.json",
+        TestGeneralUtilKt.getObjectFromJson("messages/info/standard_msg_info_plane_text_with_one_att.json",
             IncomingMessageInfo.class);
     baseCheckWithAtt(incomingMsgInfo, simpleAttachmentRule);
   }
@@ -161,7 +162,7 @@ public class MessageDetailsActivityTest extends BaseTest {
   @Test
   public void testEncryptedMsgPlaneText() {
     IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
+        TestGeneralUtilKt.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
             IncomingMessageInfo.class);
     baseCheck(incomingMsgInfo);
   }
@@ -169,7 +170,7 @@ public class MessageDetailsActivityTest extends BaseTest {
   @Test
   public void testMissingKeyErrorImportKey() throws Throwable {
     IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+        TestGeneralUtilKt.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
             IncomingMessageInfo.class);
 
     testMissingKey(incomingMsgInfo);
@@ -177,24 +178,23 @@ public class MessageDetailsActivityTest extends BaseTest {
     intending(hasComponent(new ComponentName(getTargetContext(), ImportPrivateKeyActivity.class)))
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
 
-    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL, (BaseActivity) intentsTestRule.getActivity());
+    PrivateKeysManagerKt.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL);
 
     onView(withId(R.id.buttonImportPrivateKey)).check(matches(isDisplayed())).perform(scrollTo(), click());
 
     IncomingMessageInfo incomingMsgInfoFixed =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key_fixed.json",
+        TestGeneralUtilKt.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key_fixed.json",
             IncomingMessageInfo.class);
     onView(withText(incomingMsgInfoFixed.getMsgBlocks().get(0).getContent())).check(matches(isDisplayed()));
 
-    PrivateKeysManager.deleteKey("node/default@denbond7.com_secondKey_prv_strong.json",
-        (BaseActivity) intentsTestRule.getActivity());
+    PrivateKeysManagerKt.deleteKey("node/default@denbond7.com_secondKey_prv_strong.json");
   }
 
   @Test
   public void testMissingPubKey() {
     IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_one_pub_key.json",
+        TestGeneralUtilKt.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_one_pub_key.json",
             IncomingMessageInfo.class);
 
     testMissingKey(incomingMsgInfo);
@@ -203,7 +203,7 @@ public class MessageDetailsActivityTest extends BaseTest {
   @Test
   public void testBadlyFormattedMsg() {
     IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_badly_formatted.json",
+        TestGeneralUtilKt.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_badly_formatted.json",
             IncomingMessageInfo.class);
 
     assertThat(incomingMsgInfo, notNullValue());
@@ -228,7 +228,7 @@ public class MessageDetailsActivityTest extends BaseTest {
   @Test
   public void testMissingKeyErrorChooseSinglePubKey() {
     IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+        TestGeneralUtilKt.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
             IncomingMessageInfo.class);
 
     testMissingKey(incomingMsgInfo);
@@ -243,13 +243,13 @@ public class MessageDetailsActivityTest extends BaseTest {
   @Test
   public void testMissingKeyErrorChooseFromFewPubKeys() throws Throwable {
     IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+        TestGeneralUtilKt.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
             IncomingMessageInfo.class);
 
     testMissingKey(incomingMsgInfo);
 
-    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL, (BaseActivity) intentsTestRule.getActivity());
+    PrivateKeysManagerKt.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL);
     onView(withId(R.id.buttonSendOwnPublicKey)).check(matches(isDisplayed())).perform(scrollTo(), click());
 
     String msg = getResString(R.string.tell_sender_to_update_their_settings)
@@ -266,7 +266,7 @@ public class MessageDetailsActivityTest extends BaseTest {
   @Test
   public void testEncryptedMsgPlaneTextWithOneAttachment() {
     IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_one_att.json",
+        TestGeneralUtilKt.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_one_att.json",
             IncomingMessageInfo.class);
 
     baseCheckWithAtt(incomingMsgInfo, encryptedAttachmentRule);
@@ -275,13 +275,13 @@ public class MessageDetailsActivityTest extends BaseTest {
   @Test
   public void testEncryptedMsgPlaneTextWithPubKey() throws IOException {
     IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_pub_key.json",
+        TestGeneralUtilKt.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_pub_key.json",
             IncomingMessageInfo.class);
 
     baseCheckWithAtt(incomingMsgInfo, pubKeyAttachmentRule);
 
     NodeKeyDetails nodeKeyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/denbond7@denbond7.com_pub.json");
+        PrivateKeysManagerKt.getNodeKeyDetailsFromAssets("node/denbond7@denbond7.com_pub.json");
     PgpContact pgpContact = nodeKeyDetails.getPrimaryPgpContact();
 
     onView(withId(R.id.textViewKeyOwnerTemplate)).check(matches(withText(

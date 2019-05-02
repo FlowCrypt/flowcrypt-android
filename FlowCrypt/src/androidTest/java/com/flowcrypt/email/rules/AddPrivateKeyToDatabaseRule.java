@@ -9,8 +9,8 @@ import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.util.PrivateKeysManager;
-import com.flowcrypt.email.util.TestGeneralUtil;
+import com.flowcrypt.email.util.PrivateKeysManagerKt;
+import com.flowcrypt.email.util.TestGeneralUtilKt;
 import com.google.gson.Gson;
 
 import org.junit.rules.TestRule;
@@ -50,9 +50,9 @@ public class AddPrivateKeyToDatabaseRule implements TestRule {
       @Override
       public void evaluate() throws Throwable {
         Gson gson = NodeGson.getInstance().getGson();
-        nodeKeyDetails = gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString
+        nodeKeyDetails = gson.fromJson(TestGeneralUtilKt.readFileFromAssetsAsString
             (InstrumentationRegistry.getInstrumentation().getContext(), keyPath), NodeKeyDetails.class);
-        PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, passphrase, keyDetailsType, null);
+        PrivateKeysManagerKt.saveKeyToDatabase(nodeKeyDetails, passphrase, keyDetailsType);
         base.evaluate();
       }
     };

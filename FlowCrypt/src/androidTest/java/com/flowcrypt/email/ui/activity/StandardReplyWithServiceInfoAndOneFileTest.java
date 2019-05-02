@@ -21,8 +21,8 @@ import com.flowcrypt.email.model.MessageType;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.rules.UpdateAccountRule;
-import com.flowcrypt.email.util.AccountDaoManager;
-import com.flowcrypt.email.util.TestGeneralUtil;
+import com.flowcrypt.email.util.AccountDaoManagerKt;
+import com.flowcrypt.email.util.TestGeneralUtilKt;
 import com.hootsuite.nachos.tokenizer.SpanChipTokenizer;
 
 import org.junit.Rule;
@@ -71,7 +71,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
   private IntentsTestRule intentsTestRule = new IntentsTestRule<CreateMessageActivity>(CreateMessageActivity.class) {
     @Override
     protected Intent getActivityIntent() {
-      incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
+      incomingMsgInfo = TestGeneralUtilKt.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
           IncomingMessageInfo.class);
 
       AttachmentInfo attachmentInfo = new AttachmentInfo();
@@ -105,7 +105,7 @@ public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
-      .around(new UpdateAccountRule(AccountDaoManager.getDefaultAccountDao(), generateContentValues()))
+      .around(new UpdateAccountRule(AccountDaoManagerKt.getDefaultAccountDao(), generateContentValues()))
       .around(intentsTestRule);
 
   @Override

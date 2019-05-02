@@ -11,7 +11,7 @@ import android.content.Intent;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest;
-import com.flowcrypt.email.util.AccountDaoManager;
+import com.flowcrypt.email.util.AccountDaoManagerKt;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class CreatePrivateKeyActivityTest extends BasePassphraseActivityTest {
           Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
           Intent result = new Intent(targetContext, CreatePrivateKeyActivity.class);
           result.putExtra(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT_DAO,
-              AccountDaoManager.getDefaultAccountDao());
+              AccountDaoManagerKt.getDefaultAccountDao());
           return result;
         }
       };

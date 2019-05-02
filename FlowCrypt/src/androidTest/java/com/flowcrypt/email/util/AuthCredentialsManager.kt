@@ -3,15 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util;
+package com.flowcrypt.email.util
 
-import com.flowcrypt.email.api.email.model.AuthCredentials;
-import com.google.gson.Gson;
-
-import org.apache.commons.io.IOUtils;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import com.flowcrypt.email.api.email.model.AuthCredentials
 
 /**
  * This class describes a logic of generation {@link AuthCredentials} from the resources folder.
@@ -22,24 +16,10 @@ import java.nio.charset.StandardCharsets;
  * E-mail: DenBond7@gmail.com
  */
 
-public class AuthCredentialsManager {
-  public static AuthCredentials getLocalWithOneBackupAuthCreds() {
-    return readAuthCredsFromResources("user_with_one_backup.json");
-  }
+fun getLocalWithOneBackupAuthCreds(): AuthCredentials? {
+  return readObjectFromResources("user_with_one_backup.json", AuthCredentials::class.java)
+}
 
-  public static AuthCredentials getDefaultWithBackupAuthCreds() {
-    return readAuthCredsFromResources("default.json");
-  }
-
-  private static AuthCredentials readAuthCredsFromResources(String path) {
-    try {
-      return new Gson().fromJson(IOUtils.toString(AuthCredentialsManager.class.getClassLoader().getResourceAsStream
-          (path), StandardCharsets.UTF_8), AuthCredentials.class);
-
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    return new AuthCredentials();
-  }
+fun getDefaultWithBackupAuthCreds(): AuthCredentials? {
+  return readObjectFromResources("default.json", AuthCredentials::class.java)
 }

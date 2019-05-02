@@ -3,25 +3,20 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util;
+package com.flowcrypt.email.util
 
-import android.content.Context;
-import android.os.Environment;
-
-import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.util.gson.GsonHelper;
-import com.google.gson.Gson;
-
-import org.apache.commons.io.IOUtils;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-
-import androidx.test.platform.app.InstrumentationRegistry;
+import android.content.Context
+import android.os.Environment
+import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.util.gson.GsonHelper
+import com.google.gson.Gson
+import org.apache.commons.io.IOUtils
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.nio.charset.StandardCharsets
 
 /**
  * @author Denis Bondarenko
@@ -30,57 +25,59 @@ import androidx.test.platform.app.InstrumentationRegistry;
  * E-mail: DenBond7@gmail.com
  */
 
-public class TestGeneralUtil {
-
-  public static <T> T readObjectFromResources(String path, Class<T> aClass) {
-    try {
-      return new Gson().fromJson(
-          IOUtils.toString(aClass.getClassLoader().getResourceAsStream(path), StandardCharsets.UTF_8),
-          aClass);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return null;
+fun <T> readObjectFromResources(path: String, aClass: Class<T>): T? {
+  try {
+    val json = IOUtils.toString(aClass.classLoader!!.getResourceAsStream(path), StandardCharsets.UTF_8)
+    return Gson().fromJson(json, aClass)
+  } catch (e: IOException) {
+    e.printStackTrace()
   }
 
-  public static String readFileFromAssetsAsString(Context context, String filePath) throws IOException {
-    return IOUtils.toString(context.getAssets().open(filePath), "UTF-8");
-  }
+  return null
+}
 
-  public static void deleteFiles(List<File> files) {
-    for (File file : files) {
-      if (!file.delete()) {
-        System.out.println("Can't delete a file " + file);
-      }
+fun readFileFromAssetsAsString(context: Context, filePath: String): String {
+  return IOUtils.toString(context.assets.open(filePath), "UTF-8")
+}
+
+fun deleteFiles(files: List<File>) {
+  files.forEach { file ->
+    if (!file.delete()) {
+      println("Can't delete a file $file")
     }
   }
+}
 
-  public static File createFile(String fileName, String fileText) {
-    File file = new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getExternalFilesDir(Environment
-        .DIRECTORY_DOCUMENTS), fileName);
-    try (FileOutputStream outputStream = new FileOutputStream(file)) {
-      outputStream.write(fileText.getBytes());
-    } catch (IOException e) {
-      e.printStackTrace();
+fun createFile(fileName: String, fileText: String): File {
+  val file = File(InstrumentationRegistry.getInstrumentation().targetContext
+      .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
+  try {
+    FileOutputStream(file).use { outputStream -> outputStream.write(fileText.toByteArray()) }
+  } catch (e: IOException) {
+    e.printStackTrace()
+  }
+
+  return file
+}
+
+fun <T> getObjectFromJson(jsonPathInAssets: String?, classOfT: Class<T>): T? {
+  try {
+    if (jsonPathInAssets != null) {
+      val gson = GsonHelper.gson
+      val json = readFileFromAssetsAsString(BaseTest.getContext(), jsonPathInAssets)
+      return gson.fromJson(json, classOfT)
     }
-    return file;
+  } catch (e: IOException) {
+    e.printStackTrace()
   }
 
-  public static <T> T getObjectFromJson(String jsonPathInAssets, Class<T> classOfT) {
-    try {
-      if (jsonPathInAssets != null) {
-        Gson gson = GsonHelper.INSTANCE.getGson();
-        String json = readFileFromAssetsAsString(BaseTest.getContext(), jsonPathInAssets);
-        return gson.fromJson(json, classOfT);
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return null;
-  }
+  return null
+}
 
-  public static String replaceVersionInKey(String key) {
-    return key.replaceFirst("Version: FlowCrypt \\d*.\\d*.\\d* Gmail",
-        "Version: FlowCrypt " + BuildConfig.VERSION_NAME.split("_")[0] + " Gmail");
-  }
+fun replaceVersionInKey(key: String): String {
+  val regex = "Version: FlowCrypt \\d*.\\d*.\\d* Gmail".toRegex()
+  val version = BuildConfig.VERSION_NAME.split("_").first()
+  val replacement = "Version: FlowCrypt " + version + " Gmail"
+
+  return key.replaceFirst(regex, replacement)
 }

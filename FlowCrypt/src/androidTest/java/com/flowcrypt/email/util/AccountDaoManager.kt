@@ -3,9 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util;
+package com.flowcrypt.email.util
 
-import com.flowcrypt.email.database.dao.source.AccountDao;
+import com.flowcrypt.email.database.dao.source.AccountDao
 
 /**
  * @author Denis Bondarenko
@@ -13,18 +13,15 @@ import com.flowcrypt.email.database.dao.source.AccountDao;
  * Time: 16:34
  * E-mail: DenBond7@gmail.com
  */
-public class AccountDaoManager {
-  public static final String USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT = "user_with_more_than_21_letters_account.json";
 
-  public static AccountDao getDefaultAccountDao() {
-    return TestGeneralUtil.readObjectFromResources("default_account.json", AccountDao.class);
-  }
+fun getDefaultAccountDao(): AccountDao? {
+  return readObjectFromResources("default_account.json", AccountDao::class.java)
+}
 
-  public static AccountDao getAccountDao(String accountPath) {
-    return TestGeneralUtil.readObjectFromResources(accountPath, AccountDao.class);
-  }
+fun getAccountDao(accountPath: String): AccountDao? {
+  return readObjectFromResources(accountPath, AccountDao::class.java)
+}
 
-  public static AccountDao getUserWitMoreThan21Letters() {
-    return TestGeneralUtil.readObjectFromResources(USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT, AccountDao.class);
-  }
+fun getUserWitMoreThan21Letters(): AccountDao? {
+  return readObjectFromResources("user_with_more_than_21_letters_account.json", AccountDao::class.java)
 }

@@ -12,8 +12,8 @@ import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
 import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.util.PrivateKeysManager;
-import com.flowcrypt.email.util.TestGeneralUtil;
+import com.flowcrypt.email.util.PrivateKeysManagerKt;
+import com.flowcrypt.email.util.TestGeneralUtilKt;
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem;
 
 import org.junit.Rule;
@@ -21,8 +21,6 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
-
-import java.io.IOException;
 
 import androidx.test.espresso.contrib.RecyclerViewActions;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -115,22 +113,12 @@ public class PreviewImportPgpContactActivityTest extends BaseTest {
   }
 
   private String getSinglePublicKeyForUnsavedContact() {
-    try {
-      return PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_fisrtKey_pub.json")
-          .getPublicKey();
-    } catch (IOException e) {
-      e.printStackTrace();
-      return null;
-    }
+    return PrivateKeysManagerKt.getNodeKeyDetailsFromAssets("node/default@denbond7.com_fisrtKey_pub.json")
+        .getPublicKey();
   }
 
   private String get10PublicKeysForUnsavedContacts() {
-    try {
-      return TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
-          "pgp/pub_keys_2048_bits_10.asc");
-    } catch (IOException e) {
-      e.printStackTrace();
-      return null;
-    }
+    return TestGeneralUtilKt.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
+        "pgp/pub_keys_2048_bits_10.asc");
   }
 }
