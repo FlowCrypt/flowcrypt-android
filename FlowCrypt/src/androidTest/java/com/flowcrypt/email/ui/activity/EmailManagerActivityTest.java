@@ -22,7 +22,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
 import com.flowcrypt.email.util.AccountDaoManagerKt;
-import com.flowcrypt.email.viewaction.CustomNavigationViewActionsKt;
+import com.flowcrypt.email.viewaction.CustomViewActionsKt;
 
 import org.junit.After;
 import org.junit.Before;
@@ -176,7 +176,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
             .string.loading)))));
 
     onView(withId(R.id.drawer_layout)).perform(open());
-    onView(withId(R.id.navigationView)).perform(CustomNavigationViewActionsKt.navigateTo(menuItem));
+    onView(withId(R.id.navigationView)).perform(CustomViewActionsKt.navigateTo(menuItem));
     onView(withId(R.id.toolbar)).check(matches(withToolBarText(menuItem)));
   }
 
