@@ -18,7 +18,6 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.matchers.ToastMatcher;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
@@ -59,6 +58,7 @@ import static androidx.test.espresso.intent.matcher.IntentMatchers.hasType;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.flowcrypt.email.matchers.CustomMatchers.isToastDisplayed;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
@@ -127,7 +127,7 @@ public class KeysSettingsActivityTest extends BaseTest {
     selectFirstKey();
     NodeKeyDetails details = addPrivateKeyToDatabaseRule.getNodeKeyDetails();
     onView(withId(R.id.btnCopyToClipboard)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.copied))).inRoot(new ToastMatcher()).check(matches(isDisplayed()));
+    onView(withText(getResString(R.string.copied))).inRoot(isToastDisplayed()).check(matches(isDisplayed()));
     checkClipboardText(TestGeneralUtilKt.replaceVersionInKey(details.getPublicKey()));
   }
 
@@ -136,7 +136,7 @@ public class KeysSettingsActivityTest extends BaseTest {
     selectFirstKey();
     onView(withId(R.id.btnShowPrKey)).check(matches(isDisplayed())).perform(click());
     onView(withText(getResString(R.string.see_backups_to_save_your_private_keys)))
-        .inRoot(new ToastMatcher()).check(matches(isDisplayed()));
+        .inRoot(isToastDisplayed()).check(matches(isDisplayed()));
   }
 
   @Test
@@ -189,7 +189,7 @@ public class KeysSettingsActivityTest extends BaseTest {
         .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
 
     onView(withId(R.id.btnSaveToFile)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.saved))).inRoot(new ToastMatcher()).check(matches(isDisplayed()));
+    onView(withText(getResString(R.string.saved))).inRoot(isToastDisplayed()).check(matches(isDisplayed()));
   }
 
   private void selectFirstKey() {

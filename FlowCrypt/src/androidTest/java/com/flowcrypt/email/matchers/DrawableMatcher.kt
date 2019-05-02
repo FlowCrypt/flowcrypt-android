@@ -3,17 +3,15 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.matchers;
+package com.flowcrypt.email.matchers
 
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.Drawable;
-import android.view.View;
-import android.widget.ImageView;
-
-import org.hamcrest.Description;
-import org.hamcrest.TypeSafeMatcher;
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
+import android.view.View
+import android.widget.ImageView
+import org.hamcrest.Description
+import org.hamcrest.TypeSafeMatcher
 
 /**
  * See details here https://github.com/dbottillo/Blog/blob/espresso_match_imageview/app/src/androidTest/java/com
@@ -24,60 +22,49 @@ import org.hamcrest.TypeSafeMatcher;
  * Time: 5:17 PM
  * E-mail: DenBond7@gmail.com
  */
-public class DrawableMatcher extends TypeSafeMatcher<View> {
+class DrawableMatcher(private val expectedId: Int) : TypeSafeMatcher<View>(View::class.java) {
+  private var resourceName: String? = null
 
-  public static final int EMPTY = -1;
-  public static final int ANY = -2;
-  private final int expectedId;
-  private String resourceName;
-
-  DrawableMatcher(int expectedId) {
-    super(View.class);
-    this.expectedId = expectedId;
-  }
-
-  @Override
-  public void describeTo(Description description) {
-    description.appendText("with drawable from resource id: ");
-    description.appendValue(expectedId);
+  override fun describeTo(description: Description) {
+    description.appendText("with drawable from resource id: ")
+    description.appendValue(expectedId)
     if (resourceName != null) {
-      description.appendText("[");
-      description.appendText(resourceName);
-      description.appendText("]");
+      description.appendText("[")
+      description.appendText(resourceName)
+      description.appendText("]")
     }
   }
 
-  @Override
-  protected boolean matchesSafely(View target) {
-    if (!(target instanceof ImageView)) {
-      return false;
-    }
-    ImageView imageView = (ImageView) target;
-    if (expectedId == EMPTY) {
-      return imageView.getDrawable() == null;
-    }
-    if (expectedId == ANY) {
-      return imageView.getDrawable() != null;
-    }
-    Resources resources = target.getContext().getResources();
-    Drawable expectedDrawable = resources.getDrawable(expectedId, target.getContext().getTheme());
-    resourceName = resources.getResourceEntryName(expectedId);
-
-    if (expectedDrawable == null) {
-      return false;
+  override fun matchesSafely(target: View): Boolean {
+    if (target !is ImageView) {
+      return false
     }
 
-    Bitmap bitmap = getBitmap(imageView.getDrawable());
-    Bitmap otherBitmap = getBitmap(expectedDrawable);
-    return bitmap.sameAs(otherBitmap);
+    when (expectedId) {
+      EMPTY -> return target.drawable == null
+      ANY -> return target.drawable != null
+      else -> {
+        val resources = target.getContext().resources
+        val expectedDrawable = resources.getDrawable(expectedId, target.getContext().theme) ?: return false
+        resourceName = resources.getResourceEntryName(expectedId)
+
+        val bitmap = getBitmap(target.drawable)
+        val otherBitmap = getBitmap(expectedDrawable)
+        return bitmap.sameAs(otherBitmap)
+      }
+    }
   }
 
-  private Bitmap getBitmap(Drawable drawable) {
-    Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(),
-        Bitmap.Config.ARGB_8888);
-    Canvas canvas = new Canvas(bitmap);
-    drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-    drawable.draw(canvas);
-    return bitmap;
+  private fun getBitmap(drawable: Drawable): Bitmap {
+    val bitmap = Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    drawable.setBounds(0, 0, canvas.width, canvas.height)
+    drawable.draw(canvas)
+    return bitmap
+  }
+
+  companion object {
+    const val EMPTY = -1
+    const val ANY = -2
   }
 }

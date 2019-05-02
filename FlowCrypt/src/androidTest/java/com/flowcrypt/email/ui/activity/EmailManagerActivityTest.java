@@ -15,7 +15,6 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.matchers.ToolBarTitleMatcher;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule;
 import com.flowcrypt.email.rules.AddMessageToDatabaseRule;
@@ -59,6 +58,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withParent;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.flowcrypt.email.matchers.CustomMatchers.withToolBarText;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anything;
@@ -171,13 +171,13 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
   public void testSwitchLabels() {
     String menuItem = "Sent";
     onView(withId(R.id.toolbar)).check(matches(anyOf(
-        ToolBarTitleMatcher.withText("INBOX"),
-        ToolBarTitleMatcher.withText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R
+        withToolBarText("INBOX"),
+        withToolBarText(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R
             .string.loading)))));
 
     onView(withId(R.id.drawer_layout)).perform(open());
     onView(withId(R.id.navigationView)).perform(CustomNavigationViewActionsKt.navigateTo(menuItem));
-    onView(withId(R.id.toolbar)).check(matches(ToolBarTitleMatcher.withText(menuItem)));
+    onView(withId(R.id.toolbar)).check(matches(withToolBarText(menuItem)));
   }
 
   @Test

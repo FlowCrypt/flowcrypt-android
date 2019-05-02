@@ -23,7 +23,6 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock;
 import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.matchers.ToastMatcher;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.model.PgpContact;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
@@ -63,6 +62,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.flowcrypt.email.matchers.CustomMatchers.isToastDisplayed;
 import static com.flowcrypt.email.matchers.CustomMatchers.withDrawable;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.not;
@@ -257,7 +257,7 @@ public class MessageDetailsActivityTest extends BaseTest {
 
     onView(withId(R.id.textViewMessage)).check(matches(withText(msg)));
     onView(withId(R.id.buttonOk)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.please_select_key))).inRoot(new ToastMatcher()).check(matches(isDisplayed()));
+    onView(withText(getResString(R.string.please_select_key))).inRoot(isToastDisplayed()).check(matches(isDisplayed()));
     onData(anything()).inAdapterView(withId(R.id.listViewKeys)).atPosition(1).perform(click());
     onView(withId(R.id.buttonOk)).check(matches(isDisplayed())).perform(click());
     intended(hasComponent(CreateMessageActivity.class.getName()));

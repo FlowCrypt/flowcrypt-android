@@ -3,18 +3,15 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.matchers;
+package com.flowcrypt.email.matchers
 
-import android.view.View;
-
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-
-import androidx.appcompat.widget.Toolbar;
-import androidx.test.espresso.matcher.BoundedMatcher;
-
-import static com.google.android.gms.common.internal.Preconditions.checkNotNull;
-import static org.hamcrest.CoreMatchers.is;
+import android.view.View
+import androidx.appcompat.widget.Toolbar
+import androidx.test.espresso.matcher.BoundedMatcher
+import com.google.android.gms.common.internal.Preconditions.checkNotNull
+import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.Description
+import org.hamcrest.Matcher
 
 /**
  * @author Denis Bondarenko
@@ -22,28 +19,21 @@ import static org.hamcrest.CoreMatchers.is;
  * Time: 11:14
  * E-mail: DenBond7@gmail.com
  */
-public class ToolBarTitleMatcher extends BoundedMatcher<View, Toolbar> {
+class ToolBarTitleMatcher(private val textMatcher: Matcher<String>) : BoundedMatcher<View, Toolbar>(Toolbar::class.java) {
 
-  private final Matcher<String> textMatcher;
-
-  public ToolBarTitleMatcher(Matcher<String> textMatcher) {
-    super(Toolbar.class);
-    this.textMatcher = textMatcher;
+  override fun matchesSafely(toolbar: Toolbar): Boolean {
+    return textMatcher.matches(toolbar.title)
   }
 
-  public static Matcher<View> withText(String textMatcher) {
-    return new ToolBarTitleMatcher(checkNotNull(is(textMatcher)));
+  override fun describeTo(description: Description) {
+    description.appendText("with toolbar title: ")
+    textMatcher.describeTo(description)
   }
 
-  @Override
-  protected boolean matchesSafely(Toolbar toolbar) {
-    System.out.println("toolbar = [" + toolbar.getTitle() + "]");
-    return textMatcher.matches(toolbar.getTitle());
-  }
-
-  @Override
-  public void describeTo(Description description) {
-    description.appendText("with toolbar title: ");
-    textMatcher.describeTo(description);
+  companion object {
+    @JvmStatic
+    fun withText(textMatcher: String): Matcher<View> {
+      return ToolBarTitleMatcher(checkNotNull(`is`(textMatcher)))
+    }
   }
 }

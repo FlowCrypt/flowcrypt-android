@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.matchers;
+package com.flowcrypt.email.matchers
 
-import android.view.View;
-
-import org.hamcrest.Matcher;
+import android.view.View
+import androidx.test.espresso.Root
+import org.hamcrest.Matcher
 
 /**
  * @author Denis Bondarenko
@@ -15,13 +15,27 @@ import org.hamcrest.Matcher;
  * Time: 5:20 PM
  * E-mail: DenBond7@gmail.com
  */
-public class CustomMatchers {
 
-  public static Matcher<View> withDrawable(final int resourceId) {
-    return new DrawableMatcher(resourceId);
-  }
+class CustomMatchers {
+  companion object {
+    @JvmStatic
+    fun withDrawable(resourceId: Int): Matcher<View> {
+      return DrawableMatcher(resourceId)
+    }
 
-  public static Matcher<View> emptyDrawable() {
-    return new DrawableMatcher(-1);
+    @JvmStatic
+    fun emptyDrawable(): Matcher<View> {
+      return DrawableMatcher(DrawableMatcher.EMPTY)
+    }
+
+    @JvmStatic
+    fun isToastDisplayed(): Matcher<Root> {
+      return ToastMatcher()
+    }
+
+    @JvmStatic
+    fun withToolBarText(textMatcher: String): Matcher<View> {
+      return ToolBarTitleMatcher.withText(textMatcher)
+    }
   }
 }
