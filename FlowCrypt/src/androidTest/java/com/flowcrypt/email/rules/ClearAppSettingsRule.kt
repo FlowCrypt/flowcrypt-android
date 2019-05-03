@@ -3,24 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.rules;
+package com.flowcrypt.email.rules
 
-import android.content.Context;
-import android.net.Uri;
-
-import com.flowcrypt.email.database.provider.FlowcryptContract;
-import com.flowcrypt.email.security.KeysStorageImpl;
-import com.flowcrypt.email.util.FileAndDirectoryUtils;
-import com.flowcrypt.email.util.SharedPreferencesHelper;
-
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-
-import java.io.IOException;
-
-import androidx.test.internal.runner.junit4.statement.UiThreadStatement;
-import androidx.test.platform.app.InstrumentationRegistry;
+import android.net.Uri
+import androidx.test.internal.runner.junit4.statement.UiThreadStatement
+import com.flowcrypt.email.database.provider.FlowcryptContract
+import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.util.FileAndDirectoryUtils
+import com.flowcrypt.email.util.SharedPreferencesHelper
+import org.junit.runner.Description
+import org.junit.runners.model.Statement
+import java.io.IOException
 
 /**
  * The rule which clears the application settings.
@@ -31,17 +24,16 @@ import androidx.test.platform.app.InstrumentationRegistry;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ClearAppSettingsRule implements TestRule {
+class ClearAppSettingsRule : BaseRule() {
 
-  @Override
-  public Statement apply(final Statement base, Description description) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        clearApp();
-        base.evaluate();
+  override fun apply(base: Statement, description: Description): Statement {
+    return object : Statement() {
+      @Throws(Throwable::class)
+      override fun evaluate() {
+        clearApp()
+        base.evaluate()
       }
-    };
+    }
   }
 
   /**
@@ -49,19 +41,13 @@ public class ClearAppSettingsRule implements TestRule {
    *
    * @throws IOException Different errors can be occurred.
    */
-  private void clearApp() throws Throwable {
-    final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-
-    SharedPreferencesHelper.clear(context);
-    FileAndDirectoryUtils.cleanDir(context.getCacheDir());
-    context.getContentResolver().delete(Uri.parse(FlowcryptContract.AUTHORITY_URI
-        + "/" + FlowcryptContract.ERASE_DATABASE), null, null);
-    UiThreadStatement.runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        KeysStorageImpl.getInstance(context).refresh(context);
-      }
-    });
-    Thread.sleep(1000);// Added timeout for a better sync between threads.
+  @Throws(Throwable::class)
+  private fun clearApp() {
+    SharedPreferencesHelper.clear(targetContext)
+    FileAndDirectoryUtils.cleanDir(targetContext.cacheDir)
+    targetContext.contentResolver.delete(Uri.parse(FlowcryptContract.AUTHORITY_URI.toString()
+        + "/" + FlowcryptContract.ERASE_DATABASE), null, null)
+    UiThreadStatement.runOnUiThread { KeysStorageImpl.getInstance(targetContext).refresh(targetContext) }
+    Thread.sleep(1000)// Added timeout for a better sync between threads.
   }
 }

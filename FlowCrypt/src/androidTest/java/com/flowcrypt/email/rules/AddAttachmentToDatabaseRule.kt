@@ -3,16 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.rules;
+package com.flowcrypt.email.rules
 
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
-
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-
-import androidx.test.platform.app.InstrumentationRegistry;
+import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
+import org.junit.runner.Description
+import org.junit.runners.model.Statement
 
 /**
  * @author Denis Bondarenko
@@ -20,30 +16,19 @@ import androidx.test.platform.app.InstrumentationRegistry;
  * Time: 5:54 PM
  * E-mail: DenBond7@gmail.com
  */
-public class AddAttachmentToDatabaseRule implements TestRule {
-  private AttachmentInfo attInfo;
+class AddAttachmentToDatabaseRule(val attInfo: AttachmentInfo) : BaseRule() {
 
-  public AddAttachmentToDatabaseRule(AttachmentInfo attInfo) {
-    this.attInfo = attInfo;
-  }
-
-  @Override
-  public Statement apply(final Statement base, Description description) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        saveAttToDatabase();
-        base.evaluate();
+  override fun apply(base: Statement, description: Description): Statement {
+    return object : Statement() {
+      @Throws(Throwable::class)
+      override fun evaluate() {
+        saveAttToDatabase()
+        base.evaluate()
       }
-    };
+    }
   }
 
-  public AttachmentInfo getAttInfo() {
-    return attInfo;
-  }
-
-  private void saveAttToDatabase() {
-    AttachmentDaoSource source = new AttachmentDaoSource();
-    source.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), attInfo);
+  private fun saveAttToDatabase() {
+    AttachmentDaoSource().addRow(targetContext, attInfo)
   }
 }

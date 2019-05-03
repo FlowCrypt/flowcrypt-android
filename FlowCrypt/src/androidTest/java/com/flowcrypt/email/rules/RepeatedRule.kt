@@ -3,11 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.rules;
+package com.flowcrypt.email.rules
 
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.junit.runner.Description
+import org.junit.runners.model.Statement
 
 /**
  * @author Denis Bondarenko
@@ -16,32 +15,24 @@ import org.junit.runners.model.Statement;
  * E-mail: DenBond7@gmail.com
  */
 
-public class RepeatedRule implements TestRule {
+class RepeatedRule : BaseRule() {
 
-  @Override
-  public Statement apply(Statement statement, Description description) {
-    Statement result = statement;
-    Repeat repeat = description.getAnnotation(Repeat.class);
+  override fun apply(statement: Statement, description: Description): Statement {
+    var result = statement
+    val repeat = description.getAnnotation(Repeat::class.java)
     if (repeat != null) {
-      int times = repeat.value();
-      result = new RepeatStatement(statement, times);
+      val times = repeat.value
+      result = RepeatStatement(statement, times)
     }
-    return result;
+    return result
   }
 
-  private static class RepeatStatement extends Statement {
-    private final Statement statement;
-    private final int repeat;
+  private class RepeatStatement internal constructor(private val statement: Statement, private val repeat: Int) : Statement() {
 
-    RepeatStatement(Statement statement, int repeat) {
-      this.statement = statement;
-      this.repeat = repeat;
-    }
-
-    @Override
-    public void evaluate() throws Throwable {
-      for (int i = 0; i < repeat; i++) {
-        statement.evaluate();
+    @Throws(Throwable::class)
+    override fun evaluate() {
+      for (i in 0 until repeat) {
+        statement.evaluate()
       }
     }
   }

@@ -3,29 +3,21 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.rules;
+package com.flowcrypt.email.rules
 
-import com.flowcrypt.email.api.email.LocalFolder;
-import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.google.android.gms.auth.GoogleAuthException;
-import com.sun.mail.imap.IMAPFolder;
-
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-
-import java.io.IOException;
-
-import javax.mail.FetchProfile;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Store;
-import javax.mail.UIDFolder;
-
-import androidx.test.platform.app.InstrumentationRegistry;
+import com.flowcrypt.email.api.email.LocalFolder
+import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.google.android.gms.auth.GoogleAuthException
+import com.sun.mail.imap.IMAPFolder
+import org.junit.runner.Description
+import org.junit.runners.model.Statement
+import java.io.IOException
+import javax.mail.FetchProfile
+import javax.mail.Message
+import javax.mail.MessagingException
+import javax.mail.UIDFolder
 
 /**
  * @author Denis Bondarenko
@@ -33,69 +25,49 @@ import androidx.test.platform.app.InstrumentationRegistry;
  * Time: 09:48
  * E-mail: DenBond7@gmail.com
  */
-public class AddMessageToDatabaseRule implements TestRule {
-  private AccountDao account;
-  private LocalFolder localFolder;
-  private long uid;
-  private Message message;
+class AddMessageToDatabaseRule(val account: AccountDao, val localFolder: LocalFolder) : BaseRule() {
+  private var message: Message? = null
 
-  public AddMessageToDatabaseRule(AccountDao account, LocalFolder localFolder, long uid, Message message) {
-    this.account = account;
-    this.localFolder = localFolder;
-    this.uid = uid;
-    this.message = message;
-  }
-
-  public AddMessageToDatabaseRule(AccountDao account, LocalFolder localFolder) {
-    this.account = account;
-    this.localFolder = localFolder;
-
+  init {
     try {
-      Session session = OpenStoreHelper.getAccountSess(InstrumentationRegistry.getInstrumentation()
-              .getTargetContext(),
-          account);
-      Store store = OpenStoreHelper.openStore(InstrumentationRegistry.getInstrumentation()
-              .getTargetContext(), account,
-          session);
+      val session = OpenStoreHelper.getAccountSess(targetContext, account)
+      val store = OpenStoreHelper.openStore(targetContext, account, session)
 
-      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
-      imapFolder.open(javax.mail.Folder.READ_ONLY);
+      val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
+      imapFolder.open(javax.mail.Folder.READ_ONLY)
 
-      Message[] messages;
+      val messages = arrayOf(imapFolder.getMessage(imapFolder.messageCount))
 
-      messages = new Message[]{imapFolder.getMessage(imapFolder.getMessageCount())};
+      val fetchProfile = FetchProfile()
+      fetchProfile.add(FetchProfile.Item.ENVELOPE)
+      fetchProfile.add(FetchProfile.Item.FLAGS)
+      fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+      fetchProfile.add(UIDFolder.FetchProfileItem.UID)
 
-      FetchProfile fetchProfile = new FetchProfile();
-      fetchProfile.add(FetchProfile.Item.ENVELOPE);
-      fetchProfile.add(FetchProfile.Item.FLAGS);
-      fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
-      fetchProfile.add(UIDFolder.FetchProfileItem.UID);
+      this.message = messages[0]
 
-      this.message = messages[0];
-
-      imapFolder.fetch(messages, fetchProfile);
-    } catch (MessagingException | IOException | GoogleAuthException e) {
-      e.printStackTrace();
+      imapFolder.fetch(messages, fetchProfile)
+    } catch (e: MessagingException) {
+      e.printStackTrace()
+    } catch (e: IOException) {
+      e.printStackTrace()
+    } catch (e: GoogleAuthException) {
+      e.printStackTrace()
     }
   }
 
-  @Override
-  public Statement apply(final Statement base, Description description) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        saveMsgToDatabase();
-        base.evaluate();
+  override fun apply(base: Statement, description: Description): Statement {
+    return object : Statement() {
+      @Throws(Throwable::class)
+      override fun evaluate() {
+        saveMsgToDatabase()
+        base.evaluate()
       }
-    };
+    }
   }
 
-  private void saveMsgToDatabase() throws MessagingException {
-    MessageDaoSource messageDaoSource = new MessageDaoSource();
-    messageDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        account.getEmail(),
-        localFolder.getFolderAlias(),
-        uid,
-        message, false);
+  @Throws(MessagingException::class)
+  private fun saveMsgToDatabase() {
+    MessageDaoSource().addRow(targetContext, account.email, localFolder.folderAlias, 0, message, false)
   }
 }

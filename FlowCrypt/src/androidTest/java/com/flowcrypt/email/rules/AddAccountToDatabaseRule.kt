@@ -5,11 +5,11 @@
 
 package com.flowcrypt.email.rules
 
-import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.util.AccountDaoManager
 import org.junit.runner.Description
+import org.junit.runners.model.Statement
 
 /**
  * @author Denis Bondarenko
@@ -17,36 +17,24 @@ import org.junit.runner.Description
  * Time: 17:54
  * E-mail: DenBond7@gmail.com
  */
-class AddAccountToDatabaseRule implements TestRule {
-  protected AccountDao account
+class AddAccountToDatabaseRule(val account: AccountDao) : BaseRule() {
 
-  public AddAccountToDatabaseRule() {
-    account = AccountDaoManager.getDefaultAccountDao()
-  }
+  constructor() : this(AccountDaoManager.getDefaultAccountDao())
 
-  public AddAccountToDatabaseRule(AccountDao account) {
-    this.account = account
-  }
-
-  @Override
-  public Statement apply(final Statement base, Description description) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
+  override fun apply(base: Statement, description: Description): Statement {
+    return object : Statement() {
+      @Throws(Throwable::class)
+      override fun evaluate() {
         saveAccountToDatabase()
         base.evaluate()
       }
     }
   }
 
-  public AccountDao getAccount {
-    return account
-  }
-
-  private void saveAccountToDatabase() throws Exception {
-    AccountDaoSource accountDaoSource = new AccountDaoSource()
-    accountDaoSource.addRow(InstrumentationRegistry.getInstrumentation().targetContext, account.getAuthCreds())
-    accountDaoSource.setActiveAccount(InstrumentationRegistry.getInstrumentation().targetContext, account
-        .getEmail())
+  @Throws(Exception::class)
+  private fun saveAccountToDatabase() {
+    val accountDaoSource = AccountDaoSource()
+    accountDaoSource.addRow(targetContext, account.authCreds)
+    accountDaoSource.setActiveAccount(targetContext, account.email)
   }
 }

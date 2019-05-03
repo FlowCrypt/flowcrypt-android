@@ -3,52 +3,36 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.rules;
+package com.flowcrypt.email.rules
 
-import android.content.ContentValues;
-import android.content.Context;
-
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-
-import org.junit.Rule;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-
-import androidx.test.platform.app.InstrumentationRegistry;
+import android.content.ContentValues
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import org.junit.Rule
+import org.junit.runner.Description
+import org.junit.runners.model.Statement
 
 /**
- * This {@link Rule} updates <b>an existed account</b> with given {@link ContentValues}
+ * This [Rule] updates **an existed account** with given [ContentValues]
  *
  * @author Denis Bondarenko
  * Date: 15.05.2018
  * Time: 10:19
  * E-mail: DenBond7@gmail.com
  */
-public class UpdateAccountRule implements TestRule {
-  private AccountDao account;
-  private ContentValues contentValues;
+class UpdateAccountRule(private val account: AccountDao, private val contentValues: ContentValues) : BaseRule() {
 
-  public UpdateAccountRule(AccountDao account, ContentValues contentValues) {
-    this.account = account;
-    this.contentValues = contentValues;
-  }
-
-  @Override
-  public Statement apply(final Statement base, Description description) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        updateAccount();
-        base.evaluate();
+  override fun apply(base: Statement, description: Description): Statement {
+    return object : Statement() {
+      @Throws(Throwable::class)
+      override fun evaluate() {
+        updateAccount()
+        base.evaluate()
       }
-    };
+    }
   }
 
-  private void updateAccount() {
-    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-    AccountDaoSource accountDaoSource = new AccountDaoSource();
-    accountDaoSource.updateAccountInformation(targetContext, account.getAccount(), contentValues);
+  private fun updateAccount() {
+    AccountDaoSource().updateAccountInformation(targetContext, account.account, contentValues)
   }
 }

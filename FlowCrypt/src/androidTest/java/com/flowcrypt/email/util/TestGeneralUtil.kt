@@ -27,15 +27,9 @@ import java.nio.charset.StandardCharsets
 class TestGeneralUtil {
   companion object {
     @JvmStatic
-    fun <T> readObjectFromResources(path: String, aClass: Class<T>): T? {
-      try {
-        val json = IOUtils.toString(aClass.classLoader!!.getResourceAsStream(path), StandardCharsets.UTF_8)
-        return Gson().fromJson(json, aClass)
-      } catch (e: IOException) {
-        e.printStackTrace()
-      }
-
-      return null
+    fun <T> readObjectFromResources(path: String, aClass: Class<T>): T {
+      val json = IOUtils.toString(aClass.classLoader!!.getResourceAsStream(path), StandardCharsets.UTF_8)
+      return Gson().fromJson(json, aClass)
     }
 
     @JvmStatic

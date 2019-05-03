@@ -3,14 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.rules;
+package com.flowcrypt.email.rules
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
-import static java.lang.annotation.ElementType.METHOD;
+import java.lang.annotation.Retention
+import java.lang.annotation.RetentionPolicy
 
 /**
  * @author Denis Bondarenko
@@ -20,7 +16,6 @@ import static java.lang.annotation.ElementType.METHOD;
  */
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({METHOD, ANNOTATION_TYPE})
-public @interface Repeat {
-  int value() default 1;
-}
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER,
+    AnnotationTarget.PROPERTY_SETTER, AnnotationTarget.ANNOTATION_CLASS)
+annotation class Repeat(val value: Int = 1)

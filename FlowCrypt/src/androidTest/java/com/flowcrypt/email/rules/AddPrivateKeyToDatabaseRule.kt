@@ -5,14 +5,14 @@
 
 package com.flowcrypt.email.rules
 
-import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import com.google.gson.Gson
 import org.junit.runner.Description
+import org.junit.runners.model.Statement
 
 /**
  * @author Denis Bondarenko
@@ -20,40 +20,23 @@ import org.junit.runner.Description
  * Time: 17:54
  * E-mail: DenBond7@gmail.com
  */
-class AddPrivateKeyToDatabaseRule implements TestRule {
+class AddPrivateKeyToDatabaseRule(val keyPath: String, val passphrase: String, val type: KeyDetails.Type) : BaseRule() {
 
-  private String keyPath
-  private String passphrase
-  private KeyDetails . Type keyDetailsType
-  private NodeKeyDetails nodeKeyDetails
+  var nodeKeyDetails: NodeKeyDetails? = null
+    private set
 
-  public AddPrivateKeyToDatabaseRule(String keyPath, String passphrase, KeyDetails.Type keyDetailsType) {
-    this.keyPath = keyPath
-    this.passphrase = passphrase
-    this.keyDetailsType = keyDetailsType
-  }
+  constructor() : this("node/default@denbond7.com_fisrtKey_prv_strong.json",
+      TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
 
-  public AddPrivateKeyToDatabaseRule() {
-    this.keyPath = "node/default@denbond7.com_fisrtKey_prv_strong.json"
-    this.passphrase = TestConstants.DEFAULT_STRONG_PASSWORD
-    this.keyDetailsType = KeyDetails.Type.EMAIL
-  }
-
-  @Override
-  public Statement apply(final Statement base, Description description) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        Gson gson = NodeGson . getInstance ().getGson()
-        nodeKeyDetails = gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString
-        (InstrumentationRegistry.getInstrumentation().context, keyPath), NodeKeyDetails.class)
-        PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, passphrase, keyDetailsType)
+  override fun apply(base: Statement, description: Description): Statement {
+    return object : Statement() {
+      @Throws(Throwable::class)
+      override fun evaluate() {
+        nodeKeyDetails = NodeGson.getInstance().gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString(
+            context, keyPath), NodeKeyDetails::class.java)
+        PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails!!, passphrase, type)
         base.evaluate()
       }
     }
-  }
-
-  public NodeKeyDetails getNodeKeyDetails {
-    return nodeKeyDetails
   }
 }
