@@ -9,7 +9,6 @@ import androidx.test.internal.runner.junit4.statement.UiThreadStatement
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
@@ -51,7 +50,7 @@ class PrivateKeysManager {
     @JvmStatic
     fun getNodeKeyDetailsFromAssets(assetsPath: String): NodeKeyDetails {
       val gson = NodeGson.getInstance().gson
-      val json = TestGeneralUtil.readFileFromAssetsAsString(BaseTest.getContext(), assetsPath)
+      val json = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().context, assetsPath)
       return gson.fromJson(json, NodeKeyDetails::class.java)
     }
 

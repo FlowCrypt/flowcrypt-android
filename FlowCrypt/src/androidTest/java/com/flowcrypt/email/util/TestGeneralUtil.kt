@@ -9,7 +9,6 @@ import android.content.Context
 import android.os.Environment
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.util.gson.GsonHelper
 import com.google.gson.Gson
 import org.apache.commons.io.IOUtils
@@ -64,7 +63,7 @@ class TestGeneralUtil {
       try {
         if (jsonPathInAssets != null) {
           val gson = GsonHelper.gson
-          val json = readFileFromAssetsAsString(BaseTest.getContext(), jsonPathInAssets)
+          val json = readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().context, jsonPathInAssets)
           return gson.fromJson(json, classOfT)
         }
       } catch (e: IOException) {
