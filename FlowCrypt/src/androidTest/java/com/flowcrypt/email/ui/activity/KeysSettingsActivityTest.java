@@ -59,6 +59,8 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static com.flowcrypt.email.matchers.CustomMatchers.isToastDisplayed;
+import static com.flowcrypt.email.matchers.CustomMatchers.withEmptyRecyclerView;
+import static com.flowcrypt.email.matchers.CustomMatchers.withRecyclerViewItemCount;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
@@ -100,12 +102,12 @@ public class KeysSettingsActivityTest extends BaseTest {
     PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
 
     onView(withId(R.id.floatActionButtonAddKey)).check(matches(isDisplayed())).perform(click());
-    onView(withId(R.id.recyclerViewKeys)).check(matches(isDisplayed())).check(matches(matchRecyclerViewSize(2)));
+    onView(withId(R.id.recyclerViewKeys)).check(matches(isDisplayed())).check(matches(withRecyclerViewItemCount(2)));
   }
 
   @Test
   public void testKeyExists() {
-    onView(withId(R.id.recyclerViewKeys)).check(matches(not(matchEmptyRecyclerView()))).check(matches(isDisplayed()));
+    onView(withId(R.id.recyclerViewKeys)).check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()));
     onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
   }
 

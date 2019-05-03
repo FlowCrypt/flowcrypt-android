@@ -39,6 +39,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withChild;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.flowcrypt.email.matchers.CustomMatchers.withEmptyListView;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.not;
 
@@ -95,13 +96,13 @@ public class SelectContactsActivityTest extends BaseTest {
     //Need to wait a little while data will be updated
     Thread.sleep(2000);
 
-    onView(withId(R.id.listViewContacts)).check(matches(matchEmptyList())).check(matches(not(isDisplayed())));
+    onView(withId(R.id.listViewContacts)).check(matches(withEmptyListView())).check(matches(not(isDisplayed())));
     onView(withId(R.id.emptyView)).check(matches(isDisplayed())).check(matches(withText(R.string.no_results)));
   }
 
   @Test
   public void testShowListContacts() {
-    onView(withId(R.id.listViewContacts)).check(matches(isDisplayed())).check(matches(not(matchEmptyList())));
+    onView(withId(R.id.listViewContacts)).check(matches(isDisplayed())).check(matches(not(withEmptyListView())));
     onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
 
     for (int i = 0; i < EMAILS.length; i++) {
@@ -131,7 +132,7 @@ public class SelectContactsActivityTest extends BaseTest {
     onView(withId(com.google.android.material.R.id.search_src_text)).perform(clearText(),
         typeText("some email"));
     closeSoftKeyboard();
-    onView(withId(R.id.listViewContacts)).check(matches(matchEmptyList()));
+    onView(withId(R.id.listViewContacts)).check(matches(withEmptyListView()));
     onView(withId(R.id.emptyView)).check(matches(isDisplayed())).check(matches(withText(R.string.no_results)));
   }
 

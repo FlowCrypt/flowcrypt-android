@@ -18,6 +18,7 @@ import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.flowcrypt.email.matchers.CustomMatchers.withListViewItemCount;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
@@ -33,7 +34,7 @@ public abstract class BaseEmailListActivityTest extends BaseTest {
   protected void testDownloadAllMsgs(int messageCount) {
     onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
     // size of list = number of the letters in the mail + 1 footer.
-    onView(withId(R.id.listViewMessages)).check(matches(matchListSize(messageCount))).check(matches(isDisplayed()));
+    onView(withId(R.id.listViewMessages)).check(matches(withListViewItemCount(messageCount))).check(matches(isDisplayed()));
   }
 
   protected void testRunMsgDetailsActivity(int position) {

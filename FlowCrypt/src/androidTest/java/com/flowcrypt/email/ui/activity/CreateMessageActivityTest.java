@@ -67,6 +67,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withChild;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.flowcrypt.email.matchers.CustomMatchers.withAppBarLayoutBackgroundColor;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -371,7 +372,7 @@ public class CreateMessageActivityTest extends BaseTest {
 
   private void checkIsDisplayedEncryptedAttributes() {
     onView(withId(R.id.underToolbarTextTextView)).check(doesNotExist());
-    onView(withId(R.id.appBarLayout)).check(matches(matchAppBarLayoutBackgroundColor(
+    onView(withId(R.id.appBarLayout)).check(matches(withAppBarLayoutBackgroundColor(
         UIUtil.getColor(InstrumentationRegistry.getInstrumentation().getTargetContext(), R.color.colorPrimary))));
   }
 
@@ -413,7 +414,7 @@ public class CreateMessageActivityTest extends BaseTest {
   private void checkIsDisplayedStandardAttributes() {
     onView(withId(R.id.underToolbarTextTextView)).check(matches(isDisplayed())).
         check(matches(withText(R.string.this_message_will_not_be_encrypted)));
-    onView(withId(R.id.appBarLayout)).check(matches(matchAppBarLayoutBackgroundColor(UIUtil.getColor
+    onView(withId(R.id.appBarLayout)).check(matches(withAppBarLayoutBackgroundColor(UIUtil.getColor
         (InstrumentationRegistry.getInstrumentation().getTargetContext(), R.color.red))));
   }
 

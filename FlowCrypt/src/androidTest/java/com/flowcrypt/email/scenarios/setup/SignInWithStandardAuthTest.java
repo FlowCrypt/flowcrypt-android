@@ -30,6 +30,7 @@ import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.action.ViewActions.scrollTo;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static com.flowcrypt.email.matchers.CustomMatchers.withSecurityTypeOption;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
@@ -78,7 +79,7 @@ public abstract class SignInWithStandardAuthTest extends BaseTest {
         closeSoftKeyboard());
     onView(withId(R.id.spinnerImapSecurityType)).perform(scrollTo(), click());
     onData(allOf(is(instanceOf(SecurityType.class)),
-        matchOpt(authCreds.getImapOpt()))).perform(click());
+        withSecurityTypeOption(authCreds.getImapOpt()))).perform(click());
     onView(withId(R.id.editTextImapPort)).perform(clearText(), typeText(String.valueOf(authCreds
         .getImapPort())), closeSoftKeyboard());
 
@@ -86,7 +87,7 @@ public abstract class SignInWithStandardAuthTest extends BaseTest {
         closeSoftKeyboard());
     onView(withId(R.id.spinnerSmtpSecyrityType)).perform(scrollTo(), click());
     onData(allOf(is(instanceOf(SecurityType.class)),
-        matchOpt(authCreds.getSmtpOpt()))).perform(click());
+        withSecurityTypeOption(authCreds.getSmtpOpt()))).perform(click());
     onView(withId(R.id.editTextSmtpPort)).perform(clearText(), typeText(String.valueOf(authCreds
         .getSmtpPort())), closeSoftKeyboard());
 

@@ -57,6 +57,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withParent;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.flowcrypt.email.matchers.CustomMatchers.withEmptyListView;
 import static com.flowcrypt.email.matchers.CustomMatchers.withToolBarText;
 import static com.flowcrypt.email.viewaction.CustomViewActions.navigateToItemWithName;
 import static org.hamcrest.CoreMatchers.anyOf;
@@ -137,7 +138,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
         .atPosition(0)
         .perform(scrollTo());
     onView(withId(R.id.listViewMessages)).check(matches(isDisplayed())).perform(swipeDown());
-    onView(withId(R.id.listViewMessages)).check(matches(not(matchEmptyList()))).check(matches(isDisplayed()));
+    onView(withId(R.id.listViewMessages)).check(matches(not(withEmptyListView()))).check(matches(isDisplayed()));
   }
 
   @Test

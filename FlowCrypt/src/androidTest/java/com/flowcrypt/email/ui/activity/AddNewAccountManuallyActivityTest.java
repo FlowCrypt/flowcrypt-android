@@ -41,6 +41,7 @@ import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.flowcrypt.email.matchers.CustomMatchers.withSecurityTypeOption;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.instanceOf;
@@ -271,7 +272,7 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
     String someValue = "111";
     onView(withId(portViewId)).perform(scrollTo(), clearText(), typeText(someValue), closeSoftKeyboard());
     onView(withId(spinnerViewId)).perform(scrollTo(), click());
-    onData(allOf(is(instanceOf(SecurityType.class)), matchOpt(option))).perform(click());
+    onData(allOf(is(instanceOf(SecurityType.class)), withSecurityTypeOption(option))).perform(click());
     onView(withId(portViewId)).check(matches(withText(portValue)));
   }
 
@@ -303,7 +304,7 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
         closeSoftKeyboard());
     onView(withId(R.id.spinnerImapSecurityType)).perform(scrollTo(), click());
     onData(allOf(is(instanceOf(SecurityType.class)),
-        matchOpt(authCreds.getImapOpt()))).perform(click());
+        withSecurityTypeOption(authCreds.getImapOpt()))).perform(click());
     onView(withId(R.id.editTextImapPort)).perform(clearText(),
         typeText(String.valueOf(authCreds.getImapPort())), closeSoftKeyboard());
 
@@ -311,7 +312,7 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
         closeSoftKeyboard());
     onView(withId(R.id.spinnerSmtpSecyrityType)).perform(scrollTo(), click());
     onData(allOf(is(instanceOf(SecurityType.class)),
-        matchOpt(authCreds.getSmtpOpt()))).perform(click());
+        withSecurityTypeOption(authCreds.getSmtpOpt()))).perform(click());
     onView(withId(R.id.editTextSmtpPort)).perform(clearText(),
         typeText(String.valueOf(authCreds.getSmtpPort())), closeSoftKeyboard());
 

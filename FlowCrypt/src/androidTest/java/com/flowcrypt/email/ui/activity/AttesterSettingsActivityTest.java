@@ -25,6 +25,7 @@ import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static com.flowcrypt.email.matchers.CustomMatchers.withEmptyListView;
 import static org.hamcrest.Matchers.not;
 
 /**
@@ -51,7 +52,7 @@ public class AttesterSettingsActivityTest extends BaseTest {
 
   @Test
   public void testKeysExistOnAttester() {
-    onView(withId(R.id.listViewKeys)).check(matches(not(matchEmptyList()))).check(matches(isDisplayed()));
+    onView(withId(R.id.listViewKeys)).check(matches(not(withEmptyListView()))).check(matches(isDisplayed()));
     onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
   }
 }

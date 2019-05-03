@@ -32,6 +32,7 @@ import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.flowcrypt.email.matchers.CustomMatchers.withEmptyListView;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.not;
 
@@ -78,7 +79,7 @@ public class ContactsSettingsActivityTest extends BaseTest {
 
   @Test
   public void testEmptyList() {
-    onView(withId(R.id.listViewContacts)).check(matches(matchEmptyList())).check(matches(not(isDisplayed())));
+    onView(withId(R.id.listViewContacts)).check(matches(withEmptyListView())).check(matches(not(isDisplayed())));
     onView(withId(R.id.emptyView)).check(matches(isDisplayed())).check(matches(withText(R.string.no_results)));
   }
 

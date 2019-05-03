@@ -47,6 +47,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibilit
 import static androidx.test.espresso.matcher.ViewMatchers.withHint;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static com.flowcrypt.email.matchers.CustomMatchers.withEmptyListView;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
@@ -108,7 +109,7 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
   @Test
   public void testShowNotEmptyList() {
     onView(withId(R.id.listViewMessages)).check(matches(isDisplayed()));
-    onView(withId(R.id.listViewMessages)).check(matches(not(matchEmptyList())));
+    onView(withId(R.id.listViewMessages)).check(matches(not(withEmptyListView())));
   }
 
   @Test
