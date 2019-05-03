@@ -16,7 +16,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.rules.UpdateAccountRule;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest;
-import com.flowcrypt.email.util.AccountDaoManagerKt;
+import com.flowcrypt.email.util.AccountDaoManager;
 
 import org.junit.After;
 import org.junit.Before;
@@ -77,7 +77,7 @@ public class SearchMessagesActivityTest extends BaseEmailListActivityTest {
   public TestRule ruleChain = RuleChain
       .outerRule(new ClearAppSettingsRule())
       .around(new AddAccountToDatabaseRule())
-      .around(new UpdateAccountRule(AccountDaoManagerKt.getDefaultAccountDao(), generateContentValues()))
+      .around(new UpdateAccountRule(AccountDaoManager.getDefaultAccountDao(), generateContentValues()))
       .around(intentsTestRule);
 
   @Override

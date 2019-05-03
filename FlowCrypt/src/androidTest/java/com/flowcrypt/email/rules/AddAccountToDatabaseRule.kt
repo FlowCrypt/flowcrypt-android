@@ -3,17 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.rules;
+package com.flowcrypt.email.rules
 
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.util.AccountDaoManagerKt;
-
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-
-import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.util.AccountDaoManager
+import org.junit.runner.Description
 
 /**
  * @author Denis Bondarenko
@@ -21,15 +17,15 @@ import androidx.test.platform.app.InstrumentationRegistry;
  * Time: 17:54
  * E-mail: DenBond7@gmail.com
  */
-public class AddAccountToDatabaseRule implements TestRule {
-  protected AccountDao account;
+class AddAccountToDatabaseRule implements TestRule {
+  protected AccountDao account
 
   public AddAccountToDatabaseRule() {
-    account = AccountDaoManagerKt.getDefaultAccountDao();
+    account = AccountDaoManager.getDefaultAccountDao()
   }
 
   public AddAccountToDatabaseRule(AccountDao account) {
-    this.account = account;
+    this.account = account
   }
 
   @Override
@@ -37,20 +33,20 @@ public class AddAccountToDatabaseRule implements TestRule {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        saveAccountToDatabase();
-        base.evaluate();
+        saveAccountToDatabase()
+        base.evaluate()
       }
-    };
+    }
   }
 
-  public AccountDao getAccount() {
-    return account;
+  public AccountDao getAccount {
+    return account
   }
 
   private void saveAccountToDatabase() throws Exception {
-    AccountDaoSource accountDaoSource = new AccountDaoSource();
-    accountDaoSource.addRow(InstrumentationRegistry.getInstrumentation().getTargetContext(), account.getAuthCreds());
-    accountDaoSource.setActiveAccount(InstrumentationRegistry.getInstrumentation().getTargetContext(), account
-        .getEmail());
+    AccountDaoSource accountDaoSource = new AccountDaoSource()
+    accountDaoSource.addRow(InstrumentationRegistry.getInstrumentation().targetContext, account.getAuthCreds())
+    accountDaoSource.setActiveAccount(InstrumentationRegistry.getInstrumentation().targetContext, account
+        .getEmail())
   }
 }

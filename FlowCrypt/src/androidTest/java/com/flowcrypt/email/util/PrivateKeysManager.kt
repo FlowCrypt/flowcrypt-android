@@ -26,47 +26,55 @@ import java.util.*
  * Time: 17:44
  * E-mail: DenBond7@gmail.com
  */
+class PrivateKeysManager {
+  companion object {
+    @JvmStatic
+    fun saveKeyFromAssetsToDatabase(keyPath: String, passphrase: String, type: KeyDetails.Type) {
+      val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
+      saveKeyToDatabase(nodeKeyDetails, passphrase, type)
+    }
 
-fun saveKeyFromAssetsToDatabase(keyPath: String, passphrase: String, type: KeyDetails.Type) {
-  val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
-  saveKeyToDatabase(nodeKeyDetails, passphrase, type)
-}
+    @JvmStatic
+    fun saveKeyToDatabase(nodeKeyDetails: NodeKeyDetails, passphrase: String, type: KeyDetails.Type) {
+      val context = InstrumentationRegistry.getInstrumentation().targetContext
+      val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(InstrumentationRegistry.getInstrumentation()
+          .targetContext)
 
-fun saveKeyToDatabase(nodeKeyDetails: NodeKeyDetails, passphrase: String, type: KeyDetails.Type) {
-  val context = InstrumentationRegistry.getInstrumentation().targetContext
-  val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(InstrumentationRegistry.getInstrumentation()
-      .targetContext)
+      KeysDaoSource().addRow(context, KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase))
+      UserIdEmailsKeysDaoSource().addRow(context, nodeKeyDetails.longId, nodeKeyDetails.primaryPgpContact.email)
 
-  KeysDaoSource().addRow(context, KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase))
-  UserIdEmailsKeysDaoSource().addRow(context, nodeKeyDetails.longId, nodeKeyDetails.primaryPgpContact.email)
+      UiThreadStatement.runOnUiThread { KeysStorageImpl.getInstance(context).refresh(context) }
+      // Added timeout for a better sync between threads.
+      Thread.sleep(3000)
+    }
 
-  UiThreadStatement.runOnUiThread { KeysStorageImpl.getInstance(context).refresh(context) }
-  // Added timeout for a better sync between threads.
-  Thread.sleep(3000)
-}
+    @JvmStatic
+    fun getNodeKeyDetailsFromAssets(assetsPath: String): NodeKeyDetails {
+      val gson = NodeGson.getInstance().gson
+      val json = TestGeneralUtil.readFileFromAssetsAsString(BaseTest.getContext(), assetsPath)
+      return gson.fromJson(json, NodeKeyDetails::class.java)
+    }
 
-fun getNodeKeyDetailsFromAssets(assetsPath: String): NodeKeyDetails {
-  val gson = NodeGson.getInstance().gson
-  val json = readFileFromAssetsAsString(BaseTest.getContext(), assetsPath)
-  return gson.fromJson(json, NodeKeyDetails::class.java)
-}
+    @JvmStatic
+    fun getKeysFromAssets(keysPaths: Array<String>): ArrayList<NodeKeyDetails> {
+      val privateKeys = ArrayList<NodeKeyDetails>()
+      keysPaths.forEach { path ->
+        privateKeys.add(getNodeKeyDetailsFromAssets(path))
+      }
+      return privateKeys
+    }
 
-fun getKeysFromAssets(keysPaths: Array<String>): ArrayList<NodeKeyDetails> {
-  val privateKeys = ArrayList<NodeKeyDetails>()
-  keysPaths.forEach { path ->
-    privateKeys.add(getNodeKeyDetailsFromAssets(path))
+    @JvmStatic
+    fun deleteKey(keyPath: String) {
+      val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
+      val context = InstrumentationRegistry.getInstrumentation().targetContext
+
+      KeysDaoSource().removeKey(context, nodeKeyDetails.longId)
+      UserIdEmailsKeysDaoSource().removeKey(context, nodeKeyDetails.longId)
+
+      UiThreadStatement.runOnUiThread { KeysStorageImpl.getInstance(context).refresh(context) }
+      // Added timeout for a better sync between threads.
+      Thread.sleep(3000)
+    }
   }
-  return privateKeys
-}
-
-fun deleteKey(keyPath: String) {
-  val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
-  val context = InstrumentationRegistry.getInstrumentation().targetContext
-
-  KeysDaoSource().removeKey(context, nodeKeyDetails.longId)
-  UserIdEmailsKeysDaoSource().removeKey(context, nodeKeyDetails.longId)
-
-  UiThreadStatement.runOnUiThread { KeysStorageImpl.getInstance(context).refresh(context) }
-  // Added timeout for a better sync between threads.
-  Thread.sleep(3000)
 }

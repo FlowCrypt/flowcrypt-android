@@ -3,21 +3,16 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.rules;
+package com.flowcrypt.email.rules
 
-import com.flowcrypt.email.TestConstants;
-import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.util.PrivateKeysManagerKt;
-import com.flowcrypt.email.util.TestGeneralUtilKt;
-import com.google.gson.Gson;
-
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-
-import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.util.PrivateKeysManager
+import com.flowcrypt.email.util.TestGeneralUtil
+import com.google.gson.Gson
+import org.junit.runner.Description
 
 /**
  * @author Denis Bondarenko
@@ -25,23 +20,23 @@ import androidx.test.platform.app.InstrumentationRegistry;
  * Time: 17:54
  * E-mail: DenBond7@gmail.com
  */
-public class AddPrivateKeyToDatabaseRule implements TestRule {
+class AddPrivateKeyToDatabaseRule implements TestRule {
 
-  private String keyPath;
-  private String passphrase;
-  private KeyDetails.Type keyDetailsType;
-  private NodeKeyDetails nodeKeyDetails;
+  private String keyPath
+  private String passphrase
+  private KeyDetails . Type keyDetailsType
+  private NodeKeyDetails nodeKeyDetails
 
   public AddPrivateKeyToDatabaseRule(String keyPath, String passphrase, KeyDetails.Type keyDetailsType) {
-    this.keyPath = keyPath;
-    this.passphrase = passphrase;
-    this.keyDetailsType = keyDetailsType;
+    this.keyPath = keyPath
+    this.passphrase = passphrase
+    this.keyDetailsType = keyDetailsType
   }
 
   public AddPrivateKeyToDatabaseRule() {
-    this.keyPath = "node/default@denbond7.com_fisrtKey_prv_strong.json";
-    this.passphrase = TestConstants.DEFAULT_STRONG_PASSWORD;
-    this.keyDetailsType = KeyDetails.Type.EMAIL;
+    this.keyPath = "node/default@denbond7.com_fisrtKey_prv_strong.json"
+    this.passphrase = TestConstants.DEFAULT_STRONG_PASSWORD
+    this.keyDetailsType = KeyDetails.Type.EMAIL
   }
 
   @Override
@@ -49,16 +44,16 @@ public class AddPrivateKeyToDatabaseRule implements TestRule {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        Gson gson = NodeGson.getInstance().getGson();
-        nodeKeyDetails = gson.fromJson(TestGeneralUtilKt.readFileFromAssetsAsString
-            (InstrumentationRegistry.getInstrumentation().getContext(), keyPath), NodeKeyDetails.class);
-        PrivateKeysManagerKt.saveKeyToDatabase(nodeKeyDetails, passphrase, keyDetailsType);
-        base.evaluate();
+        Gson gson = NodeGson . getInstance ().getGson()
+        nodeKeyDetails = gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString
+        (InstrumentationRegistry.getInstrumentation().context, keyPath), NodeKeyDetails.class)
+        PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, passphrase, keyDetailsType)
+        base.evaluate()
       }
-    };
+    }
   }
 
-  public NodeKeyDetails getNodeKeyDetails() {
-    return nodeKeyDetails;
+  public NodeKeyDetails getNodeKeyDetails {
+    return nodeKeyDetails
   }
 }

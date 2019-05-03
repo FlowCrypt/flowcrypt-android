@@ -15,11 +15,17 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
  * Time: 14:49
  * E-mail: DenBond7@gmail.com
  */
+class AuthCredentialsManager {
+  companion object {
+    @JvmStatic
+    fun getLocalWithOneBackupAuthCreds(): AuthCredentials? {
+      return TestGeneralUtil.readObjectFromResources("user_with_one_backup.json", AuthCredentials::class.java)
+    }
 
-fun getLocalWithOneBackupAuthCreds(): AuthCredentials? {
-  return readObjectFromResources("user_with_one_backup.json", AuthCredentials::class.java)
+    @JvmStatic
+    fun getDefaultWithBackupAuthCreds(): AuthCredentials? {
+      return TestGeneralUtil.readObjectFromResources("default.json", AuthCredentials::class.java)
+    }
+  }
 }
 
-fun getDefaultWithBackupAuthCreds(): AuthCredentials? {
-  return readObjectFromResources("default.json", AuthCredentials::class.java)
-}

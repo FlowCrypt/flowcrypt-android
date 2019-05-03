@@ -21,7 +21,7 @@ import com.flowcrypt.email.rules.AddMessageToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest;
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity;
-import com.flowcrypt.email.util.AccountDaoManagerKt;
+import com.flowcrypt.email.util.AccountDaoManager;
 
 import org.junit.After;
 import org.junit.Before;
@@ -85,8 +85,8 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
     LOCAL_FOLDERS.add(new LocalFolder("Junk", "Junk", 0, new String[]{"\\HasNoChildren", "\\Junk"}, false));
   }
 
-  private AccountDao userWithoutLetters = AccountDaoManagerKt.getAccountDao("user_without_letters.json");
-  private AccountDao userWithMoreThan21LettersAccount = AccountDaoManagerKt.getUserWitMoreThan21Letters();
+  private AccountDao userWithoutLetters = AccountDaoManager.getAccountDao("user_without_letters.json");
+  private AccountDao userWithMoreThan21LettersAccount = AccountDaoManager.getUserWitMoreThan21Letters();
   private IntentsTestRule intentsTestRule = new IntentsTestRule<>(EmailManagerActivity.class);
   @Rule
   public TestRule ruleChain = RuleChain
@@ -183,7 +183,7 @@ public class EmailManagerActivityTest extends BaseEmailListActivityTest {
   @Test
   public void testAddNewAccount() {
     Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-    AccountDao account = AccountDaoManagerKt.getDefaultAccountDao();
+    AccountDao account = AccountDaoManager.getDefaultAccountDao();
     Intent result = new Intent();
     result.putExtra(AddNewAccountActivity.KEY_EXTRA_NEW_ACCOUNT, account);
     intending(hasComponent(new ComponentName(targetContext, AddNewAccountActivity.class)))

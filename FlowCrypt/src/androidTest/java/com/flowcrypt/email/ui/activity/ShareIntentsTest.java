@@ -15,7 +15,7 @@ import com.flowcrypt.email.TestConstants;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.util.TestGeneralUtilKt;
+import com.flowcrypt.email.util.TestGeneralUtil;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -86,7 +86,7 @@ public class ShareIntentsTest extends BaseTest {
 
   @AfterClass
   public static void cleanResources() {
-    TestGeneralUtilKt.deleteFiles(Arrays.asList(atts));
+    TestGeneralUtil.deleteFiles(Arrays.asList(atts));
   }
 
   @Override
@@ -219,7 +219,7 @@ public class ShareIntentsTest extends BaseTest {
   private static void createFilesForAtts() {
     atts = new File[ATTACHMENTS_COUNT];
     for (int i = 0; i < atts.length; i++) {
-      atts[i] = TestGeneralUtilKt.createFile(i + ".txt", UUID.randomUUID().toString());
+      atts[i] = TestGeneralUtil.createFile(i + ".txt", UUID.randomUUID().toString());
     }
   }
 

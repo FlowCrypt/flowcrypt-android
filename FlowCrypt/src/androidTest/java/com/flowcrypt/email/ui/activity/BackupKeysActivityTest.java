@@ -18,9 +18,9 @@ import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.util.AccountDaoManagerKt;
-import com.flowcrypt.email.util.PrivateKeysManagerKt;
-import com.flowcrypt.email.util.TestGeneralUtilKt;
+import com.flowcrypt.email.util.AccountDaoManager;
+import com.flowcrypt.email.util.PrivateKeysManager;
+import com.flowcrypt.email.util.TestGeneralUtil;
 
 import org.junit.After;
 import org.junit.Before;
@@ -109,7 +109,7 @@ public class BackupKeysActivityTest extends BaseTest {
     onView(withId(R.id.radioButtonEmail)).check(matches(isDisplayed())).perform(click());
     onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
     onView(withText(getResString(R.string.there_are_no_private_keys,
-        AccountDaoManagerKt.getDefaultAccountDao().getEmail()))).check(matches(isDisplayed()));
+        AccountDaoManager.getDefaultAccountDao().getEmail()))).check(matches(isDisplayed()));
   }
 
   @Test
@@ -117,7 +117,7 @@ public class BackupKeysActivityTest extends BaseTest {
     onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
     onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
     onView(withText(getResString(R.string.there_are_no_private_keys,
-        AccountDaoManagerKt.getDefaultAccountDao().getEmail()))).check(matches(isDisplayed()));
+        AccountDaoManager.getDefaultAccountDao().getEmail()))).check(matches(isDisplayed()));
   }
 
   @Test
@@ -137,11 +137,11 @@ public class BackupKeysActivityTest extends BaseTest {
   public void testSuccessDownloadOption() throws Throwable {
     addFirstKeyWithStrongPassword();
     onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
-    File file = TestGeneralUtilKt.createFile("key.asc", "");
+    File file = TestGeneralUtil.createFile("key.asc", "");
     intendingFileChoose(file);
     onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
     assertTrue(activityTestRule.getActivity().isFinishing());
-    TestGeneralUtilKt.deleteFiles(Collections.singletonList(file));
+    TestGeneralUtil.deleteFiles(Collections.singletonList(file));
   }
 
   @Test
@@ -222,22 +222,22 @@ public class BackupKeysActivityTest extends BaseTest {
   }
 
   private void addFirstKeyWithDefaultPassword() throws Throwable {
-    PrivateKeysManagerKt.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_default.json",
+    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_default.json",
         TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
   }
 
   private void addFirstKeyWithStrongPassword() throws Throwable {
-    PrivateKeysManagerKt.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_strong.json",
+    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_strong.json",
         TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL);
   }
 
   private void addSecondKeyWithStrongPassword() throws Throwable {
-    PrivateKeysManagerKt.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
+    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
         TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL);
   }
 
   private void addSecondKeyWithStrongSecondPassword() throws Throwable {
-    PrivateKeysManagerKt.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong_second.json",
+    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong_second.json",
         TestConstants.DEFAULT_SECOND_STRONG_PASSWORD, KeyDetails.Type.EMAIL);
   }
 }

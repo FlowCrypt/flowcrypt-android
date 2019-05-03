@@ -14,7 +14,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.util.PrivateKeysManagerKt;
+import com.flowcrypt.email.util.PrivateKeysManager;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,7 +56,7 @@ public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
     @Override
     protected Intent getActivityIntent() {
       Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-      ArrayList<NodeKeyDetails> privateKeys = PrivateKeysManagerKt.getKeysFromAssets(
+      ArrayList<NodeKeyDetails> privateKeys = PrivateKeysManager.getKeysFromAssets(
           new String[]{"node/default@denbond7.com_fisrtKey_prv_default.json"});
       return CheckKeysActivity.newIntent(targetContext,
           privateKeys,

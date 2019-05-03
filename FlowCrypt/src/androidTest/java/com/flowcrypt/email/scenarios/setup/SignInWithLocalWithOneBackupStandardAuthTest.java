@@ -6,7 +6,7 @@
 package com.flowcrypt.email.scenarios.setup;
 
 import com.flowcrypt.email.api.email.model.AuthCredentials;
-import com.flowcrypt.email.util.AuthCredentialsManagerKt;
+import com.flowcrypt.email.util.AuthCredentialsManager;
 
 /**
  * This test is using credentials of the user which has only one backup.
@@ -21,6 +21,6 @@ public class SignInWithLocalWithOneBackupStandardAuthTest extends SignInWithBack
 
   @Override
   AuthCredentials getAuthCreds() {
-    return AuthCredentialsManagerKt.getLocalWithOneBackupAuthCreds();
+    return AuthCredentialsManager.getLocalWithOneBackupAuthCreds();
   }
 }

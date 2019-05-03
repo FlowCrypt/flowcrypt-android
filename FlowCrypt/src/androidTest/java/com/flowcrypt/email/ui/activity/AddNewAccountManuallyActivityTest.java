@@ -12,7 +12,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials;
 import com.flowcrypt.email.api.email.model.SecurityType;
 import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.util.AuthCredentialsManagerKt;
+import com.flowcrypt.email.util.AuthCredentialsManager;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -79,7 +79,7 @@ public class AddNewAccountManuallyActivityTest extends BaseTest {
 
   @Before
   public void setUp() {
-    this.authCreds = AuthCredentialsManagerKt.getDefaultWithBackupAuthCreds();
+    this.authCreds = AuthCredentialsManager.getDefaultWithBackupAuthCreds();
     IdlingPolicies.setMasterPolicyTimeout(60, TimeUnit.SECONDS);
   }
 

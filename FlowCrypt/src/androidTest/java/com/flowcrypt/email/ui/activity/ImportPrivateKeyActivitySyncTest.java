@@ -19,7 +19,7 @@ import com.flowcrypt.email.base.BaseTest;
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
 import com.flowcrypt.email.rules.ClearAppSettingsRule;
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
-import com.flowcrypt.email.util.TestGeneralUtilKt;
+import com.flowcrypt.email.util.TestGeneralUtil;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -101,11 +101,11 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
 
   @BeforeClass
   public static void createResources() throws IOException {
-    privateKey = TestGeneralUtilKt.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
+    privateKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().getContext(),
         "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-sec.asc");
-    fileWithPrivateKey = TestGeneralUtilKt.createFile(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
+    fileWithPrivateKey = TestGeneralUtil.createFile(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
         + "_sec.asc", privateKey);
-    fileWithoutPrivateKey = TestGeneralUtilKt.createFile(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
+    fileWithoutPrivateKey = TestGeneralUtil.createFile(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER
         + ".txt", SOME_TEXT);
   }
 
@@ -114,7 +114,7 @@ public class ImportPrivateKeyActivitySyncTest extends BaseTest {
     List<File> files = new ArrayList<>();
     files.add(fileWithPrivateKey);
     files.add(fileWithoutPrivateKey);
-    TestGeneralUtilKt.deleteFiles(files);
+    TestGeneralUtil.deleteFiles(files);
   }
 
   @Override
