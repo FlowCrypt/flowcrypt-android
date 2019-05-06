@@ -3,59 +3,52 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.app.Activity;
-import android.app.Instrumentation;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.net.Uri;
-
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.TestConstants;
-import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
-import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.util.AccountDaoManager;
-import com.flowcrypt.email.util.PrivateKeysManager;
-import com.flowcrypt.email.util.TestGeneralUtil;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
-import org.junit.runner.RunWith;
-
-import java.io.File;
-import java.util.Collections;
-
-import androidx.test.espresso.IdlingRegistry;
-import androidx.test.espresso.intent.rule.IntentsTestRule;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
-
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.intent.Intents.intending;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.hasAction;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.hasType;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import android.app.Activity
+import android.app.Instrumentation
+import android.content.ComponentName
+import android.content.Intent
+import android.net.Uri
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingRegistry
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
+import androidx.test.espresso.intent.rule.IntentsTestRule
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
+import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
+import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule
+import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.util.AccountDaoManager
+import com.flowcrypt.email.util.PrivateKeysManager
+import com.flowcrypt.email.util.TestGeneralUtil
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.hasItem
+import org.junit.After
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.runner.RunWith
+import java.io.File
 
 /**
  * @author Denis Bondarenko
@@ -64,180 +57,218 @@ import static org.junit.Assert.assertTrue;
  * E-mail: DenBond7@gmail.com
  */
 @LargeTest
-@RunWith(AndroidJUnit4.class)
-public class BackupKeysActivityTest extends BaseTest {
+@RunWith(AndroidJUnit4::class)
+class BackupKeysActivityTest : BaseTest() {
+  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(BackupKeysActivity::class.java)
 
-  private IntentsTestRule activityTestRule = new IntentsTestRule<>(BackupKeysActivity.class);
-
-  @Rule
-  public TestRule ruleChain = RuleChain
-      .outerRule(new ClearAppSettingsRule())
-      .around(new AddAccountToDatabaseRule())
-      .around(activityTestRule);
-
-  @Override
-  public ActivityTestRule getActivityTestRule() {
-    return activityTestRule;
-  }
+  @get:Rule
+  var ruleChain: TestRule = RuleChain
+      .outerRule(ClearAppSettingsRule())
+      .around(AddAccountToDatabaseRule())
+      .around(activityTestRule)
 
   @Before
-  public void registerIdlingResource() {
-    IdlingRegistry.getInstance().register(((BackupKeysActivity) activityTestRule.getActivity())
-        .getCountingIdlingResource());
+  fun registerIdlingResource() {
+    IdlingRegistry.getInstance().register((activityTestRule?.activity as BackupKeysActivity).countingIdlingResource)
   }
 
   @After
-  public void unregisterIdlingResource() {
-    IdlingRegistry.getInstance().unregister(((BackupKeysActivity) activityTestRule.getActivity())
-        .getCountingIdlingResource());
+  fun unregisterIdlingResource() {
+    IdlingRegistry.getInstance().unregister((activityTestRule?.activity as BackupKeysActivity).countingIdlingResource)
   }
 
   @Test
-  public void testEmailOptionHint() {
-    onView(withId(R.id.radioButtonEmail)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.backup_as_email_hint))).check(matches(isDisplayed()));
+  fun testEmailOptionHint() {
+    onView(withId(R.id.radioButtonEmail))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withText(getResString(R.string.backup_as_email_hint)))
+        .check(matches(isDisplayed()))
   }
 
   @Test
-  public void testDownloadOptionHint() {
-    onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.backup_as_download_hint))).check(matches(isDisplayed()));
+  fun testDownloadOptionHint() {
+    onView(withId(R.id.radioButtonDownload))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withText(getResString(R.string.backup_as_download_hint)))
+        .check(matches(isDisplayed()))
   }
 
   @Test
-  public void testNoKeysEmailOption() {
-    onView(withId(R.id.radioButtonEmail)).check(matches(isDisplayed())).perform(click());
-    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.there_are_no_private_keys,
-        AccountDaoManager.getDefaultAccountDao().getEmail()))).check(matches(isDisplayed()));
+  fun testNoKeysEmailOption() {
+    onView(withId(R.id.radioButtonEmail))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withId(R.id.buttonBackupAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withText(getResString(R.string.there_are_no_private_keys, AccountDaoManager.getDefaultAccountDao().email)))
+        .check(matches(isDisplayed()))
   }
 
   @Test
-  public void testNoKeysDownloadOption() {
-    onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
-    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.there_are_no_private_keys,
-        AccountDaoManager.getDefaultAccountDao().getEmail()))).check(matches(isDisplayed()));
+  fun testNoKeysDownloadOption() {
+    onView(withId(R.id.radioButtonDownload))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withId(R.id.buttonBackupAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withText(getResString(R.string.there_are_no_private_keys, AccountDaoManager.getDefaultAccountDao().email)))
+        .check(matches(isDisplayed()))
   }
 
   @Test
-  public void testSuccessEmailOption() throws Throwable {
-    addFirstKeyWithStrongPassword();
-    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    assertTrue(activityTestRule.getActivity().isFinishing());
+  fun testSuccessEmailOption() {
+    addFirstKeyWithStrongPassword()
+    onView(withId(R.id.buttonBackupAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    assertTrue(activityTestRule?.activity!!.isFinishing)
   }
 
   @Test
-  public void testSuccessWithTwoKeysEmailOption() throws Throwable {
-    addSecondKeyWithStrongPassword();
-    testSuccessEmailOption();
+  fun testSuccessWithTwoKeysEmailOption() {
+    addSecondKeyWithStrongPassword()
+    testSuccessEmailOption()
   }
 
   @Test
-  public void testSuccessDownloadOption() throws Throwable {
-    addFirstKeyWithStrongPassword();
-    onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
-    File file = TestGeneralUtil.createFile("key.asc", "");
-    intendingFileChoose(file);
-    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    assertTrue(activityTestRule.getActivity().isFinishing());
-    TestGeneralUtil.deleteFiles(Collections.singletonList(file));
+  fun testSuccessDownloadOption() {
+    addFirstKeyWithStrongPassword()
+    onView(withId(R.id.radioButtonDownload))
+        .check(matches(isDisplayed()))
+        .perform(click())
+
+    val file = TestGeneralUtil.createFile("key.asc", "")
+
+    intendingFileChoose(file)
+    onView(withId(R.id.buttonBackupAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    assertTrue(activityTestRule?.activity!!.isFinishing)
+    TestGeneralUtil.deleteFiles(listOf(file))
   }
 
   @Test
-  public void testSuccessWithTwoKeysDownloadOption() throws Throwable {
-    addSecondKeyWithStrongPassword();
-    testSuccessDownloadOption();
+  fun testSuccessWithTwoKeysDownloadOption() {
+    addSecondKeyWithStrongPassword()
+    testSuccessDownloadOption()
   }
 
   @Test
-  public void testShowWeakPasswordHintForDownloadOption() throws Throwable {
-    addFirstKeyWithDefaultPassword();
-    onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
-    intendingFileChoose(new File(""));
-    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.pass_phrase_is_too_weak))).check(matches(isDisplayed()));
+  fun testShowWeakPasswordHintForDownloadOption() {
+    addFirstKeyWithDefaultPassword()
+    onView(withId(R.id.radioButtonDownload))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    intendingFileChoose(File(""))
+    onView(withId(R.id.buttonBackupAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withText(getResString(R.string.pass_phrase_is_too_weak)))
+        .check(matches(isDisplayed()))
   }
 
   @Test
-  public void testShowWeakPasswordHintForEmailOption() throws Throwable {
-    addFirstKeyWithDefaultPassword();
-    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.pass_phrase_is_too_weak))).check(matches(isDisplayed()));
+  fun testShowWeakPasswordHintForEmailOption() {
+    addFirstKeyWithDefaultPassword()
+    onView(withId(R.id.buttonBackupAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withText(getResString(R.string.pass_phrase_is_too_weak)))
+        .check(matches(isDisplayed()))
   }
 
   @Test
-  public void testFixWeakPasswordForDownloadOption() throws Throwable {
-    addFirstKeyWithDefaultPassword();
-    onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
-    intendingFileChoose(new File(""));
-    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        ChangePassPhraseActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak));
-    assertFalse(activityTestRule.getActivity().isFinishing());
+  fun testFixWeakPasswordForDownloadOption() {
+    addFirstKeyWithDefaultPassword()
+    onView(withId(R.id.radioButtonDownload))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    intendingFileChoose(File(""))
+    onView(withId(R.id.buttonBackupAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+    checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak))
+    assertFalse(activityTestRule?.activity!!.isFinishing)
   }
 
   @Test
-  public void testFixWeakPasswordForEmailOption() throws Throwable {
-    addFirstKeyWithDefaultPassword();
-    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        ChangePassPhraseActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak));
-    assertFalse(activityTestRule.getActivity().isFinishing());
+  fun testFixWeakPasswordForEmailOption() {
+    addFirstKeyWithDefaultPassword()
+    onView(withId(R.id.buttonBackupAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+    checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak))
+    assertFalse(activityTestRule?.activity!!.isFinishing)
   }
 
   @Test
-  public void testDiffPassphrasesForEmailOption() throws Throwable {
-    addFirstKeyWithStrongPassword();
-    addSecondKeyWithStrongSecondPassword();
-    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        ChangePassPhraseActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases));
-    assertFalse(activityTestRule.getActivity().isFinishing());
+  fun testDiffPassphrasesForEmailOption() {
+    addFirstKeyWithStrongPassword()
+    addSecondKeyWithStrongSecondPassword()
+    onView(withId(R.id.buttonBackupAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+    checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
+    assertFalse(activityTestRule?.activity!!.isFinishing)
   }
 
   @Test
-  public void testDiffPassphrasesForDownloadOption() throws Throwable {
-    addFirstKeyWithStrongPassword();
-    addSecondKeyWithStrongSecondPassword();
-    onView(withId(R.id.radioButtonDownload)).check(matches(isDisplayed())).perform(click());
-    intendingFileChoose(new File(""));
-    onView(withId(R.id.buttonBackupAction)).check(matches(isDisplayed())).perform(click());
-    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        ChangePassPhraseActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases));
-    assertFalse(activityTestRule.getActivity().isFinishing());
+  fun testDiffPassphrasesForDownloadOption() {
+    addFirstKeyWithStrongPassword()
+    addSecondKeyWithStrongSecondPassword()
+    onView(withId(R.id.radioButtonDownload))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    intendingFileChoose(File(""))
+    onView(withId(R.id.buttonBackupAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+    checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
+    assertFalse(activityTestRule?.activity!!.isFinishing)
   }
 
-  private void intendingFileChoose(File file) {
-    Intent resultData = new Intent();
-    resultData.setData(Uri.fromFile(file));
+  private fun intendingFileChoose(file: File) {
+    val resultData = Intent()
+    resultData.data = Uri.fromFile(file)
     intending(allOf(hasAction(Intent.ACTION_CREATE_DOCUMENT),
         hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
         hasType(Constants.MIME_TYPE_PGP_KEY)))
-        .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
   }
 
-  private void addFirstKeyWithDefaultPassword() throws Throwable {
+
+  private fun addFirstKeyWithDefaultPassword() {
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_default.json",
-        TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
+        TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
   }
 
-  private void addFirstKeyWithStrongPassword() throws Throwable {
+
+  private fun addFirstKeyWithStrongPassword() {
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_strong.json",
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL);
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
   }
 
-  private void addSecondKeyWithStrongPassword() throws Throwable {
+
+  private fun addSecondKeyWithStrongPassword() {
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL);
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
   }
 
-  private void addSecondKeyWithStrongSecondPassword() throws Throwable {
+
+  private fun addSecondKeyWithStrongSecondPassword() {
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong_second.json",
-        TestConstants.DEFAULT_SECOND_STRONG_PASSWORD, KeyDetails.Type.EMAIL);
+        TestConstants.DEFAULT_SECOND_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
   }
 }
