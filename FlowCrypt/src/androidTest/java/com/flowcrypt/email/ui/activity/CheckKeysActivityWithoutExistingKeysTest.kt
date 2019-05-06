@@ -3,44 +3,37 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.util.PrivateKeysManager;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
-import org.junit.runner.RunWith;
-
-import java.util.ArrayList;
-
-import androidx.test.espresso.Espresso;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
-
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
-import static androidx.test.espresso.action.ViewActions.scrollTo;
-import static androidx.test.espresso.action.ViewActions.typeText;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.not;
+import android.app.Activity
+import android.app.Instrumentation
+import android.content.Intent
+import android.view.View
+import androidx.test.espresso.Espresso
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.scrollTo
+import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
+import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.R
+import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.util.PrivateKeysManager
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.not
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
@@ -48,71 +41,74 @@ import static org.hamcrest.Matchers.not;
  * Time: 11:45
  * E-mail: DenBond7@gmail.com
  */
-
 @LargeTest
-@RunWith(AndroidJUnit4.class)
-public class CheckKeysActivityWithoutExistingKeysTest extends BaseTest {
-  private ActivityTestRule activityTestRule = new ActivityTestRule<CheckKeysActivity>(CheckKeysActivity.class) {
-    @Override
-    protected Intent getActivityIntent() {
-      Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-      ArrayList<NodeKeyDetails> privateKeys = PrivateKeysManager.getKeysFromAssets(
-          new String[]{"node/default@denbond7.com_fisrtKey_prv_default.json"});
-      return CheckKeysActivity.newIntent(targetContext,
-          privateKeys,
-          KeyDetails.Type.EMAIL,
-          targetContext.getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
-              privateKeys.size(), privateKeys.size()),
-          targetContext.getString(R.string.continue_),
-          targetContext.getString(R.string.use_another_account));
-    }
-  };
+@RunWith(AndroidJUnit4::class)
+class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
+  override val activityTestRule: ActivityTestRule<*>? =
+      object : ActivityTestRule<CheckKeysActivity>(CheckKeysActivity::class.java) {
+        override fun getActivityIntent(): Intent {
+          val privateKeys = PrivateKeysManager.getKeysFromAssets(
+              arrayOf("node/default@denbond7.com_fisrtKey_prv_default.json"))
+          return CheckKeysActivity.newIntent(getTargetContext(),
+              privateKeys,
+              KeyDetails.Type.EMAIL,
+              getTargetContext().resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
+                  privateKeys.size, privateKeys.size),
+              getTargetContext().getString(R.string.continue_),
+              getTargetContext().getString(R.string.use_another_account))
+        }
+      }
 
-  @Rule
-  public TestRule ruleChain = RuleChain
-      .outerRule(new ClearAppSettingsRule())
-      .around(activityTestRule);
+  @get:Rule
+  var ruleChain: TestRule = RuleChain
+      .outerRule(ClearAppSettingsRule())
+      .around(activityTestRule)
 
-  @Override
-  public ActivityTestRule getActivityTestRule() {
-    return activityTestRule;
+  @Test
+  fun testShowMsgEmptyWarning() {
+    Espresso.closeSoftKeyboard()
+    onView(withId(R.id.buttonPositiveAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    checkIsSnackbarDisplayedAndClick(getResString(R.string.passphrase_must_be_non_empty))
   }
 
   @Test
-  public void testShowMsgEmptyWarning() {
-    Espresso.closeSoftKeyboard();
-    onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayedAndClick(InstrumentationRegistry.getInstrumentation().getTargetContext()
-        .getString(R.string.passphrase_must_be_non_empty));
+  fun testUseIncorrectPassPhrase() {
+    onView(withId(R.id.editTextKeyPassword))
+        .check(matches(isDisplayed()))
+        .perform(typeText("some pass phrase"), closeSoftKeyboard())
+    onView(withId(R.id.buttonPositiveAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    checkIsSnackbarDisplayedAndClick(getResString(R.string.password_is_incorrect))
   }
 
   @Test
-  public void testUseIncorrectPassPhrase() {
-    onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
-        .perform(typeText("some pass phrase"), closeSoftKeyboard());
-    onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    checkIsSnackbarDisplayedAndClick(InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string
-        .password_is_incorrect));
+  fun testUseCorrectPassPhrase() {
+    onView(withId(R.id.editTextKeyPassword))
+        .check(matches(isDisplayed()))
+        .perform(typeText("android"), closeSoftKeyboard())
+    onView(withId(R.id.buttonPositiveAction))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    assertThat<Instrumentation.ActivityResult>(activityTestRule?.activityResult, hasResultCode(Activity.RESULT_OK))
   }
 
   @Test
-  public void testUseCorrectPassPhrase() {
-    onView(withId(R.id.editTextKeyPassword)).check(matches(isDisplayed()))
-        .perform(typeText("android"), closeSoftKeyboard());
-    onView(withId(R.id.buttonPositiveAction)).check(matches(isDisplayed())).perform(click());
-    assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
+  fun testCheckClickButtonNeutral() {
+    Espresso.closeSoftKeyboard()
+    onView(withId(R.id.buttonNeutralAction))
+        .check(matches(not<View>(isDisplayed())))
   }
 
   @Test
-  public void testCheckClickButtonNeutral() {
-    Espresso.closeSoftKeyboard();
-    onView(withId(R.id.buttonNeutralAction)).check(matches(not(isDisplayed())));
-  }
-
-  @Test
-  public void testCheckClickButtonNegative() {
-    Espresso.closeSoftKeyboard();
-    onView(withId(R.id.buttonNegativeAction)).check(matches(isDisplayed())).perform(scrollTo(), click());
-    assertThat(activityTestRule.getActivityResult(), hasResultCode(CheckKeysActivity.RESULT_NEGATIVE));
+  fun testCheckClickButtonNegative() {
+    Espresso.closeSoftKeyboard()
+    onView(withId(R.id.buttonNegativeAction))
+        .check(matches(isDisplayed()))
+        .perform(scrollTo(), click())
+    assertThat<Instrumentation.ActivityResult>(activityTestRule?.activityResult,
+        hasResultCode(CheckKeysActivity.RESULT_NEGATIVE))
   }
 }
