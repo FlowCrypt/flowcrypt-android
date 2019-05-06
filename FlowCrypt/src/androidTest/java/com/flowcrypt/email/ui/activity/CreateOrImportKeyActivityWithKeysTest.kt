@@ -3,44 +3,37 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.app.Activity;
-import android.app.Instrumentation;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
-import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
-import com.flowcrypt.email.util.AccountDaoManager;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
-import org.junit.runner.RunWith;
-
-import androidx.test.espresso.intent.rule.IntentsTestRule;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
-
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode;
-import static androidx.test.espresso.intent.Intents.intending;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.hasExtraWithKey;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
+import android.app.Activity
+import android.app.Instrumentation
+import android.content.ComponentName
+import android.content.Intent
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtraWithKey
+import androidx.test.espresso.intent.rule.IntentsTestRule
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
+import com.flowcrypt.email.R
+import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
+import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
+import com.flowcrypt.email.util.AccountDaoManager
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.allOf
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
@@ -49,61 +42,61 @@ import static org.hamcrest.Matchers.allOf;
  * E-mail: DenBond7@gmail.com
  */
 @LargeTest
-@RunWith(AndroidJUnit4.class)
-public class CreateOrImportKeyActivityWithKeysTest extends BaseTest {
+@RunWith(AndroidJUnit4::class)
+class CreateOrImportKeyActivityWithKeysTest : BaseTest() {
 
-  private IntentsTestRule activityTestRule =
-      new IntentsTestRule<CreateOrImportKeyActivity>(CreateOrImportKeyActivity.class) {
-        @Override
-        protected Intent getActivityIntent() {
-          Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-          return CreateOrImportKeyActivity.newIntent(targetContext, AccountDaoManager.getDefaultAccountDao(), true);
+  override val activityTestRule =
+      object : IntentsTestRule<CreateOrImportKeyActivity>(CreateOrImportKeyActivity::class.java) {
+        override fun getActivityIntent(): Intent {
+          return CreateOrImportKeyActivity.newIntent(getTargetContext(), AccountDaoManager.getDefaultAccountDao(), true)
         }
-      };
+      }
 
-  @Rule
-  public TestRule ruleChain = RuleChain
-      .outerRule(new ClearAppSettingsRule())
-      .around(new AddPrivateKeyToDatabaseRule())
-      .around(activityTestRule);
+  @get:Rule
+  var ruleChain: TestRule = RuleChain
+      .outerRule(ClearAppSettingsRule())
+      .around(AddPrivateKeyToDatabaseRule())
+      .around(activityTestRule)
 
-  @Override
-  public ActivityTestRule getActivityTestRule() {
-    return activityTestRule;
+  @Test
+  fun testClickOnButtonCreateNewKey() {
+    intending(allOf(hasComponent(ComponentName(getTargetContext(), CreatePrivateKeyActivity::class.java)),
+        hasExtraWithKey(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT_DAO)))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+    onView(withId(R.id.buttonCreateNewKey))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    assertThat(activityTestRule.activityResult, hasResultCode(Activity.RESULT_OK))
   }
 
   @Test
-  public void testClickOnButtonCreateNewKey() {
-    intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        CreatePrivateKeyActivity.class)), hasExtraWithKey(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT_DAO)))
-        .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
-    onView(withId(R.id.buttonCreateNewKey)).check(matches(isDisplayed())).perform(click());
-    assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
-  }
-
-  @Test
-  public void testClickOnButtonImportMyKey() {
-    intending(allOf(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-            ImportPrivateKeyActivity.class)),
+  fun testClickOnButtonImportMyKey() {
+    intending(allOf(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)),
         hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE),
         hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_TITLE),
         hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD),
         hasExtraWithKey(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND)))
-        .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
-    onView(withId(R.id.buttonImportMyKey)).check(matches(isDisplayed())).perform(click());
-    assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+    onView(withId(R.id.buttonImportMyKey))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    assertThat(activityTestRule.activityResult, hasResultCode(Activity.RESULT_OK))
   }
 
   @Test
-  public void testClickOnButtonSelectAnotherAccount() {
-    onView(withId(R.id.buttonSelectAnotherAccount)).check(matches(isDisplayed())).perform(click());
-    assertThat(activityTestRule.getActivityResult(), hasResultCode(CreateOrImportKeyActivity
-        .RESULT_CODE_USE_ANOTHER_ACCOUNT));
+  fun testClickOnButtonSelectAnotherAccount() {
+    onView(withId(R.id.buttonSelectAnotherAccount))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    assertThat(activityTestRule.activityResult,
+        hasResultCode(CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT))
   }
 
   @Test
-  public void testClickOnButtonSkipSetup() {
-    onView(withId(R.id.buttonSkipSetup)).check(matches(isDisplayed())).perform(click());
-    assertThat(activityTestRule.getActivityResult(), hasResultCode(Activity.RESULT_OK));
+  fun testClickOnButtonSkipSetup() {
+    onView(withId(R.id.buttonSkipSetup))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    assertThat(activityTestRule.activityResult, hasResultCode(Activity.RESULT_OK))
   }
 }
