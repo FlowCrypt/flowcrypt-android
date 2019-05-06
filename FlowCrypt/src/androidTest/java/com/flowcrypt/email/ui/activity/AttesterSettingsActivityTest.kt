@@ -3,30 +3,28 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
-import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.ui.activity.settings.AttesterSettingsActivity;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
-import org.junit.runner.RunWith;
-
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
-import androidx.test.rule.ActivityTestRule;
-
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static com.flowcrypt.email.matchers.CustomMatchers.withEmptyListView;
-import static org.hamcrest.Matchers.not;
+import android.view.View
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
+import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.R
+import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyListView
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule
+import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.ui.activity.settings.AttesterSettingsActivity
+import org.hamcrest.Matchers.not
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
@@ -35,24 +33,21 @@ import static org.hamcrest.Matchers.not;
  * E-mail: DenBond7@gmail.com
  */
 @LargeTest
-@RunWith(AndroidJUnit4.class)
-public class AttesterSettingsActivityTest extends BaseTest {
-  private ActivityTestRule activityTestRule = new ActivityTestRule<>(AttesterSettingsActivity.class);
+@RunWith(AndroidJUnit4::class)
+class AttesterSettingsActivityTest : BaseTest() {
+  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(AttesterSettingsActivity::class.java)
 
-  @Rule
-  public TestRule ruleChain = RuleChain
-      .outerRule(new ClearAppSettingsRule())
-      .around(new AddAccountToDatabaseRule())
-      .around(activityTestRule);
-
-  @Override
-  public ActivityTestRule getActivityTestRule() {
-    return activityTestRule;
-  }
+  @get:Rule
+  var ruleChain: TestRule = RuleChain
+      .outerRule(ClearAppSettingsRule())
+      .around(AddAccountToDatabaseRule())
+      .around(activityTestRule)
 
   @Test
-  public void testKeysExistOnAttester() {
-    onView(withId(R.id.listViewKeys)).check(matches(not(withEmptyListView()))).check(matches(isDisplayed()));
-    onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
+  fun testKeysExistOnAttester() {
+    onView(withId(R.id.listViewKeys))
+        .check(matches(not<View>(withEmptyListView()))).check(matches(isDisplayed()))
+    onView(withId(R.id.emptyView))
+        .check(matches(not<View>(isDisplayed())))
   }
 }
