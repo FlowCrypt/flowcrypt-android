@@ -3,58 +3,52 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.content.ContentValues;
-import android.content.Intent;
-import android.text.TextUtils;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
-import com.flowcrypt.email.api.email.model.ServiceInfo;
-import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.model.MessageType;
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
-import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.rules.UpdateAccountRule;
-import com.flowcrypt.email.util.AccountDaoManager;
-import com.flowcrypt.email.util.TestGeneralUtil;
-import com.hootsuite.nachos.tokenizer.SpanChipTokenizer;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
-import org.junit.runner.RunWith;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import androidx.test.espresso.intent.rule.IntentsTestRule;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
-
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.replaceText;
-import static androidx.test.espresso.action.ViewActions.scrollTo;
-import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.isFocusable;
-import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.isEmptyString;
-import static org.hamcrest.Matchers.not;
+import android.content.ContentValues
+import android.content.Intent
+import android.text.TextUtils
+import android.view.View
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.action.ViewActions.scrollTo
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.rule.IntentsTestRule
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isFocusable
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
+import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.api.email.model.ServiceInfo
+import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule
+import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.UpdateAccountRule
+import com.flowcrypt.email.util.AccountDaoManager
+import com.flowcrypt.email.util.TestGeneralUtil
+import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.isEmptyString
+import org.hamcrest.Matchers.not
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.runner.RunWith
+import java.util.*
 
 /**
- * This class tests a case when we want to send a reply with {@link ServiceInfo}
+ * This class tests a case when we want to send a reply with [ServiceInfo]
  *
  * @author Denis Bondarenko
  * Date: 14.05.2018
@@ -62,121 +56,125 @@ import static org.hamcrest.Matchers.not;
  * E-mail: DenBond7@gmail.com
  */
 @LargeTest
-@RunWith(AndroidJUnit4.class)
-public class StandardReplyWithServiceInfoAndOneFileTest extends BaseTest {
-  private static final String STRING = "Some short string";
-  private ServiceInfo serviceInfo;
-  private IncomingMessageInfo incomingMsgInfo;
+@RunWith(AndroidJUnit4::class)
+class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
+  private lateinit var serviceInfo: ServiceInfo
+  private lateinit var incomingMsgInfo: IncomingMessageInfo
 
-  private IntentsTestRule intentsTestRule = new IntentsTestRule<CreateMessageActivity>(CreateMessageActivity.class) {
-    @Override
-    protected Intent getActivityIntent() {
-      incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
-          IncomingMessageInfo.class);
+  override val activityTestRule: ActivityTestRule<*>? =
+      object : IntentsTestRule<CreateMessageActivity>(CreateMessageActivity::class.java) {
+        override fun getActivityIntent(): Intent {
+          incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
+              IncomingMessageInfo::class.java)!!
 
-      AttachmentInfo attachmentInfo = new AttachmentInfo();
-      attachmentInfo.setName("test.txt");
-      attachmentInfo.setEncodedSize(STRING.length());
-      attachmentInfo.setRawData(STRING);
-      attachmentInfo.setType("text/plain");
-      attachmentInfo.setId(EmailUtil.generateContentId());
-      attachmentInfo.setProtected(true);
+          val attachmentInfo = AttachmentInfo()
+          attachmentInfo.name = "test.txt"
+          attachmentInfo.encodedSize = STRING.length.toLong()
+          attachmentInfo.rawData = STRING
+          attachmentInfo.type = "text/plain"
+          attachmentInfo.id = EmailUtil.generateContentId()
+          attachmentInfo.isProtected = true
 
-      List<AttachmentInfo> attachmentInfoList = new ArrayList<>();
-      attachmentInfoList.add(attachmentInfo);
+          val attachmentInfoList = ArrayList<AttachmentInfo>()
+          attachmentInfoList.add(attachmentInfo)
 
-      serviceInfo = new ServiceInfo.Builder()
-          .setIsFromFieldEditable(false)
-          .setIsToFieldEditable(false)
-          .setIsSubjectEditable(false)
-          .setIsMsgTypeSwitchable(false)
-          .setHasAbilityToAddNewAtt(false)
-          .setSystemMsg(InstrumentationRegistry.getInstrumentation().getTargetContext()
-              .getString(R.string.message_was_encrypted_for_wrong_key))
-          .setAtts(attachmentInfoList)
-          .build();
+          serviceInfo = ServiceInfo.Builder()
+              .setIsFromFieldEditable(false)
+              .setIsToFieldEditable(false)
+              .setIsSubjectEditable(false)
+              .setIsMsgTypeSwitchable(false)
+              .setHasAbilityToAddNewAtt(false)
+              .setSystemMsg(getResString(R.string.message_was_encrypted_for_wrong_key))
+              .setAtts(attachmentInfoList)
+              .build()
 
-      return CreateMessageActivity.generateIntent(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-          incomingMsgInfo, MessageType.REPLY, MessageEncryptionType.STANDARD, serviceInfo);
-    }
-  };
+          return CreateMessageActivity.generateIntent(getTargetContext(), incomingMsgInfo, MessageType.REPLY,
+              MessageEncryptionType.STANDARD, serviceInfo)
+        }
+      }
 
-  @Rule
-  public TestRule ruleChain = RuleChain
-      .outerRule(new ClearAppSettingsRule())
-      .around(new AddAccountToDatabaseRule())
-      .around(new UpdateAccountRule(AccountDaoManager.getDefaultAccountDao(), generateContentValues()))
-      .around(intentsTestRule);
+  @get:Rule
+  var ruleChain: TestRule = RuleChain
+      .outerRule(ClearAppSettingsRule())
+      .around(AddAccountToDatabaseRule())
+      .around(UpdateAccountRule(AccountDaoManager.getDefaultAccountDao(), generateContentValues()))
+      .around(activityTestRule)
 
-  @Override
-  public ActivityTestRule getActivityTestRule() {
-    return intentsTestRule;
+  @Test
+  fun testFrom() {
+    onView(withId(R.id.editTextFrom))
+        .perform(scrollTo())
+        .check(matches(allOf<View>(isDisplayed(),
+            if (serviceInfo.isFromFieldEditable) isFocusable() else not<View>(isFocusable()))))
   }
 
   @Test
-  public void testFrom() {
-    onView(withId(R.id.editTextFrom)).perform(scrollTo()).check(matches(allOf(
-        isDisplayed(), serviceInfo.isFromFieldEditable() ? isFocusable() : not(isFocusable()))));
-  }
-
-  @Test
-  public void testToRecipients() {
-    String chipSeparator = Character.toString(SpanChipTokenizer.CHIP_SPAN_SEPARATOR);
-    String autoCorrectSeparator = Character.toString(SpanChipTokenizer.AUTOCORRECT_SEPARATOR);
-    CharSequence textWithSeparator = autoCorrectSeparator
+  fun testToRecipients() {
+    val chipSeparator = Character.toString(SpanChipTokenizer.CHIP_SPAN_SEPARATOR)
+    val autoCorrectSeparator = Character.toString(SpanChipTokenizer.AUTOCORRECT_SEPARATOR)
+    val textWithSeparator = (autoCorrectSeparator
         + chipSeparator
-        + incomingMsgInfo.getFrom()[0].getAddress()
+        + incomingMsgInfo.from[0].address
         + chipSeparator
-        + autoCorrectSeparator;
+        + autoCorrectSeparator)
 
-    onView(withId(R.id.editTextRecipientTo)).perform(scrollTo()).check(matches(allOf(
-        isDisplayed(), withText(textWithSeparator.toString()),
-        serviceInfo.isToFieldEditable() ? isFocusable() : not(isFocusable()))));
+    onView(withId(R.id.editTextRecipientTo))
+        .perform(scrollTo())
+        .check(matches(allOf<View>(isDisplayed(), withText(textWithSeparator),
+            if (serviceInfo.isToFieldEditable) isFocusable() else not<View>(isFocusable()))))
   }
 
   @Test
-  public void testSubject() {
-    onView(withId(R.id.editTextEmailSubject)).check(matches(allOf(
-        isDisplayed(),
-        serviceInfo.isSubjectEditable() ? isFocusable() : not(isFocusable()))));
+  fun testSubject() {
+    onView(withId(R.id.editTextEmailSubject))
+        .check(matches(allOf<View>(isDisplayed(),
+            if (serviceInfo.isSubjectEditable) isFocusable() else not<View>(isFocusable()))))
   }
 
   @Test
-  public void testEmailMsg() {
-    onView(withId(R.id.editTextEmailMessage)).check(matches(
-        allOf(isDisplayed(), TextUtils.isEmpty(serviceInfo.getSystemMsg())
-                ? withText(isEmptyString())
-                : withText(serviceInfo.getSystemMsg()),
-            serviceInfo.isMsgEditable() ? isFocusable() : not(isFocusable()))));
+  fun testEmailMsg() {
+    onView(withId(R.id.editTextEmailMessage))
+        .check(matches(allOf<View>(isDisplayed(),
+            if (TextUtils.isEmpty(serviceInfo.systemMsg)) withText(isEmptyString())
+            else withText(serviceInfo.systemMsg),
+            if (serviceInfo.isMsgEditable) isFocusable() else not<View>(isFocusable()))))
 
-    if (serviceInfo.isMsgEditable()) {
-      onView(withId(R.id.editTextEmailMessage)).perform(replaceText(STRING));
+    if (serviceInfo.isMsgEditable) {
+      onView(withId(R.id.editTextEmailMessage))
+          .perform(replaceText(STRING))
     }
   }
 
   @Test
-  public void testAvailabilityAddingAtts() {
+  fun testAvailabilityAddingAtts() {
     if (!serviceInfo.hasAbilityToAddNewAtt()) {
-      onView(withId(R.id.menuActionAttachFile)).check(doesNotExist());
+      onView(withId(R.id.menuActionAttachFile))
+          .check(doesNotExist())
     }
   }
 
   @Test
-  public void testDisabledSwitchingBetweenEncryptionTypes() {
-    if (!serviceInfo.isMsgTypeSwitchable()) {
-      onView(withText(R.string.switch_to_standard_email)).check(doesNotExist());
-      onView(withText(R.string.switch_to_secure_email)).check(doesNotExist());
+  fun testDisabledSwitchingBetweenEncryptionTypes() {
+    if (!serviceInfo.isMsgTypeSwitchable) {
+      onView(withText(R.string.switch_to_standard_email))
+          .check(doesNotExist())
+      onView(withText(R.string.switch_to_secure_email))
+          .check(doesNotExist())
     }
   }
 
   @Test
-  public void testShowHelpScreen() {
-    testHelpScreen();
+  fun testShowHelpScreen() {
+    testHelpScreen()
   }
 
-  private ContentValues generateContentValues() {
-    ContentValues contentValues = new ContentValues();
-    contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true);
-    return contentValues;
+  private fun generateContentValues(): ContentValues {
+    val contentValues = ContentValues()
+    contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true)
+    return contentValues
+  }
+
+  companion object {
+    private const val STRING = "Some short string"
   }
 }
