@@ -441,11 +441,13 @@ class CreateMessageActivityTest : BaseTest() {
     private var atts: MutableList<File> = mutableListOf()
 
     @BeforeClass
+    @JvmStatic
     fun setUp() {
       createFilesForAtts()
     }
 
     @AfterClass
+    @JvmStatic
     fun cleanResources() {
       TestGeneralUtil.deleteFiles(atts)
     }

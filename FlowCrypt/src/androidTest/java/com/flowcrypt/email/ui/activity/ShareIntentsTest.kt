@@ -3,52 +3,42 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.Manifest;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.TestConstants;
-import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
-import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.util.TestGeneralUtil;
-
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
-import org.junit.runner.RunWith;
-
-import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
-import java.util.UUID;
-
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
-import androidx.test.rule.GrantPermissionRule;
-
-import static androidx.test.espresso.Espresso.closeSoftKeyboard;
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.isEmptyString;
-import static org.hamcrest.Matchers.not;
+import android.Manifest
+import android.content.Intent
+import android.net.Uri
+import androidx.test.espresso.Espresso.closeSoftKeyboard
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
+import androidx.test.rule.ActivityTestRule
+import androidx.test.rule.GrantPermissionRule
+import com.flowcrypt.email.R
+import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule
+import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.util.TestGeneralUtil
+import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.isEmptyString
+import org.hamcrest.Matchers.not
+import org.junit.AfterClass
+import org.junit.BeforeClass
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.runner.RunWith
+import java.io.File
+import java.io.UnsupportedEncodingException
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
+import java.util.*
 
 /**
  * @author Denis Bondarenko
@@ -57,283 +47,259 @@ import static org.hamcrest.Matchers.not;
  * E-mail: DenBond7@gmail.com
  */
 @LargeTest
-@RunWith(AndroidJUnit4.class)
-public class ShareIntentsTest extends BaseTest {
-  private static final int ATTACHMENTS_COUNT = 3;
-  private static final String ENCODED_SUBJECT = "some%20subject";
-  private static final String ENCODED_BODY = "some%20body";
+@RunWith(AndroidJUnit4::class)
+class ShareIntentsTest : BaseTest() {
 
-  private static File[] atts;
-  private static String[] recipients;
+  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(CreateMessageActivity::class.java, false, false)
 
-  private ActivityTestRule activityTestRule =
-      new ActivityTestRule<>(CreateMessageActivity.class, false, false);
-
-  @Rule
-  public TestRule ruleChain = RuleChain
-      .outerRule(new ClearAppSettingsRule())
+  @get:Rule
+  var ruleChain: TestRule = RuleChain
+      .outerRule(ClearAppSettingsRule())
       .around(GrantPermissionRule.grant(Manifest.permission.READ_EXTERNAL_STORAGE))
-      .around(new AddAccountToDatabaseRule())
-      .around(activityTestRule);
+      .around(AddAccountToDatabaseRule())
+      .around(activityTestRule)
 
-  @BeforeClass
-  public static void setUp() {
-    createFilesForAtts();
-    recipients = new String[]{
-        TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER,
-        TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER};
-  }
+  private val randomActionForRFC6068: String
+    get() = if (Random().nextBoolean()) Intent.ACTION_SENDTO else Intent.ACTION_VIEW
 
-  @AfterClass
-  public static void cleanResources() {
-    TestGeneralUtil.deleteFiles(Arrays.asList(atts));
-  }
-
-  @Override
-  public ActivityTestRule getActivityTestRule() {
-    return activityTestRule;
+  @Test
+  fun testEmptyUri() {
+    activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, null))
+    checkViewsOnScreen(0, null, null, 0)
   }
 
   @Test
-  public void testEmptyUri() {
-    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(), null));
-    checkViewsOnScreen(0, null, null, 0);
+  fun testToSubjectBody() {
+    activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
+        + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
   @Test
-  public void testToSubjectBody() {
-    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
-        "mailto:" + recipients[0] + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY));
-    checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0);
+  fun testToParamSubjectBody() {
+    activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:?to=" + recipients[0]
+        + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
   @Test
-  public void testToParamSubjectBody() {
-    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
-        "mailto:?to=" + recipients[0] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY));
-    checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0);
+  fun testToToParamSubjectBody() {
+    activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
+        + "?to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
   @Test
-  public void testToToParamSubjectBody() {
-    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
-        "mailto:" + recipients[0] + "?to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" +
-            ENCODED_BODY));
-    checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0);
+  fun testToParamToSubjectBody() {
+    activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:?to=" + recipients[0]
+        + "," + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
   @Test
-  public void testToParamToSubjectBody() {
-    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
-        "mailto:?to=" + recipients[0] + "," + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" +
-            ENCODED_BODY));
-    checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0);
+  fun testMultiToSubjectBody() {
+    activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
+        + "," + recipients[1] + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
   @Test
-  public void testMultiToSubjectBody() {
-    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
-        "mailto:" + recipients[0] + "," + recipients[1] + "?subject=" + ENCODED_SUBJECT + "&body=" +
-            ENCODED_BODY));
-    checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0);
+  fun testMultiToParamSubjectBody() {
+    activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:?to=" + recipients[0]
+        + "&to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
   @Test
-  public void testMultiToParamSubjectBody() {
-    activityTestRule.launchActivity(genIntentForUri(getRandomActionForRFC6068(),
-        "mailto:?to=" + recipients[0] + "&to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT +
-            "&body=" + ENCODED_BODY));
-    checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0);
+  fun testSendEmptyExtras() {
+    activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null, null, 0))
+    checkViewsOnScreen(0, null, null, 0)
   }
 
   @Test
-  public void testSendEmptyExtras() {
-    activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null,
-        null, 0));
-    checkViewsOnScreen(0, null, null, 0);
+  fun testSendExtSubject() {
+    activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT, null, 0))
+    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, null, 0)
   }
 
   @Test
-  public void testSendExtSubject() {
-    activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
-        null, 0));
-    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, null, 0);
+  fun testSendExtBody() {
+    activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null, Intent.EXTRA_TEXT, 0))
+    checkViewsOnScreen(0, null, Intent.EXTRA_TEXT, 0)
   }
 
   @Test
-  public void testSendExtBody() {
-    activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null,
-        Intent.EXTRA_TEXT, 0));
-    checkViewsOnScreen(0, null, Intent.EXTRA_TEXT, 0);
+  fun testSendAtt() {
+    activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null, null, 1))
+    checkViewsOnScreen(0, null, null, 1)
   }
 
   @Test
-  public void testSendAtt() {
-    activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null,
-        null, 1));
-    checkViewsOnScreen(0, null, null, 1);
+  fun testSendExtSubjectExtBody() {
+    activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
+        Intent.EXTRA_TEXT, 0))
+    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 0)
   }
 
   @Test
-  public void testSendExtSubjectExtBody() {
-    activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
-        Intent.EXTRA_TEXT, 0));
-    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 0);
+  fun testSendExtSubjectAtt() {
+    activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT, null, 1))
+    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, null, 1)
   }
 
   @Test
-  public void testSendExtSubjectAtt() {
-    activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
-        null, 1));
-    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, null, 1);
+  fun testSendExtBodyAtt() {
+    activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null, Intent.EXTRA_TEXT, 1))
+    checkViewsOnScreen(0, null, Intent.EXTRA_TEXT, 1)
   }
 
   @Test
-  public void testSendExtBodyAtt() {
-    activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null,
-        Intent.EXTRA_TEXT, 1));
-    checkViewsOnScreen(0, null, Intent.EXTRA_TEXT, 1);
+  fun testSendExtSubjectExtBodyAtt() {
+    activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
+        Intent.EXTRA_TEXT, 1))
+    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 1)
   }
 
   @Test
-  public void testSendExtSubjectExtBodyAtt() {
-    activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
-        Intent.EXTRA_TEXT, 1));
-    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 1);
+  fun testSendMultipleMultiAtt() {
+    activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, null, null, atts.size))
+    checkViewsOnScreen(0, null, null, atts.size)
   }
 
   @Test
-  public void testSendMultipleMultiAtt() {
-    activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, null,
-        null, atts.length));
-    checkViewsOnScreen(0, null, null, atts.length);
+  fun testSendMultipleExtSubjectExtBodyMultiAtt() {
+    activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, Intent.EXTRA_SUBJECT,
+        Intent.EXTRA_TEXT, atts.size))
+    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, atts.size)
   }
 
-  @Test
-  public void testSendMultipleExtSubjectExtBodyMultiAtt() {
-    activityTestRule.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, Intent.EXTRA_SUBJECT,
-        Intent.EXTRA_TEXT, atts.length));
-    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, atts.length);
-  }
-
-  private static void createFilesForAtts() {
-    atts = new File[ATTACHMENTS_COUNT];
-    for (int i = 0; i < atts.length; i++) {
-      atts[i] = TestGeneralUtil.createFile(i + ".txt", UUID.randomUUID().toString());
-    }
-  }
-
-  private String getRandomActionForRFC6068() {
-    return new Random().nextBoolean() ? Intent.ACTION_SENDTO : Intent.ACTION_VIEW;
-  }
-
-  private Intent genIntentForUri(String action, String stringUri) {
-    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-    Intent intent = new Intent(targetContext, CreateMessageActivity.class);
-
-    if (action != null) {
-      intent.setAction(action);
-    }
-
+  private fun genIntentForUri(action: String?, stringUri: String?): Intent {
+    val intent = Intent(getTargetContext(), CreateMessageActivity::class.java)
+    intent.action = action
     if (stringUri != null) {
-      intent.setData(Uri.parse(stringUri));
+      intent.data = Uri.parse(stringUri)
     }
-    return intent;
+    return intent
   }
 
 
-  private Intent generateIntentWithExtras(String action, String extraSubject, CharSequence extraMsg,
-                                          int attachmentsCount) {
-    Context targetContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-    Intent intent = new Intent(targetContext, CreateMessageActivity.class);
-
-    if (action != null) {
-      intent.setAction(action);
-    }
-
-    if (extraSubject != null) {
-      intent.putExtra(Intent.EXTRA_SUBJECT, extraSubject);
-    }
-
-    if (extraMsg != null) {
-      intent.putExtra(Intent.EXTRA_TEXT, extraMsg);
-    }
+  private fun generateIntentWithExtras(action: String?, extraSubject: String?, extraMsg: CharSequence?,
+                                       attachmentsCount: Int): Intent {
+    val intent = Intent(getTargetContext(), CreateMessageActivity::class.java)
+    intent.action = action
+    intent.putExtra(Intent.EXTRA_SUBJECT, extraSubject)
+    intent.putExtra(Intent.EXTRA_TEXT, extraMsg)
 
     if (attachmentsCount > 0) {
       if (attachmentsCount == 1) {
-        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(atts[1]));
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(atts[1]))
       } else {
-        ArrayList<Uri> urisFromAtts = new ArrayList<>();
-        for (File att : atts) {
-          urisFromAtts.add(Uri.fromFile(att));
+        val urisFromAtts = ArrayList<Uri>()
+        for (att in atts) {
+          urisFromAtts.add(Uri.fromFile(att))
         }
-        intent.putExtra(Intent.EXTRA_STREAM, urisFromAtts);
+        intent.putExtra(Intent.EXTRA_STREAM, urisFromAtts)
       }
     }
-    return intent;
+    return intent
   }
 
-  private void checkViewsOnScreen(int recipientsCount, String subject, CharSequence body, int attachmentsCount) {
-    onView(withText(R.string.compose)).check(matches(isDisplayed()));
-    onView(withId(R.id.editTextFrom)).check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))));
-    closeSoftKeyboard();
+  private fun checkViewsOnScreen(recipientsCount: Int, subject: String?, body: CharSequence?, attachmentsCount: Int) {
+    onView(withText(R.string.compose))
+        .check(matches(isDisplayed()))
+    onView(withId(R.id.editTextFrom))
+        .check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))))
+    closeSoftKeyboard()
 
-    checkRecipients(recipientsCount);
-    checkSubject(subject);
-    checkBody(body);
-    checkAtts(attachmentsCount);
+    checkRecipients(recipientsCount)
+    checkSubject(subject)
+    checkBody(body)
+    checkAtts(attachmentsCount)
   }
 
-  private void checkAtts(int attachmentsCount) {
+  private fun checkAtts(attachmentsCount: Int) {
     if (attachmentsCount > 0) {
       if (attachmentsCount == 1) {
-        onView(withText(atts[1].getName())).check(matches(isDisplayed()));
+        onView(withText(atts[1].name))
+            .check(matches(isDisplayed()))
       } else {
-        for (File att : atts) {
-          onView(withText(att.getName())).check(matches(isDisplayed()));
+        for (att in atts) {
+          onView(withText(att.name))
+              .check(matches(isDisplayed()))
         }
       }
     }
   }
 
-  private void checkBody(CharSequence body) {
+  private fun checkBody(body: CharSequence?) {
     if (body != null) {
-      onView(withId(R.id.editTextEmailMessage)).check(matches(isDisplayed()))
-          .check(matches(withText(getRidOfCharacterSubstitutes(body.toString()))));
+      onView(withId(R.id.editTextEmailMessage))
+          .check(matches(isDisplayed())).check(matches(withText(getRidOfCharacterSubstitutes(body.toString()))))
     } else {
-      onView(withId(R.id.editTextEmailMessage)).check(matches(isDisplayed()))
-          .check(matches(withText(isEmptyString())));
+      onView(withId(R.id.editTextEmailMessage))
+          .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
     }
   }
 
-  private void checkSubject(String subject) {
+  private fun checkSubject(subject: String?) {
     if (subject != null) {
-      onView(withId(R.id.editTextEmailSubject)).check(matches(isDisplayed()))
-          .check(matches(withText(getRidOfCharacterSubstitutes(subject))));
+      onView(withId(R.id.editTextEmailSubject))
+          .check(matches(isDisplayed())).check(matches(withText(getRidOfCharacterSubstitutes(subject))))
     } else {
-      onView(withId(R.id.editTextEmailSubject)).check(matches(isDisplayed()))
-          .check(matches(withText(isEmptyString())));
+      onView(withId(R.id.editTextEmailSubject))
+          .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
     }
   }
 
-  private void checkRecipients(int recipientsCount) {
+  private fun checkRecipients(recipientsCount: Int) {
     if (recipientsCount > 0) {
-      for (int i = 0; i < recipientsCount; i++) {
-        onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed()))
-            .check(matches(withText(containsString(recipients[i]))));
+      for (i in 0 until recipientsCount) {
+        onView(withId(R.id.editTextRecipientTo))
+            .check(matches(isDisplayed())).check(matches(withText(containsString(recipients[i]))))
       }
     } else {
-      onView(withId(R.id.editTextRecipientTo)).check(matches(isDisplayed()))
-          .check(matches(withText(isEmptyString())));
+      onView(withId(R.id.editTextRecipientTo))
+          .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
     }
   }
 
-  private String getRidOfCharacterSubstitutes(String message) {
-    try {
-      return URLDecoder.decode(message, StandardCharsets.UTF_8.displayName());
-    } catch (UnsupportedEncodingException e) {
-      e.printStackTrace();
-      return message;
+  private fun getRidOfCharacterSubstitutes(message: String): String {
+    return try {
+      URLDecoder.decode(message, StandardCharsets.UTF_8.displayName())
+    } catch (e: UnsupportedEncodingException) {
+      e.printStackTrace()
+      message
+    }
+  }
+
+  companion object {
+    private const val ATTACHMENTS_COUNT = 3
+    private const val ENCODED_SUBJECT = "some%20subject"
+    private const val ENCODED_BODY = "some%20body"
+
+    private lateinit var atts: MutableList<File>
+    private val recipients: Array<String> = arrayOf(
+        TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER,
+        TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
+
+    @BeforeClass
+    @JvmStatic
+    fun setUp() {
+      createFilesForAtts()
+    }
+
+    @AfterClass
+    @JvmStatic
+    fun cleanResources() {
+      TestGeneralUtil.deleteFiles(atts)
+    }
+
+    private fun createFilesForAtts() {
+      atts = mutableListOf()
+
+      for (i in 0 until ATTACHMENTS_COUNT) {
+        atts.add(TestGeneralUtil.createFile("$i.txt", UUID.randomUUID().toString()))
+      }
     }
   }
 }
