@@ -3,36 +3,32 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
-import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.ui.activity.settings.LegalSettingsActivity;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
-import org.junit.runner.RunWith;
-
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
-
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.action.ViewActions.swipeLeft;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.isSelected;
-import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static androidx.test.espresso.matcher.ViewMatchers.withParent;
-import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.hamcrest.Matchers.allOf;
+import android.view.View
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.swipeLeft
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isSelected
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withParent
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
+import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.R
+import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule
+import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.ui.activity.settings.LegalSettingsActivity
+import org.hamcrest.Matchers.allOf
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
@@ -41,57 +37,48 @@ import static org.hamcrest.Matchers.allOf;
  * E-mail: DenBond7@gmail.com
  */
 @LargeTest
-@RunWith(AndroidJUnit4.class)
-public class LegalSettingsActivityTest extends BaseTest {
-  private ActivityTestRule activityTestRule = new ActivityTestRule<>(LegalSettingsActivity.class);
+@RunWith(AndroidJUnit4::class)
+class LegalSettingsActivityTest : BaseTest() {
+  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(LegalSettingsActivity::class.java)
 
-  @Rule
-  public TestRule ruleChain = RuleChain
-      .outerRule(new ClearAppSettingsRule())
-      .around(new AddAccountToDatabaseRule())
-      .around(activityTestRule);
-  private String[] titleNames;
+  @get:Rule
+  var ruleChain: TestRule = RuleChain
+      .outerRule(ClearAppSettingsRule())
+      .around(AddAccountToDatabaseRule())
+      .around(activityTestRule)
 
-  @Override
-  public ActivityTestRule getActivityTestRule() {
-    return activityTestRule;
-  }
-
-  @Before
-  public void setUp() {
-    titleNames = new String[]{
-        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.privacy),
-        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.terms),
-        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.licence),
-        InstrumentationRegistry.getInstrumentation().getTargetContext().getString(R.string.sources)
-    };
-  }
+  private val titleNames: Array<String> = arrayOf(
+      getResString(R.string.privacy),
+      getResString(R.string.terms),
+      getResString(R.string.licence),
+      getResString(R.string.sources))
 
   @Test
-  public void testClickToTitleViewPager() {
-    for (String titleName : titleNames) {
-      onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
-          .check(matches(isDisplayed())).perform(click());
-      onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
-          .check(matches(isDisplayed())).check(matches(isSelected()));
+  fun testClickToTitleViewPager() {
+    for (titleName in titleNames) {
+      onView(allOf<View>(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
+          .check(matches(isDisplayed()))
+          .perform(click())
+      onView(allOf<View>(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
+          .check(matches(isDisplayed())).check(matches(isSelected()))
     }
   }
 
   @Test
-  public void testShowHelpScreen() throws InterruptedException {
+  fun testShowHelpScreen() {
     //Added a timeout because an initialization of WebViews needs more time.
-    Thread.sleep(5000);
-    testHelpScreen();
+    Thread.sleep(5000)
+    testHelpScreen()
   }
 
   @Test
-  public void testSwipeInViewPager() {
-    onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleNames[0])))
-        .check(matches(isDisplayed())).check(matches(isSelected()));
-    for (int i = 1; i < titleNames.length; i++) {
-      onView(withId(R.id.viewPager)).perform(swipeLeft());
-      onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleNames[i])))
-          .check(matches(isDisplayed())).check(matches(isSelected()));
+  fun testSwipeInViewPager() {
+    onView(allOf<View>(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleNames[0])))
+        .check(matches(isDisplayed())).check(matches(isSelected()))
+    for (i in 1 until titleNames.size) {
+      onView(withId(R.id.viewPager)).perform(swipeLeft())
+      onView(allOf<View>(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleNames[i])))
+          .check(matches(isDisplayed())).check(matches(isSelected()))
     }
   }
 }
