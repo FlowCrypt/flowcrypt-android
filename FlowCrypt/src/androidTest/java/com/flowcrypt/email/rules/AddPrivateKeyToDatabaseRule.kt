@@ -22,7 +22,7 @@ import org.junit.runners.model.Statement
  */
 class AddPrivateKeyToDatabaseRule(val keyPath: String, val passphrase: String, val type: KeyDetails.Type) : BaseRule() {
 
-  var nodeKeyDetails: NodeKeyDetails? = null
+  lateinit var nodeKeyDetails: NodeKeyDetails
     private set
 
   constructor() : this("node/default@denbond7.com_fisrtKey_prv_strong.json",
@@ -34,7 +34,7 @@ class AddPrivateKeyToDatabaseRule(val keyPath: String, val passphrase: String, v
       override fun evaluate() {
         nodeKeyDetails = NodeGson.getInstance().gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString(
             context, keyPath), NodeKeyDetails::class.java)
-        PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails!!, passphrase, type)
+        PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, passphrase, type)
         base.evaluate()
       }
     }

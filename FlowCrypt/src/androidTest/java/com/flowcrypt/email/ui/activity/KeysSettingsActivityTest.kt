@@ -3,68 +3,61 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.app.Activity;
-import android.app.Instrumentation;
-import android.content.ComponentName;
-import android.content.Intent;
-import android.os.Environment;
-import android.text.TextUtils;
-import android.text.format.DateFormat;
-
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.TestConstants;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
-import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.PrivateKeysManager;
-import com.flowcrypt.email.util.TestGeneralUtil;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
-import org.junit.runner.RunWith;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import androidx.core.content.FileProvider;
-import androidx.test.espresso.contrib.RecyclerViewActions;
-import androidx.test.espresso.intent.rule.IntentsTestRule;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.LargeTest;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.rule.ActivityTestRule;
-
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.intent.Intents.intending;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.hasAction;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.hasType;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static com.flowcrypt.email.matchers.CustomMatchers.isToastDisplayed;
-import static com.flowcrypt.email.matchers.CustomMatchers.withEmptyRecyclerView;
-import static com.flowcrypt.email.matchers.CustomMatchers.withRecyclerViewItemCount;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.core.AllOf.allOf;
+import android.app.Activity
+import android.app.Instrumentation
+import android.content.ComponentName
+import android.content.Intent
+import android.os.Environment
+import android.text.TextUtils
+import android.text.format.DateFormat
+import android.view.View
+import androidx.core.content.FileProvider
+import androidx.recyclerview.widget.RecyclerView
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
+import androidx.test.espresso.intent.rule.IntentsTestRule
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
+import androidx.test.internal.runner.junit4.statement.UiThreadStatement
+import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
+import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.isToastDisplayed
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule
+import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
+import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.PrivateKeysManager
+import com.flowcrypt.email.util.TestGeneralUtil
+import org.hamcrest.CoreMatchers.hasItem
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.not
+import org.hamcrest.core.AllOf.allOf
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import org.junit.runner.RunWith
+import java.io.File
+import java.util.*
 
 /**
  * @author Denis Bondarenko
@@ -73,128 +66,139 @@ import static org.hamcrest.core.AllOf.allOf;
  * E-mail: DenBond7@gmail.com
  */
 @LargeTest
-@RunWith(AndroidJUnit4.class)
-public class KeysSettingsActivityTest extends BaseTest {
+@RunWith(AndroidJUnit4::class)
+class KeysSettingsActivityTest : BaseTest() {
 
-  private IntentsTestRule intentsTestRule = new IntentsTestRule<>(KeysSettingsActivity.class);
-  private AddPrivateKeyToDatabaseRule addPrivateKeyToDatabaseRule = new AddPrivateKeyToDatabaseRule();
+  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(KeysSettingsActivity::class.java)
+  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
 
-  @Rule
-  public TestRule ruleChain = RuleChain
-      .outerRule(new ClearAppSettingsRule())
-      .around(new AddAccountToDatabaseRule())
+  @get:Rule
+  var ruleChain: TestRule = RuleChain
+      .outerRule(ClearAppSettingsRule())
+      .around(AddAccountToDatabaseRule())
       .around(addPrivateKeyToDatabaseRule)
-      .around(intentsTestRule);
+      .around(activityTestRule)
 
-  @Override
-  public ActivityTestRule getActivityTestRule() {
-    return intentsTestRule;
+  @Test
+  fun testAddNewKeys() {
+    intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+
+    val details = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_secondKey_prv_default.json")
+    PrivateKeysManager.saveKeyToDatabase(details, TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
+
+    onView(withId(R.id.floatActionButtonAddKey))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withId(R.id.recyclerViewKeys))
+        .check(matches(isDisplayed()))
+        .check(matches(withRecyclerViewItemCount(2)))
   }
 
   @Test
-  public void testAddNewKeys() throws Throwable {
-    intending(hasComponent(new ComponentName(InstrumentationRegistry.getInstrumentation().getTargetContext(),
-        ImportPrivateKeyActivity.class))).respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
-
-    NodeKeyDetails nodeKeyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_secondKey_prv_default.json");
-
-    PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL);
-
-    onView(withId(R.id.floatActionButtonAddKey)).check(matches(isDisplayed())).perform(click());
-    onView(withId(R.id.recyclerViewKeys)).check(matches(isDisplayed())).check(matches(withRecyclerViewItemCount(2)));
+  fun testKeyExists() {
+    onView(withId(R.id.recyclerViewKeys))
+        .check(matches(not<View>(withEmptyRecyclerView()))).check(matches(isDisplayed()))
+    onView(withId(R.id.emptyView))
+        .check(matches(not<View>(isDisplayed())))
   }
 
   @Test
-  public void testKeyExists() {
-    onView(withId(R.id.recyclerViewKeys)).check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()));
-    onView(withId(R.id.emptyView)).check(matches(not(isDisplayed())));
+  fun testShowKeyDetailsScreen() {
+    selectFirstKey()
   }
 
   @Test
-  public void testShowKeyDetailsScreen() {
-    selectFirstKey();
+  fun testKeyDetailsShowPubKey() {
+    selectFirstKey()
+    val keyDetails = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    onView(withId(R.id.btnShowPubKey))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withText(TestGeneralUtil.replaceVersionInKey(keyDetails.publicKey)))
   }
 
   @Test
-  public void testKeyDetailsShowPubKey() {
-    selectFirstKey();
-    NodeKeyDetails keyDetails = addPrivateKeyToDatabaseRule.getNodeKeyDetails();
-    onView(withId(R.id.btnShowPubKey)).check(matches(isDisplayed())).perform(click());
-    onView(withText(TestGeneralUtil.replaceVersionInKey(keyDetails.getPublicKey())));
+  fun testKeyDetailsCopyToClipBoard() {
+    selectFirstKey()
+    val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    onView(withId(R.id.btnCopyToClipboard))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withText(getResString(R.string.copied)))
+        .inRoot(isToastDisplayed())
+        .check(matches(isDisplayed()))
+    UiThreadStatement.runOnUiThread { checkClipboardText(TestGeneralUtil.replaceVersionInKey(details.publicKey)) }
   }
 
   @Test
-  public void testKeyDetailsCopyToClipBoard() {
-    selectFirstKey();
-    NodeKeyDetails details = addPrivateKeyToDatabaseRule.getNodeKeyDetails();
-    onView(withId(R.id.btnCopyToClipboard)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.copied))).inRoot(isToastDisplayed()).check(matches(isDisplayed()));
-    checkClipboardText(TestGeneralUtil.replaceVersionInKey(details.getPublicKey()));
-  }
-
-  @Test
-  public void testKeyDetailsShowPrivateKey() {
-    selectFirstKey();
-    onView(withId(R.id.btnShowPrKey)).check(matches(isDisplayed())).perform(click());
+  fun testKeyDetailsShowPrivateKey() {
+    selectFirstKey()
+    onView(withId(R.id.btnShowPrKey))
+        .check(matches(isDisplayed()))
+        .perform(click())
     onView(withText(getResString(R.string.see_backups_to_save_your_private_keys)))
-        .inRoot(isToastDisplayed()).check(matches(isDisplayed()));
+        .inRoot(isToastDisplayed())
+        .check(matches(isDisplayed()))
   }
 
   @Test
-  public void testKeyDetailsCheckDetails() {
-    selectFirstKey();
-    NodeKeyDetails details = addPrivateKeyToDatabaseRule.getNodeKeyDetails();
-    onView(withId(R.id.textViewKeyWords)).check(matches(withText(
-        getHtmlString(getResString(R.string.template_key_words, details.getKeywords())))));
+  fun testKeyDetailsCheckDetails() {
+    selectFirstKey()
+    val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
+    onView(withId(R.id.textViewKeyWords))
+        .check(matches(withText(getHtmlString(getResString(R.string.template_key_words, details.keywords)))))
 
-    onView(withId(R.id.textViewFingerprint)).check(matches(withText(
-        getHtmlString(getResString(R.string.template_fingerprint,
-            GeneralUtil.doSectionsInText(" ", details.getFingerprint(), 4))))));
+    onView(withId(R.id.textViewFingerprint))
+        .check(matches(withText(getHtmlString(getResString(R.string.template_fingerprint,
+            GeneralUtil.doSectionsInText(" ", details.fingerprint, 4))))))
 
-    onView(withId(R.id.textViewLongId)).check(matches(withText(getResString(R.string.template_longid,
-        details.getLongId()))));
+    onView(withId(R.id.textViewLongId))
+        .check(matches(withText(getResString(R.string.template_longid, details.longId))))
 
-    onView(withId(R.id.textViewDate)).check(matches(withText(
-        getHtmlString(getResString(R.string.template_date,
-            DateFormat.getMediumDateFormat(getTargetContext()).format(new Date(details.getCreated())))))));
+    onView(withId(R.id.textViewDate))
+        .check(matches(withText(getHtmlString(getResString(R.string.template_date,
+            DateFormat.getMediumDateFormat(getTargetContext()).format(Date(details.created)))))))
 
-    List<PgpContact> pgpContacts = details.getPgpContacts();
-    ArrayList<String> emails = new ArrayList<>();
+    val emails = ArrayList<String>()
 
-    for (PgpContact pgpContact : pgpContacts) {
-      emails.add(pgpContact.getEmail());
+    for (pgpContact in details.pgpContacts) {
+      emails.add(pgpContact.email)
     }
 
-    onView(withId(R.id.textViewUsers)).check(matches(withText(getResString(R.string.template_users, TextUtils.join(
-        ", ", emails)))));
+    onView(withId(R.id.textViewUsers))
+        .check(matches(withText(getResString(R.string.template_users, TextUtils.join(", ", emails)))))
   }
 
   @Test
-  public void testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
-    selectFirstKey();
-    NodeKeyDetails details = addPrivateKeyToDatabaseRule.getNodeKeyDetails();
+  fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
+    selectFirstKey()
+    val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
 
-    File file = new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getExternalFilesDir(Environment
-        .DIRECTORY_DOCUMENTS), "0x" + details.getLongId() + ".asc");
+    val file = File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "0x" + details.longId + ".asc")
 
     if (file.exists()) {
-      file.delete();
+      file.delete()
     }
 
-    Intent resultData = new Intent();
-    resultData.setData(FileProvider.getUriForFile(getTargetContext(), Constants.FILE_PROVIDER_AUTHORITY, file));
+    val resultData = Intent()
+    resultData.data = FileProvider.getUriForFile(getTargetContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
 
     intending(allOf(hasAction(Intent.ACTION_CREATE_DOCUMENT),
         hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE))),
         hasType(Constants.MIME_TYPE_PGP_KEY)))
-        .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
 
-    onView(withId(R.id.btnSaveToFile)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.saved))).inRoot(isToastDisplayed()).check(matches(isDisplayed()));
+    onView(withId(R.id.btnSaveToFile))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withText(getResString(R.string.saved)))
+        .inRoot(isToastDisplayed())
+        .check(matches(isDisplayed()))
   }
 
-  private void selectFirstKey() {
-    onView(withId(R.id.recyclerViewKeys)).perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
+  private fun selectFirstKey() {
+    onView(withId(R.id.recyclerViewKeys))
+        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
   }
 }
