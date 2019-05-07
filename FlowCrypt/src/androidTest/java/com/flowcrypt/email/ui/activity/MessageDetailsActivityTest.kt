@@ -3,70 +3,60 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.app.Activity;
-import android.app.Instrumentation;
-import android.content.ComponentName;
-import android.text.format.DateFormat;
-import android.text.format.Formatter;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.TestConstants;
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.LocalFolder;
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
-import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptError;
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock;
-import com.flowcrypt.email.base.BaseTest;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.rules.AddAccountToDatabaseRule;
-import com.flowcrypt.email.rules.AddAttachmentToDatabaseRule;
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule;
-import com.flowcrypt.email.rules.ClearAppSettingsRule;
-import com.flowcrypt.email.ui.activity.base.BaseActivity;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.PrivateKeysManager;
-import com.flowcrypt.email.util.TestGeneralUtil;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TestRule;
-
-import java.io.IOException;
-
-import javax.annotation.Nullable;
-
-import androidx.test.espresso.IdlingRegistry;
-import androidx.test.espresso.intent.rule.IntentsTestRule;
-import androidx.test.rule.ActivityTestRule;
-
-import static androidx.test.espresso.Espresso.onData;
-import static androidx.test.espresso.Espresso.onView;
-import static androidx.test.espresso.action.ViewActions.click;
-import static androidx.test.espresso.action.ViewActions.scrollTo;
-import static androidx.test.espresso.assertion.ViewAssertions.matches;
-import static androidx.test.espresso.intent.Intents.intended;
-import static androidx.test.espresso.intent.Intents.intending;
-import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
-import static androidx.test.espresso.matcher.ViewMatchers.assertThat;
-import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
-import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static androidx.test.espresso.matcher.ViewMatchers.withId;
-import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static com.flowcrypt.email.matchers.CustomMatchers.isToastDisplayed;
-import static com.flowcrypt.email.matchers.CustomMatchers.withDrawable;
-import static org.hamcrest.Matchers.anything;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.notNullValue;
+import android.app.Activity
+import android.app.Instrumentation
+import android.content.ComponentName
+import android.text.format.DateFormat
+import android.text.format.Formatter
+import android.view.View
+import androidx.test.espresso.Espresso.onData
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingRegistry
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.Intents.intended
+import androidx.test.espresso.intent.Intents.intending
+import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
+import androidx.test.espresso.intent.rule.IntentsTestRule
+import androidx.test.espresso.matcher.ViewMatchers.assertThat
+import androidx.test.espresso.matcher.ViewMatchers.isChecked
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.R
+import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.LocalFolder
+import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.api.email.model.GeneralMessageDetails
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
+import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.isToastDisplayed
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule
+import com.flowcrypt.email.rules.AddAttachmentToDatabaseRule
+import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
+import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.PrivateKeysManager
+import com.flowcrypt.email.util.TestGeneralUtil
+import org.hamcrest.Matchers.anything
+import org.hamcrest.Matchers.not
+import org.hamcrest.Matchers.notNullValue
+import org.junit.After
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.RuleChain
+import org.junit.rules.TestRule
+import java.io.IOException
 
 /**
  * @author Denis Bondarenko
@@ -74,331 +64,372 @@ import static org.hamcrest.Matchers.notNullValue;
  * Time: 4:32 PM
  * E-mail: DenBond7@gmail.com
  */
-public class MessageDetailsActivityTest extends BaseTest {
-  private IntentsTestRule intentsTestRule = new IntentsTestRule<>(MessageDetailsActivity.class, false, false);
-  private AddAttachmentToDatabaseRule simpleAttachmentRule =
-      new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/simple_att.json",
-          AttachmentInfo.class));
+class MessageDetailsActivityTest : BaseTest() {
+  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(MessageDetailsActivity::class.java, false, false)
+  private val simpleAttachmentRule =
+      AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/simple_att.json",
+          AttachmentInfo::class.java)!!)
 
-  private AddAttachmentToDatabaseRule encryptedAttachmentRule =
-      new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/encrypted_att.json",
-          AttachmentInfo.class));
+  private val encryptedAttachmentRule =
+      AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/encrypted_att.json",
+          AttachmentInfo::class.java)!!)
 
-  private AddAttachmentToDatabaseRule pubKeyAttachmentRule =
-      new AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/pub_key.json",
-          AttachmentInfo.class));
-  @Rule
-  public TestRule ruleChain = RuleChain
-      .outerRule(new ClearAppSettingsRule())
-      .around(new AddAccountToDatabaseRule())
-      .around(new AddPrivateKeyToDatabaseRule())
+  private val pubKeyAttachmentRule =
+      AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/pub_key.json",
+          AttachmentInfo::class.java)!!)
+
+  @get:Rule
+  var ruleChain: TestRule = RuleChain
+      .outerRule(ClearAppSettingsRule())
+      .around(AddAccountToDatabaseRule())
+      .around(AddPrivateKeyToDatabaseRule())
       .around(simpleAttachmentRule)
       .around(encryptedAttachmentRule)
       .around(pubKeyAttachmentRule)
-      .around(intentsTestRule);
+      .around(activityTestRule)
 
-  private java.text.DateFormat dateFormat;
-  private LocalFolder localFolder;
-
-  @Override
-  public ActivityTestRule getActivityTestRule() {
-    return intentsTestRule;
-  }
+  private val dateFormat: java.text.DateFormat = DateFormat.getTimeFormat(getTargetContext())
+  private val localFolder: LocalFolder = LocalFolder("INBOX", "INBOX", 1, arrayOf("\\HasNoChildren"), false)
 
   @After
-  public void unregisterDecryptionIdling() {
-    ActivityTestRule activityTestRule = getActivityTestRule();
-    if (activityTestRule != null) {
-      Activity activity = activityTestRule.getActivity();
-      if (activity instanceof MessageDetailsActivity) {
-        IdlingRegistry.getInstance().unregister(((MessageDetailsActivity) activity).getIdlingForDecryption());
-      }
+  fun unregisterDecryptionIdling() {
+    val activity = activityTestRule?.activity ?: return
+    if (activity is MessageDetailsActivity) {
+      IdlingRegistry.getInstance().unregister(activity.idlingForDecryption)
     }
   }
 
-  @Before
-  public void init() {
-    dateFormat = DateFormat.getTimeFormat(getTargetContext());
-    localFolder = new LocalFolder("INBOX", "INBOX", 1, new String[]{"\\HasNoChildren"}, false);
+  @Test
+  fun testReplyButton() {
+    testStandardMsgPlaneText()
+    onView(withId(R.id.layoutReplyButton))
+        .check(matches(isDisplayed()))
+        .perform(scrollTo(), click())
+    intended(hasComponent(CreateMessageActivity::class.java.name))
   }
 
   @Test
-  public void testReplyButton() {
-    testStandardMsgPlaneText();
-    onView(withId(R.id.layoutReplyButton)).check(matches(isDisplayed())).perform(scrollTo(), click());
-    intended(hasComponent(CreateMessageActivity.class.getName()));
+  fun testReplyAllButton() {
+    testStandardMsgPlaneText()
+    onView(withId(R.id.layoutReplyAllButton))
+        .check(matches(isDisplayed()))
+        .perform(scrollTo(), click())
+    intended(hasComponent(CreateMessageActivity::class.java.name))
   }
 
   @Test
-  public void testReplyAllButton() {
-    testStandardMsgPlaneText();
-    onView(withId(R.id.layoutReplyAllButton)).check(matches(isDisplayed())).perform(scrollTo(), click());
-    intended(hasComponent(CreateMessageActivity.class.getName()));
+  fun testFwdButton() {
+    testStandardMsgPlaneText()
+    onView(withId(R.id.layoutFwdButton))
+        .check(matches(isDisplayed()))
+        .perform(scrollTo(), click())
+    intended(hasComponent(CreateMessageActivity::class.java.name))
   }
 
   @Test
-  public void testFwdButton() {
-    testStandardMsgPlaneText();
-    onView(withId(R.id.layoutFwdButton)).check(matches(isDisplayed())).perform(scrollTo(), click());
-    intended(hasComponent(CreateMessageActivity.class.getName()));
+  fun testStandardMsgPlaneText() {
+    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text.json",
+        IncomingMessageInfo::class.java)
+    baseCheck(incomingMsgInfo)
   }
 
   @Test
-  public void testStandardMsgPlaneText() {
-    IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text.json",
-            IncomingMessageInfo.class);
-    baseCheck(incomingMsgInfo);
+  fun testStandardMsgPlaneTextWithOneAttachment() {
+    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text_with_one_att.json",
+        IncomingMessageInfo::class.java)
+    baseCheckWithAtt(incomingMsgInfo, simpleAttachmentRule)
   }
 
   @Test
-  public void testStandardMsgPlaneTextWithOneAttachment() {
-    IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text_with_one_att.json",
-            IncomingMessageInfo.class);
-    baseCheckWithAtt(incomingMsgInfo, simpleAttachmentRule);
+  fun testEncryptedMsgPlaneText() {
+    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
+        IncomingMessageInfo::class.java)
+    baseCheck(incomingMsgInfo)
   }
 
   @Test
-  public void testEncryptedMsgPlaneText() {
-    IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
-            IncomingMessageInfo.class);
-    baseCheck(incomingMsgInfo);
-  }
+  @Throws(Throwable::class)
+  fun testMissingKeyErrorImportKey() {
+    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+        IncomingMessageInfo::class.java)
 
-  @Test
-  public void testMissingKeyErrorImportKey() throws Throwable {
-    IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
-            IncomingMessageInfo.class);
+    testMissingKey(incomingMsgInfo)
 
-    testMissingKey(incomingMsgInfo);
-
-    intending(hasComponent(new ComponentName(getTargetContext(), ImportPrivateKeyActivity.class)))
-        .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, null));
+    intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
 
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL);
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
 
-    onView(withId(R.id.buttonImportPrivateKey)).check(matches(isDisplayed())).perform(scrollTo(), click());
+    onView(withId(R.id.buttonImportPrivateKey))
+        .check(matches(isDisplayed()))
+        .perform(scrollTo(), click())
 
-    IncomingMessageInfo incomingMsgInfoFixed =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key_fixed.json",
-            IncomingMessageInfo.class);
-    onView(withText(incomingMsgInfoFixed.getMsgBlocks().get(0).getContent())).check(matches(isDisplayed()));
+    val incomingMsgInfoFixed = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key_fixed.json",
+        IncomingMessageInfo::class.java)
+    onView(withText(incomingMsgInfoFixed!!.msgBlocks[0].content))
+        .check(matches(isDisplayed()))
 
-    PrivateKeysManager.deleteKey("node/default@denbond7.com_secondKey_prv_strong.json");
+    PrivateKeysManager.deleteKey("node/default@denbond7.com_secondKey_prv_strong.json")
   }
 
   @Test
-  public void testMissingPubKey() {
-    IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_one_pub_key.json",
-            IncomingMessageInfo.class);
+  fun testMissingPubKey() {
+    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_one_pub_key.json",
+        IncomingMessageInfo::class.java)
 
-    testMissingKey(incomingMsgInfo);
+    testMissingKey(incomingMsgInfo)
   }
 
   @Test
-  public void testBadlyFormattedMsg() {
-    IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_badly_formatted.json",
-            IncomingMessageInfo.class);
+  fun testBadlyFormattedMsg() {
+    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_badly_formatted.json",
+        IncomingMessageInfo::class.java)
 
-    assertThat(incomingMsgInfo, notNullValue());
+    assertThat(incomingMsgInfo, notNullValue())
 
-    GeneralMessageDetails details = incomingMsgInfo.getGeneralMsgDetails();
+    val details = incomingMsgInfo!!.generalMsgDetails
 
-    launchActivity(details);
-    matchHeader(details);
+    launchActivity(details)
+    matchHeader(details)
 
-    DecryptErrorMsgBlock block = (DecryptErrorMsgBlock) incomingMsgInfo.getMsgBlocks().get(0);
-    DecryptError decryptError = block.getError();
-    String formatErrorMsg = getResString(R.string.decrypt_error_message_badly_formatted,
-        getResString(R.string.app_name)) + "\n\n"
-        + decryptError.getDetails().getType() + ":" + decryptError.getDetails().getMessage();
+    val block = incomingMsgInfo.msgBlocks[0] as DecryptErrorMsgBlock
+    val decryptError = block.error
+    val formatErrorMsg = (getResString(R.string.decrypt_error_message_badly_formatted,
+        getResString(R.string.app_name)) + "\n\n" + decryptError.details.type + ":" + decryptError.details.message)
 
-    onView(withId(R.id.textViewErrorMessage)).check(matches(withText(formatErrorMsg)));
+    onView(withId(R.id.textViewErrorMessage))
+        .check(matches(withText(formatErrorMsg)))
 
-    testSwitch(block.getContent());
-    matchReplyButtons(details);
+    testSwitch(block.content)
+    matchReplyButtons(details)
   }
 
   @Test
-  public void testMissingKeyErrorChooseSinglePubKey() {
-    IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
-            IncomingMessageInfo.class);
+  fun testMissingKeyErrorChooseSinglePubKey() {
+    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+        IncomingMessageInfo::class.java)
 
-    testMissingKey(incomingMsgInfo);
+    testMissingKey(incomingMsgInfo)
 
-    onView(withId(R.id.buttonSendOwnPublicKey)).check(matches(isDisplayed())).perform(scrollTo(), click());
+    onView(withId(R.id.buttonSendOwnPublicKey))
+        .check(matches(isDisplayed()))
+        .perform(scrollTo(), click())
     onView(withId(R.id.textViewMessage)).check(
-        matches(withText(getResString(R.string.tell_sender_to_update_their_settings))));
-    onView(withId(R.id.buttonOk)).check(matches(isDisplayed())).perform(click());
-    intended(hasComponent(CreateMessageActivity.class.getName()));
+        matches(withText(getResString(R.string.tell_sender_to_update_their_settings))))
+    onView(withId(R.id.buttonOk))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    intended(hasComponent(CreateMessageActivity::class.java.name))
   }
 
   @Test
-  public void testMissingKeyErrorChooseFromFewPubKeys() throws Throwable {
-    IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
-            IncomingMessageInfo.class);
+  @Throws(Throwable::class)
+  fun testMissingKeyErrorChooseFromFewPubKeys() {
+    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+        IncomingMessageInfo::class.java)
 
-    testMissingKey(incomingMsgInfo);
+    testMissingKey(incomingMsgInfo)
 
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL);
-    onView(withId(R.id.buttonSendOwnPublicKey)).check(matches(isDisplayed())).perform(scrollTo(), click());
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+    onView(withId(R.id.buttonSendOwnPublicKey))
+        .check(matches(isDisplayed()))
+        .perform(scrollTo(), click())
 
-    String msg = getResString(R.string.tell_sender_to_update_their_settings)
-        + "\n\n" + getResString(R.string.select_key);
+    val msg = (getResString(R.string.tell_sender_to_update_their_settings) + "\n\n" + getResString(R.string.select_key))
 
-    onView(withId(R.id.textViewMessage)).check(matches(withText(msg)));
-    onView(withId(R.id.buttonOk)).check(matches(isDisplayed())).perform(click());
-    onView(withText(getResString(R.string.please_select_key))).inRoot(isToastDisplayed()).check(matches(isDisplayed()));
-    onData(anything()).inAdapterView(withId(R.id.listViewKeys)).atPosition(1).perform(click());
-    onView(withId(R.id.buttonOk)).check(matches(isDisplayed())).perform(click());
-    intended(hasComponent(CreateMessageActivity.class.getName()));
+    onView(withId(R.id.textViewMessage))
+        .check(matches(withText(msg)))
+    onView(withId(R.id.buttonOk))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    onView(withText(getResString(R.string.please_select_key)))
+        .inRoot(isToastDisplayed())
+        .check(matches(isDisplayed()))
+    onData(anything())
+        .inAdapterView(withId(R.id.listViewKeys))
+        .atPosition(1)
+        .perform(click())
+    onView(withId(R.id.buttonOk))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    intended(hasComponent(CreateMessageActivity::class.java.name))
   }
 
   @Test
-  public void testEncryptedMsgPlaneTextWithOneAttachment() {
-    IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_one_att.json",
-            IncomingMessageInfo.class);
+  fun testEncryptedMsgPlaneTextWithOneAttachment() {
+    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_one_att.json",
+        IncomingMessageInfo::class.java)
 
-    baseCheckWithAtt(incomingMsgInfo, encryptedAttachmentRule);
+    baseCheckWithAtt(incomingMsgInfo, encryptedAttachmentRule)
   }
 
   @Test
-  public void testEncryptedMsgPlaneTextWithPubKey() throws IOException {
-    IncomingMessageInfo incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_pub_key.json",
-            IncomingMessageInfo.class);
+  @Throws(IOException::class)
+  fun testEncryptedMsgPlaneTextWithPubKey() {
+    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_pub_key.json",
+        IncomingMessageInfo::class.java)
 
-    baseCheckWithAtt(incomingMsgInfo, pubKeyAttachmentRule);
+    baseCheckWithAtt(incomingMsgInfo, pubKeyAttachmentRule)
 
-    NodeKeyDetails nodeKeyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/denbond7@denbond7.com_pub.json");
-    PgpContact pgpContact = nodeKeyDetails.getPrimaryPgpContact();
+    val nodeKeyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/denbond7@denbond7.com_pub.json")
+    val pgpContact = nodeKeyDetails.primaryPgpContact
 
     onView(withId(R.id.textViewKeyOwnerTemplate)).check(matches(withText(
-        getResString(R.string.template_message_part_public_key_owner, pgpContact.getEmail()))));
+        getResString(R.string.template_message_part_public_key_owner, pgpContact.email))))
 
     onView(withId(R.id.textViewKeyWordsTemplate)).check(matches(withText(
-        getHtmlString(getResString(R.string.template_message_part_public_key_key_words,
-            nodeKeyDetails.getKeywords())))));
+        getHtmlString(getResString(R.string.template_message_part_public_key_key_words, nodeKeyDetails.keywords)))))
 
     onView(withId(R.id.textViewFingerprintTemplate)).check(matches(withText(
         getHtmlString(getResString(R.string.template_message_part_public_key_fingerprint,
-            GeneralUtil.doSectionsInText(" ", nodeKeyDetails.getFingerprint(), 4))))));
+            GeneralUtil.doSectionsInText(" ", nodeKeyDetails.fingerprint, 4))))))
 
-    PublicKeyMsgBlock block = (PublicKeyMsgBlock) incomingMsgInfo.getMsgBlocks().get(1);
+    val block = incomingMsgInfo!!.msgBlocks[1] as PublicKeyMsgBlock
 
-    onView(withId(R.id.textViewPgpPublicKey)).check(matches(not(isDisplayed())));
-    onView(withId(R.id.switchShowPublicKey)).check(matches(not(isChecked()))).perform(scrollTo(), click());
-    onView(withId(R.id.textViewPgpPublicKey)).check(matches(isDisplayed()));
-    onView(withId(R.id.textViewPgpPublicKey)).check(matches(withText(block.getContent())));
-    onView(withId(R.id.switchShowPublicKey)).check(matches(isChecked())).perform(scrollTo(), click());
-    onView(withId(R.id.textViewPgpPublicKey)).check(matches(not(isDisplayed())));
+    onView(withId(R.id.textViewPgpPublicKey))
+        .check(matches(not<View>(isDisplayed())))
+    onView(withId(R.id.switchShowPublicKey))
+        .check(matches(not<View>(isChecked())))
+        .perform(scrollTo(), click())
+    onView(withId(R.id.textViewPgpPublicKey))
+        .check(matches(isDisplayed()))
+    onView(withId(R.id.textViewPgpPublicKey))
+        .check(matches(withText(block.content)))
+    onView(withId(R.id.switchShowPublicKey))
+        .check(matches(isChecked()))
+        .perform(scrollTo(), click())
+    onView(withId(R.id.textViewPgpPublicKey))
+        .check(matches(not<View>(isDisplayed())))
 
-    onView(withId(R.id.buttonKeyAction)).check(matches(isDisplayed())).perform(scrollTo(), click());
-    onView(withId(R.id.buttonKeyAction)).check(matches(not(isDisplayed())));
+    onView(withId(R.id.buttonKeyAction))
+        .check(matches(isDisplayed()))
+        .perform(scrollTo(), click())
+    onView(withId(R.id.buttonKeyAction))
+        .check(matches(not<View>(isDisplayed())))
   }
 
-  private void testMissingKey(IncomingMessageInfo incomingMsgInfo) {
-    assertThat(incomingMsgInfo, notNullValue());
+  private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {
+    assertThat(incomingMsgInfo, notNullValue())
 
-    GeneralMessageDetails details = incomingMsgInfo.getGeneralMsgDetails();
+    val details = incomingMsgInfo!!.generalMsgDetails
 
-    launchActivity(details);
-    matchHeader(details);
+    launchActivity(details)
+    matchHeader(details)
 
-    DecryptErrorMsgBlock block = (DecryptErrorMsgBlock) incomingMsgInfo.getMsgBlocks().get(0);
-    String errorMsg = getResString(R.string.decrypt_error_current_key_cannot_open_message);
+    val block = incomingMsgInfo.msgBlocks[0] as DecryptErrorMsgBlock
+    val errorMsg = getResString(R.string.decrypt_error_current_key_cannot_open_message)
 
-    onView(withId(R.id.textViewErrorMessage)).check(matches(withText(errorMsg)));
+    onView(withId(R.id.textViewErrorMessage))
+        .check(matches(withText(errorMsg)))
 
-    testSwitch(block.getContent());
-    matchReplyButtons(details);
+    testSwitch(block.content)
+    matchReplyButtons(details)
   }
 
-  private void testSwitch(String content) {
-    onView(withId(R.id.textViewOrigPgpMsg)).check(matches(not(isDisplayed())));
-    onView(withId(R.id.switchShowOrigMsg)).check(matches(not(isChecked()))).perform(scrollTo(), click());
-    onView(withId(R.id.textViewOrigPgpMsg)).check(matches(isDisplayed()));
-    onView(withId(R.id.textViewOrigPgpMsg)).check(matches(withText(content)));
-    onView(withId(R.id.switchShowOrigMsg)).check(matches(isChecked())).perform(scrollTo(), click());
-    onView(withId(R.id.textViewOrigPgpMsg)).check(matches(not(isDisplayed())));
+  private fun testSwitch(content: String) {
+    onView(withId(R.id.textViewOrigPgpMsg))
+        .check(matches(not<View>(isDisplayed())))
+    onView(withId(R.id.switchShowOrigMsg))
+        .check(matches(not<View>(isChecked())))
+        .perform(scrollTo(), click())
+    onView(withId(R.id.textViewOrigPgpMsg))
+        .check(matches(isDisplayed()))
+    onView(withId(R.id.textViewOrigPgpMsg))
+        .check(matches(withText(content)))
+    onView(withId(R.id.switchShowOrigMsg))
+        .check(matches(isChecked()))
+        .perform(scrollTo(), click())
+    onView(withId(R.id.textViewOrigPgpMsg))
+        .check(matches(not<View>(isDisplayed())))
   }
 
-  private void baseCheck(@Nullable IncomingMessageInfo incomingMsgInfo) {
-    assertThat(incomingMsgInfo, notNullValue());
+  private fun baseCheck(incomingMsgInfo: IncomingMessageInfo?) {
+    assertThat(incomingMsgInfo, notNullValue())
 
-    GeneralMessageDetails details = incomingMsgInfo.getGeneralMsgDetails();
-    launchActivity(details);
-    matchHeader(details);
-    onView(withText(incomingMsgInfo.getMsgBlocks().get(0).getContent())).check(matches(isDisplayed()));
-    matchReplyButtons(details);
+    val details = incomingMsgInfo!!.generalMsgDetails
+    launchActivity(details)
+    matchHeader(details)
+    onView(withText(incomingMsgInfo.msgBlocks[0].content))
+        .check(matches(isDisplayed()))
+    matchReplyButtons(details)
   }
 
-  private void baseCheckWithAtt(@Nullable IncomingMessageInfo incomingMsgInfo,
-                                AddAttachmentToDatabaseRule encryptedAttachmentRule) {
-    assertThat(incomingMsgInfo, notNullValue());
+  private fun baseCheckWithAtt(incomingMsgInfo: IncomingMessageInfo?, rule: AddAttachmentToDatabaseRule) {
+    assertThat(incomingMsgInfo, notNullValue())
 
-    GeneralMessageDetails details = incomingMsgInfo.getGeneralMsgDetails();
-    launchActivity(details);
-    matchHeader(details);
-    onView(withText(incomingMsgInfo.getMsgBlocks().get(0).getContent())).check(matches(isDisplayed()));
-    onView(withId(R.id.layoutAtt)).check(matches(isDisplayed()));
-    matchAtt(encryptedAttachmentRule.getAttInfo());
-    matchReplyButtons(details);
+    val details = incomingMsgInfo!!.generalMsgDetails
+    launchActivity(details)
+    matchHeader(details)
+    onView(withText(incomingMsgInfo.msgBlocks[0].content))
+        .check(matches(isDisplayed()))
+    onView(withId(R.id.layoutAtt))
+        .check(matches(isDisplayed()))
+    matchAtt(rule.attInfo)
+    matchReplyButtons(details)
   }
 
-  private void matchHeader(GeneralMessageDetails details) {
+  private fun matchHeader(details: GeneralMessageDetails) {
     onView(withId(R.id.textViewSenderAddress))
-        .check(matches(withText(EmailUtil.getFirstAddressString(details.getFrom()))));
-    onView(withId(R.id.textViewDate)).check(matches(withText(dateFormat.format(details.getReceivedDate()))));
-    onView(withId(R.id.textViewSubject)).check(matches(withText(details.getSubject())));
+        .check(matches(withText(EmailUtil.getFirstAddressString(details.from))))
+    onView(withId(R.id.textViewDate))
+        .check(matches(withText(dateFormat.format(details.receivedDate))))
+    onView(withId(R.id.textViewSubject))
+        .check(matches(withText(details.subject)))
   }
 
-  private void matchAtt(AttachmentInfo att) {
-    onView(withId(R.id.textViewAttchmentName)).check(matches(withText(att.getName())));
-    onView(withId(R.id.textViewAttSize)).check(matches(withText(
-        Formatter.formatFileSize(getContext(), att.getEncodedSize()))));
+  private fun matchAtt(att: AttachmentInfo) {
+    onView(withId(R.id.textViewAttchmentName))
+        .check(matches(withText(att.name)))
+    onView(withId(R.id.textViewAttSize))
+        .check(matches(withText(Formatter.formatFileSize(getContext(), att.encodedSize))))
   }
 
-  private void matchReplyButtons(GeneralMessageDetails details) {
-    onView(withId(R.id.imageButtonReplyAll)).check(matches(isDisplayed()));
-    onView(withId(R.id.layoutReplyButton)).check(matches(isDisplayed()));
-    onView(withId(R.id.layoutReplyAllButton)).check(matches(isDisplayed()));
-    onView(withId(R.id.layoutFwdButton)).check(matches(isDisplayed()));
+  private fun matchReplyButtons(details: GeneralMessageDetails) {
+    onView(withId(R.id.imageButtonReplyAll))
+        .check(matches(isDisplayed()))
+    onView(withId(R.id.layoutReplyButton))
+        .check(matches(isDisplayed()))
+    onView(withId(R.id.layoutReplyAllButton))
+        .check(matches(isDisplayed()))
+    onView(withId(R.id.layoutFwdButton))
+        .check(matches(isDisplayed()))
 
-    if (details.isEncrypted()) {
-      onView(withId(R.id.textViewReply)).check(matches(withText(getResString(R.string.reply_encrypted))));
-      onView(withId(R.id.textViewReplyAll)).check(matches(withText(getResString(R.string.reply_all_encrypted))));
-      onView(withId(R.id.textViewFwd)).check(matches(withText(getResString(R.string.forward_encrypted))));
+    if (details.isEncrypted) {
+      onView(withId(R.id.textViewReply))
+          .check(matches(withText(getResString(R.string.reply_encrypted))))
+      onView(withId(R.id.textViewReplyAll))
+          .check(matches(withText(getResString(R.string.reply_all_encrypted))))
+      onView(withId(R.id.textViewFwd))
+          .check(matches(withText(getResString(R.string.forward_encrypted))))
 
-      onView(withId(R.id.imageViewReply)).check(matches(withDrawable(R.mipmap.ic_reply_green)));
-      onView(withId(R.id.imageViewReplyAll)).check(matches(withDrawable(R.mipmap.ic_reply_all_green)));
-      onView(withId(R.id.imageViewFwd)).check(matches(withDrawable(R.mipmap.ic_forward_green)));
+      onView(withId(R.id.imageViewReply))
+          .check(matches(withDrawable(R.mipmap.ic_reply_green)))
+      onView(withId(R.id.imageViewReplyAll))
+          .check(matches(withDrawable(R.mipmap.ic_reply_all_green)))
+      onView(withId(R.id.imageViewFwd))
+          .check(matches(withDrawable(R.mipmap.ic_forward_green)))
     } else {
-      onView(withId(R.id.textViewReply)).check(matches(withText(getResString(R.string.reply))));
-      onView(withId(R.id.textViewReplyAll)).check(matches(withText(getResString(R.string.reply_all))));
-      onView(withId(R.id.textViewFwd)).check(matches(withText(getResString(R.string.forward))));
+      onView(withId(R.id.textViewReply))
+          .check(matches(withText(getResString(R.string.reply))))
+      onView(withId(R.id.textViewReplyAll))
+          .check(matches(withText(getResString(R.string.reply_all))))
+      onView(withId(R.id.textViewFwd))
+          .check(matches(withText(getResString(R.string.forward))))
 
-      onView(withId(R.id.imageViewReply)).check(matches(withDrawable(R.mipmap.ic_reply_red)));
-      onView(withId(R.id.imageViewReplyAll)).check(matches(withDrawable(R.mipmap.ic_reply_all_red)));
-      onView(withId(R.id.imageViewFwd)).check(matches(withDrawable(R.mipmap.ic_forward_red)));
+      onView(withId(R.id.imageViewReply))
+          .check(matches(withDrawable(R.mipmap.ic_reply_red)))
+      onView(withId(R.id.imageViewReplyAll))
+          .check(matches(withDrawable(R.mipmap.ic_reply_all_red)))
+      onView(withId(R.id.imageViewFwd))
+          .check(matches(withDrawable(R.mipmap.ic_forward_red)))
     }
   }
 
-  private void launchActivity(GeneralMessageDetails details) {
-    intentsTestRule.launchActivity(MessageDetailsActivity.getIntent(getTargetContext(), localFolder, details));
-    IdlingRegistry.getInstance().register(((BaseActivity) intentsTestRule.getActivity()).getNodeIdlingResource());
-    IdlingRegistry.getInstance().register(((MessageDetailsActivity) intentsTestRule.getActivity())
-        .getIdlingForDecryption());
+  private fun launchActivity(details: GeneralMessageDetails) {
+    activityTestRule?.launchActivity(MessageDetailsActivity.getIntent(getTargetContext(), localFolder, details))
+    IdlingRegistry.getInstance().register((activityTestRule?.activity as BaseActivity).nodeIdlingResource)
+    IdlingRegistry.getInstance().register((activityTestRule.activity as MessageDetailsActivity).idlingForDecryption)
   }
 }
