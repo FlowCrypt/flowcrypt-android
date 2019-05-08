@@ -83,7 +83,8 @@ public class EncryptPrivateKeysIfNeededAction extends Action {
 
       List<NodeKeyDetails> keyDetailsList = NodeCallsExecutor.parseKeys(pgpKeyInfo.getPrivate());
       if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size() != 1) {
-        ExceptionUtil.handleError(new IllegalArgumentException("An error occurred during the key parsing| 1"));
+        ExceptionUtil.handleError(new IllegalArgumentException("An error occurred during the key parsing| 1: " +
+            (CollectionUtils.isEmpty(keyDetailsList) ? "Empty results" : "Size = " + keyDetailsList.size())));
         continue;
       }
 
