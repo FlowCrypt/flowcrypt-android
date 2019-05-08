@@ -376,10 +376,12 @@ public class FlowCryptSQLiteOpenHelper extends SQLiteOpenHelper {
   private void upgradeDatabaseFrom10To11Version(SQLiteDatabase sqLiteDatabase) {
     sqLiteDatabase.beginTransaction();
     try {
-      sqLiteDatabase.execSQL("ALTER TABLE " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT +
-          " ADD COLUMN " + AttachmentDaoSource.COL_FORWARDED_FOLDER + " TEXT;");
-      sqLiteDatabase.execSQL("ALTER TABLE " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT +
-          " ADD COLUMN " + AttachmentDaoSource.COL_FORWARDED_UID + " INTEGER DEFAULT -1;");
+      if (sqLiteDatabase.getVersion() >= 3) {
+        sqLiteDatabase.execSQL("ALTER TABLE " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT +
+            " ADD COLUMN " + AttachmentDaoSource.COL_FORWARDED_FOLDER + " TEXT;");
+        sqLiteDatabase.execSQL("ALTER TABLE " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT +
+            " ADD COLUMN " + AttachmentDaoSource.COL_FORWARDED_UID + " INTEGER DEFAULT -1;");
+      }
 
       sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
           " ADD COLUMN " + MessageDaoSource.COL_ATTACHMENTS_DIRECTORY + " TEXT;");
