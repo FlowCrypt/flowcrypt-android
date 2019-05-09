@@ -504,6 +504,11 @@ public class AttachmentDownloadManagerService extends Service {
           if (inputStream != null) {
             FileUtils.copyInputStreamToFile(inputStream, attFile);
             attFile = decryptFileIfNeeded(context, attFile);
+
+            if (attFile == null) {
+              throw new NullPointerException("Error. The file is missing");
+            }
+
             att.setName(attFile.getName());
 
             if (!Thread.currentThread().isInterrupted()) {
@@ -562,6 +567,11 @@ public class AttachmentDownloadManagerService extends Service {
           downloadFile(attFile, inputStream);
 
           attFile = decryptFileIfNeeded(context, attFile);
+
+          if (attFile == null) {
+            throw new NullPointerException("Error. The file is missing");
+          }
+
           this.att.setName(attFile.getName());
 
           if (listener != null) {
@@ -656,7 +666,7 @@ public class AttachmentDownloadManagerService extends Service {
      * @return The decrypted or the original file.
      */
     private File decryptFileIfNeeded(Context context, File file) throws Exception {
-      if (file == null) {
+      if (file == null || !file.exists()) {
         return null;
       }
 
