@@ -313,7 +313,7 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
     }
   }
 
-  protected boolean isNodeReady() {
+  public boolean isNodeReady() {
     if (Node.getInstance() == null || Node.getInstance().getLiveData() == null
         || Node.getInstance().getLiveData().getValue() == null) {
       return false;

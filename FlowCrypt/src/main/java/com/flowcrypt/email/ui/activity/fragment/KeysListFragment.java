@@ -77,6 +77,10 @@ public class KeysListFragment extends BaseFragment implements View.OnClickListen
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
     initViews(view);
+
+    if (recyclerViewAdapter.getItemCount() == 0 && getBaseActivity().isNodeReady()) {
+      fetchKeys();
+    }
   }
 
   @Override

@@ -13,7 +13,10 @@ import com.flowcrypt.email.R;
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
 import com.flowcrypt.email.ui.activity.fragment.KeysListFragment;
 
+import java.util.List;
+
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 /**
  * This {@link Activity} shows information about available keys in the database.
@@ -52,10 +55,14 @@ public class KeysSettingsActivity extends BaseBackStackActivity {
   protected void onNodeStateChanged(boolean isReady) {
     super.onNodeStateChanged(isReady);
     if (isReady) {
-      KeysListFragment fragment = (KeysListFragment) getSupportFragmentManager().findFragmentById(R.id.layoutContent);
+      List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
 
-      if (fragment != null) {
-        fragment.fetchKeys();
+      for (Fragment fragment : fragmentList) {
+        if (fragment instanceof KeysListFragment) {
+          KeysListFragment keysListFragment = (KeysListFragment) fragment;
+          keysListFragment.fetchKeys();
+          return;
+        }
       }
     }
   }
