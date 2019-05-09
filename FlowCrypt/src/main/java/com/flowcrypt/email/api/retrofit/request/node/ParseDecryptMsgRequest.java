@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.api.retrofit.request.node;
 
+import android.text.TextUtils;
+
 import com.flowcrypt.email.api.retrofit.node.NodeService;
 import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo;
 import com.flowcrypt.email.model.PgpKeyInfo;
@@ -39,14 +41,14 @@ public final class ParseDecryptMsgRequest extends BaseNodeRequest {
   @Expose
   private boolean isEmail;
 
-  private String encryptedMsg;
+  private String msg;
 
-  public ParseDecryptMsgRequest(String encryptedMsg, List<PgpKeyInfo> prvKeys, String[] passphrases) {
-    this(encryptedMsg, prvKeys, passphrases, false);
+  public ParseDecryptMsgRequest(String msg, List<PgpKeyInfo> prvKeys, String[] passphrases) {
+    this(msg, prvKeys, passphrases, false);
   }
 
-  public ParseDecryptMsgRequest(String encryptedMsg, List<PgpKeyInfo> prvKeys, String[] passphrases, boolean isEmail) {
-    this.encryptedMsg = encryptedMsg;
+  public ParseDecryptMsgRequest(String msg, List<PgpKeyInfo> prvKeys, String[] passphrases, boolean isEmail) {
+    this.msg = msg;
     this.isEmail = isEmail;
     this.privateKeyInfoList = new ArrayList<>();
 
@@ -64,7 +66,7 @@ public final class ParseDecryptMsgRequest extends BaseNodeRequest {
 
   @Override
   public byte[] getData() {
-    return encryptedMsg.getBytes();
+    return TextUtils.isEmpty(msg) ? new byte[]{} : msg.getBytes();
   }
 
   @Override
