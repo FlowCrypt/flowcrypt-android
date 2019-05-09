@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.util.exception;
 
+import com.flowcrypt.email.api.retrofit.response.model.node.Error;
+
 /**
  * This exception can occur during the encryption process.
  *
@@ -14,7 +16,7 @@ package com.flowcrypt.email.util.exception;
  * E-mail: DenBond7@gmail.com
  */
 public class NodeEncryptException extends NodeException {
-  public NodeEncryptException(String message) {
-    super(message);
+  public NodeEncryptException(Error error) {
+    super(error);
   }
 }

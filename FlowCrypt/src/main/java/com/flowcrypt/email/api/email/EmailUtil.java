@@ -728,7 +728,7 @@ public class EmailUtil {
     }
 
     if (result.getError() != null) {
-      throw new NodeEncryptException(result.getError().getMsg());
+      throw new NodeEncryptException(result.getError());
     }
 
     return result.getMimeMsg();

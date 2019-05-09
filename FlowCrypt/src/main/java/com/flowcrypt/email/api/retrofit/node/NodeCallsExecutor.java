@@ -185,7 +185,7 @@ public class NodeCallsExecutor {
     }
 
     if (result.getError() != null) {
-      throw new NodeException(result.getError().getMsg());
+      throw new NodeException(result.getError());
     }
   }
 }
