@@ -20,7 +20,7 @@ public class Constants {
   /**
    * The base URL for attester.
    */
-  public static final String ATTESTER_URL = "https://attester.flowcrypt.com";
+  public static final String ATTESTER_URL = "https://flowcrypt.com/attester/";
 
   /**
    * The base API URL.

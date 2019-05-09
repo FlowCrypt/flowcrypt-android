@@ -13,7 +13,7 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Response from the API
- * "https://attester.flowcrypt.com/lookup/email"
+ * "https://flowcrypt.com/attester/lookup/email"
  *
  * @author DenBond7
  * Date: 24.04.2017
@@ -35,9 +35,6 @@ public class LookUpEmailResponse extends BaseApiResponse {
     }
   };
 
-  @Expose
-  private boolean attested;
-
   @SerializedName("has_cryptup")
   @Expose
   private boolean hasCryptup;
@@ -58,7 +55,6 @@ public class LookUpEmailResponse extends BaseApiResponse {
 
   protected LookUpEmailResponse(Parcel in) {
     super(in);
-    this.attested = in.readByte() != 0;
     this.hasCryptup = in.readByte() != 0;
     this.pubKey = in.readString();
     this.email = in.readString();
@@ -68,7 +64,6 @@ public class LookUpEmailResponse extends BaseApiResponse {
   @Override
   public String toString() {
     return "LookUpEmailResponse{" +
-        "attested=" + attested +
         ", hasCryptup=" + hasCryptup +
         ", pubKey='" + pubKey + '\'' +
         ", email='" + email + '\'' +
@@ -84,15 +79,10 @@ public class LookUpEmailResponse extends BaseApiResponse {
   @Override
   public void writeToParcel(Parcel dest, int flags) {
     super.writeToParcel(dest, flags);
-    dest.writeByte(this.attested ? (byte) 1 : (byte) 0);
     dest.writeByte(this.hasCryptup ? (byte) 1 : (byte) 0);
     dest.writeString(this.pubKey);
     dest.writeString(this.email);
     dest.writeString(this.longId);
-  }
-
-  public boolean isAttested() {
-    return attested;
   }
 
   public boolean hasCryptup() {

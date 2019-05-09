@@ -12,8 +12,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * This is a POJO object which used to make a request to the API "https://attester.cryptup
- * .io/lookup/email"
+ * This is a POJO object which used to make a request to the API "https://flowcrypt.com/attester/lookup/email"
  *
  * @author DenBond7
  * Date: 24.04.2017

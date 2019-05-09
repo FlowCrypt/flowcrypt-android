@@ -82,8 +82,7 @@ class ContactsSettingsActivityTest : BaseTest() {
   private fun addContactsToDatabase() {
     val contactsDaoSource = ContactsDaoSource()
     for (email in EMAILS) {
-      val pgpContact = PgpContact(email, null, "", true, null,
-          false, null, null, null, 0)
+      val pgpContact = PgpContact(email, null, "", true, null, null, null, null, 0)
       contactsDaoSource.addRow(getTargetContext(), pgpContact)
     }
   }

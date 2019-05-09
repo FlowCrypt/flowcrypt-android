@@ -62,7 +62,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
       object : IntentsTestRule<ImportPublicKeyActivity>(ImportPublicKeyActivity::class.java) {
         override fun getActivityIntent(): Intent {
           val pgpContact = PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER, null, null,
-              false, null, false, null, null, null, 0)
+              false, null, null, null, null, 0)
           val result = Intent(getTargetContext(), ImportPublicKeyActivity::class.java)
           result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE, true)
           result.putExtra(BaseImportKeyActivity.KEY_EXTRA_TITLE, getResString(R.string.import_public_key))

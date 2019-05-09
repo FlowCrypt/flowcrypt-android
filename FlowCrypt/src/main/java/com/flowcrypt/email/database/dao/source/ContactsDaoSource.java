@@ -187,7 +187,6 @@ public class ContactsDaoSource extends BaseDaoSource {
         cursor.getString(cursor.getColumnIndex(COL_PUBLIC_KEY)),
         cursor.getInt(cursor.getColumnIndex(COL_HAS_PGP)) == 1,
         cursor.getString(cursor.getColumnIndex(COL_CLIENT)),
-        cursor.getInt(cursor.getColumnIndex(COL_ATTESTED)) == 1,
         cursor.getString(cursor.getColumnIndex(COL_FINGERPRINT)),
         cursor.getString(cursor.getColumnIndex(COL_LONG_ID)),
         cursor.getString(cursor.getColumnIndex(COL_KEYWORDS)),
@@ -294,7 +293,6 @@ public class ContactsDaoSource extends BaseDaoSource {
       contentValues.put(COL_PUBLIC_KEY, pgpContact.getPubkey());
       contentValues.put(COL_HAS_PGP, pgpContact.getHasPgp());
       contentValues.put(COL_CLIENT, pgpContact.getClient());
-      contentValues.put(COL_ATTESTED, pgpContact.getAttested());
       contentValues.put(COL_FINGERPRINT, pgpContact.getFingerprint());
       contentValues.put(COL_LONG_ID, pgpContact.getLongid());
       contentValues.put(COL_KEYWORDS, pgpContact.getKeywords());
@@ -327,7 +325,6 @@ public class ContactsDaoSource extends BaseDaoSource {
       contentValues.put(COL_PUBLIC_KEY, remoteContact.getPubkey());
       contentValues.put(COL_HAS_PGP, remoteContact.getHasPgp());
       contentValues.put(COL_CLIENT, remoteContact.getClient());
-      contentValues.put(COL_ATTESTED, remoteContact.getAttested());
       contentValues.put(COL_FINGERPRINT, remoteContact.getFingerprint());
       contentValues.put(COL_LONG_ID, remoteContact.getLongid());
       contentValues.put(COL_KEYWORDS, remoteContact.getKeywords());
@@ -379,7 +376,6 @@ public class ContactsDaoSource extends BaseDaoSource {
             .withValue(COL_PUBLIC_KEY, pgpContact.getPubkey())
             .withValue(COL_HAS_PGP, pgpContact.getHasPgp())
             .withValue(COL_CLIENT, pgpContact.getClient())
-            .withValue(COL_ATTESTED, pgpContact.getAttested())
             .withValue(COL_FINGERPRINT, pgpContact.getFingerprint())
             .withValue(COL_LONG_ID, pgpContact.getLongid())
             .withValue(COL_KEYWORDS, pgpContact.getKeywords())
@@ -457,7 +453,6 @@ public class ContactsDaoSource extends BaseDaoSource {
     contentValues.put(COL_PUBLIC_KEY, pgpContact.getPubkey());
     contentValues.put(COL_HAS_PGP, pgpContact.getHasPgp());
     contentValues.put(COL_CLIENT, pgpContact.getClient());
-    contentValues.put(COL_ATTESTED, pgpContact.getAttested());
     contentValues.put(COL_FINGERPRINT, pgpContact.getFingerprint());
     contentValues.put(COL_LONG_ID, pgpContact.getLongid());
     contentValues.put(COL_KEYWORDS, pgpContact.getKeywords());

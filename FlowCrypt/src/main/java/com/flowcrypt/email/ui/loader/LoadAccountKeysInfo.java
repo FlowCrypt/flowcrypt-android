@@ -31,7 +31,7 @@ import retrofit2.Response;
 
 /**
  * This loader does job of receiving information about an array of public
- * keys from "https://attester.flowcrypt.com/lookup/email".
+ * keys from "https://flowcrypt.com/attester/lookup/email".
  *
  * @author Denis Bondarenko
  * Date: 13.11.2017

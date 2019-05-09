@@ -20,7 +20,7 @@ import retrofit2.Response;
 
 /**
  * This action describes a task which registers a user public key
- * using API "https://attester.flowcrypt.com/initial/legacy_submit".
+ * using API "https://flowcrypt.com/attester/initial/legacy_submit".
  *
  * @author Denis Bondarenko
  * Date: 30.01.2018

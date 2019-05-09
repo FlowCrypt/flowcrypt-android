@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This adapter can be used to show info about public keys from the https://attester.flowcrypt.com/lookup/email/.
+ * This adapter can be used to show info about public keys from the https://flowcrypt.com/attester/lookup/email/.
  *
  * @author Denis Bondarenko
  * Date: 14.11.2017

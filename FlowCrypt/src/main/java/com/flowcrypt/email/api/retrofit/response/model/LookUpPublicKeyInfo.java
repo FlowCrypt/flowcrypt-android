@@ -15,7 +15,7 @@ import java.util.ArrayList;
 
 /**
  * This POJO class describes information about a public key from the
- * API <code> https://attester.flowcrypt.com/lookup/</code>
+ * API <code> https://flowcrypt.com/attester/lookup/</code>
  *
  * @author Denis Bondarenko
  * Date: 05.05.2018

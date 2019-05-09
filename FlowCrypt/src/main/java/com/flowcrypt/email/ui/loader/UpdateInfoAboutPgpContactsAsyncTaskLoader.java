@@ -38,13 +38,13 @@ import retrofit2.Response;
  * <li>a) look up the email in the database;
  * <li>b) if there is a record for that email and has_pgp==true, we can use the `pubkey` instead of
  * querying Attester;
- * <li>c) if there is a record but `has_pgp==false`, do `attester.flowcrypt.com/lookup/email` API call
+ * <li>c) if there is a record but `has_pgp==false`, do `flowcrypt.com/attester/lookup/email` API call
  * to see if you can now get the pubkey. If a pubkey is available, save it back to the database.
  * <li>e) no record in the db found:<ol>
  * <li>save an empty record eg `new PgpContact(email, null);` - this means we don't know if they have PGP yet
- * <li>look up the email on `attester.flowcrypt.com/lookup/email`
+ * <li>look up the email on `flowcrypt.com/attester/lookup/email`
  * <li>if pubkey comes back, create something like `new PgpContact(js, email, null, pubkey,
- * client, attested);`. The PgpContact constructor will define has_pgp, longid, fingerprint, etc
+ * client);`. The PgpContact constructor will define has_pgp, longid, fingerprint, etc
  * for you. Then save that object into database.
  * <li>if no pubkey found, create `new PgpContact(js, email, null, null, null, null);` - this
  * means we know they don't currently have PGP
@@ -142,7 +142,6 @@ public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<L
         List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(response.getPubKey());
         if (!CollectionUtils.isEmpty(details)) {
           PgpContact pgpContact = details.get(0).getPrimaryPgpContact();
-          pgpContact.setAttested(response.isAttested());
           pgpContact.setClient(client);
           return pgpContact;
         }

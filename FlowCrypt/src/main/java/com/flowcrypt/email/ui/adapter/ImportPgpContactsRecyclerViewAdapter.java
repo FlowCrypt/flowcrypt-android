@@ -100,7 +100,7 @@ public class ImportPgpContactsRecyclerViewAdapter extends
 
   private void saveContact(int position, View v, Context context, PublicKeyInfo publicKeyInfo) {
     PgpContact pgpContact = new PgpContact(publicKeyInfo.getKeyOwner(), null, publicKeyInfo.getPublicKey(), true,
-        null, false, publicKeyInfo.getFingerprint(), publicKeyInfo.getLongId(), publicKeyInfo.getKeyWords(), 0);
+        null, publicKeyInfo.getFingerprint(), publicKeyInfo.getLongId(), publicKeyInfo.getKeyWords(), 0);
 
     Uri uri = new ContactsDaoSource().addRow(context, pgpContact);
     if (uri != null) {
@@ -115,7 +115,7 @@ public class ImportPgpContactsRecyclerViewAdapter extends
 
   private void updateContact(int position, View v, Context context, PublicKeyInfo publicKeyInfo) {
     PgpContact pgpContact = new PgpContact(publicKeyInfo.getKeyOwner(), null, publicKeyInfo.getPublicKey(), true,
-        null, false, publicKeyInfo.getFingerprint(), publicKeyInfo.getLongId(), publicKeyInfo.getKeyWords(), 0);
+        null, publicKeyInfo.getFingerprint(), publicKeyInfo.getLongId(), publicKeyInfo.getKeyWords(), 0);
 
     boolean isUpdated = new ContactsDaoSource().updatePgpContact(context, pgpContact) > 0;
     if (isUpdated) {

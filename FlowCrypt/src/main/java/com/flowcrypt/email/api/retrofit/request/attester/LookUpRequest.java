@@ -9,7 +9,7 @@ import com.flowcrypt.email.api.retrofit.ApiName;
 import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 
 /**
- * This class describes the request to the API "https://attester.flowcrypt.com/lookup"
+ * This class describes the request to the API "https://flowcrypt.com/attester/lookup"
  *
  * @author DenBond7
  * Date: 05.05.2018

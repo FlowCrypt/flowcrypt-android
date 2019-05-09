@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.retrofit.response.base.BaseApiResponse;
 import com.google.gson.annotations.Expose;
 
 /**
- * This class describes a response from the https://attester.flowcrypt.com/test/welcome API.
+ * This class describes a response from the https://flowcrypt.com/attester/test/welcome API.
  * <p>
  * <code>POST /test/welcome
  * response(200): {

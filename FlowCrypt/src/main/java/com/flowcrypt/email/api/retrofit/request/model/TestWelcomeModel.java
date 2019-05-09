@@ -11,7 +11,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * The request model for the https://attester.flowcrypt.com/test/welcome API.
+ * The request model for the https://flowcrypt.com/attester/test/welcome API.
  *
  * @author Denis Bondarenko
  * Date: 12.07.2017

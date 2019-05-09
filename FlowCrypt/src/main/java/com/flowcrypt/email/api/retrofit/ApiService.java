@@ -35,39 +35,39 @@ import retrofit2.http.Path;
 public interface ApiService {
 
   /**
-   * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/lookup/email"
+   * This method create a {@link Call} object for the API "https://flowcrypt.com/attester/lookup/email"
    *
    * @param body POJO model for requests
    * @return {@link Call<LookUpEmailResponse>}
    */
-  @POST("/lookup/email")
+  @POST("lookup/email")
   Call<LookUpEmailResponse> postLookUpEmail(@Body PostLookUpEmailModel body);
 
   /**
-   * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/lookup/email"
+   * This method create a {@link Call} object for the API "https://flowcrypt.com/attester/lookup/email"
    *
    * @param body POJO model for requests
    * @return {@link Call<LookUpEmailsResponse>}
    */
-  @POST("/lookup/email")
+  @POST("lookup/email")
   Call<LookUpEmailsResponse> postLookUpEmails(@Body PostLookUpEmailsModel body);
 
   /**
-   * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/initial/legacy_submit"
+   * This method create a {@link Call} object for the API "https://flowcrypt.com/attester/initial/legacy_submit"
    *
    * @param body POJO model for requests
    * @return {@link Call<InitialLegacySubmitResponse>}
    */
-  @POST("/initial/legacy_submit")
+  @POST("initial/legacy_submit")
   Call<InitialLegacySubmitResponse> postInitialLegacySubmit(@Body InitialLegacySubmitModel body);
 
   /**
-   * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/test/welcome"
+   * This method create a {@link Call} object for the API "https://flowcrypt.com/attester/test/welcome"
    *
    * @param body POJO model for requests
    * @return {@link Call<TestWelcomeResponse>}
    */
-  @POST("/test/welcome")
+  @POST("test/welcome")
   Call<TestWelcomeResponse> postTestWelcome(@Body TestWelcomeModel body);
 
   /**
@@ -80,10 +80,10 @@ public interface ApiService {
   Call<PostHelpFeedbackResponse> postHelpFeedbackResponse(@Body PostHelpFeedbackModel body);
 
   /**
-   * This method create a {@link Call} object for the API "https://attester.flowcrypt.com/lookup"
+   * This method create a {@link Call} object for the API "https://flowcrypt.com/attester/lookup"
    *
    * @return {@link Call<LookUpResponse>}
    */
-  @GET("/lookup/{keyIdOrEmail}")
+  @GET("lookup/{keyIdOrEmail}")
   Call<LookUpResponse> getLookUp(@Path("keyIdOrEmail") String keyIdOrEmail);
 }

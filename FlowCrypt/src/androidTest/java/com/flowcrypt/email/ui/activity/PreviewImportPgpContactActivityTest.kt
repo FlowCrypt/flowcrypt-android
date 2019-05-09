@@ -66,7 +66,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
   @Test
   fun testIsDisplayedSingleItem() {
     val pgpContact = PgpContact("default@denbond7.com", null,
-        singlePublicKeyForUnsavedContact, true, null, false, null, null, null, 0)
+        singlePublicKeyForUnsavedContact, true, null, null, null, null, 0)
     ContactsDaoSource().addRow(getTargetContext(), pgpContact)
     activityTestRule?.launchActivity(
         PreviewImportPgpContactActivity.newIntent(getTargetContext(), singlePublicKeyForUnsavedContact))

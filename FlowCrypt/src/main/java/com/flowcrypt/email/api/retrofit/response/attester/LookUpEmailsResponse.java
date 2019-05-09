@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * Response from the API
- * "https://attester.flowcrypt.com/lookup/email" for {@link PostLookUpEmailsModel}
+ * "https://flowcrypt.com/attester/lookup/email" for {@link PostLookUpEmailsModel}
  *
  * @author Denis Bondarenko
  * Date: 13.11.2017

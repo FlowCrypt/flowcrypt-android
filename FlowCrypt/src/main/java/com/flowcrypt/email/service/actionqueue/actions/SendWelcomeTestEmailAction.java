@@ -18,7 +18,7 @@ import retrofit2.Response;
 
 /**
  * This action describes a task which sends a welcome message to the user
- * using API "https://attester.flowcrypt.com/test/welcome".
+ * using API "https://flowcrypt.com/attester/test/welcome".
  *
  * @author Denis Bondarenko
  * Date: 30.01.2018

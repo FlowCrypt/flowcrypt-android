@@ -10,7 +10,7 @@ import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
 
 /**
- * This class describes a request to the https://attester.flowcrypt.com/test/welcome API.
+ * This class describes a request to the https://flowcrypt.com/attester/test/welcome API.
  * <p>
  * <code>POST /test/welcome  {
  * "email" (<type 'str'>)  # email to send a welcome to

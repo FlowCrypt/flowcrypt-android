@@ -27,21 +27,18 @@ public class PgpContact implements Parcelable {
   private String pubkey;
   private boolean hasPgp;
   private String client;
-  private boolean attested;
   private String fingerprint;
   private String longid;
   private String keywords;
   private int lastUse;
 
   public PgpContact(String email, String name, String pubkey, Boolean hasPgp, String client,
-                    Boolean attested, String fingerprint, String longid, String keywords,
-                    Integer lastUse) {
+                    String fingerprint, String longid, String keywords, Integer lastUse) {
     this.email = email;
     this.name = name;
     this.pubkey = pubkey;
     this.hasPgp = hasPgp;
     this.client = client;
-    this.attested = attested;
     this.fingerprint = fingerprint;
     this.longid = longid;
     this.keywords = keywords;
@@ -54,7 +51,6 @@ public class PgpContact implements Parcelable {
     this.pubkey = null;
     this.hasPgp = false;
     this.client = null;
-    this.attested = false;
     this.fingerprint = null;
     this.longid = null;
     this.keywords = null;
@@ -67,7 +63,6 @@ public class PgpContact implements Parcelable {
     this.pubkey = in.readString();
     this.hasPgp = in.readByte() != 0;
     this.client = in.readString();
-    this.attested = in.readByte() != 0;
     this.fingerprint = in.readString();
     this.longid = in.readString();
     this.keywords = in.readString();
@@ -86,7 +81,6 @@ public class PgpContact implements Parcelable {
     dest.writeString(this.pubkey);
     dest.writeByte(this.hasPgp ? (byte) 1 : (byte) 0);
     dest.writeString(this.client);
-    dest.writeByte(this.attested ? (byte) 1 : (byte) 0);
     dest.writeString(this.fingerprint);
     dest.writeString(this.longid);
     dest.writeString(this.keywords);
@@ -122,14 +116,6 @@ public class PgpContact implements Parcelable {
 
   public void setClient(String client) {
     this.client = client;
-  }
-
-  public boolean getAttested() {
-    return attested;
-  }
-
-  public void setAttested(boolean attested) {
-    this.attested = attested;
   }
 
   public String getKeywords() {

@@ -10,7 +10,7 @@ import com.flowcrypt.email.api.retrofit.request.BaseRequest;
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
 
 /**
- * This class describes a request to the https://attester.flowcrypt.com/initial/legacy_submit API.
+ * This class describes a request to the https://flowcrypt.com/attester/initial/legacy_submit API.
  * <p>
  * <code>POST /initial/legacy_submit  {
  * "email" (<type 'str'>)  # email to use pubkey for

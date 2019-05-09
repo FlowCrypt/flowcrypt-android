@@ -11,12 +11,11 @@ import com.flowcrypt.email.api.retrofit.response.base.BaseApiResponse;
 import com.google.gson.annotations.Expose;
 
 /**
- * This class describes a response from the https://attester.flowcrypt.com/initial/legacy_submit API.
+ * This class describes a response from the https://flowcrypt.com/attester/initial/legacy_submit API.
  * <p>
  * <code>POST /initial/legacy_submit
  * response(200): {
  * "saved" (True, False)  # successfuly saved pubkey
- * "attested" (True, False)  # previously went through full attestation using keys/attest
  * [voluntary] "error" (<type 'str'>)  # error detail, if not saved
  * }</code>
  *
@@ -43,24 +42,18 @@ public class InitialLegacySubmitResponse extends BaseApiResponse {
   @Expose
   private boolean saved;
 
-  @Expose
-  private boolean attested;
-
-
   public InitialLegacySubmitResponse() {
   }
 
   protected InitialLegacySubmitResponse(Parcel in) {
     super(in);
     this.saved = in.readByte() != 0;
-    this.attested = in.readByte() != 0;
   }
 
   @Override
   public String toString() {
     return "InitialLegacySubmitResponse{" +
         "saved=" + saved +
-        ", attested=" + attested +
         "} " + super.toString();
   }
 
@@ -73,11 +66,6 @@ public class InitialLegacySubmitResponse extends BaseApiResponse {
   public void writeToParcel(Parcel dest, int flags) {
     super.writeToParcel(dest, flags);
     dest.writeByte(this.saved ? (byte) 1 : (byte) 0);
-    dest.writeByte(this.attested ? (byte) 1 : (byte) 0);
-  }
-
-  public boolean isAttested() {
-    return attested;
   }
 
   public boolean isSaved() {

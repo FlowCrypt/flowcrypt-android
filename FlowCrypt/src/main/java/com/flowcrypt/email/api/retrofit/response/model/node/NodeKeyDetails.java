@@ -139,7 +139,7 @@ public class NodeKeyDetails implements Parcelable {
       }
     }
 
-    return new PgpContact(email, name, publicKey, !TextUtils.isEmpty(publicKey), null, false,
+    return new PgpContact(email, name, publicKey, !TextUtils.isEmpty(publicKey), null,
         keyId.getFingerprint(), keyId.getLongId(), keyId.getKeywords(), 0);
   }
 

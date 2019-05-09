@@ -14,18 +14,14 @@ package com.flowcrypt.email.api.retrofit;
  * E-mail: DenBond7@gmail.com
  */
 public enum ApiName {
-  /*attester.flowcrypt.com*/
+  /*flowcrypt.com/attester*/
   POST_TEST_WELCOME,
-  POST_INITIAL_REQUEST,
-  POST_INITIAL_CONFIRM,
   POST_INITIAL_LEGACY_SUBMIT,
   POST_LOOKUP_EMAIL_SINGLE,
   POST_LOOKUP_EMAIL_MULTIPLY,
-  POST_REPLACE_REQUEST,
-  POST_REPLACE_CONFIRM,
   GET_LOOKUP,
 
-  /*api.cryptup.io*/
+  /*flowcrypt.com/api*/
   POST_HELP_FEEDBACK,
   POST_LINK_MESSAGE,
   POST_MESSAGE_REPLY

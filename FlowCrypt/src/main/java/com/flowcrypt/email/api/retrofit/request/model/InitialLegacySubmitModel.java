@@ -41,11 +41,6 @@ public class InitialLegacySubmitModel extends BaseRequestModel {
   @Expose
   private String pubKey;
 
-  /*todo-denbond7 Make sure to choose attest: false for now.
-   https://github.com/FlowCrypt/flowcrypt-android/issues/71*/
-  @Expose
-  private boolean attest;
-
   public InitialLegacySubmitModel() {
   }
 
@@ -57,7 +52,6 @@ public class InitialLegacySubmitModel extends BaseRequestModel {
   protected InitialLegacySubmitModel(Parcel in) {
     this.email = in.readString();
     this.pubKey = in.readString();
-    this.attest = in.readByte() != 0;
   }
 
   @Override
@@ -69,7 +63,6 @@ public class InitialLegacySubmitModel extends BaseRequestModel {
   public void writeToParcel(Parcel dest, int flags) {
     dest.writeString(this.email);
     dest.writeString(this.pubKey);
-    dest.writeByte(this.attest ? (byte) 1 : (byte) 0);
   }
 
   public String getEmail() {
@@ -86,13 +79,5 @@ public class InitialLegacySubmitModel extends BaseRequestModel {
 
   public void setPubKey(String pubKey) {
     this.pubKey = pubKey;
-  }
-
-  public boolean isAttest() {
-    return attest;
-  }
-
-  public void setAttest(boolean attest) {
-    this.attest = attest;
   }
 }

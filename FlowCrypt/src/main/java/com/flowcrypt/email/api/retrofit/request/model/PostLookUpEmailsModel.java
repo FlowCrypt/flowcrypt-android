@@ -14,8 +14,8 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 /**
- * This is a POJO object which used to make a request to the API "https://attester.cryptup
- * .io/lookup/email" to retrieve info about an array of keys.
+ * This is a POJO object which used to make a request to the API "https://flowcrypt.com/attester/lookup/email"
+ * to retrieve info about an array of keys.
  *
  * @author Denis Bondarenko
  * Date: 13.11.2017
