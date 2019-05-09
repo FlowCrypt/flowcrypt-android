@@ -202,6 +202,10 @@ public class ContactsDaoSource extends BaseDaoSource {
    * @return A {@link PgpContact} object.
    */
   public PgpContact getPgpContact(Context context, String email) {
+    if (email == null) {
+      return null;
+    }
+
     String emailInLowerCase = TextUtils.isEmpty(email) ? email : email.toLowerCase();
 
     ContentResolver contentResolver = context.getContentResolver();
