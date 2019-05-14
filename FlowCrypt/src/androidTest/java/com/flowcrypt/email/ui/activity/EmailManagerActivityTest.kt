@@ -235,14 +235,27 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   companion object {
     private val LOCAL_FOLDERS: MutableList<LocalFolder>
-    private val INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT = LocalFolder("INBOX", "INBOX", 0, arrayOf("\\HasNoChildren"), false)
+    private val INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT = LocalFolder(
+        fullName = "INBOX",
+        folderAlias = "INBOX",
+        attributes = listOf("\\HasNoChildren"),
+        isCustom = true)
 
     init {
       LOCAL_FOLDERS = ArrayList()
       LOCAL_FOLDERS.add(INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT)
-      LOCAL_FOLDERS.add(LocalFolder("Drafts", "Drafts", 0, arrayOf("\\HasNoChildren", "\\Drafts"), false))
-      LOCAL_FOLDERS.add(LocalFolder("Sent", "Sent", 0, arrayOf("\\HasNoChildren", "\\Sent"), false))
-      LOCAL_FOLDERS.add(LocalFolder("Junk", "Junk", 0, arrayOf("\\HasNoChildren", "\\Junk"), false))
+      LOCAL_FOLDERS.add(LocalFolder(
+          fullName = "Drafts",
+          folderAlias = "Drafts",
+          attributes = listOf("\\HasNoChildren", "\\Drafts")))
+      LOCAL_FOLDERS.add(LocalFolder(
+          fullName = "Sent",
+          folderAlias = "Sent",
+          attributes = listOf("\\HasNoChildren", "\\Sent")))
+      LOCAL_FOLDERS.add(LocalFolder(
+          fullName = "Junk",
+          folderAlias = "Junk",
+          attributes = listOf("\\HasNoChildren", "\\Junk")))
     }
   }
 }

@@ -19,8 +19,10 @@ import android.text.TextUtils;
 
 import com.flowcrypt.email.api.email.model.LocalFolder;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
+import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -136,9 +138,10 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     return new LocalFolder(
         cursor.getString(cursor.getColumnIndex(COL_FOLDER_NAME)),
         cursor.getString(cursor.getColumnIndex(COL_FOLDER_ALIAS)),
-        cursor.getInt(cursor.getColumnIndex(COL_MESSAGE_COUNT)),
         parseAttributes(cursor.getString(cursor.getColumnIndex(COL_FOLDER_ATTRIBUTES))),
-        cursor.getInt(cursor.getColumnIndex(COL_IS_CUSTOM_LABEL)) == 1
+        cursor.getInt(cursor.getColumnIndex(COL_IS_CUSTOM_LABEL)) == 1,
+        cursor.getInt(cursor.getColumnIndex(COL_MESSAGE_COUNT)),
+        null
     );
   }
 
@@ -280,8 +283,8 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     return contentValues;
   }
 
-  private String prepareAttributesToSaving(String[] attributes) {
-    if (attributes != null && attributes.length > 0) {
+  private String prepareAttributesToSaving(List<String> attributes) {
+    if (!CollectionUtils.isEmpty(attributes)) {
       StringBuilder result = new StringBuilder();
       for (String attribute : attributes) {
         result.append(attribute).append("\t");
@@ -293,9 +296,9 @@ public class ImapLabelsDaoSource extends BaseDaoSource {
     }
   }
 
-  private String[] parseAttributes(String attributesAsString) {
+  private List<String> parseAttributes(String attributesAsString) {
     if (attributesAsString != null && attributesAsString.length() > 0) {
-      return attributesAsString.split("\t");
+      return Arrays.asList(attributesAsString.split("\t"));
     } else {
       return null;
     }

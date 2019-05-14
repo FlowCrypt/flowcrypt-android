@@ -89,7 +89,11 @@ class MessageDetailsActivityTest : BaseTest() {
       .around(activityTestRule)
 
   private val dateFormat: java.text.DateFormat = DateFormat.getTimeFormat(getTargetContext())
-  private val localFolder: LocalFolder = LocalFolder("INBOX", "INBOX", 1, arrayOf("\\HasNoChildren"), false)
+  private val localFolder: LocalFolder = LocalFolder(
+      fullName = "INBOX",
+      folderAlias = "INBOX",
+      msgCount = 1,
+      attributes = listOf("\\HasNoChildren"))
 
   @After
   fun unregisterDecryptionIdling() {

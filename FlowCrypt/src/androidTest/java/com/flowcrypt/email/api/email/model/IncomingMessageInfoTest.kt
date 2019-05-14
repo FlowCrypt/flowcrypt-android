@@ -81,7 +81,7 @@ class IncomingMessageInfoTest {
     val original = IncomingMessageInfo(
         details,
         listOf(att1, att2),
-        LocalFolder("fullName", "folderAlias", 12, arrayOf("attributes"), false, "searchQuery"),
+        LocalFolder("fullName", "folderAlias", listOf("attributes"), true, 12, "searchQuery"),
         listOf(BaseMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false), BaseMsgBlock(MsgBlock.Type.UNKNOWN,
             "content", false)))
 

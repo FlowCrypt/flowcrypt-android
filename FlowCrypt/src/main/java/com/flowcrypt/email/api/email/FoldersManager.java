@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder;
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
 import com.sun.mail.imap.IMAPFolder;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -76,8 +77,8 @@ public class FoldersManager {
    */
   public static LocalFolder generateFolder(IMAPFolder imapFolder, String folderAlias) throws
       MessagingException {
-    return new LocalFolder(imapFolder.getFullName(), folderAlias, 0, imapFolder.getAttributes(),
-        isCustom(imapFolder));
+    return new LocalFolder(imapFolder.getFullName(), folderAlias, Arrays.asList(imapFolder.getAttributes()),
+        isCustom(imapFolder), 0, "");
   }
 
   /**
@@ -113,7 +114,7 @@ public class FoldersManager {
     FolderType[] folderTypes = FolderType.values();
 
     if (localFolder != null) {
-      String[] attributes = localFolder.getAttributes();
+      List<String> attributes = localFolder.getAttributes();
 
       if (attributes != null) {
         for (String attribute : attributes) {
@@ -207,7 +208,7 @@ public class FoldersManager {
    * Add a new folder to {@link FoldersManager} to manage it.
    *
    * @param localFolder The {@link LocalFolder} object which contains information about a
-   *               remote folder.
+   *                    remote folder.
    */
   public void addFolder(LocalFolder localFolder) {
     if (localFolder != null && !TextUtils.isEmpty(localFolder.getFullName())

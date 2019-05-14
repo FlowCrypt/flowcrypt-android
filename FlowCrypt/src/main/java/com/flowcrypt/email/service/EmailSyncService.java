@@ -54,6 +54,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -487,8 +488,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
       }
     }
 
-    LocalFolder localFolder = new LocalFolder(JavaEmailConstants.FOLDER_OUTBOX, JavaEmailConstants.FOLDER_OUTBOX, 0,
-        new String[]{JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN}, false);
+    LocalFolder localFolder = new LocalFolder(JavaEmailConstants.FOLDER_OUTBOX, JavaEmailConstants.FOLDER_OUTBOX,
+        Collections.singletonList(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN), false, 0, "");
 
     foldersManager.addFolder(localFolder);
 

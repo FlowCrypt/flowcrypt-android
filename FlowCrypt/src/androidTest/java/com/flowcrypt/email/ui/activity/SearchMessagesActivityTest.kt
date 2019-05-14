@@ -61,8 +61,9 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   override val activityTestRule: ActivityTestRule<*>? =
       object : IntentsTestRule<SearchMessagesActivity>(SearchMessagesActivity::class.java) {
         override fun getActivityIntent(): Intent {
-          return SearchMessagesActivity.newIntent(getTargetContext(), QUERY, LocalFolder(FOLDER_NAME, FOLDER_NAME,
-              0, null, false))
+          return SearchMessagesActivity.newIntent(getTargetContext(), QUERY, LocalFolder(
+              fullName = FOLDER_NAME,
+              folderAlias = FOLDER_NAME))
         }
       }
 

@@ -693,7 +693,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
     }
 
     if (getSupportActionBar() != null) {
-      getSupportActionBar().setTitle(listener.getCurrentFolder().getUserFriendlyName());
+      getSupportActionBar().setTitle(listener.getCurrentFolder().getFolderAlias());
     }
   }
 
