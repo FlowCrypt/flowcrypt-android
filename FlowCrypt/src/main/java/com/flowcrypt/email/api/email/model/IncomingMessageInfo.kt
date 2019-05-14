@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.api.email.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import java.util.*
 import javax.mail.internet.InternetAddress

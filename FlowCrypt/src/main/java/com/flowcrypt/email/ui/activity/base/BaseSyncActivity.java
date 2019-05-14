@@ -14,7 +14,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.LocalFolder;
+import com.flowcrypt.email.api.email.model.LocalFolder;
 import com.flowcrypt.email.service.BaseService;
 import com.flowcrypt.email.service.EmailSyncService;
 import com.flowcrypt.email.ui.activity.BaseNodeActivity;

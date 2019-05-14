@@ -32,7 +32,7 @@ import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.LocalFolder
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyListView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withToolBarText

@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.email.sync;
 import android.content.Context;
 import android.util.LongSparseArray;
 
-import com.flowcrypt.email.api.email.LocalFolder;
+import com.flowcrypt.email.api.email.model.LocalFolder;
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
 import com.flowcrypt.email.database.dao.source.AccountDao;

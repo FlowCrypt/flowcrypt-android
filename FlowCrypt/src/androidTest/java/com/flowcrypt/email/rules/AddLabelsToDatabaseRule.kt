@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.rules
 
-import com.flowcrypt.email.api.email.LocalFolder
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
 import org.junit.runner.Description

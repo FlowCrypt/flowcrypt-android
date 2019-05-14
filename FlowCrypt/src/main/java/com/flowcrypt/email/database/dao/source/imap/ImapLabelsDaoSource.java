@@ -17,7 +17,7 @@ import android.os.RemoteException;
 import android.provider.BaseColumns;
 import android.text.TextUtils;
 
-import com.flowcrypt.email.api.email.LocalFolder;
+import com.flowcrypt.email.api.email.model.LocalFolder;
 import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 
 import java.util.ArrayList;

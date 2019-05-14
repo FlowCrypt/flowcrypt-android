@@ -16,7 +16,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.LocalFolder;
+import com.flowcrypt.email.api.email.model.LocalFolder;
 import com.flowcrypt.email.database.dao.source.AccountDao;
 import com.flowcrypt.email.database.dao.source.AccountDaoSource;
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity;

@@ -23,9 +23,9 @@ import android.util.LongSparseArray;
 
 import com.flowcrypt.email.Constants;
 import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.LocalFolder;
 import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
+import com.flowcrypt.email.api.email.model.LocalFolder;
 import com.flowcrypt.email.api.email.model.MessageFlag;
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
 import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper;
