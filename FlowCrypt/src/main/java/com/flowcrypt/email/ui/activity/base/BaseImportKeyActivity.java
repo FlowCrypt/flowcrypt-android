@@ -433,7 +433,7 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
   }
 
   /**
-   * Show an explanation to the user for read the sdcard.
+   * Show an explanation to the user for readOption the sdcard.
    * After the user sees the explanation, we try again to request the permission.
    */
   private void showReadSdCardExplanation() {

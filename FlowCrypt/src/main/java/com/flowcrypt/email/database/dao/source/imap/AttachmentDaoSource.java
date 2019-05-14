@@ -123,23 +123,22 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @return A generated {@link AttachmentInfo}.
    */
   public static AttachmentInfo getAttInfo(Cursor cursor) {
-    AttachmentInfo attInfo = new AttachmentInfo();
-    attInfo.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
-    attInfo.setFolder(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
-    attInfo.setUid(cursor.getInt(cursor.getColumnIndex(COL_UID)));
-    attInfo.setName(cursor.getString(cursor.getColumnIndex(COL_NAME)));
-    attInfo.setEncodedSize(cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)));
-    attInfo.setType(cursor.getString(cursor.getColumnIndex(COL_TYPE)));
-    attInfo.setId(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)));
-    String uriString = cursor.getString(cursor.getColumnIndex(COL_FILE_URI));
-    if (!TextUtils.isEmpty(uriString)) {
-      attInfo.setUri(Uri.parse(uriString));
-    }
-    attInfo.setFwdFolder(cursor.getString(cursor.getColumnIndex(COL_FORWARDED_FOLDER)));
-    attInfo.setFwdUid(cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)));
-    attInfo.setForwarded(!cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))
-        && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0);
-    return attInfo;
+    return new AttachmentInfo(null,
+        cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
+        cursor.getString(cursor.getColumnIndex(COL_FOLDER)),
+        cursor.getInt(cursor.getColumnIndex(COL_UID)),
+        cursor.getString(cursor.getColumnIndex(COL_FORWARDED_FOLDER)),
+        cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)),
+        cursor.getString(cursor.getColumnIndex(COL_NAME)),
+        cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)),
+        cursor.getString(cursor.getColumnIndex(COL_TYPE)),
+        cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)),
+        null,
+        false,
+        !cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))
+            && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0, 0
+
+    );
   }
 
   @Override

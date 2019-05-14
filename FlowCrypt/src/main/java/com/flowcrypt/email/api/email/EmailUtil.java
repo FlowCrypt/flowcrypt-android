@@ -151,7 +151,8 @@ public class EmailUtil {
    */
   public static AttachmentInfo getAttInfoFromUri(Context context, Uri uri) {
     if (context != null && uri != null) {
-      AttachmentInfo attInfo = new AttachmentInfo();
+      AttachmentInfo attInfo = new AttachmentInfo(null, null, null, 0, null, 0, null, 0, null, null, null, false,
+          false, 0);
       attInfo.setUri(uri);
       attInfo.setType(GeneralUtil.getFileMimeTypeFromUri(context, uri));
       attInfo.setId(EmailUtil.generateContentId());
@@ -192,7 +193,9 @@ public class EmailUtil {
       String fileName = "0x" + nodeKeyDetails.getLongId().toUpperCase() + ".asc";
 
       if (!TextUtils.isEmpty(nodeKeyDetails.getPublicKey())) {
-        AttachmentInfo attachmentInfo = new AttachmentInfo();
+        AttachmentInfo attachmentInfo = new AttachmentInfo(null, null, null, 0, null, 0, null, 0, null, null, null,
+            false,
+            false, 0);
 
         attachmentInfo.setName(fileName);
         attachmentInfo.setEncodedSize(nodeKeyDetails.getPublicKey().length());
@@ -530,15 +533,15 @@ public class EmailUtil {
    * @param addresses An array of {@link InternetAddress}
    * @return The first address as a human readable string or email.
    */
-  public static String getFirstAddressString(InternetAddress[] addresses) {
-    if (addresses == null || addresses.length == 0) {
+  public static String getFirstAddressString(List<InternetAddress> addresses) {
+    if (addresses == null || addresses.size() == 0) {
       return "";
     }
 
-    if (TextUtils.isEmpty(addresses[0].getPersonal())) {
-      return addresses[0].getAddress();
+    if (TextUtils.isEmpty(addresses.get(0).getPersonal())) {
+      return addresses.get(0).getAddress();
     } else {
-      return addresses[0].getPersonal();
+      return addresses.get(0).getPersonal();
     }
   }
 

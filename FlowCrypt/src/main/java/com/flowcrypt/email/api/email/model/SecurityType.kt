@@ -3,18 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.model;
+package com.flowcrypt.email.api.email.model
 
-import android.content.Context;
-import android.os.Parcel;
-import android.os.Parcelable;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.JavaEmailConstants;
-
-import java.util.ArrayList;
-
-import androidx.annotation.NonNull;
+import android.content.Context
+import android.os.Parcel
+import android.os.Parcelable
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.JavaEmailConstants
 
 /**
  * This class describes settings for some security type.
@@ -25,91 +20,76 @@ import androidx.annotation.NonNull;
  * E-mail: DenBond7@gmail.com
  */
 
-public class SecurityType implements Parcelable {
+data class SecurityType constructor(val name: String = "",
+                                    val opt: Option = Option.NONE,
+                                    val defImapPort: Int = 0,
+                                    val defSmtpPort: Int = 0) : Parcelable {
 
-  public static final Creator<SecurityType> CREATOR = new Creator<SecurityType>() {
-    @Override
-    public SecurityType createFromParcel(Parcel source) {
-      return new SecurityType(source);
+  constructor(parcel: Parcel) : this(
+      parcel.readString()!!,
+      parcel.readParcelable(Option::class.java.classLoader)!!,
+      parcel.readInt(),
+      parcel.readInt())
+
+  override fun toString(): String {
+    return name
+  }
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) {
+    dest.writeString(this.name)
+    dest.writeParcelable(opt, flags)
+    dest.writeInt(this.defImapPort)
+    dest.writeInt(this.defSmtpPort)
+  }
+
+  enum class Option : Parcelable {
+    NONE, SSL_TLS, STARTLS;
+
+    companion object {
+      @JvmField
+      @Suppress("unused")
+      val CREATOR: Parcelable.Creator<Option> = object : Parcelable.Creator<Option> {
+        override fun createFromParcel(source: Parcel): Option = values()[source.readInt()]
+        override fun newArray(size: Int): Array<Option?> = arrayOfNulls(size)
+      }
     }
 
-    @Override
-    public SecurityType[] newArray(int size) {
-      return new SecurityType[size];
+    override fun describeContents(): Int {
+      return 0
     }
-  };
-  private String name;
-  private int defImapPort;
-  private int defSmtpPort;
-  private Option option;
 
-  public SecurityType(String name, Option option, int defImapPort, int smtpPort) {
-    this.name = name;
-    this.option = option;
-    this.defImapPort = defImapPort;
-    this.defSmtpPort = smtpPort;
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+      dest.writeInt(ordinal)
+    }
   }
 
-  public SecurityType(Parcel in) {
-    this.name = in.readString();
-    this.defImapPort = in.readInt();
-    this.defSmtpPort = in.readInt();
-    int tmpOpt = in.readInt();
-    this.option = tmpOpt == -1 ? null : Option.values()[tmpOpt];
-  }
+  companion object {
+    @JvmField
+    @Suppress("unused")
+    val CREATOR: Parcelable.Creator<SecurityType> = object : Parcelable.Creator<SecurityType> {
+      override fun createFromParcel(source: Parcel): SecurityType = SecurityType(source)
+      override fun newArray(size: Int): Array<SecurityType?> = arrayOfNulls(size)
+    }
 
-  /**
-   * Generate a list which contains all available {@link SecurityType}.
-   *
-   * @return The list of all available {@link SecurityType}.
-   */
-  @NonNull
-  public static ArrayList<SecurityType> generateSecurityTypes(Context context) {
-    ArrayList<SecurityType> securityTypes = new ArrayList<>();
-    securityTypes.add(new SecurityType(context.getString(R.string.none), SecurityType.Option.NONE,
-        JavaEmailConstants.DEFAULT_IMAP_PORT, JavaEmailConstants.DEFAULT_SMTP_PORT));
-    securityTypes.add(new SecurityType(context.getString(R.string.ssl_tls), SecurityType.Option.SSL_TLS,
-        JavaEmailConstants.SSL_IMAP_PORT, JavaEmailConstants.SSL_SMTP_PORT));
-    securityTypes.add(new SecurityType(context.getString(R.string.startls), SecurityType.Option.STARTLS,
-        JavaEmailConstants.DEFAULT_IMAP_PORT, JavaEmailConstants.STARTTLS_SMTP_PORT));
-    return securityTypes;
-  }
-
-  @Override
-  public String toString() {
-    return name;
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.name);
-    dest.writeInt(this.defImapPort);
-    dest.writeInt(this.defSmtpPort);
-    dest.writeInt(this.option == null ? -1 : this.option.ordinal());
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public int getDefImapPort() {
-    return defImapPort;
-  }
-
-  public int getDefaultSmtpPort() {
-    return defSmtpPort;
-  }
-
-  public Option getOpt() {
-    return option;
-  }
-
-  public enum Option {
-    NONE, SSL_TLS, STARTLS
+    /**
+     * Generate a list which contains all available [SecurityType].
+     *
+     * @return The list of all available [SecurityType].
+     */
+    @JvmStatic
+    fun generateSecurityTypes(context: Context): MutableList<SecurityType> {
+      val securityTypes = mutableListOf<SecurityType>()
+      securityTypes.add(SecurityType(context.getString(R.string.none), Option.NONE,
+          JavaEmailConstants.DEFAULT_IMAP_PORT, JavaEmailConstants.DEFAULT_SMTP_PORT))
+      securityTypes.add(SecurityType(context.getString(R.string.ssl_tls), Option.SSL_TLS,
+          JavaEmailConstants.SSL_IMAP_PORT, JavaEmailConstants.SSL_SMTP_PORT))
+      securityTypes.add(SecurityType(context.getString(R.string.startls), Option.STARTLS,
+          JavaEmailConstants.DEFAULT_IMAP_PORT, JavaEmailConstants.STARTTLS_SMTP_PORT))
+      return securityTypes
+    }
   }
 }

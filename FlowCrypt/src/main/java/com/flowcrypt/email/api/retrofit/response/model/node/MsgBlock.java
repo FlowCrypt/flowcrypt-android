@@ -11,6 +11,8 @@ import android.os.Parcelable;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Objects;
+
 import androidx.annotation.NonNull;
 
 public class MsgBlock implements Parcelable {
@@ -48,6 +50,12 @@ public class MsgBlock implements Parcelable {
   public MsgBlock() {
   }
 
+  public MsgBlock(Type type, String content, boolean complete) {
+    this.type = type;
+    this.content = content;
+    this.complete = complete;
+  }
+
   protected MsgBlock(Parcel in, Type type) {
     this.type = type;
     this.content = in.readString();
@@ -62,6 +70,21 @@ public class MsgBlock implements Parcelable {
         ", content='" + content + '\'' +
         ", complete=" + complete +
         '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    MsgBlock msgBlock = (MsgBlock) o;
+    return complete == msgBlock.complete &&
+        type == msgBlock.type &&
+        Objects.equals(content, msgBlock.content);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(type, content, complete);
   }
 
   @Override

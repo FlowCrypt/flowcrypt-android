@@ -3,18 +3,14 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.model;
+package com.flowcrypt.email.api.email.model
 
-import android.os.Parcel;
-
-import com.flowcrypt.email.api.email.LocalFolder;
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.mail.internet.InternetAddress;
+import android.os.Parcel
+import android.os.Parcelable
+import com.flowcrypt.email.api.email.LocalFolder
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import java.util.*
+import javax.mail.internet.InternetAddress
 
 /**
  * The class which describe an incoming message model.
@@ -25,144 +21,84 @@ import javax.mail.internet.InternetAddress;
  * E-mail: DenBond7@gmail.com
  */
 
-public class IncomingMessageInfo extends MessageInfo {
+data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessageDetails,
+                                           var atts: List<AttachmentInfo>? = null,
+                                           var localFolder: LocalFolder? = null,
+                                           val msgBlocks: List<MsgBlock>? = null) : Parcelable {
 
-  public static final Creator<IncomingMessageInfo> CREATOR = new Creator<IncomingMessageInfo>() {
-    @Override
-    public IncomingMessageInfo createFromParcel(Parcel source) {
-      return new IncomingMessageInfo(source);
-    }
+  fun getSubject(): String? = generalMsgDetails.subject
 
-    @Override
-    public IncomingMessageInfo[] newArray(int size) {
-      return new IncomingMessageInfo[size];
-    }
-  };
+  fun getFrom(): List<InternetAddress>? = generalMsgDetails.from
 
-  private GeneralMessageDetails generalMsgDetails;
-  private ArrayList<AttachmentInfo> atts;
-  private LocalFolder localFolder;
-  private List<MsgBlock> msgBlocks;
+  fun getReceiveDate(): Date = Date(generalMsgDetails.receivedDate)
 
-  public IncomingMessageInfo(GeneralMessageDetails generalMsgDetails, List<MsgBlock> msgBlocks) {
-    this.generalMsgDetails = generalMsgDetails;
-    this.msgBlocks = msgBlocks;
-  }
+  fun getOrigRawMsgWithoutAtts(): String? = generalMsgDetails.rawMsgWithoutAtts
 
-  protected IncomingMessageInfo(Parcel in) {
-    super(in);
-    this.generalMsgDetails = in.readParcelable(GeneralMessageDetails.class.getClassLoader());
-    this.atts = in.createTypedArrayList(AttachmentInfo.CREATOR);
-    this.localFolder = in.readParcelable(LocalFolder.class.getClassLoader());
-    this.msgBlocks = in.createTypedArrayList(MsgBlock.CREATOR);
-  }
+  fun getTo(): List<InternetAddress>? = generalMsgDetails.to
 
-  @Override
-  public String toString() {
-    return "IncomingMessageInfo{" +
-        "generalMsgDetails=" + generalMsgDetails +
-        ", atts=" + atts +
-        ", localFolder=" + localFolder +
-        ", msgBlocks=" + msgBlocks +
-        "} " + super.toString();
-  }
+  fun getCc(): List<InternetAddress>? = generalMsgDetails.cc
 
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
-    dest.writeParcelable(this.generalMsgDetails, flags);
-    dest.writeTypedList(this.atts);
-    dest.writeParcelable(this.localFolder, flags);
-    dest.writeTypedList(this.msgBlocks);
-  }
-
-  @Override
-  public String getSubject() {
-    return generalMsgDetails.getSubject();
-  }
-
-  public GeneralMessageDetails getGeneralMsgDetails() {
-    return generalMsgDetails;
-  }
-
-  public InternetAddress[] getFrom() {
-    return generalMsgDetails.getFrom();
-  }
-
-  public Date getReceiveDate() {
-    return new Date(generalMsgDetails.getReceivedDate());
-  }
-
-  public String getOrigRawMsgWithoutAtts() {
-    return generalMsgDetails.getRawMsgWithoutAtts();
-  }
-
-  public List<MsgBlock> getMsgBlocks() {
-    return msgBlocks;
-  }
-
-  public void setMsgBlocks(List<MsgBlock> messageParts) {
-    this.msgBlocks = messageParts;
-  }
-
-  public LocalFolder getLocalFolder() {
-    return localFolder;
-  }
-
-  public void setLocalFolder(LocalFolder localFolder) {
-    this.localFolder = localFolder;
-  }
-
-  public InternetAddress[] getTo() {
-    return generalMsgDetails.getTo();
-  }
-
-  public InternetAddress[] getCc() {
-    return generalMsgDetails.getCc();
-  }
-
-  public boolean hasHtmlText() {
-    return hasSomePart(MsgBlock.Type.PLAIN_HTML) || hasSomePart(MsgBlock.Type.DECRYPTED_HTML);
-  }
-
-  public MsgBlock getHtmlMsgBlock() {
-    for (MsgBlock part : msgBlocks) {
-      if (part.getType() == MsgBlock.Type.PLAIN_HTML || part.getType() == MsgBlock.Type.DECRYPTED_HTML) {
-        return part;
+  fun getHtmlMsgBlock(): MsgBlock? {
+    for (part in msgBlocks!!) {
+      if (part.type == MsgBlock.Type.PLAIN_HTML || part.type == MsgBlock.Type.DECRYPTED_HTML) {
+        return part
       }
     }
 
-    return null;
+    return null
   }
 
-  public boolean hasPlainText() {
-    return hasSomePart(MsgBlock.Type.PLAIN_TEXT);
+  fun getUid(): Int = generalMsgDetails.uid
+
+  constructor(generalMsgDetails: GeneralMessageDetails, msgBlocks: List<MsgBlock>) : this(
+      generalMsgDetails,
+      null,
+      null,
+      msgBlocks)
+
+  constructor(parcel: Parcel) : this(
+      parcel.readParcelable(GeneralMessageDetails::class.java.classLoader)!!,
+      mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
+      parcel.readParcelable(LocalFolder::class.java.classLoader),
+      mutableListOf<MsgBlock>().apply { parcel.readTypedList(this, MsgBlock.CREATOR) })
+
+  override fun describeContents(): Int {
+    return 0
   }
 
-  public int getUid() {
-    return generalMsgDetails.getUid();
+  override fun writeToParcel(dest: Parcel, flags: Int) {
+    with(dest) {
+      writeParcelable(generalMsgDetails, flags)
+      writeTypedList(atts)
+      writeParcelable(localFolder, flags)
+      writeTypedList(msgBlocks)
+    }
   }
 
-  public ArrayList<AttachmentInfo> getAtts() {
-    return atts;
+  fun hasHtmlText(): Boolean {
+    return hasSomePart(MsgBlock.Type.PLAIN_HTML) || hasSomePart(MsgBlock.Type.DECRYPTED_HTML)
   }
 
-  public void setAtts(ArrayList<AttachmentInfo> atts) {
-    this.atts = atts;
+  fun hasPlainText(): Boolean {
+    return hasSomePart(MsgBlock.Type.PLAIN_TEXT)
   }
 
-  private boolean hasSomePart(MsgBlock.Type partType) {
-    for (MsgBlock part : msgBlocks) {
-      if (part.getType() == partType) {
-        return true;
+  private fun hasSomePart(partType: MsgBlock.Type): Boolean {
+    for (part in msgBlocks!!) {
+      if (part.type == partType) {
+        return true
       }
     }
 
-    return false;
+    return false
+  }
+
+  companion object {
+    @JvmField
+    @Suppress("unused")
+    val CREATOR: Parcelable.Creator<IncomingMessageInfo> = object : Parcelable.Creator<IncomingMessageInfo> {
+      override fun createFromParcel(source: Parcel): IncomingMessageInfo = IncomingMessageInfo(source)
+      override fun newArray(size: Int): Array<IncomingMessageInfo?> = arrayOfNulls(size)
+    }
   }
 }

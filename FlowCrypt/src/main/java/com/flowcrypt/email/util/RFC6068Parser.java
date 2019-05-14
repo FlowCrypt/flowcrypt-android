@@ -8,10 +8,12 @@ package com.flowcrypt.email.util;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import com.flowcrypt.email.api.email.model.AttachmentInfo;
 import com.flowcrypt.email.api.email.model.ExtraActionInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -73,13 +75,8 @@ public class RFC6068Parser {
     String subject = getFirstParameterValue(params, SUBJECT);
     String body = getFirstParameterValue(params, BODY);
 
-    return new ExtraActionInfo.Builder()
-        .setToAddresses(toList)
-        .setCcAddresses(ccList)
-        .setBccAddresses(bccList)
-        .setSubject(subject)
-        .setBody(body)
-        .create();
+    return new ExtraActionInfo(Collections.<AttachmentInfo>emptyList(), toList, ccList, bccList,
+        subject == null ? "" : subject, body == null ? "" : body);
   }
 
   private static ArrayList<String> checkToList(ArrayList<String> toList) {

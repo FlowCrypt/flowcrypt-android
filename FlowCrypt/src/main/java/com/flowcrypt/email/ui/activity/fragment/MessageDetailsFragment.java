@@ -428,15 +428,15 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
     }
 
     startActivity(CreateMessageActivity.generateIntent(getContext(), msgInfo, MessageType.REPLY,
-        MessageEncryptionType.STANDARD, new ServiceInfo.Builder()
-            .setIsFromFieldEditable(false)
-            .setIsToFieldEditable(false)
-            .setIsSubjectEditable(false)
-            .setIsMsgTypeSwitchable(false)
-            .setHasAbilityToAddNewAtt(false)
-            .setSystemMsg(getString(R.string.message_was_encrypted_for_wrong_key))
-            .setAtts(atts)
-            .build()));
+        MessageEncryptionType.STANDARD,
+        new ServiceInfo(false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            getString(R.string.message_was_encrypted_for_wrong_key),
+            atts)));
   }
 
   /**
@@ -562,7 +562,7 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
   }
 
   private void showAttsIfTheyExist() {
-    if (details != null && details.hasAtts()) {
+    if (details != null && details.getHasAtts()) {
       LayoutInflater layoutInflater = LayoutInflater.from(getContext());
 
       if (!CollectionUtils.isEmpty(atts)) {

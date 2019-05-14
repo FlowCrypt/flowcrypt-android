@@ -40,12 +40,14 @@ import com.sun.mail.imap.IMAPFolder;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.mail.BodyPart;
 import javax.mail.Flags;
@@ -177,7 +179,7 @@ public class MessageDaoSource extends BaseDaoSource {
     contentValues.put(COL_UID, uid);
     contentValues.put(COL_SENT_DATE, System.currentTimeMillis());
     contentValues.put(COL_SUBJECT, info.getSubject());
-    contentValues.put(COL_FLAGS, MessageFlag.SEEN);
+    contentValues.put(COL_FLAGS, MessageFlag.SEEN.getValue());
     contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, !CollectionUtils.isEmpty(info.getAtts()) ||
         !CollectionUtils.isEmpty(info.getForwardedAtts()));
     return contentValues;
@@ -454,7 +456,7 @@ public class MessageDaoSource extends BaseDaoSource {
     ContentResolver resolver = context.getContentResolver();
     if (email != null && label != null && resolver != null) {
       ContentValues values = new ContentValues();
-      values.put(COL_FLAGS, MessageFlag.SEEN);
+      values.put(COL_FLAGS, MessageFlag.SEEN.getValue());
 
       String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";
       return resolver.update(getBaseContentUri(), values, where, new String[]{email, label, String.valueOf(uid)});
@@ -536,44 +538,45 @@ public class MessageDaoSource extends BaseDaoSource {
    * @return A generated {@link LocalFolder}.
    */
   public GeneralMessageDetails getMsgInfo(Cursor cursor) {
-    GeneralMessageDetails details = new GeneralMessageDetails();
-
-    details.setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)));
-    details.setLabel(cursor.getString(cursor.getColumnIndex(COL_FOLDER)));
-    details.setUid(cursor.getInt(cursor.getColumnIndex(COL_UID)));
-    details.setReceivedDateInMillisecond(cursor.getLong(cursor.getColumnIndex(COL_RECEIVED_DATE)));
-    details.setSentDateInMillisecond(cursor.getLong(cursor.getColumnIndex(COL_SENT_DATE)));
-    details.setSubject(cursor.getString(cursor.getColumnIndex(COL_SUBJECT)));
-    details.setFlags(parseFlags(cursor.getString(cursor.getColumnIndex(COL_FLAGS))));
-    details.setRawMsgWithoutAtts(
-        cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)));
-    details.setHasAtts(cursor.getInt(cursor.getColumnIndex(COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1);
-    details.setEncrypted(cursor.getInt(cursor.getColumnIndex(COL_IS_ENCRYPTED)) == 1);
-    details.setMsgState(MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))));
-    details.setErrorMsg(cursor.getString(cursor.getColumnIndex(COL_ERROR_MSG)));
+    GeneralMessageDetails details = new GeneralMessageDetails(
+        cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
+        cursor.getString(cursor.getColumnIndex(COL_FOLDER)),
+        cursor.getInt(cursor.getColumnIndex(COL_UID)),
+        cursor.getLong(cursor.getColumnIndex(COL_RECEIVED_DATE)),
+        cursor.getLong(cursor.getColumnIndex(COL_SENT_DATE)),
+        null,
+        null,
+        null,
+        cursor.getString(cursor.getColumnIndex(COL_SUBJECT)),
+        Arrays.asList(parseFlags(cursor.getString(cursor.getColumnIndex(COL_FLAGS)))),
+        cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)),
+        cursor.getInt(cursor.getColumnIndex(COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1,
+        cursor.getInt(cursor.getColumnIndex(COL_IS_ENCRYPTED)) == 1,
+        Objects.requireNonNull(MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE)))),
+        cursor.getString(cursor.getColumnIndex(COL_ATTACHMENTS_DIRECTORY)),
+        cursor.getString(cursor.getColumnIndex(COL_ERROR_MSG))
+    );
 
     try {
       String fromAddresses = cursor.getString(cursor.getColumnIndex(COL_FROM_ADDRESSES));
-      details.setFrom(TextUtils.isEmpty(fromAddresses) ? null : InternetAddress.parse(fromAddresses));
+      details.setFrom(TextUtils.isEmpty(fromAddresses) ? null : Arrays.asList(InternetAddress.parse(fromAddresses)));
     } catch (AddressException e) {
       e.printStackTrace();
     }
 
     try {
       String toAddresses = cursor.getString(cursor.getColumnIndex(COL_TO_ADDRESSES));
-      details.setTo(TextUtils.isEmpty(toAddresses) ? null : InternetAddress.parse(toAddresses));
+      details.setTo(TextUtils.isEmpty(toAddresses) ? null : Arrays.asList(InternetAddress.parse(toAddresses)));
     } catch (AddressException e) {
       e.printStackTrace();
     }
 
     try {
       String ccAddresses = cursor.getString(cursor.getColumnIndex(COL_CC_ADDRESSES));
-      details.setCc(TextUtils.isEmpty(ccAddresses) ? null : InternetAddress.parse(ccAddresses));
+      details.setCc(TextUtils.isEmpty(ccAddresses) ? null : Arrays.asList(InternetAddress.parse(ccAddresses)));
     } catch (AddressException e) {
       e.printStackTrace();
     }
-
-    details.setAttsDir(cursor.getString(cursor.getColumnIndex(COL_ATTACHMENTS_DIRECTORY)));
 
     return details;
   }
@@ -918,7 +921,7 @@ public class MessageDaoSource extends BaseDaoSource {
 
     String[] projection = new String[]{COL_UID};
     String selection = COL_EMAIL + " = ? AND " + COL_FOLDER + " = ? AND " + COL_FLAGS + " NOT LIKE '%"
-        + MessageFlag.SEEN + "%'";
+        + MessageFlag.SEEN.getValue() + "%'";
     String[] selectionArgs = new String[]{email, label};
 
     Cursor cursor = contentResolver.query(getBaseContentUri(), projection, selection, selectionArgs, null);
@@ -1053,7 +1056,7 @@ public class MessageDaoSource extends BaseDaoSource {
           JavaEmailConstants.FOLDER_OUTBOX, new MessageDaoSource().getOutboxMsgs(context,
               details.getEmail()).size());
 
-      if (details.hasAtts()) {
+      if (details.getHasAtts()) {
         AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
 
         List<AttachmentInfo> attachmentInfoList = attDaoSource.getAttInfoList(context, details

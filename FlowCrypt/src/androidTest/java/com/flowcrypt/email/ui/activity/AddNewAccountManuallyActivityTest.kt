@@ -262,7 +262,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
         authCreds.imapPort.toString(), authCreds.smtpServer, authCreds.smtpPort.toString(),
         authCreds.smtpSigInUsername, authCreds.smtpSignInPassword)
 
-    val numberOfChecks = if (authCreds.hasCustomSignInForSmtp()) {
+    val numberOfChecks = if (authCreds.hasCustomSignInForSmtp) {
       fieldIdentifiersWithIncorrectData.size
     } else {
       fieldIdentifiersWithIncorrectData.size - 2
@@ -342,7 +342,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
     onView(withId(R.id.editTextSmtpPort))
         .perform(clearText(), typeText(authCreds.smtpPort.toString()), closeSoftKeyboard())
 
-    if (authCreds.hasCustomSignInForSmtp()) {
+    if (authCreds.hasCustomSignInForSmtp) {
       onView(withId(R.id.checkBoxRequireSignInForSmtp))
           .perform(click())
       onView(withId(R.id.editTextSmtpUsername))

@@ -175,7 +175,7 @@ public class MessageListAdapter extends CursorAdapter {
         viewHolder.textViewDate.setTextColor(UIUtil.getColor(context, android.R.color.black));
       }
 
-      viewHolder.imageViewAtts.setVisibility(details.hasAtts() ? View.VISIBLE : View.GONE);
+      viewHolder.imageViewAtts.setVisibility(details.getHasAtts() ? View.VISIBLE : View.GONE);
       viewHolder.viewIsEncrypted.setVisibility(details.isEncrypted() ? View.VISIBLE : View.GONE);
     } else {
       clearItem(viewHolder);
@@ -242,19 +242,19 @@ public class MessageListAdapter extends CursorAdapter {
     changeViewsTypeface(viewHolder, Typeface.NORMAL);
   }
 
-  private String generateAddresses(InternetAddress[] internetAddresses) {
+  private String generateAddresses(List<InternetAddress> internetAddresses) {
     if (internetAddresses == null) {
       return "null";
     }
 
-    int iMax = internetAddresses.length - 1;
+    int iMax = internetAddresses.size() - 1;
     if (iMax == -1) {
       return "";
     }
 
     StringBuilder b = new StringBuilder();
     for (int i = 0; ; i++) {
-      InternetAddress address = internetAddresses[i];
+      InternetAddress address = internetAddresses.get(i);
       String displayName = TextUtils.isEmpty(address.getPersonal()) ? address.getAddress() : address.getPersonal();
       b.append(displayName);
       if (i == iMax) {

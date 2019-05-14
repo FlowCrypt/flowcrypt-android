@@ -381,7 +381,7 @@ public class MessagesSenderJobService extends JobService {
 
       switch (account.getAccountType()) {
         case AccountDao.ACCOUNT_TYPE_GOOGLE:
-          if (account.getEmail().equalsIgnoreCase(details.getFrom()[0].getAddress())) {
+          if (account.getEmail().equalsIgnoreCase(details.getFrom().get(0).getAddress())) {
             Transport transport = SmtpProtocolUtil.prepareSmtpTransport(context, sess, account);
             transport.sendMessage(mimeMsg, mimeMsg.getAllRecipients());
           } else {

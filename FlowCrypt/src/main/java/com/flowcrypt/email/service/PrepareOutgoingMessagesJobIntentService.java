@@ -222,7 +222,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     int msgStateValue = msgInfo.isForwarded() ? MessageState.NEW_FORWARDED.getValue() : MessageState.NEW.getValue();
 
     contentValues.put(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS, rawMsg);
-    contentValues.put(MessageDaoSource.COL_FLAGS, MessageFlag.SEEN);
+    contentValues.put(MessageDaoSource.COL_FLAGS, MessageFlag.SEEN.getValue());
     contentValues.put(MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS, hasAtts);
     contentValues.put(MessageDaoSource.COL_IS_ENCRYPTED, isEncrypted);
     contentValues.put(MessageDaoSource.COL_STATE, msgStateValue);
@@ -304,11 +304,11 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
         }
 
         if (msgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-          AttachmentInfo encryptedAtt = new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX, att);
+          AttachmentInfo encryptedAtt = att.copy(JavaEmailConstants.FOLDER_OUTBOX);
           encryptedAtt.setName(encryptedAtt.getName() + Constants.PGP_FILE_EXT);
           cachedAtts.add(encryptedAtt);
         } else {
-          cachedAtts.add(new AttachmentInfo(JavaEmailConstants.FOLDER_OUTBOX, att));
+          cachedAtts.add(att.copy(JavaEmailConstants.FOLDER_OUTBOX));
         }
       }
     }

@@ -45,6 +45,7 @@ import com.sun.mail.util.MailConnectException;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import javax.mail.AuthenticationFailedException;
 
@@ -83,8 +84,8 @@ public class AddNewAccountManuallyActivity extends BaseNodeActivity implements C
   private EditText editTextSmtpPort;
   private EditText editTextSmtpUsername;
   private EditText editTextSmtpPassword;
-  private Spinner spinnerImapSecyrityType;
-  private Spinner spinnerSmtpSecyrityType;
+  private Spinner spinnerImapSecurityType;
+  private Spinner spinnerSmtpSecurityType;
   private View layoutSmtpSignIn;
   private View progressView;
   private View contentView;
@@ -191,7 +192,7 @@ public class AddNewAccountManuallyActivity extends BaseNodeActivity implements C
       case R.id.spinnerSmtpSecyrityType:
         SecurityType smtpSecurityType = (SecurityType) parent.getAdapter().getItem(position);
         if (isSmtpSpinnerRestored) {
-          editTextSmtpPort.setText(String.valueOf(smtpSecurityType.getDefaultSmtpPort()));
+          editTextSmtpPort.setText(String.valueOf(smtpSecurityType.getDefSmtpPort()));
         } else {
           isSmtpSpinnerRestored = true;
         }
@@ -416,17 +417,17 @@ public class AddNewAccountManuallyActivity extends BaseNodeActivity implements C
     checkBoxRequireSignInForSmtp = findViewById(R.id.checkBoxRequireSignInForSmtp);
     checkBoxRequireSignInForSmtp.setOnCheckedChangeListener(this);
 
-    spinnerImapSecyrityType = findViewById(R.id.spinnerImapSecurityType);
-    spinnerSmtpSecyrityType = findViewById(R.id.spinnerSmtpSecyrityType);
+    spinnerImapSecurityType = findViewById(R.id.spinnerImapSecurityType);
+    spinnerSmtpSecurityType = findViewById(R.id.spinnerSmtpSecyrityType);
 
     ArrayAdapter<SecurityType> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item,
         SecurityType.generateSecurityTypes(this));
 
-    spinnerImapSecyrityType.setAdapter(adapter);
-    spinnerSmtpSecyrityType.setAdapter(adapter);
+    spinnerImapSecurityType.setAdapter(adapter);
+    spinnerSmtpSecurityType.setAdapter(adapter);
 
-    spinnerImapSecyrityType.setOnItemSelectedListener(this);
-    spinnerSmtpSecyrityType.setOnItemSelectedListener(this);
+    spinnerImapSecurityType.setOnItemSelectedListener(this);
+    spinnerSmtpSecurityType.setOnItemSelectedListener(this);
 
     if (findViewById(R.id.buttonTryToConnect) != null) {
       findViewById(R.id.buttonTryToConnect).setOnClickListener(this);
@@ -449,20 +450,20 @@ public class AddNewAccountManuallyActivity extends BaseNodeActivity implements C
       editTextImapPort.setText(String.valueOf(authCreds.getImapPort()));
       editTextSmtpServer.setText(authCreds.getSmtpServer());
       editTextSmtpPort.setText(String.valueOf(authCreds.getSmtpPort()));
-      checkBoxRequireSignInForSmtp.setChecked(authCreds.hasCustomSignInForSmtp());
+      checkBoxRequireSignInForSmtp.setChecked(authCreds.getHasCustomSignInForSmtp());
       editTextSmtpUsername.setText(authCreds.getSmtpSigInUsername());
 
-      int imapOptionsCount = spinnerImapSecyrityType.getAdapter().getCount();
+      int imapOptionsCount = spinnerImapSecurityType.getAdapter().getCount();
       for (int i = 0; i < imapOptionsCount; i++) {
-        if (authCreds.getImapOpt() == ((SecurityType) spinnerImapSecyrityType.getAdapter().getItem(i)).getOpt()) {
-          spinnerImapSecyrityType.setSelection(i);
+        if (authCreds.getImapOpt() == ((SecurityType) spinnerImapSecurityType.getAdapter().getItem(i)).getOpt()) {
+          spinnerImapSecurityType.setSelection(i);
         }
       }
 
-      int smtpOptionsCount = spinnerSmtpSecyrityType.getAdapter().getCount();
+      int smtpOptionsCount = spinnerSmtpSecurityType.getAdapter().getCount();
       for (int i = 0; i < smtpOptionsCount; i++) {
-        if (authCreds.getSmtpOpt() == ((SecurityType) spinnerSmtpSecyrityType.getAdapter().getItem(i)).getOpt()) {
-          spinnerSmtpSecyrityType.setSelection(i);
+        if (authCreds.getSmtpOpt() == ((SecurityType) spinnerSmtpSecurityType.getAdapter().getItem(i)).getOpt()) {
+          spinnerSmtpSecurityType.setSelection(i);
         }
       }
     }
@@ -511,19 +512,18 @@ public class AddNewAccountManuallyActivity extends BaseNodeActivity implements C
     int smtpPort = TextUtils.isEmpty(editTextSmtpPort.getText()) ? JavaEmailConstants.DEFAULT_SMTP_PORT
         : Integer.parseInt(editTextSmtpPort.getText().toString());
 
-    return new AuthCredentials.Builder().setEmail(editTextEmail.getText().toString())
-        .setUsername(editTextUserName.getText().toString())
-        .setPassword(editTextPassword.getText().toString())
-        .setImapServer(editTextImapServer.getText().toString())
-        .setImapPort(imapPort)
-        .setImapSecurityTypeOpt(((SecurityType) spinnerImapSecyrityType.getSelectedItem()).getOpt())
-        .setSmtpServer(editTextSmtpServer.getText().toString())
-        .setSmtpPort(smtpPort)
-        .setSmtpSecurityTypeOpt(((SecurityType) spinnerSmtpSecyrityType.getSelectedItem()).getOpt())
-        .setIsUseCustomSignInForSmtp(checkBoxRequireSignInForSmtp.isChecked())
-        .setSmtpSigInUsername(editTextSmtpUsername.getText().toString())
-        .setSmtpSignInPassword(editTextSmtpPassword.getText().toString())
-        .build();
+    return new AuthCredentials(editTextEmail.getText().toString()
+        , editTextUserName.getText().toString()
+        , editTextPassword.getText().toString()
+        , editTextImapServer.getText().toString()
+        , imapPort
+        , Objects.requireNonNull(((SecurityType) spinnerImapSecurityType.getSelectedItem()).getOpt())
+        , editTextSmtpServer.getText().toString()
+        , smtpPort
+        , Objects.requireNonNull(((SecurityType) spinnerSmtpSecurityType.getSelectedItem()).getOpt())
+        , checkBoxRequireSignInForSmtp.isChecked()
+        , editTextSmtpUsername.getText().toString()
+        , editTextSmtpPassword.getText().toString());
   }
 
   /**

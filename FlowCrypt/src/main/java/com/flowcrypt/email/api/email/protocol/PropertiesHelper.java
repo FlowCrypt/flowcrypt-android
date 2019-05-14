@@ -79,7 +79,7 @@ public class PropertiesHelper {
       properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE,
           authCreds.getImapOpt() == SecurityType.Option.STARTLS);
       properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH,
-          authCreds.hasCustomSignInForSmtp());
+          authCreds.getHasCustomSignInForSmtp());
       properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE,
           authCreds.getSmtpOpt() == SecurityType.Option.SSL_TLS);
       properties.put(JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE,

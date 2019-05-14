@@ -167,7 +167,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
     val incomingMsgInfoFixed = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key_fixed.json",
         IncomingMessageInfo::class.java)
-    onView(withText(incomingMsgInfoFixed!!.msgBlocks[0].content))
+    onView(withText(incomingMsgInfoFixed?.msgBlocks?.get(0)?.content))
         .check(matches(isDisplayed()))
 
     PrivateKeysManager.deleteKey("node/default@denbond7.com_secondKey_prv_strong.json")
@@ -193,7 +193,7 @@ class MessageDetailsActivityTest : BaseTest() {
     launchActivity(details)
     matchHeader(details)
 
-    val block = incomingMsgInfo.msgBlocks[0] as DecryptErrorMsgBlock
+    val block = incomingMsgInfo.msgBlocks?.get(0) as DecryptErrorMsgBlock
     val decryptError = block.error
     val formatErrorMsg = (getResString(R.string.decrypt_error_message_badly_formatted,
         getResString(R.string.app_name)) + "\n\n" + decryptError.details.type + ":" + decryptError.details.message)
@@ -286,7 +286,7 @@ class MessageDetailsActivityTest : BaseTest() {
         getHtmlString(getResString(R.string.template_message_part_public_key_fingerprint,
             GeneralUtil.doSectionsInText(" ", nodeKeyDetails.fingerprint, 4))))))
 
-    val block = incomingMsgInfo!!.msgBlocks[1] as PublicKeyMsgBlock
+    val block = incomingMsgInfo?.msgBlocks?.get(1) as PublicKeyMsgBlock
 
     onView(withId(R.id.textViewPgpPublicKey))
         .check(matches(not<View>(isDisplayed())))
@@ -318,7 +318,7 @@ class MessageDetailsActivityTest : BaseTest() {
     launchActivity(details)
     matchHeader(details)
 
-    val block = incomingMsgInfo.msgBlocks[0] as DecryptErrorMsgBlock
+    val block = incomingMsgInfo.msgBlocks?.get(0) as DecryptErrorMsgBlock
     val errorMsg = getResString(R.string.decrypt_error_current_key_cannot_open_message)
 
     onView(withId(R.id.textViewErrorMessage))
@@ -351,7 +351,7 @@ class MessageDetailsActivityTest : BaseTest() {
     val details = incomingMsgInfo!!.generalMsgDetails
     launchActivity(details)
     matchHeader(details)
-    onView(withText(incomingMsgInfo.msgBlocks[0].content))
+    onView(withText(incomingMsgInfo.msgBlocks?.get(0)?.content))
         .check(matches(isDisplayed()))
     matchReplyButtons(details)
   }
@@ -362,7 +362,7 @@ class MessageDetailsActivityTest : BaseTest() {
     val details = incomingMsgInfo!!.generalMsgDetails
     launchActivity(details)
     matchHeader(details)
-    onView(withText(incomingMsgInfo.msgBlocks[0].content))
+    onView(withText(incomingMsgInfo.msgBlocks?.get(0)?.content))
         .check(matches(isDisplayed()))
     onView(withId(R.id.layoutAtt))
         .check(matches(isDisplayed()))

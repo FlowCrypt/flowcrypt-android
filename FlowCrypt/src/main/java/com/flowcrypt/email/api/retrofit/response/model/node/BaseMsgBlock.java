@@ -16,6 +16,10 @@ import android.os.Parcel;
  * E-mail: DenBond7@gmail.com
  */
 public class BaseMsgBlock extends MsgBlock {
+  public BaseMsgBlock(Type type, String content, boolean complete) {
+    super(type, content, complete);
+  }
+
   public BaseMsgBlock(Parcel in, Type type) {
     super(in, type);
   }

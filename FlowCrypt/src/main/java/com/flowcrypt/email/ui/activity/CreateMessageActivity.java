@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -79,7 +80,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     Intent intent = new Intent(context, CreateMessageActivity.class);
     intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, msgInfo);
     intent.putExtra(EXTRA_KEY_MESSAGE_TYPE, messageType);
-    intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, msgEncryptionType);
+    intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, (Parcelable) msgEncryptionType);
     intent.putExtra(EXTRA_KEY_SERVICE_INFO, serviceInfo);
     return intent;
   }
@@ -95,7 +96,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
     if (getIntent() != null) {
       serviceInfo = getIntent().getParcelableExtra(EXTRA_KEY_SERVICE_INFO);
       if (getIntent().hasExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)) {
-        msgEncryptionType = (MessageEncryptionType) getIntent().getSerializableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE);
+        msgEncryptionType = getIntent().getParcelableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE);
       }
     }
 

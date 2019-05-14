@@ -102,7 +102,7 @@ public class CheckEmailSettingsAsyncTaskLoader extends AsyncTaskLoader<LoaderRes
     String username;
     String password;
 
-    if (authCreds.hasCustomSignInForSmtp()) {
+    if (authCreds.getHasCustomSignInForSmtp()) {
       username = authCreds.getSmtpSigInUsername();
       password = authCreds.getSmtpSignInPassword();
     } else {

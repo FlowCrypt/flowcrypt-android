@@ -24,6 +24,7 @@ import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
@@ -61,32 +62,34 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   private lateinit var serviceInfo: ServiceInfo
   private lateinit var incomingMsgInfo: IncomingMessageInfo
 
+  val addAccountToDatabaseRule: AddAccountToDatabaseRule = AddAccountToDatabaseRule()
+
   override val activityTestRule: ActivityTestRule<*>? =
       object : IntentsTestRule<CreateMessageActivity>(CreateMessageActivity::class.java) {
         override fun getActivityIntent(): Intent {
           incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
               IncomingMessageInfo::class.java)!!
 
-          val attachmentInfo = AttachmentInfo()
-          attachmentInfo.name = "test.txt"
-          attachmentInfo.encodedSize = STRING.length.toLong()
-          attachmentInfo.rawData = STRING
-          attachmentInfo.type = "text/plain"
-          attachmentInfo.id = EmailUtil.generateContentId()
-          attachmentInfo.isProtected = true
+          val attachmentInfo = AttachmentInfo(name = "test.txt",
+              email = addAccountToDatabaseRule.account.email,
+              encodedSize = STRING.length.toLong(),
+              rawData = STRING,
+              type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN,
+              folder = "SENT",
+              id = EmailUtil.generateContentId(),
+              isProtected = true)
 
           val attachmentInfoList = ArrayList<AttachmentInfo>()
           attachmentInfoList.add(attachmentInfo)
 
-          serviceInfo = ServiceInfo.Builder()
-              .setIsFromFieldEditable(false)
-              .setIsToFieldEditable(false)
-              .setIsSubjectEditable(false)
-              .setIsMsgTypeSwitchable(false)
-              .setHasAbilityToAddNewAtt(false)
-              .setSystemMsg(getResString(R.string.message_was_encrypted_for_wrong_key))
-              .setAtts(attachmentInfoList)
-              .build()
+          serviceInfo = ServiceInfo(false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              getResString(R.string.message_was_encrypted_for_wrong_key),
+              attachmentInfoList)
 
           return CreateMessageActivity.generateIntent(getTargetContext(), incomingMsgInfo, MessageType.REPLY,
               MessageEncryptionType.STANDARD, serviceInfo)
@@ -114,7 +117,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
     val autoCorrectSeparator = Character.toString(SpanChipTokenizer.AUTOCORRECT_SEPARATOR)
     val textWithSeparator = (autoCorrectSeparator
         + chipSeparator
-        + incomingMsgInfo.from[0].address
+        + incomingMsgInfo.getFrom()?.first()?.address
         + chipSeparator
         + autoCorrectSeparator)
 

@@ -92,6 +92,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -864,14 +865,14 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   private void prepareAliasForReplyIfNeeded(List<String> aliases) {
     MessageEncryptionType messageEncryptionType = listener.getMsgEncryptionType();
 
-    InternetAddress[] toAddresses;
+    List<InternetAddress> toAddresses;
     if (folderType == FoldersManager.FolderType.SENT) {
       toAddresses = msgInfo.getFrom();
     } else {
       toAddresses = msgInfo.getTo();
     }
 
-    if (!ArraysUtil.isEmpty(toAddresses)) {
+    if (!CollectionUtils.isEmpty(toAddresses)) {
       String firstFoundedAlias = null;
       for (InternetAddress toAddress : toAddresses) {
         if (firstFoundedAlias == null) {
@@ -1201,9 +1202,9 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   }
 
   private void updateViewsFromExtraActionInfo() {
-    setupPgpFromExtraActionInfo(recipientsTo, extraActionInfo.getToAddresses());
-    setupPgpFromExtraActionInfo(recipientsCc, extraActionInfo.getCcAddresses());
-    setupPgpFromExtraActionInfo(recipientsBcc, extraActionInfo.getBccAddresses());
+    setupPgpFromExtraActionInfo(recipientsTo, extraActionInfo.getToAddresses().toArray(new String[0]));
+    setupPgpFromExtraActionInfo(recipientsCc, extraActionInfo.getCcAddresses().toArray(new String[0]));
+    setupPgpFromExtraActionInfo(recipientsBcc, extraActionInfo.getBccAddresses().toArray(new String[0]));
 
     editTextEmailSubject.setText(extraActionInfo.getSubject());
     editTextEmailMsg.setText(extraActionInfo.getBody());
@@ -1266,11 +1267,11 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
       }
     }
 
-    editTextEmailMsg.setText(getString(R.string.forward_template, msgInfo.getFrom()[0].getAddress(),
+    editTextEmailMsg.setText(getString(R.string.forward_template, msgInfo.getFrom().get(0).getAddress(),
         EmailUtil.genForwardedMsgDate(msgInfo.getReceiveDate()), msgInfo.getSubject(),
         prepareRecipientsLineForForwarding(msgInfo.getTo())));
 
-    if (!ArraysUtil.isEmpty(msgInfo.getCc())) {
+    if (!CollectionUtils.isEmpty(msgInfo.getCc())) {
       editTextEmailMsg.append("Cc: ");
       editTextEmailMsg.append(prepareRecipientsLineForForwarding(msgInfo.getCc()));
       editTextEmailMsg.append("\n\n");
@@ -1301,7 +1302,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
       recipientsTo.setText(prepareRecipients(msgInfo.getTo()));
 
-      if (msgInfo.getCc() != null && msgInfo.getCc().length != 0) {
+      if (msgInfo.getCc() != null && msgInfo.getCc().size() != 0) {
         layoutCc.setVisibility(View.VISIBLE);
         recipientsCc.append(prepareRecipients(msgInfo.getCc()));
       }
@@ -1310,7 +1311,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
       Set<InternetAddress> ccSet = new HashSet<>();
 
-      if (!ArraysUtil.isEmpty(msgInfo.getTo())) {
+      if (!CollectionUtils.isEmpty(msgInfo.getTo())) {
         for (InternetAddress address : msgInfo.getTo()) {
           if (!account.getEmail().equalsIgnoreCase(address.getAddress())) {
             ccSet.add(address);
@@ -1331,7 +1332,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
         }
       }
 
-      if (!ArraysUtil.isEmpty(msgInfo.getCc())) {
+      if (!CollectionUtils.isEmpty(msgInfo.getCc())) {
         for (InternetAddress address : msgInfo.getCc()) {
           if (!account.getEmail().equalsIgnoreCase(address.getAddress())) {
             ccSet.add(address);
@@ -1341,7 +1342,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
       if (!ccSet.isEmpty()) {
         layoutCc.setVisibility(View.VISIBLE);
-        recipientsCc.append(prepareRecipients(ccSet.toArray(new InternetAddress[0])));
+        recipientsCc.append(prepareRecipients(ccSet));
       }
     }
 
@@ -1372,22 +1373,22 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
   }
 
   private void setupPgpFromExtraActionInfo(PgpContactsNachoTextView pgpContactsNachoTextView,
-                                           ArrayList<String> addresses) {
-    if (addresses != null && !addresses.isEmpty()) {
+                                           String[] addresses) {
+    if (addresses != null && addresses.length > 0) {
       pgpContactsNachoTextView.setText(prepareRecipients(addresses));
       pgpContactsNachoTextView.chipifyAllUnterminatedTokens();
       pgpContactsNachoTextView.getOnFocusChangeListener().onFocusChange(pgpContactsNachoTextView, false);
     }
   }
 
-  private String prepareRecipientsLineForForwarding(InternetAddress[] recipients) {
+  private String prepareRecipientsLineForForwarding(List<InternetAddress> recipients) {
     StringBuilder stringBuilder = new StringBuilder();
-    if (!ArraysUtil.isEmpty(recipients)) {
-      stringBuilder.append(recipients[0]);
+    if (!CollectionUtils.isEmpty(recipients)) {
+      stringBuilder.append(recipients.get(0));
 
-      if (recipients.length > 1) {
-        for (int i = 1; i < recipients.length; i++) {
-          String recipient = recipients[i].getAddress();
+      if (recipients.size() > 1) {
+        for (int i = 1; i < recipients.size(); i++) {
+          String recipient = recipients.get(0).getAddress();
           stringBuilder.append(", ");
           stringBuilder.append(recipient);
         }
@@ -1430,22 +1431,22 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     }
   }
 
-  private String prepareRecipients(InternetAddress[] recipients) {
+  private String prepareRecipients(String[] recipients) {
     StringBuilder stringBuilder = new StringBuilder();
     if (!ArraysUtil.isEmpty(recipients)) {
-      for (InternetAddress s : recipients) {
-        stringBuilder.append(s.getAddress()).append(" ");
+      for (String s : recipients) {
+        stringBuilder.append(s).append(" ");
       }
     }
 
     return stringBuilder.toString();
   }
 
-  private String prepareRecipients(List<String> recipients) {
+  private String prepareRecipients(Collection<InternetAddress> recipients) {
     StringBuilder stringBuilder = new StringBuilder();
-    if (recipients != null) {
-      for (String s : recipients) {
-        stringBuilder.append(s).append(" ");
+    if (!CollectionUtils.isEmpty(recipients)) {
+      for (InternetAddress s : recipients) {
+        stringBuilder.append(s.getAddress()).append(" ");
       }
     }
 

@@ -163,20 +163,19 @@ public class AccountDaoSource extends BaseDaoSource {
       originalPassword = "";
     }
 
-    return new AuthCredentials.Builder().setEmail(cursor.getString(cursor.getColumnIndex(COL_EMAIL)))
-        .setUsername(cursor.getString(cursor.getColumnIndex(COL_USERNAME)))
-        .setPassword(manager.decryptWithRSAOrAES(context, originalPassword))
-        .setImapServer(cursor.getString(cursor.getColumnIndex(COL_IMAP_SERVER)))
-        .setImapPort(cursor.getInt(cursor.getColumnIndex(COL_IMAP_PORT)))
-        .setImapSecurityTypeOpt(imapOpt)
-        .setSmtpServer(cursor.getString(cursor.getColumnIndex(COL_SMTP_SERVER)))
-        .setSmtpPort(cursor.getInt(cursor.getColumnIndex(COL_SMTP_PORT)))
-        .setSmtpSecurityTypeOpt(smtpOpt)
-        .setIsUseCustomSignInForSmtp(cursor.getInt(cursor.getColumnIndex(COL_SMTP_IS_USE_CUSTOM_SIGN)) == 1)
-        .setSmtpSigInUsername(cursor.getString(cursor.getColumnIndex(COL_SMTP_USERNAME)))
-        .setSmtpSignInPassword(manager.decryptWithRSAOrAES(context,
-            cursor.getString(cursor.getColumnIndex(COL_SMTP_PASSWORD))))
-        .build();
+    return new AuthCredentials(cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
+        cursor.getString(cursor.getColumnIndex(COL_USERNAME)),
+        manager.decryptWithRSAOrAES(context, originalPassword),
+        cursor.getString(cursor.getColumnIndex(COL_IMAP_SERVER)),
+        cursor.getInt(cursor.getColumnIndex(COL_IMAP_PORT)),
+        imapOpt,
+        cursor.getString(cursor.getColumnIndex(COL_SMTP_SERVER)),
+        cursor.getInt(cursor.getColumnIndex(COL_SMTP_PORT)),
+        smtpOpt,
+        cursor.getInt(cursor.getColumnIndex(COL_SMTP_IS_USE_CUSTOM_SIGN)) == 1,
+        cursor.getString(cursor.getColumnIndex(COL_SMTP_USERNAME)),
+        manager.decryptWithRSAOrAES(context, cursor.getString(cursor.getColumnIndex(COL_SMTP_PASSWORD))
+        ));
   }
 
   @Override
@@ -520,7 +519,7 @@ public class AccountDaoSource extends BaseDaoSource {
     contentValues.put(COL_SMTP_PORT, authCreds.getSmtpPort());
     contentValues.put(COL_SMTP_IS_USE_SSL_TLS, authCreds.getSmtpOpt() == SecurityType.Option.SSL_TLS);
     contentValues.put(COL_SMTP_IS_USE_STARTTLS, authCreds.getSmtpOpt() == SecurityType.Option.STARTLS);
-    contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCreds.hasCustomSignInForSmtp());
+    contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCreds.getHasCustomSignInForSmtp());
     contentValues.put(COL_SMTP_USERNAME, authCreds.getSmtpSigInUsername());
     contentValues.put(COL_SMTP_PASSWORD, keyStoreCryptoManager.encryptWithRSAOrAES(authCreds.getSmtpSignInPassword()));
 

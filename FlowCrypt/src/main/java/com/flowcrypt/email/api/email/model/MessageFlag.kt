@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.model;
+package com.flowcrypt.email.api.email.model
 
 /**
  * The message flags. This flags will be used in the local database.
@@ -13,12 +13,11 @@ package com.flowcrypt.email.api.email.model;
  * Time: 17:47
  * E-mail: DenBond7@gmail.com
  */
-
-public class MessageFlag {
-  public static final String ANSWERED = "\\ANSWERED";
-  public static final String DELETED = "\\DELETED";
-  public static final String DRAFT = "\\DRAFT";
-  public static final String FLAGGED = "\\FLAGGED";
-  public static final String RECENT = "\\RECENT";
-  public static final String SEEN = "\\SEEN";
+enum class MessageFlag constructor(val value: String) {
+  ANSWERED("\\ANSWERED"),
+  DELETED("\\DELETED"),
+  DRAFT("\\DRAFT"),
+  FLAGGED("\\FLAGGED"),
+  RECENT("\\RECENT"),
+  SEEN("\\SEEN")
 }
