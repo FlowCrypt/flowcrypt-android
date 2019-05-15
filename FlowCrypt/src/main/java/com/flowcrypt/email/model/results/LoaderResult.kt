@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.model.results;
+package com.flowcrypt.email.model.results
 
 /**
  * This class used by Android loaders to create response result with an exception, if it happened.
@@ -14,56 +14,12 @@ package com.flowcrypt.email.model.results;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LoaderResult {
-  /**
-   * Some result which will be returned by loader.
-   */
-  private Object result;
-
-  /**
-   * Some exception which will be returned if it happened.
-   */
-  private Exception exception;
-
-  public LoaderResult() {
-  }
-
-  public LoaderResult(Object result, Exception exception) {
-    this.result = result;
-    this.exception = exception;
-  }
-
-  @Override
-  public String toString() {
-    return "LoaderResult{" +
-        "result=" + result +
-        ", exception=" + exception +
-        '}';
-  }
-
-  /**
-   * Return a result after a loader will be executed.
-   *
-   * @return <tt>LoaderResult</tt> A result object.
-   */
-  public Object getResult() {
-    return result;
-  }
-
-  public void setResult(Object result) {
-    this.result = result;
-  }
-
-  /**
-   * Return an exception if it will happened when loader will be executed.
-   *
-   * @return <tt>Exception</tt> A result object.
-   */
-  public Exception getException() {
-    return exception;
-  }
-
-  public void setException(Exception exception) {
-    this.exception = exception;
-  }
-}
+data class LoaderResult constructor(
+    /**
+     * Some result which will be returned by loader.
+     */
+    var result: Any? = null,
+    /**
+     * Some exception which will be returned if it happened.
+     */
+    var exception: Exception? = null)

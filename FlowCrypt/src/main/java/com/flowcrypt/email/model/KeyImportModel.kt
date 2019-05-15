@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.model;
+package com.flowcrypt.email.model
 
-import android.net.Uri;
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.net.Uri
+import android.os.Parcel
+import android.os.Parcelable
 
 /**
  * This model describes info about an imported key.
@@ -17,65 +17,34 @@ import android.os.Parcelable;
  * Time: 15:47
  * E-mail: DenBond7@gmail.com
  */
-public class KeyImportModel implements Parcelable {
+data class KeyImportModel constructor(val fileUri: Uri? = null,
+                                      val keyString: String? = null,
+                                      val isPrivateKey: Boolean = false,
+                                      val type: KeyDetails.Type) : Parcelable {
+  constructor(source: Parcel) : this(
+      source.readParcelable<Uri>(Uri::class.java.classLoader),
+      source.readString(),
+      source.readInt() == 1,
+      source.readParcelable(KeyDetails.Type::class.java.classLoader)!!
+  )
 
-  public static final Creator<KeyImportModel> CREATOR = new Creator<KeyImportModel>() {
-    @Override
-    public KeyImportModel createFromParcel(Parcel source) {
-      return new KeyImportModel(source);
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(fileUri, flags)
+        writeString(keyString)
+        writeInt((if (isPrivateKey) 1 else 0))
+        writeParcelable(type, flags)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<KeyImportModel> = object : Parcelable.Creator<KeyImportModel> {
+      override fun createFromParcel(source: Parcel): KeyImportModel = KeyImportModel(source)
+      override fun newArray(size: Int): Array<KeyImportModel?> = arrayOfNulls(size)
     }
-
-    @Override
-    public KeyImportModel[] newArray(int size) {
-      return new KeyImportModel[size];
-    }
-  };
-  private Uri fileUri;
-  private String keyString;
-  private boolean isPrivateKey;
-  private KeyDetails.Type type;
-
-  public KeyImportModel(Uri fileUri, String keyString, boolean isPrivateKey, KeyDetails.Type type) {
-    this.fileUri = fileUri;
-    this.keyString = keyString;
-    this.isPrivateKey = isPrivateKey;
-    this.type = type;
-  }
-
-  protected KeyImportModel(Parcel in) {
-    this.fileUri = in.readParcelable(Uri.class.getClassLoader());
-    this.keyString = in.readString();
-    this.isPrivateKey = in.readByte() != 0;
-    int tmpType = in.readInt();
-    this.type = tmpType == -1 ? null : KeyDetails.Type.values()[tmpType];
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeParcelable(this.fileUri, flags);
-    dest.writeString(this.keyString);
-    dest.writeByte(this.isPrivateKey ? (byte) 1 : (byte) 0);
-    dest.writeInt(this.type == null ? -1 : this.type.ordinal());
-  }
-
-  public Uri getFileUri() {
-    return fileUri;
-  }
-
-  public String getKeyString() {
-    return keyString;
-  }
-
-  public boolean isPrivateKey() {
-    return isPrivateKey;
-  }
-
-  public KeyDetails.Type getType() {
-    return type;
   }
 }

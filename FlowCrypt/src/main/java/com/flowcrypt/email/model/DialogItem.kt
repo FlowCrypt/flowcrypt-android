@@ -3,10 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.model;
+package com.flowcrypt.email.model
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.Parcel
+import android.os.Parcelable
 
 /**
  * Simple POJO class which describes a dialog item.
@@ -17,60 +17,31 @@ import android.os.Parcelable;
  * E-mail: DenBond7@gmail.com
  */
 
-public class DialogItem implements Parcelable {
-  public static final Creator<DialogItem> CREATOR = new
-      Creator<DialogItem>() {
-        @Override
-        public DialogItem createFromParcel(Parcel source) {
-          return new DialogItem(source);
-        }
+data class DialogItem constructor(val iconResourceId: Int = 0,
+                                  val title: String = "",
+                                  val id: Int = 0) : Parcelable {
+  constructor(source: Parcel) : this(
+      source.readInt(),
+      source.readString()!!,
+      source.readInt()
+  )
 
-        @Override
-        public DialogItem[] newArray(int size) {
-          return new DialogItem[size];
-        }
-      };
-
-  private int iconResId;
-  private String title;
-  private int id;
-
-  public DialogItem() {
+  override fun describeContents(): Int {
+    return 0
   }
 
-  public DialogItem(int iconResId, String title, int id) {
-    this.iconResId = iconResId;
-    this.title = title;
-    this.id = id;
-  }
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeInt(iconResourceId)
+        writeString(title)
+        writeInt(id)
+      }
 
-  protected DialogItem(Parcel in) {
-    this.iconResId = in.readInt();
-    this.title = in.readString();
-    this.id = in.readInt();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeInt(this.iconResId);
-    dest.writeString(this.title);
-    dest.writeInt(this.id);
-  }
-
-  public int getIconResourceId() {
-    return iconResId;
-  }
-
-  public String getTitle() {
-    return title;
-  }
-
-  public int getId() {
-    return id;
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<DialogItem> = object : Parcelable.Creator<DialogItem> {
+      override fun createFromParcel(source: Parcel): DialogItem = DialogItem(source)
+      override fun newArray(size: Int): Array<DialogItem?> = arrayOfNulls(size)
+    }
   }
 }

@@ -3,10 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.model;
+package com.flowcrypt.email.model
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.Parcel
+import android.os.Parcelable
 
 /**
  * This class describes a pair of email and name. This is a simple POJO object.
@@ -17,55 +17,26 @@ import android.os.Parcelable;
  * E-mail: DenBond7@gmail.com
  */
 
-public class EmailAndNamePair implements Parcelable {
-  public static final Parcelable.Creator<EmailAndNamePair> CREATOR = new Parcelable.Creator<EmailAndNamePair>() {
-    @Override
-    public EmailAndNamePair createFromParcel(Parcel source) {
-      return new EmailAndNamePair(source);
+data class EmailAndNamePair constructor(val email: String? = null, val name: String? = null) : Parcelable {
+  constructor(source: Parcel) : this(
+      source.readString(),
+      source.readString()
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
+    writeString(email)
+    writeString(name)
+  }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<EmailAndNamePair> = object : Parcelable.Creator<EmailAndNamePair> {
+      override fun createFromParcel(source: Parcel): EmailAndNamePair = EmailAndNamePair(source)
+      override fun newArray(size: Int): Array<EmailAndNamePair?> = arrayOfNulls(size)
     }
-
-    @Override
-    public EmailAndNamePair[] newArray(int size) {
-      return new EmailAndNamePair[size];
-    }
-  };
-  private String email;
-  private String name;
-
-  public EmailAndNamePair(String email, String name) {
-    this.email = email;
-    this.name = name;
-  }
-
-  protected EmailAndNamePair(Parcel in) {
-    this.email = in.readString();
-    this.name = in.readString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.email);
-    dest.writeString(this.name);
-  }
-
-  @Override
-  public String toString() {
-    return "EmailAndNamePair{" +
-        "email='" + email + '\'' +
-        ", name='" + name + '\'' +
-        '}';
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public String getName() {
-    return name;
   }
 }

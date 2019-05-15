@@ -3,10 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.model;
+package com.flowcrypt.email.model
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.Parcel
+import android.os.Parcelable
 
 /**
  * The message encryption type.
@@ -17,28 +17,22 @@ import android.os.Parcelable;
  * E-mail: DenBond7@gmail.com
  */
 
-public enum MessageEncryptionType implements Parcelable {
+enum class MessageEncryptionType : Parcelable {
   ENCRYPTED, STANDARD;
 
-  public static final Creator<MessageEncryptionType> CREATOR = new Creator<MessageEncryptionType>() {
-    @Override
-    public MessageEncryptionType createFromParcel(Parcel in) {
-      return MessageEncryptionType.values()[in.readInt()];
-    }
-
-    @Override
-    public MessageEncryptionType[] newArray(int size) {
-      return new MessageEncryptionType[size];
-    }
-  };
-
-  @Override
-  public int describeContents() {
-    return 0;
+  override fun describeContents(): Int {
+    return 0
   }
 
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeInt(ordinal());
+  override fun writeToParcel(dest: Parcel, flags: Int) {
+    dest.writeInt(ordinal)
+  }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<MessageEncryptionType> = object : Parcelable.Creator<MessageEncryptionType> {
+      override fun createFromParcel(source: Parcel): MessageEncryptionType = values()[source.readInt()]
+      override fun newArray(size: Int): Array<MessageEncryptionType?> = arrayOfNulls(size)
+    }
   }
 }

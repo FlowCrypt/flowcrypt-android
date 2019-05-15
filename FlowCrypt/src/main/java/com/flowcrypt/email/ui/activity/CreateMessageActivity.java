@@ -79,7 +79,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
 
     Intent intent = new Intent(context, CreateMessageActivity.class);
     intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, msgInfo);
-    intent.putExtra(EXTRA_KEY_MESSAGE_TYPE, messageType);
+    intent.putExtra(EXTRA_KEY_MESSAGE_TYPE, (Parcelable) messageType);
     intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, (Parcelable) msgEncryptionType);
     intent.putExtra(EXTRA_KEY_SERVICE_INFO, serviceInfo);
     return intent;
@@ -208,8 +208,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
   private void prepareActionBarTitle() {
     if (getSupportActionBar() != null) {
       if (getIntent().hasExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE)) {
-        MessageType msgType = (MessageType) getIntent().getSerializableExtra(CreateMessageActivity
-            .EXTRA_KEY_MESSAGE_TYPE);
+        MessageType msgType = getIntent().getParcelableExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE);
 
         switch (msgType) {
           case NEW:
@@ -239,7 +238,7 @@ public class CreateMessageActivity extends BaseBackStackSyncActivity implements
   }
 
   private void notifyFragmentAboutChangeMsgEncryptionType(MessageEncryptionType
-                                                                  messageEncryptionType) {
+                                                              messageEncryptionType) {
     CreateMessageFragment fragment = (CreateMessageFragment) getSupportFragmentManager().findFragmentById(R.id
         .composeFragment);
 

@@ -3,18 +3,16 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.model;
+package com.flowcrypt.email.model
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
-
-import java.util.List;
+import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader
 
 /**
  * The simple POJO class which describes information about result from the
- * {@link UpdateInfoAboutPgpContactsAsyncTaskLoader}
+ * [UpdateInfoAboutPgpContactsAsyncTaskLoader]
  *
  * @author Denis Bondarenko
  * Date: 31.07.2017
@@ -22,58 +20,28 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 
-public class UpdateInfoAboutPgpContactsResult implements Parcelable {
-  public static final Creator<UpdateInfoAboutPgpContactsResult> CREATOR =
-      new Creator<UpdateInfoAboutPgpContactsResult>() {
-        @Override
-        public UpdateInfoAboutPgpContactsResult createFromParcel(Parcel source) {
-          return new UpdateInfoAboutPgpContactsResult(source);
-        }
+data class UpdateInfoAboutPgpContactsResult constructor(val emails: List<String>,
+                                                        val isAllInfoReceived: Boolean = false,
+                                                        val updatedPgpContacts: List<PgpContact>) : Parcelable {
+  constructor(source: Parcel) : this(
+      source.createStringArrayList()!!,
+      source.readInt() == 1,
+      source.createTypedArrayList(PgpContact.CREATOR)!!
+  )
 
-        @Override
-        public UpdateInfoAboutPgpContactsResult[] newArray(int size) {
-          return new UpdateInfoAboutPgpContactsResult[size];
-        }
-      };
+  override fun describeContents() = 0
 
-  private List<String> emails;
-  private boolean isAllInfoReceived;
-  private List<PgpContact> updatedPgpContacts;
-
-  public UpdateInfoAboutPgpContactsResult(List<String> emails, boolean isAllInfoReceived,
-                                          List<PgpContact> updatedPgpContacts) {
-    this.emails = emails;
-    this.isAllInfoReceived = isAllInfoReceived;
-    this.updatedPgpContacts = updatedPgpContacts;
+  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
+    writeStringList(emails)
+    writeInt((if (isAllInfoReceived) 1 else 0))
+    writeTypedList(updatedPgpContacts)
   }
 
-  protected UpdateInfoAboutPgpContactsResult(Parcel in) {
-    this.emails = in.createStringArrayList();
-    this.isAllInfoReceived = in.readByte() != 0;
-    this.updatedPgpContacts = in.createTypedArrayList(PgpContact.CREATOR);
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeStringList(this.emails);
-    dest.writeByte(this.isAllInfoReceived ? (byte) 1 : (byte) 0);
-    dest.writeTypedList(this.updatedPgpContacts);
-  }
-
-  public List<String> getEmails() {
-    return emails;
-  }
-
-  public boolean isAllInfoReceived() {
-    return isAllInfoReceived;
-  }
-
-  public List<PgpContact> getUpdatedPgpContacts() {
-    return updatedPgpContacts;
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<UpdateInfoAboutPgpContactsResult> = object : Parcelable.Creator<UpdateInfoAboutPgpContactsResult> {
+      override fun createFromParcel(source: Parcel): UpdateInfoAboutPgpContactsResult = UpdateInfoAboutPgpContactsResult(source)
+      override fun newArray(size: Int): Array<UpdateInfoAboutPgpContactsResult?> = arrayOfNulls(size)
+    }
   }
 }

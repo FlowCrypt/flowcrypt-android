@@ -3,7 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.model;
+package com.flowcrypt.email.model
+
+import android.os.Parcel
+import android.os.Parcelable
 
 /**
  * The message types.
@@ -14,6 +17,22 @@ package com.flowcrypt.email.model;
  * E-mail: DenBond7@gmail.com
  */
 
-public enum MessageType {
-  NEW, REPLY, REPLY_ALL, FORWARD
+enum class MessageType : Parcelable {
+  NEW, REPLY, REPLY_ALL, FORWARD;
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) {
+    dest.writeInt(ordinal)
+  }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<MessageType> = object : Parcelable.Creator<MessageType> {
+      override fun createFromParcel(source: Parcel): MessageType = values()[source.readInt()]
+      override fun newArray(size: Int): Array<MessageType?> = arrayOfNulls(size)
+    }
+  }
 }

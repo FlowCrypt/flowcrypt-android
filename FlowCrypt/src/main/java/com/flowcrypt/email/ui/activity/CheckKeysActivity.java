@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
@@ -108,7 +109,7 @@ public class CheckKeysActivity extends BaseNodeActivity implements View.OnClickL
                                  String negativeBtnTitle, boolean isExtraImportOpt) {
     Intent intent = new Intent(context, CheckKeysActivity.class);
     intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys);
-    intent.putExtra(KEY_EXTRA_TYPE, type);
+    intent.putExtra(KEY_EXTRA_TYPE, (Parcelable) type);
     intent.putExtra(KEY_EXTRA_SUB_TITLE, subTitle);
     intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveBtnTitle);
     intent.putExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE, neutralBtnTitle);
@@ -292,7 +293,7 @@ public class CheckKeysActivity extends BaseNodeActivity implements View.OnClickL
 
   private void getExtras() {
     this.keyDetailsList = getIntent().getParcelableArrayListExtra(KEY_EXTRA_PRIVATE_KEYS);
-    this.type = (KeyDetails.Type) getIntent().getSerializableExtra(KEY_EXTRA_TYPE);
+    this.type = getIntent().getParcelableExtra(KEY_EXTRA_TYPE);
     this.subTitle = getIntent().getStringExtra(KEY_EXTRA_SUB_TITLE);
     this.positiveBtnTitle = getIntent().getStringExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE);
     this.neutralBtnTitle = getIntent().getStringExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE);

@@ -3,33 +3,31 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.model;
+package com.flowcrypt.email.model
 
-import android.content.Context;
+import android.content.Context
 
-import java.util.List;
-
-import androidx.annotation.Keep;
+import androidx.annotation.Keep
 
 @Keep
-public interface KeysStorage {
+interface KeysStorage {
 
-  PgpContact findPgpContact(String longid);
+  fun getAllPgpPrivateKeys(): List<PgpKeyInfo>
+
+  fun findPgpContact(longid: String): PgpContact
 
   // if two contacts requested and only one found, will still return list of 2:
   // eg [PgpContact, null] or [null, PgpContact] depending which one is missing
-  List findPgpContacts(String[] longid);
+  fun findPgpContacts(longid: Array<String>): List<*>
 
-  PgpKeyInfo getPgpPrivateKey(String longid);
+  fun getPgpPrivateKey(longid: String): PgpKeyInfo
 
   // if 2 keys requested and only one found, will return list of 1: [PgpKey]
-  List<PgpKeyInfo> getFilteredPgpPrivateKeys(String[] longid);
+  fun getFilteredPgpPrivateKeys(longid: Array<String>): List<PgpKeyInfo>
 
-  List<PgpKeyInfo> getAllPgpPrivateKeys();
+  fun getPassphrase(longid: String): String
 
-  String getPassphrase(String longid);
-
-  void refresh(Context context);
+  fun refresh(context: Context)
 
 }
 
