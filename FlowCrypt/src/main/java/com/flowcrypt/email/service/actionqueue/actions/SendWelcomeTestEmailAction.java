@@ -53,7 +53,7 @@ public class SendWelcomeTestEmailAction extends Action {
   @Override
   public void run(Context context) throws Exception {
     ApiService apiService = ApiHelper.getInstance(context).getRetrofit().create(ApiService.class);
-    TestWelcomeModel body = new TestWelcomeModel(email, publicKey);
+    TestWelcomeModel body = new TestWelcomeModel(getEmail(), publicKey);
     Response<TestWelcomeResponse> response = apiService.postTestWelcome(body).execute();
 
     TestWelcomeResponse testWelcomeResponse = response.body();

@@ -3,13 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node;
+package com.flowcrypt.email.api.retrofit.response.model.node
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * @author Denis Bondarenko
@@ -17,69 +17,34 @@ import com.google.gson.annotations.SerializedName;
  * Time: 3:30 PM
  * E-mail: DenBond7@gmail.com
  */
-public class DecryptError implements Parcelable {
+data class DecryptError constructor(@Expose val isSuccess: Boolean,
+                                    @SerializedName("error") @Expose val details: DecryptErrorDetails?,
+                                    @SerializedName("longids") @Expose val longids: Longids?,
+                                    @Expose val isEncrypted: Boolean) : Parcelable {
+  constructor(source: Parcel) : this(
+      1 == source.readInt(),
+      source.readParcelable<DecryptErrorDetails>(DecryptErrorDetails::class.java.classLoader),
+      source.readParcelable<Longids>(Longids::class.java.classLoader),
+      1 == source.readInt()
+  )
 
-  public static final Creator<DecryptError> CREATOR = new Creator<DecryptError>() {
-    @Override
-    public DecryptError createFromParcel(Parcel source) {
-      return new DecryptError(source);
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeInt((if (isSuccess) 1 else 0))
+        writeParcelable(details, flags)
+        writeParcelable(longids, flags)
+        writeInt((if (isEncrypted) 1 else 0))
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<DecryptError> = object : Parcelable.Creator<DecryptError> {
+      override fun createFromParcel(source: Parcel): DecryptError = DecryptError(source)
+      override fun newArray(size: Int): Array<DecryptError?> = arrayOfNulls(size)
     }
-
-    @Override
-    public DecryptError[] newArray(int size) {
-      return new DecryptError[size];
-    }
-  };
-  @Expose
-  private boolean success;
-
-  @SerializedName("error")
-  @Expose
-  private DecryptErrorDetails details;
-
-  @SerializedName("longids")
-  @Expose
-  private Longids longids;
-
-  @Expose
-  private boolean isEncrypted;
-
-  public DecryptError() {
-  }
-
-  protected DecryptError(Parcel in) {
-    this.success = in.readByte() != 0;
-    this.details = in.readParcelable(DecryptErrorDetails.class.getClassLoader());
-    this.longids = in.readParcelable(Longids.class.getClassLoader());
-    this.isEncrypted = in.readByte() != 0;
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeByte(this.success ? (byte) 1 : (byte) 0);
-    dest.writeParcelable(this.details, flags);
-    dest.writeParcelable(this.longids, flags);
-    dest.writeByte(this.isEncrypted ? (byte) 1 : (byte) 0);
-  }
-
-  public boolean isSuccess() {
-    return success;
-  }
-
-  public DecryptErrorDetails getDetails() {
-    return details;
-  }
-
-  public Longids getLongids() {
-    return longids;
-  }
-
-  public boolean isEncrypted() {
-    return isEncrypted;
   }
 }

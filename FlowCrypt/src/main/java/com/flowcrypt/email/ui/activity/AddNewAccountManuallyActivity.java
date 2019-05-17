@@ -258,7 +258,7 @@ public class AddNewAccountManuallyActivity extends BaseNodeActivity implements C
       case R.id.loader_id_load_private_key_backups_from_email:
         UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
         AccountDao account = new AccountDao(authCreds.getEmail(), null, authCreds.getUsername(), null, null, null,
-            authCreds, false);
+            false, authCreds);
         return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
 
       default:
@@ -294,7 +294,7 @@ public class AddNewAccountManuallyActivity extends BaseNodeActivity implements C
         ArrayList<NodeKeyDetails> keyDetailsList = (ArrayList<NodeKeyDetails>) result;
         if (CollectionUtils.isEmpty(keyDetailsList)) {
           AccountDao account = new AccountDao(authCreds.getEmail(), null, authCreds.getUsername(), null, null, null,
-              authCreds, false);
+              false, authCreds);
           startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
               REQUEST_CODE_ADD_NEW_ACCOUNT);
           UIUtil.exchangeViewVisibility(this, false, progressView, contentView);

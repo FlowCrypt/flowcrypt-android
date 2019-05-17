@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import java.util.*
 import javax.mail.internet.InternetAddress
@@ -24,7 +25,6 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
                                            var atts: List<AttachmentInfo>? = null,
                                            var localFolder: LocalFolder? = null,
                                            val msgBlocks: List<MsgBlock>? = null) : Parcelable {
-
   fun getSubject(): String? = generalMsgDetails.subject
 
   fun getFrom(): List<InternetAddress>? = generalMsgDetails.from
@@ -55,25 +55,6 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
       null,
       msgBlocks)
 
-  constructor(parcel: Parcel) : this(
-      parcel.readParcelable(GeneralMessageDetails::class.java.classLoader)!!,
-      mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
-      parcel.readParcelable(LocalFolder::class.java.classLoader),
-      mutableListOf<MsgBlock>().apply { parcel.readTypedList(this, MsgBlock.CREATOR) })
-
-  override fun describeContents(): Int {
-    return 0
-  }
-
-  override fun writeToParcel(dest: Parcel, flags: Int) {
-    with(dest) {
-      writeParcelable(generalMsgDetails, flags)
-      writeTypedList(atts)
-      writeParcelable(localFolder, flags)
-      writeTypedList(msgBlocks)
-    }
-  }
-
   fun hasHtmlText(): Boolean {
     return hasSomePart(MsgBlock.Type.PLAIN_HTML) || hasSomePart(MsgBlock.Type.DECRYPTED_HTML)
   }
@@ -92,9 +73,24 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
     return false
   }
 
+  constructor(source: Parcel) : this(
+      source.readParcelable<GeneralMessageDetails>(GeneralMessageDetails::class.java.classLoader)!!,
+      source.createTypedArrayList(AttachmentInfo.CREATOR),
+      source.readParcelable<LocalFolder>(LocalFolder::class.java.classLoader),
+      listOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) }
+  )
+
+  override fun describeContents() = 0
+
+  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
+    writeParcelable(generalMsgDetails, 0)
+    writeTypedList(atts)
+    writeParcelable(localFolder, 0)
+    writeTypedList(msgBlocks)
+  }
+
   companion object {
     @JvmField
-    @Suppress("unused")
     val CREATOR: Parcelable.Creator<IncomingMessageInfo> = object : Parcelable.Creator<IncomingMessageInfo> {
       override fun createFromParcel(source: Parcel): IncomingMessageInfo = IncomingMessageInfo(source)
       override fun newArray(size: Int): Array<IncomingMessageInfo?> = arrayOfNulls(size)

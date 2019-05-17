@@ -3,10 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database;
+package com.flowcrypt.email.database
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.Parcel
+import android.os.Parcelable
 
 /**
  * This class describes the message states.
@@ -16,7 +16,7 @@ import android.os.Parcelable;
  * Time: 15:11
  * E-mail: DenBond7@gmail.com
  */
-public enum MessageState implements Parcelable {
+enum class MessageState constructor(val value: Int) : Parcelable {
   NONE(-1),
   NEW(1),
   QUEUED(2),
@@ -31,45 +31,30 @@ public enum MessageState implements Parcelable {
   ERROR_SENDING_FAILED(11),
   ERROR_PRIVATE_KEY_NOT_FOUND(12);
 
-  public static final Creator<MessageState> CREATOR = new Creator<MessageState>() {
-    @Override
-    public MessageState createFromParcel(Parcel in) {
-      return values()[in.readInt()];
-    }
-
-    @Override
-    public MessageState[] newArray(int size) {
-      return new MessageState[size];
-    }
-  };
-
-  private int value;
-
-  MessageState(int value) {
-    this.value = value;
+  override fun describeContents(): Int {
+    return 0
   }
 
-  public static MessageState generate(int code) {
-    for (MessageState messageState : MessageState.values()) {
-      if (messageState.getValue() == code) {
-        return messageState;
+  override fun writeToParcel(dest: Parcel, flags: Int) {
+    dest.writeInt(ordinal)
+  }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<MessageState> = object : Parcelable.Creator<MessageState> {
+      override fun createFromParcel(source: Parcel): MessageState = values()[source.readInt()]
+      override fun newArray(size: Int): Array<MessageState?> = arrayOfNulls(size)
+    }
+
+    @JvmStatic
+    fun generate(code: Int): MessageState {
+      for (messageState in values()) {
+        if (messageState.value == code) {
+          return messageState
+        }
       }
+
+      return NONE
     }
-
-    return null;
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeInt(ordinal());
-  }
-
-  public int getValue() {
-    return value;
   }
 }

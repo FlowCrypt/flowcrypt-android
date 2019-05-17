@@ -3,12 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node;
+package com.flowcrypt.email.api.retrofit.response.model.node
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.Expose
 
 /**
  * @author Denis Bondarenko
@@ -16,76 +16,34 @@ import com.google.gson.annotations.Expose;
  * Time: 3:31 PM
  * E-mail: DenBond7@gmail.com
  */
-public class Word implements Parcelable {
-  public static final Creator<Word> CREATOR = new Creator<Word>() {
-    @Override
-    public Word createFromParcel(Parcel source) {
-      return new Word(source);
+data class Word constructor(@Expose val match: String?,
+                            @Expose val word: String?,
+                            @Expose val bar: Int,
+                            @Expose val color: String?,
+                            @Expose val isPass: Boolean) : Parcelable {
+  constructor(source: Parcel) : this(
+      source.readString(),
+      source.readString(),
+      source.readInt(),
+      source.readString(),
+      1 == source.readInt()
+  )
+
+  override fun describeContents() = 0
+
+  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
+    writeString(match)
+    writeString(word)
+    writeInt(bar)
+    writeString(color)
+    writeInt((if (isPass) 1 else 0))
+  }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<Word> = object : Parcelable.Creator<Word> {
+      override fun createFromParcel(source: Parcel): Word = Word(source)
+      override fun newArray(size: Int): Array<Word?> = arrayOfNulls(size)
     }
-
-    @Override
-    public Word[] newArray(int size) {
-      return new Word[size];
-    }
-  };
-
-  @Expose
-  private String match;
-
-  @Expose
-  private String word;
-
-  @Expose
-  private int bar;
-
-  @Expose
-  private String color;
-
-  @Expose
-  private boolean pass;
-
-  public Word() {
-  }
-
-  protected Word(Parcel in) {
-    this.match = in.readString();
-    this.word = in.readString();
-    this.bar = in.readInt();
-    this.color = in.readString();
-    this.pass = in.readByte() != 0;
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.match);
-    dest.writeString(this.word);
-    dest.writeInt(this.bar);
-    dest.writeString(this.color);
-    dest.writeByte(this.pass ? (byte) 1 : (byte) 0);
-  }
-
-  public String getMatch() {
-    return match;
-  }
-
-  public String getWord() {
-    return word;
-  }
-
-  public int getBar() {
-    return bar;
-  }
-
-  public String getColor() {
-    return color;
-  }
-
-  public boolean isPass() {
-    return pass;
   }
 }

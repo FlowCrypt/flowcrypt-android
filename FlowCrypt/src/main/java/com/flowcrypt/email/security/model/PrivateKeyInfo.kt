@@ -3,15 +3,15 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.security.model;
+package com.flowcrypt.email.security.model
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.flowcrypt.email.model.PgpKeyInfo;
+import com.flowcrypt.email.model.PgpKeyInfo
 
 /**
- * A simple private key information object which contais a {@link PgpKeyInfo} object and the
+ * A simple private key information object which contais a [PgpKeyInfo] object and the
  * private key passphrase.
  *
  * @author DenBond7
@@ -20,59 +20,28 @@ import com.flowcrypt.email.model.PgpKeyInfo;
  * E-mail: DenBond7@gmail.com
  */
 
-public class PrivateKeyInfo implements Parcelable {
-  public static final Parcelable.Creator<PrivateKeyInfo> CREATOR = new Parcelable.Creator<PrivateKeyInfo>() {
-    @Override
-    public PrivateKeyInfo createFromParcel(Parcel source) {
-      return new PrivateKeyInfo(source);
+data class PrivateKeyInfo constructor(var pgpKeyInfo: PgpKeyInfo? = null,
+                                      var passphrase: String? = null) : Parcelable {
+  constructor(source: Parcel) : this(
+      source.readParcelable<PgpKeyInfo>(PgpKeyInfo::class.java.classLoader),
+      source.readString()
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(pgpKeyInfo, 0)
+        writeString(passphrase)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<PrivateKeyInfo> = object : Parcelable.Creator<PrivateKeyInfo> {
+      override fun createFromParcel(source: Parcel): PrivateKeyInfo = PrivateKeyInfo(source)
+      override fun newArray(size: Int): Array<PrivateKeyInfo?> = arrayOfNulls(size)
     }
-
-    @Override
-    public PrivateKeyInfo[] newArray(int size) {
-      return new PrivateKeyInfo[size];
-    }
-  };
-
-  private PgpKeyInfo pgpKeyInfo;
-  private String passphrase;
-
-  public PrivateKeyInfo() {
-  }
-
-  public PrivateKeyInfo(PgpKeyInfo pgpKeyInfo, String passphrase) {
-    this.pgpKeyInfo = pgpKeyInfo;
-    this.passphrase = passphrase;
-  }
-
-  protected PrivateKeyInfo(Parcel in) {
-    this.pgpKeyInfo = in.readParcelable(PgpKeyInfo.class.getClassLoader());
-    this.passphrase = in.readString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeParcelable(this.pgpKeyInfo, flags);
-    dest.writeString(this.passphrase);
-  }
-
-  public PgpKeyInfo getPgpKeyInfo() {
-    return pgpKeyInfo;
-  }
-
-  public void setPgpKeyInfo(PgpKeyInfo pgpKeyInfo) {
-    this.pgpKeyInfo = pgpKeyInfo;
-  }
-
-  public String getPassphrase() {
-    return passphrase;
-  }
-
-  public void setPassphrase(String passphrase) {
-    this.passphrase = passphrase;
   }
 }

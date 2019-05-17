@@ -123,8 +123,9 @@ public class AccountDaoSource extends BaseDaoSource {
         cursor.getString(cursor.getColumnIndex(COL_DISPLAY_NAME)),
         cursor.getString(cursor.getColumnIndex(COL_GIVEN_NAME)),
         cursor.getString(cursor.getColumnIndex(COL_FAMILY_NAME)),
-        cursor.getString(cursor.getColumnIndex(COL_PHOTO_URL)), authCreds,
-        cursor.getInt(cursor.getColumnIndex(COL_IS_CONTACTS_LOADED)) == 1);
+        cursor.getString(cursor.getColumnIndex(COL_PHOTO_URL)),
+        cursor.getInt(cursor.getColumnIndex(COL_IS_CONTACTS_LOADED)) == 1,
+        authCreds);
   }
 
   /**

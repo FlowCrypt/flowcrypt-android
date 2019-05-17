@@ -5,11 +5,9 @@
 
 package com.flowcrypt.email.database.dao;
 
-import android.os.Parcel;
 import android.text.TextUtils;
 
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.database.dao.source.BaseDaoSource;
 import com.flowcrypt.email.model.KeyDetails;
 import com.flowcrypt.email.security.KeyStoreCryptoManager;
 import com.flowcrypt.email.security.model.PrivateKeySourceType;
@@ -23,19 +21,7 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType;
  * E-mail: DenBond7@gmail.com
  */
 
-public class KeysDao extends BaseDao {
-
-  public static final Creator<KeysDao> CREATOR = new Creator<KeysDao>() {
-    @Override
-    public KeysDao createFromParcel(Parcel source) {
-      return new KeysDao(source);
-    }
-
-    @Override
-    public KeysDao[] newArray(int size) {
-      return new KeysDao[size];
-    }
-  };
+public class KeysDao {
 
   private String longId;
   private PrivateKeySourceType privateKeySourceType;
@@ -53,16 +39,6 @@ public class KeysDao extends BaseDao {
     this.publicKey = publicKey;
     this.privateKey = privateKey;
     this.passphrase = passphrase;
-  }
-
-  protected KeysDao(Parcel in) {
-    this.longId = in.readString();
-    int tmpPrivateKeySourceType = in.readInt();
-    this.privateKeySourceType = tmpPrivateKeySourceType == -1 ? null : PrivateKeySourceType
-        .values()[tmpPrivateKeySourceType];
-    this.publicKey = in.readString();
-    this.privateKey = in.readString();
-    this.passphrase = in.readString();
   }
 
   /**
@@ -132,25 +108,6 @@ public class KeysDao extends BaseDao {
     String encryptedPassphrase = keyStoreCryptoManager.encrypt(passphrase, randomVector);
     keysDao.setPassphrase(encryptedPassphrase);
     return keysDao;
-  }
-
-  @Override
-  public BaseDaoSource getDaoSource() {
-    return null;
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.longId);
-    dest.writeInt(this.privateKeySourceType == null ? -1 : this.privateKeySourceType.ordinal());
-    dest.writeString(this.publicKey);
-    dest.writeString(this.privateKey);
-    dest.writeString(this.passphrase);
   }
 
   public String getLongId() {

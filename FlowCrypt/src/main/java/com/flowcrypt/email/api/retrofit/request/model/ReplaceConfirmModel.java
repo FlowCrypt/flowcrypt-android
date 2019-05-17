@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.api.retrofit.request.model;
 
-import android.os.Parcel;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -21,18 +19,6 @@ import com.google.gson.annotations.SerializedName;
 
 public class ReplaceConfirmModel extends BaseRequestModel {
 
-  public static final Creator<ReplaceConfirmModel> CREATOR = new Creator<ReplaceConfirmModel>() {
-    @Override
-    public ReplaceConfirmModel createFromParcel(Parcel source) {
-      return new ReplaceConfirmModel(source);
-    }
-
-    @Override
-    public ReplaceConfirmModel[] newArray(int size) {
-      return new ReplaceConfirmModel[size];
-    }
-  };
-
   @SerializedName("signed_message")
   @Expose
   private String signedMsg;
@@ -41,25 +27,7 @@ public class ReplaceConfirmModel extends BaseRequestModel {
     this.signedMsg = signedMsg;
   }
 
-
-  protected ReplaceConfirmModel(Parcel in) {
-    this.signedMsg = in.readString();
-  }
-
-  @Override
-  public String toString() {
-    return "ReplaceConfirmModel{" +
-        "signedMsg='" + signedMsg + '\'' +
-        "} " + super.toString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.signedMsg);
+  public String getSignedMsg() {
+    return signedMsg;
   }
 }

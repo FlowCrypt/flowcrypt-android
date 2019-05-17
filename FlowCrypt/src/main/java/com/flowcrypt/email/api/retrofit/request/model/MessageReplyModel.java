@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.api.retrofit.request.model;
 
-import android.os.Parcel;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -20,18 +18,6 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class MessageReplyModel extends BaseRequestModel {
-
-  public static final Creator<MessageReplyModel> CREATOR = new Creator<MessageReplyModel>() {
-    @Override
-    public MessageReplyModel createFromParcel(Parcel source) {
-      return new MessageReplyModel(source);
-    }
-
-    @Override
-    public MessageReplyModel[] newArray(int size) {
-      return new MessageReplyModel[size];
-    }
-  };
 
   @SerializedName("short")
   @Expose
@@ -67,39 +53,27 @@ public class MessageReplyModel extends BaseRequestModel {
     this.to = to;
   }
 
-  protected MessageReplyModel(Parcel in) {
-    this.shortValue = in.readString();
-    this.token = in.readString();
-    this.message = in.readString();
-    this.subject = in.readString();
-    this.from = in.readString();
-    this.to = in.readString();
+  public String getShortValue() {
+    return shortValue;
   }
 
-  @Override
-  public String toString() {
-    return "MessageReplyModel{" +
-        "shortValue='" + shortValue + '\'' +
-        ", token='" + token + '\'' +
-        ", message='" + message + '\'' +
-        ", subject='" + subject + '\'' +
-        ", from='" + from + '\'' +
-        ", to='" + to + '\'' +
-        "} " + super.toString();
+  public String getToken() {
+    return token;
   }
 
-  @Override
-  public int describeContents() {
-    return 0;
+  public String getMessage() {
+    return message;
   }
 
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.shortValue);
-    dest.writeString(this.token);
-    dest.writeString(this.message);
-    dest.writeString(this.subject);
-    dest.writeString(this.from);
-    dest.writeString(this.to);
+  public String getSubject() {
+    return subject;
+  }
+
+  public String getFrom() {
+    return from;
+  }
+
+  public String getTo() {
+    return to;
   }
 }

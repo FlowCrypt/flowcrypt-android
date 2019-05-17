@@ -3,25 +3,19 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node;
+package com.flowcrypt.email.api.retrofit.response.model.node
 
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.text.TextUtils;
-import android.util.Patterns;
-
-import com.flowcrypt.email.model.PgpContact;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
+import android.os.Parcel
+import android.os.Parcelable
+import android.text.TextUtils
+import android.util.Patterns
+import com.flowcrypt.email.model.PgpContact
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
+import java.util.*
+import java.util.concurrent.TimeUnit
+import javax.mail.internet.AddressException
+import javax.mail.internet.InternetAddress
 
 /**
  * @author Denis Bondarenko
@@ -29,158 +23,99 @@ import javax.mail.internet.InternetAddress;
  * Time: 1:23 PM
  * E-mail: DenBond7@gmail.com
  */
-public class NodeKeyDetails implements Parcelable {
-
-  public static final Creator<NodeKeyDetails> CREATOR = new Creator<NodeKeyDetails>() {
-    @Override
-    public NodeKeyDetails createFromParcel(Parcel source) {
-      return new NodeKeyDetails(source);
-    }
-
-    @Override
-    public NodeKeyDetails[] newArray(int size) {
-      return new NodeKeyDetails[size];
-    }
-  };
-
-  @Expose
-  private Boolean isDecrypted;
-
-  @Expose
-  @SerializedName("private")
-  private String privateKey;
-
-  @Expose
-  @SerializedName("public")
-  private String publicKey;
-
-  @Expose
-  private List<String> users;
-
-  @Expose
-  private List<KeyId> ids;
-
-  @Expose
-  private long created;
-
-  @Expose
-  private Algo algo;
-
-  public NodeKeyDetails() {
-  }
-
-  protected NodeKeyDetails(Parcel in) {
-    this.isDecrypted = (Boolean) in.readValue(Boolean.class.getClassLoader());
-    this.privateKey = in.readString();
-    this.publicKey = in.readString();
-    this.users = in.createStringArrayList();
-    this.ids = in.createTypedArrayList(KeyId.CREATOR);
-    this.created = in.readLong();
-    this.algo = in.readParcelable(Algo.class.getClassLoader());
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeValue(this.isDecrypted);
-    dest.writeString(this.privateKey);
-    dest.writeString(this.publicKey);
-    dest.writeStringList(this.users);
-    dest.writeTypedList(this.ids);
-    dest.writeLong(this.created);
-    dest.writeParcelable(this.algo, flags);
-  }
-
-  public String getPrivateKey() {
-    return privateKey;
-  }
-
-  public String getPublicKey() {
-    return publicKey;
-  }
-
-  public List<String> getUsers() {
-    return users;
-  }
-
-  public List<KeyId> getIds() {
-    return ids;
-  }
-
-  public long getCreated() {
-    return TimeUnit.MILLISECONDS.convert(created, TimeUnit.SECONDS);
-  }
-
-  public Algo getAlgo() {
-    return algo;
-  }
-
-  public PgpContact getPrimaryPgpContact() {
-    KeyId keyId = ids.get(0);
-    String email = null;
-    String name = null;
-    try {
-      InternetAddress[] internetAddresses = InternetAddress.parse(users.get(0));
-      email = internetAddresses[0].getAddress();
-      name = internetAddresses[0].getPersonal();
-    } catch (AddressException e) {
-      e.printStackTrace();
-
-      //It means the input string has a wrong format. So we need to try to extract only an email address using regex.
-      Pattern pattern = Patterns.EMAIL_ADDRESS;
-      Matcher matcher = pattern.matcher(users.get(0));
-      if (matcher.find()) {
-        email = matcher.group();
-        name = email;
-      }
-    }
-
-    return new PgpContact(email, name, publicKey, !TextUtils.isEmpty(publicKey), null,
-        keyId.getFingerprint(), keyId.getLongId(), keyId.getKeywords(), 0);
-  }
-
-  public ArrayList<PgpContact> getPgpContacts() {
-    ArrayList<PgpContact> pgpContacts = new ArrayList<>();
-
-    for (String user : users) {
+data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
+                                      @Expose @SerializedName("private") val privateKey: String?,
+                                      @Expose @SerializedName("public") val publicKey: String?,
+                                      @Expose val users: List<String>?,
+                                      @Expose val ids: List<KeyId>?,
+                                      @Expose val created: Long,
+                                      @Expose val algo: Algo?) : Parcelable {
+  //It means the input string has a wrong format. So we need to try to extract only an email address using regex.
+  val primaryPgpContact: PgpContact
+    get() {
+      val (fingerprint1, longId1, _, keywords1) = ids!![0]
+      var email: String? = null
+      var name: String? = null
       try {
-        InternetAddress[] internetAddresses = InternetAddress.parse(user);
-
-        for (InternetAddress internetAddress : internetAddresses) {
-          String email = internetAddress.getAddress();
-          String name = internetAddress.getPersonal();
-
-          pgpContacts.add(new PgpContact(email, name));
+        val internetAddresses = InternetAddress.parse(users!![0])
+        email = internetAddresses[0].address
+        name = internetAddresses[0].personal
+      } catch (e: AddressException) {
+        e.printStackTrace()
+        val pattern = Patterns.EMAIL_ADDRESS
+        val matcher = pattern.matcher(users!![0])
+        if (matcher.find()) {
+          email = matcher.group()
+          name = email
         }
-      } catch (AddressException e) {
-        e.printStackTrace();
       }
+
+      return PgpContact(email!!, name, publicKey, !TextUtils.isEmpty(publicKey), null,
+          fingerprint1, longId1, keywords1, 0)
     }
 
-    return pgpContacts;
+  val pgpContacts: ArrayList<PgpContact>
+    get() {
+      val pgpContacts = ArrayList<PgpContact>()
+
+      for (user in users!!) {
+        try {
+          val internetAddresses = InternetAddress.parse(user)
+
+          for (internetAddress in internetAddresses) {
+            val email = internetAddress.address
+            val name = internetAddress.personal
+
+            pgpContacts.add(PgpContact(email, name))
+          }
+        } catch (e: AddressException) {
+          e.printStackTrace()
+        }
+
+      }
+
+      return pgpContacts
+    }
+
+  val longId: String? = ids?.get(0)?.longId
+
+  val fingerprint: String? = ids?.get(0)?.fingerprint
+
+  val keywords: String? = ids?.get(0)?.keywords
+
+  val isPrivate: Boolean = !TextUtils.isEmpty(privateKey)
+
+  fun getCreatedInMilliseconds(): Long {
+    return TimeUnit.MILLISECONDS.convert(created, TimeUnit.SECONDS)
   }
 
-  public String getLongId() {
-    return ids.get(0).getLongId();
+  constructor(source: Parcel) : this(
+      source.readValue(Boolean::class.java.classLoader) as Boolean?,
+      source.readString(),
+      source.readString(),
+      source.createStringArrayList(),
+      source.createTypedArrayList(KeyId.CREATOR),
+      source.readLong(),
+      source.readParcelable<Algo>(Algo::class.java.classLoader)
+  )
+
+  override fun describeContents() = 0
+
+  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
+    writeValue(isDecrypted)
+    writeString(privateKey)
+    writeString(publicKey)
+    writeStringList(users)
+    writeTypedList(ids)
+    writeLong(created)
+    writeParcelable(algo, 0)
   }
 
-  public String getFingerprint() {
-    return ids.get(0).getFingerprint();
-  }
-
-  public String getKeywords() {
-    return ids.get(0).getKeywords();
-  }
-
-  public boolean isPrivate() {
-    return !TextUtils.isEmpty(privateKey);
-  }
-
-  public Boolean isDecrypted() {
-    return isDecrypted;
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<NodeKeyDetails> = object : Parcelable.Creator<NodeKeyDetails> {
+      override fun createFromParcel(source: Parcel): NodeKeyDetails = NodeKeyDetails(source)
+      override fun newArray(size: Int): Array<NodeKeyDetails?> = arrayOfNulls(size)
+    }
   }
 }

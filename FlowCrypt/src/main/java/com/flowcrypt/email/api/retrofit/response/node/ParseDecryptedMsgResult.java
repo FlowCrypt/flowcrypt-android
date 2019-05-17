@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.node;
 import android.os.Parcel;
 
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
+import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock;
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
@@ -48,9 +49,9 @@ public class ParseDecryptedMsgResult extends BaseNodeResult {
     this.msgBlocks = new ArrayList<>();
   }
 
-  protected ParseDecryptedMsgResult(Parcel in) {
+  public ParseDecryptedMsgResult(Parcel in) {
     super(in);
-    this.msgBlocks = in.createTypedArrayList(MsgBlock.CREATOR);
+    this.msgBlocks = in.createTypedArrayList(BaseMsgBlock.CREATOR);
   }
 
   @Override

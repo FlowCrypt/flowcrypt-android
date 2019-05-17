@@ -7,9 +7,13 @@ package com.flowcrypt.email.api.retrofit.response.attester;
 
 import android.os.Parcel;
 
-import com.flowcrypt.email.api.retrofit.response.base.BaseApiResponse;
+import com.flowcrypt.email.api.retrofit.response.base.ApiError;
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
 import com.flowcrypt.email.api.retrofit.response.model.LookUpPublicKeyInfo;
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
@@ -23,7 +27,7 @@ import java.util.ArrayList;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LookUpResponse extends BaseApiResponse {
+public class LookUpResponse implements ApiResponse {
 
   public static final Creator<LookUpResponse> CREATOR = new Creator<LookUpResponse>() {
     @Override
@@ -37,6 +41,10 @@ public class LookUpResponse extends BaseApiResponse {
     }
   };
 
+  @SerializedName("error")
+  @Expose
+  private ApiError apiError;
+
   @Expose
   private ArrayList<LookUpPublicKeyInfo> results;
 
@@ -46,8 +54,8 @@ public class LookUpResponse extends BaseApiResponse {
   public LookUpResponse() {
   }
 
-  protected LookUpResponse(Parcel in) {
-    super(in);
+  public LookUpResponse(Parcel in) {
+    this.apiError = in.readParcelable(ApiError.class.getClassLoader());
     this.results = in.createTypedArrayList(LookUpPublicKeyInfo.CREATOR);
     this.query = in.readString();
   }
@@ -59,9 +67,15 @@ public class LookUpResponse extends BaseApiResponse {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
+    dest.writeParcelable(this.apiError, flags);
     dest.writeTypedList(this.results);
     dest.writeString(this.query);
+  }
+
+  @NotNull
+  @Override
+  public ApiError getApiError() {
+    return apiError;
   }
 
   public ArrayList<LookUpPublicKeyInfo> getResults() {

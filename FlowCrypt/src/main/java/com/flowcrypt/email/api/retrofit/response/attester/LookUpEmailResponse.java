@@ -7,9 +7,12 @@ package com.flowcrypt.email.api.retrofit.response.attester;
 
 import android.os.Parcel;
 
-import com.flowcrypt.email.api.retrofit.response.base.BaseApiResponse;
+import com.flowcrypt.email.api.retrofit.response.base.ApiError;
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Response from the API
@@ -21,7 +24,7 @@ import com.google.gson.annotations.SerializedName;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LookUpEmailResponse extends BaseApiResponse {
+public class LookUpEmailResponse implements ApiResponse {
 
   public static final Creator<LookUpEmailResponse> CREATOR = new Creator<LookUpEmailResponse>() {
     @Override
@@ -34,6 +37,10 @@ public class LookUpEmailResponse extends BaseApiResponse {
       return new LookUpEmailResponse[size];
     }
   };
+
+  @SerializedName("error")
+  @Expose
+  private ApiError apiError;
 
   @SerializedName("has_cryptup")
   @Expose
@@ -53,22 +60,12 @@ public class LookUpEmailResponse extends BaseApiResponse {
   public LookUpEmailResponse() {
   }
 
-  protected LookUpEmailResponse(Parcel in) {
-    super(in);
+  public LookUpEmailResponse(Parcel in) {
+    this.apiError = in.readParcelable(ApiError.class.getClassLoader());
     this.hasCryptup = in.readByte() != 0;
     this.pubKey = in.readString();
     this.email = in.readString();
     this.longId = in.readString();
-  }
-
-  @Override
-  public String toString() {
-    return "LookUpEmailResponse{" +
-        ", hasCryptup=" + hasCryptup +
-        ", pubKey='" + pubKey + '\'' +
-        ", email='" + email + '\'' +
-        ", longId='" + longId + '\'' +
-        "} " + super.toString();
   }
 
   @Override
@@ -78,11 +75,17 @@ public class LookUpEmailResponse extends BaseApiResponse {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
+    dest.writeParcelable(this.apiError, flags);
     dest.writeByte(this.hasCryptup ? (byte) 1 : (byte) 0);
     dest.writeString(this.pubKey);
     dest.writeString(this.email);
     dest.writeString(this.longId);
+  }
+
+  @NotNull
+  @Override
+  public ApiError getApiError() {
+    return apiError;
   }
 
   public boolean hasCryptup() {

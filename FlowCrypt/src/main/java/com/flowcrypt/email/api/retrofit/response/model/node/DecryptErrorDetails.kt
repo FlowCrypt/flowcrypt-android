@@ -3,15 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node;
+package com.flowcrypt.email.api.retrofit.response.model.node
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import androidx.annotation.NonNull;
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * @author Denis Bondarenko
@@ -19,63 +17,31 @@ import androidx.annotation.NonNull;
  * Time: 3:30 PM
  * E-mail: DenBond7@gmail.com
  */
-public class DecryptErrorDetails implements Parcelable {
-  public static final Creator<DecryptErrorDetails> CREATOR = new Creator<DecryptErrorDetails>() {
-    @Override
-    public DecryptErrorDetails createFromParcel(Parcel source) {
-      return new DecryptErrorDetails(source);
+data class DecryptErrorDetails(@Expose val type: Type?,
+                               @Expose val message: String?) : Parcelable {
+  constructor(source: Parcel) : this(
+      source.readParcelable<Type>(Type::class.java.classLoader),
+      source.readString()
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
+    writeParcelable(type, flags)
+    writeString(message)
+  }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<DecryptErrorDetails> = object : Parcelable.Creator<DecryptErrorDetails> {
+      override fun createFromParcel(source: Parcel): DecryptErrorDetails = DecryptErrorDetails(source)
+      override fun newArray(size: Int): Array<DecryptErrorDetails?> = arrayOfNulls(size)
     }
-
-    @Override
-    public DecryptErrorDetails[] newArray(int size) {
-      return new DecryptErrorDetails[size];
-    }
-  };
-
-  @Expose
-  private Type type;
-
-  @Expose
-  private String message;
-
-  public DecryptErrorDetails() {
   }
 
-  protected DecryptErrorDetails(Parcel in) {
-    int tmpType = in.readInt();
-    this.type = tmpType == -1 ? null : Type.values()[tmpType];
-    this.message = in.readString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeInt(this.type == null ? -1 : this.type.ordinal());
-    dest.writeString(this.message);
-  }
-
-  @NonNull
-  @Override
-  public String toString() {
-    return "DecryptErrorDetails{" +
-        "type=" + type +
-        ", message='" + message + '\'' +
-        '}';
-  }
-
-  public Type getType() {
-    return type;
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public enum Type {
+  enum class Type : Parcelable {
     UNKNOWN,
 
     @SerializedName("key_mismatch")
@@ -97,6 +63,22 @@ public class DecryptErrorDetails implements Parcelable {
     FORMAT,
 
     @SerializedName("other")
-    OTHER
+    OTHER;
+
+    override fun describeContents(): Int {
+      return 0
+    }
+
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+      dest.writeInt(ordinal)
+    }
+
+    companion object {
+      @JvmField
+      val CREATOR: Parcelable.Creator<Type> = object : Parcelable.Creator<Type> {
+        override fun createFromParcel(source: Parcel): Type = values()[source.readInt()]
+        override fun newArray(size: Int): Array<Type?> = arrayOfNulls(size)
+      }
+    }
   }
 }

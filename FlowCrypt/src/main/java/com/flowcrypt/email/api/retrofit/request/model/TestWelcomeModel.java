@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.api.retrofit.request.model;
 
-import android.os.Parcel;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -20,17 +18,6 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class TestWelcomeModel extends BaseRequestModel {
-  public static final Creator<TestWelcomeModel> CREATOR = new Creator<TestWelcomeModel>() {
-    @Override
-    public TestWelcomeModel createFromParcel(Parcel source) {
-      return new TestWelcomeModel(source);
-    }
-
-    @Override
-    public TestWelcomeModel[] newArray(int size) {
-      return new TestWelcomeModel[size];
-    }
-  };
 
   @SerializedName("email")
   @Expose
@@ -45,28 +32,11 @@ public class TestWelcomeModel extends BaseRequestModel {
     this.pubKey = pubKey;
   }
 
-
-  protected TestWelcomeModel(Parcel in) {
-    this.email = in.readString();
-    this.pubKey = in.readString();
+  public String getEmail() {
+    return email;
   }
 
-  @Override
-  public String toString() {
-    return "TestWelcomeModel{" +
-        "email='" + email + '\'' +
-        ", pubKey='" + pubKey + '\'' +
-        "} " + super.toString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.email);
-    dest.writeString(this.pubKey);
+  public String getPubKey() {
+    return pubKey;
   }
 }

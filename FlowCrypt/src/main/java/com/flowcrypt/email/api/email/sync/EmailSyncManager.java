@@ -413,7 +413,7 @@ public class EmailSyncManager {
    * Load contacts info from the SENT folder.
    */
   private void loadContactsInfoIfNeeded() {
-    if (account != null && !account.areContactsLoaded()) {
+    if (account != null && !account.getAreContactsLoaded()) {
       //we need to update labels before we can use the SENT folder for retrieve contacts
       updateLabels(null, 0, passiveQueue);
       try {

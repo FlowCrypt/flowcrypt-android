@@ -3,24 +3,64 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node;
+package com.flowcrypt.email.api.retrofit.response.model.node
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
+import com.google.gson.annotations.Expose
 
 /**
- * It's a base {@link MsgBlock}
+ * It's a base [MsgBlock]
  *
  * @author Denis Bondarenko
  * Date: 3/26/19
  * Time: 9:46 AM
  * E-mail: DenBond7@gmail.com
  */
-public class BaseMsgBlock extends MsgBlock {
-  public BaseMsgBlock(Type type, String content, boolean complete) {
-    super(type, content, complete);
+data class BaseMsgBlock(@Expose override val type: MsgBlock.Type,
+                        @Expose override val content: String?,
+                        @Expose override val isComplete: Boolean) : MsgBlock {
+
+  constructor(source: Parcel) : this(
+      source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!,
+      source.readString(),
+      1 == source.readInt()
+  )
+
+  override fun describeContents() = 0
+
+  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
+    writeParcelable(type, flags)
+    writeString(content)
+    writeInt((if (isComplete) 1 else 0))
   }
 
-  public BaseMsgBlock(Parcel in, Type type) {
-    super(in, type);
+  companion object {
+    const val TAG_TYPE = "type"
+
+    @JvmField
+    val CREATOR: Parcelable.Creator<MsgBlock> = object : Parcelable.Creator<MsgBlock> {
+      override fun createFromParcel(source: Parcel): MsgBlock {
+        val tmp = source.readInt()
+        val partType = if (tmp == -1) null else MsgBlock.Type.values()[tmp]
+        return if (partType != null) {
+          genMsgBlockFromType(source, partType)
+        } else {
+          BaseMsgBlock(source)
+        }
+      }
+
+      override fun newArray(size: Int): Array<MsgBlock?> = arrayOfNulls(size)
+    }
+
+    fun genMsgBlockFromType(source: Parcel, type: MsgBlock.Type): MsgBlock {
+      return when (type) {
+        MsgBlock.Type.PUBLIC_KEY -> PublicKeyMsgBlock(source)
+
+        MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(source)
+
+        else -> BaseMsgBlock(source)
+      }
+    }
   }
 }

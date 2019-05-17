@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.api.retrofit.request.model;
 
-import android.os.Parcel;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -20,17 +18,6 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class ReplaceRequestModel extends BaseRequestModel {
-  public static final Creator<ReplaceRequestModel> CREATOR = new Creator<ReplaceRequestModel>() {
-    @Override
-    public ReplaceRequestModel createFromParcel(Parcel source) {
-      return new ReplaceRequestModel(source);
-    }
-
-    @Override
-    public ReplaceRequestModel[] newArray(int size) {
-      return new ReplaceRequestModel[size];
-    }
-  };
 
   @SerializedName("signed_message")
   @Expose
@@ -50,30 +37,15 @@ public class ReplaceRequestModel extends BaseRequestModel {
     this.email = email;
   }
 
-  protected ReplaceRequestModel(Parcel in) {
-    this.signedMsg = in.readString();
-    this.newPubKey = in.readString();
-    this.email = in.readString();
+  public String getSignedMsg() {
+    return signedMsg;
   }
 
-  @Override
-  public String toString() {
-    return "ReplaceRequestModel{" +
-        "signedMsg='" + signedMsg + '\'' +
-        ", newPubKey='" + newPubKey + '\'' +
-        ", email='" + email + '\'' +
-        "} " + super.toString();
+  public String getNewPubKey() {
+    return newPubKey;
   }
 
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.signedMsg);
-    dest.writeString(this.newPubKey);
-    dest.writeString(this.email);
+  public String getEmail() {
+    return email;
   }
 }

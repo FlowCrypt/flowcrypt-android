@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node;
+package com.flowcrypt.email.api.retrofit.response.model.node
 
-import android.os.Parcel;
-
-import com.google.gson.annotations.Expose;
+import android.os.Parcel
+import android.os.Parcelable
+import com.google.gson.annotations.Expose
 
 /**
  * @author Denis Bondarenko
@@ -15,42 +15,34 @@ import com.google.gson.annotations.Expose;
  * Time: 3:02 PM
  * E-mail: DenBond7@gmail.com
  */
-public class DecryptErrorMsgBlock extends MsgBlock {
-  public static final Creator<DecryptErrorMsgBlock> CREATOR = new Creator<DecryptErrorMsgBlock>() {
-    @Override
-    public DecryptErrorMsgBlock createFromParcel(Parcel source) {
-      return new DecryptErrorMsgBlock(source, Type.DECRYPT_ERROR);
+data class DecryptErrorMsgBlock(@Expose override val type: MsgBlock.Type,
+                                @Expose override val content: String?,
+                                @Expose override val isComplete: Boolean,
+                                @Expose val error: DecryptError?) : MsgBlock {
+  constructor(source: Parcel) : this(
+      source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!,
+      source.readString(),
+      1 == source.readInt(),
+      source.readParcelable<DecryptError>(DecryptError::class.java.classLoader)
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(type, flags)
+        writeString(content)
+        writeInt((if (isComplete) 1 else 0))
+        writeParcelable(error, flags)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<DecryptErrorMsgBlock> = object : Parcelable.Creator<DecryptErrorMsgBlock> {
+      override fun createFromParcel(source: Parcel): DecryptErrorMsgBlock = DecryptErrorMsgBlock(source)
+      override fun newArray(size: Int): Array<DecryptErrorMsgBlock?> = arrayOfNulls(size)
     }
-
-    @Override
-    public DecryptErrorMsgBlock[] newArray(int size) {
-      return new DecryptErrorMsgBlock[size];
-    }
-  };
-
-  @Expose
-  private DecryptError decryptErr;
-
-  public DecryptErrorMsgBlock() {
-  }
-
-  protected DecryptErrorMsgBlock(Parcel in, Type type) {
-    super(in, type);
-    this.decryptErr = in.readParcelable(DecryptError.class.getClassLoader());
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
-    dest.writeParcelable(this.decryptErr, flags);
-  }
-
-  public DecryptError getError() {
-    return decryptErr;
   }
 }

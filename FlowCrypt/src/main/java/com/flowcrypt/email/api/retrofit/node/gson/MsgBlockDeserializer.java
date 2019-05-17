@@ -31,7 +31,7 @@ public class MsgBlockDeserializer implements JsonDeserializer<MsgBlock> {
       throws JsonParseException {
     JsonObject jsonObject = json.getAsJsonObject();
 
-    MsgBlock.Type type = context.deserialize(jsonObject.get(MsgBlock.TAG_TYPE), MsgBlock.Type.class);
+    MsgBlock.Type type = context.deserialize(jsonObject.get(BaseMsgBlock.TAG_TYPE), MsgBlock.Type.class);
 
     switch (type) {
       case PUBLIC_KEY:

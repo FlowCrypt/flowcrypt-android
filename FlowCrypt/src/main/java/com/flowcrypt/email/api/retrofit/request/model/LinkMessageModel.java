@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.api.retrofit.request.model;
 
-import android.os.Parcel;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -20,17 +18,6 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class LinkMessageModel extends BaseRequestModel {
-  public static final Creator<LinkMessageModel> CREATOR = new Creator<LinkMessageModel>() {
-    @Override
-    public LinkMessageModel createFromParcel(Parcel source) {
-      return new LinkMessageModel(source);
-    }
-
-    @Override
-    public LinkMessageModel[] newArray(int size) {
-      return new LinkMessageModel[size];
-    }
-  };
 
   @SerializedName("short")
   @Expose
@@ -40,25 +27,7 @@ public class LinkMessageModel extends BaseRequestModel {
     this.shortValue = shortValue;
   }
 
-
-  protected LinkMessageModel(Parcel in) {
-    this.shortValue = in.readString();
-  }
-
-  @Override
-  public String toString() {
-    return "LinkMessageModel{" +
-        "shortValue='" + shortValue + '\'' +
-        "} " + super.toString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.shortValue);
+  public String getShortValue() {
+    return shortValue;
   }
 }

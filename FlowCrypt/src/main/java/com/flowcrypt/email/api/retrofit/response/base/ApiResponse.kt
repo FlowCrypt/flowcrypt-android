@@ -3,9 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.base;
+package com.flowcrypt.email.api.retrofit.response.base
 
-import android.os.Parcelable;
+import android.os.Parcelable
 
 /**
  * An interface for identification API response
@@ -15,5 +15,6 @@ import android.os.Parcelable;
  * Time: 16:41
  * E-mail: DenBond7@gmail.com
  */
-interface ApiResponse extends Parcelable {
+interface ApiResponse : Parcelable {
+  val apiError: ApiError
 }

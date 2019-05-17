@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.api.retrofit.request.model;
 
-import android.os.Parcel;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -22,18 +20,6 @@ import com.google.gson.annotations.SerializedName;
 
 public class InitialLegacySubmitModel extends BaseRequestModel {
 
-  public static final Creator<InitialLegacySubmitModel> CREATOR = new Creator<InitialLegacySubmitModel>() {
-    @Override
-    public InitialLegacySubmitModel createFromParcel(Parcel source) {
-      return new InitialLegacySubmitModel(source);
-    }
-
-    @Override
-    public InitialLegacySubmitModel[] newArray(int size) {
-      return new InitialLegacySubmitModel[size];
-    }
-  };
-
   @Expose
   private String email;
 
@@ -41,43 +27,16 @@ public class InitialLegacySubmitModel extends BaseRequestModel {
   @Expose
   private String pubKey;
 
-  public InitialLegacySubmitModel() {
-  }
-
   public InitialLegacySubmitModel(String email, String pubKey) {
     this.email = email;
     this.pubKey = pubKey;
-  }
-
-  protected InitialLegacySubmitModel(Parcel in) {
-    this.email = in.readString();
-    this.pubKey = in.readString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.email);
-    dest.writeString(this.pubKey);
   }
 
   public String getEmail() {
     return email;
   }
 
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
   public String getPubKey() {
     return pubKey;
-  }
-
-  public void setPubKey(String pubKey) {
-    this.pubKey = pubKey;
   }
 }

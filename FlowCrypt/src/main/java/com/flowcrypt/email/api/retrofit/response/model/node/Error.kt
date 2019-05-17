@@ -3,81 +3,43 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node;
+package com.flowcrypt.email.api.retrofit.response.model.node
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * @author DenBond7
  */
 
-public class Error implements Parcelable {
+data class Error constructor(@SerializedName("message") @Expose val msg: String?,
+                             @Expose val stack: String?,
+                             @Expose val type: String?) : Parcelable {
+  constructor(source: Parcel) : this(
+      source.readString(),
+      source.readString(),
+      source.readString()
+  )
 
-  public static final Creator<Error> CREATOR = new Creator<Error>() {
-    @Override
-    public Error createFromParcel(Parcel source) {
-      return new Error(source);
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeString(msg)
+        writeString(stack)
+        writeString(type)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<Error> = object : Parcelable.Creator<Error> {
+      override fun createFromParcel(source: Parcel): Error = Error(source)
+      override fun newArray(size: Int): Array<Error?> = arrayOfNulls(size)
     }
-
-    @Override
-    public Error[] newArray(int size) {
-      return new Error[size];
-    }
-  };
-
-  @SerializedName("message")
-  @Expose
-  private String msg;
-
-  @Expose
-  private String stack;
-
-  @Expose
-  private String type;
-
-  public Error() {
-  }
-
-  protected Error(Parcel in) {
-    this.msg = in.readString();
-    this.stack = in.readString();
-    this.type = in.readString();
-  }
-
-  @Override
-  public String toString() {
-    return "Error{" +
-        "msg='" + msg + '\'' +
-        ", stack='" + stack + '\'' +
-        ", type='" + type + '\'' +
-        '}';
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.msg);
-    dest.writeString(this.stack);
-    dest.writeString(this.type);
-  }
-
-  public String getMsg() {
-    return msg;
-  }
-
-  public String getStack() {
-    return stack;
-  }
-
-  public String getType() {
-    return type;
   }
 }

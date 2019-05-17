@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit;
 
-import com.flowcrypt.email.api.retrofit.response.base.BaseApiResponse;
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
 
 import java.io.Serializable;
 
@@ -19,7 +19,7 @@ import retrofit2.Response;
  * Time: 13:34
  * E-mail: DenBond7@gmail.com
  */
-public class BaseResponse<T extends BaseApiResponse> implements Serializable {
+public class BaseResponse<T extends ApiResponse> implements Serializable {
   private Response<T> modelResponse;
   private Exception e;
   private ApiName apiName;

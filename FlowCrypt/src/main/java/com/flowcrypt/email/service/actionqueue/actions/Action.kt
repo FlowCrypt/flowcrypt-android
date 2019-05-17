@@ -3,14 +3,14 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.service.actionqueue.actions;
+package com.flowcrypt.email.service.actionqueue.actions
 
-import android.content.Context;
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.content.Context
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.flowcrypt.email.util.LogsUtil;
-import com.google.gson.annotations.SerializedName;
+import com.flowcrypt.email.util.LogsUtil
+import com.google.gson.annotations.SerializedName
 
 /**
  * Must be run in non-UI thread. This class describes an action which will be run on a queue.
@@ -21,93 +21,68 @@ import com.google.gson.annotations.SerializedName;
  * E-mail: DenBond7@gmail.com
  */
 
-public class Action implements Parcelable {
-  public static final String TAG_NAME_ACTION_TYPE = "actionType";
-  public static final String USER_SYSTEM = "system";
-  public static final Creator<Action> CREATOR = new Creator<Action>() {
-    @Override
-    public Action createFromParcel(Parcel source) {
-      return new Action(source);
-    }
-
-    @Override
-    public Action[] newArray(int size) {
-      return new Action[size];
-    }
-  };
-
-  private static final String TAG = Action.class.getSimpleName();
-
-  protected long id;
-  protected String email;
-  protected int version;
+open class Action : Parcelable {
+  var id: Long = 0
+  var email: String? = null
+    protected set
+  protected var version: Int = 0
 
   @SerializedName(TAG_NAME_ACTION_TYPE)
-  private final ActionType actionType;
+  val actionType: ActionType?
 
 
-  public Action(String email, ActionType actionType) {
-    this.email = email;
-    this.actionType = actionType;
+  constructor(email: String, actionType: ActionType) {
+    this.email = email
+    this.actionType = actionType
   }
 
-  protected Action(Parcel in) {
-    int tmpActionType = in.readInt();
-    this.actionType = tmpActionType == -1 ? null : ActionType.values()[tmpActionType];
-    this.id = in.readLong();
-    this.email = in.readString();
+  protected constructor(`in`: Parcel) {
+    val tmpActionType = `in`.readInt()
+    this.actionType = if (tmpActionType == -1) null else ActionType.values()[tmpActionType]
+    this.id = `in`.readLong()
+    this.email = `in`.readString()
   }
 
-  @Override
-  public int describeContents() {
-    return 0;
+  override fun describeContents(): Int {
+    return 0
   }
 
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeInt(this.actionType == null ? -1 : this.actionType.ordinal());
-    dest.writeLong(this.id);
-    dest.writeString(this.email);
+  override fun writeToParcel(dest: Parcel, flags: Int) {
+    dest.writeInt(if (this.actionType == null) -1 else this.actionType.ordinal)
+    dest.writeLong(this.id)
+    dest.writeString(this.email)
   }
 
-  public ActionType getActionType() {
-    return actionType;
-  }
-
-  public void run(Context context) throws Exception {
-    LogsUtil.d(TAG, getClass().getSimpleName() + " is running");
-  }
-
-  public long getId() {
-    return id;
-  }
-
-  public void setId(long id) {
-    this.id = id;
-  }
-
-  public String getEmail() {
-    return email;
+  @Throws(Exception::class)
+  open fun run(context: Context) {
+    LogsUtil.d(TAG, javaClass.simpleName + " is running")
   }
 
   /**
    * This class contains information about all action types.
    */
-  public enum ActionType {
+  enum class ActionType constructor(val value: String) {
     BACKUP_PRIVATE_KEY_TO_INBOX("backup_private_key_to_inbox"),
     REGISTER_USER_PUBLIC_KEY("register_user_public_key"),
     SEND_WELCOME_TEST_EMAIL("send_welcome_test_email"),
     FILL_USER_ID_EMAILS_KEYS_TABLE("fill_user_id_emails_keys_table"),
-    ENCRYPT_PRIVATE_KEYS("encrypt_private_keys");
+    ENCRYPT_PRIVATE_KEYS("encrypt_private_keys")
+  }
 
-    private String value;
+  companion object {
+    const val TAG_NAME_ACTION_TYPE = "actionType"
+    const val USER_SYSTEM = "system"
+    @JvmField
+    val CREATOR: Parcelable.Creator<Action> = object : Parcelable.Creator<Action> {
+      override fun createFromParcel(source: Parcel): Action {
+        return Action(source)
+      }
 
-    ActionType(String value) {
-      this.value = value;
+      override fun newArray(size: Int): Array<Action?> {
+        return arrayOfNulls(size)
+      }
     }
 
-    public String getValue() {
-      return value;
-    }
+    private val TAG = Action::class.java.simpleName
   }
 }

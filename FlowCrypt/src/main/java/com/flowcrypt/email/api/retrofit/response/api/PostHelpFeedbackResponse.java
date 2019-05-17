@@ -7,8 +7,12 @@ package com.flowcrypt.email.api.retrofit.response.api;
 
 import android.os.Parcel;
 
-import com.flowcrypt.email.api.retrofit.response.base.BaseApiResponse;
+import com.flowcrypt.email.api.retrofit.response.base.ApiError;
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * The simple POJO object, which contains information about a post feedback result.
@@ -30,7 +34,7 @@ import com.google.gson.annotations.Expose;
  * E-mail: DenBond7@gmail.com
  */
 
-public class PostHelpFeedbackResponse extends BaseApiResponse {
+public class PostHelpFeedbackResponse implements ApiResponse {
 
   public static final Creator<PostHelpFeedbackResponse> CREATOR = new
       Creator<PostHelpFeedbackResponse>() {
@@ -45,29 +49,21 @@ public class PostHelpFeedbackResponse extends BaseApiResponse {
         }
       };
 
+  @SerializedName("error")
+  @Expose
+  private ApiError apiError;
+
   @Expose
   private boolean sent;
 
   @Expose
   private String text;
 
-  public PostHelpFeedbackResponse() {
-  }
-
-  protected PostHelpFeedbackResponse(Parcel in) {
-    super(in);
+  public PostHelpFeedbackResponse(Parcel in) {
+    this.apiError = in.readParcelable(ApiError.class.getClassLoader());
     this.sent = in.readByte() != 0;
     this.text = in.readString();
   }
-
-  @Override
-  public String toString() {
-    return "PostHelpFeedbackResponse{" +
-        "sent=" + sent +
-        ", text='" + text + '\'' +
-        "} " + super.toString();
-  }
-
 
   @Override
   public int describeContents() {
@@ -76,9 +72,15 @@ public class PostHelpFeedbackResponse extends BaseApiResponse {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
+    dest.writeParcelable(this.apiError, flags);
     dest.writeByte(this.sent ? (byte) 1 : (byte) 0);
     dest.writeString(this.text);
+  }
+
+  @NotNull
+  @Override
+  public ApiError getApiError() {
+    return apiError;
   }
 
   public boolean isSent() {

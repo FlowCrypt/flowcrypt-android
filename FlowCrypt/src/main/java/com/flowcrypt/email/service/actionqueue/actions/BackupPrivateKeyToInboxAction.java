@@ -61,7 +61,7 @@ public class BackupPrivateKeyToInboxAction extends Action {
 
   @Override
   public void run(Context context) throws Exception {
-    AccountDao account = new AccountDaoSource().getAccountInformation(context, email);
+    AccountDao account = new AccountDaoSource().getAccountInformation(context, getEmail());
     KeysStorageImpl keysStorage = KeysStorageImpl.getInstance(context);
     PgpKeyInfo pgpKeyInfo = keysStorage.getPgpPrivateKey(privateKeyLongId);
     if (account != null && pgpKeyInfo != null && !TextUtils.isEmpty(pgpKeyInfo.getPrivate())) {

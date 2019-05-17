@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.api.retrofit.request.model;
 
-import android.os.Parcel;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -20,17 +18,6 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class InitialRequestModel extends BaseRequestModel {
-  public static final Creator<InitialRequestModel> CREATOR = new Creator<InitialRequestModel>() {
-    @Override
-    public InitialRequestModel createFromParcel(Parcel source) {
-      return new InitialRequestModel(source);
-    }
-
-    @Override
-    public InitialRequestModel[] newArray(int size) {
-      return new InitialRequestModel[size];
-    }
-  };
 
   @SerializedName("email")
   @Expose
@@ -49,34 +36,15 @@ public class InitialRequestModel extends BaseRequestModel {
     this.pubKey = pubKey;
   }
 
-  protected InitialRequestModel(Parcel in) {
-    this.email = in.readString();
-    this.pubKey = in.readString();
-    this.attest = in.readByte() != 0;
+  public String getEmail() {
+    return email;
   }
 
-  @Override
-  public String toString() {
-    return "InitialRequestModel{" +
-        "email='" + email + '\'' +
-        ", pubKey='" + pubKey + '\'' +
-        ", attest=" + attest +
-        "} " + super.toString();
+  public String getPubKey() {
+    return pubKey;
   }
 
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.email);
-    dest.writeString(this.pubKey);
-    dest.writeByte(this.attest ? (byte) 1 : (byte) 0);
-  }
-
-  public void setAttest(boolean attest) {
-    this.attest = attest;
+  public boolean isAttest() {
+    return attest;
   }
 }

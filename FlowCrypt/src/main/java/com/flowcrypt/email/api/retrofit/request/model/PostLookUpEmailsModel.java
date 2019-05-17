@@ -5,9 +5,6 @@
 
 package com.flowcrypt.email.api.retrofit.request.model;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -23,43 +20,13 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 
-public class PostLookUpEmailsModel implements Parcelable {
-  public static final Parcelable.Creator<PostLookUpEmailsModel> CREATOR = new Parcelable
-      .Creator<PostLookUpEmailsModel>() {
-    @Override
-    public PostLookUpEmailsModel createFromParcel(Parcel source) {
-      return new PostLookUpEmailsModel(source);
-    }
-
-    @Override
-    public PostLookUpEmailsModel[] newArray(int size) {
-      return new PostLookUpEmailsModel[size];
-    }
-  };
-
+public class PostLookUpEmailsModel {
   @SerializedName("email")
   @Expose
   private List<String> emails;
 
-  public PostLookUpEmailsModel() {
-  }
-
   public PostLookUpEmailsModel(List<String> emails) {
     this.emails = emails;
-  }
-
-  public PostLookUpEmailsModel(Parcel in) {
-    this.emails = in.createStringArrayList();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeStringList(this.emails);
   }
 
   public List<String> getEmails() {

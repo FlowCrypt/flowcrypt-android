@@ -5,9 +5,6 @@
 
 package com.flowcrypt.email.database.dao.source;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 /**
  * This object describes information about an account alias.
  *
@@ -17,18 +14,7 @@ import android.os.Parcelable;
  * E-mail: DenBond7@gmail.com
  */
 
-public class AccountAliasesDao implements Parcelable {
-  public static final Creator<AccountAliasesDao> CREATOR = new Creator<AccountAliasesDao>() {
-    @Override
-    public AccountAliasesDao createFromParcel(Parcel source) {
-      return new AccountAliasesDao(source);
-    }
-
-    @Override
-    public AccountAliasesDao[] newArray(int size) {
-      return new AccountAliasesDao[size];
-    }
-  };
+public class AccountAliasesDao {
 
   private String email;
   private String accountType;
@@ -38,42 +24,6 @@ public class AccountAliasesDao implements Parcelable {
   private String verificationStatus;
 
   public AccountAliasesDao() {
-  }
-
-  protected AccountAliasesDao(Parcel in) {
-    this.email = in.readString();
-    this.accountType = in.readString();
-    this.sendAsEmail = in.readString();
-    this.displayName = in.readString();
-    this.isDefault = in.readByte() != 0;
-    this.verificationStatus = in.readString();
-  }
-
-  @Override
-  public String toString() {
-    return "AccountAliasesDao{" +
-        "email='" + email + '\'' +
-        ", accountType='" + accountType + '\'' +
-        ", sendAsEmail='" + sendAsEmail + '\'' +
-        ", displayName='" + displayName + '\'' +
-        ", isDefault=" + isDefault +
-        ", verificationStatus='" + verificationStatus + '\'' +
-        '}';
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.email);
-    dest.writeString(this.accountType);
-    dest.writeString(this.sendAsEmail);
-    dest.writeString(this.displayName);
-    dest.writeByte(this.isDefault ? (byte) 1 : (byte) 0);
-    dest.writeString(this.verificationStatus);
   }
 
   public String getEmail() {

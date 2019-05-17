@@ -57,7 +57,7 @@ public class RegisterUserPublicKeyAction extends Action {
   @Override
   public void run(Context context) throws IOException {
     ApiService apiService = ApiHelper.getInstance(context).getRetrofit().create(ApiService.class);
-    InitialLegacySubmitModel body = new InitialLegacySubmitModel(email, publicKey);
+    InitialLegacySubmitModel body = new InitialLegacySubmitModel(getEmail(), publicKey);
     Response<InitialLegacySubmitResponse> response = apiService.postInitialLegacySubmit(body).execute();
 
     InitialLegacySubmitResponse initialLegacySubmitResponse = response.body();

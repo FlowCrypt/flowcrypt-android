@@ -3,12 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node;
+package com.flowcrypt.email.api.retrofit.response.model.node
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.Expose
 
 /**
  * @author Denis Bondarenko
@@ -16,67 +16,34 @@ import com.google.gson.annotations.Expose;
  * Time: 1:38 PM
  * E-mail: DenBond7@gmail.com
  */
-public class KeyId implements Parcelable {
-  public static final Creator<KeyId> CREATOR = new Creator<KeyId>() {
-    @Override
-    public KeyId createFromParcel(Parcel source) {
-      return new KeyId(source);
+data class KeyId constructor(@Expose val fingerprint: String?,
+                             @Expose val longId: String?,
+                             @Expose val shortId: String?,
+                             @Expose val keywords: String?) : Parcelable {
+  constructor(source: Parcel) : this(
+      source.readString(),
+      source.readString(),
+      source.readString(),
+      source.readString()
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeString(fingerprint)
+        writeString(longId)
+        writeString(shortId)
+        writeString(keywords)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<KeyId> = object : Parcelable.Creator<KeyId> {
+      override fun createFromParcel(source: Parcel): KeyId = KeyId(source)
+      override fun newArray(size: Int): Array<KeyId?> = arrayOfNulls(size)
     }
-
-    @Override
-    public KeyId[] newArray(int size) {
-      return new KeyId[size];
-    }
-  };
-
-  @Expose
-  private String fingerprint;
-
-  @Expose
-  private String longid;
-
-  @Expose
-  private String shortid;
-
-  @Expose
-  private String keywords;
-
-  public KeyId() {
-  }
-
-  protected KeyId(Parcel in) {
-    this.fingerprint = in.readString();
-    this.longid = in.readString();
-    this.shortid = in.readString();
-    this.keywords = in.readString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.fingerprint);
-    dest.writeString(this.longid);
-    dest.writeString(this.shortid);
-    dest.writeString(this.keywords);
-  }
-
-  public String getFingerprint() {
-    return fingerprint;
-  }
-
-  public String getLongId() {
-    return longid;
-  }
-
-  public String getShortId() {
-    return shortid;
-  }
-
-  public String getKeywords() {
-    return keywords;
   }
 }

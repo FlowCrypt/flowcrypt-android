@@ -47,7 +47,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.mail.BodyPart;
 import javax.mail.Flags;
@@ -552,7 +551,7 @@ public class MessageDaoSource extends BaseDaoSource {
         cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)),
         cursor.getInt(cursor.getColumnIndex(COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1,
         cursor.getInt(cursor.getColumnIndex(COL_IS_ENCRYPTED)) == 1,
-        Objects.requireNonNull(MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE)))),
+        MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))),
         cursor.getString(cursor.getColumnIndex(COL_ATTACHMENTS_DIRECTORY)),
         cursor.getString(cursor.getColumnIndex(COL_ERROR_MSG))
     );

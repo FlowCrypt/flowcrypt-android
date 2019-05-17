@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.api.retrofit.request.model;
 
-import android.os.Parcelable;
-
 /**
  * @author DenBond7
  * Date: 24.04.2017
@@ -14,5 +12,5 @@ import android.os.Parcelable;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseRequestModel implements Parcelable {
+public abstract class BaseRequestModel {
 }

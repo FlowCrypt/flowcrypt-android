@@ -3,54 +3,49 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.model.node;
+package com.flowcrypt.email.api.retrofit.response.model.node
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.Expose
 
 /**
- * It's a variant of {@link MsgBlock} which describes a public key.
+ * It's a variant of [MsgBlock] which describes a public key.
  *
  * @author Denis Bondarenko
  * Date: 3/25/19
  * Time: 2:35 PM
  * E-mail: DenBond7@gmail.com
  */
-public class PublicKeyMsgBlock extends MsgBlock {
+data class PublicKeyMsgBlock constructor(@Expose override val type: MsgBlock.Type,
+                                         @Expose override val content: String?,
+                                         @Expose override val isComplete: Boolean,
+                                         @Expose val keyDetails: NodeKeyDetails?) : MsgBlock {
+  constructor(source: Parcel) : this(
+      source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!,
+      source.readString(),
+      1 == source.readInt(),
+      source.readParcelable<NodeKeyDetails>(NodeKeyDetails::class.java.classLoader)
+  )
 
-  public static final Creator<PublicKeyMsgBlock> CREATOR = new Creator<PublicKeyMsgBlock>() {
-    @Override
-    public PublicKeyMsgBlock createFromParcel(Parcel source) {
-      return new PublicKeyMsgBlock(source, Type.PUBLIC_KEY);
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(type, flags)
+        writeString(content)
+        writeInt((if (isComplete) 1 else 0))
+        writeParcelable(keyDetails, 0)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<PublicKeyMsgBlock> = object : Parcelable.Creator<PublicKeyMsgBlock> {
+      override fun createFromParcel(source: Parcel): PublicKeyMsgBlock = PublicKeyMsgBlock(source)
+      override fun newArray(size: Int): Array<PublicKeyMsgBlock?> = arrayOfNulls(size)
     }
-
-    @Override
-    public PublicKeyMsgBlock[] newArray(int size) {
-      return new PublicKeyMsgBlock[size];
-    }
-  };
-
-  @Expose
-  private NodeKeyDetails keyDetails;
-
-  protected PublicKeyMsgBlock(Parcel in, Type type) {
-    super(in, type);
-    this.keyDetails = in.readParcelable(NodeKeyDetails.class.getClassLoader());
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
-    dest.writeParcelable(this.keyDetails, flags);
-  }
-
-  public NodeKeyDetails getKeyDetails() {
-    return keyDetails;
   }
 }

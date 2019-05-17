@@ -7,8 +7,12 @@ package com.flowcrypt.email.api.retrofit.response.attester;
 
 import android.os.Parcel;
 
-import com.flowcrypt.email.api.retrofit.response.base.BaseApiResponse;
+import com.flowcrypt.email.api.retrofit.response.base.ApiError;
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
 import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This class describes a response from the https://flowcrypt.com/attester/test/welcome API.
@@ -25,7 +29,7 @@ import com.google.gson.annotations.Expose;
  * E-mail: DenBond7@gmail.com
  */
 
-public class TestWelcomeResponse extends BaseApiResponse {
+public class TestWelcomeResponse implements ApiResponse {
   public static final Creator<TestWelcomeResponse> CREATOR = new Creator<TestWelcomeResponse>() {
     @Override
     public TestWelcomeResponse createFromParcel(Parcel source) {
@@ -38,22 +42,19 @@ public class TestWelcomeResponse extends BaseApiResponse {
     }
   };
 
+  @SerializedName("error")
+  @Expose
+  private ApiError apiError;
+
   @Expose
   private boolean sent;
 
   public TestWelcomeResponse() {
   }
 
-  protected TestWelcomeResponse(Parcel in) {
-    super(in);
+  public TestWelcomeResponse(Parcel in) {
+    this.apiError = in.readParcelable(ApiError.class.getClassLoader());
     this.sent = in.readByte() != 0;
-  }
-
-  @Override
-  public String toString() {
-    return "TestWelcomeResponse{" +
-        "sent=" + sent +
-        "} " + super.toString();
   }
 
   @Override
@@ -63,8 +64,14 @@ public class TestWelcomeResponse extends BaseApiResponse {
 
   @Override
   public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
+    dest.writeParcelable(this.apiError, flags);
     dest.writeByte(this.sent ? (byte) 1 : (byte) 0);
+  }
+
+  @NotNull
+  @Override
+  public ApiError getApiError() {
+    return apiError;
   }
 
   public boolean isSent() {

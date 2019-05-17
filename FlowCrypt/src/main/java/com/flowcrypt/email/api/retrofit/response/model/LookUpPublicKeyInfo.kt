@@ -6,81 +6,48 @@
 package com.flowcrypt.email.api.retrofit.response.model
 
 import android.os.Parcel
+import android.os.Parcelable
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import java.util.*
 
 /**
  * This POJO class describes information about a public key from the
- * API <code> https://flowcrypt.com/attester/lookup/</code>
+ * API ` https://flowcrypt.com/attester/lookup/`
  *
  * @author Denis Bondarenko
  * Date: 05.05.2018
  * Time: 14:04
  * E-mail: DenBond7@gmail.com
  */
-class LookUpPublicKeyInfo implements Parcelable {
-  public static final Creator < LookUpPublicKeyInfo > CREATOR = new Creator<LookUpPublicKeyInfo> {
-    @Override
-    public LookUpPublicKeyInfo createFromParcel(Parcel source) {
-      return new LookUpPublicKeyInfo (source)
-    }
+data class LookUpPublicKeyInfo constructor(@SerializedName("longid") @Expose val longId: String?,
+                                           @SerializedName("pubkey") @Expose val pubKey: String?,
+                                           @Expose val query: String?,
+                                           @Expose val attests: ArrayList<String>?) : Parcelable {
+  constructor(source: Parcel) : this(
+      source.readString(),
+      source.readString(),
+      source.readString(),
+      source.createStringArrayList()
+  )
 
-    @Override
-    public LookUpPublicKeyInfo[] newArray(int size) {
-      return new LookUpPublicKeyInfo [size]
-    }
-  }
-
-  @SerializedName("longid")
-  @Expose
-  private String longId
-
-  @SerializedName("pubkey")
-  @Expose
-  private String pubKey
-
-  @Expose
-  private String query
-
-  @Expose
-  private ArrayList < String > attests
-
-  public LookUpPublicKeyInfo() {
-  }
-
-  protected LookUpPublicKeyInfo(Parcel in) {
-    this.longId = in.readString()
-    this.pubKey = in.readString()
-    this.query = in.readString()
-    this.attests = in.createStringArrayList()
-  }
-
-  @Override
-  public int describeContents {
+  override fun describeContents(): Int {
     return 0
   }
 
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(this.longId)
-    dest.writeString(this.pubKey)
-    dest.writeString(this.query)
-    dest.writeStringList(this.attests)
-  }
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeString(longId)
+        writeString(pubKey)
+        writeString(query)
+        writeStringList(attests)
+      }
 
-  public String getLongId {
-    return longId
-  }
-
-  public String getPubKey {
-    return pubKey
-  }
-
-  public String getQuery {
-    return query
-  }
-
-  public ArrayList<String> getAttests() {
-    return attests
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<LookUpPublicKeyInfo> = object : Parcelable.Creator<LookUpPublicKeyInfo> {
+      override fun createFromParcel(source: Parcel): LookUpPublicKeyInfo = LookUpPublicKeyInfo(source)
+      override fun newArray(size: Int): Array<LookUpPublicKeyInfo?> = arrayOfNulls(size)
+    }
   }
 }
