@@ -15,12 +15,14 @@ import com.google.gson.annotations.Expose
  * Time: 3:02 PM
  * E-mail: DenBond7@gmail.com
  */
-data class DecryptErrorMsgBlock(@Expose override val type: MsgBlock.Type,
-                                @Expose override val content: String?,
+data class DecryptErrorMsgBlock(@Expose override val content: String?,
                                 @Expose override val isComplete: Boolean,
                                 @Expose val error: DecryptError?) : MsgBlock {
+
+  @Expose
+  override val type: MsgBlock.Type = MsgBlock.Type.DECRYPT_ERROR
+
   constructor(source: Parcel) : this(
-      source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!,
       source.readString(),
       1 == source.readInt(),
       source.readParcelable<DecryptError>(DecryptError::class.java.classLoader)
@@ -41,7 +43,11 @@ data class DecryptErrorMsgBlock(@Expose override val type: MsgBlock.Type,
   companion object {
     @JvmField
     val CREATOR: Parcelable.Creator<DecryptErrorMsgBlock> = object : Parcelable.Creator<DecryptErrorMsgBlock> {
-      override fun createFromParcel(source: Parcel): DecryptErrorMsgBlock = DecryptErrorMsgBlock(source)
+      override fun createFromParcel(source: Parcel): DecryptErrorMsgBlock {
+        source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
+        return DecryptErrorMsgBlock(source)
+      }
+
       override fun newArray(size: Int): Array<DecryptErrorMsgBlock?> = arrayOfNulls(size)
     }
   }

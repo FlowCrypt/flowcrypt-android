@@ -74,12 +74,16 @@ class TestGeneralUtil {
     }
 
     @JvmStatic
-    fun replaceVersionInKey(key: String): String {
+    fun replaceVersionInKey(key: String?): String {
       val regex = "Version: FlowCrypt \\d*.\\d*.\\d* Gmail".toRegex()
       val version = BuildConfig.VERSION_NAME.split("_").first()
       val replacement = "Version: FlowCrypt " + version + " Gmail"
 
-      return key.replaceFirst(regex, replacement)
+      key?.let {
+        return key.replaceFirst(regex, replacement)
+      }
+
+      return ""
     }
   }
 }

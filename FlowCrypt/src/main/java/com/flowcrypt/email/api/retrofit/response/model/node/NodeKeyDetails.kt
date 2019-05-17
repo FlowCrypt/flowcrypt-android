@@ -33,9 +33,9 @@ data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
 
   val primaryPgpContact: PgpContact = determinePrimaryPgpContact()
   val pgpContacts: ArrayList<PgpContact> = determinePgpContacts()
-  val longId: String? = ids?.get(0)?.longId
-  val fingerprint: String? = ids?.get(0)?.fingerprint
-  val keywords: String? = ids?.get(0)?.keywords
+  val longId: String? = ids?.first()?.longId
+  val fingerprint: String? = ids?.first()?.fingerprint
+  val keywords: String? = ids?.first()?.keywords
   val isPrivate: Boolean = !TextUtils.isEmpty(privateKey)
 
   fun getCreatedInMilliseconds(): Long {
@@ -68,17 +68,17 @@ data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
     val address = users?.first()
 
     address?.let {
-      val (fingerprint1, longId1, _, keywords1) = ids!![0]
+      val (fingerprint1, longId1, _, keywords1) = ids!!.first()
       var email: String? = null
       var name: String? = null
       try {
         val internetAddresses = InternetAddress.parse(it)
-        email = internetAddresses[0].address
-        name = internetAddresses[0].personal
+        email = internetAddresses.first().address
+        name = internetAddresses.first().personal
       } catch (e: AddressException) {
         e.printStackTrace()
         val pattern = Patterns.EMAIL_ADDRESS
-        val matcher = pattern.matcher(users!![0])
+        val matcher = pattern.matcher(users!!.first())
         if (matcher.find()) {
           email = matcher.group()
           name = email

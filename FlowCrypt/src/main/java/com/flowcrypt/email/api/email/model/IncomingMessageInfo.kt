@@ -77,15 +77,15 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
       source.readParcelable<GeneralMessageDetails>(GeneralMessageDetails::class.java.classLoader)!!,
       source.createTypedArrayList(AttachmentInfo.CREATOR),
       source.readParcelable<LocalFolder>(LocalFolder::class.java.classLoader),
-      listOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) }
+      mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) }
   )
 
   override fun describeContents() = 0
 
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-    writeParcelable(generalMsgDetails, 0)
+    writeParcelable(generalMsgDetails, flags)
     writeTypedList(atts)
-    writeParcelable(localFolder, 0)
+    writeParcelable(localFolder, flags)
     writeTypedList(msgBlocks)
   }
 

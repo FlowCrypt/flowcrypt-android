@@ -200,12 +200,12 @@ class MessageDetailsActivityTest : BaseTest() {
     val block = incomingMsgInfo.msgBlocks?.get(0) as DecryptErrorMsgBlock
     val decryptError = block.error
     val formatErrorMsg = (getResString(R.string.decrypt_error_message_badly_formatted,
-        getResString(R.string.app_name)) + "\n\n" + decryptError.details.type + ":" + decryptError.details.message)
+        getResString(R.string.app_name)) + "\n\n" + decryptError?.details?.type + ":" + decryptError?.details?.message)
 
     onView(withId(R.id.textViewErrorMessage))
         .check(matches(withText(formatErrorMsg)))
 
-    testSwitch(block.content)
+    testSwitch(block.content ?: "")
     matchReplyButtons(details)
   }
 
@@ -284,7 +284,8 @@ class MessageDetailsActivityTest : BaseTest() {
         getResString(R.string.template_message_part_public_key_owner, pgpContact.email))))
 
     onView(withId(R.id.textViewKeyWordsTemplate)).check(matches(withText(
-        getHtmlString(getResString(R.string.template_message_part_public_key_key_words, nodeKeyDetails.keywords)))))
+        getHtmlString(getResString(R.string.template_message_part_public_key_key_words,
+            nodeKeyDetails.keywords ?: "")))))
 
     onView(withId(R.id.textViewFingerprintTemplate)).check(matches(withText(
         getHtmlString(getResString(R.string.template_message_part_public_key_fingerprint,
@@ -328,7 +329,7 @@ class MessageDetailsActivityTest : BaseTest() {
     onView(withId(R.id.textViewErrorMessage))
         .check(matches(withText(errorMsg)))
 
-    testSwitch(block.content)
+    testSwitch(block.content ?: "")
     matchReplyButtons(details)
   }
 

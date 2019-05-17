@@ -21,11 +21,10 @@ data class BaseMsgBlock(@Expose override val type: MsgBlock.Type,
                         @Expose override val content: String?,
                         @Expose override val isComplete: Boolean) : MsgBlock {
 
-  constructor(source: Parcel) : this(
-      source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!,
+  constructor(source: Parcel, type: MsgBlock.Type) : this(
+      type,
       source.readString(),
-      1 == source.readInt()
-  )
+      1 == source.readInt())
 
   override fun describeContents() = 0
 
@@ -41,13 +40,8 @@ data class BaseMsgBlock(@Expose override val type: MsgBlock.Type,
     @JvmField
     val CREATOR: Parcelable.Creator<MsgBlock> = object : Parcelable.Creator<MsgBlock> {
       override fun createFromParcel(source: Parcel): MsgBlock {
-        val tmp = source.readInt()
-        val partType = if (tmp == -1) null else MsgBlock.Type.values()[tmp]
-        return if (partType != null) {
-          genMsgBlockFromType(source, partType)
-        } else {
-          BaseMsgBlock(source)
-        }
+        val partType = source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!
+        return genMsgBlockFromType(source, partType)
       }
 
       override fun newArray(size: Int): Array<MsgBlock?> = arrayOfNulls(size)
@@ -59,7 +53,7 @@ data class BaseMsgBlock(@Expose override val type: MsgBlock.Type,
 
         MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(source)
 
-        else -> BaseMsgBlock(source)
+        else -> BaseMsgBlock(source, type)
       }
     }
   }

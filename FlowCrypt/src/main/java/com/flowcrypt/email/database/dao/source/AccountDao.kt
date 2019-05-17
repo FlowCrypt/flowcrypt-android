@@ -21,7 +21,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
  * E-mail: DenBond7@gmail.com
  */
 
-data class AccountDao constructor(val email: String? = null,
+data class AccountDao constructor(val email: String,
                                   var accountType: String? = null,
                                   val displayName: String? = null,
                                   val givenName: String? = null,
@@ -33,16 +33,15 @@ data class AccountDao constructor(val email: String? = null,
   init {
     if (TextUtils.isEmpty(accountType)) {
       if (!TextUtils.isEmpty(email)) {
-        this.accountType = email?.substring(email.indexOf('@') + 1, email.length)
+        this.accountType = email.substring(email.indexOf('@') + 1, email.length)
       }
     }
   }
 
-  val account: Account?
-    get() = if (this.email == null) null else Account(this.email, accountType)
+  val account: Account? = Account(this.email, accountType)
 
   constructor(googleSignInAccount: GoogleSignInAccount) : this(
-      email = googleSignInAccount.email,
+      email = googleSignInAccount.email!!,
       displayName = googleSignInAccount.displayName,
       accountType = googleSignInAccount.account?.type?.toLowerCase(),
       givenName = googleSignInAccount.givenName,
@@ -50,7 +49,7 @@ data class AccountDao constructor(val email: String? = null,
       photoUrl = googleSignInAccount.photoUrl?.toString())
 
   constructor(source: Parcel) : this(
-      source.readString(),
+      source.readString()!!,
       source.readString(),
       source.readString(),
       source.readString(),

@@ -49,9 +49,8 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
       .around(AddAccountToDatabaseRule())
       .around(activityTestRule)
 
-  private val singlePublicKeyForUnsavedContact: String
-    get() = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_fisrtKey_pub.json")
-        .publicKey
+  private val singlePublicKeyForUnsavedContact: String? = PrivateKeysManager.getNodeKeyDetailsFromAssets(
+      "node/default@denbond7.com_fisrtKey_pub.json").publicKey
 
   private val tenPubKeys: String =
       TestGeneralUtil.readFileFromAssetsAsString(getContext(), "pgp/pub_keys_2048_bits_10.asc")

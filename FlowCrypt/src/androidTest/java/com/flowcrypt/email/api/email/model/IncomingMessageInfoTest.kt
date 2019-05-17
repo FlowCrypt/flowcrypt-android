@@ -10,8 +10,16 @@ import android.os.Parcel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.api.retrofit.response.model.node.Algo
 import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptError
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
+import com.flowcrypt.email.api.retrofit.response.model.node.Longids
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import org.junit.Assert
 import org.junit.Test
@@ -78,12 +86,55 @@ class IncomingMessageInfoTest {
         "attsDir",
         "errorMsg")
 
+    val publicKeyMsgBlock = PublicKeyMsgBlock(
+        "content",
+        true,
+        NodeKeyDetails(false,
+            "privateKey",
+            "pubKey",
+            listOf("Hello<hello@example.com>"),
+            listOf(KeyId(
+                "fingerprint",
+                "longId",
+                "shortId",
+                "keywords"
+            )),
+            12,
+            Algo(
+                "algorithm",
+                12,
+                2048,
+                "curve")))
+
+    val decryptErrorMsgBlock = DecryptErrorMsgBlock(
+        "content",
+        true,
+        DecryptError(true,
+            DecryptErrorDetails(
+                DecryptErrorDetails.Type.FORMAT,
+                "message"),
+            Longids(
+                listOf("message"),
+                listOf("matching"),
+                listOf("chosen"),
+                listOf("needPassphrase")
+            ),
+            true))
+
     val original = IncomingMessageInfo(
         details,
         listOf(att1, att2),
-        LocalFolder("fullName", "folderAlias", listOf("attributes"), true, 12, "searchQuery"),
-        listOf(BaseMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false), BaseMsgBlock(MsgBlock.Type.UNKNOWN,
-            "content", false)))
+        LocalFolder("fullName",
+            "folderAlias",
+            listOf("attributes"),
+            true,
+            12,
+            "searchQuery"),
+        listOf(
+            BaseMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false),
+            BaseMsgBlock(MsgBlock.Type.UNKNOWN, "content", false),
+            publicKeyMsgBlock,
+            decryptErrorMsgBlock))
 
     val parcel = Parcel.obtain()
     original.writeToParcel(parcel, original.describeContents())

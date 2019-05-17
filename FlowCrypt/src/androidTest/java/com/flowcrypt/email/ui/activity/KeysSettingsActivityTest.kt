@@ -147,14 +147,14 @@ class KeysSettingsActivityTest : BaseTest() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
     onView(withId(R.id.textViewKeyWords))
-        .check(matches(withText(getHtmlString(getResString(R.string.template_key_words, details.keywords)))))
+        .check(matches(withText(getHtmlString(getResString(R.string.template_key_words, details.keywords ?: "")))))
 
     onView(withId(R.id.textViewFingerprint))
         .check(matches(withText(getHtmlString(getResString(R.string.template_fingerprint,
             GeneralUtil.doSectionsInText(" ", details.fingerprint, 4))))))
 
-    onView(withId(R.id.textViewLongId))
-        .check(matches(withText(getResString(R.string.template_longid, details.longId))))
+    onView(withId(R.id.textViewLongId)).check(
+        matches(withText(getResString(R.string.template_longid, details.longId != null ?: ""))))
 
     onView(withId(R.id.textViewDate))
         .check(matches(withText(getHtmlString(getResString(R.string.template_date,

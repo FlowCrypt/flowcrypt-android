@@ -18,12 +18,13 @@ import com.google.gson.annotations.Expose
  * Time: 2:35 PM
  * E-mail: DenBond7@gmail.com
  */
-data class PublicKeyMsgBlock constructor(@Expose override val type: MsgBlock.Type,
-                                         @Expose override val content: String?,
+data class PublicKeyMsgBlock constructor(@Expose override val content: String?,
                                          @Expose override val isComplete: Boolean,
                                          @Expose val keyDetails: NodeKeyDetails?) : MsgBlock {
+  @Expose
+  override val type: MsgBlock.Type = MsgBlock.Type.PUBLIC_KEY
+
   constructor(source: Parcel) : this(
-      source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)!!,
       source.readString(),
       1 == source.readInt(),
       source.readParcelable<NodeKeyDetails>(NodeKeyDetails::class.java.classLoader)
@@ -44,7 +45,11 @@ data class PublicKeyMsgBlock constructor(@Expose override val type: MsgBlock.Typ
   companion object {
     @JvmField
     val CREATOR: Parcelable.Creator<PublicKeyMsgBlock> = object : Parcelable.Creator<PublicKeyMsgBlock> {
-      override fun createFromParcel(source: Parcel): PublicKeyMsgBlock = PublicKeyMsgBlock(source)
+      override fun createFromParcel(source: Parcel): PublicKeyMsgBlock {
+        source.readParcelable<MsgBlock.Type>(MsgBlock.Type::class.java.classLoader)
+        return PublicKeyMsgBlock(source)
+      }
+
       override fun newArray(size: Int): Array<PublicKeyMsgBlock?> = arrayOfNulls(size)
     }
   }
