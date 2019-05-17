@@ -30,59 +30,12 @@ data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
                                       @Expose val ids: List<KeyId>?,
                                       @Expose val created: Long,
                                       @Expose val algo: Algo?) : Parcelable {
-  //It means the input string has a wrong format. So we need to try to extract only an email address using regex.
-  val primaryPgpContact: PgpContact
-    get() {
-      val (fingerprint1, longId1, _, keywords1) = ids!![0]
-      var email: String? = null
-      var name: String? = null
-      try {
-        val internetAddresses = InternetAddress.parse(users!![0])
-        email = internetAddresses[0].address
-        name = internetAddresses[0].personal
-      } catch (e: AddressException) {
-        e.printStackTrace()
-        val pattern = Patterns.EMAIL_ADDRESS
-        val matcher = pattern.matcher(users!![0])
-        if (matcher.find()) {
-          email = matcher.group()
-          name = email
-        }
-      }
 
-      return PgpContact(email!!, name, publicKey, !TextUtils.isEmpty(publicKey), null,
-          fingerprint1, longId1, keywords1, 0)
-    }
-
-  val pgpContacts: ArrayList<PgpContact>
-    get() {
-      val pgpContacts = ArrayList<PgpContact>()
-
-      for (user in users!!) {
-        try {
-          val internetAddresses = InternetAddress.parse(user)
-
-          for (internetAddress in internetAddresses) {
-            val email = internetAddress.address
-            val name = internetAddress.personal
-
-            pgpContacts.add(PgpContact(email, name))
-          }
-        } catch (e: AddressException) {
-          e.printStackTrace()
-        }
-
-      }
-
-      return pgpContacts
-    }
-
+  val primaryPgpContact: PgpContact = determinePrimaryPgpContact()
+  val pgpContacts: ArrayList<PgpContact> = determinePgpContacts()
   val longId: String? = ids?.get(0)?.longId
-
   val fingerprint: String? = ids?.get(0)?.fingerprint
-
   val keywords: String? = ids?.get(0)?.keywords
-
   val isPrivate: Boolean = !TextUtils.isEmpty(privateKey)
 
   fun getCreatedInMilliseconds(): Long {
@@ -109,6 +62,57 @@ data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
     writeTypedList(ids)
     writeLong(created)
     writeParcelable(algo, 0)
+  }
+
+  private fun determinePrimaryPgpContact(): PgpContact {
+    val address = users?.first()
+
+    address?.let {
+      val (fingerprint1, longId1, _, keywords1) = ids!![0]
+      var email: String? = null
+      var name: String? = null
+      try {
+        val internetAddresses = InternetAddress.parse(it)
+        email = internetAddresses[0].address
+        name = internetAddresses[0].personal
+      } catch (e: AddressException) {
+        e.printStackTrace()
+        val pattern = Patterns.EMAIL_ADDRESS
+        val matcher = pattern.matcher(users!![0])
+        if (matcher.find()) {
+          email = matcher.group()
+          name = email
+        }
+      }
+
+      return PgpContact(email!!, name, publicKey, !TextUtils.isEmpty(publicKey), null,
+          fingerprint1, longId1, keywords1, 0)
+    }
+
+    return PgpContact("", "")
+  }
+
+  private fun determinePgpContacts(): ArrayList<PgpContact> {
+    val pgpContacts = ArrayList<PgpContact>()
+
+    users?.let {
+      for (user in it) {
+        try {
+          val internetAddresses = InternetAddress.parse(user)
+
+          for (internetAddress in internetAddresses) {
+            val email = internetAddress.address
+            val name = internetAddress.personal
+
+            pgpContacts.add(PgpContact(email, name))
+          }
+        } catch (e: AddressException) {
+          e.printStackTrace()
+        }
+      }
+    }
+
+    return pgpContacts
   }
 
   companion object {
