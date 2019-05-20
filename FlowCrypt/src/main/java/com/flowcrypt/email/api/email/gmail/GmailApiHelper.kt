@@ -3,22 +3,18 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.gmail;
+package com.flowcrypt.email.api.email.gmail
 
-import android.accounts.Account;
-import android.content.Context;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.gmail.Gmail;
-import com.google.api.services.gmail.GmailScopes;
-
-import java.util.Arrays;
+import android.accounts.Account
+import android.content.Context
+import com.flowcrypt.email.R
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.services.gmail.Gmail
+import com.google.api.services.gmail.GmailScopes
+import java.util.*
 
 /**
  * This class helps to work with Gmail API.
@@ -28,40 +24,42 @@ import java.util.Arrays;
  * Time: 14:35
  * E-mail: DenBond7@gmail.com
  */
+class GmailApiHelper {
+  companion object {
+    const val DEFAULT_USER_ID = "me"
+    const val MESSAGE_RESPONSE_FORMAT_RAW = "raw"
+    private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)
 
-public class GmailApiHelper {
-  public static final String DEFAULT_USER_ID = "me";
-  public static final String MESSAGE_RESPONSE_FORMAT_RAW = "raw";
-  private static final String[] SCOPES = {GmailScopes.MAIL_GOOGLE_COM};
+    /**
+     * Generate [Gmail] using incoming [AccountDao]. The [] Gmail is the main point in using Gmail API.
+     *
+     * @param context    Interface to global information about an application environment.
+     * @param account The [AccountDao] object which contains information about an email account.
+     * @return Generated [Gmail].
+     */
+    @JvmStatic
+    fun generateGmailApiService(context: Context, account: AccountDao?): Gmail {
+      if (account == null || account.account == null) {
+        throw IllegalArgumentException("AccountDao is not valid.")
+      }
 
-  /**
-   * Generate {@link Gmail} using incoming {@link AccountDao}. The {@link} Gmail is the main point in using Gmail API.
-   *
-   * @param context    Interface to global information about an application environment.
-   * @param account The {@link AccountDao} object which contains information about an email account.
-   * @return Generated {@link Gmail}.
-   */
-  public static Gmail generateGmailApiService(Context context, AccountDao account) {
-    if (account == null || account.getAccount() == null) {
-      throw new IllegalArgumentException("AccountDao is not valid.");
+      val credential = generateGoogleAccountCredential(context, account.account)
+
+      val transport = NetHttpTransport()
+      val factory = JacksonFactory.getDefaultInstance()
+      val appName = context.getString(R.string.app_name)
+      return Gmail.Builder(transport, factory, credential).setApplicationName(appName).build()
     }
 
-    GoogleAccountCredential credential = generateGoogleAccountCredential(context, account.getAccount());
-
-    HttpTransport transport = new NetHttpTransport();
-    JsonFactory factory = JacksonFactory.getDefaultInstance();
-    String appName = context.getString(R.string.app_name);
-    return new Gmail.Builder(transport, factory, credential).setApplicationName(appName).build();
-  }
-
-  /**
-   * Generate {@link GoogleAccountCredential} which will be used with Gmail API.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param account The Gmail account.
-   * @return Generated {@link GoogleAccountCredential}.
-   */
-  private static GoogleAccountCredential generateGoogleAccountCredential(Context context, Account account) {
-    return GoogleAccountCredential.usingOAuth2(context, Arrays.asList(SCOPES)).setSelectedAccount(account);
+    /**
+     * Generate [GoogleAccountCredential] which will be used with Gmail API.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param account The Gmail account.
+     * @return Generated [GoogleAccountCredential].
+     */
+    private fun generateGoogleAccountCredential(context: Context, account: Account?): GoogleAccountCredential {
+      return GoogleAccountCredential.usingOAuth2(context, Arrays.asList(*SCOPES)).setSelectedAccount(account)
+    }
   }
 }

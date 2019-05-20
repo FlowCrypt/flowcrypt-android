@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.gmail;
+package com.flowcrypt.email.api.email.gmail
 
 /**
  * This class described Gmail constants.
@@ -13,16 +13,16 @@ package com.flowcrypt.email.api.email.gmail;
  * Time: 9:47
  * E-mail: DenBond7@gmail.com
  */
+class GmailConstants {
+  companion object {
+    const val PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE = "mail.gimaps.ssl.enable"
+    const val PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS = "mail.gimaps.auth.mechanisms"
+    const val PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE = "mail.gimaps.fetchsize"
+    const val GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED = "[ALERT] Please log in via your web" + " browser"
 
-public class GmailConstants {
-  public static final String PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE = "mail.gimaps.ssl.enable";
-  public static final String PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS = "mail.gimaps.auth.mechanisms";
-  public static final String PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE = "mail.gimaps.fetchsize";
-  public static final String GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED = "[ALERT] Please log in via your web" +
-      " browser";
-
-  public static final String GMAIL_IMAP_SERVER = "imap.gmail.com";
-  public static final String GMAIL_SMTP_SERVER = "smtp.gmail.com";
-  public static final int GMAIL_SMTP_PORT = 465;
-  public static final int GMAIL_IMAP_PORT = 993;
+    const val GMAIL_IMAP_SERVER = "imap.gmail.com"
+    const val GMAIL_SMTP_SERVER = "smtp.gmail.com"
+    const val GMAIL_SMTP_PORT = 465
+    const val GMAIL_IMAP_PORT = 993
+  }
 }
