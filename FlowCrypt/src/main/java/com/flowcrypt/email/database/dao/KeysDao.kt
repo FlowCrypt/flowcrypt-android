@@ -3,14 +3,14 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database.dao;
+package com.flowcrypt.email.database.dao
 
-import android.text.TextUtils;
+import android.text.TextUtils
 
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.security.model.PrivateKeySourceType;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.security.model.PrivateKeySourceType
 
 /**
  * This class describe a key information object.
@@ -21,132 +21,73 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType;
  * E-mail: DenBond7@gmail.com
  */
 
-public class KeysDao {
+data class KeysDao constructor(var longId: String? = null,
+                               var privateKeySourceType: PrivateKeySourceType? = null,
+                               var publicKey: String? = null,
+                               var privateKey: String? = null,
+                               var passphrase: String? = null) {
 
-  private String longId;
-  private PrivateKeySourceType privateKeySourceType;
-  private String publicKey;
-  private String privateKey;
-  private String passphrase;
+  companion object {
+    /**
+     * Generate [KeysDao] using input parameters.
+     * This method use [NodeKeyDetails.getLongId] for generate an algorithm parameter spec String and
+     * [KeyStoreCryptoManager] for generate encrypted version of the private key and password.
+     *
+     * @param keyStoreCryptoManager A [KeyStoreCryptoManager] which will bu used to encrypt
+     * information about a key;
+     * @param type                  The private key born type
+     * @param nodeKeyDetails        Key details;
+     * @param passphrase            A passphrase which user provided;
+     */
+    @Throws(Exception::class)
+    @JvmStatic
+    fun generateKeysDao(keyStoreCryptoManager: KeyStoreCryptoManager, type: KeyDetails.Type,
+                        nodeKeyDetails: NodeKeyDetails, passphrase: String): KeysDao {
+      val keysDao = generateKeysDao(keyStoreCryptoManager, nodeKeyDetails, passphrase)
 
-  public KeysDao() {
-  }
+      when (type) {
+        KeyDetails.Type.EMAIL -> keysDao.privateKeySourceType = PrivateKeySourceType.BACKUP
 
-  public KeysDao(String longId, PrivateKeySourceType privateKeySourceType, String publicKey,
-                 String privateKey, String passphrase) {
-    this.longId = longId;
-    this.privateKeySourceType = privateKeySourceType;
-    this.publicKey = publicKey;
-    this.privateKey = privateKey;
-    this.passphrase = passphrase;
-  }
+        KeyDetails.Type.FILE, KeyDetails.Type.CLIPBOARD -> keysDao.privateKeySourceType = PrivateKeySourceType.IMPORT
 
-  /**
-   * Generate {@link KeysDao} using input parameters.
-   * This method use {@link NodeKeyDetails#getLongId()} for generate an algorithm parameter spec String and
-   * {@link KeyStoreCryptoManager} for generate encrypted version of the private key and password.
-   *
-   * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
-   *                              information about a key;
-   * @param type                  The private key born type
-   * @param nodeKeyDetails        Key details;
-   * @param passphrase            A passphrase which user provided;
-   */
-  public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, KeyDetails.Type type,
-                                        NodeKeyDetails nodeKeyDetails, String passphrase) throws Exception {
-    KeysDao keysDao = generateKeysDao(keyStoreCryptoManager, nodeKeyDetails, passphrase);
+        KeyDetails.Type.NEW -> keysDao.privateKeySourceType = PrivateKeySourceType.NEW
+      }
 
-    switch (type) {
-      case EMAIL:
-        keysDao.setPrivateKeySourceType(PrivateKeySourceType.BACKUP);
-        break;
-
-      case FILE:
-      case CLIPBOARD:
-        keysDao.setPrivateKeySourceType(PrivateKeySourceType.IMPORT);
-        break;
-
-      case NEW:
-        keysDao.setPrivateKeySourceType(PrivateKeySourceType.NEW);
-        break;
+      return keysDao
     }
 
-    return keysDao;
-  }
+    /**
+     * Generate [KeysDao] using input parameters.
+     * This method use [NodeKeyDetails.getLongId] for generate an algorithm parameter spec String and
+     * [KeyStoreCryptoManager] for generate encrypted version of the private key and password.
+     *
+     * @param keyStoreCryptoManager A [KeyStoreCryptoManager] which will bu used to encrypt
+     * information about a key;
+     * @param nodeKeyDetails        Key details;
+     * @param passphrase            A passphrase which user provided;
+     */
+    @Throws(Exception::class)
+    @JvmStatic
+    fun generateKeysDao(keyStoreCryptoManager: KeyStoreCryptoManager, nodeKeyDetails: NodeKeyDetails,
+                        passphrase: String): KeysDao {
+      if (nodeKeyDetails.isDecrypted!!) {
+        throw IllegalArgumentException("Error. The key is decrypted!")
+      }
 
-  /**
-   * Generate {@link KeysDao} using input parameters.
-   * This method use {@link NodeKeyDetails#getLongId()} for generate an algorithm parameter spec String and
-   * {@link KeyStoreCryptoManager} for generate encrypted version of the private key and password.
-   *
-   * @param keyStoreCryptoManager A {@link KeyStoreCryptoManager} which will bu used to encrypt
-   *                              information about a key;
-   * @param nodeKeyDetails        Key details;
-   * @param passphrase            A passphrase which user provided;
-   */
-  public static KeysDao generateKeysDao(KeyStoreCryptoManager keyStoreCryptoManager, NodeKeyDetails nodeKeyDetails,
-                                        String passphrase) throws Exception {
-    if (nodeKeyDetails.isDecrypted()) {
-      throw new IllegalArgumentException("Error. The key is decrypted!");
+      val keysDao = KeysDao()
+      val randomVector: String
+
+      if (TextUtils.isEmpty(nodeKeyDetails.longId)) {
+        throw IllegalArgumentException("longid == null")
+      } else {
+        randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(nodeKeyDetails.longId)
+      }
+
+      keysDao.longId = nodeKeyDetails.longId
+      keysDao.privateKey = keyStoreCryptoManager.encrypt(nodeKeyDetails.privateKey, randomVector)
+      keysDao.publicKey = nodeKeyDetails.publicKey
+      keysDao.passphrase = keyStoreCryptoManager.encrypt(passphrase, randomVector)
+      return keysDao
     }
-
-    KeysDao keysDao = new KeysDao();
-    keysDao.setLongId(nodeKeyDetails.getLongId());
-
-    String randomVector;
-
-    if (TextUtils.isEmpty(nodeKeyDetails.getLongId())) {
-      throw new IllegalArgumentException("longid == null");
-    } else {
-      randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(nodeKeyDetails.getLongId());
-    }
-
-    String encryptedPrivateKey = keyStoreCryptoManager.encrypt(nodeKeyDetails.getPrivateKey(), randomVector);
-    keysDao.setPrivateKey(encryptedPrivateKey);
-    keysDao.setPublicKey(nodeKeyDetails.getPublicKey());
-
-    String encryptedPassphrase = keyStoreCryptoManager.encrypt(passphrase, randomVector);
-    keysDao.setPassphrase(encryptedPassphrase);
-    return keysDao;
-  }
-
-  public String getLongId() {
-    return longId;
-  }
-
-  public void setLongId(String longId) {
-    this.longId = longId;
-  }
-
-  public PrivateKeySourceType getPrivateKeySourceType() {
-    return privateKeySourceType;
-  }
-
-  public void setPrivateKeySourceType(PrivateKeySourceType privateKeySourceType) {
-    this.privateKeySourceType = privateKeySourceType;
-  }
-
-  public String getPublicKey() {
-    return publicKey;
-  }
-
-  public void setPublicKey(String publicKey) {
-    this.publicKey = publicKey;
-  }
-
-  public String getPrivateKey() {
-    return privateKey;
-  }
-
-  public void setPrivateKey(String privateKey) {
-    this.privateKey = privateKey;
-  }
-
-  public String getPassphrase() {
-    return passphrase;
-  }
-
-  public void setPassphrase(String passphrase) {
-    this.passphrase = passphrase;
   }
 }
