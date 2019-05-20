@@ -17,7 +17,7 @@ import com.google.gson.annotations.SerializedName;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ReplaceConfirmModel extends BaseRequestModel {
+public class ReplaceConfirmModel implements RequestModel {
 
   @SerializedName("signed_message")
   @Expose

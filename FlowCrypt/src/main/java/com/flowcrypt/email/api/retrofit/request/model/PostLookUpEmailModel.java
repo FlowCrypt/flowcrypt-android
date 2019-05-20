@@ -19,7 +19,7 @@ import com.google.gson.annotations.SerializedName;
  * E-mail: DenBond7@gmail.com
  */
 
-public class PostLookUpEmailModel extends BaseRequestModel {
+public class PostLookUpEmailModel implements RequestModel {
 
   @SerializedName("email")
   @Expose

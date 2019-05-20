@@ -12,5 +12,5 @@ package com.flowcrypt.email.api.retrofit.request.model;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseRequestModel {
+interface RequestModel {
 }

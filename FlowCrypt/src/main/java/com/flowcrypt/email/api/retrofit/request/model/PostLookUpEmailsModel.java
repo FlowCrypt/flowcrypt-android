@@ -20,7 +20,7 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 
-public class PostLookUpEmailsModel {
+public class PostLookUpEmailsModel implements RequestModel {
   @SerializedName("email")
   @Expose
   private List<String> emails;

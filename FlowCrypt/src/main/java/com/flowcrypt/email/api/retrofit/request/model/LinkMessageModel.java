@@ -17,7 +17,7 @@ import com.google.gson.annotations.SerializedName;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LinkMessageModel extends BaseRequestModel {
+public class LinkMessageModel implements RequestModel {
 
   @SerializedName("short")
   @Expose

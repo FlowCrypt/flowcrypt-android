@@ -18,7 +18,7 @@ import com.google.gson.annotations.SerializedName;
  * E-mail: DenBond7@gmail.com
  */
 
-public class PostHelpFeedbackModel extends BaseRequestModel {
+public class PostHelpFeedbackModel implements RequestModel {
 
   @Expose
   private String email;
