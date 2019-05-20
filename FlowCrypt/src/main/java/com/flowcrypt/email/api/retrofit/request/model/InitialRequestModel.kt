@@ -3,10 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.model;
+package com.flowcrypt.email.api.retrofit.request.model
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * The request model for the https://flowcrypt.com/attester/initial/request API.
@@ -17,34 +17,6 @@ import com.google.gson.annotations.SerializedName;
  * E-mail: DenBond7@gmail.com
  */
 
-public class InitialRequestModel implements RequestModel {
-
-  @SerializedName("email")
-  @Expose
-  private String email;
-
-  @SerializedName("pubkey")
-  @Expose
-  private String pubKey;
-
-  @SerializedName("attest")
-  @Expose
-  private boolean attest;
-
-  public InitialRequestModel(String email, String pubKey) {
-    this.email = email;
-    this.pubKey = pubKey;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public String getPubKey() {
-    return pubKey;
-  }
-
-  public boolean isAttest() {
-    return attest;
-  }
-}
+data class InitialRequestModel(@SerializedName("email") @Expose val email: String,
+                               @SerializedName("pubkey") @Expose val pubKey: String,
+                               @SerializedName("attest") @Expose val isAttest: Boolean = false) : RequestModel

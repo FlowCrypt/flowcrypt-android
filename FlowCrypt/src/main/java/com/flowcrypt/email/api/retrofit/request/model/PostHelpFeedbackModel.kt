@@ -3,14 +3,14 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.model;
+package com.flowcrypt.email.api.retrofit.request.model
 
-import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
- * The model of {@link PostHelpFeedbackRequest}.
+ * The model of [PostHelpFeedbackRequest].
  *
  * @author DenBond7
  * Date: 30.05.2017
@@ -18,25 +18,5 @@ import com.google.gson.annotations.SerializedName;
  * E-mail: DenBond7@gmail.com
  */
 
-public class PostHelpFeedbackModel implements RequestModel {
-
-  @Expose
-  private String email;
-
-  @SerializedName("message")
-  @Expose
-  private String msg;
-
-  public PostHelpFeedbackModel(String email, String msg) {
-    this.email = email;
-    this.msg = msg;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public String getMsg() {
-    return msg;
-  }
-}
+data class PostHelpFeedbackModel(@Expose val email: String,
+                                 @SerializedName("message") @Expose val msg: String) : RequestModel

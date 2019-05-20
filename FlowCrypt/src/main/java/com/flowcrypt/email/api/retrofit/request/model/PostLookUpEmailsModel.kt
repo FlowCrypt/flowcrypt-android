@@ -3,12 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.model;
+package com.flowcrypt.email.api.retrofit.request.model
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import java.util.List;
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * This is a POJO object which used to make a request to the API "https://flowcrypt.com/attester/lookup/email"
@@ -20,16 +18,4 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 
-public class PostLookUpEmailsModel implements RequestModel {
-  @SerializedName("email")
-  @Expose
-  private List<String> emails;
-
-  public PostLookUpEmailsModel(List<String> emails) {
-    this.emails = emails;
-  }
-
-  public List<String> getEmails() {
-    return emails;
-  }
-}
+data class PostLookUpEmailsModel(@SerializedName("email") @Expose val emails: List<String>) : RequestModel

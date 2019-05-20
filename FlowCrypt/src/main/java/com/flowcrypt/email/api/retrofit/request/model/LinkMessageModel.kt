@@ -3,10 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.model;
+package com.flowcrypt.email.api.retrofit.request.model
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * The request model for the https://flowcrypt.com/api/link/message API.
@@ -17,17 +17,4 @@ import com.google.gson.annotations.SerializedName;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LinkMessageModel implements RequestModel {
-
-  @SerializedName("short")
-  @Expose
-  private String shortValue;
-
-  public LinkMessageModel(String shortValue) {
-    this.shortValue = shortValue;
-  }
-
-  public String getShortValue() {
-    return shortValue;
-  }
-}
+data class LinkMessageModel(@SerializedName("short") @Expose val shortValue: String) : RequestModel

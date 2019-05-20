@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.model;
+package com.flowcrypt.email.api.retrofit.request.model
 
 /**
  * @author DenBond7
@@ -12,5 +12,4 @@ package com.flowcrypt.email.api.retrofit.request.model;
  * E-mail: DenBond7@gmail.com
  */
 
-interface RequestModel {
-}
+interface RequestModel

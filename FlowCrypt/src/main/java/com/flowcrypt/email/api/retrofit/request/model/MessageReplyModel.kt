@@ -3,10 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.model;
+package com.flowcrypt.email.api.retrofit.request.model
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * The request model for the https://flowcrypt.com/api/message/reply API.
@@ -17,63 +17,9 @@ import com.google.gson.annotations.SerializedName;
  * E-mail: DenBond7@gmail.com
  */
 
-public class MessageReplyModel implements RequestModel {
-
-  @SerializedName("short")
-  @Expose
-  private String shortValue;
-
-  @SerializedName("token")
-  @Expose
-  private String token;
-
-  @SerializedName("message")
-  @Expose
-  private String message;
-
-  @SerializedName("subject")
-  @Expose
-  private String subject;
-
-  @SerializedName("from")
-  @Expose
-  private String from;
-
-  @SerializedName("to")
-  @Expose
-  private String to;
-
-  public MessageReplyModel(String shortValue, String token, String message, String subject,
-                           String from, String to) {
-    this.shortValue = shortValue;
-    this.token = token;
-    this.message = message;
-    this.subject = subject;
-    this.from = from;
-    this.to = to;
-  }
-
-  public String getShortValue() {
-    return shortValue;
-  }
-
-  public String getToken() {
-    return token;
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public String getSubject() {
-    return subject;
-  }
-
-  public String getFrom() {
-    return from;
-  }
-
-  public String getTo() {
-    return to;
-  }
-}
+data class MessageReplyModel(@SerializedName("short") @Expose val shortValue: String,
+                             @SerializedName("token") @Expose val token: String,
+                             @SerializedName("message") @Expose val message: String,
+                             @SerializedName("subject") @Expose val subject: String,
+                             @SerializedName("from") @Expose val from: String,
+                             @SerializedName("to") @Expose val to: String) : RequestModel

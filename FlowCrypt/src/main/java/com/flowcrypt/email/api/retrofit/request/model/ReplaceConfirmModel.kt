@@ -3,10 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.model;
+package com.flowcrypt.email.api.retrofit.request.model
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * The request model for the https://flowcrypt.com/attester/replace/confirm API.
@@ -17,17 +17,4 @@ import com.google.gson.annotations.SerializedName;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ReplaceConfirmModel implements RequestModel {
-
-  @SerializedName("signed_message")
-  @Expose
-  private String signedMsg;
-
-  public ReplaceConfirmModel(String signedMsg) {
-    this.signedMsg = signedMsg;
-  }
-
-  public String getSignedMsg() {
-    return signedMsg;
-  }
-}
+data class ReplaceConfirmModel(@SerializedName("signed_message") @Expose val signedMsg: String) : RequestModel
