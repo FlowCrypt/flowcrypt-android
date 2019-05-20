@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.response.model.node
 import android.os.Parcel
 import android.os.Parcelable
 import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * @author Denis Bondarenko
@@ -17,7 +18,7 @@ import com.google.gson.annotations.Expose
  */
 data class DecryptErrorMsgBlock(@Expose override val content: String?,
                                 @Expose override val isComplete: Boolean,
-                                @Expose val error: DecryptError?) : MsgBlock {
+                                @SerializedName("decryptErr") @Expose val error: DecryptError?) : MsgBlock {
 
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.DECRYPT_ERROR

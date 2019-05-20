@@ -9,6 +9,7 @@ import android.os.Parcel
 import android.os.Parcelable
 
 import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * @author Denis Bondarenko
@@ -17,8 +18,8 @@ import com.google.gson.annotations.Expose
  * E-mail: DenBond7@gmail.com
  */
 data class KeyId constructor(@Expose val fingerprint: String?,
-                             @Expose val longId: String?,
-                             @Expose val shortId: String?,
+                             @SerializedName("longid") @Expose val longId: String?,
+                             @SerializedName("shortid") @Expose val shortId: String?,
                              @Expose val keywords: String?) : Parcelable {
   constructor(source: Parcel) : this(
       source.readString(),

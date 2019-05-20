@@ -31,6 +31,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
 import com.flowcrypt.email.ui.loader.ParseKeysFromResourceAsyncTaskLoader;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
+import com.flowcrypt.email.util.exception.NodeException;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.FileNotFoundException;
@@ -367,15 +368,19 @@ public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
           errorMsg = getString(R.string.file_not_found);
         }
 
-        if (WRONG_STRUCTURE_ERROR.equals(errorMsg)) {
-          String mode = isPrivateKeyMode() ? getString(R.string.private_) : getString(R.string.public_);
-          switch (loaderId) {
-            case R.id.loader_id_validate_key_from_file:
-              errorMsg = getString(R.string.file_has_wrong_pgp_structure, mode);
-              break;
-            case R.id.loader_id_validate_key_from_clipboard:
-              errorMsg = getString(R.string.clipboard_has_wrong_structure, mode);
-              break;
+        if (e instanceof NodeException) {
+          NodeException nodeException = (NodeException) e;
+
+          if (WRONG_STRUCTURE_ERROR.equals(nodeException.getNodeError().getMsg())) {
+            String mode = isPrivateKeyMode() ? getString(R.string.private_) : getString(R.string.public_);
+            switch (loaderId) {
+              case R.id.loader_id_validate_key_from_file:
+                errorMsg = getString(R.string.file_has_wrong_pgp_structure, mode);
+                break;
+              case R.id.loader_id_validate_key_from_clipboard:
+                errorMsg = getString(R.string.clipboard_has_wrong_structure, mode);
+                break;
+            }
           }
         }
 

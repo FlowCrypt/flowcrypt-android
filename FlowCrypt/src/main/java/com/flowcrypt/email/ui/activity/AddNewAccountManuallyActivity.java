@@ -475,7 +475,7 @@ public class AddNewAccountManuallyActivity extends BaseNodeActivity implements C
   private void saveTempCreds() {
     authCreds = generateAuthCreds();
     Gson gson = new Gson();
-    authCreds.setPassword(null);
+    authCreds.setPassword("");
     authCreds.setSmtpSignInPassword(null);
     SharedPreferencesHelper.setString(PreferenceManager.getDefaultSharedPreferences(this),
         Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, gson.toJson(authCreds));

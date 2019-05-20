@@ -31,12 +31,18 @@ data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
                                       @Expose val created: Long,
                                       @Expose val algo: Algo?) : Parcelable {
 
-  val primaryPgpContact: PgpContact = determinePrimaryPgpContact()
-  val pgpContacts: ArrayList<PgpContact> = determinePgpContacts()
-  val longId: String? = ids?.first()?.longId
-  val fingerprint: String? = ids?.first()?.fingerprint
-  val keywords: String? = ids?.first()?.keywords
-  val isPrivate: Boolean = !TextUtils.isEmpty(privateKey)
+  val primaryPgpContact: PgpContact
+    get() = determinePrimaryPgpContact()
+  val pgpContacts: ArrayList<PgpContact>
+    get() = determinePgpContacts()
+  val longId: String?
+    get() = ids?.first()?.longId
+  val fingerprint: String?
+    get() = ids?.first()?.fingerprint
+  val keywords: String?
+    get() = ids?.first()?.keywords
+  val isPrivate: Boolean
+    get() = !TextUtils.isEmpty(privateKey)
 
   fun getCreatedInMilliseconds(): Long {
     return TimeUnit.MILLISECONDS.convert(created, TimeUnit.SECONDS)

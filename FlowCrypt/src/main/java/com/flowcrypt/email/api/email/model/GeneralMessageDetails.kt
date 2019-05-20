@@ -29,7 +29,7 @@ data class GeneralMessageDetails constructor(val email: String,
                                              var to: List<InternetAddress>? = null,
                                              var cc: List<InternetAddress>? = null,
                                              var subject: String? = null,
-                                             var msfFlags: List<String> = arrayListOf(),
+                                             var msgFlags: List<String> = arrayListOf(),
                                              var rawMsgWithoutAtts: String? = null,
                                              var hasAtts: Boolean = false,
                                              var isEncrypted: Boolean = false,
@@ -38,7 +38,7 @@ data class GeneralMessageDetails constructor(val email: String,
                                              var errorMsg: String? = null) : Parcelable {
 
   fun isSeen(): Boolean {
-    return msfFlags.contains(MessageFlag.SEEN.value)
+    return msgFlags.contains(MessageFlag.SEEN.value)
   }
 
   /**
@@ -97,7 +97,7 @@ data class GeneralMessageDetails constructor(val email: String,
       writeList(to)
       writeList(cc)
       writeString(subject)
-      writeStringList(msfFlags)
+      writeStringList(msgFlags)
       writeString(rawMsgWithoutAtts)
       writeInt((if (hasAtts) 1 else 0))
       writeInt((if (isEncrypted) 1 else 0))

@@ -1105,7 +1105,7 @@ public class MessageDaoSource extends BaseDaoSource {
     if (attributesAsString != null && attributesAsString.length() > 0) {
       return attributesAsString.split(regex);
     } else {
-      return null;
+      return new String[]{};
     }
   }
 

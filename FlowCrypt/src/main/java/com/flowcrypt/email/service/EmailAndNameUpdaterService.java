@@ -73,8 +73,7 @@ public class EmailAndNameUpdaterService extends JobIntentService {
       ArrayList<EmailAndNamePair> pairs = intent.getParcelableArrayListExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME);
 
       for (EmailAndNamePair pair : pairs) {
-        PgpContact pgpContact = contactsDaoSource.getPgpContact(getApplicationContext(),
-            pair.getEmail());
+        PgpContact pgpContact = contactsDaoSource.getPgpContact(getApplicationContext(), pair.getEmail());
         if (pgpContact != null) {
           if (TextUtils.isEmpty(pgpContact.getName())) {
             contactsDaoSource.updateNameOfPgpContact(getApplicationContext(), pair.getEmail(), pair.getName());

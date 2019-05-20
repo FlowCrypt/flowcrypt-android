@@ -30,7 +30,7 @@ data class PgpContact constructor(var email: String,
       source.readInt()
   )
 
-  constructor(email: String, name: String) : this(email) {
+  constructor(email: String, name: String?) : this(email) {
     this.name = name
   }
 

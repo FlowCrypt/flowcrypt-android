@@ -239,7 +239,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
         fullName = "INBOX",
         folderAlias = "INBOX",
         attributes = listOf("\\HasNoChildren"),
-        isCustom = true)
+        isCustom = false)
 
     init {
       LOCAL_FOLDERS = ArrayList()

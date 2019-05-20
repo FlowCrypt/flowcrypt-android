@@ -5,7 +5,7 @@
     <option name="INSTRUMENTATION_RUNNER_CLASS" value="" />
     <option name="METHOD_NAME" value="" />
     <option name="CLASS_NAME" value="" />
-    <option name="PACKAGE_NAME" value="com.flowcrypt.email.ui.activity" />
+    <option name="PACKAGE_NAME" value="com.flowcrypt.email" />
     <option name="EXTRA_OPTIONS" value="" />
     <option name="CLEAR_LOGCAT" value="false" />
     <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
@@ -42,8 +42,10 @@
     <Profilers>
       <option name="ADVANCED_PROFILING_ENABLED" value="false" />
       <option name="STARTUP_CPU_PROFILING_ENABLED" value="false" />
-      <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Sampled (Java)" />
+      <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Sample Java Methods" />
     </Profilers>
-    <method />
+    <method v="2">
+      <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+    </method>
   </configuration>
 </component>
