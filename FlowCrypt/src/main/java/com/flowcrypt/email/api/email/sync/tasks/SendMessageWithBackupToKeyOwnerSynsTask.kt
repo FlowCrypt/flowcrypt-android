@@ -3,18 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync.tasks;
+package com.flowcrypt.email.api.email.sync.tasks
 
-import android.os.Messenger;
-
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Store;
-import javax.mail.Transport;
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.dao.source.AccountDao
+import javax.mail.Session
+import javax.mail.Store
 
 /**
  * This task send a message with backup to the key owner.
@@ -25,32 +20,19 @@ import javax.mail.Transport;
  * E-mail: DenBond7@gmail.com
  */
 
-public class SendMessageWithBackupToKeyOwnerSynsTask extends BaseSyncTask {
-  /**
-   * The base constructor.
-   *
-   * @param ownerKey    The name of the reply to {@link Messenger}.
-   * @param requestCode The unique request code for the reply to {@link Messenger}.
-   */
-  public SendMessageWithBackupToKeyOwnerSynsTask(String ownerKey, int requestCode) {
-    super(ownerKey, requestCode);
-  }
+class SendMessageWithBackupToKeyOwnerSynsTask(ownerKey: String,
+                                              requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
+  override val isSMTPRequired: Boolean
+    get() = true
 
-  @Override
-  public boolean isSMTPRequired() {
-    return true;
-  }
+  @Throws(Exception::class)
+  override fun runSMTPAction(account: AccountDao, session: Session, store: Store, syncListener: SyncListener) {
+    super.runSMTPAction(account, session, store, syncListener)
 
-  @Override
-  public void runSMTPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
-    super.runSMTPAction(account, session, store, listener);
+    val transport = prepareSmtpTransport(syncListener.context, session, account)
+    val message = EmailUtil.genMsgWithAllPrivateKeys(syncListener.context, account, session)
+    transport.sendMessage(message, message.allRecipients)
 
-    if (listener != null && account != null) {
-      Transport transport = prepareSmtpTransport(listener.getContext(), session, account);
-      Message message = EmailUtil.genMsgWithAllPrivateKeys(listener.getContext(), account, session);
-      transport.sendMessage(message, message.getAllRecipients());
-
-      listener.onMsgWithBackupToKeyOwnerSent(account, ownerKey, requestCode, true);
-    }
+    syncListener.onMsgWithBackupToKeyOwnerSent(account, ownerKey, requestCode, true)
   }
 }

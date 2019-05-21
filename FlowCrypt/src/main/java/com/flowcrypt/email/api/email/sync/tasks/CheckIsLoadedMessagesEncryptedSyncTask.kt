@@ -3,79 +3,57 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync.tasks;
+package com.flowcrypt.email.api.email.sync.tasks
 
-import android.content.Context;
-import android.os.Messenger;
-import android.util.LongSparseArray;
-
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.model.LocalFolder;
-import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.sun.mail.imap.IMAPFolder;
-
-import java.util.List;
-
-import javax.mail.Folder;
-import javax.mail.Session;
-import javax.mail.Store;
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.sun.mail.imap.IMAPFolder
+import javax.mail.Folder
+import javax.mail.Session
+import javax.mail.Store
 
 /**
  * This task identifies encrypted messages and updates information about messages in the local database.
+ *
+ * @property localFolder The local implementation of the remote folder
  *
  * @author Denis Bondarenko
  * Date: 02.06.2018
  * Time: 14:30
  * E-mail: DenBond7@gmail.com
  */
-public class CheckIsLoadedMessagesEncryptedSyncTask extends BaseSyncTask {
-  private LocalFolder localFolder;
+open class CheckIsLoadedMessagesEncryptedSyncTask(ownerKey: String,
+                                                  requestCode: Int,
+                                                  private val localFolder: LocalFolder?)
+  : BaseSyncTask(ownerKey, requestCode) {
+  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+    super.runIMAPAction(account, session, store, listener)
+    localFolder?.let {
+      val context = listener.context
+      val folder = it.folderAlias
+      val msgDaoSource = MessageDaoSource()
+      val uidList = msgDaoSource.getNotCheckedUIDs(context, account.email, folder) ?: return
 
-  /**
-   * The base constructor.
-   *
-   * @param ownerKey    The name of the reply to {@link Messenger}.
-   * @param requestCode The unique request code for the reply to {@link Messenger}.
-   * @param localFolder The local implementation of the remote folder
-   */
-  public CheckIsLoadedMessagesEncryptedSyncTask(String ownerKey, int requestCode,
-                                                LocalFolder localFolder) {
-    super(ownerKey, requestCode);
-    this.localFolder = localFolder;
-  }
+      if (uidList.isEmpty()) {
+        return
+      }
 
-  @Override
-  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
-    super.runIMAPAction(account, session, store, listener);
+      val imapFolder = store.getFolder(it.fullName) as IMAPFolder
+      imapFolder.open(Folder.READ_ONLY)
 
-    Context context = listener.getContext();
-    String folder = localFolder.getFolderAlias();
+      val booleanLongSparseArray = EmailUtil.getMsgsEncryptionStates(imapFolder, uidList)
 
-    if (localFolder == null) {
-      return;
+      if (booleanLongSparseArray.size() > 0) {
+        msgDaoSource.updateEncryptionStates(context, account.email, folder, booleanLongSparseArray)
+      }
+
+      listener.onIdentificationToEncryptionCompleted(account, it, imapFolder, ownerKey, requestCode)
+
+      imapFolder.close(false)
     }
-
-    MessageDaoSource msgDaoSource = new MessageDaoSource();
-
-    List<Long> uidList = msgDaoSource.getNotCheckedUIDs(context, account.getEmail(), folder);
-
-    if (uidList == null || uidList.isEmpty()) {
-      return;
-    }
-
-    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
-    imapFolder.open(Folder.READ_ONLY);
-
-    LongSparseArray<Boolean> booleanLongSparseArray = EmailUtil.getMsgsEncryptionStates(imapFolder, uidList);
-
-    if (booleanLongSparseArray.size() > 0) {
-      msgDaoSource.updateEncryptionStates(context, account.getEmail(), folder, booleanLongSparseArray);
-    }
-
-    listener.onIdentificationToEncryptionCompleted(account, localFolder, imapFolder, ownerKey, requestCode);
-
-    imapFolder.close(false);
   }
 }
+

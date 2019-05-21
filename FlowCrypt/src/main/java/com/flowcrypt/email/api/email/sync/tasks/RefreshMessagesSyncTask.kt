@@ -3,27 +3,22 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync.tasks;
+package com.flowcrypt.email.api.email.sync.tasks
 
-import android.content.Context;
-
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.model.LocalFolder;
-import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.sun.mail.imap.IMAPFolder;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.mail.FetchProfile;
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Store;
-import javax.mail.UIDFolder;
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.sun.mail.imap.IMAPFolder
+import java.util.*
+import javax.mail.FetchProfile
+import javax.mail.Folder
+import javax.mail.Message
+import javax.mail.Session
+import javax.mail.Store
+import javax.mail.UIDFolder
 
 /**
  * This task does a job of loading all new messages which not exist in the cache but exist on the server and updates
@@ -35,64 +30,61 @@ import javax.mail.UIDFolder;
  * E-mail: DenBond7@gmail.com
  */
 
-public class RefreshMessagesSyncTask extends CheckNewMessagesSyncTask {
-  public RefreshMessagesSyncTask(String ownerKey, int requestCode, LocalFolder localFolder) {
-    super(ownerKey, requestCode, localFolder);
-  }
+class RefreshMessagesSyncTask(ownerKey: String,
+                              requestCode: Int,
+                              localFolder: LocalFolder) : CheckNewMessagesSyncTask(ownerKey, requestCode, localFolder) {
 
-  @Override
-  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
-    if (listener != null) {
-      Context context = listener.getContext();
-      String folderName = localFolder.getFolderAlias();
-      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
-      imapFolder.open(Folder.READ_ONLY);
+  @Throws(Exception::class)
+  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+    val context = listener.context
+    val folderName = localFolder!!.folderAlias
+    val imapFolder = store.getFolder(localFolder!!.fullName) as IMAPFolder
+    imapFolder.open(Folder.READ_ONLY)
 
-      long nextUID = imapFolder.getUIDNext();
+    val nextUID = imapFolder.uidNext
 
-      Message[] newMsgs = new Message[0];
-      MessageDaoSource messageDaoSource = new MessageDaoSource();
+    var newMsgs: Array<Message> = emptyArray()
+    val messageDaoSource = MessageDaoSource()
 
-      int newestCachedUID = messageDaoSource.getLastUIDOfMsgInLabel(context, account.getEmail(), folderName);
-      int countOfLoadedMsgs = messageDaoSource.getLabelMsgsCount(context, account.getEmail(), folderName);
-      boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, account.getEmail());
+    val newestCachedUID = messageDaoSource.getLastUIDOfMsgInLabel(context, account.email, folderName)
+    val countOfLoadedMsgs = messageDaoSource.getLabelMsgsCount(context, account.email, folderName)
+    val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
 
-      if (newestCachedUID > 1 && newestCachedUID < nextUID - 1) {
-        if (isEncryptedModeEnabled) {
-          Message[] foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(account));
-
-          FetchProfile fetchProfile = new FetchProfile();
-          fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-
-          imapFolder.fetch(foundMsgs, fetchProfile);
-
-          List<Message> newMsgsList = new ArrayList<>();
-
-          for (Message message : foundMsgs) {
-            if (imapFolder.getUID(message) > newestCachedUID) {
-              newMsgsList.add(message);
-            }
-          }
-
-          newMsgs = EmailUtil.fetchMsgs(imapFolder, newMsgsList.toArray(new Message[0]));
-        } else {
-          Message[] msgs = imapFolder.getMessagesByUID(newestCachedUID + 1, nextUID - 1);
-          newMsgs = EmailUtil.fetchMsgs(imapFolder, msgs);
-        }
-      }
-
-      Message[] updatedMsgs;
+    if (newestCachedUID in (2 until nextUID - 1)) {
       if (isEncryptedModeEnabled) {
-        int oldestCachedUID = messageDaoSource.getOldestUIDOfMsgInLabel(context, account.getEmail(), folderName);
-        updatedMsgs = EmailUtil.getUpdatedMsgsByUID(imapFolder, oldestCachedUID, newestCachedUID);
+        val foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(account))
+
+        val fetchProfile = FetchProfile()
+        fetchProfile.add(UIDFolder.FetchProfileItem.UID)
+
+        imapFolder.fetch(foundMsgs, fetchProfile)
+
+        val newMsgsList = ArrayList<Message>()
+
+        for (message in foundMsgs) {
+          if (imapFolder.getUID(message) > newestCachedUID) {
+            newMsgsList.add(message)
+          }
+        }
+
+        newMsgs = EmailUtil.fetchMsgs(imapFolder, newMsgsList.toTypedArray())
       } else {
-        int countOfNewMsgs = newMsgs != null ? newMsgs.length : 0;
-        updatedMsgs = EmailUtil.getUpdatedMsgs(imapFolder, countOfLoadedMsgs, countOfNewMsgs);
+        val msgs = imapFolder.getMessagesByUID((newestCachedUID + 1).toLong(), nextUID - 1)
+        newMsgs = EmailUtil.fetchMsgs(imapFolder, msgs)
       }
-
-      listener.onRefreshMsgsReceived(account, localFolder, imapFolder, newMsgs, updatedMsgs, ownerKey, requestCode);
-
-      imapFolder.close(false);
     }
+
+    val updatedMsgs: Array<Message>
+    if (isEncryptedModeEnabled) {
+      val oldestCachedUID = messageDaoSource.getOldestUIDOfMsgInLabel(context, account.email, folderName)
+      updatedMsgs = EmailUtil.getUpdatedMsgsByUID(imapFolder, oldestCachedUID.toLong(), newestCachedUID.toLong())
+    } else {
+      val countOfNewMsgs = newMsgs.size
+      updatedMsgs = EmailUtil.getUpdatedMsgs(imapFolder, countOfLoadedMsgs, countOfNewMsgs)
+    }
+
+    listener.onRefreshMsgsReceived(account, localFolder, imapFolder, newMsgs, updatedMsgs, ownerKey, requestCode)
+
+    imapFolder.close(false)
   }
 }

@@ -3,27 +3,20 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync.tasks;
+package com.flowcrypt.email.api.email.sync.tasks
 
-import android.os.Messenger;
-
-import com.flowcrypt.email.api.email.model.LocalFolder;
-import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.sun.mail.iap.Argument;
-import com.sun.mail.iap.ProtocolException;
-import com.sun.mail.iap.Response;
-import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.imap.protocol.BODY;
-import com.sun.mail.imap.protocol.FetchResponse;
-import com.sun.mail.imap.protocol.IMAPProtocol;
-import com.sun.mail.util.ASCIIUtility;
-
-import javax.mail.Flags;
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Store;
+import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.sun.mail.iap.Argument
+import com.sun.mail.imap.IMAPFolder
+import com.sun.mail.imap.protocol.BODY
+import com.sun.mail.imap.protocol.FetchResponse
+import com.sun.mail.util.ASCIIUtility
+import javax.mail.Flags
+import javax.mail.Folder
+import javax.mail.Session
+import javax.mail.Store
 
 /**
  * This task load a detail information of some message. At now this task creates and executes
@@ -31,79 +24,61 @@ import javax.mail.Store;
  * 200kb of a message, and if the message is small, we'll get the whole MIME message. If
  * larger than 200kb, we'll get only the first part of it.
  *
+ * @param localFolder      The local localFolder implementation.
+ * @param uid         The [com.sun.mail.imap.protocol.UID] of [).][Message]
+ *
  * @author DenBond7
  * Date: 26.06.2017
  * Time: 17:41
  * E-mail: DenBond7@gmail.com
  */
 
-public class LoadMessageDetailsSyncTask extends BaseSyncTask {
-  private long uid;
-  private LocalFolder localFolder;
+class LoadMessageDetailsSyncTask(ownerKey: String,
+                                 requestCode: Int,
+                                 private val localFolder: LocalFolder,
+                                 private val uid: Long) : BaseSyncTask(ownerKey, requestCode) {
 
-  /**
-   * The base constructor.
-   *
-   * @param ownerKey    The name of the reply to {@link Messenger}.
-   * @param requestCode The unique request code for the reply to {@link Messenger}.
-   * @param localFolder      The local localFolder implementation.
-   * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link Message).
-   */
-  public LoadMessageDetailsSyncTask(String ownerKey, int requestCode, LocalFolder localFolder,
-                                    long uid) {
-    super(ownerKey, requestCode);
-    this.localFolder = localFolder;
-    this.uid = uid;
-  }
+  @Throws(Exception::class)
+  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+    val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
+    imapFolder.open(Folder.READ_WRITE)
 
-  @Override
-  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
-    IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
-    imapFolder.open(Folder.READ_WRITE);
+    val rawMsg = imapFolder.doCommand { imapProtocol ->
+      var rawMsg: String? = null
 
-    if (listener != null) {
-      String rawMsg = (String) imapFolder.doCommand(new IMAPFolder.ProtocolCommand() {
-        public Object doCommand(IMAPProtocol imapProtocol) throws ProtocolException {
-          String rawMsg = null;
+      val args = Argument()
+      val list = Argument()
+      list.writeString("RFC822.SIZE")
+      list.writeString("BODY[]<0.204800>")
+      args.writeArgument(list)
 
-          Argument args = new Argument();
-          Argument list = new Argument();
-          list.writeString("RFC822.SIZE");
-          list.writeString("BODY[]<0.204800>");
-          args.writeArgument(list);
+      val responses = imapProtocol.command("UID FETCH $uid", args)
+      val serverStatusResponse = responses[responses.size - 1]
 
-          Response[] responses = imapProtocol.command("UID FETCH " + uid, args);
-          Response serverStatusResponse = responses[responses.length - 1];
-
-          if (serverStatusResponse.isOK()) {
-            for (Response response : responses) {
-              if (!(response instanceof FetchResponse)) {
-                continue;
-              }
-
-              FetchResponse fetchResponse = (FetchResponse) response;
-              BODY body = fetchResponse.getItem(BODY.class);
-              if (body != null && body.getByteArrayInputStream() != null) {
-                rawMsg = ASCIIUtility.toString(body.getByteArrayInputStream());
-              }
-            }
+      if (serverStatusResponse.isOK) {
+        for (response in responses) {
+          if (response !is FetchResponse) {
+            continue
           }
 
-          imapProtocol.notifyResponseHandlers(responses);
-          imapProtocol.handleResult(serverStatusResponse);
-
-          return rawMsg;
+          val body = response.getItem(BODY::class.java)
+          if (body != null && body.byteArrayInputStream != null) {
+            rawMsg = ASCIIUtility.toString(body.byteArrayInputStream)
+          }
         }
-      });
-
-      Message message = imapFolder.getMessageByUID(uid);
-      if (message != null) {
-        message.setFlag(Flags.Flag.SEEN, true);
       }
 
-      listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, message, rawMsg, ownerKey, requestCode);
-    }
+      imapProtocol.notifyResponseHandlers(responses)
+      imapProtocol.handleResult(serverStatusResponse)
 
-    imapFolder.close(false);
+      rawMsg
+    } as String
+
+    val message = imapFolder.getMessageByUID(uid)
+    message?.setFlag(Flags.Flag.SEEN, true)
+
+    listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, message, rawMsg, ownerKey, requestCode)
+
+    imapFolder.close(false)
   }
 }

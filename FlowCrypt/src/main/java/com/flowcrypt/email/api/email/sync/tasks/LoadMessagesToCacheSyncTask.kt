@@ -3,26 +3,23 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync.tasks;
+package com.flowcrypt.email.api.email.sync.tasks
 
-import android.content.Context;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.model.LocalFolder;
-import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
-import com.sun.mail.imap.IMAPFolder;
-
-import javax.mail.FetchProfile;
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Store;
-import javax.mail.UIDFolder;
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
+import com.sun.mail.imap.IMAPFolder
+import javax.mail.FetchProfile
+import javax.mail.Folder
+import javax.mail.Message
+import javax.mail.Session
+import javax.mail.Store
+import javax.mail.UIDFolder
 
 /**
  * This task loads the older messages via some step.
@@ -33,72 +30,66 @@ import javax.mail.UIDFolder;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LoadMessagesToCacheSyncTask extends BaseSyncTask {
-  private static final String TAG = LoadMessagesToCacheSyncTask.class.getSimpleName();
-  private LocalFolder localFolder;
-  private int countOfAlreadyLoadedMsgs;
+class LoadMessagesToCacheSyncTask(ownerKey: String,
+                                  requestCode: Int,
+                                  private val localFolder: LocalFolder,
+                                  private val countOfAlreadyLoadedMsgs: Int) : BaseSyncTask(ownerKey, requestCode) {
 
-  public LoadMessagesToCacheSyncTask(String ownerKey, int requestCode,
-                                     LocalFolder localFolder, int countOfAlreadyLoadedMsgs) {
-    super(ownerKey, requestCode);
-    this.localFolder = localFolder;
-    this.countOfAlreadyLoadedMsgs = countOfAlreadyLoadedMsgs;
-  }
+  @Throws(Exception::class)
+  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+    val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
+    listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_opening_store)
+    imapFolder.open(Folder.READ_ONLY)
 
-  @Override
-  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
-    if (listener != null) {
-      IMAPFolder imapFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
-      listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_opening_store);
-      imapFolder.open(Folder.READ_ONLY);
-
-      if (countOfAlreadyLoadedMsgs < 0) {
-        countOfAlreadyLoadedMsgs = 0;
-      }
-
-      Context context = listener.getContext();
-      boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, account.getEmail());
-      Message[] foundMsgs = new Message[0];
-      int msgsCount;
-
-      if (isEncryptedModeEnabled) {
-        foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(account));
-        msgsCount = foundMsgs.length;
-      } else {
-        msgsCount = imapFolder.getMessageCount();
-      }
-
-      int end = msgsCount - countOfAlreadyLoadedMsgs;
-      int start = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1;
-      String folderName = imapFolder.getFullName();
-      new ImapLabelsDaoSource().updateLabelMsgsCount(context, account.getEmail(), folderName, msgsCount);
-
-      listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails);
-      if (end < 1) {
-        listener.onMsgsReceived(account, localFolder, imapFolder, new Message[]{}, ownerKey, requestCode);
-      } else {
-        if (start < 1) {
-          start = 1;
+    val countOfLoadedMsgs =
+        when {
+          countOfAlreadyLoadedMsgs < 0 -> 0
+          else -> countOfAlreadyLoadedMsgs
         }
 
-        Message[] msgs;
-        if (isEncryptedModeEnabled) {
-          msgs = new Message[end - start + 1];
-          System.arraycopy(foundMsgs, start - 1, msgs, 0, end - start + 1);
-        } else {
-          msgs = imapFolder.getMessages(start, end);
-        }
+    val context = listener.context
+    val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
+    var foundMsgs = arrayOfNulls<Message>(0)
+    val msgsCount: Int
 
-        FetchProfile fetchProfile = new FetchProfile();
-        fetchProfile.add(FetchProfile.Item.ENVELOPE);
-        fetchProfile.add(FetchProfile.Item.FLAGS);
-        fetchProfile.add(FetchProfile.Item.CONTENT_INFO);
-        fetchProfile.add(UIDFolder.FetchProfileItem.UID);
-        imapFolder.fetch(msgs, fetchProfile);
-
-        listener.onMsgsReceived(account, localFolder, imapFolder, msgs, ownerKey, requestCode);
-      }
-      imapFolder.close(false);
+    if (isEncryptedModeEnabled) {
+      foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(account))
+      msgsCount = foundMsgs.size
+    } else {
+      msgsCount = imapFolder.messageCount
     }
+
+    val end = msgsCount - countOfLoadedMsgs
+    val startCandidate = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1
+    val start =
+        when {
+          startCandidate < 1 -> 1
+          else -> startCandidate
+        }
+    val folderName = imapFolder.fullName
+    ImapLabelsDaoSource().updateLabelMsgsCount(context, account.email, folderName, msgsCount)
+
+    listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails)
+    if (end < 1) {
+      listener.onMsgsReceived(account, localFolder, imapFolder, arrayOf(), ownerKey, requestCode)
+    } else {
+      val msgs: Array<Message?>
+      if (isEncryptedModeEnabled) {
+        msgs = arrayOfNulls(end - start + 1)
+        System.arraycopy(foundMsgs, start - 1, msgs, 0, end - start + 1)
+      } else {
+        msgs = imapFolder.getMessages(start, end)
+      }
+
+      val fetchProfile = FetchProfile()
+      fetchProfile.add(FetchProfile.Item.ENVELOPE)
+      fetchProfile.add(FetchProfile.Item.FLAGS)
+      fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+      fetchProfile.add(UIDFolder.FetchProfileItem.UID)
+      imapFolder.fetch(msgs, fetchProfile)
+
+      listener.onMsgsReceived(account, localFolder, imapFolder, msgs, ownerKey, requestCode)
+    }
+    imapFolder.close(false)
   }
 }

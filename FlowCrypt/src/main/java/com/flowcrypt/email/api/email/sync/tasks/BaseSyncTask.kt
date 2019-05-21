@@ -3,28 +3,26 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync.tasks;
+package com.flowcrypt.email.api.email.sync.tasks
 
-import android.content.Context;
-
-import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
-import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.google.android.gms.auth.GoogleAuthException;
-import com.sun.mail.util.MailConnectException;
-
-import java.io.IOException;
-
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Store;
-import javax.mail.Transport;
-
-import androidx.annotation.NonNull;
+import android.content.Context
+import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes
+import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.google.android.gms.auth.GoogleAuthException
+import com.sun.mail.util.MailConnectException
+import java.io.IOException
+import javax.mail.MessagingException
+import javax.mail.Session
+import javax.mail.Store
+import javax.mail.Transport
 
 /**
- * The base realization of {@link SyncTask}.
+ * The base realization of [SyncTask].
+ *
+ * @property ownerKey    The name of the reply to [Messenger].
+ * @property requestCode The unique request code for the reply to [Messenger].
  *
  * @author DenBond7
  * Date: 23.06.2017
@@ -32,64 +30,32 @@ import androidx.annotation.NonNull;
  * E-mail: DenBond7@gmail.com
  */
 
-abstract class BaseSyncTask implements SyncTask {
-  String ownerKey;
-  int requestCode;
+abstract class BaseSyncTask constructor(override var ownerKey: String, override var requestCode: Int) : SyncTask {
+  override val isSMTPRequired: Boolean
+    get() = false
 
-  /**
-   * The base constructor.
-   *
-   * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-   * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-   */
-  BaseSyncTask(String ownerKey, int requestCode) {
-    this.ownerKey = ownerKey;
-    this.requestCode = requestCode;
+  @Throws(Exception::class)
+  override fun runSMTPAction(account: AccountDao, session: Session, store: Store, syncListener: SyncListener) {
   }
 
-  @Override
-  public boolean isSMTPRequired() {
-    return false;
+  override fun handleException(account: AccountDao, e: Exception, syncListener: SyncListener) {
+    val errorType: Int =
+        when (e) {
+          is MailConnectException -> SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST
+          else -> SyncErrorTypes.TASK_RUNNING_ERROR
+        }
+
+    syncListener.onError(account, errorType, e, ownerKey, requestCode)
   }
 
-  @Override
-  public void runSMTPAction(AccountDao account, Session session, Store store, SyncListener syncListener)
-      throws Exception {
-  }
-
-  @Override
-  public void handleException(AccountDao account, Exception e, SyncListener syncListener) {
-    if (syncListener != null) {
-      int errorType;
-
-      if (e instanceof MailConnectException) {
-        errorType = SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST;
-      } else {
-        errorType = SyncErrorTypes.TASK_RUNNING_ERROR;
-      }
-
-      syncListener.onError(account, errorType, e, ownerKey, requestCode);
-    }
-  }
-
-  @Override
-  public String getOwnerKey() {
-    return ownerKey;
-  }
-
-  @Override
-  public int getRequestCode() {
-    return requestCode;
-  }
-
-  @Override
-  public void runIMAPAction(AccountDao account, Session session, Store store, SyncListener listener) throws Exception {
+  @Throws(Exception::class)
+  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
 
   }
 
-  @NonNull
-  protected Transport prepareSmtpTransport(Context context, Session session, AccountDao account) throws
-      MessagingException, IOException, GoogleAuthException {
-    return SmtpProtocolUtil.prepareSmtpTransport(context, session, account);
+  @Throws(MessagingException::class, IOException::class, GoogleAuthException::class)
+  protected fun prepareSmtpTransport(context: Context, session: Session, account: AccountDao): Transport {
+    return SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
   }
 }
+

@@ -22,6 +22,7 @@ import com.flowcrypt.email.model.PgpContact;
 import com.google.android.gms.common.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -104,18 +105,19 @@ public class ContactsDaoSource extends BaseDaoSource {
    * @param pairs   A list of {@link EmailAndNamePair} objects which will be wrote to the database.
    * @return the number of newly created rows.
    */
-  public int addRows(Context context, ArrayList<EmailAndNamePair> pairs) {
+  public int addRows(Context context, Collection<EmailAndNamePair> pairs) {
     if (!CollectionUtils.isEmpty(pairs)) {
       ContentResolver contentResolver = context.getContentResolver();
       ContentValues[] contentValuesArray = new ContentValues[pairs.size()];
 
-      for (int i = 0; i < pairs.size(); i++) {
-        EmailAndNamePair emailAndNamePair = pairs.get(i);
+      int i = 0;
+      for (EmailAndNamePair emailAndNamePair : pairs) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(COL_EMAIL, emailAndNamePair.getEmail().toLowerCase());
         contentValues.put(COL_NAME, emailAndNamePair.getName());
         contentValues.put(COL_HAS_PGP, false);
         contentValuesArray[i] = contentValues;
+        i++;
       }
 
       return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
@@ -342,7 +344,7 @@ public class ContactsDaoSource extends BaseDaoSource {
    * @param pairs   A list of {@link EmailAndNamePair} objects.
    * @return the {@link ContentProviderResult} array.
    */
-  public ContentProviderResult[] updatePgpContacts(Context context, ArrayList<EmailAndNamePair> pairs)
+  public ContentProviderResult[] updatePgpContacts(Context context, Collection<EmailAndNamePair> pairs)
       throws RemoteException, OperationApplicationException {
     ContentResolver contentResolver = context.getContentResolver();
     if (!CollectionUtils.isEmpty(pairs)) {
