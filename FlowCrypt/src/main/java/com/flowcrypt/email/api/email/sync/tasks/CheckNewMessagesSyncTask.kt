@@ -27,52 +27,51 @@ import javax.mail.UIDFolder
  * Time: 15:50
  * E-mail: DenBond7@gmail.com
  */
-open class CheckNewMessagesSyncTask(ownerKey: String,
-                                    requestCode: Int,
-                                    protected var localFolder: LocalFolder?)
-  : CheckIsLoadedMessagesEncryptedSyncTask(ownerKey, requestCode, localFolder) {
+class CheckNewMessagesSyncTask(ownerKey: String,
+                               requestCode: Int,
+                               val localFolder: LocalFolder) : BaseSyncTask(ownerKey, requestCode) {
 
   @Throws(Exception::class)
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
-    localFolder?.let {
-      val context = listener.context
-      val email = account.email
-      val folderAlias = it.folderAlias
-      val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, email)
+    val context = listener.context
+    val email = account.email
+    val folderAlias = localFolder.folderAlias
+    val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, email)
 
-      val folder = store.getFolder(it.fullName) as IMAPFolder
-      folder.open(Folder.READ_ONLY)
+    val folder = store.getFolder(localFolder.fullName) as IMAPFolder
+    folder.open(Folder.READ_ONLY)
 
-      val nextUID = folder.uidNext
-      val newestCachedUID = MessageDaoSource().getLastUIDOfMsgInLabel(context, email, folderAlias)
-      var newMsgs = arrayOfNulls<Message>(0)
+    val nextUID = folder.uidNext
+    val newestCachedUID = MessageDaoSource().getLastUIDOfMsgInLabel(context, email, folderAlias)
+    var newMsgs: Array<Message> = emptyArray()
 
-      if (newestCachedUID < nextUID - 1) {
-        if (isEncryptedModeEnabled) {
-          val foundMsgs = folder.search(EmailUtil.genEncryptedMsgsSearchTerm(account))
+    if (newestCachedUID < nextUID - 1) {
+      if (isEncryptedModeEnabled) {
+        val foundMsgs = folder.search(EmailUtil.genEncryptedMsgsSearchTerm(account))
 
-          val fetchProfile = FetchProfile()
-          fetchProfile.add(UIDFolder.FetchProfileItem.UID)
+        val fetchProfile = FetchProfile()
+        fetchProfile.add(UIDFolder.FetchProfileItem.UID)
 
-          folder.fetch(foundMsgs, fetchProfile)
+        folder.fetch(foundMsgs, fetchProfile)
 
-          val newMsgsList = mutableListOf<Message>()
+        val newMsgsList = mutableListOf<Message>()
 
-          for (msg in foundMsgs) {
-            if (folder.getUID(msg) > newestCachedUID) {
-              newMsgsList.add(msg)
-            }
+        for (msg in foundMsgs) {
+          if (folder.getUID(msg) > newestCachedUID) {
+            newMsgsList.add(msg)
           }
-
-          newMsgs = EmailUtil.fetchMsgs(folder, newMsgsList.toTypedArray())
-        } else {
-          newMsgs = EmailUtil.fetchMsgs(folder, folder.getMessagesByUID((newestCachedUID + 1).toLong(), nextUID - 1))
         }
-      }
 
-      val array = EmailUtil.getMsgsEncryptionInfo(isEncryptedModeEnabled, folder, newMsgs)
-      listener.onNewMsgsReceived(account, it, folder, newMsgs, array, ownerKey, requestCode)
-      folder.close(false)
+        newMsgs = EmailUtil.fetchMsgs(folder, newMsgsList.toTypedArray())
+      } else {
+        newMsgs = EmailUtil.fetchMsgs(folder, folder.getMessagesByUID((newestCachedUID + 1).toLong(), nextUID - 1))
+      }
     }
+
+    if (newMsgs.isNotEmpty()) {
+      val array = EmailUtil.getMsgsEncryptionInfo(isEncryptedModeEnabled, folder, newMsgs)
+      listener.onNewMsgsReceived(account, localFolder, folder, newMsgs, array, ownerKey, requestCode)
+    }
+    folder.close(false)
   }
 }

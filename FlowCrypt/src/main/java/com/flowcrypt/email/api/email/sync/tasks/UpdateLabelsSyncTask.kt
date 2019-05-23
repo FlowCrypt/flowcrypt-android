@@ -26,6 +26,6 @@ class UpdateLabelsSyncTask(ownerKey: String,
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     super.runIMAPAction(account, session, store, listener)
     val folders = store.defaultFolder.list("*")
-    listener.onFolderInfoReceived(account, folders, ownerKey, requestCode)
+    listener.onFoldersInfoReceived(account, folders, ownerKey, requestCode)
   }
 }

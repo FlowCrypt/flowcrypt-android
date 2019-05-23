@@ -48,6 +48,8 @@ import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.google.android.gms.common.util.CollectionUtils;
 import com.sun.mail.imap.IMAPFolder;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
@@ -158,9 +160,7 @@ public class EmailSyncService extends BaseService implements SyncListener {
 
     this.notificationManager = new MessagesNotificationManager(this);
 
-    emailSyncManager = new EmailSyncManager(new AccountDaoSource().getActiveAccountInformation(this));
-    emailSyncManager.setSyncListener(this);
-
+    emailSyncManager = new EmailSyncManager(new AccountDaoSource().getActiveAccountInformation(this), this);
     messenger = new Messenger(new IncomingHandler(emailSyncManager, replyToMessengers));
 
     connectionBroadcastReceiver = new BroadcastReceiver() {
@@ -275,8 +275,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
   }
 
   @Override
-  public void onMsgsMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder,
-                          javax.mail.Message[] msgs, String ownerKey, int requestCode) {
+  public void onMsgsMoved(@NotNull AccountDao account, @NotNull IMAPFolder srcFolder, @NotNull IMAPFolder destFolder,
+                          @NotNull List<? extends javax.mail.Message> msgs, @NotNull String ownerKey, int requestCode) {
     //Todo-denbond7 Not implemented yet.
   }
 
@@ -473,8 +473,8 @@ public class EmailSyncService extends BaseService implements SyncListener {
   }
 
   @Override
-  public void onFolderInfoReceived(AccountDao account, Folder[] folders, String key, int requestCode) {
-    LogsUtil.d(TAG, "onFolderInfoReceived:" + Arrays.toString(folders));
+  public void onFoldersInfoReceived(AccountDao account, Folder[] folders, String key, int requestCode) {
+    LogsUtil.d(TAG, "onFoldersInfoReceived:" + Arrays.toString(folders));
     String email = account.getEmail();
 
     FoldersManager foldersManager = new FoldersManager();

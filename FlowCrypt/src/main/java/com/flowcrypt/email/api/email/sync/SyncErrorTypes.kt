@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync;
+package com.flowcrypt.email.api.email.sync
 
 /**
  * This class contains types of synchronization errors.
@@ -14,9 +14,11 @@ package com.flowcrypt.email.api.email.sync;
  * E-mail: DenBond7@gmail.com
  */
 
-public class SyncErrorTypes {
-  public static final int UNKNOWN_ERROR = 0;
-  public static final int ACTION_FAILED_SHOW_TOAST = 1;
-  public static final int TASK_RUNNING_ERROR = 2;
-  public static final int CONNECTION_TO_STORE_IS_LOST = 3;
+class SyncErrorTypes {
+  companion object {
+    const val UNKNOWN_ERROR = 0
+    const val ACTION_FAILED_SHOW_TOAST = 1
+    const val TASK_RUNNING_ERROR = 2
+    const val CONNECTION_TO_STORE_IS_LOST = 3
+  }
 }

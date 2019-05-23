@@ -14,9 +14,9 @@ import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.sun.mail.gimap.GmailRawSearchTerm
 import com.sun.mail.imap.IMAPFolder
+import java.util.*
 import javax.mail.FetchProfile
 import javax.mail.Folder
-import javax.mail.Message
 import javax.mail.Session
 import javax.mail.Store
 import javax.mail.UIDFolder
@@ -65,8 +65,7 @@ class SearchMessagesSyncTask(ownerKey: String,
     if (end < 1) {
       listener.onSearchMsgsReceived(account, localFolder, imapFolder, arrayOf(), ownerKey, requestCode)
     } else {
-      val bufferedMsgs = arrayOfNulls<Message>(end - start + 1)
-      System.arraycopy(foundMsgs, start - 1, bufferedMsgs, 0, end - start + 1)
+      val bufferedMsgs = Arrays.copyOfRange(foundMsgs, start - 1, end)
 
       val fetchProfile = FetchProfile()
       fetchProfile.add(FetchProfile.Item.ENVELOPE)

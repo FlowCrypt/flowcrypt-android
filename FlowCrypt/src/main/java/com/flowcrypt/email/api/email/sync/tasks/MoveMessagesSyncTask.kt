@@ -46,8 +46,7 @@ class MoveMessagesSyncTask(ownerKey: String,
 
     val isSingleMoving = uids.size == 1
 
-    var msgs: Array<Message>? = srcFolder.getMessagesByUID(uids)
-    msgs = trimNulls(msgs)
+    val msgs: List<Message> = srcFolder.getMessagesByUID(uids).filterNotNull()
 
     if (msgs.isNotEmpty()) {
       if (!destFolder.exists()) {
@@ -55,9 +54,9 @@ class MoveMessagesSyncTask(ownerKey: String,
       }
 
       destFolder.open(Folder.READ_WRITE)
-      srcFolder.moveMessages(msgs, destFolder)
+      srcFolder.moveMessages(msgs.toTypedArray(), destFolder)
       if (isSingleMoving) {
-        listener.onMsgMoved(account, srcFolder, destFolder, msgs[0], ownerKey, requestCode)
+        listener.onMsgMoved(account, srcFolder, destFolder, msgs.first(), ownerKey, requestCode)
       } else {
         listener.onMsgsMoved(account, srcFolder, destFolder, msgs, ownerKey, requestCode)
       }
@@ -65,31 +64,12 @@ class MoveMessagesSyncTask(ownerKey: String,
       destFolder.close(false)
     } else {
       if (isSingleMoving) {
-        listener.onMsgsMoved(account, srcFolder, destFolder, null, ownerKey, requestCode)
+        listener.onMsgMoved(account, srcFolder, destFolder, null, ownerKey, requestCode)
       } else {
-        listener.onMsgsMoved(account, srcFolder, destFolder, arrayOf(), ownerKey, requestCode)
+        listener.onMsgsMoved(account, srcFolder, destFolder, emptyList(), ownerKey, requestCode)
       }
     }
 
     srcFolder.close(false)
-  }
-
-  /**
-   * Remove all null objects from the array.
-   *
-   * @param messages The input messages array.
-   * @return The array of non-null messages.
-   */
-  private fun trimNulls(messages: Array<Message>?): Array<Message> {
-    return if (messages != null) {
-      val list = mutableListOf<Message>()
-
-      for (message in messages) {
-        list.add(message)
-      }
-
-      list.toTypedArray()
-    } else
-      emptyArray()
   }
 }

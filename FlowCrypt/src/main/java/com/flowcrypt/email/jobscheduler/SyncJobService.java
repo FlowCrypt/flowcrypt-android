@@ -35,6 +35,8 @@ import com.flowcrypt.email.util.LogsUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
 import com.sun.mail.imap.IMAPFolder;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.HashSet;
@@ -134,7 +136,7 @@ public class SyncJobService extends JobService implements SyncListener {
 
   @Override
   public void onMsgsMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder,
-                          Message[] msgs, String ownerKey, int requestCode) {
+                          @NotNull List<? extends Message> msgs, String ownerKey, int requestCode) {
 
   }
 
@@ -211,7 +213,7 @@ public class SyncJobService extends JobService implements SyncListener {
   }
 
   @Override
-  public void onFolderInfoReceived(AccountDao account, javax.mail.Folder[] folders, String ownerKey, int requestCode) {
+  public void onFoldersInfoReceived(AccountDao account, javax.mail.Folder[] folders, String ownerKey, int requestCode) {
 
   }
 

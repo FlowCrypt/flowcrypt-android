@@ -45,7 +45,7 @@ class SyncFolderSyncTask(ownerKey: String,
     val newestCachedUID = messageDaoSource.getLastUIDOfMsgInLabel(context, account.email, folderName)
     val loadedMsgsCount = messageDaoSource.getLabelMsgsCount(context, account.email, folderName)
 
-    var newMsgs = arrayOfNulls<Message>(0)
+    var newMsgs = emptyArray<Message>()
 
     if (newestCachedUID > 1 && newestCachedUID < nextUID - 1) {
       if (isEncryptedModeEnabled) {

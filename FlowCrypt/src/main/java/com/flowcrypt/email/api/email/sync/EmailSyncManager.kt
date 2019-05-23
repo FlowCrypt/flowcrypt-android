@@ -3,66 +3,62 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync;
+package com.flowcrypt.email.api.email.sync
 
-import android.content.Context;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.FoldersManager;
-import com.flowcrypt.email.api.email.model.LocalFolder;
-import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
-import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask;
-import com.flowcrypt.email.api.email.sync.tasks.SyncTask;
-import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService;
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.LogsUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-import com.google.android.gms.auth.GoogleAuthException;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
-import com.google.android.gms.security.ProviderInstaller;
-import com.sun.mail.iap.ConnectionException;
-import com.sun.mail.imap.IMAPFolder;
-import com.sun.mail.util.MailConnectException;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-
-import javax.mail.FolderClosedException;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Store;
-import javax.mail.event.MessageChangedEvent;
-import javax.mail.event.MessageChangedListener;
-import javax.mail.event.MessageCountEvent;
-import javax.mail.event.MessageCountListener;
+import android.content.Context
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
+import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask
+import com.flowcrypt.email.api.email.sync.tasks.SyncTask
+import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.ManualHandledException
+import com.google.android.gms.auth.GoogleAuthException
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.google.android.gms.common.GooglePlayServicesRepairableException
+import com.google.android.gms.security.ProviderInstaller
+import com.sun.mail.iap.ConnectionException
+import com.sun.mail.imap.IMAPFolder
+import com.sun.mail.util.MailConnectException
+import java.io.IOException
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
+import javax.mail.FolderClosedException
+import javax.mail.Message
+import javax.mail.MessagingException
+import javax.mail.Session
+import javax.mail.Store
+import javax.mail.event.MessageChangedEvent
+import javax.mail.event.MessageChangedListener
+import javax.mail.event.MessageCountEvent
+import javax.mail.event.MessageCountListener
 
 /**
- * This class describes a logic of work with {@link Store} for the single account. Via
+ * This class describes a logic of work with [Store] for the single account. Via
  * this class we can retrieve a new information from the server and send a data to the server.
- * Here we open a new connection to the {@link Store} and keep it alive. This class does
+ * Here we open a new connection to the [Store] and keep it alive. This class does
  * all job to communicate with IMAP server.
  *
  * @author DenBond7
@@ -71,33 +67,37 @@ import javax.mail.event.MessageCountListener;
  * E-mail: DenBond7@gmail.com
  */
 
-public class EmailSyncManager {
-  private static final int MAX_THREADS_COUNT = 3;
-  private static final String TAG = EmailSyncManager.class.getSimpleName();
+class EmailSyncManager(account: AccountDao, listener: SyncListener) {
 
-  private BlockingQueue<SyncTask> activeQueue;
-  private BlockingQueue<SyncTask> passiveQueue;
-  private ExecutorService executorService;
-  private Future<?> activeFuture;
-  private Future<?> passiveFuture;
+  private val activeQueue: BlockingQueue<SyncTask>
+  private val passiveQueue: BlockingQueue<SyncTask>
+  private val executorService: ExecutorService
+  private var activeFuture: Future<*>? = null
+  private var passiveFuture: Future<*>? = null
 
   /**
    * This fields created as volatile because will be used in different threads.
    */
 
-  private volatile Future<?> idleFuture;
-  private volatile SyncListener listener;
-  private volatile AccountDao account;
-  private volatile boolean isIdleSupported = true;
+  @Volatile
+  private var idleFuture: Future<*>? = null
+  @Volatile
+  private var listener: SyncListener
+  @Volatile
+  var accountDao: AccountDao
+    private set
+  @Volatile
+  private var isIdleSupported = true
 
-  public EmailSyncManager(AccountDao account) {
-    this.account = account;
-    this.activeQueue = new LinkedBlockingQueue<>();
-    this.passiveQueue = new LinkedBlockingQueue<>();
-    this.executorService = Executors.newFixedThreadPool(MAX_THREADS_COUNT);
+  init {
+    this.accountDao = account
+    this.listener = listener
+    this.activeQueue = LinkedBlockingQueue()
+    this.passiveQueue = LinkedBlockingQueue()
+    this.executorService = Executors.newFixedThreadPool(MAX_THREADS_COUNT)
 
-    updateLabels(null, 0, activeQueue);
-    loadContactsInfoIfNeeded();
+    updateLabels("", 0, activeQueue)
+    loadContactsInfoIfNeeded()
   }
 
   /**
@@ -105,321 +105,287 @@ public class EmailSyncManager {
    *
    * @param isResetNeeded true if need a reconnect, false otherwise.
    */
-  public void beginSync(boolean isResetNeeded) {
-    LogsUtil.d(TAG, "beginSync | isResetNeeded = " + isResetNeeded);
+  fun beginSync(isResetNeeded: Boolean) {
+    LogsUtil.d(TAG, "beginSync | isResetNeeded = $isResetNeeded")
     if (isResetNeeded) {
-      cancelAllSyncTasks();
-      updateLabels(null, 0, activeQueue);
-      loadContactsInfoIfNeeded();
+      cancelAllSyncTasks()
+      updateLabels("", 0, activeQueue)
+      loadContactsInfoIfNeeded()
     }
 
     if (!isThreadAlreadyWorking(activeFuture)) {
-      activeFuture = executorService.submit(new ActiveSyncTaskRunnable());
+      activeFuture = executorService.submit(ActiveSyncTaskRunnable())
     }
 
     if (!isThreadAlreadyWorking(passiveFuture)) {
-      passiveFuture = executorService.submit(new PassiveSyncTaskRunnable());
+      passiveFuture = executorService.submit(PassiveSyncTaskRunnable())
     }
 
-    runIdleInboxIfNeeded();
+    runIdleInboxIfNeeded()
 
-    if (listener != null && listener.getContext() != null) {
-      ForwardedAttachmentsDownloaderJobService.schedule(listener.getContext());
-      MessagesSenderJobService.schedule(listener.getContext());
-    }
+    ForwardedAttachmentsDownloaderJobService.schedule(listener.context)
+    MessagesSenderJobService.schedule(listener.context)
   }
 
   /**
    * Stop a synchronization.
    */
-  public void stopSync() {
-    cancelAllSyncTasks();
+  fun stopSync() {
+    cancelAllSyncTasks()
 
-    if (activeFuture != null) {
-      activeFuture.cancel(true);
-    }
-
-    if (passiveFuture != null) {
-      passiveFuture.cancel(true);
-    }
-
-    if (idleFuture != null) {
-      idleFuture.cancel(true);
-    }
-
-    if (executorService != null) {
-      executorService.shutdown();
-    }
+    activeFuture?.cancel(true)
+    passiveFuture?.cancel(true)
+    idleFuture?.cancel(true)
+    executorService.shutdown()
   }
 
   /**
    * Clear the queue of sync tasks.
    */
-  public void cancelAllSyncTasks() {
-    if (activeQueue != null) {
-      activeQueue.clear();
-    }
-
-    if (passiveQueue != null) {
-      passiveQueue.clear();
-    }
-  }
-
-  /**
-   * Set the {@link SyncListener} for current {@link EmailSyncManager}
-   *
-   * @param syncListener A new listener.
-   */
-  public void setSyncListener(SyncListener syncListener) {
-    this.listener = syncListener;
+  fun cancelAllSyncTasks() {
+    activeQueue.clear()
+    passiveQueue.clear()
   }
 
   /**
    * Run update a folders list.
    *
-   * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-   * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-   * @param queue       The queue where {@link UpdateLabelsSyncTask} will be run.
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
+   * @param queue       The queue where [UpdateLabelsSyncTask] will be run.
    */
-  public void updateLabels(String ownerKey, int requestCode, BlockingQueue<SyncTask> queue) {
+  fun updateLabels(ownerKey: String, requestCode: Int, queue: BlockingQueue<SyncTask>) {
     try {
-      removeOldTasks(UpdateLabelsSyncTask.class, queue);
-      queue.put(new UpdateLabelsSyncTask(ownerKey, requestCode));
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      removeOldTasks(UpdateLabelsSyncTask::class.java, queue)
+      queue.put(UpdateLabelsSyncTask(ownerKey, requestCode))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 
   /**
    * Run update a folders list.
    *
-   * @param ownerKey       The name of the reply to {@link android.os.Messenger}.
-   * @param requestCode    The unique request code for the reply to {@link android.os.Messenger}.
+   * @param ownerKey       The name of the reply to [android.os.Messenger].
+   * @param requestCode    The unique request code for the reply to [android.os.Messenger].
    * @param isInBackground if true we will run this task using the passive queue, else we will use the active queue.
    */
-  public void updateLabels(String ownerKey, int requestCode, boolean isInBackground) {
-    updateLabels(ownerKey, requestCode, isInBackground ? passiveQueue : activeQueue);
+  fun updateLabels(ownerKey: String, requestCode: Int, isInBackground: Boolean) {
+    updateLabels(ownerKey, requestCode, if (isInBackground) passiveQueue else activeQueue)
   }
 
   /**
    * Add load a messages information task. This method create a new
-   * {@link LoadMessagesSyncTask} object and added it to the current synchronization
+   * [LoadMessagesSyncTask] object and added it to the current synchronization
    * BlockingQueue.
    *
-   * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-   * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
    * @param localFolder A local implementation of the remote localFolder.
    * @param start       The position of the start.
    * @param end         The position of the end.
    */
-  public void loadMsgs(String ownerKey, int requestCode, LocalFolder localFolder, int start, int end) {
+  fun loadMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, start: Int, end: Int) {
     try {
-      activeQueue.put(new LoadMessagesSyncTask(ownerKey, requestCode, localFolder, start, end));
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      activeQueue.put(LoadMessagesSyncTask(ownerKey, requestCode, localFolder, start, end))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 
   /**
    * Start loading new messages to the local cache. This method create a new
-   * {@link CheckNewMessagesSyncTask} object and add it to the passive BlockingQueue.
+   * [CheckNewMessagesSyncTask] object and add it to the passive BlockingQueue.
    *
-   * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-   * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
    * @param localFolder A local implementation of the remote localFolder.
    */
-  public void loadNewMsgs(String ownerKey, int requestCode, LocalFolder localFolder) {
+  fun loadNewMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder) {
     try {
-      removeOldTasks(CheckNewMessagesSyncTask.class, passiveQueue);
-      passiveQueue.put(new CheckNewMessagesSyncTask(ownerKey, requestCode, localFolder));
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      removeOldTasks(CheckNewMessagesSyncTask::class.java, passiveQueue)
+      passiveQueue.put(CheckNewMessagesSyncTask(ownerKey, requestCode, localFolder))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 
   /**
    * Add load a messages information task. This method create a new
-   * {@link LoadMessagesSyncTask} object and added it to the current synchronization
+   * [LoadMessagesSyncTask] object and added it to the current synchronization
    * BlockingQueue.
    *
-   * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-   * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
    * @param localFolder The local implementation of the remote localFolder.
-   * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link Message ).
+   * @param uid         The [com.sun.mail.imap.protocol.UID] of [).][Message]
    */
-  public void loadMsgDetails(String ownerKey, int requestCode, LocalFolder localFolder, int uid) {
+  fun loadMsgDetails(ownerKey: String, requestCode: Int, localFolder: LocalFolder, uid: Int) {
     try {
-      removeOldTasks(LoadMessageDetailsSyncTask.class, activeQueue);
-      activeQueue.put(new LoadMessageDetailsSyncTask(ownerKey, requestCode, localFolder, uid));
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      removeOldTasks(LoadMessageDetailsSyncTask::class.java, activeQueue)
+      activeQueue.put(LoadMessageDetailsSyncTask(ownerKey, requestCode, localFolder, uid.toLong()))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 
   /**
    * Add the task of load information of the next messages. This method create a new
-   * {@link LoadMessagesToCacheSyncTask} object and added it to the current synchronization
+   * [LoadMessagesToCacheSyncTask] object and added it to the current synchronization
    * BlockingQueue.
    *
-   * @param ownerKey               The name of the reply to {@link android.os.Messenger}.
+   * @param ownerKey               The name of the reply to [android.os.Messenger].
    * @param requestCode            The unique request code for the reply to
-   *                               {@link android.os.Messenger}.
+   * [android.os.Messenger].
    * @param localFolder            A local implementation of the remote localFolder.
    * @param alreadyLoadedMsgsCount The count of already cached messages in the localFolder.
    */
-  public void loadNextMsgs(String ownerKey, int requestCode, LocalFolder localFolder, int alreadyLoadedMsgsCount) {
+  fun loadNextMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
     try {
-      notifyActionProgress(ownerKey, requestCode, R.id.progress_id_adding_task_to_queue);
-      removeOldTasks(LoadMessagesToCacheSyncTask.class, activeQueue);
-      activeQueue.put(new LoadMessagesToCacheSyncTask(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount));
+      notifyActionProgress(ownerKey, requestCode, R.id.progress_id_adding_task_to_queue)
+      removeOldTasks(LoadMessagesToCacheSyncTask::class.java, activeQueue)
+      activeQueue.put(LoadMessagesToCacheSyncTask(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount))
 
-      if (activeQueue.size() != 1) {
-        notifyActionProgress(ownerKey, requestCode, R.id.progress_id_queue_is_not_empty);
+      if (activeQueue.size != 1) {
+        notifyActionProgress(ownerKey, requestCode, R.id.progress_id_queue_is_not_empty)
       } else {
-        if (activeFuture.isCancelled() && activeFuture.isDone()) {
-          notifyActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_cancalled_and_done);
+        val future = activeFuture ?: return
+
+        if (future.isCancelled && future.isDone) {
+          notifyActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_cancalled_and_done)
         } else {
-          if (activeFuture.isDone()) {
-            notifyActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_done);
+          if (future.isDone) {
+            notifyActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_done)
           }
 
-          if (activeFuture.isCancelled()) {
-            notifyActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_cancalled);
+          if (future.isCancelled) {
+            notifyActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_cancalled)
           }
         }
       }
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 
   /**
    * Add load a new messages information task. This method create a new
-   * {@link RefreshMessagesSyncTask} object and added it to the current synchronization
+   * [RefreshMessagesSyncTask] object and added it to the current synchronization
    * BlockingQueue.
    *
-   * @param ownerKey          The name of the reply to {@link android.os.Messenger}.
-   * @param requestCode       The unique request code for the reply to {@link android.os.Messenger}.
+   * @param ownerKey          The name of the reply to [android.os.Messenger].
+   * @param requestCode       The unique request code for the reply to [android.os.Messenger].
    * @param localFolder       A local implementation of the remote localFolder.
    * @param isActiveQueueUsed true if the current call will be ran in the active queue, otherwise false.
    */
-  public void refreshMsgs(String ownerKey, int requestCode, LocalFolder localFolder, boolean isActiveQueueUsed) {
+  fun refreshMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, isActiveQueueUsed: Boolean) {
     try {
-      BlockingQueue<SyncTask> syncTaskBlockingQueue = isActiveQueueUsed ? activeQueue : passiveQueue;
+      val syncTaskBlockingQueue = if (isActiveQueueUsed) activeQueue else passiveQueue
 
-      removeOldTasks(RefreshMessagesSyncTask.class, syncTaskBlockingQueue);
-      syncTaskBlockingQueue.put(new RefreshMessagesSyncTask(ownerKey, requestCode, localFolder));
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      removeOldTasks(RefreshMessagesSyncTask::class.java, syncTaskBlockingQueue)
+      syncTaskBlockingQueue.put(RefreshMessagesSyncTask(ownerKey, requestCode, localFolder))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 
   /**
    * Move the message to an another folder.
    *
-   * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for identify the current action.
    * @param srcFolder   A local implementation of the remote folder which is the source.
    * @param destFolder  A local implementation of the remote folder which is the destination.
-   * @param uid         The {@link com.sun.mail.imap.protocol.UID} of {@link javax.mail
-   *                    .Message ).
+   * @param uid         The [com.sun.mail.imap.protocol.UID] of [                    .Message ).][javax.mail]
    */
-  public void moveMsg(String ownerKey, int requestCode, LocalFolder srcFolder, LocalFolder destFolder, int uid) {
+  fun moveMsg(ownerKey: String, requestCode: Int, srcFolder: LocalFolder, destFolder: LocalFolder, uid: Int) {
     try {
-      activeQueue.put(new MoveMessagesSyncTask(ownerKey, requestCode, srcFolder, destFolder, new long[]{uid}));
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      activeQueue.put(MoveMessagesSyncTask(ownerKey, requestCode, srcFolder, destFolder, longArrayOf(uid.toLong())))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 
   /**
    * Load the private keys from the INBOX folder.
    *
-   * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for identify the current action.
    */
-  public void loadPrivateKeys(String ownerKey, int requestCode) {
+  fun loadPrivateKeys(ownerKey: String, requestCode: Int) {
     try {
-      activeQueue.put(new LoadPrivateKeysFromEmailBackupSyncTask(ownerKey, requestCode));
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      activeQueue.put(LoadPrivateKeysFromEmailBackupSyncTask(ownerKey, requestCode))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 
   /**
    * Send a message with a backup to the key owner.
    *
-   * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for identify the current action.
    */
-  public void sendMsgWithBackup(String ownerKey, int requestCode) {
+  fun sendMsgWithBackup(ownerKey: String, requestCode: Int) {
     try {
-      activeQueue.put(new SendMessageWithBackupToKeyOwnerSynsTask(ownerKey, requestCode));
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      activeQueue.put(SendMessageWithBackupToKeyOwnerSynsTask(ownerKey, requestCode))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 
   /**
    * Identify encrypted messages.
    *
-   * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for identify the current action.
    * @param localFolder The local implementation of the remote folder
    */
-  public void identifyEncryptedMsgs(String ownerKey, int requestCode, LocalFolder localFolder) {
+  fun identifyEncryptedMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder) {
     try {
-      removeOldTasks(CheckIsLoadedMessagesEncryptedSyncTask.class, passiveQueue);
-      passiveQueue.put(new CheckIsLoadedMessagesEncryptedSyncTask(ownerKey, requestCode, localFolder));
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      removeOldTasks(CheckIsLoadedMessagesEncryptedSyncTask::class.java, passiveQueue)
+      passiveQueue.put(CheckIsLoadedMessagesEncryptedSyncTask(ownerKey, requestCode, localFolder))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 
-  public AccountDao getAccountDao() {
-    return account;
-  }
-
-  public void switchAccount(AccountDao account) {
-    this.account = account;
-    if (account != null) {
-      this.isIdleSupported = true;
-      beginSync(true);
-    } else {
-      stopSync();
-    }
+  fun switchAccount(account: AccountDao) {
+    this.accountDao = account
+    this.isIdleSupported = true
+    beginSync(true)
   }
 
   /**
    * Add the task of load information of the next searched messages. This method create a new
-   * {@link SearchMessagesSyncTask} object and added it to the current synchronization
+   * [SearchMessagesSyncTask] object and added it to the current synchronization
    * BlockingQueue.
    *
-   * @param ownerKey               The name of the reply to {@link android.os.Messenger}.
-   * @param requestCode            The unique request code for the reply to {@link android.os.Messenger}.
+   * @param ownerKey               The name of the reply to [android.os.Messenger].
+   * @param requestCode            The unique request code for the reply to [android.os.Messenger].
    * @param localFolder            A localFolder where we do a search.
    * @param alreadyLoadedMsgsCount The count of already cached messages in the database.
    */
-  public void searchMsgs(String ownerKey, int requestCode, LocalFolder localFolder, int alreadyLoadedMsgsCount) {
+  fun searchMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
     try {
-      removeOldTasks(SearchMessagesSyncTask.class, activeQueue);
-      activeQueue.put(new SearchMessagesSyncTask(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount));
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      removeOldTasks(SearchMessagesSyncTask::class.java, activeQueue)
+      activeQueue.put(SearchMessagesSyncTask(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 
   /**
    * Load contacts info from the SENT folder.
    */
-  private void loadContactsInfoIfNeeded() {
-    if (account != null && !account.getAreContactsLoaded()) {
+  private fun loadContactsInfoIfNeeded() {
+    if (!accountDao.areContactsLoaded) {
       //we need to update labels before we can use the SENT folder for retrieve contacts
-      updateLabels(null, 0, passiveQueue);
+      updateLabels("", 0, passiveQueue)
       try {
-        passiveQueue.put(new LoadContactsSyncTask());
-      } catch (InterruptedException e) {
-        e.printStackTrace();
+        passiveQueue.put(LoadContactsSyncTask())
+      } catch (e: InterruptedException) {
+        e.printStackTrace()
       }
     }
   }
@@ -427,9 +393,9 @@ public class EmailSyncManager {
   /**
    * Run a thread where we will idle INBOX folder.
    */
-  private void runIdleInboxIfNeeded() {
+  private fun runIdleInboxIfNeeded() {
     if (isIdleSupported && !isThreadAlreadyWorking(idleFuture)) {
-      idleFuture = executorService.submit(new IdleSyncRunnable());
+      idleFuture = executorService.submit(IdleSyncRunnable())
     }
   }
 
@@ -438,8 +404,8 @@ public class EmailSyncManager {
    *
    * @return true if already work, otherwise false.
    */
-  private boolean isThreadAlreadyWorking(Future<?> future) {
-    return future != null && !future.isCancelled() && !future.isDone();
+  private fun isThreadAlreadyWorking(future: Future<*>?): Boolean {
+    return future != null && !future.isCancelled && !future.isDone
   }
 
   /**
@@ -448,11 +414,11 @@ public class EmailSyncManager {
    * @param cls   The task type.
    * @param queue The queue of the tasks.
    */
-  private void removeOldTasks(Class<?> cls, BlockingQueue<SyncTask> queue) {
-    Iterator<?> iterator = queue.iterator();
+  private fun removeOldTasks(cls: Class<*>, queue: BlockingQueue<SyncTask>) {
+    val iterator = queue.iterator()
     while (iterator.hasNext()) {
       if (cls.isInstance(iterator.next())) {
-        iterator.remove();
+        iterator.remove()
       }
     }
   }
@@ -460,67 +426,19 @@ public class EmailSyncManager {
   /**
    * This method can be used for debugging. Using this method we can identify a progress of some operation.
    *
-   * @param ownerKey    The name of the reply to {@link android.os.Messenger}.
-   * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
    * @param resultCode  The unique result code for the reply which identifies the progress of some request.
    */
-  private void notifyActionProgress(String ownerKey, int requestCode, int resultCode) {
-    if (listener != null) {
-      listener.onActionProgress(account, ownerKey, requestCode, resultCode);
-    }
+  private fun notifyActionProgress(ownerKey: String, requestCode: Int, resultCode: Int) {
+    listener.onActionProgress(accountDao, ownerKey, requestCode, resultCode)
   }
 
-  private abstract class BaseSyncRunnable implements Runnable {
-    protected final String tag;
+  private abstract inner class BaseSyncRunnable internal constructor() : Runnable {
+    protected val tag: String = javaClass.simpleName
 
-    protected Session sess;
-    protected Store store;
-
-    BaseSyncRunnable() {
-      tag = getClass().getSimpleName();
-    }
-
-    void resetConnIfNeeded(SyncTask task) throws MessagingException, ManualHandledException {
-      if (store != null && account != null) {
-        if (account.getAuthCreds() != null) {
-          if (!store.getURLName().getUsername().equalsIgnoreCase(account.getAuthCreds().getUsername())) {
-            LogsUtil.d(tag, "Connection was reset!");
-
-            if (task != null) {
-              notifyActionProgress(task.getOwnerKey(), task.getRequestCode(), R.id.progress_id_resetting_connection);
-            }
-
-            if (store != null) {
-              store.close();
-            }
-            sess = null;
-          }
-        } else if (listener != null && listener.getContext() != null) {
-          throw new ManualHandledException(listener.getContext().getString(R.string
-              .device_not_supported_key_store_error));
-        } else {
-          throw new NullPointerException("The context is null");
-        }
-      }
-    }
-
-    void closeConn() {
-      try {
-        if (store != null) {
-          store.close();
-        }
-      } catch (MessagingException e) {
-        e.printStackTrace();
-        ExceptionUtil.handleError(e);
-        LogsUtil.d(tag, "This exception occurred when we try disconnect from the store.");
-      }
-    }
-
-    void openConnToStore() throws IOException, GoogleAuthException, MessagingException {
-      patchingSecurityProvider(listener.getContext());
-      sess = OpenStoreHelper.getAccountSess(listener.getContext(), account);
-      store = OpenStoreHelper.openStore(listener.getContext(), account, sess);
-    }
+    protected var sess: Session? = null
+    protected var store: Store? = null
 
     /**
      * Check available connection to the store.
@@ -528,272 +446,298 @@ public class EmailSyncManager {
      *
      * @return trus if connected, false otherwise.
      */
-    boolean isConnected() {
-      return store != null && store.isConnected();
+    internal val isConnected: Boolean
+      get() = store != null && store!!.isConnected
+
+    @Throws(MessagingException::class, ManualHandledException::class)
+    internal fun resetConnIfNeeded(task: SyncTask?) {
+      val activeStore = store ?: return
+
+      if (accountDao.authCreds != null) {
+        if (!activeStore.urlName.username.equals(accountDao.authCreds!!.username, ignoreCase = true)) {
+          LogsUtil.d(tag, "Connection was reset!")
+
+          if (task != null) {
+            notifyActionProgress(task.ownerKey, task.requestCode, R.id.progress_id_resetting_connection)
+          }
+
+          activeStore.close()
+          sess = null
+        }
+      } else {
+        throw ManualHandledException(listener.context.getString(R.string.device_not_supported_key_store_error))
+      }
+    }
+
+    internal fun closeConn() {
+      try {
+        val activeStore = store ?: return
+        activeStore.close()
+      } catch (e: MessagingException) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        LogsUtil.d(tag, "This exception occurred when we try disconnect from the store.")
+      }
+
+    }
+
+    @Throws(IOException::class, GoogleAuthException::class, MessagingException::class)
+    internal fun openConnToStore() {
+      patchingSecurityProvider(listener.context)
+      sess = OpenStoreHelper.getAccountSess(listener.context, accountDao)
+      store = OpenStoreHelper.openStore(listener.context, accountDao, sess!!)
     }
 
     /**
-     * Run the incoming {@link SyncTask}
+     * Run the incoming [SyncTask]
      *
      * @param isRetryEnabled true if want to retry a task if it was fail
-     * @param task           The incoming {@link SyncTask}
+     * @param task           The incoming [SyncTask]
      */
-    void runSyncTask(SyncTask task, boolean isRetryEnabled) {
-      try {
-        notifyActionProgress(task.getOwnerKey(), task.getRequestCode(), R.id.progress_id_running_task);
+    internal fun runSyncTask(task: SyncTask?, isRetryEnabled: Boolean) {
 
-        resetConnIfNeeded(task);
+      task?.let {
+        try {
+          notifyActionProgress(task.ownerKey, task.requestCode, R.id.progress_id_running_task)
 
-        if (!isConnected()) {
-          LogsUtil.d(tag, "Not connected. Start a reconnection ...");
-          notifyActionProgress(task.getOwnerKey(), task.getRequestCode(), R.id.progress_id_connecting_to_email_server);
-          openConnToStore();
-          LogsUtil.d(tag, "Reconnection done");
-        }
+          resetConnIfNeeded(task)
 
-        LogsUtil.d(tag, "Start a new task = " + task.getClass().getSimpleName() + " for store " + store.toString());
-
-        if (task.isSMTPRequired()) {
-          notifyActionProgress(task.getOwnerKey(), task.getRequestCode(), R.id.progress_id_running_smtp_action);
-          task.runSMTPAction(account, sess, store, listener);
-        } else {
-          notifyActionProgress(task.getOwnerKey(), task.getRequestCode(), R.id.progress_id_running_imap_action);
-          task.runIMAPAction(account, sess, store, listener);
-        }
-        LogsUtil.d(tag, "The task = " + task.getClass().getSimpleName() + " completed");
-      } catch (Exception e) {
-        e.printStackTrace();
-        if (e instanceof ConnectionException) {
-          if (isRetryEnabled) {
-            runSyncTask(task, false);
-          } else {
-            ExceptionUtil.handleError(e);
-            task.handleException(account, e, listener);
+          if (!isConnected) {
+            LogsUtil.d(tag, "Not connected. Start a reconnection ...")
+            notifyActionProgress(task.ownerKey, task.requestCode, R.id.progress_id_connecting_to_email_server)
+            openConnToStore()
+            LogsUtil.d(tag, "Reconnection done")
           }
-        } else {
-          ExceptionUtil.handleError(e);
-          task.handleException(account, e, listener);
+
+          val activeStore = store ?: return
+          val activeSess = sess ?: return
+
+          LogsUtil.d(tag, "Start a new task = " + task.javaClass.simpleName + " for store " + activeStore.toString())
+
+          if (task.isSMTPRequired) {
+            notifyActionProgress(task.ownerKey, task.requestCode, R.id.progress_id_running_smtp_action)
+            task.runSMTPAction(accountDao, activeSess, activeStore, listener)
+          } else {
+            notifyActionProgress(task.ownerKey, task.requestCode, R.id.progress_id_running_imap_action)
+            task.runIMAPAction(accountDao, activeSess, activeStore, listener)
+          }
+          LogsUtil.d(tag, "The task = " + task.javaClass.simpleName + " completed")
+        } catch (e: Exception) {
+          e.printStackTrace()
+          if (e is ConnectionException) {
+            if (isRetryEnabled) {
+              runSyncTask(task, false)
+            } else {
+              ExceptionUtil.handleError(e)
+              task.handleException(accountDao, e, listener)
+            }
+          } else {
+            ExceptionUtil.handleError(e)
+            task.handleException(accountDao, e, listener)
+          }
         }
       }
     }
 
     /**
      * To update a device's security provider, use the ProviderInstaller class.
-     * <p>
+     *
+     *
      * When you call installIfNeeded(), the ProviderInstaller does the following:
-     * <li>If the device's Provider is successfully updated (or is already up-to-date), the method returns
-     * normally.</li>
-     * <li>If the device's Google Play services library is out of date, the method throws
+     *  * If the device's Provider is successfully updated (or is already up-to-date), the method returns
+     * normally.
+     *  * If the device's Google Play services library is out of date, the method throws
      * GooglePlayServicesRepairableException. The app can then catch this exception and show the user an
-     * appropriate dialog box to update Google Play services.</li>
-     * <li>If a non-recoverable error occurs, the method throws GooglePlayServicesNotAvailableException to indicate
+     * appropriate dialog box to update Google Play services.
+     *  * If a non-recoverable error occurs, the method throws GooglePlayServicesNotAvailableException to indicate
      * that it is unable to update the Provider. The app can then catch the exception and choose an appropriate
-     * course of action, such as displaying the standard fix-it flow diagram.</li>
-     * <p>
+     * course of action, such as displaying the standard fix-it flow diagram.
+     *
+     *
      * If installIfNeeded() needs to install a new Provider, this can take anywhere from 30-50 milliseconds (on
      * more recent devices) to 350 ms (on older devices). If the security provider is already up-to-date, the
      * method takes a negligible amount of time.
-     * <p>
+     *
+     *
      * Details here https://developer.android.com/training/articles/security-gms-provider.html#patching
      *
      * @param context Interface to global information about an application environment;
      */
-    private void patchingSecurityProvider(Context context) {
+    private fun patchingSecurityProvider(context: Context) {
       try {
-        ProviderInstaller.installIfNeeded(context);
-      } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
-        e.printStackTrace();
+        ProviderInstaller.installIfNeeded(context)
+      } catch (e: GooglePlayServicesRepairableException) {
+        e.printStackTrace()
+      } catch (e: GooglePlayServicesNotAvailableException) {
+        e.printStackTrace()
       }
     }
   }
 
-  private class PassiveSyncTaskRunnable extends BaseSyncRunnable {
-    private static final int TIMEOUT_WAIT_NEXT_TASK = 30;
+  private inner class PassiveSyncTaskRunnable : BaseSyncRunnable() {
+    private val timeoutWaitNextTask = 30
 
-    @Override
-    public void run() {
-      LogsUtil.d(tag, " run!");
-      Thread.currentThread().setName(getClass().getSimpleName());
+    override fun run() {
+      LogsUtil.d(tag, " run!")
+      Thread.currentThread().name = javaClass.simpleName
 
       while (!Thread.interrupted()) {
         try {
-          LogsUtil.d(tag, "PassiveSyncTaskBlockingQueue size = " + passiveQueue.size());
-          SyncTask syncTask = passiveQueue.poll(TIMEOUT_WAIT_NEXT_TASK, TimeUnit.SECONDS);
+          LogsUtil.d(tag, "PassiveSyncTaskBlockingQueue size = " + passiveQueue.size)
+          var syncTask: SyncTask? = passiveQueue.poll(timeoutWaitNextTask.toLong(), TimeUnit.SECONDS)
 
           if (syncTask == null) {
-            closeConn();
-            LogsUtil.d(tag, "Disconnected. Wait new tasks.");
-            syncTask = passiveQueue.take();
+            closeConn()
+            LogsUtil.d(tag, "Disconnected. Wait new tasks.")
+            syncTask = passiveQueue.take()
           }
 
-          runIdleInboxIfNeeded();
-
-          if (account != null) {
-            runSyncTask(syncTask, true);
-          } else {
-            //There is no an active account. Finishing a work.
-            break;
-          }
-        } catch (InterruptedException e) {
-          e.printStackTrace();
+          runIdleInboxIfNeeded()
+          runSyncTask(syncTask, true)
+        } catch (e: InterruptedException) {
+          e.printStackTrace()
         }
       }
 
-      closeConn();
-      LogsUtil.d(tag, " stopped!");
+      closeConn()
+      LogsUtil.d(tag, " stopped!")
     }
   }
 
-  private class ActiveSyncTaskRunnable extends BaseSyncRunnable {
-    @Override
-    public void run() {
-      LogsUtil.d(tag, " run!");
-      Thread.currentThread().setName(getClass().getSimpleName());
+  private inner class ActiveSyncTaskRunnable : BaseSyncRunnable() {
+    override fun run() {
+      LogsUtil.d(tag, " run!")
+      Thread.currentThread().name = javaClass.simpleName
       while (!Thread.interrupted()) {
         try {
-          LogsUtil.d(tag, "ActiveSyncTaskBlockingQueue size = " + activeQueue.size());
-          SyncTask syncTask = activeQueue.take();
+          LogsUtil.d(tag, "ActiveSyncTaskBlockingQueue size = " + activeQueue.size)
+          val syncTask = activeQueue.take()
 
-          runIdleInboxIfNeeded();
-
-          if (account != null) {
-            runSyncTask(syncTask, true);
-          } else {
-            //There is no an active account. Finishing a work.
-            break;
-          }
-        } catch (InterruptedException e) {
-          e.printStackTrace();
+          runIdleInboxIfNeeded()
+          runSyncTask(syncTask, true)
+        } catch (e: InterruptedException) {
+          e.printStackTrace()
         }
+
       }
 
-      closeConn();
-      LogsUtil.d(tag, " stopped!");
+      closeConn()
+      LogsUtil.d(tag, " stopped!")
     }
   }
 
   /**
    * This is a thread where we do a sync of some IMAP folder.
-   * <p>
+   *
+   *
    * P.S. Currently we support only "INBOX" folder.
    */
-  private class IdleSyncRunnable extends BaseSyncRunnable implements MessageCountListener, MessageChangedListener {
-    private LocalFolder localFolder;
-    private com.sun.mail.imap.IMAPFolder remoteFolder;
-    private MessageDaoSource msgDaoSource;
+  private inner class IdleSyncRunnable internal constructor() : BaseSyncRunnable(), MessageCountListener, MessageChangedListener {
+    private var localFolder: LocalFolder? = null
+    private var remoteFolder: IMAPFolder? = null
+    private val msgDaoSource: MessageDaoSource = MessageDaoSource()
+    /**
+     * here we can have a lot of checks which help us decide can we run idling(wifi, 3G, a battery level and etc.)
+     */
+    private val isIdlingAvailable: Boolean
+      get() = true
 
-    IdleSyncRunnable() {
-      this.msgDaoSource = new MessageDaoSource();
+    override fun run() {
+      LogsUtil.d(tag, " run!")
+      Thread.currentThread().name = javaClass.simpleName
+
+      val foldersManager = FoldersManager.fromDatabase(listener.context, accountDao.email)
+      localFolder = foldersManager.findInboxFolder() ?: return
+
+      idle()
+      closeConn()
+
+      LogsUtil.d(tag, " stopped!")
     }
 
-    @Override
-    public void run() {
-      LogsUtil.d(tag, " run!");
-      Thread.currentThread().setName(getClass().getSimpleName());
-
-      FoldersManager foldersManager = FoldersManager.fromDatabase(listener.getContext(), account.getEmail());
-      localFolder = foldersManager.findInboxFolder();
-
-      if (localFolder == null) {
-        return;
-      }
-
-      idle();
-      closeConn();
-
-      LogsUtil.d(tag, " stopped!");
+    override fun messagesAdded(e: MessageCountEvent) {
+      LogsUtil.d(tag, "messagesAdded: " + e.messages.size)
+      localFolder?.let { loadNewMsgs("", 0, it) }
     }
 
-    @Override
-    public void messagesAdded(MessageCountEvent e) {
-      LogsUtil.d(tag, "messagesAdded: " + e.getMessages().length);
-      loadNewMsgs(null, 0, localFolder);
+    override fun messagesRemoved(messageCountEvent: MessageCountEvent) {
+      LogsUtil.d(tag, "messagesRemoved")
+      syncFolderState()
     }
 
-    @Override
-    public void messagesRemoved(MessageCountEvent messageCountEvent) {
-      LogsUtil.d(tag, "messagesRemoved");
-      syncFolderState();
-    }
-
-    @Override
-    public void messageChanged(MessageChangedEvent e) {
-      LogsUtil.d(tag, "messageChanged");
-      Message msg = e.getMessage();
-      if (msg != null && e.getMessageChangeType() == MessageChangedEvent.FLAGS_CHANGED) {
+    override fun messageChanged(e: MessageChangedEvent) {
+      LogsUtil.d(tag, "messageChanged")
+      val local = localFolder ?: return
+      val remote = remoteFolder ?: return
+      val msg = e.message
+      if (msg != null && e.messageChangeType == MessageChangedEvent.FLAGS_CHANGED) {
         try {
-          msgDaoSource.updateLocalMsgFlags(listener.getContext(),
-              account.getEmail(),
-              localFolder.getFolderAlias(),
-              remoteFolder.getUID(msg),
-              msg.getFlags());
-
-          if (listener != null) {
-            listener.onMsgChanged(account, localFolder, remoteFolder, msg, null, 0);
-          }
-        } catch (MessagingException msgException) {
-          msgException.printStackTrace();
+          msgDaoSource.updateLocalMsgFlags(listener.context, accountDao.email, local.folderAlias,
+              remote.getUID(msg), msg.flags)
+          listener.onMsgChanged(accountDao, local, remote, msg, "", 0)
+        } catch (msgException: MessagingException) {
+          msgException.printStackTrace()
         }
       }
     }
 
-    void idle() {
+    internal fun idle() {
       try {
-        resetConnIfNeeded(null);
-
-        while (!GeneralUtil.isConnected(listener.getContext())) {
+        resetConnIfNeeded(null)
+        while (!GeneralUtil.isConnected(listener.context)) {
           try {
             //wait while a connection will be established
-            TimeUnit.MILLISECONDS.sleep(TimeUnit.SECONDS.toMillis(30));
-          } catch (InterruptedException interruptedException) {
-            interruptedException.printStackTrace();
+            TimeUnit.MILLISECONDS.sleep(TimeUnit.SECONDS.toMillis(30))
+          } catch (interruptedException: InterruptedException) {
+            interruptedException.printStackTrace()
           }
         }
 
-        if (!isConnected()) {
-          LogsUtil.d(tag, "Not connected. Start a reconnection ...");
-          openConnToStore();
-          LogsUtil.d(tag, "Reconnection done");
+        if (!isConnected) {
+          LogsUtil.d(tag, "Not connected. Start a reconnection ...")
+          openConnToStore()
+          LogsUtil.d(tag, "Reconnection done")
         }
 
-        LogsUtil.d(tag, "Start idling for store " + store.toString());
+        val activeStore = store ?: return
 
-        remoteFolder = (IMAPFolder) store.getFolder(localFolder.getFullName());
-        remoteFolder.open(javax.mail.Folder.READ_ONLY);
+        LogsUtil.d(tag, "Start idling for store $activeStore")
 
-        syncFolderState();
+        remoteFolder = activeStore.getFolder(localFolder!!.fullName) as IMAPFolder
+        remoteFolder!!.open(javax.mail.Folder.READ_ONLY)
 
-        remoteFolder.addMessageCountListener(this);
-        remoteFolder.addMessageChangedListener(this);
+        syncFolderState()
 
-        while (!Thread.interrupted() && isIdlingAvailable()) {
-          remoteFolder.idle();
+        remoteFolder!!.addMessageCountListener(this)
+        remoteFolder!!.addMessageChangedListener(this)
+
+        while (!Thread.interrupted() && isIdlingAvailable) {
+          remoteFolder!!.idle()
         }
-      } catch (Exception e) {
-        e.printStackTrace();
-        if (e instanceof FolderClosedException
-            || e instanceof MailConnectException
-            || e instanceof IOException) {
-          idle();
-        } else if (e instanceof MessagingException) {
-          if ("IDLE not supported".equals(e.getMessage())) {
-            LogsUtil.d(tag, "IDLE not supported!");
-            isIdleSupported = false;
+      } catch (e: Exception) {
+        e.printStackTrace()
+        if (e is FolderClosedException || e is MailConnectException || e is IOException) {
+          idle()
+        } else if (e is MessagingException) {
+          if ("IDLE not supported" == e.message) {
+            LogsUtil.d(tag, "IDLE not supported!")
+            isIdleSupported = false
           }
         } else {
-          ExceptionUtil.handleError(e);
+          ExceptionUtil.handleError(e)
         }
       }
     }
 
-    private boolean isIdlingAvailable() {
-      //here we can have a lot of checks which help us decide can we run idling(wifi, 3G, a battery level and
-      // etc.)
-      return true;
+    private fun syncFolderState() {
+      localFolder?.let {
+        refreshMsgs("", 0, it, false)
+      }
     }
+  }
 
-    private void syncFolderState() {
-      refreshMsgs("", 0, localFolder, false);
-    }
+  companion object {
+    private const val MAX_THREADS_COUNT = 3
+    private val TAG = EmailSyncManager::class.java.simpleName
   }
 }
