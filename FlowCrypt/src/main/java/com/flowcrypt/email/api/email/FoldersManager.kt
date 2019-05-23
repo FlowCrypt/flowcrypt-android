@@ -3,27 +3,18 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email;
+package com.flowcrypt.email.api.email
 
-import android.content.Context;
-import android.database.Cursor;
-import android.text.TextUtils;
-
-import com.flowcrypt.email.api.email.model.LocalFolder;
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
-import com.sun.mail.imap.IMAPFolder;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import javax.mail.MessagingException;
+import android.content.Context
+import android.text.TextUtils
+import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
+import com.sun.mail.imap.IMAPFolder
+import java.util.*
+import javax.mail.MessagingException
 
 /**
- * The {@link FoldersManager} describes a logic of work with remote folders. This class helps as
+ * The [FoldersManager] describes a logic of work with remote folders. This class helps as
  * resolve problems with localized names of Gmail labels.
  *
  * @author DenBond7
@@ -32,281 +23,158 @@ import javax.mail.MessagingException;
  * E-mail: DenBond7@gmail.com
  */
 
-public class FoldersManager {
-  private LinkedHashMap<String, LocalFolder> folders;
+class FoldersManager {
+  private var folders: LinkedHashMap<String, LocalFolder> = LinkedHashMap()
 
-  public FoldersManager() {
-    this.folders = new LinkedHashMap<>();
-  }
+  val folderInbox: LocalFolder?
+    get() = folders[FolderType.INBOX.value]
 
-  /**
-   * Generate a new {@link FoldersManager} using information from the local database.
-   *
-   * @param context     Interface to global information about an application environment.
-   * @param accountName The name of an account.
-   * @return The new {@link FoldersManager}.
-   */
-  public static FoldersManager fromDatabase(Context context, String accountName) {
-    FoldersManager foldersManager = new FoldersManager();
+  val folderArchive: LocalFolder?
+    get() = folders[FolderType.All.value]
 
-    Cursor cursor = context.getContentResolver().query(new ImapLabelsDaoSource().
-        getBaseContentUri(), null, ImapLabelsDaoSource.COL_EMAIL +
-        " = ?", new String[]{accountName}, null);
+  val folderDrafts: LocalFolder?
+    get() = folders[FolderType.DRAFTS.value]
 
-    if (cursor != null) {
-      ImapLabelsDaoSource imapLabelsDaoSource = new ImapLabelsDaoSource();
+  val folderStarred: LocalFolder?
+    get() = folders[FolderType.STARRED.value]
 
-      while (cursor.moveToNext()) {
-        foldersManager.addFolder(imapLabelsDaoSource.getFolder(cursor));
-      }
-
-      cursor.close();
+  val folderSpam: LocalFolder?
+    get() {
+      val spam = folders[FolderType.JUNK.value]
+      return spam ?: folders[FolderType.SPAM.value]
     }
 
-    return foldersManager;
-  }
+  val folderSent: LocalFolder?
+    get() = folders[FolderType.SENT.value]
 
-  /**
-   * Generate a new {@link LocalFolder}
-   *
-   * @param imapFolder  The {@link IMAPFolder} object which contains information about a
-   *                    remote folder.
-   * @param folderAlias The folder alias.
-   * @return
-   * @throws MessagingException
-   */
-  public static LocalFolder generateFolder(IMAPFolder imapFolder, String folderAlias) throws
-      MessagingException {
-    return new LocalFolder(imapFolder.getFullName(), folderAlias, Arrays.asList(imapFolder.getAttributes()),
-        isCustom(imapFolder), 0, "");
-  }
+  val folderTrash: LocalFolder?
+    get() = folders[FolderType.TRASH.value]
 
-  /**
-   * Check if current folder is a custom label.
-   *
-   * @param folder The {@link IMAPFolder} object which contains information about a
-   *               remote folder.
-   * @return true if this label is a custom, false otherwise.
-   * @throws MessagingException
-   */
-  public static boolean isCustom(IMAPFolder folder) throws MessagingException {
-    String[] attr = folder.getAttributes();
-    FolderType[] folderTypes = FolderType.values();
+  val folderAll: LocalFolder?
+    get() = folders[FolderType.All.value]
 
-    for (String attribute : attr) {
-      for (FolderType folderType : folderTypes) {
-        if (folderType.getValue().equals(attribute)) {
-          return false;
-        }
-      }
-    }
+  val folderImportant: LocalFolder?
+    get() = folders[FolderType.IMPORTANT.value]
 
-    return !FolderType.INBOX.getValue().equalsIgnoreCase(folder.getFullName());
-  }
-
-  /**
-   * Get a {@link FolderType} using folder attributes.
-   *
-   * @param localFolder Some {@link javax.mail.Folder}.
-   * @return {@link FolderType}.
-   */
-  public static FolderType getFolderType(LocalFolder localFolder) {
-    FolderType[] folderTypes = FolderType.values();
-
-    if (localFolder != null) {
-      List<String> attributes = localFolder.getAttributes();
-
-      if (attributes != null) {
-        for (String attribute : attributes) {
-          for (FolderType folderType : folderTypes) {
-            if (folderType.getValue().equals(attribute)) {
-              return folderType;
-            }
-          }
-        }
-      }
-
-      if (!TextUtils.isEmpty(localFolder.getFullName())) {
-        if (JavaEmailConstants.FOLDER_INBOX.equalsIgnoreCase(localFolder.getFullName())) {
-          return FolderType.INBOX;
-        }
-      }
-
-      if (!TextUtils.isEmpty(localFolder.getFullName())) {
-        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(localFolder.getFullName())) {
-          return FolderType.OUTBOX;
-        }
-      }
-    }
-    return null;
-  }
-
-  public LocalFolder getFolderInbox() {
-    return folders.get(FolderType.INBOX.getValue());
-  }
-
-  public LocalFolder getFolderArchive() {
-    return folders.get(FolderType.All.getValue());
-  }
-
-  public LocalFolder getFolderDrafts() {
-    return folders.get(FolderType.DRAFTS.getValue());
-  }
-
-  public LocalFolder getFolderStarred() {
-    return folders.get(FolderType.STARRED.getValue());
-  }
-
-  public LocalFolder getFolderSpam() {
-    LocalFolder spam = folders.get(FolderType.JUNK.getValue());
-    return spam != null ? spam : folders.get(FolderType.SPAM.getValue());
-  }
-
-  public LocalFolder getFolderSent() {
-    return folders.get(FolderType.SENT.getValue());
-  }
-
-  public LocalFolder getFolderTrash() {
-    return folders.get(FolderType.TRASH.getValue());
-  }
-
-  public LocalFolder getFolderAll() {
-    return folders.get(FolderType.All.getValue());
-  }
-
-  public LocalFolder getFolderImportant() {
-    return folders.get(FolderType.IMPORTANT.getValue());
-  }
-
-  /**
-   * Clear the folders list.
-   */
-  public void clear() {
-    if (this.folders != null) {
-      this.folders.clear();
-    }
-  }
-
-  /**
-   * Add a new folder to {@link FoldersManager} to manage it.
-   *
-   * @param imapFolder  The {@link IMAPFolder} object which contains information about a
-   *                    remote folder.
-   * @param folderAlias The folder alias.
-   * @throws MessagingException
-   */
-  public void addFolder(IMAPFolder imapFolder, String folderAlias) throws MessagingException {
-    if (imapFolder != null
-        && !EmailUtil.containsNoSelectAttr(imapFolder)
-        && !TextUtils.isEmpty(imapFolder.getFullName())
-        && !folders.containsKey(imapFolder.getFullName())) {
-      this.folders.put(prepareFolderKey(imapFolder), generateFolder(imapFolder, folderAlias));
-    }
-  }
-
-  /**
-   * Add a new folder to {@link FoldersManager} to manage it.
-   *
-   * @param localFolder The {@link LocalFolder} object which contains information about a
-   *                    remote folder.
-   */
-  public void addFolder(LocalFolder localFolder) {
-    if (localFolder != null && !TextUtils.isEmpty(localFolder.getFullName())
-        && !folders.containsKey(localFolder.getFullName())) {
-      this.folders.put(prepareFolderKey(localFolder), localFolder);
-    }
-  }
-
-  /**
-   * Get {@link LocalFolder} by the alias name.
-   *
-   * @param folderAlias The folder alias name.
-   * @return {@link LocalFolder}.
-   */
-  public LocalFolder getFolderByAlias(String folderAlias) {
-    for (Map.Entry<String, LocalFolder> entry : folders.entrySet()) {
-      if (entry.getValue() != null && entry.getValue().getFolderAlias().equals(folderAlias)) {
-        return entry.getValue();
-      }
-    }
-
-    return null;
-  }
-
-  public Collection<LocalFolder> getAllFolders() {
-    return folders.values();
-  }
+  val allFolders: Collection<LocalFolder>
+    get() = folders.values
 
   /**
    * Get a list of all available custom labels.
    *
-   * @return List of custom labels({@link LocalFolder}).
+   * @return List of custom labels([LocalFolder]).
    */
-  public List<LocalFolder> getCustomLabels() {
-    List<LocalFolder> customLocalFolders = new LinkedList<>();
+  val customLabels: List<LocalFolder>
+    get() {
+      val customLocalFolders = LinkedList<LocalFolder>()
 
-    for (Map.Entry<String, LocalFolder> entry : folders.entrySet()) {
-      if (entry.getValue() != null && entry.getValue().isCustom()) {
-        customLocalFolders.add(entry.getValue());
+      for ((_, value) in folders) {
+        if (value.isCustom) {
+          customLocalFolders.add(value)
+        }
       }
+
+      return customLocalFolders
     }
 
-    return customLocalFolders;
+  /**
+   * Get a list of original server [LocalFolder] objects.
+   *
+   * @return a list of original server [LocalFolder] objects.
+   */
+  val serverFolders: List<LocalFolder>
+    get() {
+      val serverLocalFolders = LinkedList<LocalFolder>()
+
+      for ((_, value) in folders) {
+        if (!value.isCustom) {
+          serverLocalFolders.add(value)
+        }
+      }
+
+      return serverLocalFolders
+    }
+
+  val folderOutbox: LocalFolder?
+    get() = folders[FolderType.OUTBOX.value]
+
+  /**
+   * Clear the folders list.
+   */
+  fun clear() {
+    folders.clear()
   }
 
   /**
-   * Get a list of original server {@link LocalFolder} objects.
+   * Add a new folder to [FoldersManager] to manage it.
    *
-   * @return a list of original server {@link LocalFolder} objects.
+   * @param imapFolder  The [IMAPFolder] object which contains information about a
+   * remote folder.
+   * @param folderAlias The folder alias.
+   * @throws MessagingException
    */
-  public List<LocalFolder> getServerFolders() {
-    List<LocalFolder> serverLocalFolders = new LinkedList<>();
+  @Throws(MessagingException::class)
+  fun addFolder(imapFolder: IMAPFolder?, folderAlias: String) {
+    imapFolder?.let {
+      if (!EmailUtil.containsNoSelectAttr(it) && !TextUtils.isEmpty(it.fullName) && !folders.containsKey(it.fullName)) {
+        this.folders[prepareFolderKey(it)] = generateFolder(it, folderAlias)
+      }
+    }
+  }
 
-    for (Map.Entry<String, LocalFolder> entry : folders.entrySet()) {
-      if (entry.getValue() != null && !entry.getValue().isCustom()) {
-        serverLocalFolders.add(entry.getValue());
+  /**
+   * Add a new folder to [FoldersManager] to manage it.
+   *
+   * @param localFolder The [LocalFolder] object which contains information about a
+   * remote folder.
+   */
+  fun addFolder(localFolder: LocalFolder?) {
+    if (localFolder != null && !TextUtils.isEmpty(localFolder.fullName) && !folders.containsKey(localFolder.fullName)) {
+      this.folders[prepareFolderKey(localFolder)] = localFolder
+    }
+  }
+
+  /**
+   * Get [LocalFolder] by the alias name.
+   *
+   * @param folderAlias The folder alias name.
+   * @return [LocalFolder].
+   */
+  fun getFolderByAlias(folderAlias: String): LocalFolder? {
+    for ((_, value) in folders) {
+      if (value.folderAlias == folderAlias) {
+        return value
       }
     }
 
-    return serverLocalFolders;
+    return null
   }
 
-  public LocalFolder findInboxFolder() {
-    for (LocalFolder localFolder : getAllFolders()) {
-      if (localFolder.getFullName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)) {
-        return localFolder;
+  fun findInboxFolder(): LocalFolder? {
+    for (localFolder in allFolders) {
+      if (localFolder.fullName.equals(JavaEmailConstants.FOLDER_INBOX, ignoreCase = true)) {
+        return localFolder
       }
     }
 
-    return null;
+    return null
   }
 
-  public LocalFolder getFolderOutbox() {
-    return folders.get(FolderType.OUTBOX.getValue());
+  @Throws(MessagingException::class)
+  private fun prepareFolderKey(imapFolder: IMAPFolder): String {
+    val folderType = getFolderType(generateFolder(imapFolder, null))
+    return folderType?.value ?: imapFolder.fullName
   }
 
-  private String prepareFolderKey(IMAPFolder imapFolder) throws MessagingException {
-    FolderType folderType = getFolderType(generateFolder(imapFolder, null));
-    if (folderType == null) {
-      return imapFolder.getFullName();
-    } else {
-      return folderType.value;
-    }
-  }
-
-  private String prepareFolderKey(LocalFolder localFolder) {
-    FolderType folderType = getFolderType(localFolder);
-    if (folderType == null) {
-      return localFolder.getFullName();
-    } else {
-      return folderType.value;
-    }
+  private fun prepareFolderKey(localFolder: LocalFolder): String {
+    val folderType = getFolderType(localFolder)
+    return folderType?.value ?: localFolder.fullName
   }
 
   /**
    * This class contains information about all servers folders types.
    */
-  public enum FolderType {
+  enum class FolderType constructor(val value: String) {
     INBOX("INBOX"),
     All("\\All"),
     ARCHIVE("\\Archive"),
@@ -317,17 +185,115 @@ public class FoldersManager {
     SENT("\\Sent"),
     TRASH("\\Trash"),
     IMPORTANT("\\Important"),
-    OUTBOX("\\Outbox");
+    OUTBOX("\\Outbox")
+  }
 
+  companion object {
 
-    private String value;
+    /**
+     * Generate a new [FoldersManager] using information from the local database.
+     *
+     * @param context     Interface to global information about an application environment.
+     * @param accountName The name of an account.
+     * @return The new [FoldersManager].
+     */
+    @JvmStatic
+    fun fromDatabase(context: Context, accountName: String): FoldersManager {
+      val foldersManager = FoldersManager()
 
-    FolderType(String value) {
-      this.value = value;
+      val cursor = context.contentResolver.query(ImapLabelsDaoSource().baseContentUri,
+          null, ImapLabelsDaoSource.COL_EMAIL + " = ?", arrayOf(accountName), null)
+
+      cursor?.let {
+        val imapLabelsDaoSource = ImapLabelsDaoSource()
+
+        while (cursor.moveToNext()) {
+          foldersManager.addFolder(imapLabelsDaoSource.getFolder(cursor))
+        }
+
+        cursor.close()
+      }
+
+      return foldersManager
     }
 
-    public String getValue() {
-      return value;
+    /**
+     * Generate a new [LocalFolder]
+     *
+     * @param imapFolder  The [IMAPFolder] object which contains information about a
+     * remote folder.
+     * @param folderAlias The folder alias.
+     * @return
+     * @throws MessagingException
+     */
+    @JvmStatic
+    @Throws(MessagingException::class)
+    fun generateFolder(imapFolder: IMAPFolder, folderAlias: String?): LocalFolder {
+      return LocalFolder(imapFolder.fullName, folderAlias, Arrays.asList(*imapFolder.attributes),
+          isCustom(imapFolder), 0, "")
+    }
+
+    /**
+     * Check if current folder is a custom label.
+     *
+     * @param folder The [IMAPFolder] object which contains information about a
+     * remote folder.
+     * @return true if this label is a custom, false otherwise.
+     * @throws MessagingException
+     */
+    @JvmStatic
+    @Throws(MessagingException::class)
+    fun isCustom(folder: IMAPFolder): Boolean {
+      val attr = folder.attributes
+      val folderTypes = FolderType.values()
+
+      for (attribute in attr) {
+        for (folderType in folderTypes) {
+          if (folderType.value == attribute) {
+            return false
+          }
+        }
+      }
+
+      return !FolderType.INBOX.value.equals(folder.fullName, ignoreCase = true)
+    }
+
+    /**
+     * Get a [FolderType] using folder attributes.
+     *
+     * @param localFolder Some [javax.mail.Folder].
+     * @return [FolderType].
+     */
+    @JvmStatic
+    fun getFolderType(localFolder: LocalFolder?): FolderType? {
+      val folderTypes = FolderType.values()
+
+      if (localFolder != null) {
+        val attributes = localFolder.attributes
+
+        if (attributes != null) {
+          for (attribute in attributes) {
+            for (folderType in folderTypes) {
+              if (folderType.value == attribute) {
+                return folderType
+              }
+            }
+          }
+        }
+
+        if (!TextUtils.isEmpty(localFolder.fullName)) {
+          if (JavaEmailConstants.FOLDER_INBOX.equals(localFolder.fullName, ignoreCase = true)) {
+            return FolderType.INBOX
+          }
+        }
+
+        if (!TextUtils.isEmpty(localFolder.fullName)) {
+          if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
+            return FolderType.OUTBOX
+          }
+        }
+      }
+      return null
     }
   }
 }

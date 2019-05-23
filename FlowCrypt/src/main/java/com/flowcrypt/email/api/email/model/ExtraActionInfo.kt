@@ -111,14 +111,19 @@ data class ExtraActionInfo constructor(var atts: List<AttachmentInfo> = emptyLis
             val stream = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
             if (stream != null) {
               val attachmentInfo = EmailUtil.getAttInfoFromUri(context, stream)
-              attsList.add(attachmentInfo)
+              attachmentInfo?.let {
+                attsList.add(attachmentInfo)
+              }
             }
           } else {
             val uriList = intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)
             if (uriList != null) {
               for (parcelable in uriList) {
                 val uri = parcelable as Uri
-                attsList.add(EmailUtil.getAttInfoFromUri(context, uri))
+                val attachmentInfo = EmailUtil.getAttInfoFromUri(context, uri)
+                attachmentInfo?.let {
+                  attsList.add(attachmentInfo)
+                }
               }
             }
           }

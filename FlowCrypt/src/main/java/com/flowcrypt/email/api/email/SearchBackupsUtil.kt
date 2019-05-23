@@ -3,19 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email;
+package com.flowcrypt.email.api.email
 
-import javax.mail.Message;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.search.AndTerm;
-import javax.mail.search.FromTerm;
-import javax.mail.search.OrTerm;
-import javax.mail.search.RecipientTerm;
-import javax.mail.search.SearchTerm;
-import javax.mail.search.SubjectTerm;
-
-import androidx.annotation.NonNull;
+import javax.mail.Message
+import javax.mail.internet.AddressException
+import javax.mail.internet.InternetAddress
+import javax.mail.search.AndTerm
+import javax.mail.search.FromTerm
+import javax.mail.search.OrTerm
+import javax.mail.search.RecipientTerm
+import javax.mail.search.SearchTerm
+import javax.mail.search.SubjectTerm
 
 /**
  * This class describes methods for search private key backups.
@@ -26,26 +24,27 @@ import androidx.annotation.NonNull;
  * E-mail: DenBond7@gmail.com
  */
 
-public class SearchBackupsUtil {
-
-  /**
-   * Generate {@link SearchTerm} for search the private key backups.
-   *
-   * @param email The email which will be used to generate {@link SearchTerm}.
-   * @return Generated {@link SearchTerm}.
-   */
-  @NonNull
-  public static SearchTerm genSearchTerms(String email) throws AddressException {
-    SearchTerm subjectTerms = new OrTerm(new SearchTerm[]{
-        new SubjectTerm("Your CryptUp Backup"),
-        new SubjectTerm("Your FlowCrypt Backup"),
-        new SubjectTerm("Your CryptUP Backup"),
-        new SubjectTerm("All you need to know about CryptUP (contains a backup)"),
-        new SubjectTerm("CryptUP Account Backup")});
-
-
-    return new AndTerm(new SearchTerm[]{subjectTerms, new FromTerm(new InternetAddress(email)),
-        new RecipientTerm(Message.RecipientType.TO, new InternetAddress(email))
-    });
+class SearchBackupsUtil {
+  companion object {
+    /**
+     * Generate [SearchTerm] for search the private key backups.
+     *
+     * @param email The email which will be used to generate [SearchTerm].
+     * @return Generated [SearchTerm].
+     */
+    @JvmStatic
+    @Throws(AddressException::class)
+    fun genSearchTerms(email: String): SearchTerm {
+      val subjectTerms = OrTerm(arrayOf(
+          SubjectTerm("Your CryptUp Backup"),
+          SubjectTerm("Your FlowCrypt Backup"),
+          SubjectTerm("Your CryptUP Backup"),
+          SubjectTerm("All you need to know about CryptUP (contains a backup)"),
+          SubjectTerm("CryptUP Account Backup")))
+      return AndTerm(arrayOf(
+          subjectTerms,
+          FromTerm(InternetAddress(email)),
+          RecipientTerm(Message.RecipientType.TO, InternetAddress(email))))
+    }
   }
 }
