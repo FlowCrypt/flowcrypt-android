@@ -81,7 +81,7 @@ public final class Node {
           } else {
             nodeSecret = new NodeSecret(context.getFilesDir().getAbsolutePath(), certs);
           }
-          requestsManager = RequestsManager.getInstance();
+          requestsManager = RequestsManager.INSTANCE;
           requestsManager.init(nodeSecret);
           start(context.getAssets(), nodeSecret);
           waitUntilReady();
@@ -115,7 +115,7 @@ public final class Node {
   }
 
   private void saveNodeSecretCertsToCache(Context context, NodeSecretCerts nodeSecretCerts) {
-    Gson gson = NodeGson.getInstance().getGson();
+    Gson gson = NodeGson.getGson();
     String data = gson.toJson(nodeSecretCerts);
     try (FileOutputStream outputStream = context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE)) {
       KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context);
@@ -131,7 +131,7 @@ public final class Node {
 
   private NodeSecretCerts getCachedNodeSecretCerts(Context context) {
     try (FileInputStream inputStream = context.openFileInput(NODE_SECRETS_CACHE_FILENAME)) {
-      Gson gson = NodeGson.getInstance().getGson();
+      Gson gson = NodeGson.getGson();
       String rawData = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
 
       int splitPosition = rawData.indexOf('\n');

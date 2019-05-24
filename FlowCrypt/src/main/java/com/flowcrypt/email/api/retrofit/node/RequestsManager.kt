@@ -3,127 +3,109 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.node;
+package com.flowcrypt.email.api.retrofit.node
 
-import android.content.Context;
-import android.net.Uri;
-import android.os.AsyncTask;
-
-import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest;
-import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest;
-import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest;
-import com.flowcrypt.email.api.retrofit.request.node.NodeRequest;
-import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper;
-import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
-import com.flowcrypt.email.api.retrofit.request.node.VersionRequest;
-import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
-import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
-import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent;
-import com.flowcrypt.email.model.PgpKeyInfo;
-import com.flowcrypt.email.node.NodeSecret;
-import com.flowcrypt.email.node.TestData;
-
-import java.util.Arrays;
-
-import androidx.annotation.WorkerThread;
-import androidx.lifecycle.LiveData;
-import retrofit2.Response;
+import android.content.Context
+import android.net.Uri
+import android.os.AsyncTask
+import androidx.annotation.WorkerThread
+import androidx.lifecycle.LiveData
+import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
+import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest
+import com.flowcrypt.email.api.retrofit.request.node.EncryptMsgRequest
+import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
+import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
+import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
+import com.flowcrypt.email.api.retrofit.request.node.VersionRequest
+import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult
+import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
+import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent
+import com.flowcrypt.email.model.PgpKeyInfo
+import com.flowcrypt.email.node.NodeSecret
+import com.flowcrypt.email.node.TestData
+import java.util.*
 
 /**
  * @author DenBond7
  */
-public class RequestsManager {
-  private static RequestsManager ourInstance = new RequestsManager();
-  private SingleLiveEvent<NodeResponseWrapper> data;
-  private NodeRetrofitHelper retrofitHelper;
-
-  public static RequestsManager getInstance() {
-    return ourInstance;
-  }
+object RequestsManager {
+  private var data: SingleLiveEvent<NodeResponseWrapper<*>> = SingleLiveEvent()
+  private var retrofitHelper: NodeRetrofitHelper? = null
 
   @WorkerThread
-  public void init(NodeSecret nodeSecret) {
-    this.data = new SingleLiveEvent<>();
-    this.retrofitHelper = NodeRetrofitHelper.getInstance();
-    this.retrofitHelper.init(nodeSecret);
+  fun init(nodeSecret: NodeSecret) {
+    this.retrofitHelper = NodeRetrofitHelper
+    this.retrofitHelper!!.init(nodeSecret)
   }
 
-  public LiveData<NodeResponseWrapper> getData() {
-    return data;
+  fun getData(): LiveData<NodeResponseWrapper<*>>? {
+    return data
   }
 
-  public void getVersion(int requestCode) {
-    load(requestCode, new VersionRequest());
+  fun getVersion(requestCode: Int) {
+    load(requestCode, VersionRequest())
   }
 
-  public void encryptMsg(int requestCode, String msg) {
-    load(requestCode, new EncryptMsgRequest(msg, Arrays.asList(TestData.getMixedPubKeys())));
+  fun encryptMsg(requestCode: Int, msg: String) {
+    load(requestCode, EncryptMsgRequest(msg, Arrays.asList(*TestData.getMixedPubKeys())))
   }
 
-  public void decryptMsg(int requestCode, String msg, PgpKeyInfo[] prvKeys) {
-    load(requestCode, new ParseDecryptMsgRequest(msg, Arrays.asList(prvKeys), TestData.passphrases()));
+  fun decryptMsg(requestCode: Int, msg: String, prvKeys: Array<PgpKeyInfo>) {
+    load(requestCode, ParseDecryptMsgRequest(msg, Arrays.asList(*prvKeys), TestData.passphrases()))
   }
 
-  public void encryptFile(int requestCode, byte[] data) {
-    load(requestCode, new EncryptFileRequest(data, "file.txt", Arrays.asList(TestData.getMixedPubKeys())));
+  fun encryptFile(requestCode: Int, data: ByteArray) {
+    load(requestCode, EncryptFileRequest(data, "file.txt", Arrays.asList(*TestData.getMixedPubKeys())))
   }
 
-  public void encryptFile(int requestCode, Context context, Uri fileUri) {
-    load(requestCode, new EncryptFileRequest(context, fileUri, "file.txt", Arrays.asList(TestData.getMixedPubKeys())));
+  fun encryptFile(requestCode: Int, context: Context, fileUri: Uri) {
+    load(requestCode, EncryptFileRequest(context, fileUri, "file.txt", Arrays.asList(*TestData.getMixedPubKeys())))
   }
 
-  public void decryptFile(int requestCode, byte[] encryptedData, PgpKeyInfo[] prvKeys) {
-    load(requestCode, new DecryptFileRequest(encryptedData, Arrays.asList(prvKeys), TestData.passphrases()));
+  fun decryptFile(requestCode: Int, encryptedData: ByteArray, prvKeys: Array<PgpKeyInfo>) {
+    load(requestCode, DecryptFileRequest(encryptedData, Arrays.asList(*prvKeys), TestData.passphrases()))
   }
 
-  private void load(final int requestCode, NodeRequest nodeRequest) {
-    new Worker(data, retrofitHelper).execute(new NodeRequestWrapper<>(requestCode, nodeRequest));
+  private fun load(requestCode: Int, nodeRequest: NodeRequest) {
+    Worker(data).execute(NodeRequestWrapper(requestCode, nodeRequest))
   }
 
-  private static class Worker extends AsyncTask<NodeRequestWrapper, Void, NodeResponseWrapper> {
-    private SingleLiveEvent<NodeResponseWrapper> data;
-    private NodeRetrofitHelper retrofitHelper;
+  private class Worker internal constructor(
+      private val data: SingleLiveEvent<NodeResponseWrapper<*>>) : AsyncTask<NodeRequestWrapper<*>, Void, NodeResponseWrapper<*>>() {
 
-    Worker(SingleLiveEvent<NodeResponseWrapper> data, NodeRetrofitHelper retrofitHelper) {
-      this.data = data;
-      this.retrofitHelper = retrofitHelper;
-    }
+    override fun doInBackground(vararg nodeRequestWrappers: NodeRequestWrapper<*>): NodeResponseWrapper<*> {
+      val nodeRequestWrapper = nodeRequestWrappers[0]
+      val baseNodeResult: BaseNodeResult
 
-    @Override
-    protected NodeResponseWrapper doInBackground(NodeRequestWrapper... nodeRequestWrappers) {
-      NodeRequestWrapper nodeRequestWrapper = nodeRequestWrappers[0];
-      BaseNodeResult baseNodeResult;
-
-      NodeService nodeService = retrofitHelper.getRetrofit().create(NodeService.class);
+      val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
 
       try {
-        Response response = nodeRequestWrapper.getRequest().getResponse(nodeService);
+        val response = nodeRequestWrapper.request.getResponse(nodeService)
         if (response != null) {
-          long time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis();
+          val time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis()
           if (response.body() != null) {
-            baseNodeResult = (BaseNodeResult) response.body();
-            baseNodeResult.setExecutionTime(time);
+            baseNodeResult = response.body() as BaseNodeResult
+            baseNodeResult.executionTime = time
           } else {
-            throw new NullPointerException("The response body is null!");
+            throw NullPointerException("The response body is null!")
           }
 
-          baseNodeResult.setExecutionTime(time);
+          baseNodeResult.executionTime = time
         } else {
-          throw new NullPointerException("The response is null!");
+          throw NullPointerException("The response is null!")
         }
 
-      } catch (Exception e) {
-        e.printStackTrace();
-        return NodeResponseWrapper.exception(nodeRequestWrapper.getRequestCode(), e);
+      } catch (e: Exception) {
+        e.printStackTrace()
+        return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode, e, null)
       }
 
-      return NodeResponseWrapper.success(nodeRequestWrapper.getRequestCode(), baseNodeResult);
+      return NodeResponseWrapper.success(nodeRequestWrapper.requestCode, baseNodeResult)
     }
 
-    @Override
-    protected void onPostExecute(NodeResponseWrapper nodeResponseWrapper) {
-      super.onPostExecute(nodeResponseWrapper);
-      data.setValue(nodeResponseWrapper);
+    override fun onPostExecute(nodeResponseWrapper: NodeResponseWrapper<*>) {
+      super.onPostExecute(nodeResponseWrapper)
+      data.value = nodeResponseWrapper
     }
   }
 }

@@ -3,151 +3,118 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.node;
+package com.flowcrypt.email.api.retrofit.node
 
-import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
-import com.flowcrypt.email.node.NodeSecret;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.LogsUtil;
-import com.google.gson.Gson;
-
-import java.io.IOException;
-import java.security.cert.X509Certificate;
-import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLSession;
-
-import androidx.annotation.NonNull;
-import okhttp3.Headers;
-import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.Retrofit;
+import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
+import com.flowcrypt.email.node.NodeSecret
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.LogsUtil
+import com.google.gson.Gson
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import java.security.cert.X509Certificate
+import java.util.concurrent.TimeUnit
+import javax.net.ssl.HostnameVerifier
 
 /**
- * This class helps to receive instance of {@link Retrofit} for requests to the Node.js server.
+ * This class helps to receive instance of [Retrofit] for requests to the Node.js server.
  *
  * @author Denis Bondarenko
  * Date: 1/13/19
  * Time: 3:28 PM
  * E-mail: DenBond7@gmail.com
  */
-public final class NodeRetrofitHelper {
-  private static final int TIMEOUT = 300;
-  private static NodeRetrofitHelper ourInstance = new NodeRetrofitHelper();
-  private OkHttpClient okHttpClient;
-  private Retrofit retrofit;
-  private Gson gson;
+object NodeRetrofitHelper {
+  private const val TIMEOUT = 300
+  private var okHttpClient: OkHttpClient? = null
+  private var retrofit: Retrofit? = null
+  var gson: Gson = NodeGson.gson
 
-  private NodeRetrofitHelper() {
-  }
+  private val httpLoggingInterceptor: Interceptor
+    get() = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
 
-  public static NodeRetrofitHelper getInstance() {
-    return ourInstance;
-  }
+  fun init(nodeSecret: NodeSecret) {
+    okHttpClient = getOkHttpClientBuilder(nodeSecret).build()
 
-  public void init(NodeSecret nodeSecret) {
-    okHttpClient = getOkHttpClientBuilder(nodeSecret).build();
-    gson = NodeGson.getInstance().getGson();
-
-    Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
-        .baseUrl("https://localhost:" + nodeSecret.getPort() + "/")
+    val retrofitBuilder = Retrofit.Builder()
+        .baseUrl("https://localhost:" + nodeSecret.port + "/")
         .addConverterFactory(NodeConverterFactory.create(gson))
-        .client(okHttpClient);
+        .client(okHttpClient!!)
 
-    retrofit = retrofitBuilder.build();
+    retrofit = retrofitBuilder.build()
   }
 
-  public OkHttpClient getOkHttpClient() {
-    return okHttpClient;
+  @JvmStatic
+  fun getRetrofit(): Retrofit? {
+    checkAndWaitNode()
+    return retrofit
   }
 
-  public Retrofit getRetrofit() {
-    checkAndWaitNode();
-    return retrofit;
-  }
-
-  public Gson getGson() {
-    return gson;
-  }
-
-  @NonNull
-  private OkHttpClient.Builder getOkHttpClientBuilder(NodeSecret nodeSecret) {
-    OkHttpClient.Builder builder = new OkHttpClient.Builder()
-        .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
-        .readTimeout(TIMEOUT, TimeUnit.SECONDS)
-        .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
+  private fun getOkHttpClientBuilder(nodeSecret: NodeSecret): OkHttpClient.Builder {
+    val builder = OkHttpClient.Builder()
+        .connectTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
+        .readTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
+        .writeTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
         .addInterceptor(headersInterceptor(nodeSecret))
-        .sslSocketFactory(nodeSecret.getSslSocketFactory(), nodeSecret.getSslTrustManager())
+        .sslSocketFactory(nodeSecret.sslSocketFactory, nodeSecret.sslTrustManager)
         .followRedirects(false)
         .followSslRedirects(false)
-        .hostnameVerifier(trustOurOwnCrtHostnameVerifier(nodeSecret));
+        .hostnameVerifier(trustOurOwnCrtHostnameVerifier(nodeSecret))
 
     if (GeneralUtil.isDebugBuild()) {
-      builder.addInterceptor(getHttpLoggingInterceptor());
+      builder.addInterceptor(httpLoggingInterceptor)
     }
 
-    return builder;
-  }
-
-  @NonNull
-  private Interceptor getHttpLoggingInterceptor() {
-    return new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY);
+    return builder
   }
 
   /**
    * This method does 5 attempts to check is Node.js server started.
    */
-  private void checkAndWaitNode() {
-    int attemptCount = 5;
+  private fun checkAndWaitNode() {
+    var attemptCount = 5
 
     while (attemptCount != 0) {
       if (retrofit == null) {
-        attemptCount--;
+        attemptCount--
         try {
-          LogsUtil.d(NodeRetrofitHelper.class.getSimpleName(), "Node.js server is not run yet. Trying to wait...");
-          Thread.sleep(1000);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
+          LogsUtil.d(NodeRetrofitHelper::class.java.simpleName, "Node.js server is not run yet. Trying to wait...")
+          Thread.sleep(1000)
+        } catch (e: InterruptedException) {
+          e.printStackTrace()
         }
       } else {
-        return;
+        return
       }
     }
   }
 
-  private Interceptor headersInterceptor(final NodeSecret nodeSecret) {
-    return new Interceptor() {
-      @Override
-      public okhttp3.Response intercept(@NonNull Chain chain) throws IOException {
-        okhttp3.Request request = chain.request();
-        Headers headers = request
-            .headers()
-            .newBuilder()
-            .add("Authorization", nodeSecret.getAuthHeader())
-            .add("Connection", "Keep-Alive")
-            .build();
-        request = request.newBuilder().headers(headers).build();
-        return chain.proceed(request);
-      }
-    };
+  private fun headersInterceptor(nodeSecret: NodeSecret): Interceptor {
+    return Interceptor { chain ->
+      var request: okhttp3.Request = chain.request()
+      val headers = request
+          .headers()
+          .newBuilder()
+          .add("Authorization", nodeSecret.authHeader)
+          .add("Connection", "Keep-Alive")
+          .build()
+      request = request.newBuilder().headers(headers).build()
+      chain.proceed(request)
+    }
   }
 
-  private HostnameVerifier trustOurOwnCrtHostnameVerifier(final NodeSecret nodeSecret) {
-    return new HostnameVerifier() {
-      @Override
-      public boolean verify(String host, SSLSession session) {
-        try {
-          X509Certificate crt = (X509Certificate) session.getPeerCertificates()[0];
-          if (!NodeSecret.HOSTNAME.equals(host) || !NodeSecret.CRT_SUBJECT.equals(crt.getSubjectDN().getName())) {
-            return false;
-          }
-          return crt.getSerialNumber().equals(nodeSecret.getSslCrtSerialNumber());
-        } catch (Exception e) {
-          return false;
-        }
+  private fun trustOurOwnCrtHostnameVerifier(nodeSecret: NodeSecret): HostnameVerifier {
+    return HostnameVerifier { host, session ->
+      try {
+        val crt = session.peerCertificates[0] as X509Certificate
+        return@HostnameVerifier if (NodeSecret.HOSTNAME != host || NodeSecret.CRT_SUBJECT != crt.subjectDN.name) {
+          false
+        } else crt.serialNumber == nodeSecret.sslCrtSerialNumber
+      } catch (e: Exception) {
+        return@HostnameVerifier false
       }
-    };
+    }
   }
 }

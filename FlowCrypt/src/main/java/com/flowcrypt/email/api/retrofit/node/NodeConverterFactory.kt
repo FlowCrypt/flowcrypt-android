@@ -3,22 +3,18 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.node;
+package com.flowcrypt.email.api.retrofit.node
 
-import com.google.gson.Gson;
-import com.google.gson.TypeAdapter;
-import com.google.gson.reflect.TypeToken;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import retrofit2.Converter;
-import retrofit2.Retrofit;
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
+import retrofit2.Converter
+import retrofit2.Retrofit
+import java.lang.reflect.Type
 
 /**
- * A {@linkplain Converter.Factory converter} which uses a custom realization for request and responses to communicate
+ * A [converter][Converter.Factory] which uses a custom realization for request and responses to communicate
  * with inner Node.js server.
  *
  * @author Denis Bondarenko
@@ -26,41 +22,37 @@ import retrofit2.Retrofit;
  * Time: 5:20 PM
  * E-mail: DenBond7@gmail.com
  */
-public final class NodeConverterFactory extends Converter.Factory {
-  private final Gson gson;
+class NodeConverterFactory private constructor(private val gson: Gson) : Converter.Factory() {
 
-  private NodeConverterFactory(Gson gson) {
-    this.gson = gson;
+  override fun responseBodyConverter(type: Type?, annotations: Array<Annotation>?, retrofit: Retrofit?): Converter<ResponseBody, *> {
+    val adapter = gson.getAdapter(TypeToken.get(type!!))
+    return NodeResponseBodyConverter(gson, adapter)
   }
 
-  /**
-   * Create an instance using a default {@link Gson} instance for conversion. Encoding to JSON and
-   * decoding from JSON (when no charset is specified by a header) will use UTF-8.
-   */
-  public static NodeConverterFactory create() {
-    return create(new Gson());
+  override fun requestBodyConverter(type: Type?, parameterAnnotations: Array<Annotation>?,
+                                    methodAnnotations: Array<Annotation>?, retrofit: Retrofit?): Converter<*, RequestBody> {
+    val adapter = gson.getAdapter(TypeToken.get(type!!))
+    return NodeRequestBodyConverter(gson, adapter)
   }
 
-  /**
-   * Create an instance using {@code gson} for conversion. Encoding to JSON and
-   * decoding from JSON (when no charset is specified by a header) will use UTF-8.
-   */
-  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
-  public static NodeConverterFactory create(Gson gson) {
-    if (gson == null) throw new NullPointerException("gson == null");
-    return new NodeConverterFactory(gson);
-  }
+  companion object {
 
-  @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations, Retrofit retrofit) {
-    TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
-    return new NodeResponseBodyConverter<>(gson, adapter);
-  }
+    /**
+     * Create an instance using a default [Gson] instance for conversion. Encoding to JSON and
+     * decoding from JSON (when no charset is specified by a header) will use UTF-8.
+     */
+    fun create(): NodeConverterFactory {
+      return create(Gson())
+    }
 
-  @Override
-  public Converter<?, RequestBody> requestBodyConverter(Type type, Annotation[] parameterAnnotations,
-                                                        Annotation[] methodAnnotations, Retrofit retrofit) {
-    TypeAdapter<?> adapter = gson.getAdapter(TypeToken.get(type));
-    return new NodeRequestBodyConverter<>(gson, adapter);
+    /**
+     * Create an instance using `gson` for conversion. Encoding to JSON and
+     * decoding from JSON (when no charset is specified by a header) will use UTF-8.
+     */
+    // Guarding public API nullability.
+    fun create(gson: Gson?): NodeConverterFactory {
+      if (gson == null) throw NullPointerException("gson == null")
+      return NodeConverterFactory(gson)
+    }
   }
 }

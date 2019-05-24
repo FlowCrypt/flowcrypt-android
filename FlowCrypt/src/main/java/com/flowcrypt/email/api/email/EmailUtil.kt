@@ -705,7 +705,9 @@ class EmailUtil {
     @Throws(IOException::class, NodeEncryptException::class)
     fun genRawMsgWithoutAtts(info: OutgoingMessageInfo, pubKeys: List<String>): String {
 
-      val nodeService = NodeRetrofitHelper.getInstance().retrofit.create(NodeService::class.java)
+      val retrofit = NodeRetrofitHelper.getRetrofit() ?: return ""
+
+      val nodeService = retrofit.create(NodeService::class.java)
       val request = ComposeEmailRequest(info, pubKeys)
 
       val response = nodeService.composeEmail(request).execute()

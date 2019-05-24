@@ -22,14 +22,14 @@ import androidx.lifecycle.AndroidViewModel;
  * E-mail: DenBond7@gmail.com
  */
 public abstract class BaseNodeApiViewModel extends AndroidViewModel {
-  protected SingleLiveEvent<NodeResponseWrapper> responsesLiveData;
+  protected SingleLiveEvent<NodeResponseWrapper<?>> responsesLiveData;
 
   public BaseNodeApiViewModel(@NonNull Application application) {
     super(application);
     this.responsesLiveData = new SingleLiveEvent<>();
   }
 
-  public SingleLiveEvent<NodeResponseWrapper> getResponsesLiveData() {
+  public SingleLiveEvent<NodeResponseWrapper<?>> getResponsesLiveData() {
     return responsesLiveData;
   }
 }

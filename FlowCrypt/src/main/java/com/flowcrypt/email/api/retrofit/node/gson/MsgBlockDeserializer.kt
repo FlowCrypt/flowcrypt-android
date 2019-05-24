@@ -3,45 +3,37 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.node.gson;
+package com.flowcrypt.email.api.retrofit.node.gson
 
-import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock;
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock;
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
-import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-
-import java.lang.reflect.Type;
+import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonParseException
+import java.lang.reflect.Type
 
 /**
- * This realization helps parse a right variant of {@link MsgBlock}
+ * This realization helps parse a right variant of [MsgBlock]
  *
  * @author Denis Bondarenko
  * Date: 3/26/19
  * Time: 9:36 AM
  * E-mail: DenBond7@gmail.com
  */
-public class MsgBlockDeserializer implements JsonDeserializer<MsgBlock> {
-  @Override
-  public MsgBlock deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-      throws JsonParseException {
-    JsonObject jsonObject = json.getAsJsonObject();
+class MsgBlockDeserializer : JsonDeserializer<MsgBlock> {
+  @Throws(JsonParseException::class)
+  override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): MsgBlock {
+    val jsonObject = json.asJsonObject
 
-    MsgBlock.Type type = context.deserialize(jsonObject.get(BaseMsgBlock.TAG_TYPE), MsgBlock.Type.class);
+    return when (context.deserialize<MsgBlock.Type>(jsonObject.get(BaseMsgBlock.TAG_TYPE), MsgBlock.Type::class.java)) {
+      MsgBlock.Type.PUBLIC_KEY -> context.deserialize(json, PublicKeyMsgBlock::class.java)
 
-    switch (type) {
-      case PUBLIC_KEY:
-        return context.deserialize(json, PublicKeyMsgBlock.class);
+      MsgBlock.Type.DECRYPT_ERROR -> context.deserialize(json, DecryptErrorMsgBlock::class.java)
 
-      case DECRYPT_ERROR:
-        return context.deserialize(json, DecryptErrorMsgBlock.class);
-
-      default:
-        return context.deserialize(json, BaseMsgBlock.class);
+      else -> context.deserialize(json, BaseMsgBlock::class.java)
     }
   }
 }

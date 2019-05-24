@@ -3,14 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.node;
+package com.flowcrypt.email.api.retrofit.node
 
-import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
-import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
-
-import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.MutableLiveData
+import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
+import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 
 /**
  * It's an entry point of all requests to work with PGP actions.
@@ -20,33 +19,33 @@ import androidx.lifecycle.MutableLiveData;
  * Time: 10:25 AM
  * E-mail: DenBond7@gmail.com
  */
-public interface PgpApiRepository {
+interface PgpApiRepository {
   /**
-   * Parse the given raw string and fetch a list of {@link NodeKeyDetails}.
+   * Parse the given raw string and fetch a list of [NodeKeyDetails].
    *
    * @param requestCode The unique request code for identify the current action.
-   * @param liveData    An instance of {@link MutableLiveData} which will be used for the result delivering.
+   * @param liveData    An instance of [MutableLiveData] which will be used for the result delivering.
    * @param raw         The raw string which can take one key or many keys,
-   *                    it can be private or public keys, it can be armored or binary.. doesn't matter.
+   * it can be private or public keys, it can be armored or binary.. doesn't matter.
    */
-  void fetchKeyDetails(int requestCode, MutableLiveData<NodeResponseWrapper> liveData, String raw);
+  fun fetchKeyDetails(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>, raw: String)
 
   /**
    * Parse the given raw MIME message and decrypt some parts if needed.
    *
    * @param requestCode The unique request code for identify the current action.
-   * @param liveData    An instance of {@link MutableLiveData} which will be used for the result delivering.
-   * @param request     An instance of {@link ParseDecryptMsgRequest} which contains information about a message.
+   * @param liveData    An instance of [MutableLiveData] which will be used for the result delivering.
+   * @param request     An instance of [ParseDecryptMsgRequest] which contains information about a message.
    */
-  void parseDecryptMsg(int requestCode, MutableLiveData<NodeResponseWrapper> liveData, ParseDecryptMsgRequest request);
+  fun parseDecryptMsg(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>, request: ParseDecryptMsgRequest)
 
   /**
    * Check the passphrase strength
    *
    * @param requestCode The unique request code for identify the current action.
-   * @param liveData    An instance of {@link MutableLiveData} which will be used for the result delivering.
-   * @param request     An instance of {@link ZxcvbnStrengthBarRequest}.
+   * @param liveData    An instance of [MutableLiveData] which will be used for the result delivering.
+   * @param request     An instance of [ZxcvbnStrengthBarRequest].
    */
-  void checkPassphraseStrength(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
-                               ZxcvbnStrengthBarRequest request);
+  fun checkPassphraseStrength(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>,
+                              request: ZxcvbnStrengthBarRequest)
 }

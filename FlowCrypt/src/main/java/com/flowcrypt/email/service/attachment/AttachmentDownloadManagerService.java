@@ -711,7 +711,7 @@ public class AttachmentDownloadManagerService extends Service {
         passphrases.add(keysStorage.getPassphrase(pgpKeyInfo.getLongid()));
       }
 
-      NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+      NodeService nodeService = NodeRetrofitHelper.getRetrofit().create(NodeService.class);
       DecryptFileRequest request = new DecryptFileRequest(IOUtils.toByteArray(inputStream), pgpKeyInfoList,
           passphrases.toArray(new String[0]));
 

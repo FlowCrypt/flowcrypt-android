@@ -57,7 +57,7 @@ public class ParseDecryptedMsgResult extends BaseNodeResult {
   @Override
   public void handleRawData(BufferedInputStream bufferedInputStream) throws IOException {
     boolean isEnabled = true;
-    Gson gson = NodeGson.getInstance().getGson();
+    Gson gson = NodeGson.getGson();
 
     while (isEnabled) {
       try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -74,7 +74,7 @@ public class ParseDecryptedMsgResult extends BaseNodeResult {
 
         bufferedOutputStream.flush();
         JsonReader jsonReader = gson.newJsonReader(new StringReader(outputStream.toString()));
-        MsgBlock block = NodeGson.getInstance().getGson().fromJson(jsonReader, MsgBlock.class);
+        MsgBlock block = NodeGson.getGson().fromJson(jsonReader, MsgBlock.class);
 
         if (block != null) {
           msgBlocks.add(block);

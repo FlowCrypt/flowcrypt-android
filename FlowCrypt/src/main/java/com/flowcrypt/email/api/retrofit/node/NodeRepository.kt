@@ -3,20 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.node;
+package com.flowcrypt.email.api.retrofit.node
 
-import android.os.AsyncTask;
-
-import com.flowcrypt.email.api.retrofit.request.node.NodeRequest;
-import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper;
-import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest;
-import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
-import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest;
-import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
-import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
-
-import androidx.lifecycle.MutableLiveData;
-import retrofit2.Response;
+import android.os.AsyncTask
+import androidx.lifecycle.MutableLiveData
+import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
+import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
+import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
+import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
+import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
+import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult
+import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 
 /**
  * It's an entry point of all requests to work with Node.js server.
@@ -26,86 +23,74 @@ import retrofit2.Response;
  * Time: 10:26 AM
  * E-mail: DenBond7@gmail.com
  */
-public final class NodeRepository implements PgpApiRepository {
+class NodeRepository : PgpApiRepository {
 
-  @Override
-  public void fetchKeyDetails(int requestCode, MutableLiveData<NodeResponseWrapper> liveData, String raw) {
-    load(requestCode, liveData, new ParseKeysRequest(raw));
+  override fun fetchKeyDetails(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>, raw: String) {
+    load(requestCode, liveData, ParseKeysRequest(raw))
   }
 
-  @Override
-  public void parseDecryptMsg(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
-                              ParseDecryptMsgRequest request) {
-    load(requestCode, liveData, request);
+  override fun parseDecryptMsg(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>,
+                               request: ParseDecryptMsgRequest) {
+    load(requestCode, liveData, request)
   }
 
-  @Override
-  public void checkPassphraseStrength(int requestCode, MutableLiveData<NodeResponseWrapper> liveData,
-                                      ZxcvbnStrengthBarRequest request) {
-    load(requestCode, liveData, request);
+  override fun checkPassphraseStrength(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>,
+                                       request: ZxcvbnStrengthBarRequest) {
+    load(requestCode, liveData, request)
   }
 
   /**
    * It's a base method for all requests to Node.js
    *
    * @param requestCode The unique request code for identify the current action.
-   * @param data        An instance of {@link MutableLiveData} which will be used for result delivering.
-   * @param nodeRequest An instance of {@link NodeRequest}
+   * @param data        An instance of [MutableLiveData] which will be used for result delivering.
+   * @param nodeRequest An instance of [NodeRequest]
    */
-  private void load(int requestCode, MutableLiveData<NodeResponseWrapper> data, NodeRequest nodeRequest) {
-    data.setValue(NodeResponseWrapper.loading(requestCode));
-    new Worker(data).execute(new NodeRequestWrapper<>(requestCode, nodeRequest));
+  private fun load(requestCode: Int, data: MutableLiveData<NodeResponseWrapper<*>>, nodeRequest: NodeRequest) {
+    data.value = NodeResponseWrapper.loading(requestCode, null)
+    Worker(data).execute(NodeRequestWrapper(requestCode, nodeRequest))
   }
 
   /**
-   * Here we describe a logic of making requests to Node.js using {@link retrofit2.Retrofit}
+   * Here we describe a logic of making requests to Node.js using [retrofit2.Retrofit]
    */
-  private static class Worker extends AsyncTask<NodeRequestWrapper, Void, NodeResponseWrapper> {
-    private MutableLiveData<NodeResponseWrapper> liveData;
-    private NodeRetrofitHelper retrofitHelper;
+  private class Worker internal constructor(private val liveData: MutableLiveData<NodeResponseWrapper<*>>) : AsyncTask<NodeRequestWrapper<*>, Void, NodeResponseWrapper<*>>() {
 
-    Worker(MutableLiveData<NodeResponseWrapper> data) {
-      this.liveData = data;
-      this.retrofitHelper = NodeRetrofitHelper.getInstance();
-    }
+    override fun doInBackground(vararg nodeRequestWrappers: NodeRequestWrapper<*>): NodeResponseWrapper<*> {
+      val nodeRequestWrapper = nodeRequestWrappers[0]
+      val baseNodeResult: BaseNodeResult
 
-    @Override
-    protected NodeResponseWrapper doInBackground(NodeRequestWrapper... nodeRequestWrappers) {
-      NodeRequestWrapper nodeRequestWrapper = nodeRequestWrappers[0];
-      BaseNodeResult baseNodeResult;
-
-      NodeService nodeService = retrofitHelper.getRetrofit().create(NodeService.class);
+      val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       try {
-        Response response = nodeRequestWrapper.getRequest().getResponse(nodeService);
+        val response = nodeRequestWrapper.request.getResponse(nodeService)
         if (response != null) {
-          long time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis();
+          val time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis()
           if (response.body() != null) {
-            baseNodeResult = (BaseNodeResult) response.body();
-            baseNodeResult.setExecutionTime(time);
+            baseNodeResult = response.body() as BaseNodeResult
+            baseNodeResult.executionTime = time
 
-            if (baseNodeResult.getError() != null) {
-              return NodeResponseWrapper.error(nodeRequestWrapper.getRequestCode(), baseNodeResult);
+            if (baseNodeResult.error != null) {
+              return NodeResponseWrapper.error(nodeRequestWrapper.requestCode, baseNodeResult)
             }
           } else {
-            return NodeResponseWrapper.exception(nodeRequestWrapper.getRequestCode(),
-                new NullPointerException("The response body is null!"));
+            return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode,
+                NullPointerException("The response body is null!"), null)
           }
         } else {
-          return NodeResponseWrapper.exception(nodeRequestWrapper.getRequestCode(),
-              new NullPointerException("The response is null!"));
+          return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode,
+              NullPointerException("The response is null!"), null)
         }
-      } catch (Exception e) {
-        e.printStackTrace();
-        return NodeResponseWrapper.exception(nodeRequestWrapper.getRequestCode(), e);
+      } catch (e: Exception) {
+        e.printStackTrace()
+        return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode, e, null)
       }
 
-      return NodeResponseWrapper.success(nodeRequestWrapper.getRequestCode(), baseNodeResult);
+      return NodeResponseWrapper.success(nodeRequestWrapper.requestCode, baseNodeResult)
     }
 
-    @Override
-    protected void onPostExecute(NodeResponseWrapper nodeResponseWrapper) {
-      super.onPostExecute(nodeResponseWrapper);
-      liveData.setValue(nodeResponseWrapper);
+    override fun onPostExecute(nodeResponseWrapper: NodeResponseWrapper<*>) {
+      super.onPostExecute(nodeResponseWrapper)
+      liveData.value = nodeResponseWrapper
     }
   }
 }

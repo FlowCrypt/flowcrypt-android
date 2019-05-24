@@ -32,7 +32,7 @@ class AddPrivateKeyToDatabaseRule(val keyPath: String, val passphrase: String, v
     return object : Statement() {
       @Throws(Throwable::class)
       override fun evaluate() {
-        nodeKeyDetails = NodeGson.getInstance().gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString(
+        nodeKeyDetails = NodeGson.gson.fromJson(TestGeneralUtil.readFileFromAssetsAsString(
             context, keyPath), NodeKeyDetails::class.java)
         PrivateKeysManager.saveKeyToDatabase(nodeKeyDetails, passphrase, type)
         base.evaluate()

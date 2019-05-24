@@ -49,7 +49,7 @@ public class NodeCallsExecutor {
    * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
    */
   public static List<NodeKeyDetails> parseKeys(String key) throws IOException, NodeException {
-    NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    NodeService service = NodeRetrofitHelper.getRetrofit().create(NodeService.class);
     ParseKeysRequest request = new ParseKeysRequest(key);
 
     Response<ParseKeysResult> response = service.parseKeys(request).execute();
@@ -71,7 +71,7 @@ public class NodeCallsExecutor {
    * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
    */
   public static String getGmailBackupSearch(String email) throws IOException, NodeException {
-    NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    NodeService service = NodeRetrofitHelper.getRetrofit().create(NodeService.class);
     GmailBackupSearchRequest request = new GmailBackupSearchRequest(email);
 
     Response<GmailBackupSearchResult> response = service.gmailBackupSearch(request).execute();
@@ -105,7 +105,7 @@ public class NodeCallsExecutor {
    * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
    */
   public static DecryptKeyResult decryptKey(String key, List<String> passphrases) throws IOException, NodeException {
-    NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    NodeService service = NodeRetrofitHelper.getRetrofit().create(NodeService.class);
     DecryptKeyRequest request = new DecryptKeyRequest(key, passphrases);
 
     Response<DecryptKeyResult> response = service.decryptKey(request).execute();
@@ -126,7 +126,7 @@ public class NodeCallsExecutor {
    * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
    */
   public static EncryptKeyResult encryptKey(String key, String passphrase) throws IOException, NodeException {
-    NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    NodeService service = NodeRetrofitHelper.getRetrofit().create(NodeService.class);
     EncryptKeyRequest request = new EncryptKeyRequest(key, passphrase);
 
     Response<EncryptKeyResult> response = service.encryptKey(request).execute();
@@ -148,7 +148,7 @@ public class NodeCallsExecutor {
    */
   public static GenerateKeyResult genKey(String passphrase, List<PgpContact> pgpContacts)
       throws IOException, NodeException {
-    NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    NodeService service = NodeRetrofitHelper.getRetrofit().create(NodeService.class);
     GenerateKeyRequest request = new GenerateKeyRequest(passphrase, pgpContacts);
 
     Response<GenerateKeyResult> response = service.generateKey(request).execute();
@@ -168,7 +168,7 @@ public class NodeCallsExecutor {
    * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
    */
   public static ZxcvbnStrengthBarResult zxcvbnStrengthBar(double guesses) throws IOException, NodeException {
-    NodeService service = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    NodeService service = NodeRetrofitHelper.getRetrofit().create(NodeService.class);
     ZxcvbnStrengthBarRequest request = new ZxcvbnStrengthBarRequest(guesses);
 
     Response<ZxcvbnStrengthBarResult> response = service.zxcvbnStrengthBar(request).execute();

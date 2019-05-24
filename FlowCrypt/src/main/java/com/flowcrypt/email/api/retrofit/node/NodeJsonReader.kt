@@ -3,21 +3,20 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.node;
+package com.flowcrypt.email.api.retrofit.node
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.Charset;
-import java.util.Arrays;
-
-import okhttp3.internal.Util;
-import okio.BufferedSource;
+import okhttp3.internal.Util
+import okio.BufferedSource
+import java.io.BufferedInputStream
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.io.Reader
+import java.nio.charset.Charset
+import java.util.*
 
 /**
- * It's a realization of {@link Reader} which will be used by {@link NodeResponseBodyConverter} to parse JSON from
+ * It's a realization of [Reader] which will be used by [NodeResponseBodyConverter] to parse JSON from
  * the buffered input stream.
  *
  * @author Denis Bondarenko
@@ -25,84 +24,80 @@ import okio.BufferedSource;
  * Time: 11:54 AM
  * E-mail: DenBond7@gmail.com
  */
-public final class NodeJsonReader extends Reader {
-  private final Charset charset;
+class NodeJsonReader constructor(private val bufferedInputStream: BufferedInputStream,
+                                 private val source: BufferedSource,
+                                 private val charset: Charset) : Reader() {
 
-  private boolean closed;
-  private Reader delegate;
-  private boolean isStopped;
-  private BufferedSource source;
-  private BufferedInputStream bufferedInputStream;
+  private var closed: Boolean = false
+  private var delegate: Reader? = null
+  private var isStopped: Boolean = false
 
-  NodeJsonReader(BufferedInputStream bufferedInputStream, BufferedSource source, Charset charset) {
-    this.bufferedInputStream = bufferedInputStream;
-    this.charset = charset;
-    this.source = source;
+  @Throws(IOException::class)
+  override fun read(): Int {
+    return super.read()
   }
 
-  @Override
-  public int read() throws IOException {
-    return super.read();
-  }
-
-  @Override
-  public int read(char[] cbuf, int off, int len) throws IOException {
-    if (closed) throw new IOException("Stream closed");
+  @Throws(IOException::class)
+  override fun read(cbuf: CharArray, off: Int, len: Int): Int {
+    if (closed) throw IOException("Stream closed")
 
     if (isStopped) {
-      return -1;
+      return -1
     }
 
-    Reader delegate = this.delegate;
+    var delegate = this.delegate
     if (delegate == null) {
-      Charset charset = Util.bomAwareCharset(source, this.charset);
-      delegate = this.delegate = new BufferedReader(new InputStreamReader(bufferedInputStream, charset));
+      val charset = Util.bomAwareCharset(source, this.charset)
+      this.delegate = BufferedReader(InputStreamReader(bufferedInputStream, charset))
+      delegate = this.delegate
     }
 
-    bufferedInputStream.mark(0);
-    delegate.mark(1);
-    int count = delegate.read(cbuf, off, len);
+    bufferedInputStream.mark(0)
+    delegate!!.mark(1)
+    var count = delegate.read(cbuf, off, len)
 
     if (count != -1) {
 
-      int position = 0;
-      for (int i = 0; i < cbuf.length; i++) {
-        char c = cbuf[i];
+      var position = 0
+      for (i in cbuf.indices) {
+        val c = cbuf[i]
 
         if (c == '\n') {
-          position = i;
-          isStopped = true;
-          break;
+          position = i
+          isStopped = true
+          break
         }
       }
 
       if (position > 0) {
-        delegate.reset();
-        bufferedInputStream.reset();
+        delegate.reset()
+        bufferedInputStream.reset()
 
-        int c;
-        while ((c = bufferedInputStream.read()) != -1) {
-          if (c == '\n') {
-            break;
+        var c: Int
+        while (true) {
+          c = bufferedInputStream.read()
+          if (c == -1 || c == '\n'.toInt()) {
+            break
           }
         }
 
-        Arrays.fill(cbuf, Character.MIN_VALUE);
-        count = delegate.read(cbuf, off, position);
-        return count;
+        Arrays.fill(cbuf, Character.MIN_VALUE)
+        count = delegate.read(cbuf, off, position)
+        return count
       } else {
-        return count;
+        return count
       }
-    } else return count;
+    } else
+      return count
   }
 
-  @Override
-  public void close() throws IOException {
-    closed = true;
+  @Throws(IOException::class)
+  override fun close() {
+    closed = true
     if (delegate != null) {
-      delegate.close();
+      delegate!!.close()
     } else {
-      source.close();
+      source.close()
     }
   }
 }

@@ -235,7 +235,7 @@ public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
     AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
     List<AttachmentInfo> cachedAtts = new ArrayList<>();
 
-    NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+    NodeService nodeService = NodeRetrofitHelper.getRetrofit().create(NodeService.class);
     if (!CollectionUtils.isEmpty(msgInfo.getAtts())) {
       for (AttachmentInfo att : msgInfo.getAtts()) {
         if (TextUtils.isEmpty(att.getType())) {

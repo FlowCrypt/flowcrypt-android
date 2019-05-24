@@ -41,12 +41,13 @@ public class NodeResponseWrapper<T extends BaseNodeResult> {
     return new NodeResponseWrapper<>(requestCode, Status.ERROR, data, null);
   }
 
-  public static <T extends BaseNodeResult> NodeResponseWrapper<T> loading(int requestCode) {
-    return new NodeResponseWrapper<>(requestCode, Status.LOADING, null, null);
+  public static <T extends BaseNodeResult> NodeResponseWrapper<T> loading(int requestCode, @Nullable T data) {
+    return new NodeResponseWrapper<>(requestCode, Status.LOADING, data, null);
   }
 
-  public static <T extends BaseNodeResult> NodeResponseWrapper<T> exception(int requestCode, Throwable throwable) {
-    return new NodeResponseWrapper<>(requestCode, Status.EXCEPTION, null, throwable);
+  public static <T extends BaseNodeResult> NodeResponseWrapper<T> exception(int requestCode, Throwable throwable,
+                                                                            @Nullable T data) {
+    return new NodeResponseWrapper<>(requestCode, Status.EXCEPTION, data, throwable);
   }
 
   public int getRequestCode() {

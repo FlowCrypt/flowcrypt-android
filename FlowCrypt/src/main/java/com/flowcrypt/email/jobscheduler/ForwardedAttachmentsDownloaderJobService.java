@@ -338,7 +338,7 @@ public class ForwardedAttachmentsDownloaderJobService extends JobService {
       if (details.isEncrypted()) {
         byte[] originalBytes = IOUtils.toByteArray(inputStream);
         String fileName = FilenameUtils.removeExtension(att.getName());
-        NodeService nodeService = NodeRetrofitHelper.getInstance().getRetrofit().create(NodeService.class);
+        NodeService nodeService = NodeRetrofitHelper.getRetrofit().create(NodeService.class);
         EncryptFileRequest request = new EncryptFileRequest(originalBytes, fileName, pubKeys);
 
         Response<EncryptedFileResult> response = nodeService.encryptFile(request).execute();
