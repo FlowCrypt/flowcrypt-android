@@ -3,16 +3,14 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.okhttp;
+package com.flowcrypt.email.api.retrofit.okhttp
 
-import java.io.IOException;
-
-import okhttp3.Interceptor;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.Interceptor
+import okhttp3.Response
+import java.io.IOException
 
 /**
- * This {@link Interceptor} add a custom header (<code>api-version: version-value</code>) to all
+ * This [Interceptor] add a custom header (`api-version: version-value`) to all
  * requests.
  *
  * @author Denis Bondarenko
@@ -21,14 +19,15 @@ import okhttp3.Response;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ApiVersionInterceptor implements Interceptor {
+class ApiVersionInterceptor : Interceptor {
 
-  private static final String HEADER_NAME_API_VERSION = "api-version";
-  private static final String API_VERSION_VALUE = "3";
+  @Throws(IOException::class)
+  override fun intercept(chain: Interceptor.Chain): Response {
+    return chain.proceed(chain.request().newBuilder().addHeader(HEADER_NAME_API_VERSION, API_VERSION_VALUE).build())
+  }
 
-  @Override
-  public Response intercept(Chain chain) throws IOException {
-    Request request = chain.request().newBuilder().addHeader(HEADER_NAME_API_VERSION, API_VERSION_VALUE).build();
-    return chain.proceed(request);
+  companion object {
+    private const val HEADER_NAME_API_VERSION = "api-version"
+    private const val API_VERSION_VALUE = "3"
   }
 }
