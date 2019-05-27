@@ -29,8 +29,8 @@ import com.google.gson.annotations.SerializedName
  * E-mail: DenBond7@gmail.com
  */
 
-class TestWelcomeResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
-                                      @Expose val isSent: Boolean) : ApiResponse {
+data class TestWelcomeResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
+                                           @Expose val isSent: Boolean) : ApiResponse {
 
   constructor(source: Parcel) : this(
       source.readParcelable<ApiError>(ApiError::class.java.classLoader),

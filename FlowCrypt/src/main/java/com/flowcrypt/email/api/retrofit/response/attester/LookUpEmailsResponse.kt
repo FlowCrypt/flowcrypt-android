@@ -24,8 +24,8 @@ import com.google.gson.annotations.SerializedName
  * E-mail: DenBond7@gmail.com
  */
 
-class LookUpEmailsResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
-                                       @Expose val results: List<LookUpEmailResponse>?) : ApiResponse {
+data class LookUpEmailsResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
+                                            @Expose val results: List<LookUpEmailResponse>?) : ApiResponse {
   constructor(source: Parcel) : this(
       source.readParcelable<ApiError>(ApiError::class.java.classLoader),
       source.createTypedArrayList(LookUpEmailResponse.CREATOR)

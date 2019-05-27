@@ -24,9 +24,9 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-class LookUpResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
-                                 @Expose val results: ArrayList<LookUpPublicKeyInfo>?,
-                                 @Expose val query: String?) : ApiResponse {
+data class LookUpResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
+                                      @Expose val results: ArrayList<LookUpPublicKeyInfo>?,
+                                      @Expose val query: String?) : ApiResponse {
   constructor(source: Parcel) : this(
       source.readParcelable<ApiError>(ApiError::class.java.classLoader),
       source.createTypedArrayList(LookUpPublicKeyInfo.CREATOR),

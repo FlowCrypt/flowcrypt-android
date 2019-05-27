@@ -23,11 +23,11 @@ import com.google.gson.annotations.SerializedName
  * E-mail: DenBond7@gmail.com
  */
 
-class LookUpEmailResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
-                                      @SerializedName("has_cryptup") @Expose val hasCryptup: Boolean,
-                                      @SerializedName("pubkey") @Expose val pubKey: String?,
-                                      @Expose val email: String?,
-                                      @SerializedName("longid") @Expose val longId: String?) : ApiResponse {
+data class LookUpEmailResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
+                                           @SerializedName("has_cryptup") @Expose val hasCryptup: Boolean,
+                                           @SerializedName("pubkey") @Expose val pubKey: String?,
+                                           @Expose val email: String?,
+                                           @SerializedName("longid") @Expose val longId: String?) : ApiResponse {
   fun hasCryptup(): Boolean {
     return hasCryptup
   }
