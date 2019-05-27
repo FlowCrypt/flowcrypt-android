@@ -12,7 +12,7 @@ import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest;
 import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest;
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
+import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
 import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult;
@@ -179,7 +179,7 @@ public class NodeCallsExecutor {
     return result;
   }
 
-  private static void checkResult(BaseNodeResult result) throws NodeException {
+  private static void checkResult(BaseNodeResponse result) throws NodeException {
     if (result == null) {
       throw new NullPointerException("Result is null");
     }

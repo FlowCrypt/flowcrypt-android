@@ -12,7 +12,7 @@ import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
-import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult
+import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 
 /**
@@ -47,7 +47,7 @@ class NodeRepository : PgpApiRepository {
    * @param nodeRequest An instance of [NodeRequest]
    */
   private fun load(requestCode: Int, data: MutableLiveData<NodeResponseWrapper<*>>, nodeRequest: NodeRequest) {
-    data.value = NodeResponseWrapper.loading(requestCode, null)
+    data.value = NodeResponseWrapper.loading(requestCode, null, 0)
     Worker(data).execute(NodeRequestWrapper(requestCode, nodeRequest))
   }
 
@@ -58,7 +58,7 @@ class NodeRepository : PgpApiRepository {
 
     override fun doInBackground(vararg nodeRequestWrappers: NodeRequestWrapper<*>): NodeResponseWrapper<*> {
       val nodeRequestWrapper = nodeRequestWrappers[0]
-      val baseNodeResult: BaseNodeResult
+      val baseNodeResult: BaseNodeResponse
 
       val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       try {
@@ -66,26 +66,25 @@ class NodeRepository : PgpApiRepository {
         if (response != null) {
           val time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis()
           if (response.body() != null) {
-            baseNodeResult = response.body() as BaseNodeResult
-            baseNodeResult.executionTime = time
+            baseNodeResult = response.body() as BaseNodeResponse
 
             if (baseNodeResult.error != null) {
-              return NodeResponseWrapper.error(nodeRequestWrapper.requestCode, baseNodeResult)
+              return NodeResponseWrapper.error(nodeRequestWrapper.requestCode, baseNodeResult, time)
             }
           } else {
             return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode,
-                NullPointerException("The response body is null!"), null)
+                NullPointerException("The response body is null!"), null, time)
           }
         } else {
           return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode,
-              NullPointerException("The response is null!"), null)
+              NullPointerException("The response is null!"), null, 0)
         }
       } catch (e: Exception) {
         e.printStackTrace()
-        return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode, e, null)
+        return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode, e, null, 0)
       }
 
-      return NodeResponseWrapper.success(nodeRequestWrapper.requestCode, baseNodeResult)
+      return NodeResponseWrapper.success(nodeRequestWrapper.requestCode, baseNodeResult, 0)
     }
 
     override fun onPostExecute(nodeResponseWrapper: NodeResponseWrapper<*>) {

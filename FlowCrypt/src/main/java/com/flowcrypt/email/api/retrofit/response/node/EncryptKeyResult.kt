@@ -3,11 +3,16 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.node;
+package com.flowcrypt.email.api.retrofit.response.node
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.google.gson.annotations.Expose;
+import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.google.gson.annotations.Expose
+
+import java.io.BufferedInputStream
+import java.io.IOException
 
 /**
  * It's a result for "encryptKey" requests.
@@ -17,42 +22,33 @@ import com.google.gson.annotations.Expose;
  * Time: 9:28 AM
  * E-mail: DenBond7@gmail.com
  */
-public class EncryptKeyResult extends BaseNodeResult {
-  public static final Creator<DecryptKeyResult> CREATOR = new Creator<DecryptKeyResult>() {
-    @Override
-    public DecryptKeyResult createFromParcel(Parcel source) {
-      return new DecryptKeyResult(source);
+data class EncryptKeyResult constructor(@Expose val encryptedKey: String?,
+                                        @Expose override val error: Error?) : BaseNodeResponse {
+  @Throws(IOException::class)
+  override fun handleRawData(bufferedInputStream: BufferedInputStream) {
+
+  }
+
+  constructor(source: Parcel) : this(
+      source.readString(),
+      source.readParcelable<Error>(Error::class.java.classLoader)
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeString(encryptedKey)
+        writeParcelable(error, 0)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<EncryptKeyResult> = object : Parcelable.Creator<EncryptKeyResult> {
+      override fun createFromParcel(source: Parcel): EncryptKeyResult = EncryptKeyResult(source)
+      override fun newArray(size: Int): Array<EncryptKeyResult?> = arrayOfNulls(size)
     }
-
-    @Override
-    public DecryptKeyResult[] newArray(int size) {
-      return new DecryptKeyResult[size];
-    }
-  };
-
-  @Expose
-  private String encryptedKey;
-
-  public EncryptKeyResult() {
-  }
-
-  protected EncryptKeyResult(Parcel in) {
-    super(in);
-    this.encryptedKey = in.readString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
-    dest.writeString(this.encryptedKey);
-  }
-
-  public String getEncryptedKey() {
-    return encryptedKey;
   }
 }

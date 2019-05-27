@@ -3,10 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.node;
+package com.flowcrypt.email.api.retrofit.response.node
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
+import android.os.Parcelable
+import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import java.io.BufferedInputStream
+import java.io.IOException
 
 /**
  * It's a base response from the Node.js server.
@@ -16,10 +18,9 @@ import java.io.IOException;
  * Time: 11:42 AM
  * E-mail: DenBond7@gmail.com
  */
-public interface BaseNodeResponse {
-  void setData(byte[] data);
+interface BaseNodeResponse : Parcelable {
+  val error: Error?
 
-  void setExecutionTime(long executionTime);
-
-  void handleRawData(BufferedInputStream bufferedInputStream) throws IOException;
+  @Throws(IOException::class)
+  fun handleRawData(bufferedInputStream: BufferedInputStream)
 }

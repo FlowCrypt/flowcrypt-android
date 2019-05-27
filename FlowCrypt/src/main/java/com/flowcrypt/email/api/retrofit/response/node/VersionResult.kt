@@ -3,12 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.node;
+package com.flowcrypt.email.api.retrofit.response.node
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
+
+import java.io.BufferedInputStream
+import java.io.IOException
 
 /**
  * It's a result for "version" requests.
@@ -18,141 +23,60 @@ import com.google.gson.annotations.SerializedName;
  * Time: 11:42 AM
  * E-mail: DenBond7@gmail.com
  */
-public class VersionResult extends BaseNodeResult {
+data class VersionResult constructor(@SerializedName("http_parser") @Expose val httpParser: String?,
+                                     @Expose val mobile: String?,
+                                     @Expose val node: String?,
+                                     @Expose val v8: String?,
+                                     @Expose val uv: String?,
+                                     @Expose val zlib: String?,
+                                     @Expose val ares: String?,
+                                     @Expose val modules: String?,
+                                     @Expose val nghttp2: String?,
+                                     @Expose val openssl: String?,
+                                     @Expose override val error: Error?) : BaseNodeResponse {
+  @Throws(IOException::class)
+  override fun handleRawData(bufferedInputStream: BufferedInputStream) {
 
-  public static final Creator<VersionResult> CREATOR = new Creator<VersionResult>() {
-    @Override
-    public VersionResult createFromParcel(Parcel source) {
-      return new VersionResult(source);
+  }
+
+  constructor(source: Parcel) : this(
+      source.readString(),
+      source.readString(),
+      source.readString(),
+      source.readString(),
+      source.readString(),
+      source.readString(),
+      source.readString(),
+      source.readString(),
+      source.readString(),
+      source.readString(),
+      source.readParcelable<Error>(Error::class.java.classLoader)
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeString(httpParser)
+        writeString(mobile)
+        writeString(node)
+        writeString(v8)
+        writeString(uv)
+        writeString(zlib)
+        writeString(ares)
+        writeString(modules)
+        writeString(nghttp2)
+        writeString(openssl)
+        writeParcelable(error, 0)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<VersionResult> = object : Parcelable.Creator<VersionResult> {
+      override fun createFromParcel(source: Parcel): VersionResult = VersionResult(source)
+      override fun newArray(size: Int): Array<VersionResult?> = arrayOfNulls(size)
     }
-
-    @Override
-    public VersionResult[] newArray(int size) {
-      return new VersionResult[size];
-    }
-  };
-
-  @SerializedName("http_parser")
-  @Expose
-  private String httpParser;
-  @SerializedName("mobile")
-  @Expose
-  private String mobile;
-  @SerializedName("node")
-  @Expose
-  private String node;
-  @SerializedName("v8")
-  @Expose
-  private String v8;
-  @SerializedName("uv")
-  @Expose
-  private String uv;
-  @SerializedName("zlib")
-  @Expose
-  private String zlib;
-  @SerializedName("ares")
-  @Expose
-  private String ares;
-  @SerializedName("modules")
-  @Expose
-  private String modules;
-  @SerializedName("nghttp2")
-  @Expose
-  private String nghttp2;
-  @SerializedName("openssl")
-  @Expose
-  private String openssl;
-
-  public VersionResult() {
-  }
-
-  protected VersionResult(Parcel in) {
-    super(in);
-    this.httpParser = in.readString();
-    this.mobile = in.readString();
-    this.node = in.readString();
-    this.v8 = in.readString();
-    this.uv = in.readString();
-    this.zlib = in.readString();
-    this.ares = in.readString();
-    this.modules = in.readString();
-    this.nghttp2 = in.readString();
-    this.openssl = in.readString();
-  }
-
-  @Override
-  public String toString() {
-    return "VersionResult{" +
-        "httpParser='" + httpParser + '\'' +
-        ", mobile='" + mobile + '\'' +
-        ", node='" + node + '\'' +
-        ", v8='" + v8 + '\'' +
-        ", uv='" + uv + '\'' +
-        ", zlib='" + zlib + '\'' +
-        ", ares='" + ares + '\'' +
-        ", modules='" + modules + '\'' +
-        ", nghttp2='" + nghttp2 + '\'' +
-        ", openssl='" + openssl + '\'' +
-        "} " + super.toString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
-    dest.writeString(this.httpParser);
-    dest.writeString(this.mobile);
-    dest.writeString(this.node);
-    dest.writeString(this.v8);
-    dest.writeString(this.uv);
-    dest.writeString(this.zlib);
-    dest.writeString(this.ares);
-    dest.writeString(this.modules);
-    dest.writeString(this.nghttp2);
-    dest.writeString(this.openssl);
-  }
-
-  public String getHttpParser() {
-    return httpParser;
-  }
-
-  public String getMobile() {
-    return mobile;
-  }
-
-  public String getNode() {
-    return node;
-  }
-
-  public String getV8() {
-    return v8;
-  }
-
-  public String getUv() {
-    return uv;
-  }
-
-  public String getZlib() {
-    return zlib;
-  }
-
-  public String getAres() {
-    return ares;
-  }
-
-  public String getModules() {
-    return modules;
-  }
-
-  public String getNghttp2() {
-    return nghttp2;
-  }
-
-  public String getOpenssl() {
-    return openssl;
   }
 }

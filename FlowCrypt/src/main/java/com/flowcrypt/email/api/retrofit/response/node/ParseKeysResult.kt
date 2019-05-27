@@ -3,15 +3,18 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.node;
+package com.flowcrypt.email.api.retrofit.response.node
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
-import java.util.List;
+import java.io.BufferedInputStream
+import java.io.IOException
 
 /**
  * It's a result for "parseKeys" requests.
@@ -21,52 +24,36 @@ import java.util.List;
  * Time: 12:01 PM
  * E-mail: DenBond7@gmail.com
  */
-public class ParseKeysResult extends BaseNodeResult {
-  public static final Creator<ParseKeysResult> CREATOR = new Creator<ParseKeysResult>() {
-    @Override
-    public ParseKeysResult createFromParcel(Parcel source) {
-      return new ParseKeysResult(source);
+data class ParseKeysResult constructor(@Expose val format: String?,
+                                       @Expose @SerializedName("keyDetails") val nodeKeyDetails: List<NodeKeyDetails>?,
+                                       @Expose override val error: Error?) : BaseNodeResponse {
+  @Throws(IOException::class)
+  override fun handleRawData(bufferedInputStream: BufferedInputStream) {
+
+  }
+
+  constructor(source: Parcel) : this(
+      source.readString(),
+      source.createTypedArrayList(NodeKeyDetails.CREATOR),
+      source.readParcelable<Error>(Error::class.java.classLoader)
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeString(format)
+        writeTypedList(nodeKeyDetails)
+        writeParcelable(error, 0)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<ParseKeysResult> = object : Parcelable.Creator<ParseKeysResult> {
+      override fun createFromParcel(source: Parcel): ParseKeysResult = ParseKeysResult(source)
+      override fun newArray(size: Int): Array<ParseKeysResult?> = arrayOfNulls(size)
     }
-
-    @Override
-    public ParseKeysResult[] newArray(int size) {
-      return new ParseKeysResult[size];
-    }
-  };
-
-  @Expose
-  private String format;
-
-  @Expose
-  @SerializedName("keyDetails")
-  private List<NodeKeyDetails> nodeKeyDetails;
-
-  public ParseKeysResult() {
-  }
-
-  protected ParseKeysResult(Parcel in) {
-    super(in);
-    this.format = in.readString();
-    this.nodeKeyDetails = in.createTypedArrayList(NodeKeyDetails.CREATOR);
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
-    dest.writeString(this.format);
-    dest.writeTypedList(this.nodeKeyDetails);
-  }
-
-  public String getFormat() {
-    return format;
-  }
-
-  public List<NodeKeyDetails> getNodeKeyDetails() {
-    return nodeKeyDetails;
   }
 }

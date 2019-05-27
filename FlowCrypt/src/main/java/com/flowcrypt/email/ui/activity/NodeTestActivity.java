@@ -14,7 +14,7 @@ import android.widget.TextView;
 import com.flowcrypt.email.R;
 import com.flowcrypt.email.api.retrofit.node.RequestsManager;
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
-import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult;
+import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse;
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult;
 import com.flowcrypt.email.api.retrofit.response.node.EncryptedMsgResult;
@@ -109,7 +109,7 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
       }
 
       if (responseWrapper.getResult().getError() != null) {
-        addResultLine("ERROR", responseWrapper.getResult().getExecutionTime(),
+        addResultLine("ERROR", responseWrapper.getExecutionTime(),
             "error: " + responseWrapper.getResult().getError(), true);
         return;
       }
@@ -130,83 +130,92 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
 
         case R.id.req_id_decrypt_msg_ecc:
           ParseDecryptedMsgResult eccDecryptMsgResult = (ParseDecryptedMsgResult) responseWrapper.getResult();
-          printDecryptMsgResult("decrypt-msg-ecc", eccDecryptMsgResult);
+          printDecryptMsgResult("decrypt-msg-ecc", eccDecryptMsgResult, responseWrapper.getExecutionTime());
           requestsManager.decryptMsg(R.id.req_id_decrypt_msg_rsa_2048, encryptedMsg, TestData.rsa2048PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_msg_rsa_2048:
           ParseDecryptedMsgResult rsa2048DecryptMsgResult = (ParseDecryptedMsgResult) responseWrapper.getResult();
-          printDecryptMsgResult("decrypt-msg-rsa2048", rsa2048DecryptMsgResult);
+          printDecryptMsgResult("decrypt-msg-rsa2048", rsa2048DecryptMsgResult, responseWrapper.getExecutionTime());
           requestsManager.decryptMsg(R.id.req_id_decrypt_msg_rsa_4096, encryptedMsg, TestData.rsa4096PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_msg_rsa_4096:
           ParseDecryptedMsgResult rsa4096DecryptMsgResult = (ParseDecryptedMsgResult) responseWrapper.getResult();
-          printDecryptMsgResult("decrypt-msg-rsa4096", rsa4096DecryptMsgResult);
+          printDecryptMsgResult("decrypt-msg-rsa4096", rsa4096DecryptMsgResult, responseWrapper.getExecutionTime());
           requestsManager.encryptFile(R.id.req_id_encrypt_file, TEST_MSG.getBytes());
           break;
 
         case R.id.req_id_encrypt_file:
           EncryptedFileResult encryptFileResult = (EncryptedFileResult) responseWrapper.getResult();
-          addResultLine("encrypt-file", encryptFileResult);
+          addResultLine("encrypt-file", encryptFileResult, responseWrapper.getExecutionTime());
           encryptedBytes = encryptFileResult.getEncryptedBytes();
           requestsManager.decryptFile(R.id.req_id_decrypt_file_ecc, encryptedBytes, TestData.getMixedPrvKeys());
           break;
 
         case R.id.req_id_decrypt_file_ecc:
           DecryptedFileResult eccDecryptedFileResult = (DecryptedFileResult) responseWrapper.getResult();
-          printDecryptFileResult("decrypt-file-ecc", TEST_MSG.getBytes(), eccDecryptedFileResult);
+          printDecryptFileResult("decrypt-file-ecc", TEST_MSG.getBytes(), eccDecryptedFileResult,
+              responseWrapper.getExecutionTime());
           requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_2048, encryptedBytes, TestData.rsa2048PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_rsa_2048:
           DecryptedFileResult rsa2048DecryptedFileResult = (DecryptedFileResult) responseWrapper.getResult();
-          printDecryptFileResult("decrypt-file-rsa2048", TEST_MSG.getBytes(), rsa2048DecryptedFileResult);
+          printDecryptFileResult("decrypt-file-rsa2048", TEST_MSG.getBytes(), rsa2048DecryptedFileResult,
+              responseWrapper.getExecutionTime());
           requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_4096, encryptedBytes, TestData.rsa4096PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_rsa_4096:
           DecryptedFileResult rsa4096DecryptedFileResult = (DecryptedFileResult) responseWrapper.getResult();
-          printDecryptFileResult("decrypt-file-rsa4096", TEST_MSG.getBytes(), rsa4096DecryptedFileResult);
+          printDecryptFileResult("decrypt-file-rsa4096", TEST_MSG.getBytes(), rsa4096DecryptedFileResult,
+              responseWrapper.getExecutionTime());
           requestsManager.encryptFile(R.id.req_id_encrypt_file_rsa_2048_1mb, payloads[0]);
           break;
 
         case R.id.req_id_encrypt_file_rsa_2048_1mb:
           EncryptedFileResult encryptedFileResult1Mb = (EncryptedFileResult) responseWrapper.getResult();
-          addResultLine("encrypt-file-" + 1 + "m" + "-rsa2048", encryptedFileResult1Mb);
+          addResultLine("encrypt-file-" + 1 + "m" + "-rsa2048", encryptedFileResult1Mb,
+              responseWrapper.getExecutionTime());
           requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_2048_1mb, encryptedFileResult1Mb.getEncryptedBytes(),
               TestData.rsa2048PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_rsa_2048_1mb:
           DecryptedFileResult rsa2048DecryptedFileResult1Mb = (DecryptedFileResult) responseWrapper.getResult();
-          printDecryptFileResult("decrypt-file-" + 1 + "m" + "-rsa2048", payloads[0], rsa2048DecryptedFileResult1Mb);
+          printDecryptFileResult("decrypt-file-" + 1 + "m" + "-rsa2048", payloads[0], rsa2048DecryptedFileResult1Mb,
+              responseWrapper.getExecutionTime());
           requestsManager.encryptFile(R.id.req_id_encrypt_file_rsa_2048_3mb, payloads[1]);
           break;
 
         case R.id.req_id_encrypt_file_rsa_2048_3mb:
           EncryptedFileResult encryptedFileResult3Mb = (EncryptedFileResult) responseWrapper.getResult();
-          addResultLine("encrypt-file-" + 3 + "m" + "-rsa2048", encryptedFileResult3Mb);
+          addResultLine("encrypt-file-" + 3 + "m" + "-rsa2048", encryptedFileResult3Mb,
+              responseWrapper.getExecutionTime());
           requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_2048_3mb, encryptedFileResult3Mb
               .getEncryptedBytes(), TestData.eccPrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_rsa_2048_3mb:
           DecryptedFileResult rsa2048DecryptedFileResult3Mb = (DecryptedFileResult) responseWrapper.getResult();
-          printDecryptFileResult("decrypt-file-" + 3 + "m" + "-rsa2048", payloads[1], rsa2048DecryptedFileResult3Mb);
+          printDecryptFileResult("decrypt-file-" + 3 + "m" + "-rsa2048", payloads[1], rsa2048DecryptedFileResult3Mb,
+              responseWrapper.getExecutionTime());
           requestsManager.encryptFile(R.id.req_id_encrypt_file_rsa_2048_5mb, payloads[2]);
           break;
 
         case R.id.req_id_encrypt_file_rsa_2048_5mb:
           EncryptedFileResult encryptedFileResult5Mb = (EncryptedFileResult) responseWrapper.getResult();
-          addResultLine("encrypt-file-" + 5 + "m" + "-rsa2048", encryptedFileResult5Mb);
+          addResultLine("encrypt-file-" + 5 + "m" + "-rsa2048", encryptedFileResult5Mb,
+              responseWrapper.getExecutionTime());
           requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_2048_5mb, encryptedFileResult5Mb
               .getEncryptedBytes(), TestData.eccPrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_rsa_2048_5mb:
           DecryptedFileResult rsa2048DecryptFileResult5Mb = (DecryptedFileResult) responseWrapper.getResult();
-          printDecryptFileResult("decrypt-file-" + 5 + "m" + "-rsa2048", payloads[2], rsa2048DecryptFileResult5Mb);
+          printDecryptFileResult("decrypt-file-" + 5 + "m" + "-rsa2048", payloads[2], rsa2048DecryptFileResult5Mb,
+              responseWrapper.getExecutionTime());
 
           if (!hasTestFailure) {
             addResultLine("all-tests", System.currentTimeMillis() - allTestsStartTime, "success", true);
@@ -217,14 +226,15 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
 
         case R.id.req_id_encrypt_file_from_uri:
           EncryptedFileResult encryptFileFromUriResult = (EncryptedFileResult) responseWrapper.getResult();
-          addResultLine("encrypt-file", encryptFileFromUriResult);
+          addResultLine("encrypt-file", encryptFileFromUriResult, responseWrapper.getExecutionTime());
           requestsManager.decryptFile(R.id.req_id_decrypt_file_rsa_2048_from_uri, encryptFileFromUriResult
               .getEncryptedBytes(), TestData.rsa2048PrvKeyInfo());
           break;
 
         case R.id.req_id_decrypt_file_rsa_2048_from_uri:
           DecryptedFileResult rsa2048DecryptFileFromUriResult3Mb = (DecryptedFileResult) responseWrapper.getResult();
-          printDecryptFileResult("decrypt-file-rsa2048", null, rsa2048DecryptFileFromUriResult3Mb);
+          printDecryptFileResult("decrypt-file-rsa2048", null, rsa2048DecryptFileFromUriResult3Mb,
+              responseWrapper.getExecutionTime());
           break;
       }
     }
@@ -247,59 +257,60 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   }
 
   private void addResultLine(String actionName, NodeResponseWrapper result) {
-    BaseNodeResult baseNodeResult = result.getResult();
+    BaseNodeResponse baseNodeResult = result.getResult();
 
     if (result.getException() != null) {
       addResultLine(actionName, 0, result.getException());
     } else {
-      addResultLine(actionName, baseNodeResult.getExecutionTime(), "ok", false);
+      addResultLine(actionName, result.getExecutionTime(), "ok", false);
     }
   }
 
-  private void addResultLine(String actionName, BaseNodeResult result) {
+  private void addResultLine(String actionName, BaseNodeResponse result, long executionTime) {
     if (result != null) {
       if (result.getError() != null) {
-        addResultLine(actionName, result.getExecutionTime(), result.getError().getMsg(), false);
+        addResultLine(actionName, executionTime, result.getError().getMsg(), false);
       } else {
-        addResultLine(actionName, result.getExecutionTime(), "ok", false);
+        addResultLine(actionName, executionTime, "ok", false);
       }
     }
   }
 
-  private void printDecryptMsgResult(String actionName, ParseDecryptedMsgResult r) {
+  private void printDecryptMsgResult(String actionName, ParseDecryptedMsgResult r, long executionTime) {
     if (r.getError() != null) {
-      addResultLine(actionName, r);
+      addResultLine(actionName, r, executionTime);
     } else if (r.getMsgBlocks().get(0).getContent().length() != TEST_MSG_HTML.length()) {
-      addResultLine(actionName, r.getExecutionTime(),
+      addResultLine(actionName, executionTime,
           "wrong meta block len " + r.getMsgBlocks().size() + "!=" + TEST_MSG_HTML.length(), false);
     } else if (r.getMsgBlocks().get(0).getType() != MsgBlock.Type.DECRYPTED_TEXT) {
-      addResultLine(actionName, r.getExecutionTime(), "wrong meta block type: " + r.getMsgBlocks().get(0).getType(),
+      addResultLine(actionName, executionTime, "wrong meta block type: " + r.getMsgBlocks().get(0).getType(),
           false);
     } else {
       MsgBlock block = r.getMsgBlocks().get(0);
       if (block == null) {
-        addResultLine(actionName, r.getExecutionTime(), "getNextBlock unexpectedly null", false);
+        addResultLine(actionName, executionTime, "getNextBlock unexpectedly null", false);
       } else if (block.getType() != MsgBlock.Type.DECRYPTED_TEXT) {
-        addResultLine(actionName, r.getExecutionTime(), "wrong block type: " + r.getMsgBlocks().size(), false);
+        addResultLine(actionName, executionTime, "wrong block type: " + r.getMsgBlocks().size(), false);
       } else if (!block.getContent().equals(TEST_MSG_HTML)) {
-        addResultLine(actionName, r.getExecutionTime(), "block content mismatch", false);
+        addResultLine(actionName, executionTime, "block content mismatch", false);
       } else if (r.getMsgBlocks().size() > 1) {
-        addResultLine(actionName, r.getExecutionTime(), "unexpected second block", false);
+        addResultLine(actionName, executionTime, "unexpected second block", false);
       } else {
-        addResultLine(actionName, r);
+        addResultLine(actionName, r, executionTime);
       }
     }
   }
 
-  private void printDecryptFileResult(String actionName, byte[] originalData, DecryptedFileResult r) {
+  private void printDecryptFileResult(String actionName, byte[] originalData, DecryptedFileResult r,
+                                      long executionTime) {
     if (r.getError() != null) {
-      addResultLine(actionName, r);
+      addResultLine(actionName, r, executionTime);
     } else if (!"file.txt".equals(r.getName())) {
-      addResultLine(actionName, r.getExecutionTime(), "wrong filename", false);
+      addResultLine(actionName, executionTime, "wrong filename", false);
     } else if (originalData != null && !Arrays.equals(r.getDecryptedBytes(), originalData)) {
-      addResultLine(actionName, r.getExecutionTime(), "decrypted file content mismatch", false);
+      addResultLine(actionName, executionTime, "decrypted file content mismatch", false);
     } else {
-      addResultLine(actionName, r);
+      addResultLine(actionName, r, executionTime);
     }
   }
 

@@ -3,11 +3,18 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.node;
+package com.flowcrypt.email.api.retrofit.response.node
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.google.gson.annotations.Expose;
+import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.google.gson.annotations.Expose
+
+import org.apache.commons.io.IOUtils
+
+import java.io.BufferedInputStream
+import java.io.IOException
 
 /**
  * It's a result for "decryptFile" requests.
@@ -17,55 +24,42 @@ import com.google.gson.annotations.Expose;
  * Time: 4:37 PM
  * E-mail: DenBond7@gmail.com
  */
-public class DecryptedFileResult extends BaseNodeResult {
-  public static final Creator<DecryptedFileResult> CREATOR = new Creator<DecryptedFileResult>() {
-    @Override
-    public DecryptedFileResult createFromParcel(Parcel source) {
-      return new DecryptedFileResult(source);
+data class DecryptedFileResult constructor(@Expose val isSuccess: Boolean,
+                                           @Expose val name: String?,
+                                           @Expose override val error: Error?) : BaseNodeResponse {
+  var decryptedBytes: ByteArray? = null
+    private set
+
+  @Throws(IOException::class)
+  override fun handleRawData(bufferedInputStream: BufferedInputStream) {
+    decryptedBytes = IOUtils.toByteArray(bufferedInputStream)
+  }
+
+  constructor(source: Parcel) : this(
+      1 == source.readInt(),
+      source.readString(),
+      source.readParcelable<Error>(Error::class.java.classLoader)
+  ) {
+    source.readByteArray(this.decryptedBytes)
+  }
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeInt((if (isSuccess) 1 else 0))
+        writeString(name)
+        writeParcelable(error, 0)
+        writeByteArray(decryptedBytes)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<DecryptedFileResult> = object : Parcelable.Creator<DecryptedFileResult> {
+      override fun createFromParcel(source: Parcel): DecryptedFileResult = DecryptedFileResult(source)
+      override fun newArray(size: Int): Array<DecryptedFileResult?> = arrayOfNulls(size)
     }
-
-    @Override
-    public DecryptedFileResult[] newArray(int size) {
-      return new DecryptedFileResult[size];
-    }
-  };
-
-  @Expose
-  private boolean success;
-
-  @Expose
-  private String name;
-
-  public DecryptedFileResult() {
-  }
-
-  protected DecryptedFileResult(Parcel in) {
-    super(in);
-    this.success = in.readByte() != 0;
-    this.name = in.readString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
-    dest.writeByte(this.success ? (byte) 1 : (byte) 0);
-    dest.writeString(this.name);
-  }
-
-  public byte[] getDecryptedBytes() {
-    return getData();
-  }
-
-  public boolean isSuccess() {
-    return success;
-  }
-
-  public String getName() {
-    return name;
   }
 }

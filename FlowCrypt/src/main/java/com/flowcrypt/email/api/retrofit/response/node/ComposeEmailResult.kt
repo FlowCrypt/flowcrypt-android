@@ -3,14 +3,16 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.node;
+package com.flowcrypt.email.api.retrofit.response.node
 
-import android.os.Parcel;
-
-import org.apache.commons.io.IOUtils;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import android.os.Parcel
+import android.os.Parcelable
+import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.google.gson.annotations.Expose
+import org.apache.commons.io.IOUtils
+import java.io.BufferedInputStream
+import java.io.IOException
+import java.nio.charset.StandardCharsets
 
 /**
  * It's a result for "composeEmail" requests.
@@ -20,47 +22,42 @@ import java.nio.charset.StandardCharsets;
  * Time: 3:00 PM
  * E-mail: DenBond7@gmail.com
  */
-public class ComposeEmailResult extends BaseNodeResult {
-  public static final Creator<ComposeEmailResult> CREATOR = new Creator<ComposeEmailResult>() {
-    @Override
-    public ComposeEmailResult createFromParcel(Parcel source) {
-      return new ComposeEmailResult(source);
-    }
+data class ComposeEmailResult constructor(@Expose override val error: Error?) : BaseNodeResponse {
+  var mimeMsg: String = ""
+    private set
 
-    @Override
-    public ComposeEmailResult[] newArray(int size) {
-      return new ComposeEmailResult[size];
-    }
-  };
+  @Throws(IOException::class)
+  override fun handleRawData(bufferedInputStream: BufferedInputStream) {
+    val bytes = IOUtils.toByteArray(bufferedInputStream) ?: return
 
-  public ComposeEmailResult() {
-  }
-
-  protected ComposeEmailResult(Parcel in) {
-    super(in);
-  }
-
-  public final String getMimeMsg() {
-    byte[] bytes = getData();
-
-    if (bytes == null) {
-      return "";
-    }
     try {
-      return IOUtils.toString(bytes, StandardCharsets.UTF_8.displayName());
-    } catch (IOException e) {
-      e.printStackTrace();
+      mimeMsg = IOUtils.toString(bytes, StandardCharsets.UTF_8.displayName())
+    } catch (e: IOException) {
+      e.printStackTrace()
     }
-    return "";
   }
 
-  @Override
-  public int describeContents() {
-    return 0;
+  constructor(source: Parcel) : this(
+      source.readParcelable<Error>(Error::class.java.classLoader)
+  ) {
+    this.mimeMsg = source.readString()!!
   }
 
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(error, 0)
+        writeString(mimeMsg)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<ComposeEmailResult> = object : Parcelable.Creator<ComposeEmailResult> {
+      override fun createFromParcel(source: Parcel): ComposeEmailResult = ComposeEmailResult(source)
+      override fun newArray(size: Int): Array<ComposeEmailResult?> = arrayOfNulls(size)
+    }
   }
 }

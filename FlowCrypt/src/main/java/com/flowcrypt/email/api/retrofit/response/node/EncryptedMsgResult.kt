@@ -3,14 +3,19 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.node;
+package com.flowcrypt.email.api.retrofit.response.node
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import org.apache.commons.io.IOUtils;
+import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.google.gson.annotations.Expose
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import org.apache.commons.io.IOUtils
+
+import java.io.BufferedInputStream
+import java.io.IOException
+import java.nio.charset.StandardCharsets
 
 /**
  * It's a result for "encryptMsg" requests.
@@ -20,49 +25,42 @@ import java.nio.charset.StandardCharsets;
  * Time: 12:51 PM
  * E-mail: DenBond7@gmail.com
  */
-public class EncryptedMsgResult extends BaseNodeResult {
+data class EncryptedMsgResult constructor(@Expose override val error: Error?) : BaseNodeResponse {
+  var encryptedMsg: String? = null
+    private set
 
-  public static final Creator<EncryptedMsgResult> CREATOR = new Creator<EncryptedMsgResult>() {
-    @Override
-    public EncryptedMsgResult createFromParcel(Parcel source) {
-      return new EncryptedMsgResult(source);
-    }
+  @Throws(IOException::class)
+  override fun handleRawData(bufferedInputStream: BufferedInputStream) {
+    val bytes = IOUtils.toByteArray(bufferedInputStream) ?: return
 
-    @Override
-    public EncryptedMsgResult[] newArray(int size) {
-      return new EncryptedMsgResult[size];
-    }
-  };
-
-
-  public EncryptedMsgResult() {
-  }
-
-  protected EncryptedMsgResult(Parcel in) {
-    super(in);
-  }
-
-  public final String getEncryptedMsg() {
-    byte[] bytes = getData();
-
-    if (bytes == null) {
-      return "";
-    }
     try {
-      return IOUtils.toString(bytes, StandardCharsets.UTF_8.displayName());
-    } catch (IOException e) {
-      e.printStackTrace();
+      encryptedMsg = IOUtils.toString(bytes, StandardCharsets.UTF_8.displayName())
+    } catch (e: IOException) {
+      e.printStackTrace()
     }
-    return "";
   }
 
-  @Override
-  public int describeContents() {
-    return 0;
+  constructor(source: Parcel) : this(
+      source.readParcelable<Error>(Error::class.java.classLoader)
+  ) {
+    this.encryptedMsg = source.readString()
   }
 
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(error, 0)
+        writeString(encryptedMsg)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<EncryptedMsgResult> = object : Parcelable.Creator<EncryptedMsgResult> {
+      override fun createFromParcel(source: Parcel): EncryptedMsgResult = EncryptedMsgResult(source)
+      override fun newArray(size: Int): Array<EncryptedMsgResult?> = arrayOfNulls(size)
+    }
   }
 }

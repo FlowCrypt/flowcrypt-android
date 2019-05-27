@@ -3,12 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.node;
+package com.flowcrypt.email.api.retrofit.response.node
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.google.gson.annotations.Expose;
+import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.google.gson.annotations.Expose
+
+import java.io.BufferedInputStream
+import java.io.IOException
 
 /**
  * It's a result for "generateKey" requests.
@@ -18,43 +23,33 @@ import com.google.gson.annotations.Expose;
  * Time: 9:44 AM
  * E-mail: DenBond7@gmail.com
  */
-public class GenerateKeyResult extends BaseNodeResult {
+data class GenerateKeyResult constructor(@Expose val key: NodeKeyDetails?,
+                                         @Expose override val error: Error?) : BaseNodeResponse {
+  @Throws(IOException::class)
+  override fun handleRawData(bufferedInputStream: BufferedInputStream) {
 
-  public static final Creator<GenerateKeyResult> CREATOR = new Creator<GenerateKeyResult>() {
-    @Override
-    public GenerateKeyResult createFromParcel(Parcel source) {
-      return new GenerateKeyResult(source);
+  }
+
+  constructor(source: Parcel) : this(
+      source.readParcelable<NodeKeyDetails>(NodeKeyDetails::class.java.classLoader),
+      source.readParcelable<Error>(Error::class.java.classLoader)
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(key, 0)
+        writeParcelable(error, 0)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<GenerateKeyResult> = object : Parcelable.Creator<GenerateKeyResult> {
+      override fun createFromParcel(source: Parcel): GenerateKeyResult = GenerateKeyResult(source)
+      override fun newArray(size: Int): Array<GenerateKeyResult?> = arrayOfNulls(size)
     }
-
-    @Override
-    public GenerateKeyResult[] newArray(int size) {
-      return new GenerateKeyResult[size];
-    }
-  };
-
-  @Expose
-  private NodeKeyDetails key;
-
-  public GenerateKeyResult() {
-  }
-
-  protected GenerateKeyResult(Parcel in) {
-    super(in);
-    this.key = in.readParcelable(NodeKeyDetails.class.getClassLoader());
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
-    dest.writeParcelable(this.key, flags);
-  }
-
-  public NodeKeyDetails getKey() {
-    return key;
   }
 }

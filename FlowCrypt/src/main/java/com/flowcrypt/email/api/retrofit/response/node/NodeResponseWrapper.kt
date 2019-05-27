@@ -3,67 +3,31 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.node;
+package com.flowcrypt.email.api.retrofit.response.node
 
-import com.flowcrypt.email.api.retrofit.Status;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import com.flowcrypt.email.api.retrofit.Status
 
 /**
  * @author DenBond7
  */
-public class NodeResponseWrapper<T extends BaseNodeResult> {
-  @NonNull
-  private final Status status;
+class NodeResponseWrapper<T : BaseNodeResponse>(val requestCode: Int, val status: Status, val result: T?,
+                                                val exception: Throwable?, val executionTime: Long) {
+  companion object {
+    fun <T : BaseNodeResponse> success(requestCode: Int, data: T?, executionTime: Long): NodeResponseWrapper<T> {
+      return NodeResponseWrapper(requestCode, Status.SUCCESS, data, null, executionTime)
+    }
 
-  private int requestCode;
+    fun <T : BaseNodeResponse> error(requestCode: Int, data: T?, executionTime: Long): NodeResponseWrapper<T> {
+      return NodeResponseWrapper(requestCode, Status.ERROR, data, null, executionTime)
+    }
 
-  @Nullable
-  private T baseNodeResult;
+    fun <T : BaseNodeResponse> loading(requestCode: Int, data: T?, executionTime: Long): NodeResponseWrapper<T> {
+      return NodeResponseWrapper(requestCode, Status.LOADING, data, null, executionTime)
+    }
 
-  @Nullable
-  private Throwable exception;
-
-  public NodeResponseWrapper(int requestCode, @NonNull Status status, @Nullable T baseNodeResult,
-                             @Nullable Throwable exception) {
-    this.status = status;
-    this.requestCode = requestCode;
-    this.baseNodeResult = baseNodeResult;
-    this.exception = exception;
-  }
-
-  public static <T extends BaseNodeResult> NodeResponseWrapper<T> success(int requestCode, @Nullable T data) {
-    return new NodeResponseWrapper<>(requestCode, Status.SUCCESS, data, null);
-  }
-
-  public static <T extends BaseNodeResult> NodeResponseWrapper<T> error(int requestCode, @Nullable T data) {
-    return new NodeResponseWrapper<>(requestCode, Status.ERROR, data, null);
-  }
-
-  public static <T extends BaseNodeResult> NodeResponseWrapper<T> loading(int requestCode, @Nullable T data) {
-    return new NodeResponseWrapper<>(requestCode, Status.LOADING, data, null);
-  }
-
-  public static <T extends BaseNodeResult> NodeResponseWrapper<T> exception(int requestCode, Throwable throwable,
-                                                                            @Nullable T data) {
-    return new NodeResponseWrapper<>(requestCode, Status.EXCEPTION, data, throwable);
-  }
-
-  public int getRequestCode() {
-    return requestCode;
-  }
-
-  public Throwable getException() {
-    return exception;
-  }
-
-  public T getResult() {
-    return baseNodeResult;
-  }
-
-  @NonNull
-  public Status getStatus() {
-    return status;
+    fun <T : BaseNodeResponse> exception(requestCode: Int, throwable: Throwable, data: T?, executionTime: Long):
+        NodeResponseWrapper<T> {
+      return NodeResponseWrapper(requestCode, Status.EXCEPTION, data, throwable, executionTime)
+    }
   }
 }

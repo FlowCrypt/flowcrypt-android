@@ -17,7 +17,7 @@ import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest
-import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResult
+import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent
 import com.flowcrypt.email.model.PgpKeyInfo
@@ -75,32 +75,29 @@ object RequestsManager {
 
     override fun doInBackground(vararg nodeRequestWrappers: NodeRequestWrapper<*>): NodeResponseWrapper<*> {
       val nodeRequestWrapper = nodeRequestWrappers[0]
-      val baseNodeResult: BaseNodeResult
+      val baseNodeResult: BaseNodeResponse
 
       val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-
+      var time = 0L
       try {
         val response = nodeRequestWrapper.request.getResponse(nodeService)
         if (response != null) {
-          val time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis()
+          time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis()
           if (response.body() != null) {
-            baseNodeResult = response.body() as BaseNodeResult
-            baseNodeResult.executionTime = time
+            baseNodeResult = response.body() as BaseNodeResponse
           } else {
             throw NullPointerException("The response body is null!")
           }
-
-          baseNodeResult.executionTime = time
         } else {
           throw NullPointerException("The response is null!")
         }
 
       } catch (e: Exception) {
         e.printStackTrace()
-        return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode, e, null)
+        return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode, e, null, time)
       }
 
-      return NodeResponseWrapper.success(nodeRequestWrapper.requestCode, baseNodeResult)
+      return NodeResponseWrapper.success(nodeRequestWrapper.requestCode, baseNodeResult, time)
     }
 
     override fun onPostExecute(nodeResponseWrapper: NodeResponseWrapper<*>) {
