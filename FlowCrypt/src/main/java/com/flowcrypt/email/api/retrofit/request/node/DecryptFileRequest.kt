@@ -3,20 +3,16 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.node;
+package com.flowcrypt.email.api.retrofit.request.node
 
-import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo;
-import com.flowcrypt.email.model.PgpKeyInfo;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import retrofit2.Response;
+import com.flowcrypt.email.api.retrofit.node.NodeService
+import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo
+import com.flowcrypt.email.model.PgpKeyInfo
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
+import retrofit2.Response
+import java.io.IOException
+import java.util.*
 
 /**
  * Using this class we can create a request to decrypt an encrypted file using the given private keys.
@@ -26,43 +22,27 @@ import retrofit2.Response;
  * Time: 4:32 PM
  * E-mail: DenBond7@gmail.com
  */
-public class DecryptFileRequest extends BaseNodeRequest {
+class DecryptFileRequest(override val data: ByteArray,
+                         prvKeys: List<PgpKeyInfo>,
+                         @SerializedName("passphrases") @Expose val passphrases: List<String>) :
+    BaseNodeRequest() {
 
   @SerializedName("keys")
   @Expose
-  private List<PrivateKeyInfo> privateKeyInfoList;
+  private val privateKeyInfoList: MutableList<PrivateKeyInfo>
 
-  @SerializedName("passphrases")
-  @Expose
-  private List<String> passphrases;
+  override val endpoint: String = "decryptFile"
 
-  private byte[] data;
+  init {
+    this.privateKeyInfoList = ArrayList()
 
-  public DecryptFileRequest(byte[] data, List<PgpKeyInfo> prvKeys, String[] passphrases) {
-    this.data = data;
-    this.privateKeyInfoList = new ArrayList<>();
-
-    for (PgpKeyInfo pgpKeyInfo : prvKeys) {
-      privateKeyInfoList.add(new PrivateKeyInfo(pgpKeyInfo.getPrivate(), pgpKeyInfo.getLongid()));
+    for ((longid, private) in prvKeys) {
+      privateKeyInfoList.add(PrivateKeyInfo(private!!, longid))
     }
-
-    this.passphrases = Arrays.asList(passphrases);
   }
 
-  @Override
-  public String getEndpoint() {
-    return "decryptFile";
-  }
-
-  @Override
-  public byte[] getData() {
-    return data;
-  }
-
-  @Override
-  public Response getResponse(NodeService nodeService) throws IOException {
-    if (nodeService != null) {
-      return nodeService.decryptFile(this).execute();
-    } else return null;
+  @Throws(IOException::class)
+  override fun getResponse(nodeService: NodeService): Response<*> {
+    return nodeService.decryptFile(this).execute()
   }
 }

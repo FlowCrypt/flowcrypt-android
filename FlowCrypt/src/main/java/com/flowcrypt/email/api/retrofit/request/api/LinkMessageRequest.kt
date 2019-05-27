@@ -3,18 +3,19 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.api;
+package com.flowcrypt.email.api.retrofit.request.api
 
-import com.flowcrypt.email.api.retrofit.ApiName;
-import com.flowcrypt.email.api.retrofit.request.BaseRequest;
-import com.flowcrypt.email.api.retrofit.request.model.LinkMessageModel;
+import com.flowcrypt.email.api.retrofit.ApiName
+import com.flowcrypt.email.api.retrofit.request.BaseRequest
+import com.flowcrypt.email.api.retrofit.request.model.LinkMessageModel
 
 /**
  * This class describes a request to the https://flowcrypt.com/api/link/message API.
- * <p>
- * <code>POST /link/message  {
- * "short" (<type 'str'>)  # short id of the message
- * }</code>
+ *
+ *
+ * `POST /link/message  {
+ * "short" (<type></type>'str'>)  # short id of the message
+ * }`
  *
  * @author Denis Bondarenko
  * Date: 13.07.2017
@@ -22,9 +23,5 @@ import com.flowcrypt.email.api.retrofit.request.model.LinkMessageModel;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LinkMessageRequest extends BaseRequest<LinkMessageModel> {
-
-  public LinkMessageRequest(LinkMessageModel requestModel) {
-    super(ApiName.POST_LINK_MESSAGE, requestModel);
-  }
-}
+class LinkMessageRequest(override val apiName: ApiName = ApiName.POST_LINK_MESSAGE,
+                         override val requestModel: LinkMessageModel) : BaseRequest<LinkMessageModel>

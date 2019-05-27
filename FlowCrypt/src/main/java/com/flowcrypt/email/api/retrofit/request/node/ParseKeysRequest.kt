@@ -3,15 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.node;
+package com.flowcrypt.email.api.retrofit.request.node
 
-import android.text.TextUtils;
-
-import com.flowcrypt.email.api.retrofit.node.NodeService;
-
-import java.io.IOException;
-
-import retrofit2.Response;
+import android.text.TextUtils
+import com.flowcrypt.email.api.retrofit.node.NodeService
+import retrofit2.Response
+import java.io.IOException
 
 /**
  * Using this class we can create a request to parse the given string to find keys. It can take one key or many keys,
@@ -22,27 +19,15 @@ import retrofit2.Response;
  * Time: 11:59 AM
  * E-mail: DenBond7@gmail.com
  */
-public class ParseKeysRequest extends BaseNodeRequest {
-  private String rawKey;
+class ParseKeysRequest(val rawKey: String) : BaseNodeRequest() {
 
-  public ParseKeysRequest(String rawKey) {
-    this.rawKey = rawKey;
-  }
+  override val endpoint: String = "parseKeys"
 
-  @Override
-  public String getEndpoint() {
-    return "parseKeys";
-  }
+  override val data: ByteArray
+    get() = if (TextUtils.isEmpty(rawKey)) byteArrayOf() else rawKey.toByteArray()
 
-  @Override
-  public byte[] getData() {
-    return TextUtils.isEmpty(rawKey) ? new byte[]{} : rawKey.getBytes();
-  }
-
-  @Override
-  public Response getResponse(NodeService nodeService) throws IOException {
-    if (nodeService != null) {
-      return nodeService.parseKeys(this).execute();
-    } else return null;
+  @Throws(IOException::class)
+  override fun getResponse(nodeService: NodeService): Response<*> {
+    return nodeService.parseKeys(this).execute()
   }
 }

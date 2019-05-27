@@ -3,13 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.node;
+package com.flowcrypt.email.api.retrofit.request.node
 
-import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
-import com.flowcrypt.email.model.MessageEncryptionType;
-import com.google.gson.annotations.Expose;
-
-import java.util.List;
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.model.MessageEncryptionType
+import com.google.gson.annotations.Expose
 
 /**
  * Using this class we can create a request to create a raw MIME message(encrypted or plane).
@@ -19,54 +17,53 @@ import java.util.List;
  * Time: 3:00 PM
  * E-mail: DenBond7@gmail.com
  */
-public class ComposeEmailRequest extends BaseNodeRequest {
-  private static final String FORMAT_ENCRYPT_INLINE = "encrypt-inline";
-  private static final String FORMAT_PLAIN = "plain";
+class ComposeEmailRequest(info: OutgoingMessageInfo?,
+                          @field:Expose val pubKeys: List<String>) : BaseNodeRequest() {
 
   @Expose
-  private List<String> pubKeys;
+  private var format: String? = null
 
   @Expose
-  private String format;
+  private var text: String? = null
 
   @Expose
-  private String text;
+  private var to: List<String>? = null
 
   @Expose
-  private List<String> to;
+  private var cc: List<String>? = null
 
   @Expose
-  private List<String> cc;
+  private var bcc: List<String>? = null
 
   @Expose
-  private List<String> bcc;
+  private var from: String? = null
 
   @Expose
-  private String from;
+  private var subject: String? = null
 
   @Expose
-  private String subject;
+  private var replyToMimeMsg: String? = null
 
-  @Expose
-  private String replyToMimeMsg;
+  override val endpoint: String = "composeEmail"
 
-  public ComposeEmailRequest(OutgoingMessageInfo info, List<String> pubKeys) {
-    this.pubKeys = pubKeys;
+  override val data: ByteArray
+    get() = ByteArray(0)
 
+  init {
     if (info != null) {
-      format = info.getEncryptionType() == MessageEncryptionType.ENCRYPTED ? FORMAT_ENCRYPT_INLINE : FORMAT_PLAIN;
-      text = info.getMsg();
-      to = info.getToRecipients();
-      cc = info.getCcRecipients();
-      bcc = info.getBccRecipients();
-      from = info.getFrom();
-      subject = info.getSubject();
-      replyToMimeMsg = info.getRawReplyMsg();
+      format = if (info.encryptionType === MessageEncryptionType.ENCRYPTED) FORMAT_ENCRYPT_INLINE else FORMAT_PLAIN
+      text = info.msg
+      to = info.toRecipients
+      cc = info.ccRecipients
+      bcc = info.bccRecipients
+      from = info.from
+      subject = info.subject
+      replyToMimeMsg = info.rawReplyMsg
     }
   }
 
-  @Override
-  public String getEndpoint() {
-    return "composeEmail";
+  companion object {
+    private const val FORMAT_ENCRYPT_INLINE = "encrypt-inline"
+    private const val FORMAT_PLAIN = "plain"
   }
 }

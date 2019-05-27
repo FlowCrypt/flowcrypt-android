@@ -3,16 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.node;
+package com.flowcrypt.email.api.retrofit.request.node
 
-import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import java.io.IOException;
-import java.util.List;
-
-import retrofit2.Response;
+import com.flowcrypt.email.api.retrofit.node.NodeService
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
+import retrofit2.Response
+import java.io.IOException
 
 /**
  * Using this class we can create a request to decrypt the given private key. The private key should be armored. We
@@ -23,28 +20,13 @@ import retrofit2.Response;
  * Time: 4:34 PM
  * E-mail: DenBond7@gmail.com
  */
-public class DecryptKeyRequest extends BaseNodeRequest {
-  @Expose
-  @SerializedName("armored")
-  private String armoredKey;
+class DecryptKeyRequest(@Expose @SerializedName("armored") val armoredKey: String,
+                        @Expose val passphrases: List<String>) : BaseNodeRequest() {
 
-  @Expose
-  private List<String> passphrases;
+  override val endpoint: String = "decryptKey"
 
-  public DecryptKeyRequest(String armoredKey, List<String> passphrases) {
-    this.armoredKey = armoredKey;
-    this.passphrases = passphrases;
-  }
-
-  @Override
-  public String getEndpoint() {
-    return "decryptKey";
-  }
-
-  @Override
-  public Response getResponse(NodeService nodeService) throws IOException {
-    if (nodeService != null) {
-      return nodeService.decryptKey(this).execute();
-    } else return null;
+  @Throws(IOException::class)
+  override fun getResponse(nodeService: NodeService): Response<*> {
+    return nodeService.decryptKey(this).execute()
   }
 }

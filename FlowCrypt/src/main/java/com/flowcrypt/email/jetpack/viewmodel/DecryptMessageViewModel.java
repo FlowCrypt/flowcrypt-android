@@ -57,6 +57,6 @@ public class DecryptMessageViewModel extends BaseNodeApiViewModel implements Key
     }
 
     apiRepository.parseDecryptMsg(R.id.live_data_id_parse_and_decrypt_msg, responsesLiveData,
-        new ParseDecryptMsgRequest(rawMessage, pgpKeyInfoList, passphrases.toArray(new String[0]), true));
+        new ParseDecryptMsgRequest(rawMessage, pgpKeyInfoList, passphrases, true));
   }
 }

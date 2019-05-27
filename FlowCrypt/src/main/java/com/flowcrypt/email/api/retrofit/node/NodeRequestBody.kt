@@ -59,7 +59,7 @@ class NodeRequestBody constructor(private val nodeRequest: NodeRequest,
     if (nodeRequest.uri != null) {
       var source: Source? = null
       try {
-        val inputStream = nodeRequest.context.contentResolver.openInputStream(nodeRequest.uri)
+        val inputStream = nodeRequest.context?.contentResolver?.openInputStream(nodeRequest.uri)
         if (inputStream != null) {
           source = Okio.source(BufferedInputStream(inputStream))
           sink.writeAll(source!!)

@@ -7,7 +7,9 @@ package com.flowcrypt.email.node;
 
 import com.flowcrypt.email.model.PgpKeyInfo;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class TestData {
 
@@ -323,8 +325,10 @@ public class TestData {
     return data;
   }
 
-  public static String[] passphrases() {
-    return new String[]{"some long pp"};
+  public static List<String> passphrases() {
+    List<String> list = new ArrayList<>();
+    list.add("some long pp");
+    return list;
   }
 
   public static PgpKeyInfo[] eccPrvKeyInfo() {

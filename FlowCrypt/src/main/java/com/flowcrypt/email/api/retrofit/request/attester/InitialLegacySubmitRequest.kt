@@ -3,20 +3,21 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.attester;
+package com.flowcrypt.email.api.retrofit.request.attester
 
-import com.flowcrypt.email.api.retrofit.ApiName;
-import com.flowcrypt.email.api.retrofit.request.BaseRequest;
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
+import com.flowcrypt.email.api.retrofit.ApiName
+import com.flowcrypt.email.api.retrofit.request.BaseRequest
+import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 
 /**
  * This class describes a request to the https://flowcrypt.com/attester/initial/legacy_submit API.
- * <p>
- * <code>POST /initial/legacy_submit  {
- * "email" (<type 'str'>)  # email to use pubkey for
- * "pubkey" (<type 'str'>)  # ascii armored pubkey
+ *
+ *
+ * `POST /initial/legacy_submit  {
+ * "email" (<type></type>'str'>)  # email to use pubkey for
+ * "pubkey" (<type></type>'str'>)  # ascii armored pubkey
  * [voluntary] "attest" (True, False)  # send attestation email
- * }</code>
+ * }`
  *
  * @author Denis Bondarenko
  * Date: 15.01.2018
@@ -24,8 +25,5 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
  * E-mail: DenBond7@gmail.com
  */
 
-public class InitialLegacySubmitRequest extends BaseRequest<InitialLegacySubmitModel> {
-  public InitialLegacySubmitRequest(InitialLegacySubmitModel initialLegacySubmitModel) {
-    super(ApiName.POST_INITIAL_LEGACY_SUBMIT, initialLegacySubmitModel);
-  }
-}
+class InitialLegacySubmitRequest(override val apiName: ApiName = ApiName.POST_INITIAL_LEGACY_SUBMIT,
+                                 override val requestModel: InitialLegacySubmitModel) : BaseRequest<InitialLegacySubmitModel>

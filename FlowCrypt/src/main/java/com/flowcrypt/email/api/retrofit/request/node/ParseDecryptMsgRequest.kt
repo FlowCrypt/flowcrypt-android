@@ -3,22 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.node;
+package com.flowcrypt.email.api.retrofit.request.node
 
-import android.text.TextUtils;
-
-import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo;
-import com.flowcrypt.email.model.PgpKeyInfo;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import retrofit2.Response;
+import android.text.TextUtils
+import com.flowcrypt.email.api.retrofit.node.NodeService
+import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo
+import com.flowcrypt.email.model.PgpKeyInfo
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
+import retrofit2.Response
+import java.io.IOException
+import java.util.*
 
 /**
  * This class will be used for the message decryption.
@@ -28,51 +23,30 @@ import retrofit2.Response;
  * Time: 03:29 PM
  * E-mail: DenBond7@gmail.com
  */
-public final class ParseDecryptMsgRequest extends BaseNodeRequest {
+class ParseDecryptMsgRequest @JvmOverloads constructor(val msg: String,
+                                                       prvKeys: List<PgpKeyInfo>,
+                                                       @Expose val passphrases: List<String>,
+                                                       @Expose val isEmail: Boolean = false) : BaseNodeRequest() {
 
   @SerializedName("keys")
   @Expose
-  private List<PrivateKeyInfo> privateKeyInfoList;
+  private val privateKeyInfoList: MutableList<PrivateKeyInfo>
 
-  @SerializedName("passphrases")
-  @Expose
-  private List<String> passphrases;
+  override val endpoint: String = "parseDecryptMsg"
 
-  @Expose
-  private boolean isEmail;
+  override val data: ByteArray
+    get() = if (TextUtils.isEmpty(msg)) byteArrayOf() else msg.toByteArray()
 
-  private String msg;
+  init {
+    this.privateKeyInfoList = ArrayList()
 
-  public ParseDecryptMsgRequest(String msg, List<PgpKeyInfo> prvKeys, String[] passphrases) {
-    this(msg, prvKeys, passphrases, false);
-  }
-
-  public ParseDecryptMsgRequest(String msg, List<PgpKeyInfo> prvKeys, String[] passphrases, boolean isEmail) {
-    this.msg = msg;
-    this.isEmail = isEmail;
-    this.privateKeyInfoList = new ArrayList<>();
-
-    for (PgpKeyInfo pgpKeyInfo : prvKeys) {
-      privateKeyInfoList.add(new PrivateKeyInfo(pgpKeyInfo.getPrivate(), pgpKeyInfo.getLongid()));
+    for ((longid, private) in prvKeys) {
+      privateKeyInfoList.add(PrivateKeyInfo(private!!, longid))
     }
-
-    this.passphrases = Arrays.asList(passphrases);
   }
 
-  @Override
-  public String getEndpoint() {
-    return "parseDecryptMsg";
-  }
-
-  @Override
-  public byte[] getData() {
-    return TextUtils.isEmpty(msg) ? new byte[]{} : msg.getBytes();
-  }
-
-  @Override
-  public Response getResponse(NodeService nodeService) throws IOException {
-    if (nodeService != null) {
-      return nodeService.parseDecryptMsg(this).execute();
-    } else return null;
+  @Throws(IOException::class)
+  override fun getResponse(nodeService: NodeService): Response<*> {
+    return nodeService.parseDecryptMsg(this).execute()
   }
 }

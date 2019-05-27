@@ -3,16 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.node;
+package com.flowcrypt.email.api.retrofit.request.node
 
-import android.content.Context;
-import android.net.Uri;
-
-import com.flowcrypt.email.api.retrofit.node.NodeService;
-
-import java.io.IOException;
-
-import retrofit2.Response;
+import android.content.Context
+import android.net.Uri
+import com.flowcrypt.email.api.retrofit.node.NodeService
+import retrofit2.Response
+import java.io.IOException
 
 /**
  * It's a base request for the Node backend.
@@ -22,41 +19,22 @@ import retrofit2.Response;
  * Time: 5:43 PM
  * E-mail: DenBond7@gmail.com
  */
-public class BaseNodeRequest implements NodeRequest {
+open class BaseNodeRequest(final override var context: Context?, override val uri: Uri?) : NodeRequest {
 
-  protected Context context;
-  protected Uri uri;
-
-  public BaseNodeRequest(Context context, Uri uri) {
-    this.context = context != null ? context.getApplicationContext() : context;
-    this.uri = uri;
+  init {
+    this.context = context?.applicationContext
   }
 
-  public BaseNodeRequest() {
-  }
+  override val endpoint: String
+    get() = throw UnsupportedOperationException("not defined")
 
-  @Override
-  public String getEndpoint() {
-    throw new UnsupportedOperationException("not defined");
-  }
+  override val data: ByteArray
+    get() = ByteArray(0)
 
-  @Override
-  public byte[] getData() {
-    return new byte[0];
-  }
+  constructor() : this(null, null)
 
-  @Override
-  public Uri getUri() {
-    return uri;
-  }
-
-  @Override
-  public Context getContext() {
-    return context;
-  }
-
-  @Override
-  public Response getResponse(NodeService nodeService) throws IOException {
-    throw new UnsupportedOperationException("not defined");
+  @Throws(IOException::class)
+  override fun getResponse(nodeService: NodeService): Response<*> {
+    throw UnsupportedOperationException("not defined")
   }
 }

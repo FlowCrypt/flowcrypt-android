@@ -3,10 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.attester;
+package com.flowcrypt.email.api.retrofit.request.attester
 
-import com.flowcrypt.email.api.retrofit.ApiName;
-import com.flowcrypt.email.api.retrofit.request.BaseRequest;
+import com.flowcrypt.email.api.retrofit.ApiName
+import com.flowcrypt.email.api.retrofit.request.BaseRequest
+import com.flowcrypt.email.api.retrofit.request.model.RequestModel
 
 /**
  * This class describes the request to the API "https://flowcrypt.com/attester/lookup"
@@ -17,15 +18,8 @@ import com.flowcrypt.email.api.retrofit.request.BaseRequest;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LookUpRequest extends BaseRequest {
-  private String query;
-
-  public LookUpRequest(String query) {
-    super(ApiName.GET_LOOKUP);
-    this.query = query;
-  }
-
-  public String getQuery() {
-    return query;
-  }
+class LookUpRequest @JvmOverloads constructor(override val apiName: ApiName = ApiName.GET_LOOKUP,
+                                              val query: String) : BaseRequest<RequestModel> {
+  override val requestModel: RequestModel = object : RequestModel {}
 }
+

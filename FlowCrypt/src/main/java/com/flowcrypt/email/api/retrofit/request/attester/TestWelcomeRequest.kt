@@ -3,19 +3,20 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.attester;
+package com.flowcrypt.email.api.retrofit.request.attester
 
-import com.flowcrypt.email.api.retrofit.ApiName;
-import com.flowcrypt.email.api.retrofit.request.BaseRequest;
-import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
+import com.flowcrypt.email.api.retrofit.ApiName
+import com.flowcrypt.email.api.retrofit.request.BaseRequest
+import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 
 /**
  * This class describes a request to the https://flowcrypt.com/attester/test/welcome API.
- * <p>
- * <code>POST /test/welcome  {
- * "email" (<type 'str'>)  # email to send a welcome to
- * "pubkey" (<type 'str'>)  # ascii armored pubkey to encrypt welcome message for
- * }</code>
+ *
+ *
+ * `POST /test/welcome  {
+ * "email" (<type></type>'str'>)  # email to send a welcome to
+ * "pubkey" (<type></type>'str'>)  # ascii armored pubkey to encrypt welcome message for
+ * }`
  *
  * @author Denis Bondarenko
  * Date: 12.07.2017
@@ -23,8 +24,6 @@ import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
  * E-mail: DenBond7@gmail.com
  */
 
-public class TestWelcomeRequest extends BaseRequest<TestWelcomeModel> {
-  public TestWelcomeRequest(TestWelcomeModel testWelcomeModel) {
-    super(ApiName.POST_TEST_WELCOME, testWelcomeModel);
-  }
-}
+class TestWelcomeRequest(override val apiName: ApiName = ApiName.POST_TEST_WELCOME,
+                         override val requestModel: TestWelcomeModel) : BaseRequest<TestWelcomeModel>
+

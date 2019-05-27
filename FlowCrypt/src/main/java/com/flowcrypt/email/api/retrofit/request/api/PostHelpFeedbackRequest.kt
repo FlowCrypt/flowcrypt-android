@@ -3,22 +3,23 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.api;
+package com.flowcrypt.email.api.retrofit.request.api
 
-import com.flowcrypt.email.api.retrofit.ApiName;
-import com.flowcrypt.email.api.retrofit.request.BaseRequest;
-import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
+import com.flowcrypt.email.api.retrofit.ApiName
+import com.flowcrypt.email.api.retrofit.request.BaseRequest
+import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 
 /**
  * This class describes the next request:
- * <p>
+ *
+ *
  * <pre>
- * <code>POST /help/feedback  {
- * "email" (<type 'str'>)  # user email or "unknown@cryptup.org"
- * "message" (<type 'str'>)  # user feedback message text
+ * `POST /help/feedback  {
+ * "email" (<type></type>'str'>)  # user email or "unknown@cryptup.org"
+ * "message" (<type></type>'str'>)  # user feedback message text
  * }
- * </code>
- * </pre>
+` *
+</pre> *
  *
  * @author DenBond7
  * Date: 30.05.2017
@@ -26,8 +27,5 @@ import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
  * E-mail: DenBond7@gmail.com
  */
 
-public class PostHelpFeedbackRequest extends BaseRequest<PostHelpFeedbackModel> {
-  public PostHelpFeedbackRequest(PostHelpFeedbackModel postHelpFeedbackModel) {
-    super(ApiName.POST_HELP_FEEDBACK, postHelpFeedbackModel);
-  }
-}
+class PostHelpFeedbackRequest @JvmOverloads constructor(override val apiName: ApiName = ApiName.POST_HELP_FEEDBACK,
+                                                        override val requestModel: PostHelpFeedbackModel) : BaseRequest<PostHelpFeedbackModel>

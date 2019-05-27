@@ -713,7 +713,7 @@ public class AttachmentDownloadManagerService extends Service {
 
       NodeService nodeService = NodeRetrofitHelper.getRetrofit().create(NodeService.class);
       DecryptFileRequest request = new DecryptFileRequest(IOUtils.toByteArray(inputStream), pgpKeyInfoList,
-          passphrases.toArray(new String[0]));
+          passphrases);
 
       Response<DecryptedFileResult> response = nodeService.decryptFile(request).execute();
       DecryptedFileResult result = response.body();

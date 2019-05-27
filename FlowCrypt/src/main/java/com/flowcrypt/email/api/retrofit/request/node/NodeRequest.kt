@@ -3,16 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.node;
+package com.flowcrypt.email.api.retrofit.request.node
 
-import android.content.Context;
-import android.net.Uri;
-
-import com.flowcrypt.email.api.retrofit.node.NodeService;
-
-import java.io.IOException;
-
-import retrofit2.Response;
+import android.content.Context
+import android.net.Uri
+import com.flowcrypt.email.api.retrofit.node.NodeService
+import retrofit2.Response
+import java.io.IOException
 
 /**
  * This interface describes common things for all requests to Node.js
@@ -22,14 +19,15 @@ import retrofit2.Response;
  * Time: 5:40 PM
  * E-mail: DenBond7@gmail.com
  */
-public interface NodeRequest {
-  String getEndpoint();
+interface NodeRequest {
+  val endpoint: String
 
-  byte[] getData();
+  val data: ByteArray
 
-  Uri getUri();
+  val uri: Uri?
 
-  Context getContext();
+  val context: Context?
 
-  Response getResponse(NodeService nodeService) throws IOException;
+  @Throws(IOException::class)
+  fun getResponse(nodeService: NodeService): Response<*>
 }

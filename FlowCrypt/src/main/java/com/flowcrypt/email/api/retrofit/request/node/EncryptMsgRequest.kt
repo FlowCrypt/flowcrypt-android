@@ -3,17 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.node;
+package com.flowcrypt.email.api.retrofit.request.node
 
-import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.google.gson.annotations.Expose;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import retrofit2.Response;
+import com.flowcrypt.email.api.retrofit.node.NodeService
+import com.google.gson.annotations.Expose
+import retrofit2.Response
+import java.io.IOException
 
 /**
  * Using this class we can create a request to encrypt an input message using the given public keys.
@@ -23,36 +18,16 @@ import retrofit2.Response;
  * Time: 12:48 PM
  * E-mail: DenBond7@gmail.com
  */
-public final class EncryptMsgRequest extends BaseNodeRequest {
+class EncryptMsgRequest(private val msg: String?,
+                        @Expose val pubKeys: List<String>) : BaseNodeRequest() {
 
-  @Expose
-  private List<String> pubKeys;
+  override val endpoint: String = "encryptMsg"
 
-  private String msg;
+  override val data: ByteArray
+    get() = msg?.toByteArray() ?: byteArrayOf()
 
-  public EncryptMsgRequest(String msg, String[] pubKeys) {
-    this(msg, pubKeys != null ? Arrays.asList(pubKeys) : new ArrayList<String>());
-  }
-
-  public EncryptMsgRequest(String msg, List<String> pubKeys) {
-    this.msg = msg;
-    this.pubKeys = pubKeys;
-  }
-
-  @Override
-  public String getEndpoint() {
-    return "encryptMsg";
-  }
-
-  @Override
-  public byte[] getData() {
-    return msg != null ? msg.getBytes() : new byte[]{};
-  }
-
-  @Override
-  public Response getResponse(NodeService nodeService) throws IOException {
-    if (nodeService != null) {
-      return nodeService.encryptMsg(this).execute();
-    } else return null;
+  @Throws(IOException::class)
+  override fun getResponse(nodeService: NodeService): Response<*> {
+    return nodeService.encryptMsg(this).execute()
   }
 }

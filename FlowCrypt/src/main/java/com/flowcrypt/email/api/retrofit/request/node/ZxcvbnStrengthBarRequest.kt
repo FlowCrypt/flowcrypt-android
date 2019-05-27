@@ -3,14 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.node;
+package com.flowcrypt.email.api.retrofit.request.node
 
-import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.google.gson.annotations.Expose;
-
-import java.io.IOException;
-
-import retrofit2.Response;
+import com.flowcrypt.email.api.retrofit.node.NodeService
+import com.google.gson.annotations.Expose
+import retrofit2.Response
+import java.io.IOException
 
 /**
  * Using this class we can create a request to check is the passphrase is strong.
@@ -20,28 +18,15 @@ import retrofit2.Response;
  * Time: 3:06 PM
  * E-mail: DenBond7@gmail.com
  */
-public class ZxcvbnStrengthBarRequest extends BaseNodeRequest {
+class ZxcvbnStrengthBarRequest(@Expose val guesses: Double) : BaseNodeRequest() {
 
   @Expose
-  private double guesses;
+  private val purpose: String = "passphrase"
 
-  @Expose
-  private String purpose;
+  override val endpoint: String = "zxcvbnStrengthBar"
 
-  public ZxcvbnStrengthBarRequest(double guesses) {
-    this.guesses = guesses;
-    this.purpose = "passphrase";
-  }
-
-  @Override
-  public String getEndpoint() {
-    return "zxcvbnStrengthBar";
-  }
-
-  @Override
-  public Response getResponse(NodeService nodeService) throws IOException {
-    if (nodeService != null) {
-      return nodeService.zxcvbnStrengthBar(this).execute();
-    } else return null;
+  @Throws(IOException::class)
+  override fun getResponse(nodeService: NodeService): Response<*> {
+    return nodeService.zxcvbnStrengthBar(this).execute()
   }
 }

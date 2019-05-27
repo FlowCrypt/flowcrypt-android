@@ -3,20 +3,14 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.request.node;
+package com.flowcrypt.email.api.retrofit.request.node
 
-import android.content.Context;
-import android.net.Uri;
-
-import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.google.gson.annotations.Expose;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import retrofit2.Response;
+import android.content.Context
+import android.net.Uri
+import com.flowcrypt.email.api.retrofit.node.NodeService
+import com.google.gson.annotations.Expose
+import retrofit2.Response
+import java.io.IOException
 
 /**
  * Using this class we can create a request to encrypt an input data using the given public keys.
@@ -26,46 +20,32 @@ import retrofit2.Response;
  * Time: 9:07 AM
  * E-mail: DenBond7@gmail.com
  */
-public class EncryptFileRequest extends BaseNodeRequest {
+class EncryptFileRequest : BaseNodeRequest {
 
-  private byte[] data;
-
-  @Expose
-  private String name;
+  override val data: ByteArray
 
   @Expose
-  private List<String> pubKeys;
+  private var name: String? = null
 
-  public EncryptFileRequest(byte[] data, String name, List<String> pubKeys) {
-    this.data = data;
-    this.name = name;
-    this.pubKeys = pubKeys;
+  @Expose
+  private var pubKeys: List<String>? = null
+
+  override val endpoint: String = "encryptFile"
+
+  constructor(data: ByteArray, name: String, pubKeys: List<String>) {
+    this.data = data
+    this.name = name
+    this.pubKeys = pubKeys
   }
 
-  public EncryptFileRequest(Context context, Uri uri, String name, String[] pubKeys) {
-    this(context, uri, name, pubKeys != null ? Arrays.asList(pubKeys) : new ArrayList<String>());
+  constructor(context: Context, uri: Uri, name: String, pubKeys: List<String>) : super(context, uri) {
+    this.name = name
+    this.pubKeys = pubKeys
+    this.data = ByteArray(0)
   }
 
-  public EncryptFileRequest(Context context, Uri uri, String name, List<String> pubKeys) {
-    super(context, uri);
-    this.name = name;
-    this.pubKeys = pubKeys;
-  }
-
-  @Override
-  public String getEndpoint() {
-    return "encryptFile";
-  }
-
-  @Override
-  public byte[] getData() {
-    return data;
-  }
-
-  @Override
-  public Response getResponse(NodeService nodeService) throws IOException {
-    if (nodeService != null) {
-      return nodeService.encryptFile(this).execute();
-    } else return null;
+  @Throws(IOException::class)
+  override fun getResponse(nodeService: NodeService): Response<*> {
+    return nodeService.encryptFile(this).execute()
   }
 }
