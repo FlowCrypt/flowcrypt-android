@@ -3,25 +3,25 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.attester;
+package com.flowcrypt.email.api.retrofit.response.attester
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.flowcrypt.email.api.retrofit.response.base.ApiError;
-import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import org.jetbrains.annotations.NotNull;
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * This class describes a response from the https://flowcrypt.com/attester/initial/legacy_submit API.
- * <p>
- * <code>POST /initial/legacy_submit
+ *
+ *
+ * `POST /initial/legacy_submit
  * response(200): {
  * "saved" (True, False)  # successfuly saved pubkey
- * [voluntary] "error" (<type 'str'>)  # error detail, if not saved
- * }</code>
+ * [voluntary] "error" (<type></type>'str'>)  # error detail, if not saved
+ * }`
  *
  * @author Denis Bondarenko
  * Date: 15.01.2018
@@ -29,54 +29,28 @@ import org.jetbrains.annotations.NotNull;
  * E-mail: DenBond7@gmail.com
  */
 
-public class InitialLegacySubmitResponse implements ApiResponse {
+class InitialLegacySubmitResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
+                                              @Expose val isSaved: Boolean) : ApiResponse {
+  constructor(source: Parcel) : this(
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+      1 == source.readInt()
+  )
 
-  public static final Creator<InitialLegacySubmitResponse> CREATOR = new Creator<InitialLegacySubmitResponse>() {
-    @Override
-    public InitialLegacySubmitResponse createFromParcel(Parcel source) {
-      return new InitialLegacySubmitResponse(source);
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(apiError, 0)
+        writeInt((if (isSaved) 1 else 0))
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<InitialLegacySubmitResponse> = object : Parcelable.Creator<InitialLegacySubmitResponse> {
+      override fun createFromParcel(source: Parcel): InitialLegacySubmitResponse = InitialLegacySubmitResponse(source)
+      override fun newArray(size: Int): Array<InitialLegacySubmitResponse?> = arrayOfNulls(size)
     }
-
-    @Override
-    public InitialLegacySubmitResponse[] newArray(int size) {
-      return new InitialLegacySubmitResponse[size];
-    }
-  };
-
-  @SerializedName("error")
-  @Expose
-  private ApiError apiError;
-
-
-  @Expose
-  private boolean saved;
-
-  public InitialLegacySubmitResponse() {
-  }
-
-  public InitialLegacySubmitResponse(Parcel in) {
-    this.apiError = in.readParcelable(ApiError.class.getClassLoader());
-    this.saved = in.readByte() != 0;
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeParcelable(this.apiError, flags);
-    dest.writeByte(this.saved ? (byte) 1 : (byte) 0);
-  }
-
-  @NotNull
-  @Override
-  public ApiError getApiError() {
-    return apiError;
-  }
-
-  public boolean isSaved() {
-    return saved;
   }
 }

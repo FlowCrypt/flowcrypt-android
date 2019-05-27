@@ -3,25 +3,25 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.attester;
+package com.flowcrypt.email.api.retrofit.response.attester
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.flowcrypt.email.api.retrofit.response.base.ApiError;
-import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import org.jetbrains.annotations.NotNull;
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * This class describes a response from the https://flowcrypt.com/attester/test/welcome API.
- * <p>
- * <code>POST /test/welcome
+ *
+ *
+ * `POST /test/welcome
  * response(200): {
  * "sent" (True, False)  # successfuly sent email
- * [voluntary] "error" (<type 'str'>)  # error detail, if not saved
- * }</code>
+ * [voluntary] "error" (<type></type>'str'>)  # error detail, if not saved
+ * }`
  *
  * @author Denis Bondarenko
  * Date: 12.07.2017
@@ -29,52 +29,29 @@ import org.jetbrains.annotations.NotNull;
  * E-mail: DenBond7@gmail.com
  */
 
-public class TestWelcomeResponse implements ApiResponse {
-  public static final Creator<TestWelcomeResponse> CREATOR = new Creator<TestWelcomeResponse>() {
-    @Override
-    public TestWelcomeResponse createFromParcel(Parcel source) {
-      return new TestWelcomeResponse(source);
+class TestWelcomeResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
+                                      @Expose val isSent: Boolean) : ApiResponse {
+
+  constructor(source: Parcel) : this(
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+      1 == source.readInt()
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(apiError, 0)
+        writeInt((if (isSent) 1 else 0))
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<TestWelcomeResponse> = object : Parcelable.Creator<TestWelcomeResponse> {
+      override fun createFromParcel(source: Parcel): TestWelcomeResponse = TestWelcomeResponse(source)
+      override fun newArray(size: Int): Array<TestWelcomeResponse?> = arrayOfNulls(size)
     }
-
-    @Override
-    public TestWelcomeResponse[] newArray(int size) {
-      return new TestWelcomeResponse[size];
-    }
-  };
-
-  @SerializedName("error")
-  @Expose
-  private ApiError apiError;
-
-  @Expose
-  private boolean sent;
-
-  public TestWelcomeResponse() {
-  }
-
-  public TestWelcomeResponse(Parcel in) {
-    this.apiError = in.readParcelable(ApiError.class.getClassLoader());
-    this.sent = in.readByte() != 0;
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeParcelable(this.apiError, flags);
-    dest.writeByte(this.sent ? (byte) 1 : (byte) 0);
-  }
-
-  @NotNull
-  @Override
-  public ApiError getApiError() {
-    return apiError;
-  }
-
-  public boolean isSent() {
-    return sent;
   }
 }

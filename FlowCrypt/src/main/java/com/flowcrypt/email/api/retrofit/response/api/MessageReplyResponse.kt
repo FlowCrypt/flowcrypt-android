@@ -3,25 +3,25 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.api;
+package com.flowcrypt.email.api.retrofit.response.api
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.flowcrypt.email.api.retrofit.response.base.ApiError;
-import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import org.jetbrains.annotations.NotNull;
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * This class describes a response from the https://flowcrypt.com/api/message/reply API.
- * <p>
- * <code>POST /message/reply
+ *
+ *
+ * `POST /message/reply
  * response(200): {
  * "sent" (True, False)  # successfully sent message
- * [voluntary] "error" (<type 'str'>)  # Encountered error if any
- * }</code>
+ * [voluntary] "error" (<type></type>'str'>)  # Encountered error if any
+ * }`
  *
  * @author Denis Bondarenko
  * Date: 13.07.2017
@@ -29,52 +29,28 @@ import org.jetbrains.annotations.NotNull;
  * E-mail: DenBond7@gmail.com
  */
 
-public class MessageReplyResponse implements ApiResponse {
-  public static final Creator<MessageReplyResponse> CREATOR = new Creator<MessageReplyResponse>() {
-    @Override
-    public MessageReplyResponse createFromParcel(Parcel source) {
-      return new MessageReplyResponse(source);
+class MessageReplyResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
+                                       @Expose val isSent: Boolean) : ApiResponse {
+  constructor(source: Parcel) : this(
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+      1 == source.readInt()
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(apiError, 0)
+        writeInt((if (isSent) 1 else 0))
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<MessageReplyResponse> = object : Parcelable.Creator<MessageReplyResponse> {
+      override fun createFromParcel(source: Parcel): MessageReplyResponse = MessageReplyResponse(source)
+      override fun newArray(size: Int): Array<MessageReplyResponse?> = arrayOfNulls(size)
     }
-
-    @Override
-    public MessageReplyResponse[] newArray(int size) {
-      return new MessageReplyResponse[size];
-    }
-  };
-
-  @SerializedName("error")
-  @Expose
-  private ApiError apiError;
-
-  @Expose
-  private boolean sent;
-
-  public MessageReplyResponse() {
-  }
-
-  public MessageReplyResponse(Parcel in) {
-    this.apiError = in.readParcelable(ApiError.class.getClassLoader());
-    this.sent = in.readByte() != 0;
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeParcelable(this.apiError, flags);
-    dest.writeByte(this.sent ? (byte) 1 : (byte) 0);
-  }
-
-  public boolean isSent() {
-    return sent;
-  }
-
-  @NotNull
-  @Override
-  public ApiError getApiError() {
-    return apiError;
   }
 }

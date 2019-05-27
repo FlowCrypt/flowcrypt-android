@@ -3,16 +3,15 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.attester;
+package com.flowcrypt.email.api.retrofit.response.attester
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.flowcrypt.email.api.retrofit.response.base.ApiError;
-import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import org.jetbrains.annotations.NotNull;
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * Response from the API
@@ -24,83 +23,41 @@ import org.jetbrains.annotations.NotNull;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LookUpEmailResponse implements ApiResponse {
+class LookUpEmailResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
+                                      @SerializedName("has_cryptup") @Expose val hasCryptup: Boolean,
+                                      @SerializedName("pubkey") @Expose val pubKey: String?,
+                                      @Expose val email: String?,
+                                      @SerializedName("longid") @Expose val longId: String?) : ApiResponse {
+  fun hasCryptup(): Boolean {
+    return hasCryptup
+  }
 
-  public static final Creator<LookUpEmailResponse> CREATOR = new Creator<LookUpEmailResponse>() {
-    @Override
-    public LookUpEmailResponse createFromParcel(Parcel source) {
-      return new LookUpEmailResponse(source);
+  constructor(source: Parcel) : this(
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+      1 == source.readInt(),
+      source.readString(),
+      source.readString(),
+      source.readString()
+  )
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(apiError, 0)
+        writeInt((if (hasCryptup) 1 else 0))
+        writeString(pubKey)
+        writeString(email)
+        writeString(longId)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<LookUpEmailResponse> = object : Parcelable.Creator<LookUpEmailResponse> {
+      override fun createFromParcel(source: Parcel): LookUpEmailResponse = LookUpEmailResponse(source)
+      override fun newArray(size: Int): Array<LookUpEmailResponse?> = arrayOfNulls(size)
     }
-
-    @Override
-    public LookUpEmailResponse[] newArray(int size) {
-      return new LookUpEmailResponse[size];
-    }
-  };
-
-  @SerializedName("error")
-  @Expose
-  private ApiError apiError;
-
-  @SerializedName("has_cryptup")
-  @Expose
-  private boolean hasCryptup;
-
-  @SerializedName("pubkey")
-  @Expose
-  private String pubKey;
-
-  @Expose
-  private String email;
-
-  @SerializedName("longid")
-  @Expose
-  private String longId;
-
-  public LookUpEmailResponse() {
-  }
-
-  public LookUpEmailResponse(Parcel in) {
-    this.apiError = in.readParcelable(ApiError.class.getClassLoader());
-    this.hasCryptup = in.readByte() != 0;
-    this.pubKey = in.readString();
-    this.email = in.readString();
-    this.longId = in.readString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeParcelable(this.apiError, flags);
-    dest.writeByte(this.hasCryptup ? (byte) 1 : (byte) 0);
-    dest.writeString(this.pubKey);
-    dest.writeString(this.email);
-    dest.writeString(this.longId);
-  }
-
-  @NotNull
-  @Override
-  public ApiError getApiError() {
-    return apiError;
-  }
-
-  public boolean hasCryptup() {
-    return hasCryptup;
-  }
-
-  public String getPubKey() {
-    return pubKey;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public String getLongId() {
-    return longId;
   }
 }

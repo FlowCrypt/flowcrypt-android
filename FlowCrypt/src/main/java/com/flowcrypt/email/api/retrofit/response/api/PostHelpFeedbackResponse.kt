@@ -3,30 +3,31 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.api;
+package com.flowcrypt.email.api.retrofit.response.api
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.flowcrypt.email.api.retrofit.response.base.ApiError;
-import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import org.jetbrains.annotations.NotNull;
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * The simple POJO object, which contains information about a post feedback result.
- * <p>
+ *
+ *
  * This class describes the next response:
- * <p>
+ *
+ *
  * <pre>
- * <code>POST
+ * `POST
  * response(200): {
  * "sent" (True, False)  # True if message was sent successfully
- * "text" (<type 'str'>)  # User friendly success or error text
+ * "text" (<type></type>'str'>)  # User friendly success or error text
  * }
- * </code>
- * </pre>
+` *
+</pre> *
  *
  * @author DenBond7
  * Date: 30.05.2017
@@ -34,60 +35,31 @@ import org.jetbrains.annotations.NotNull;
  * E-mail: DenBond7@gmail.com
  */
 
-public class PostHelpFeedbackResponse implements ApiResponse {
+class PostHelpFeedbackResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
+                                           @Expose val isSent: Boolean,
+                                           @Expose val text: String?) : ApiResponse {
+  constructor(source: Parcel) : this(
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+      1 == source.readInt(),
+      source.readString()
+  )
 
-  public static final Creator<PostHelpFeedbackResponse> CREATOR = new
-      Creator<PostHelpFeedbackResponse>() {
-        @Override
-        public PostHelpFeedbackResponse createFromParcel(Parcel source) {
-          return new PostHelpFeedbackResponse(source);
-        }
-
-        @Override
-        public PostHelpFeedbackResponse[] newArray(int size) {
-          return new PostHelpFeedbackResponse[size];
-        }
-      };
-
-  @SerializedName("error")
-  @Expose
-  private ApiError apiError;
-
-  @Expose
-  private boolean sent;
-
-  @Expose
-  private String text;
-
-  public PostHelpFeedbackResponse(Parcel in) {
-    this.apiError = in.readParcelable(ApiError.class.getClassLoader());
-    this.sent = in.readByte() != 0;
-    this.text = in.readString();
+  override fun describeContents(): Int {
+    return 0
   }
 
-  @Override
-  public int describeContents() {
-    return 0;
-  }
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(apiError, 0)
+        writeInt((if (isSent) 1 else 0))
+        writeString(text)
+      }
 
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeParcelable(this.apiError, flags);
-    dest.writeByte(this.sent ? (byte) 1 : (byte) 0);
-    dest.writeString(this.text);
-  }
-
-  @NotNull
-  @Override
-  public ApiError getApiError() {
-    return apiError;
-  }
-
-  public boolean isSent() {
-    return sent;
-  }
-
-  public String getText() {
-    return text;
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<PostHelpFeedbackResponse> = object : Parcelable.Creator<PostHelpFeedbackResponse> {
+      override fun createFromParcel(source: Parcel): PostHelpFeedbackResponse = PostHelpFeedbackResponse(source)
+      override fun newArray(size: Int): Array<PostHelpFeedbackResponse?> = arrayOfNulls(size)
+    }
   }
 }

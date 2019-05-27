@@ -3,25 +3,25 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.api;
+package com.flowcrypt.email.api.retrofit.response.api
 
-import android.os.Parcel;
+import android.os.Parcel
+import android.os.Parcelable
 
-import com.flowcrypt.email.api.retrofit.response.base.ApiError;
-import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import org.jetbrains.annotations.NotNull;
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 /**
  * This class describes a response from the https://flowcrypt.com/api/link/message API.
- * <p>
- * <code>POST /initial/confirm
+ *
+ *
+ * `POST /initial/confirm
  * response(200): {
- * "url" (<type 'str'>, None)  # url of the message, or None if not found
+ * "url" (<type></type>'str'>, None)  # url of the message, or None if not found
  * "repliable" (True, False, None)  # this message may be available for a reply
- * }</code>
+ * }`
  *
  * @author Denis Bondarenko
  * Date: 13.07.2017
@@ -29,89 +29,40 @@ import org.jetbrains.annotations.NotNull;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LinkMessageResponse implements ApiResponse {
+data class LinkMessageResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
+                                           @Expose val url: String?,
+                                           @Expose val isDeleted: Boolean,
+                                           @Expose val expire: String?,
+                                           @Expose val isExpired: Boolean,
+                                           @Expose val repliable: Boolean?) : ApiResponse {
+  constructor(source: Parcel) : this(
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+      source.readString(),
+      1 == source.readInt(),
+      source.readString(),
+      1 == source.readInt(),
+      source.readValue(Boolean::class.java.classLoader) as Boolean?
+  )
 
-  public static final Creator<LinkMessageResponse> CREATOR = new Creator<LinkMessageResponse>() {
-    @Override
-    public LinkMessageResponse createFromParcel(Parcel source) {
-      return new LinkMessageResponse(source);
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(apiError, 0)
+        writeString(url)
+        writeInt((if (isDeleted) 1 else 0))
+        writeString(expire)
+        writeInt((if (isExpired) 1 else 0))
+        writeValue(repliable)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<LinkMessageResponse> = object : Parcelable.Creator<LinkMessageResponse> {
+      override fun createFromParcel(source: Parcel): LinkMessageResponse = LinkMessageResponse(source)
+      override fun newArray(size: Int): Array<LinkMessageResponse?> = arrayOfNulls(size)
     }
-
-    @Override
-    public LinkMessageResponse[] newArray(int size) {
-      return new LinkMessageResponse[size];
-    }
-  };
-
-  @SerializedName("error")
-  @Expose
-  private ApiError apiError;
-
-  @Expose
-  private String url;
-
-  @Expose
-  private boolean deleted;
-
-  @Expose
-  private String expire;
-
-  @Expose
-  private boolean expired;
-
-  @Expose
-  private Boolean repliable;
-
-  public LinkMessageResponse() {
-  }
-
-  protected LinkMessageResponse(Parcel in) {
-    this.apiError = in.readParcelable(ApiError.class.getClassLoader());
-    this.url = in.readString();
-    this.deleted = in.readByte() != 0;
-    this.expire = in.readString();
-    this.expired = in.readByte() != 0;
-    this.repliable = (Boolean) in.readValue(Boolean.class.getClassLoader());
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeParcelable(this.apiError, flags);
-    dest.writeString(this.url);
-    dest.writeByte(this.deleted ? (byte) 1 : (byte) 0);
-    dest.writeString(this.expire);
-    dest.writeByte(this.expired ? (byte) 1 : (byte) 0);
-    dest.writeValue(this.repliable);
-  }
-
-  public String getUrl() {
-    return url;
-  }
-
-  public boolean isDeleted() {
-    return deleted;
-  }
-
-  public String getExpire() {
-    return expire;
-  }
-
-  public boolean isExpired() {
-    return expired;
-  }
-
-  public Boolean getRepliable() {
-    return repliable;
-  }
-
-  @NotNull
-  @Override
-  public ApiError getApiError() {
-    return apiError;
   }
 }

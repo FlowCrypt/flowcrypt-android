@@ -3,19 +3,16 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit.response.attester;
+package com.flowcrypt.email.api.retrofit.response.attester
 
-import android.os.Parcel;
-
-import com.flowcrypt.email.api.retrofit.response.base.ApiError;
-import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
-import com.flowcrypt.email.api.retrofit.response.model.LookUpPublicKeyInfo;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-
-import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
+import android.os.Parcel
+import android.os.Parcelable
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.flowcrypt.email.api.retrofit.response.model.LookUpPublicKeyInfo
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
+import java.util.*
 
 /**
  * Response from the API
@@ -27,62 +24,31 @@ import java.util.ArrayList;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LookUpResponse implements ApiResponse {
+class LookUpResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
+                                 @Expose val results: ArrayList<LookUpPublicKeyInfo>?,
+                                 @Expose val query: String?) : ApiResponse {
+  constructor(source: Parcel) : this(
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+      source.createTypedArrayList(LookUpPublicKeyInfo.CREATOR),
+      source.readString()
+  )
 
-  public static final Creator<LookUpResponse> CREATOR = new Creator<LookUpResponse>() {
-    @Override
-    public LookUpResponse createFromParcel(Parcel source) {
-      return new LookUpResponse(source);
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeParcelable(apiError, 0)
+        writeTypedList(results)
+        writeString(query)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<LookUpResponse> = object : Parcelable.Creator<LookUpResponse> {
+      override fun createFromParcel(source: Parcel): LookUpResponse = LookUpResponse(source)
+      override fun newArray(size: Int): Array<LookUpResponse?> = arrayOfNulls(size)
     }
-
-    @Override
-    public LookUpResponse[] newArray(int size) {
-      return new LookUpResponse[size];
-    }
-  };
-
-  @SerializedName("error")
-  @Expose
-  private ApiError apiError;
-
-  @Expose
-  private ArrayList<LookUpPublicKeyInfo> results;
-
-  @Expose
-  private String query;
-
-  public LookUpResponse() {
-  }
-
-  public LookUpResponse(Parcel in) {
-    this.apiError = in.readParcelable(ApiError.class.getClassLoader());
-    this.results = in.createTypedArrayList(LookUpPublicKeyInfo.CREATOR);
-    this.query = in.readString();
-  }
-
-  @Override
-  public int describeContents() {
-    return 0;
-  }
-
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    dest.writeParcelable(this.apiError, flags);
-    dest.writeTypedList(this.results);
-    dest.writeString(this.query);
-  }
-
-  @NotNull
-  @Override
-  public ApiError getApiError() {
-    return apiError;
-  }
-
-  public ArrayList<LookUpPublicKeyInfo> getResults() {
-    return results;
-  }
-
-  public String getQuery() {
-    return query;
   }
 }

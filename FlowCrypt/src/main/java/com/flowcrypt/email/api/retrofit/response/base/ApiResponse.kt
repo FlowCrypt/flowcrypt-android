@@ -16,5 +16,5 @@ import android.os.Parcelable
  * E-mail: DenBond7@gmail.com
  */
 interface ApiResponse : Parcelable {
-  val apiError: ApiError
+  val apiError: ApiError?
 }
