@@ -3,38 +3,42 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.broadcastreceivers;
+package com.flowcrypt.email.broadcastreceivers
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 
-import com.flowcrypt.email.security.KeysStorageImpl;
-import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
- * This {@link BroadcastReceiver} updates {@link KeysStorageImpl} instances.
+ * This [BroadcastReceiver] updates [KeysStorageImpl] instances.
  *
  * @author Denis Bondarenko
  * Date: 2/25/19
  * Time: 4:28 PM
  * E-mail: DenBond7@gmail.com
  */
-public class UpdateStorageConnectorBroadcastReceiver extends BroadcastReceiver {
-  public static final String ACTION_UPDATE_STORAGE_CONNECTOR = GeneralUtil.generateUniqueExtraKey(
-      "ACTION_UPDATE_STORAGE_CONNECTOR", UpdateStorageConnectorBroadcastReceiver.class);
+class UpdateStorageConnectorBroadcastReceiver : BroadcastReceiver() {
 
-  public static Intent newIntent(Context context) {
-    Intent intent = new Intent(context, UpdateStorageConnectorBroadcastReceiver.class);
-    intent.setAction(ACTION_UPDATE_STORAGE_CONNECTOR);
-
-    return intent;
+  override fun onReceive(context: Context, intent: Intent?) {
+    if (intent != null && ACTION_UPDATE_STORAGE_CONNECTOR == intent.action) {
+      KeysStorageImpl.getInstance(context).refresh(context)
+    }
   }
 
-  @Override
-  public void onReceive(Context context, Intent intent) {
-    if (intent != null && ACTION_UPDATE_STORAGE_CONNECTOR.equals(intent.getAction())) {
-      KeysStorageImpl.getInstance(context).refresh(context);
+  companion object {
+    @JvmField
+    val ACTION_UPDATE_STORAGE_CONNECTOR = GeneralUtil.generateUniqueExtraKey(
+        "ACTION_UPDATE_STORAGE_CONNECTOR", UpdateStorageConnectorBroadcastReceiver::class.java)
+
+    @JvmStatic
+    fun newIntent(context: Context): Intent {
+      val intent = Intent(context, UpdateStorageConnectorBroadcastReceiver::class.java)
+      intent.action = ACTION_UPDATE_STORAGE_CONNECTOR
+
+      return intent
     }
   }
 }

@@ -3,32 +3,29 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.broadcastreceivers;
+package com.flowcrypt.email.broadcastreceivers
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.util.SharedPreferencesHelper;
-
-import androidx.preference.PreferenceManager;
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import androidx.preference.PreferenceManager
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.util.SharedPreferencesHelper
 
 /**
- * This {@link BroadcastReceiver} can be used to run some actions when the app will be updated.
+ * This [BroadcastReceiver] can be used to run some actions when the app will be updated.
  *
  * @author Denis Bondarenko
  * Date: 3/15/19
  * Time: 10:34 AM
  * E-mail: DenBond7@gmail.com
  */
-public class AppUpdateBroadcastReceiver extends BroadcastReceiver {
+class AppUpdateBroadcastReceiver : BroadcastReceiver() {
 
-  @Override
-  public void onReceive(Context context, Intent intent) {
-    if (intent != null && Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction())) {
+  override fun onReceive(context: Context, intent: Intent?) {
+    if (intent != null && Intent.ACTION_MY_PACKAGE_REPLACED == intent.action) {
       SharedPreferencesHelper.setBoolean(PreferenceManager
-          .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, true);
+          .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, true)
     }
   }
 }

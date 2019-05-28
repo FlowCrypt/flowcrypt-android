@@ -3,17 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.broadcastreceivers;
+package com.flowcrypt.email.broadcastreceivers
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 
-import com.flowcrypt.email.ui.activity.CorruptedStorageActivity;
-import com.flowcrypt.email.util.GeneralUtil;
+import com.flowcrypt.email.ui.activity.CorruptedStorageActivity
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
- * This {@link BroadcastReceiver} handles situations when the app storage space was corrupted. This can
+ * This [BroadcastReceiver] handles situations when the app storage space was corrupted. This can
  * happen on certain rooted or unofficial systems, due to user intervention, etc.
  *
  * @author DenBond7
@@ -21,14 +21,13 @@ import com.flowcrypt.email.util.GeneralUtil;
  * Time: 12:00
  * E-mail: DenBond7@gmail.com
  */
-public class CorruptedStorageBroadcastReceiver extends BroadcastReceiver {
+class CorruptedStorageBroadcastReceiver : BroadcastReceiver() {
 
-  @Override
-  public void onReceive(Context context, Intent intent) {
+  override fun onReceive(context: Context, intent: Intent) {
     if (GeneralUtil.isAppForegrounded()) {
-      Intent newIntent = new Intent(context, CorruptedStorageActivity.class);
-      newIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-      context.startActivity(newIntent);
+      val newIntent = Intent(context, CorruptedStorageActivity::class.java)
+      newIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+      context.startActivity(newIntent)
     }
   }
 }
