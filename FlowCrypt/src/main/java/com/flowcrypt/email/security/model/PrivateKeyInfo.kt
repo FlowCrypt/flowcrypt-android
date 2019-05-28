@@ -20,11 +20,11 @@ import com.flowcrypt.email.model.PgpKeyInfo
  * E-mail: DenBond7@gmail.com
  */
 
-data class PrivateKeyInfo constructor(var pgpKeyInfo: PgpKeyInfo? = null,
-                                      var passphrase: String? = null) : Parcelable {
+data class PrivateKeyInfo constructor(var pgpKeyInfo: PgpKeyInfo,
+                                      var passphrase: String) : Parcelable {
   constructor(source: Parcel) : this(
-      source.readParcelable<PgpKeyInfo>(PgpKeyInfo::class.java.classLoader),
-      source.readString()
+      source.readParcelable<PgpKeyInfo>(PgpKeyInfo::class.java.classLoader)!!,
+      source.readString()!!
   )
 
   override fun describeContents(): Int {

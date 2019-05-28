@@ -42,7 +42,7 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
     val pgpKeyInfoList = keysStorage!!.getAllPgpPrivateKeys()
 
     for ((longid) in pgpKeyInfoList) {
-      passphrases.add(keysStorage!!.getPassphrase(longid))
+      keysStorage!!.getPassphrase(longid)?.let { passphrases.add(it) }
     }
 
     apiRepository!!.parseDecryptMsg(R.id.live_data_id_parse_and_decrypt_msg, responsesLiveData,

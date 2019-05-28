@@ -80,11 +80,11 @@ data class KeysDao constructor(var longId: String? = null,
       if (TextUtils.isEmpty(nodeKeyDetails.longId)) {
         throw IllegalArgumentException("longid == null")
       } else {
-        randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(nodeKeyDetails.longId)
+        randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(nodeKeyDetails.longId!!)
       }
 
       keysDao.longId = nodeKeyDetails.longId
-      keysDao.privateKey = keyStoreCryptoManager.encrypt(nodeKeyDetails.privateKey, randomVector)
+      keysDao.privateKey = keyStoreCryptoManager.encrypt(nodeKeyDetails.privateKey!!, randomVector)
       keysDao.publicKey = nodeKeyDetails.publicKey
       keysDao.passphrase = keyStoreCryptoManager.encrypt(passphrase, randomVector)
       return keysDao

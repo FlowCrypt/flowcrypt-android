@@ -3,23 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.security;
+package com.flowcrypt.email.security
 
-import android.content.Context;
-
-import com.flowcrypt.email.model.KeysStorage;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.model.PgpKeyInfo;
-import com.flowcrypt.email.security.model.PrivateKeyInfo;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import android.content.Context
+import com.flowcrypt.email.model.KeysStorage
+import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.model.PgpKeyInfo
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import java.util.*
 
 /**
- * This class implements {@link KeysStorage}. Here we collect information about imported private keys.
+ * This class implements [KeysStorage]. Here we collect information about imported private keys.
  *
  * @author DenBond7
  * Date: 05.05.2017
@@ -27,128 +21,118 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 
-public final class KeysStorageImpl implements KeysStorage {
+class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
-  private static volatile KeysStorageImpl ourInstance;
+  private var pgpKeyInfoList: LinkedList<PgpKeyInfo> = LinkedList()
+  private var passphrases: LinkedList<String> = LinkedList()
+  private val onRefreshListeners: MutableList<OnRefreshListener>
 
-  private LinkedList<PgpKeyInfo> pgpKeyInfoList;
-  private LinkedList<String> passphrases;
-  private List<OnRefreshListener> onRefreshListeners;
-
-  private KeysStorageImpl(Context context) {
-    this.onRefreshListeners = new ArrayList<>();
-    setup(context);
+  init {
+    this.onRefreshListeners = ArrayList()
+    setup(context)
   }
 
-  public static void init(Context context) {
-    KeysStorageImpl.getInstance(context);
+  override fun findPgpContact(longid: String): PgpContact? {
+    return null
   }
 
-  public static KeysStorageImpl getInstance(Context context) {
-    if (ourInstance == null) {
-      synchronized (KeysStorageImpl.class) {
-        if (ourInstance == null) {
-          ourInstance = new KeysStorageImpl(context);
+  override fun findPgpContacts(longid: Array<String>): List<PgpContact> {
+    return emptyList()
+  }
+
+  override fun getPgpPrivateKey(longid: String): PgpKeyInfo? {
+    for (pgpKeyInfo in pgpKeyInfoList) {
+      if (longid == pgpKeyInfo.longid) {
+        return pgpKeyInfo
+      }
+    }
+    return null
+  }
+
+  override fun getFilteredPgpPrivateKeys(longid: Array<String>): List<PgpKeyInfo> {
+    val pgpKeyInfos = ArrayList<PgpKeyInfo>()
+    for (id in longid) {
+      for (pgpKeyInfo in this.pgpKeyInfoList) {
+        if (pgpKeyInfo.longid == id) {
+          pgpKeyInfos.add(pgpKeyInfo)
+          break
         }
       }
     }
-    return ourInstance;
+    return pgpKeyInfos
   }
 
-  @Override
-  public PgpContact findPgpContact(String longid) {
-    return null;
+  override fun getAllPgpPrivateKeys(): List<PgpKeyInfo> {
+    return pgpKeyInfoList
   }
 
-  @Override
-  public List<PgpContact> findPgpContacts(String[] longid) {
-    return Collections.emptyList();
-  }
-
-  @Override
-  public PgpKeyInfo getPgpPrivateKey(String longid) {
-    for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoList) {
-      if (longid.equals(pgpKeyInfo.getLongid())) {
-        return pgpKeyInfo;
-      }
-    }
-    return null;
-  }
-
-  @Override
-  public List<PgpKeyInfo> getFilteredPgpPrivateKeys(String[] longId) {
-    List<PgpKeyInfo> pgpKeyInfos = new ArrayList<>();
-    for (String id : longId) {
-      for (PgpKeyInfo pgpKeyInfo : this.pgpKeyInfoList) {
-        if (pgpKeyInfo.getLongid().equals(id)) {
-          pgpKeyInfos.add(pgpKeyInfo);
-          break;
-        }
-      }
-    }
-    return pgpKeyInfos;
-  }
-
-  @Override
-  public List<PgpKeyInfo> getAllPgpPrivateKeys() {
-    return pgpKeyInfoList;
-  }
-
-  @Override
-  public String getPassphrase(String longid) {
-    for (int i = 0; i < pgpKeyInfoList.size(); i++) {
-      PgpKeyInfo pgpKeyInfo = pgpKeyInfoList.get(i);
-      if (longid.equals(pgpKeyInfo.getLongid())) {
-        return passphrases.get(i);
+  override fun getPassphrase(longid: String): String? {
+    for (i in pgpKeyInfoList.indices) {
+      val (longid1) = pgpKeyInfoList[i]
+      if (longid == longid1) {
+        return passphrases[i]
       }
     }
 
-    return null;
+    return null
   }
 
-  @Override
-  public synchronized void refresh(Context context) {
-    setup(context);
+  @Synchronized
+  override fun refresh(context: Context) {
+    setup(context)
 
-    for (OnRefreshListener onRefreshListener : onRefreshListeners) {
-      onRefreshListener.onRefresh();
+    for (onRefreshListener in onRefreshListeners) {
+      onRefreshListener.onRefresh()
     }
   }
 
-  public void attachOnRefreshListener(OnRefreshListener onRefreshListener) {
+  fun attachOnRefreshListener(onRefreshListener: OnRefreshListener?) {
     if (onRefreshListener != null) {
-      this.onRefreshListeners.add(onRefreshListener);
+      this.onRefreshListeners.add(onRefreshListener)
     }
   }
 
-  public void removeOnRefreshListener(OnRefreshListener onRefreshListener) {
+  fun removeOnRefreshListener(onRefreshListener: OnRefreshListener?) {
     if (onRefreshListener != null) {
-      this.onRefreshListeners.remove(onRefreshListener);
+      this.onRefreshListeners.remove(onRefreshListener)
     }
   }
 
-  private void setup(Context context) {
+  private fun setup(context: Context?) {
     if (context == null) {
-      return;
+      return
     }
 
-    Context appContext = context.getApplicationContext();
+    val appContext = context.applicationContext
 
-    this.pgpKeyInfoList = new LinkedList<>();
-    this.passphrases = new LinkedList<>();
+    this.pgpKeyInfoList.clear()
+    this.passphrases.clear()
     try {
-      List<PrivateKeyInfo> privateKeysInfo = SecurityUtils.getPrivateKeysInfo(appContext);
-      for (PrivateKeyInfo privateKeyInfo : privateKeysInfo) {
-        pgpKeyInfoList.add(privateKeyInfo.getPgpKeyInfo());
-        passphrases.add(privateKeyInfo.getPassphrase());
+      val privateKeysInfo = SecurityUtils.getPrivateKeysInfo(appContext)
+      for ((pgpKeyInfo, passphrase) in privateKeysInfo) {
+        pgpKeyInfoList.add(pgpKeyInfo)
+        passphrases.add(passphrase)
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
     }
+
   }
 
-  public interface OnRefreshListener {
-    void onRefresh();
+  interface OnRefreshListener {
+    fun onRefresh()
+  }
+
+  companion object {
+    @Volatile
+    private var INSTANCE: KeysStorageImpl? = null
+
+    @JvmStatic
+    fun getInstance(context: Context): KeysStorageImpl {
+      return INSTANCE ?: synchronized(this) {
+        INSTANCE ?: KeysStorageImpl(context).also { INSTANCE = it }
+      }
+    }
   }
 }

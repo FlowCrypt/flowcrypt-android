@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.security.model;
+package com.flowcrypt.email.security.model
 
 /**
  * @author DenBond7
@@ -12,25 +12,12 @@ package com.flowcrypt.email.security.model;
  * E-mail: DenBond7@gmail.com
  */
 
-public enum PrivateKeySourceType {
+enum class PrivateKeySourceType constructor(private val text: String) {
   BACKUP("backup"),
   NEW("new"),
   IMPORT("import");
 
-  private final String text;
-
-  /**
-   * @param text
-   */
-  PrivateKeySourceType(final String text) {
-    this.text = text;
-  }
-
-  /* (non-Javadoc)
-   * @see java.lang.Enum#toString()
-   */
-  @Override
-  public String toString() {
-    return text;
+  override fun toString(): String {
+    return text
   }
 }
