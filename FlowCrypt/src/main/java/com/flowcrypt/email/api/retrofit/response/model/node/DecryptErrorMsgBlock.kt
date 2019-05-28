@@ -17,7 +17,7 @@ import com.google.gson.annotations.SerializedName
  * E-mail: DenBond7@gmail.com
  */
 data class DecryptErrorMsgBlock(@Expose override val content: String?,
-                                @Expose override val isComplete: Boolean,
+                                @Expose override val complete: Boolean,
                                 @SerializedName("decryptErr") @Expose val error: DecryptError?) : MsgBlock {
 
   @Expose
@@ -37,7 +37,7 @@ data class DecryptErrorMsgBlock(@Expose override val content: String?,
       with(dest) {
         writeParcelable(type, flags)
         writeString(content)
-        writeInt((if (isComplete) 1 else 0))
+        writeInt((if (complete) 1 else 0))
         writeParcelable(error, flags)
       }
 

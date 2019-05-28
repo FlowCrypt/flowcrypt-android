@@ -25,10 +25,8 @@ import java.nio.charset.StandardCharsets
  * Time: 12:51 PM
  * E-mail: DenBond7@gmail.com
  */
-data class EncryptedMsgResult constructor(@Expose override val error: Error?) : BaseNodeResponse {
-  var encryptedMsg: String? = null
-    private set
-
+data class EncryptedMsgResult constructor(@Expose override val error: Error?,
+                                          var encryptedMsg: String? = null) : BaseNodeResponse {
   @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     val bytes = IOUtils.toByteArray(bufferedInputStream) ?: return
@@ -41,10 +39,9 @@ data class EncryptedMsgResult constructor(@Expose override val error: Error?) : 
   }
 
   constructor(source: Parcel) : this(
-      source.readParcelable<Error>(Error::class.java.classLoader)
-  ) {
-    this.encryptedMsg = source.readString()
-  }
+      source.readParcelable<Error>(Error::class.java.classLoader),
+      source.readString()
+  )
 
   override fun describeContents(): Int {
     return 0

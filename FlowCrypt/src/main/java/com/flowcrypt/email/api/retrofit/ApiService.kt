@@ -3,26 +3,26 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit;
+package com.flowcrypt.email.api.retrofit
 
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
-import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
-import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
-import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel;
-import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
-import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse;
-import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse;
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse;
-import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse;
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
+import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
+import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
+import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
+import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
+import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse
+import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.GET;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
+import retrofit2.Call
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Path
 
 /**
  * A base API interface for RETROFIT.
@@ -32,58 +32,58 @@ import retrofit2.http.Path;
  * Time: 13:39
  * E-mail: DenBond7@gmail.com
  */
-public interface ApiService {
+interface ApiService {
 
   /**
-   * This method create a {@link Call} object for the API "https://flowcrypt.com/attester/lookup/email"
+   * This method create a [Call] object for the API "https://flowcrypt.com/attester/lookup/email"
    *
    * @param body POJO model for requests
-   * @return {@link Call<LookUpEmailResponse>}
+   * @return [<]
    */
   @POST("lookup/email")
-  Call<LookUpEmailResponse> postLookUpEmail(@Body PostLookUpEmailModel body);
+  fun postLookUpEmail(@Body body: PostLookUpEmailModel): Call<LookUpEmailResponse>
 
   /**
-   * This method create a {@link Call} object for the API "https://flowcrypt.com/attester/lookup/email"
+   * This method create a [Call] object for the API "https://flowcrypt.com/attester/lookup/email"
    *
    * @param body POJO model for requests
-   * @return {@link Call<LookUpEmailsResponse>}
+   * @return [<]
    */
   @POST("lookup/email")
-  Call<LookUpEmailsResponse> postLookUpEmails(@Body PostLookUpEmailsModel body);
+  fun postLookUpEmails(@Body body: PostLookUpEmailsModel): Call<LookUpEmailsResponse>
 
   /**
-   * This method create a {@link Call} object for the API "https://flowcrypt.com/attester/initial/legacy_submit"
+   * This method create a [Call] object for the API "https://flowcrypt.com/attester/initial/legacy_submit"
    *
    * @param body POJO model for requests
-   * @return {@link Call<InitialLegacySubmitResponse>}
+   * @return [<]
    */
   @POST("initial/legacy_submit")
-  Call<InitialLegacySubmitResponse> postInitialLegacySubmit(@Body InitialLegacySubmitModel body);
+  fun postInitialLegacySubmit(@Body body: InitialLegacySubmitModel): Call<InitialLegacySubmitResponse>
 
   /**
-   * This method create a {@link Call} object for the API "https://flowcrypt.com/attester/test/welcome"
+   * This method create a [Call] object for the API "https://flowcrypt.com/attester/test/welcome"
    *
    * @param body POJO model for requests
-   * @return {@link Call<TestWelcomeResponse>}
+   * @return [<]
    */
   @POST("test/welcome")
-  Call<TestWelcomeResponse> postTestWelcome(@Body TestWelcomeModel body);
+  fun postTestWelcome(@Body body: TestWelcomeModel): Call<TestWelcomeResponse>
 
   /**
-   * This method create a {@link Call} object for the API "https://flowcrypt.com/api/help/feedback"
+   * This method create a [Call] object for the API "https://flowcrypt.com/api/help/feedback"
    *
    * @param body POJO model for requests
-   * @return {@link Call<PostHelpFeedbackResponse>}
+   * @return [<]
    */
   @POST(Constants.FLOWCRYPT_API_URL + "/help/feedback")
-  Call<PostHelpFeedbackResponse> postHelpFeedbackResponse(@Body PostHelpFeedbackModel body);
+  fun postHelpFeedbackResponse(@Body body: PostHelpFeedbackModel): Call<PostHelpFeedbackResponse>
 
   /**
-   * This method create a {@link Call} object for the API "https://flowcrypt.com/attester/lookup"
+   * This method create a [Call] object for the API "https://flowcrypt.com/attester/lookup"
    *
-   * @return {@link Call<LookUpResponse>}
+   * @return [<]
    */
   @GET("lookup/{keyIdOrEmail}")
-  Call<LookUpResponse> getLookUp(@Path("keyIdOrEmail") String keyIdOrEmail);
+  fun getLookUp(@Path("keyIdOrEmail") keyIdOrEmail: String): Call<LookUpResponse>
 }

@@ -13,244 +13,214 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.flowcrypt.email.api.retrofit;
+package com.flowcrypt.email.api.retrofit
 
-import android.util.Base64;
-
-import java.io.EOFException;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.concurrent.TimeUnit;
-
-import okhttp3.Connection;
-import okhttp3.Headers;
-import okhttp3.Interceptor;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
-import okhttp3.internal.http.HttpHeaders;
-import okhttp3.internal.platform.Platform;
-import okhttp3.logging.HttpLoggingInterceptor;
-import okio.Buffer;
-import okio.BufferedSource;
-import okio.GzipSource;
-
-import static okhttp3.internal.platform.Platform.INFO;
+import android.util.Base64
+import okhttp3.Headers
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
+import okhttp3.Response
+import okhttp3.internal.http.HttpHeaders
+import okhttp3.internal.platform.Platform
+import okhttp3.internal.platform.Platform.INFO
+import okhttp3.logging.HttpLoggingInterceptor
+import okio.Buffer
+import okio.GzipSource
+import java.io.EOFException
+import java.io.IOException
+import java.nio.charset.Charset
+import java.util.concurrent.TimeUnit
 
 /**
  * An OkHttp interceptor which logs request and response information. Can be applied as an
- * {@linkplain OkHttpClient#interceptors() application interceptor} or as a {@linkplain
- * OkHttpClient#networkInterceptors() network interceptor}. <p> The format of the logs created by
+ * [application interceptor][OkHttpClient.interceptors] or as a [ ][OkHttpClient.networkInterceptors].
+ *
+ * The format of the logs created by
  * this class should not be considered stable and may change slightly between releases. If you need
  * a stable logging format, use your own interceptor.
- * <p>
- * It's a custom realization of {@link HttpLoggingInterceptor}
+ *
+ *
+ * It's a custom realization of [HttpLoggingInterceptor]
  *
  * @author Denis Bondarenko
  * Date: 1/16/19
  * Time: 5:30 PM
  * E-mail: DenBond7@gmail.com
  */
-public final class CustomHttpLoggingInterceptor implements Interceptor {
-  private static final Charset UTF8 = Charset.forName("UTF-8");
-  private final CustomHttpLoggingInterceptor.Logger logger;
-  private volatile CustomHttpLoggingInterceptor.Level level = CustomHttpLoggingInterceptor.Level.NONE;
+class CustomHttpLoggingInterceptor @JvmOverloads constructor(logger: Logger = Logger.DEFAULT) : Interceptor {
+  private val logger: CustomHttpLoggingInterceptor.Logger
+  @Volatile
+  private var level: CustomHttpLoggingInterceptor.Level = CustomHttpLoggingInterceptor.Level.NONE
 
-  public CustomHttpLoggingInterceptor() {
-    this(Logger.DEFAULT);
+  init {
+    this.logger = logger
   }
 
-  public CustomHttpLoggingInterceptor(Logger logger) {
-    this.logger = logger;
-  }
+  @Throws(IOException::class)
+  override fun intercept(chain: Interceptor.Chain): Response {
+    val level = this.level
 
-  /**
-   * Returns true if the body in question probably contains human readable text. Uses a small sample
-   * of code points to detect unicode control characters commonly used in binary file signatures.
-   */
-  static boolean isPlaintext(Buffer buffer) {
-    try {
-      Buffer prefix = new Buffer();
-      long byteCount = buffer.size() < 64 ? buffer.size() : 64;
-      buffer.copyTo(prefix, 0, byteCount);
-      for (int i = 0; i < 16; i++) {
-        if (prefix.exhausted()) {
-          break;
-        }
-        int codePoint = prefix.readUtf8CodePoint();
-        if (Character.isISOControl(codePoint) && !Character.isWhitespace(codePoint)) {
-          return false;
-        }
-      }
-      return true;
-    } catch (EOFException e) {
-      return false; // Truncated UTF-8 sequence.
-    }
-  }
-
-  @Override
-  public Response intercept(Chain chain) throws IOException {
-    Level level = this.level;
-
-    Request request = chain.request();
+    val request = chain.request()
     if (level == Level.NONE) {
-      return chain.proceed(request);
+      return chain.proceed(request)
     }
 
-    boolean logBody = level == Level.BODY;
-    boolean logHeaders = logBody || level == Level.HEADERS;
+    val logBody = level == Level.BODY
+    val logHeaders = logBody || level == Level.HEADERS
 
-    RequestBody requestBody = request.body();
-    boolean hasRequestBody = requestBody != null;
+    val requestBody = request.body()
+    val hasRequestBody = requestBody != null
 
-    Connection connection = chain.connection();
-    String requestStartMessage = "--> "
+    val connection = chain.connection()
+    var requestStartMessage = ("--> "
         + request.method()
-        + ' ' + request.url()
-        + (connection != null ? " " + connection.protocol() : "");
+        + ' '.toString() + request.url()
+        + if (connection != null) " " + connection.protocol() else "")
     if (!logHeaders && hasRequestBody) {
-      requestStartMessage += " (" + requestBody.contentLength() + "-byte body)";
+      requestStartMessage += " (" + requestBody!!.contentLength() + "-byte body)"
     }
-    logger.log(requestStartMessage);
+    logger.log(requestStartMessage)
 
     if (logHeaders) {
       if (hasRequestBody) {
         // Request body headers are only present when installed as a network interceptor. Force
         // them to be included (when available) so there values are known.
-        if (requestBody.contentType() != null) {
-          logger.log("Content-Type: " + requestBody.contentType());
+        if (requestBody!!.contentType() != null) {
+          logger.log("Content-Type: " + requestBody.contentType()!!)
         }
-        if (requestBody.contentLength() != -1) {
-          logger.log("Content-Length: " + requestBody.contentLength());
+        if (requestBody.contentLength() != -1.toLong()) {
+          logger.log("Content-Length: " + requestBody.contentLength())
         }
       }
 
-      Headers headers = request.headers();
-      for (int i = 0, count = headers.size(); i < count; i++) {
-        String name = headers.name(i);
+      val headers = request.headers()
+      var i = 0
+      val count = headers.size()
+      while (i < count) {
+        val name = headers.name(i)
         // Skip headers from the request body as they are explicitly logged above.
-        if (!"Content-Type".equalsIgnoreCase(name) && !"Content-Length".equalsIgnoreCase(name)) {
-          logger.log(name + ": " + headers.value(i));
+        if (!"Content-Type".equals(name, ignoreCase = true) && !"Content-Length".equals(name, ignoreCase = true)) {
+          logger.log(name + ": " + headers.value(i))
         }
+        i++
       }
 
       if (!logBody || !hasRequestBody) {
-        logger.log("--> END " + request.method());
+        logger.log("--> END " + request.method())
       } else if (bodyHasUnknownEncoding(request.headers())) {
-        logger.log("--> END " + request.method() + " (encoded body omitted)");
+        logger.log("--> END " + request.method() + " (encoded body omitted)")
       } else {
-        Buffer buffer = new Buffer();
-        requestBody.writeTo(buffer);
+        val buffer = Buffer()
+        requestBody!!.writeTo(buffer)
 
-        Charset charset = UTF8;
-        MediaType contentType = requestBody.contentType();
+        var charset: Charset? = UTF8
+        val contentType = requestBody.contentType()
         if (contentType != null) {
-          charset = contentType.charset(UTF8);
+          charset = contentType.charset(UTF8)
         }
 
-        logger.log("");
-        logger.log(Base64.encodeToString(buffer.readByteArray(), Base64.DEFAULT));
+        logger.log("")
+        logger.log(Base64.encodeToString(buffer.readByteArray(), Base64.DEFAULT))
         logger.log("--> END " + request.method()
-            + " (" + requestBody.contentLength() + "-byte body)");
+            + " (" + requestBody.contentLength() + "-byte body)")
       }
     }
 
-    long startNs = System.nanoTime();
-    Response response;
+    val startNs = System.nanoTime()
+    val response: Response
     try {
-      response = chain.proceed(request);
-    } catch (Exception e) {
-      logger.log("<-- HTTP FAILED: " + e);
-      throw e;
+      response = chain.proceed(request)
+    } catch (e: Exception) {
+      logger.log("<-- HTTP FAILED: $e")
+      throw e
     }
-    long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs);
 
-    ResponseBody responseBody = response.body();
-    long contentLength = responseBody.contentLength();
-    String bodySize = contentLength != -1 ? contentLength + "-byte" : "unknown-length";
+    val tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
+
+    val responseBody = response.body()
+    val contentLength = responseBody!!.contentLength()
+    val bodySize = if (contentLength != -1.toLong()) "$contentLength-byte" else "unknown-length"
     logger.log("<-- "
         + response.code()
-        + (response.message().isEmpty() ? "" : ' ' + response.message())
-        + ' ' + response.request().url()
-        + " (" + tookMs + "ms" + (!logHeaders ? ", " + bodySize + " body" : "") + ')');
+        + (if (response.message().isEmpty()) "" else ' ' + response.message())
+        + ' '.toString() + response.request().url()
+        + " (" + tookMs + "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString())
 
     if (logHeaders) {
-      Headers headers = response.headers();
-      for (int i = 0, count = headers.size(); i < count; i++) {
-        logger.log(headers.name(i) + ": " + headers.value(i));
+      val headers = response.headers()
+      var i = 0
+      val count = headers.size()
+      while (i < count) {
+        logger.log(headers.name(i) + ": " + headers.value(i))
+        i++
       }
 
       if (!logBody || !HttpHeaders.hasBody(response)) {
-        logger.log("<-- END HTTP");
+        logger.log("<-- END HTTP")
       } else if (bodyHasUnknownEncoding(response.headers())) {
-        logger.log("<-- END HTTP (encoded body omitted)");
+        logger.log("<-- END HTTP (encoded body omitted)")
       } else {
-        BufferedSource source = responseBody.source();
-        source.request(Long.MAX_VALUE); // Buffer the entire body.
-        Buffer buffer = source.buffer();
+        val source = responseBody.source()
+        source.request(java.lang.Long.MAX_VALUE) // Buffer the entire body.
+        var buffer = source.buffer()
 
-        Long gzippedLength = null;
-        if ("gzip".equalsIgnoreCase(headers.get("Content-Encoding"))) {
-          gzippedLength = buffer.size();
-          GzipSource gzippedResponseBody = null;
+        var gzippedLength: Long? = null
+        if ("gzip".equals(headers.get("Content-Encoding")!!, ignoreCase = true)) {
+          gzippedLength = buffer.size()
+          var gzippedResponseBody: GzipSource? = null
           try {
-            gzippedResponseBody = new GzipSource(buffer.clone());
-            buffer = new Buffer();
-            buffer.writeAll(gzippedResponseBody);
+            gzippedResponseBody = GzipSource(buffer.clone())
+            buffer = Buffer()
+            buffer.writeAll(gzippedResponseBody)
           } finally {
-            if (gzippedResponseBody != null) {
-              gzippedResponseBody.close();
-            }
+            gzippedResponseBody?.close()
           }
         }
 
-        Charset charset = UTF8;
-        MediaType contentType = responseBody.contentType();
+        var charset: Charset? = UTF8
+        val contentType = responseBody.contentType()
         if (contentType != null) {
-          charset = contentType.charset(UTF8);
+          charset = contentType.charset(UTF8)
         }
 
-        if (contentLength != 0) {
-          logger.log("");
-          logger.log(Base64.encodeToString(buffer.clone().readByteArray(), Base64.DEFAULT));
+        if (contentLength != 0L) {
+          logger.log("")
+          logger.log(Base64.encodeToString(buffer.clone().readByteArray(), Base64.DEFAULT))
         }
 
         if (gzippedLength != null) {
           logger.log("<-- END HTTP (" + buffer.size() + "-byte, "
-              + gzippedLength + "-gzipped-byte body)");
+              + gzippedLength + "-gzipped-byte body)")
         } else {
-          logger.log("<-- END HTTP (" + buffer.size() + "-byte body)");
+          logger.log("<-- END HTTP (" + buffer.size() + "-byte body)")
         }
       }
     }
 
-    return response;
+    return response
   }
 
-  public Level getLevel() {
-    return level;
+  fun getLevel(): Level {
+    return level
   }
 
   /**
    * Change the level at which this interceptor logs.
    */
-  public CustomHttpLoggingInterceptor setLevel(Level level) {
-    if (level == null) throw new NullPointerException("level == null. Use Level.NONE instead.");
-    this.level = level;
-    return this;
+  fun setLevel(level: Level?): CustomHttpLoggingInterceptor {
+    if (level == null) throw NullPointerException("level == null. Use Level.NONE instead.")
+    this.level = level
+    return this
   }
 
-  private boolean bodyHasUnknownEncoding(Headers headers) {
-    String contentEncoding = headers.get("Content-Encoding");
-    return contentEncoding != null
-        && !"identity".equalsIgnoreCase(contentEncoding)
-        && !"gzip".equalsIgnoreCase(contentEncoding);
+  private fun bodyHasUnknownEncoding(headers: Headers): Boolean {
+    val contentEncoding = headers.get("Content-Encoding")
+    return (contentEncoding != null
+        && !"identity".equals(contentEncoding, ignoreCase = true)
+        && !"gzip".equals(contentEncoding, ignoreCase = true))
   }
 
-  public enum Level {
+  enum class Level {
     /**
      * No logs.
      */
@@ -258,20 +228,20 @@ public final class CustomHttpLoggingInterceptor implements Interceptor {
     /**
      * Logs request and response lines.
      *
-     * <p>Example:
-     * <pre>{@code
-     * --> POST /greeting http/1.1 (3-byte body)
+     *
+     * Example:
+     * <pre>`--> POST /greeting http/1.1 (3-byte body)
      *
      * <-- 200 OK (22ms, 6-byte body)
-     * }</pre>
+    `</pre> *
      */
     BASIC,
     /**
      * Logs request and response lines and their respective headers.
      *
-     * <p>Example:
-     * <pre>{@code
-     * --> POST /greeting http/1.1
+     *
+     * Example:
+     * <pre>`--> POST /greeting http/1.1
      * Host: example.com
      * Content-Type: plain/text
      * Content-Length: 3
@@ -281,15 +251,15 @@ public final class CustomHttpLoggingInterceptor implements Interceptor {
      * Content-Type: plain/text
      * Content-Length: 6
      * <-- END HTTP
-     * }</pre>
+    `</pre> *
      */
     HEADERS,
     /**
      * Logs request and response lines and their respective headers and bodies (if present).
      *
-     * <p>Example:
-     * <pre>{@code
-     * --> POST /greeting http/1.1
+     *
+     * Example:
+     * <pre>`--> POST /greeting http/1.1
      * Host: example.com
      * Content-Type: plain/text
      * Content-Length: 3
@@ -303,23 +273,54 @@ public final class CustomHttpLoggingInterceptor implements Interceptor {
      *
      * Hello!
      * <-- END HTTP
-     * }</pre>
+    `</pre> *
      */
     BODY
   }
 
-  public interface Logger {
-    /**
-     * A {@link Logger} defaults output appropriate for the current platform.
-     */
-    Logger DEFAULT = new Logger() {
-      @Override
-      public void log(String message) {
-        Platform.get().log(INFO, message, null);
-      }
-    };
+  interface Logger {
 
-    void log(String message);
+    fun log(message: String)
+
+    companion object {
+      /**
+       * A [Logger] defaults output appropriate for the current platform.
+       */
+      val DEFAULT: Logger = object : Logger {
+        override fun log(message: String) {
+          Platform.get().log(INFO, message, null)
+        }
+      }
+    }
+  }
+
+  companion object {
+    private val UTF8 = Charset.forName("UTF-8")
+
+    /**
+     * Returns true if the body in question probably contains human readable text. Uses a small sample
+     * of code points to detect unicode control characters commonly used in binary file signatures.
+     */
+    internal fun isPlaintext(buffer: Buffer): Boolean {
+      try {
+        val prefix = Buffer()
+        val byteCount = if (buffer.size() < 64) buffer.size() else 64
+        buffer.copyTo(prefix, 0, byteCount)
+        for (i in 0..15) {
+          if (prefix.exhausted()) {
+            break
+          }
+          val codePoint = prefix.readUtf8CodePoint()
+          if (Character.isISOControl(codePoint) && !Character.isWhitespace(codePoint)) {
+            return false
+          }
+        }
+        return true
+      } catch (e: EOFException) {
+        return false // Truncated UTF-8 sequence.
+      }
+
+    }
   }
 }
 

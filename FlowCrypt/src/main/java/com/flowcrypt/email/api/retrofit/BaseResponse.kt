@@ -3,13 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit;
+package com.flowcrypt.email.api.retrofit
 
-import com.flowcrypt.email.api.retrofit.response.base.ApiResponse;
-
-import java.io.Serializable;
-
-import retrofit2.Response;
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import retrofit2.Response
+import java.io.Serializable
 
 /**
  * A base response model class.
@@ -19,36 +17,18 @@ import retrofit2.Response;
  * Time: 13:34
  * E-mail: DenBond7@gmail.com
  */
-public class BaseResponse<T extends ApiResponse> implements Serializable {
-  private Response<T> modelResponse;
-  private Exception e;
-  private ApiName apiName;
+class BaseResponse<T : ApiResponse> : Serializable {
+  private var modelResponse: Response<T>? = null
+  var exception: Exception? = null
+  var apiName: ApiName? = null
 
-  public T getResponseModel() {
-    return modelResponse != null ? modelResponse.body() : null;
-  }
+  val responseModel: T?
+    get() = if (modelResponse != null) modelResponse!!.body() else null
 
-  public void setResponse(Response<T> response) {
-    this.modelResponse = response;
-  }
+  val responseCode: Int
+    get() = if (modelResponse != null) modelResponse!!.code() else -1
 
-  public Exception getException() {
-    return e;
-  }
-
-  public void setException(Exception e) {
-    this.e = e;
-  }
-
-  public ApiName getApiName() {
-    return apiName;
-  }
-
-  public void setApiName(ApiName apiName) {
-    this.apiName = apiName;
-  }
-
-  public int getResponseCode() {
-    return modelResponse != null ? modelResponse.code() : -1;
+  fun setResponse(response: Response<T>) {
+    this.modelResponse = response
   }
 }

@@ -24,9 +24,8 @@ import java.io.IOException
  * Time: 8:59 AM
  * E-mail: DenBond7@gmail.com
  */
-data class EncryptedFileResult constructor(@Expose override val error: Error?) : BaseNodeResponse {
-  var encryptedBytes: ByteArray? = null
-    private set
+data class EncryptedFileResult constructor(@Expose override val error: Error?,
+                                           var encryptedBytes: ByteArray? = null) : BaseNodeResponse {
 
   @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
@@ -34,10 +33,9 @@ data class EncryptedFileResult constructor(@Expose override val error: Error?) :
   }
 
   constructor(source: Parcel) : this(
-      source.readParcelable<Error>(Error::class.java.classLoader)
-  ) {
-    source.readByteArray(encryptedBytes)
-  }
+      source.readParcelable<Error>(Error::class.java.classLoader),
+      source.createByteArray()
+  )
 
   override fun describeContents(): Int {
     return 0
@@ -48,6 +46,27 @@ data class EncryptedFileResult constructor(@Expose override val error: Error?) :
         writeParcelable(error, 0)
         writeByteArray(encryptedBytes)
       }
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as EncryptedFileResult
+
+    if (error != other.error) return false
+    if (encryptedBytes != null) {
+      if (other.encryptedBytes == null) return false
+      if (!encryptedBytes!!.contentEquals(other.encryptedBytes!!)) return false
+    } else if (other.encryptedBytes != null) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = error?.hashCode() ?: 0
+    result = 31 * result + (encryptedBytes?.contentHashCode() ?: 0)
+    return result
+  }
 
   companion object {
     @JvmField

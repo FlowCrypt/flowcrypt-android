@@ -12,7 +12,7 @@ import com.google.gson.annotations.SerializedName
 interface MsgBlock : Parcelable {
   val type: Type
   val content: String?
-  val isComplete: Boolean
+  val complete: Boolean
 
   enum class Type : Parcelable {
     UNKNOWN,

@@ -19,7 +19,7 @@ import com.google.gson.annotations.Expose
  */
 data class BaseMsgBlock(@Expose override val type: MsgBlock.Type,
                         @Expose override val content: String?,
-                        @Expose override val isComplete: Boolean) : MsgBlock {
+                        @Expose override val complete: Boolean) : MsgBlock {
 
   constructor(source: Parcel, type: MsgBlock.Type) : this(
       type,
@@ -31,7 +31,7 @@ data class BaseMsgBlock(@Expose override val type: MsgBlock.Type,
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
     writeParcelable(type, flags)
     writeString(content)
-    writeInt((if (isComplete) 1 else 0))
+    writeInt((if (complete) 1 else 0))
   }
 
   companion object {

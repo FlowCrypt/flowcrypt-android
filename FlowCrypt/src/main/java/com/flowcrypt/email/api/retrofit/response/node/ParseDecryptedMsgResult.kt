@@ -27,11 +27,17 @@ import java.io.StringReader
  * E-mail: DenBond7@gmail.com
  */
 data class ParseDecryptedMsgResult constructor(@Expose override val error: Error?,
-                                               var msgBlocks: MutableList<MsgBlock> = mutableListOf()) : BaseNodeResponse {
+                                               var msgBlocks: MutableList<MsgBlock>?) :
+    BaseNodeResponse {
+
   @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     var isEnabled = true
     val gson = NodeGson.gson
+
+    if (msgBlocks == null) {
+      msgBlocks = mutableListOf()
+    }
 
     while (isEnabled) {
       ByteArrayOutputStream().use { outputStream ->
@@ -52,7 +58,7 @@ data class ParseDecryptedMsgResult constructor(@Expose override val error: Error
           val block = NodeGson.gson.fromJson<MsgBlock>(jsonReader, MsgBlock::class.java)
 
           if (block != null) {
-            msgBlocks.add(block)
+            msgBlocks?.add(block)
           }
 
           if (c == -1) {
@@ -64,10 +70,9 @@ data class ParseDecryptedMsgResult constructor(@Expose override val error: Error
   }
 
   constructor(source: Parcel) : this(
-      source.readParcelable<Error>(Error::class.java.classLoader)
-  ) {
-    mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) }
-  }
+      source.readParcelable<Error>(Error::class.java.classLoader),
+      mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) }
+  )
 
   override fun describeContents(): Int {
     return 0

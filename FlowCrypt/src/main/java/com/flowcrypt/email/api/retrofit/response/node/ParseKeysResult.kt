@@ -25,7 +25,8 @@ import java.io.IOException
  * E-mail: DenBond7@gmail.com
  */
 data class ParseKeysResult constructor(@Expose val format: String?,
-                                       @Expose @SerializedName("keyDetails") val nodeKeyDetails: List<NodeKeyDetails>?,
+                                       @Expose @SerializedName("keyDetails") val nodeKeyDetails:
+                                       MutableList<NodeKeyDetails> = mutableListOf(),
                                        @Expose override val error: Error?) : BaseNodeResponse {
   @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
@@ -34,7 +35,7 @@ data class ParseKeysResult constructor(@Expose val format: String?,
 
   constructor(source: Parcel) : this(
       source.readString(),
-      source.createTypedArrayList(NodeKeyDetails.CREATOR),
+      source.createTypedArrayList(NodeKeyDetails.CREATOR)!!,
       source.readParcelable<Error>(Error::class.java.classLoader)
   )
 

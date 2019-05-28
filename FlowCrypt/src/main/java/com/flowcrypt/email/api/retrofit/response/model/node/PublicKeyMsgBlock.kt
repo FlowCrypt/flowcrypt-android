@@ -19,7 +19,7 @@ import com.google.gson.annotations.Expose
  * E-mail: DenBond7@gmail.com
  */
 data class PublicKeyMsgBlock constructor(@Expose override val content: String?,
-                                         @Expose override val isComplete: Boolean,
+                                         @Expose override val complete: Boolean,
                                          @Expose val keyDetails: NodeKeyDetails?) : MsgBlock {
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.PUBLIC_KEY
@@ -38,7 +38,7 @@ data class PublicKeyMsgBlock constructor(@Expose override val content: String?,
       with(dest) {
         writeParcelable(type, flags)
         writeString(content)
-        writeInt((if (isComplete) 1 else 0))
+        writeInt((if (complete) 1 else 0))
         writeParcelable(keyDetails, 0)
       }
 

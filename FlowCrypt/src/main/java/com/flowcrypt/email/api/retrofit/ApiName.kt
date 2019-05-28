@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.retrofit;
+package com.flowcrypt.email.api.retrofit
 
 /**
  * List of all API which uses in the RETROFIT.
@@ -13,7 +13,7 @@ package com.flowcrypt.email.api.retrofit;
  * Time: 13:51
  * E-mail: DenBond7@gmail.com
  */
-public enum ApiName {
+enum class ApiName {
   /*flowcrypt.com/attester*/
   POST_TEST_WELCOME,
   POST_INITIAL_LEGACY_SUBMIT,

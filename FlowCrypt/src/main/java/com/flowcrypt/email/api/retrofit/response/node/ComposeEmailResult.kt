@@ -22,10 +22,8 @@ import java.nio.charset.StandardCharsets
  * Time: 3:00 PM
  * E-mail: DenBond7@gmail.com
  */
-data class ComposeEmailResult constructor(@Expose override val error: Error?) : BaseNodeResponse {
-  var mimeMsg: String = ""
-    private set
-
+data class ComposeEmailResult constructor(@Expose override val error: Error?,
+                                          var mimeMsg: String = "") : BaseNodeResponse {
   @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     val bytes = IOUtils.toByteArray(bufferedInputStream) ?: return
@@ -38,10 +36,9 @@ data class ComposeEmailResult constructor(@Expose override val error: Error?) : 
   }
 
   constructor(source: Parcel) : this(
-      source.readParcelable<Error>(Error::class.java.classLoader)
-  ) {
-    this.mimeMsg = source.readString()!!
-  }
+      source.readParcelable<Error>(Error::class.java.classLoader),
+      source.readString()!!
+  )
 
   override fun describeContents(): Int {
     return 0

@@ -26,10 +26,8 @@ import java.io.IOException
  */
 data class DecryptedFileResult constructor(@Expose val isSuccess: Boolean,
                                            @Expose val name: String?,
-                                           @Expose override val error: Error?) : BaseNodeResponse {
-  var decryptedBytes: ByteArray? = null
-    private set
-
+                                           @Expose override val error: Error?,
+                                           var decryptedBytes: ByteArray? = null) : BaseNodeResponse {
   @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     decryptedBytes = IOUtils.toByteArray(bufferedInputStream)
@@ -38,10 +36,9 @@ data class DecryptedFileResult constructor(@Expose val isSuccess: Boolean,
   constructor(source: Parcel) : this(
       1 == source.readInt(),
       source.readString(),
-      source.readParcelable<Error>(Error::class.java.classLoader)
-  ) {
-    source.readByteArray(this.decryptedBytes)
-  }
+      source.readParcelable<Error>(Error::class.java.classLoader),
+      source.createByteArray()
+  )
 
   override fun describeContents(): Int {
     return 0
