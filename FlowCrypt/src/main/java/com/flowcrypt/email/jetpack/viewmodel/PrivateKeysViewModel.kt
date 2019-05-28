@@ -3,64 +3,54 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.jetpack.viewmodel;
+package com.flowcrypt.email.jetpack.viewmodel
 
-import android.app.Application;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.node.PgpApiRepository;
-import com.flowcrypt.email.model.PgpKeyInfo;
-import com.flowcrypt.email.security.KeysStorageImpl;
-import com.google.android.gms.common.util.CollectionUtils;
-
-import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.lifecycle.ViewModel;
+import android.app.Application
+import androidx.lifecycle.ViewModel
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
+import com.flowcrypt.email.security.KeysStorageImpl
+import com.google.android.gms.common.util.CollectionUtils
 
 /**
- * This {@link ViewModel} implementation can be used to fetch details about imported keys.
+ * This [ViewModel] implementation can be used to fetch details about imported keys.
  *
  * @author Denis Bondarenko
  * Date: 2/14/19
  * Time: 10:50 AM
  * E-mail: DenBond7@gmail.com
  */
-public class PrivateKeysViewModel extends BaseNodeApiViewModel implements KeysStorageImpl.OnRefreshListener {
-  private KeysStorageImpl keysStorage;
-  private PgpApiRepository apiRepository;
+class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(application),
+    KeysStorageImpl.OnRefreshListener {
+  private var keysStorage: KeysStorageImpl? = null
+  private var apiRepository: PgpApiRepository? = null
 
-  public PrivateKeysViewModel(@NonNull Application application) {
-    super(application);
+  override fun onRefresh() {
+    checkAndFetchKeys()
   }
 
-  @Override
-  public void onRefresh() {
-    checkAndFetchKeys();
+  fun init(apiRepository: PgpApiRepository) {
+    this.apiRepository = apiRepository
+    this.keysStorage = KeysStorageImpl.getInstance(getApplication())
+    this.keysStorage!!.attachOnRefreshListener(this)
+    checkAndFetchKeys()
   }
 
-  public void init(PgpApiRepository apiRepository) {
-    this.apiRepository = apiRepository;
-    this.keysStorage = KeysStorageImpl.getInstance(getApplication());
-    this.keysStorage.attachOnRefreshListener(this);
-    checkAndFetchKeys();
+  private fun fetchKeys(rawKey: String?) {
+    apiRepository!!.fetchKeyDetails(R.id.live_data_id_fetch_keys, responsesLiveData, rawKey!!)
   }
 
-  private void fetchKeys(String rawKey) {
-    apiRepository.fetchKeyDetails(R.id.live_data_id_fetch_keys, responsesLiveData, rawKey);
-  }
-
-  private void checkAndFetchKeys() {
-    List<PgpKeyInfo> pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys();
+  private fun checkAndFetchKeys() {
+    val pgpKeyInfoList = keysStorage!!.getAllPgpPrivateKeys()
     if (!CollectionUtils.isEmpty(pgpKeyInfoList)) {
-      StringBuilder builder = new StringBuilder();
-      for (PgpKeyInfo pgpKeyInfo : pgpKeyInfoList) {
-        builder.append(pgpKeyInfo.getPrivate()).append("\n");
+      val builder = StringBuilder()
+      for ((_, private) in pgpKeyInfoList) {
+        builder.append(private).append("\n")
       }
 
-      fetchKeys(builder.toString());
+      fetchKeys(builder.toString())
     } else {
-      fetchKeys(null);
+      fetchKeys(null)
     }
   }
 }

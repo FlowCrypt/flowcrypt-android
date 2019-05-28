@@ -3,46 +3,36 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.jetpack.viewmodel;
+package com.flowcrypt.email.jetpack.viewmodel
 
-import android.app.Application;
-
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.node.PgpApiRepository;
-import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest;
-import com.nulabinc.zxcvbn.Zxcvbn;
-
-import java.util.Arrays;
-
-import androidx.annotation.NonNull;
-import androidx.lifecycle.ViewModel;
+import android.app.Application
+import androidx.lifecycle.ViewModel
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
+import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
+import com.nulabinc.zxcvbn.Zxcvbn
 
 /**
- * This {@link ViewModel} implementation can be used to check the passphrase strength
+ * This [ViewModel] implementation can be used to check the passphrase strength
  *
  * @author Denis Bondarenko
  * Date: 4/2/19
  * Time: 11:11 AM
  * E-mail: DenBond7@gmail.com
  */
-public class PasswordStrengthViewModel extends BaseNodeApiViewModel {
-  private Zxcvbn zxcvbn;
-  private PgpApiRepository apiRepository;
+class PasswordStrengthViewModel(application: Application) : BaseNodeApiViewModel(application) {
+  private val zxcvbn: Zxcvbn = Zxcvbn()
+  private var apiRepository: PgpApiRepository? = null
 
-  public PasswordStrengthViewModel(@NonNull Application application) {
-    super(application);
-    this.zxcvbn = new Zxcvbn();
+  fun init(apiRepository: PgpApiRepository) {
+    this.apiRepository = apiRepository
   }
 
-  public void init(PgpApiRepository apiRepository) {
-    this.apiRepository = apiRepository;
-  }
+  fun check(passphrase: String) {
+    val measure = zxcvbn.measure(passphrase, arrayListOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
 
-  public void check(final String passphrase) {
-    double measure = zxcvbn.measure(passphrase, Arrays.asList(Constants.PASSWORD_WEAK_WORDS)).getGuesses();
-
-    apiRepository.checkPassphraseStrength(R.id.live_data_id_check_passphrase_strength, responsesLiveData,
-        new ZxcvbnStrengthBarRequest(measure));
+    apiRepository!!.checkPassphraseStrength(R.id.live_data_id_check_passphrase_strength, responsesLiveData,
+        ZxcvbnStrengthBarRequest(measure))
   }
 }
