@@ -3,346 +3,316 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.jobscheduler;
+package com.flowcrypt.email.jobscheduler
 
-import android.app.job.JobInfo;
-import android.app.job.JobParameters;
-import android.app.job.JobScheduler;
-import android.app.job.JobService;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.OperationApplicationException;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.RemoteException;
-import android.util.Log;
-import android.util.LongSparseArray;
-
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.FoldersManager;
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
-import com.flowcrypt.email.api.email.model.LocalFolder;
-import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
-import com.flowcrypt.email.api.email.sync.SyncListener;
-import com.flowcrypt.email.api.email.sync.tasks.SyncFolderSyncTask;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.flowcrypt.email.service.MessagesNotificationManager;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.LogsUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.sun.mail.imap.IMAPFolder;
-
-import org.jetbrains.annotations.NotNull;
-
-import java.lang.ref.WeakReference;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Store;
+import android.app.job.JobInfo
+import android.app.job.JobParameters
+import android.app.job.JobScheduler
+import android.app.job.JobService
+import android.content.ComponentName
+import android.content.Context
+import android.content.OperationApplicationException
+import android.os.AsyncTask
+import android.os.Build
+import android.os.RemoteException
+import android.util.Log
+import android.util.LongSparseArray
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
+import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.api.email.sync.tasks.SyncFolderSyncTask
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.service.MessagesNotificationManager
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.sun.mail.imap.IMAPFolder
+import java.lang.ref.WeakReference
+import java.util.*
+import java.util.concurrent.TimeUnit
+import javax.mail.Message
+import javax.mail.MessagingException
+import javax.mail.Session
+import javax.mail.Store
 
 /**
- * This is an implementation of {@link JobService}. Here we are going to do syncing INBOX folder of an active account.
+ * This is an implementation of [JobService]. Here we are going to do syncing INBOX folder of an active account.
  *
  * @author Denis Bondarenko
  * Date: 20.06.2018
  * Time: 12:40
  * E-mail: DenBond7@gmail.com
  */
-public class SyncJobService extends JobService implements SyncListener {
-  private static final long INTERVAL_MILLIS = TimeUnit.MINUTES.toMillis(15);
-  private static final String TAG = SyncJobService.class.getSimpleName();
-  private MessagesNotificationManager messagesNotificationManager;
+class SyncJobService : JobService(), SyncListener {
+  private var messagesNotificationManager: MessagesNotificationManager? = null
 
-  public static void schedule(Context context) {
-    ComponentName serviceName = new ComponentName(context, SyncJobService.class);
-    JobInfo.Builder jobInfoBuilder = new JobInfo.Builder(JobIdManager.JOB_TYPE_SYNC, serviceName)
-        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-        .setPeriodic(INTERVAL_MILLIS)
-        .setPersisted(true);
+  override val context: Context
+    get() = applicationContext
 
-    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-      jobInfoBuilder.setRequiresBatteryNotLow(true);
-    }
-
-    JobScheduler scheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-    if (scheduler != null) {
-      int result = scheduler.schedule(jobInfoBuilder.build());
-      if (result == JobScheduler.RESULT_SUCCESS) {
-        LogsUtil.d(TAG, "A job scheduled successfully");
-      } else {
-        String errorMsg = "Error. Can't schedule a job";
-        Log.e(TAG, errorMsg);
-        ExceptionUtil.handleError(new IllegalStateException(errorMsg));
-      }
-    }
+  override fun onCreate() {
+    super.onCreate()
+    LogsUtil.d(TAG, "onCreate")
+    this.messagesNotificationManager = MessagesNotificationManager(this)
   }
 
-  @Override
-  public void onCreate() {
-    super.onCreate();
-    LogsUtil.d(TAG, "onCreate");
-    this.messagesNotificationManager = new MessagesNotificationManager(this);
+  override fun onDestroy() {
+    super.onDestroy()
+    LogsUtil.d(TAG, "onDestroy")
   }
 
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-    LogsUtil.d(TAG, "onDestroy");
+  override fun onStartJob(jobParameters: JobParameters): Boolean {
+    LogsUtil.d(TAG, "onStartJob")
+    CheckNewMessagesJobTask(this).execute(jobParameters)
+    return true
   }
 
-  @Override
-  public boolean onStartJob(JobParameters jobParameters) {
-    LogsUtil.d(TAG, "onStartJob");
-    new CheckNewMessagesJobTask(this).execute(jobParameters);
-    return true;
+  override fun onStopJob(jobParameters: JobParameters): Boolean {
+    LogsUtil.d(TAG, "onStopJob")
+    jobFinished(jobParameters, true)
+    return false
   }
 
-  @Override
-  public boolean onStopJob(JobParameters jobParameters) {
-    LogsUtil.d(TAG, "onStopJob");
-    jobFinished(jobParameters, true);
-    return false;
-  }
-
-  @Override
-  public Context getContext() {
-    return getApplicationContext();
-  }
-
-  @Override
-  public void onMsgWithBackupToKeyOwnerSent(AccountDao account, String ownerKey, int requestCode, boolean isSent) {
+  override fun onMsgWithBackupToKeyOwnerSent(account: AccountDao, ownerKey: String, requestCode: Int, isSent: Boolean) {
 
   }
 
-  @Override
-  public void onPrivateKeysFound(AccountDao account, List<NodeKeyDetails> keys, String ownerKey, int requestCode) {
+  override fun onPrivateKeysFound(account: AccountDao, keys: List<NodeKeyDetails>, ownerKey: String, requestCode: Int) {
 
   }
 
-  @Override
-  public void onMsgSent(AccountDao account, String ownerKey, int requestCode, boolean isSent) {
+  override fun onMsgSent(account: AccountDao, ownerKey: String, requestCode: Int, isSent: Boolean) {
 
   }
 
-  @Override
-  public void onMsgsMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder,
-                          @NotNull List<? extends Message> msgs, String ownerKey, int requestCode) {
+  override fun onMsgsMoved(account: AccountDao, srcFolder: IMAPFolder, destFolder: IMAPFolder,
+                           msgs: List<Message>, ownerKey: String, requestCode: Int) {
 
   }
 
-  @Override
-  public void onMsgMoved(AccountDao account, IMAPFolder srcFolder, IMAPFolder destFolder,
-                         Message msg, String ownerKey, int requestCode) {
+  override fun onMsgMoved(account: AccountDao, srcFolder: IMAPFolder, destFolder: IMAPFolder,
+                          msg: Message?, ownerKey: String, requestCode: Int) {
 
   }
 
-  @Override
-  public void onMsgDetailsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder, long uid,
-                                   Message msg, String rawMsgWithoutAtts, String ownerKey, int requestCode) {
+  override fun onMsgDetailsReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder, uid: Long,
+                                    msg: Message?, rawMsgWithoutAtts: String, ownerKey: String, requestCode: Int) {
 
   }
 
-  @Override
-  public void onMsgsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
-                             Message[] msgs, String ownerKey, int requestCode) {
+  override fun onMsgsReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
+                              msgs: Array<Message>, ownerKey: String, requestCode: Int) {
 
   }
 
-  @Override
-  public void onSearchMsgsReceived(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
-                                   Message[] msgs, String ownerKey, int requestCode) {
+  override fun onSearchMsgsReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
+                                    msgs: Array<Message>, ownerKey: String, requestCode: Int) {
 
   }
 
-  @Override
-  public void onRefreshMsgsReceived(AccountDao account, LocalFolder localFolder,
-                                    IMAPFolder remoteFolder, Message[] newMsgs,
-                                    Message[] updateMsgs, String ownerKey, int requestCode) {
+  override fun onRefreshMsgsReceived(account: AccountDao, localFolder: LocalFolder,
+                                     remoteFolder: IMAPFolder, newMsgs: Array<Message>,
+                                     updateMsgs: Array<Message>, ownerKey: String, requestCode: Int) {
     try {
-      MessageDaoSource msgDaoSource = new MessageDaoSource();
+      val msgDaoSource = MessageDaoSource()
 
-      Map<Long, String> mapOfUIDsAndMsgsFlags = msgDaoSource.getMapOfUIDAndMsgFlags
-          (getApplicationContext(), account.getEmail(), localFolder.getFolderAlias());
+      val mapOfUIDsAndMsgsFlags = msgDaoSource.getMapOfUIDAndMsgFlags(applicationContext, account.email, localFolder.folderAlias)
 
-      Collection<Long> uidSet = new HashSet<>(mapOfUIDsAndMsgsFlags.keySet());
-      Collection<Long> deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(uidSet, remoteFolder, updateMsgs);
+      val uidSet = HashSet(mapOfUIDsAndMsgsFlags.keys)
+      val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(uidSet, remoteFolder, updateMsgs)
 
-      String folderAlias = localFolder.getFolderAlias();
-      List<GeneralMessageDetails> generalMsgDetailsBeforeUpdate = msgDaoSource.getNewMsgs
-          (getApplicationContext(), account.getEmail(), folderAlias);
+      val folderAlias = localFolder.folderAlias
+      val generalMsgDetailsBeforeUpdate = msgDaoSource.getNewMsgs(applicationContext, account.email, folderAlias)
 
-      msgDaoSource.deleteMsgsByUID(getApplicationContext(), account.getEmail(), localFolder.getFolderAlias(),
-          deleteCandidatesUIDs);
+      msgDaoSource.deleteMsgsByUID(applicationContext, account.email, localFolder.folderAlias,
+          deleteCandidatesUIDs)
 
-      msgDaoSource.updateMsgsByUID(getApplicationContext(), account.getEmail(), localFolder.getFolderAlias(),
-          remoteFolder, EmailUtil.genUpdateCandidates(mapOfUIDsAndMsgsFlags, remoteFolder, updateMsgs));
+      msgDaoSource.updateMsgsByUID(applicationContext, account.email, localFolder.folderAlias,
+          remoteFolder, EmailUtil.genUpdateCandidates(mapOfUIDsAndMsgsFlags, remoteFolder, updateMsgs))
 
-      List<GeneralMessageDetails> detailsAfterUpdate = msgDaoSource.getNewMsgs(getApplicationContext(),
-          account.getEmail(), folderAlias);
+      val detailsAfterUpdate = msgDaoSource.getNewMsgs(applicationContext,
+          account.email, folderAlias)
 
-      List<GeneralMessageDetails> detailsDeleteCandidates = new LinkedList<>(generalMsgDetailsBeforeUpdate);
-      detailsDeleteCandidates.removeAll(detailsAfterUpdate);
+      val detailsDeleteCandidates = LinkedList(generalMsgDetailsBeforeUpdate)
+      detailsDeleteCandidates.removeAll(detailsAfterUpdate)
 
-      boolean isInbox = FoldersManager.getFolderType(localFolder) == FoldersManager.FolderType.INBOX;
+      val isInbox = FoldersManager.getFolderType(localFolder) === FoldersManager.FolderType.INBOX
       if (!GeneralUtil.isAppForegrounded() && isInbox) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-          for (GeneralMessageDetails details : detailsDeleteCandidates) {
-            messagesNotificationManager.cancel(details.getUid());
+          for ((_, _, uid) in detailsDeleteCandidates) {
+            messagesNotificationManager!!.cancel(uid)
           }
         } else {
           if (!detailsDeleteCandidates.isEmpty()) {
-            List<Integer> unseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, account.getEmail(), folderAlias);
-            messagesNotificationManager.notify(this, account, localFolder, detailsAfterUpdate, unseenMsgs, true);
+            val unseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, account.email, folderAlias)
+            messagesNotificationManager!!.notify(this, account, localFolder, detailsAfterUpdate, unseenMsgs, true)
           }
         }
       }
-    } catch (RemoteException | MessagingException | OperationApplicationException e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    } catch (e: MessagingException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    } catch (e: OperationApplicationException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
     }
-  }
-
-  @Override
-  public void onFoldersInfoReceived(AccountDao account, javax.mail.Folder[] folders, String ownerKey, int requestCode) {
 
   }
 
-  @Override
-  public void onError(AccountDao account, int errorType, Exception e, String ownerKey, int requestCode) {
+  override fun onFoldersInfoReceived(account: AccountDao, folders: Array<javax.mail.Folder>, ownerKey: String, requestCode: Int) {
 
   }
 
-  @Override
-  public void onActionProgress(AccountDao account, String ownerKey, int requestCode, int resultCode) {
+  override fun onError(account: AccountDao, errorType: Int, e: Exception, ownerKey: String, requestCode: Int) {
 
   }
 
-  @Override
-  public void onMsgChanged(AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder, Message msg,
-                           String ownerKey, int requestCode) {
+  override fun onActionProgress(account: AccountDao, ownerKey: String, requestCode: Int, resultCode: Int) {
 
   }
 
-  @Override
-  public void onIdentificationToEncryptionCompleted(AccountDao account, LocalFolder localFolder,
-                                                    IMAPFolder remoteFolder, String ownerKey, int requestCode) {
+  override fun onMsgChanged(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder, msg: Message,
+                            ownerKey: String, requestCode: Int) {
 
   }
 
-  @Override
-  public void onNewMsgsReceived(final AccountDao account, LocalFolder localFolder, IMAPFolder remoteFolder,
-                                Message[] newMsgs, LongSparseArray<Boolean> msgsEncryptionStates,
-                                String ownerKey, int requestCode) {
+  override fun onIdentificationToEncryptionCompleted(account: AccountDao, localFolder: LocalFolder,
+                                                     remoteFolder: IMAPFolder, ownerKey: String, requestCode: Int) {
+
+  }
+
+  override fun onNewMsgsReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
+                                 newMsgs: Array<Message>, msgsEncryptionStates: LongSparseArray<Boolean>,
+                                 ownerKey: String, requestCode: Int) {
     try {
-      Context context = getApplicationContext();
-      boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(context, account.getEmail());
+      val context = applicationContext
+      val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
 
-      MessageDaoSource msgDaoSource = new MessageDaoSource();
+      val msgDaoSource = MessageDaoSource()
 
-      Map<Long, String> mapOfUIDAndMsgFlags = msgDaoSource.getMapOfUIDAndMsgFlags
-          (context, account.getEmail(), localFolder.getFolderAlias());
+      val mapOfUIDAndMsgFlags = msgDaoSource.getMapOfUIDAndMsgFlags(context, account.email, localFolder.folderAlias)
 
-      Collection<Long> uids = new HashSet<>(mapOfUIDAndMsgFlags.keySet());
+      val uids = HashSet(mapOfUIDAndMsgFlags.keys)
 
-      javax.mail.Message[] newCandidates = EmailUtil.genNewCandidates(uids, remoteFolder, newMsgs);
+      val newCandidates = EmailUtil.genNewCandidates(uids, remoteFolder, newMsgs)
 
-      msgDaoSource.addRows(context, account.getEmail(), localFolder.getFolderAlias(), remoteFolder, newCandidates,
-          msgsEncryptionStates, !GeneralUtil.isAppForegrounded(), isEncryptedModeEnabled);
+      msgDaoSource.addRows(context, account.email, localFolder.folderAlias, remoteFolder, newCandidates,
+          msgsEncryptionStates, !GeneralUtil.isAppForegrounded(), isEncryptedModeEnabled)
 
       if (!GeneralUtil.isAppForegrounded()) {
-        String folderAlias = localFolder.getFolderAlias();
+        val folderAlias = localFolder.folderAlias
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && newCandidates.length == 0) {
-          return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && newCandidates.size == 0) {
+          return
         }
 
-        List<GeneralMessageDetails> newMsgsList = msgDaoSource.getNewMsgs(getApplicationContext(),
-            account.getEmail(), folderAlias);
-        List<Integer> unseenUIDs = msgDaoSource.getUIDOfUnseenMsgs(this, account.getEmail(), folderAlias);
+        val newMsgsList = msgDaoSource.getNewMsgs(applicationContext,
+            account.email, folderAlias)
+        val unseenUIDs = msgDaoSource.getUIDOfUnseenMsgs(this, account.email, folderAlias)
 
-        messagesNotificationManager.notify(this, account, localFolder, newMsgsList, unseenUIDs, false);
+        messagesNotificationManager!!.notify(this, account, localFolder, newMsgsList, unseenUIDs, false)
       }
-    } catch (MessagingException e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
+    } catch (e: MessagingException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
     }
+
   }
 
   /**
    * This is a worker. Here we will do sync in the background thread. If the sync will be failed we'll schedule it
    * again.
    */
-  private static class CheckNewMessagesJobTask extends AsyncTask<JobParameters, Boolean, JobParameters> {
-    private final WeakReference<SyncJobService> weakRef;
+  private class CheckNewMessagesJobTask internal constructor(syncJobService: SyncJobService) : AsyncTask<JobParameters, Boolean, JobParameters>() {
+    private val weakRef: WeakReference<SyncJobService> = WeakReference(syncJobService)
 
-    private Session sess;
-    private Store store;
-    private boolean isFailed;
+    private var sess: Session? = null
+    private var store: Store? = null
+    private var isFailed: Boolean = false
 
-    CheckNewMessagesJobTask(SyncJobService syncJobService) {
-      this.weakRef = new WeakReference<>(syncJobService);
-    }
-
-    @Override
-    protected JobParameters doInBackground(JobParameters... params) {
-      LogsUtil.d(TAG, "doInBackground");
+    override fun doInBackground(vararg params: JobParameters): JobParameters {
+      LogsUtil.d(TAG, "doInBackground")
 
       try {
         if (weakRef.get() != null) {
-          Context context = weakRef.get().getApplicationContext();
-          AccountDao account = new AccountDaoSource().getActiveAccountInformation(context);
+          val context = weakRef.get()!!.applicationContext
+          val account = AccountDaoSource().getActiveAccountInformation(context)
 
           if (account != null) {
-            FoldersManager foldersManager = FoldersManager.fromDatabase(context, account.getEmail());
-            LocalFolder localFolder = foldersManager.findInboxFolder();
+            val foldersManager = FoldersManager.fromDatabase(context, account.email)
+            val localFolder = foldersManager.findInboxFolder()
 
             if (localFolder != null) {
-              sess = OpenStoreHelper.getAccountSess(context, account);
-              store = OpenStoreHelper.openStore(context, account, sess);
+              sess = OpenStoreHelper.getAccountSess(context, account)
+              store = OpenStoreHelper.openStore(context, account, sess!!)
 
-              new SyncFolderSyncTask("", 0, localFolder).runIMAPAction(account, sess, store, weakRef.get());
+              SyncFolderSyncTask("", 0, localFolder).runIMAPAction(account, sess!!, store!!, weakRef.get()!!)
 
               if (store != null) {
-                store.close();
+                store!!.close()
               }
             }
           }
         }
-      } catch (Exception e) {
-        e.printStackTrace();
-        publishProgress(true);
+      } catch (e: Exception) {
+        e.printStackTrace()
+        publishProgress(true)
       }
 
-      publishProgress(false);
-      return params[0];
+      publishProgress(false)
+      return params[0]
     }
 
-    @Override
-    protected void onPostExecute(JobParameters jobParameters) {
-      LogsUtil.d(TAG, "onPostExecute");
+    override fun onPostExecute(jobParameters: JobParameters) {
+      LogsUtil.d(TAG, "onPostExecute")
       try {
         if (weakRef.get() != null) {
-          weakRef.get().jobFinished(jobParameters, isFailed);
+          weakRef.get()!!.jobFinished(jobParameters, isFailed)
         }
-      } catch (NullPointerException e) {
-        e.printStackTrace();
+      } catch (e: NullPointerException) {
+        e.printStackTrace()
       }
+
     }
 
-    @Override
-    protected void onProgressUpdate(Boolean... values) {
-      super.onProgressUpdate(values);
-      isFailed = values[0];
+    override fun onProgressUpdate(vararg values: Boolean?) {
+      super.onProgressUpdate(*values)
+      isFailed = values[0]!!
+    }
+  }
+
+  companion object {
+    private val INTERVAL_MILLIS = TimeUnit.MINUTES.toMillis(15)
+    private val TAG = SyncJobService::class.java.simpleName
+
+    @JvmStatic
+    fun schedule(context: Context) {
+      val serviceName = ComponentName(context, SyncJobService::class.java)
+      val jobInfoBuilder = JobInfo.Builder(JobIdManager.JOB_TYPE_SYNC, serviceName)
+          .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+          .setPeriodic(INTERVAL_MILLIS)
+          .setPersisted(true)
+
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        jobInfoBuilder.setRequiresBatteryNotLow(true)
+      }
+
+      val scheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+      val result = scheduler.schedule(jobInfoBuilder.build())
+      if (result == JobScheduler.RESULT_SUCCESS) {
+        LogsUtil.d(TAG, "A job scheduled successfully")
+      } else {
+        val errorMsg = "Error. Can't schedule a job"
+        Log.e(TAG, errorMsg)
+        ExceptionUtil.handleError(IllegalStateException(errorMsg))
+      }
     }
   }
 }
