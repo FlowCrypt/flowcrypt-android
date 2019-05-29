@@ -3,43 +3,33 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.node;
+package com.flowcrypt.email.node
 
-import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.Expose
 
 /**
  * It's a simple POJO which contains information about generated secret certs.
  */
-final class NodeSecretCerts implements java.io.Serializable {
+class NodeSecretCerts private constructor() : java.io.Serializable {
   @Expose
-  private String ca;
-
-  @Expose
-  private String key;
+  var ca: String? = null
+    private set
 
   @Expose
-  private String crt;
+  var key: String? = null
+    private set
 
-  private NodeSecretCerts() {
-  }
+  @Expose
+  var crt: String? = null
+    private set
 
-  static NodeSecretCerts fromNodeSecret(NodeSecret nodeSecret) {
-    NodeSecretCerts nodeSecretCerts = new NodeSecretCerts();
-    nodeSecretCerts.ca = nodeSecret.getCa();
-    nodeSecretCerts.crt = nodeSecret.getCrt();
-    nodeSecretCerts.key = nodeSecret.getKey();
-    return nodeSecretCerts;
-  }
-
-  String getCa() {
-    return ca;
-  }
-
-  String getKey() {
-    return key;
-  }
-
-  String getCrt() {
-    return crt;
+  companion object {
+    fun fromNodeSecret(nodeSecret: NodeSecret): NodeSecretCerts {
+      val nodeSecretCerts = NodeSecretCerts()
+      nodeSecretCerts.ca = nodeSecret.ca
+      nodeSecretCerts.crt = nodeSecret.crt
+      nodeSecretCerts.key = nodeSecret.key
+      return nodeSecretCerts
+    }
   }
 }

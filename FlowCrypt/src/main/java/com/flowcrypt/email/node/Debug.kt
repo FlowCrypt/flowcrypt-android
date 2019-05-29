@@ -3,28 +3,31 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.node;
+package com.flowcrypt.email.node
 
-import java.util.Arrays;
+import java.util.*
 
-public class Debug {
+class Debug {
+  companion object {
+    private const val MAX_LENGTH = 20
 
-  private static final int MAX_LENGTH = 20;
-
-  public static void printChunk(String name, String string) {
-    print(name, string.substring(0, Math.min(string.length(), MAX_LENGTH)).getBytes());
-  }
-
-  public static void printChunk(String name, byte[] data) {
-    print(name, Arrays.copyOfRange(data, 0, Math.min(data.length, MAX_LENGTH)));
-  }
-
-  private static void print(String name, byte[] bytes) {
-    int[] unsignedBytes = new int[bytes.length];
-    for (int i = 0; i < bytes.length; i++) {
-      unsignedBytes[i] = bytes[i] & 0xFF;
+    @JvmStatic
+    fun printChunk(name: String, string: String) {
+      print(name, string.substring(0, Math.min(string.length, MAX_LENGTH)).toByteArray())
     }
-    System.out.println("Debug.printChunk[" + name + "]: " + Arrays.toString(unsignedBytes));
-  }
 
+    @JvmStatic
+    fun printChunk(name: String, data: ByteArray) {
+      print(name, Arrays.copyOfRange(data, 0, Math.min(data.size, MAX_LENGTH)))
+    }
+
+    @JvmStatic
+    private fun print(name: String, bytes: ByteArray) {
+      val unsignedBytes = IntArray(bytes.size)
+      for (i in bytes.indices) {
+        unsignedBytes[i] = bytes[i].toInt() and 0xFF
+      }
+      println("Debug.printChunk[" + name + "]: " + Arrays.toString(unsignedBytes))
+    }
+  }
 }

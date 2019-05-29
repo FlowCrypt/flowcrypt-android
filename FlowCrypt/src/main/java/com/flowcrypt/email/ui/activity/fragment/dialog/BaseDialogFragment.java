@@ -69,12 +69,11 @@ public class BaseDialogFragment extends DialogFragment {
   }
 
   protected boolean isNodeReady() {
-    if (Node.getInstance() == null || Node.getInstance().getLiveData() == null
-        || Node.getInstance().getLiveData().getValue() == null) {
+    if (Node.getInstance(getActivity().getApplication()).getLiveData().getValue() == null) {
       return false;
     }
 
-    return Node.getInstance().getLiveData().getValue();
+    return Node.getInstance(getActivity().getApplication()).getLiveData().getValue();
   }
 
   protected void onNodeStateChanged(Boolean newState) {
@@ -83,7 +82,7 @@ public class BaseDialogFragment extends DialogFragment {
 
   private void registerNodeIdlingResources() {
     nodeIdlingResource = new NodeIdlingResource();
-    Node.getInstance().getLiveData().observe(this, new Observer<Boolean>() {
+    Node.getInstance(getActivity().getApplication()).getLiveData().observe(this, new Observer<Boolean>() {
       @Override
       public void onChanged(Boolean aBoolean) {
         nodeIdlingResource.setIdleState(aBoolean);

@@ -47,7 +47,7 @@ object RequestsManager {
   }
 
   fun encryptMsg(requestCode: Int, msg: String) {
-    load(requestCode, EncryptMsgRequest(msg, Arrays.asList(*TestData.getMixedPubKeys())))
+    load(requestCode, EncryptMsgRequest(msg, Arrays.asList(*TestData.mixedPubKeys)))
   }
 
   fun decryptMsg(requestCode: Int, msg: String, prvKeys: Array<PgpKeyInfo>) {
@@ -55,11 +55,11 @@ object RequestsManager {
   }
 
   fun encryptFile(requestCode: Int, data: ByteArray) {
-    load(requestCode, EncryptFileRequest(data, "file.txt", Arrays.asList(*TestData.getMixedPubKeys())))
+    load(requestCode, EncryptFileRequest(data, "file.txt", Arrays.asList(*TestData.mixedPubKeys)))
   }
 
   fun encryptFile(requestCode: Int, context: Context, fileUri: Uri) {
-    load(requestCode, EncryptFileRequest(context, fileUri, "file.txt", Arrays.asList(*TestData.getMixedPubKeys())))
+    load(requestCode, EncryptFileRequest(context, fileUri, "file.txt", Arrays.asList(*TestData.mixedPubKeys)))
   }
 
   fun decryptFile(requestCode: Int, encryptedData: ByteArray, prvKeys: Array<PgpKeyInfo>) {

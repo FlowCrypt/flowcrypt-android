@@ -3,17 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.node.exception;
+package com.flowcrypt.email.node.exception
 
 /**
  * @author DenBond7
  */
-public class NodeNotReady extends Exception {
-  public NodeNotReady(String message, Throwable cause) {
-    super(message, cause);
-  }
+class NodeNotReady : Exception {
+  constructor(message: String, cause: Throwable) : super(message, cause)
 
-  public NodeNotReady(String message) {
-    super(message);
-  }
+  constructor(message: String) : super(message)
 }

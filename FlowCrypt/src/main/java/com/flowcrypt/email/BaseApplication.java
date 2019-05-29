@@ -11,7 +11,6 @@ import android.content.Context;
 
 import com.flowcrypt.email.jobscheduler.JobIdManager;
 import com.flowcrypt.email.jobscheduler.SyncJobService;
-import com.flowcrypt.email.node.Node;
 import com.flowcrypt.email.ui.NotificationChannelManager;
 import com.flowcrypt.email.util.GeneralUtil;
 
@@ -44,8 +43,6 @@ public abstract class BaseApplication extends Application {
       scheduler.cancel(JobIdManager.JOB_TYPE_SYNC);
     }
     SyncJobService.schedule(this);
-
-    Node.init(this);
   }
 
   @Override

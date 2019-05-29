@@ -3,122 +3,120 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.node;
+package com.flowcrypt.email.node
 
-import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
+import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
 
 /**
  * This class describes a logic of running Node.js using the native code. Here we run Node.js server with given
  * parameters. This is a singleton. Because we need to be sure we have only one instance of Node.js which is run.
  *
- * @see <a href="https://code.janeasystems.com/nodejs-mobile/getting-started-android">Node.js for Mobile Apps</a>
+ * @see [Node.js for Mobile Apps](https://code.janeasystems.com/nodejs-mobile/getting-started-android)
  */
-final class NativeNode {
+internal class NativeNode private constructor(private val nodeSecret: NodeSecret) {
 
-  private static NativeNode ourInstance;
-  private static volatile boolean isReady;
-
-  static {
-    // Used to load the 'native-lib' library on application startup
-    System.loadLibrary("native-lib");
-    System.loadLibrary("node"); // takes about 100ms
-  }
-
-  private boolean isRunning;
-  private NodeSecret nodeSecret;
-
-  private NativeNode(NodeSecret nodeSecret) {
-    this.nodeSecret = nodeSecret;
-  }
-
-  public static NativeNode getInstance(NodeSecret nodeSecret) {
-    if (ourInstance == null) {
-      ourInstance = new NativeNode(nodeSecret);
-    }
-    return ourInstance;
-  }
-
-  /**
-   * Will be called by native code
-   */
-  public static void receiveNativeMessageFromNode(String msg) {
-    if (msg.startsWith("listening on ")) {
-      isReady = true;
-    }
-
-    if (GeneralUtil.isDebugBuild()) {
-      System.out.println("NODEJS-NATIVE-MSG[" + msg + "]");
-    }
-  }
+  private var isRunning: Boolean = false
 
   /**
    * A native method that is implemented by the 'native-lib' native library
    */
-  @SuppressWarnings("JniMissingFunction")
-  public native Integer startNodeWithArguments(String[] arguments);
+  external fun startNodeWithArguments(arguments: Array<String>): Int?
 
   /**
    * A native method that is implemented by the 'native-lib' native library
    */
-  @SuppressWarnings("JniMissingFunction")
-  public native void sendNativeMessageToNode(String msg);
+  external fun sendNativeMessageToNode(msg: String)
 
   /**
    * Run the Node.js using input parameters.
    *
    * @param jsCode An input js code
    */
-  void start(final String jsCode) { // takes just a few ms
+  fun start(jsCode: String) { // takes just a few ms
     if (!isRunning) {
-      isRunning = true;
-      new Thread(new Runnable() {
-        @Override
-        public void run() {
-          Thread.currentThread().setName(NativeNode.class.getSimpleName());
-          startSynchronously(jsCode);
-          isRunning = false; // if it ever stops running, set isRunning back to false
-          isReady = false;
-        }
-      }).start();
+      isRunning = true
+      Thread(Runnable {
+        Thread.currentThread().name = NativeNode::class.java.simpleName
+        startSynchronously(jsCode)
+        isRunning = false // if it ever stops running, set isRunning back to false
+        isReady = false
+      }).start()
     }
   }
 
-  boolean isReady() {
-    return isReady;
+  fun isReady(): Boolean {
+    return isReady
   }
 
-  private void startSynchronously(String jsCode) {
+  private fun startSynchronously(jsCode: String) {
     try {
       // slow!
       // takes 1750ms to start node with no scripts - using node-chakracore v8.6.0
       // startNodeWithArguments(new String[]{"node", "-e", "console.log('NODE: ' + Date.now())"});
       // about 3500ms with scripts
-      startNodeWithArguments(new String[]{"node", "-e", getJsSrc(jsCode)});
-    } catch (Exception e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
+      startNodeWithArguments(arrayOf("node", "-e", getJsSrc(jsCode)))
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
     }
+
   }
 
-  private String getJsSrc(String jsCode) {
-    String src = "";
-    src += genConst("NODE_UNIX_SOCKET", String.valueOf(nodeSecret.getUnixSocketFilePath())); // not used yet
-    src += genConst("NODE_PORT", String.valueOf(nodeSecret.getPort()));
-    src += genConst("NODE_SSL_CA", nodeSecret.getCa());
-    src += genConst("NODE_SSL_CRT", nodeSecret.getCrt());
-    src += genConst("NODE_SSL_KEY", nodeSecret.getKey());
-    src += genConst("NODE_AUTH_HEADER", nodeSecret.getAuthHeader());
-    src += genConst("NODE_DEBUG", "false");
-    src += genConst("APP_ENV", "prod");
-    src += genConst("APP_VERSION", BuildConfig.VERSION_NAME.split("_")[0]);
-    src += genConst("APP_PROFILE", "false");
-    src += jsCode;
-    return src;
+  private fun getJsSrc(jsCode: String): String {
+    var src = ""
+    src += genConst("NODE_UNIX_SOCKET", nodeSecret.unixSocketFilePath) // not used yet
+    src += genConst("NODE_PORT", nodeSecret.port.toString())
+    src += genConst("NODE_SSL_CA", nodeSecret.ca)
+    src += genConst("NODE_SSL_CRT", nodeSecret.crt)
+    src += genConst("NODE_SSL_KEY", nodeSecret.key)
+    src += genConst("NODE_AUTH_HEADER", nodeSecret.authHeader)
+    src += genConst("NODE_DEBUG", "false")
+    src += genConst("APP_ENV", "prod")
+    src += genConst("APP_VERSION", BuildConfig.VERSION_NAME.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0])
+    src += genConst("APP_PROFILE", "false")
+    src += jsCode
+    return src
   }
 
-  private String genConst(String name, String value) {
-    return "const " + name + " = `" + value + "`;\n";
+  private fun genConst(name: String, value: String?): String {
+    return "const $name = `$value`;\n"
+  }
+
+  companion object {
+
+    @Volatile
+    private var INSTANCE: NativeNode? = null
+
+    @Volatile
+    private var isReady: Boolean = false
+
+    init {
+      // Used to load the 'native-lib' library on application startup
+      System.loadLibrary("native-lib")
+      System.loadLibrary("node") // takes about 100ms
+    }
+
+    @JvmStatic
+    fun getInstance(nodeSecret: NodeSecret): NativeNode {
+      return INSTANCE ?: synchronized(this) {
+        INSTANCE ?: NativeNode(nodeSecret).also { INSTANCE = it }
+      }
+    }
+
+    /**
+     * Will be called by native code
+     */
+    @JvmStatic
+    fun receiveNativeMessageFromNode(msg: String) {
+      if (msg.startsWith("listening on ")) {
+        isReady = true
+      }
+
+      if (GeneralUtil.isDebugBuild()) {
+        println("NODEJS-NATIVE-MSG[$msg]")
+      }
+    }
   }
 }

@@ -3,153 +3,142 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.node;
+package com.flowcrypt.email.node
 
-import android.app.Application;
-import android.content.Context;
-import android.content.res.AssetManager;
-
-import com.flowcrypt.email.api.retrofit.node.RequestsManager;
-import com.flowcrypt.email.api.retrofit.node.gson.NodeGson;
-import com.flowcrypt.email.node.exception.NodeNotReady;
-import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.google.gson.Gson;
-
-import org.apache.commons.io.IOUtils;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
-import androidx.annotation.NonNull;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+import android.app.Application
+import android.content.Context
+import android.content.res.AssetManager
+import androidx.lifecycle.MutableLiveData
+import com.flowcrypt.email.api.retrofit.node.RequestsManager
+import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
+import com.flowcrypt.email.node.exception.NodeNotReady
+import com.flowcrypt.email.security.KeyStoreCryptoManager
+import org.apache.commons.io.IOUtils
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.nio.charset.StandardCharsets
 
 /**
  * This is node.js manager.
  */
-public final class Node {
-  private static final String NODE_SECRETS_CACHE_FILENAME = "flowcrypt-node-secrets-cache";
+class Node private constructor(app: Application) {
+  @Volatile
+  private var nativeNode: NativeNode? = null
 
-  private static final Node INSTANCE = new Node();
-  private volatile NativeNode nativeNode;
-  private volatile NodeSecret nodeSecret;
-  private volatile RequestsManager requestsManager;
-  private MutableLiveData<Boolean> liveData;
+  @Volatile
+  private var nodeSecret: NodeSecret? = null
 
-  private Node() {
-    liveData = new MutableLiveData<>();
+  @Volatile
+  var requestsManager: RequestsManager? = null
+    private set
+
+  init {
+    init(app)
   }
 
-  public static Node getInstance() {
-    return INSTANCE;
-  }
+  val liveData: MutableLiveData<Boolean> = MutableLiveData()
 
-  public static void init(@NonNull Application app) {
-    Node node = Node.getInstance();
-    node.start(app);
-  }
-
-  public LiveData<Boolean> getLiveData() {
-    return liveData;
-  }
-
-  public RequestsManager getRequestsManager() {
-    return requestsManager;
-  }
-
-  public NativeNode getNativeNode() {
-    return nativeNode;
-  }
-
-  public NodeSecret getNodeSecret() {
-    return nodeSecret;
-  }
-
-  private void start(final Context context) {
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        Thread.currentThread().setName("Node");
-        try {
-          NodeSecretCerts certs = getCachedNodeSecretCerts(context);
-          if (certs == null) {
-            nodeSecret = new NodeSecret(context.getFilesDir().getAbsolutePath());
-            saveNodeSecretCertsToCache(context, nodeSecret.getCache());
-          } else {
-            nodeSecret = new NodeSecret(context.getFilesDir().getAbsolutePath(), certs);
-          }
-          requestsManager = RequestsManager.INSTANCE;
-          requestsManager.init(nodeSecret);
-          start(context.getAssets(), nodeSecret);
-          waitUntilReady();
-          liveData.postValue(true);
-        } catch (Exception e) {
-          e.printStackTrace();
-          liveData.postValue(false);
-        }
-      }
-    }).start();
-  }
-
-  private void start(AssetManager am, NodeSecret nodeSecret) throws IOException {
-    if (nativeNode == null) {
-      nativeNode = NativeNode.getInstance(nodeSecret); // takes about 100ms due to static native loads
-    }
-    nativeNode.start(IOUtils.toString(am.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8));
-  }
-
-  private void waitUntilReady() throws NodeNotReady {
-    if (nativeNode == null) {
-      throw new NodeNotReady("NativeNode not started. Call Node.start first");
-    }
-    while (!nativeNode.isReady()) {
+  private fun init(context: Context) {
+    Thread(Runnable {
+      Thread.currentThread().name = "Node"
       try {
-        Thread.sleep(50);
-      } catch (InterruptedException e) {
-        throw new NodeNotReady("Was interrupted while waiting for node to become ready", e);
+        val certs = getCachedNodeSecretCerts(context)
+        if (certs == null) {
+          nodeSecret = NodeSecret(context.filesDir.absolutePath)
+          saveNodeSecretCertsToCache(context, nodeSecret!!.cache)
+        } else {
+          nodeSecret = NodeSecret(context.filesDir.absolutePath, certs)
+        }
+        requestsManager = RequestsManager
+        requestsManager!!.init(nodeSecret!!)
+        start(context.assets, nodeSecret)
+        waitUntilReady()
+        liveData.postValue(true)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        liveData.postValue(false)
+      }
+    }).start()
+  }
+
+  @Throws(IOException::class)
+  private fun start(am: AssetManager, nodeSecret: NodeSecret?) {
+    if (nativeNode == null) {
+      nativeNode = NativeNode.getInstance(nodeSecret!!) // takes about 100ms due to static native loads
+    }
+    nativeNode!!.start(IOUtils.toString(am.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8))
+  }
+
+  @Throws(NodeNotReady::class)
+  private fun waitUntilReady() {
+    if (nativeNode == null) {
+      throw NodeNotReady("NativeNode not started. Call Node.start first")
+    }
+    while (!nativeNode!!.isReady()) {
+      try {
+        Thread.sleep(50)
+      } catch (e: InterruptedException) {
+        throw NodeNotReady("Was interrupted while waiting for node to become ready", e)
       }
     }
   }
 
-  private void saveNodeSecretCertsToCache(Context context, NodeSecretCerts nodeSecretCerts) {
-    Gson gson = NodeGson.getGson();
-    String data = gson.toJson(nodeSecretCerts);
-    try (FileOutputStream outputStream = context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE)) {
-      KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context);
-      String spec = KeyStoreCryptoManager.generateAlgorithmParameterSpecString();
-      String encryptedData = keyStoreCryptoManager.encrypt(data, spec);
-      outputStream.write(spec.getBytes());
-      outputStream.write('\n');
-      outputStream.write(encryptedData.getBytes());
-    } catch (Exception e) {
-      throw new RuntimeException("Could not save certs cache", e);
+  private fun saveNodeSecretCertsToCache(context: Context, nodeSecretCerts: NodeSecretCerts) {
+    val gson = NodeGson.gson
+    val data = gson.toJson(nodeSecretCerts)
+    try {
+      context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE).use { outputStream ->
+        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
+        val spec = KeyStoreCryptoManager.generateAlgorithmParameterSpecString()
+        val encryptedData = keyStoreCryptoManager.encrypt(data, spec)
+        outputStream.write(spec.toByteArray())
+        outputStream.write('\n'.toInt())
+        outputStream.write(encryptedData.toByteArray())
+      }
+    } catch (e: Exception) {
+      throw RuntimeException("Could not save certs cache", e)
     }
+
   }
 
-  private NodeSecretCerts getCachedNodeSecretCerts(Context context) {
-    try (FileInputStream inputStream = context.openFileInput(NODE_SECRETS_CACHE_FILENAME)) {
-      Gson gson = NodeGson.getGson();
-      String rawData = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+  private fun getCachedNodeSecretCerts(context: Context): NodeSecretCerts? {
+    try {
+      context.openFileInput(NODE_SECRETS_CACHE_FILENAME).use { inputStream ->
+        val gson = NodeGson.gson
+        val rawData = IOUtils.toString(inputStream, StandardCharsets.UTF_8)
 
-      int splitPosition = rawData.indexOf('\n');
+        val splitPosition = rawData.indexOf('\n')
 
-      if (splitPosition == -1) {
-        throw new IllegalArgumentException("wrong rawData");
+        if (splitPosition == -1) {
+          throw IllegalArgumentException("wrong rawData")
+        }
+
+        val spec = rawData.substring(0, splitPosition)
+
+        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
+        val decryptedData = keyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1), spec)
+        return gson.fromJson(decryptedData, NodeSecretCerts::class.java)
       }
+    } catch (e: FileNotFoundException) {
+      e.printStackTrace()
+      return null
+    } catch (e: Exception) {
+      throw RuntimeException("Could not load certs cache", e)
+    }
 
-      String spec = rawData.substring(0, splitPosition);
+  }
 
-      KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context);
-      String decryptedData = keyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1), spec);
-      return gson.fromJson(decryptedData, NodeSecretCerts.class);
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-      return null;
-    } catch (Exception e) {
-      throw new RuntimeException("Could not load certs cache", e);
+  companion object {
+    private const val NODE_SECRETS_CACHE_FILENAME = "flowcrypt-node-secrets-cache"
+
+    @Volatile
+    private var INSTANCE: Node? = null
+
+    @JvmStatic
+    fun getInstance(app: Application): Node {
+      return INSTANCE ?: synchronized(this) {
+        INSTANCE ?: Node(app).also { INSTANCE = it }
+      }
     }
   }
 }

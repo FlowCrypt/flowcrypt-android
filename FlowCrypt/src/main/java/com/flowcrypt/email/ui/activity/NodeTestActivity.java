@@ -47,7 +47,7 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   private RequestsManager requestsManager;
 
   public NodeTestActivity() {
-    Node node = Node.getInstance();
+    Node node = Node.getInstance(getApplication());
     requestsManager = node.getRequestsManager();
   }
 
