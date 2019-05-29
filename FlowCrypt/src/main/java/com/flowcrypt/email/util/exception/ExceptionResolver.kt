@@ -3,29 +3,25 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.exception;
+package com.flowcrypt.email.util.exception
 
-import android.text.TextUtils;
-
-import com.google.android.gms.auth.GoogleAuthException;
-import com.google.android.gms.auth.UserRecoverableAuthException;
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.sun.mail.iap.ConnectionException;
-import com.sun.mail.smtp.SMTPSendFailedException;
-import com.sun.mail.util.MailConnectException;
-
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-
-import javax.crypto.BadPaddingException;
-import javax.mail.AuthenticationFailedException;
-import javax.mail.FolderClosedException;
-import javax.mail.MessagingException;
-import javax.mail.StoreClosedException;
-import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLProtocolException;
+import com.google.android.gms.auth.GoogleAuthException
+import com.google.android.gms.auth.UserRecoverableAuthException
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
+import com.sun.mail.iap.ConnectionException
+import com.sun.mail.smtp.SMTPSendFailedException
+import com.sun.mail.util.MailConnectException
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.crypto.BadPaddingException
+import javax.mail.AuthenticationFailedException
+import javax.mail.FolderClosedException
+import javax.mail.MessagingException
+import javax.mail.StoreClosedException
+import javax.net.ssl.SSLHandshakeException
+import javax.net.ssl.SSLProtocolException
 
 /**
  * This class decides what an error can be handled by ACRA.
@@ -36,7 +32,7 @@ import javax.net.ssl.SSLProtocolException;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ExceptionResolver {
+object ExceptionResolver {
 
   /**
    * Check if need to handle a happened error with  ACRA
@@ -44,75 +40,74 @@ public class ExceptionResolver {
    * @param e A happened error
    * @return true if need to handle such exception with ACRA and send logs to the backend, false - otherwise.
    */
-  public static boolean isHandlingNeeded(Throwable e) {
-    if ((e instanceof MailConnectException)
-        || (e instanceof SMTPSendFailedException)
-        || (e instanceof UnknownHostException)
-        || (e instanceof SocketTimeoutException)
-        || (e instanceof ConnectionException)
-        || (e instanceof java.net.ConnectException)
-        || (e instanceof UserRecoverableAuthException)
-        || (e instanceof AuthenticationFailedException)
-        || (e instanceof UserRecoverableAuthIOException)
-        || (e instanceof FlowCryptException)) {
-      return false;
+  fun isHandlingNeeded(e: Throwable): Boolean {
+    if (e is MailConnectException
+        || e is SMTPSendFailedException
+        || e is UnknownHostException
+        || e is SocketTimeoutException
+        || e is ConnectionException
+        || e is java.net.ConnectException
+        || e is UserRecoverableAuthException
+        || e is AuthenticationFailedException
+        || e is UserRecoverableAuthIOException
+        || e is FlowCryptException) {
+      return false
     }
 
-    if (e instanceof IOException) {
+    if (e is IOException) {
       //Google network errors.
-      if ("NetworkError".equalsIgnoreCase(e.getMessage())
-          || "Error on service connection.".equalsIgnoreCase(e.getMessage())) {
-        return false;
+      if ("NetworkError".equals(e.message, ignoreCase = true) || "Error on service connection.".equals(e.message, ignoreCase = true)) {
+        return false
       }
 
-      if (e instanceof GoogleJsonResponseException) {
-        return false;
+      if (e is GoogleJsonResponseException) {
+        return false
       }
     }
 
-    if (e instanceof SSLHandshakeException
-        || e instanceof SSLProtocolException
-        || e instanceof MessagingException) {
-      if (!TextUtils.isEmpty(e.getMessage())) {
-        if (e.getMessage().contains("Connection closed by peer")
-            || e.getMessage().contains("I/O error during system call")
-            || e.getMessage().contains("Failure in SSL library, usually a protocol error")
-            || e.getMessage().contains("Handshake failed")
-            || e.getMessage().contains("Exception reading response")
-            || e.getMessage().contains("connection failure")) {
-          return false;
+    if (e is SSLHandshakeException
+        || e is SSLProtocolException
+        || e is MessagingException) {
+      e.message?.let {
+        if (e.message!!.contains("Connection closed by peer")
+            || e.message!!.contains("I/O error during system call")
+            || e.message!!.contains("Failure in SSL library, usually a protocol error")
+            || e.message!!.contains("Handshake failed")
+            || e.message!!.contains("Exception reading response")
+            || e.message!!.contains("connection failure")) {
+          return false
         }
       }
     }
 
-    if (e instanceof StoreClosedException || e instanceof FolderClosedException) {
+    if (e is StoreClosedException || e is FolderClosedException) {
       //Connection limit exceeded
-      if ("failed to create new store connection".equalsIgnoreCase(e.getMessage())) {
-        return false;
+      if ("failed to create new store connection".equals(e.message, ignoreCase = true)) {
+        return false
       }
 
-      if ("Lost folder connection to server".equalsIgnoreCase(e.getMessage())) {
-        return false;
-      }
-    }
-
-    if (e instanceof GoogleAuthException) {
-      if ("InternalError".equalsIgnoreCase(e.getMessage())) {
-        return false;
+      if ("Lost folder connection to server".equals(e.message, ignoreCase = true)) {
+        return false
       }
     }
 
-    if (e instanceof RuntimeException) {
-      if ("error:04000044:RSA routines:OPENSSL_internal:internal error".equalsIgnoreCase(e.getMessage())) {
-        return false;
+    if (e is GoogleAuthException) {
+      if ("InternalError".equals(e.message, ignoreCase = true)) {
+        return false
       }
     }
 
-    if (e instanceof BadPaddingException) {
-      String errorMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error";
-      return !errorMsg.equalsIgnoreCase(e.getMessage());
+    if (e is RuntimeException) {
+      if ("error:04000044:RSA routines:OPENSSL_internal:internal error".equals(e.message, ignoreCase = true)) {
+        return false
+      }
     }
 
-    return true;
+    if (e is BadPaddingException) {
+      val errorMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error"
+      return !errorMsg.equals(e.message, ignoreCase = true)
+    }
+
+    return true
   }
 }

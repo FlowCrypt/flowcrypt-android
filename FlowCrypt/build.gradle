@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 def keystoreProperties = new Properties()
 File propertiesFile = project.file("keystore.properties")
@@ -254,8 +255,8 @@ dependencies {
     }
 
     implementation "com.github.bumptech.glide:glide:${rootProject.ext.glideVersion}"
-    annotationProcessor "com.github.bumptech.glide:compiler:${rootProject.ext.glideVersion}"
-    annotationProcessor "androidx.annotation:annotation:${rootProject.ext.androidxBaseVersion}"
+    kapt "com.github.bumptech.glide:compiler:${rootProject.ext.glideVersion}"
+    kapt "androidx.annotation:annotation:${rootProject.ext.androidxBaseVersion}"
 
     implementation 'commons-io:commons-io:2.6'
     prodImplementation 'ch.acra:acra:4.11'

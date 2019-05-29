@@ -3,9 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util;
+package com.flowcrypt.email.util
 
-import android.util.Log;
+import android.util.Log
 
 /**
  * @author Denis Bondarenko
@@ -13,10 +13,13 @@ import android.util.Log;
  * Time: 9:33 PM
  * E-mail: DenBond7@gmail.com
  */
-public class LogsUtil {
-  public static void d(String tag, String msg) {
-    if (GeneralUtil.isDebugBuild()) {
-      Log.d(tag, msg);
+class LogsUtil {
+  companion object {
+    @JvmStatic
+    fun d(tag: String, msg: String) {
+      if (GeneralUtil.isDebugBuild()) {
+        Log.d(tag, msg)
+      }
     }
   }
 }

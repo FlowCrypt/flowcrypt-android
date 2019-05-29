@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.exception;
+package com.flowcrypt.email.util.exception
 
 /**
  * This exception means a limit is reached.
@@ -13,8 +13,4 @@ package com.flowcrypt.email.util.exception;
  * Time: 1:43 PM
  * E-mail: DenBond7@gmail.com
  */
-public class FlowCryptLimitException extends FlowCryptException {
-  public FlowCryptLimitException(String message) {
-    super(message);
-  }
-}
+class FlowCryptLimitException(message: String) : FlowCryptException(message)

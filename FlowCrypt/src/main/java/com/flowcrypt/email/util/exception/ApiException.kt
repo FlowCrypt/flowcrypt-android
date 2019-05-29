@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.exception;
+package com.flowcrypt.email.util.exception
 
-import com.flowcrypt.email.api.retrofit.response.base.ApiError;
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 
-import java.io.IOException;
+import java.io.IOException
 
 /**
  * An API exception.
@@ -18,8 +18,5 @@ import java.io.IOException;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ApiException extends IOException {
-  public ApiException(ApiError apiError) {
-    super("API error: code = " + apiError.getCode() + ", message = " + apiError.getMsg());
-  }
-}
+class ApiException(apiError: ApiError) :
+    IOException("API error: code = " + apiError.code + ", message = " + apiError.msg)

@@ -3,23 +3,20 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util;
+package com.flowcrypt.email.util
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.app.Activity;
-import android.content.Context;
-import android.os.Build;
-import android.text.Html;
-import android.text.Spanned;
-import android.text.TextUtils;
-import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.TextView;
-
-import com.google.android.material.snackbar.Snackbar;
-
-import androidx.annotation.NonNull;
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.app.Activity
+import android.content.Context
+import android.os.Build
+import android.text.Html
+import android.text.Spanned
+import android.text.TextUtils
+import android.view.View
+import android.view.inputmethod.InputMethodManager
+import android.widget.TextView
+import com.google.android.material.snackbar.Snackbar
 
 /**
  * User interface util methods.
@@ -30,152 +27,140 @@ import androidx.annotation.NonNull;
  * E-mail: DenBond7@gmail.com
  */
 
-public class UIUtil {
-  /**
-   * Show some information as Snackbar.
-   *
-   * @param view    The view to find a parent from.
-   * @param msgText The text to show.  Can be formatted text..
-   */
-  public static Snackbar showInfoSnackbar(View view, String msgText) {
-    Snackbar snackbar = Snackbar.make(view, msgText, Snackbar.LENGTH_INDEFINITE)
-        .setAction(android.R.string.ok, new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-          }
-        });
-    snackbar.show();
+class UIUtil {
+  companion object {
+    /**
+     * Show some information as Snackbar.
+     *
+     * @param view    The view to find a parent from.
+     * @param msgText The text to show.  Can be formatted text..
+     */
+    @JvmStatic
+    fun showInfoSnackbar(view: View, msgText: String): Snackbar {
+      val snackbar = Snackbar.make(view, msgText, Snackbar.LENGTH_INDEFINITE)
+          .setAction(android.R.string.ok) { }
+      snackbar.show()
 
-    return snackbar;
-  }
-
-  /**
-   * Show some information as Snackbar with custom message, action button mame and listener. .
-   *
-   * @param view            The view to find a parent from.
-   * @param msgText         The text to show.  Can be formatted text..
-   * @param buttonName      The text of the Snackbar button;
-   * @param onClickListener The Snackbar button click listener.
-   */
-  public static Snackbar showSnackbar(View view, String msgText, String buttonName,
-                                      @NonNull View.OnClickListener onClickListener) {
-    return showSnackbar(view, msgText, buttonName, onClickListener, Snackbar.LENGTH_INDEFINITE);
-  }
-
-  /**
-   * Show some information as Snackbar with custom message, action button mame and listener. .
-   *
-   * @param view            The view to find a parent from.
-   * @param msgText         The text to show.  Can be formatted text..
-   * @param buttonName      The text of the Snackbar button;
-   * @param onClickListener The Snackbar button click listener.
-   * @param duration        How long to display the message.  Either {@link Snackbar#LENGTH_SHORT} or {@link
-   *                        Snackbar#LENGTH_LONG}
-   */
-  public static Snackbar showSnackbar(View view, String msgText, String buttonName,
-                                      @NonNull View.OnClickListener onClickListener, int duration) {
-    Snackbar snackbar = Snackbar.make(view, msgText, duration).setAction(buttonName, onClickListener);
-    snackbar.show();
-
-    return snackbar;
-  }
-
-  /**
-   * Request to hide the soft input window from the
-   * context of the window that is currently accepting input.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param view
-   */
-  public static void hideSoftInput(Context context, View view) {
-    InputMethodManager inputMethodManager =
-        (InputMethodManager) context.getSystemService(Activity.INPUT_METHOD_SERVICE);
-    if (view != null) {
-      inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
-    }
-  }
-
-  /**
-   * This method can be used to exchange views visibility for some interactions.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param show    When true we show the firstView, when false we show the secondView;
-   * @param first   The first view;
-   * @param second  The second view.
-   */
-  public static void exchangeViewVisibility(Context context, final boolean show, final View first, final View second) {
-    if (context == null) {
-      return;
+      return snackbar
     }
 
-    if (show && first.getVisibility() == View.VISIBLE && second.getVisibility() == View.GONE) {
-      return;
+    /**
+     * Show some information as Snackbar with custom message, action button mame and listener. .
+     *
+     * @param view            The view to find a parent from.
+     * @param msgText         The text to show.  Can be formatted text..
+     * @param buttonName      The text of the Snackbar button;
+     * @param onClickListener The Snackbar button click listener.
+     * @param duration        How long to display the message.  Either [Snackbar.LENGTH_SHORT] or [                        ][Snackbar.LENGTH_LONG]
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun showSnackbar(view: View, msgText: String, buttonName: String,
+                     onClickListener: View.OnClickListener, duration: Int = Snackbar.LENGTH_INDEFINITE): Snackbar {
+      val snackbar = Snackbar.make(view, msgText, duration).setAction(buttonName, onClickListener)
+      snackbar.show()
+
+      return snackbar
     }
 
-    if (!show && second.getVisibility() == View.VISIBLE && first.getVisibility() == View.GONE) {
-      return;
-    }
-
-    int shortAnimTime = context.getResources().getInteger(android.R.integer.config_shortAnimTime);
-
-    second.setVisibility(show ? View.GONE : View.VISIBLE);
-    second.animate().setDuration(shortAnimTime).alpha(show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-      @Override
-      public void onAnimationEnd(Animator animation) {
-        second.setVisibility(show ? View.GONE : View.VISIBLE);
-      }
-    });
-
-    first.setVisibility(show ? View.VISIBLE : View.GONE);
-    first.animate().setDuration(shortAnimTime).alpha(show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-      @Override
-      public void onAnimationEnd(Animator animation) {
-        first.setVisibility(show ? View.VISIBLE : View.GONE);
-      }
-    });
-  }
-
-  /**
-   * Set a HTML text to some TextView.
-   *
-   * @param text     The text which will be set to the current textView.
-   * @param textView The textView where we will set the HTML text.
-   */
-  @SuppressWarnings("deprecation")
-  public static void setHtmlTextToTextView(String text, TextView textView) {
-    if (textView != null && !TextUtils.isEmpty(text)) {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        textView.setText(Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY));
-      } else {
-        textView.setText(Html.fromHtml(text));
+    /**
+     * Request to hide the soft input window from the
+     * context of the window that is currently accepting input.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param view
+     */
+    @JvmStatic
+    fun hideSoftInput(context: Context, view: View?) {
+      val inputMethodManager = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+      if (view != null) {
+        inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
       }
     }
-  }
 
-  /**
-   * Get the HTML {@link Spanned} from a text.
-   *
-   * @param text The text which contains HTML.
-   */
-  @SuppressWarnings("deprecation")
-  public static CharSequence getHtmlSpannedFromText(String text) {
-    if (!TextUtils.isEmpty(text)) {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        return Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY);
-      } else {
-        return Html.fromHtml(text);
+    /**
+     * This method can be used to exchange views visibility for some interactions.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param show    When true we show the firstView, when false we show the secondView;
+     * @param first   The first view;
+     * @param second  The second view.
+     */
+    @JvmStatic
+    fun exchangeViewVisibility(context: Context?, show: Boolean, first: View, second: View) {
+      if (context == null) {
+        return
       }
-    } else return text;
-  }
 
-  /**
-   * Get a color value using the context.
-   *
-   * @param context          Interface to global information about an application environment.
-   * @param colorResourcesId The resources id of the needed color.
-   * @return The int value of the color.
-   */
-  public static int getColor(Context context, int colorResourcesId) {
-    return context.getResources().getColor(colorResourcesId, context.getTheme());
+      if (show && first.visibility == View.VISIBLE && second.visibility == View.GONE) {
+        return
+      }
+
+      if (!show && second.visibility == View.VISIBLE && first.visibility == View.GONE) {
+        return
+      }
+
+      val shortAnimTime = context.resources.getInteger(android.R.integer.config_shortAnimTime)
+
+      second.visibility = if (show) View.GONE else View.VISIBLE
+      second.animate().setDuration(shortAnimTime.toLong()).alpha((if (show) 0 else 1).toFloat()).setListener(object : AnimatorListenerAdapter() {
+        override fun onAnimationEnd(animation: Animator) {
+          second.visibility = if (show) View.GONE else View.VISIBLE
+        }
+      })
+
+      first.visibility = if (show) View.VISIBLE else View.GONE
+      first.animate().setDuration(shortAnimTime.toLong()).alpha((if (show) 1 else 0).toFloat()).setListener(object : AnimatorListenerAdapter() {
+        override fun onAnimationEnd(animation: Animator) {
+          first.visibility = if (show) View.VISIBLE else View.GONE
+        }
+      })
+    }
+
+    /**
+     * Set a HTML text to some TextView.
+     *
+     * @param text     The text which will be set to the current textView.
+     * @param textView The textView where we will set the HTML text.
+     */
+    @JvmStatic
+    fun setHtmlTextToTextView(text: String, textView: TextView?) {
+      if (textView != null && !TextUtils.isEmpty(text)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+          textView.text = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY)
+        } else {
+          textView.text = Html.fromHtml(text)
+        }
+      }
+    }
+
+    /**
+     * Get the HTML [Spanned] from a text.
+     *
+     * @param text The text which contains HTML.
+     */
+    @JvmStatic
+    fun getHtmlSpannedFromText(text: String): CharSequence {
+      return if (!TextUtils.isEmpty(text)) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+          Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY)
+        } else {
+          Html.fromHtml(text)
+        }
+      } else
+        text
+    }
+
+    /**
+     * Get a color value using the context.
+     *
+     * @param context          Interface to global information about an application environment.
+     * @param colorResourcesId The resources id of the needed color.
+     * @return The int value of the color.
+     */
+    @JvmStatic
+    fun getColor(context: Context, colorResourcesId: Int): Int {
+      return context.resources.getColor(colorResourcesId, context.theme)
+    }
   }
 }

@@ -3,9 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.exception;
+package com.flowcrypt.email.util.exception
 
-import com.flowcrypt.email.api.retrofit.response.model.node.Error;
+import com.flowcrypt.email.api.retrofit.response.model.node.Error
 
 /**
  * This exception can occur during the encryption process.
@@ -15,8 +15,4 @@ import com.flowcrypt.email.api.retrofit.response.model.node.Error;
  * Time: 6:34 PM
  * E-mail: DenBond7@gmail.com
  */
-public class NodeEncryptException extends NodeException {
-  public NodeEncryptException(Error error) {
-    super(error);
-  }
-}
+class NodeEncryptException(error: Error) : NodeException(error)

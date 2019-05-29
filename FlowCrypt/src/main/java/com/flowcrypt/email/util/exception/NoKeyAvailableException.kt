@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.exception;
+package com.flowcrypt.email.util.exception
 
-import android.content.Context;
+import android.content.Context
 
-import com.flowcrypt.email.R;
+import com.flowcrypt.email.R
 
 /**
  * This exception means that no key available for a given email account or alias.
@@ -17,23 +17,6 @@ import com.flowcrypt.email.R;
  * Time: 12:12
  * E-mail: DenBond7@gmail.com
  */
-public class NoKeyAvailableException extends FlowCryptException {
-  private String email;
-  private String alias;
-
-  public NoKeyAvailableException(Context context, String email, String alias) {
-    super(context.getString(R.string.no_key_available_for_your_email_account,
-        context.getString(R.string.support_email)));
-
-    this.email = email;
-    this.alias = alias;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public String getAlias() {
-    return alias;
-  }
-}
+class NoKeyAvailableException(context: Context, val email: String, val alias: String? = null)
+  : FlowCryptException(context.getString(R.string.no_key_available_for_your_email_account,
+    context.getString(R.string.support_email)))

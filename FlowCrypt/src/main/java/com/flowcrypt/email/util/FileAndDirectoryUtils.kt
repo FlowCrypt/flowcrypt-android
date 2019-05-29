@@ -3,12 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util;
+package com.flowcrypt.email.util
 
-import java.io.File;
-import java.io.IOException;
-
-import androidx.annotation.NonNull;
+import java.io.File
+import java.io.IOException
 
 /**
  * This class describes methods for a work with files and directories.
@@ -19,82 +17,84 @@ import androidx.annotation.NonNull;
  * E-mail: DenBond7@gmail.com
  */
 
-public class FileAndDirectoryUtils {
-
-  /**
-   * Cleans an input directory.
-   *
-   * @param dir The directory which will be cleaned.
-   * @throws IOException An error can occur while cleaning the directory.
-   */
-  public static void deleteDir(final File dir) throws IOException {
-    cleanDir(dir);
-    deleteFile(dir);
-  }
-
-  /**
-   * Cleans an input directory.
-   *
-   * @param directory The directory which will be cleaned.
-   * @throws IOException An error can occur while cleaning the directory.
-   */
-  public static void cleanDir(final File directory) throws IOException {
-    if (directory == null || !directory.exists() || !directory.isDirectory()) {
-      return;
+class FileAndDirectoryUtils {
+  companion object {
+    /**
+     * Cleans an input directory.
+     *
+     * @param dir The directory which will be cleaned.
+     * @throws IOException An error can occur while cleaning the directory.
+     */
+    @JvmStatic
+    @Throws(IOException::class)
+    fun deleteDir(dir: File) {
+      cleanDir(dir)
+      deleteFile(dir)
     }
 
-    final File[] files = getFilesInDir(directory);
+    /**
+     * Cleans an input directory.
+     *
+     * @param directory The directory which will be cleaned.
+     * @throws IOException An error can occur while cleaning the directory.
+     */
+    @JvmStatic
+    @Throws(IOException::class)
+    fun cleanDir(directory: File?) {
+      if (directory == null || !directory.exists() || !directory.isDirectory) {
+        return
+      }
 
-    for (File file : files) {
-      deleteFile(file);
+      val files = getFilesInDir(directory)
+
+      for (file in files) {
+        deleteFile(file)
+      }
     }
-  }
 
-  /**
-   * Delete an input file. If the input file is a directory then delete the directory recursively.
-   *
-   * @param file The input file.
-   * @throws IOException An error can occur while deleting the file.
-   */
-  public static void deleteFile(File file) throws IOException {
-    if (file != null && file.exists()) {
-      if (file.isDirectory()) {
-        File[] files = file.listFiles();
-        if (files != null) {
-          for (File childFile : files) {
-            if (childFile != null && childFile.exists()) {
-              if (childFile.isDirectory()) {
-                deleteFile(childFile);
-              } else if (!childFile.delete()) {
-                throw new IOException("An error occurred while delete " + childFile);
+    /**
+     * Delete an input file. If the input file is a directory then delete the directory recursively.
+     *
+     * @param file The input file.
+     * @throws IOException An error can occur while deleting the file.
+     */
+    @JvmStatic
+    @Throws(IOException::class)
+    fun deleteFile(file: File?) {
+      if (file != null && file.exists()) {
+        if (file.isDirectory) {
+          val files = file.listFiles()
+          if (files != null) {
+            for (childFile in files) {
+              if (childFile != null && childFile.exists()) {
+                if (childFile.isDirectory) {
+                  deleteFile(childFile)
+                } else if (!childFile.delete()) {
+                  throw IOException("An error occurred while delete $childFile")
+                }
               }
             }
           }
         }
-      }
 
-      if (!file.delete()) {
-        throw new IOException("An error occurred while delete " + file);
+        if (!file.delete()) {
+          throw IOException("An error occurred while delete $file")
+        }
       }
     }
-  }
 
-  /**
-   * Get the files list of an input directory.
-   *
-   * @param directory The input directory.
-   * @return The the directory files or an empty array.
-   */
-  @NonNull
-  private static File[] getFilesInDir(final File directory) {
-    if (directory.exists() && directory.isDirectory()) {
-      File[] files = directory.listFiles();
-      if (files == null) {
-        return new File[]{};
+    /**
+     * Get the files list of an input directory.
+     *
+     * @param directory The input directory.
+     * @return The the directory files or an empty array.
+     */
+    private fun getFilesInDir(directory: File): Array<File> {
+      return if (directory.exists() && directory.isDirectory) {
+        directory.listFiles() ?: return arrayOf()
+      } else {
+        arrayOf()
       }
-      return files;
-    } else {
-      return new File[]{};
     }
   }
 }

@@ -3,39 +3,31 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util;
+package com.flowcrypt.email.util
 
-import android.app.ActivityManager;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.Intent;
-import android.database.Cursor;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Uri;
-import android.provider.OpenableColumns;
-import android.provider.Settings;
-import android.text.TextUtils;
-import android.webkit.MimeTypeMap;
-
-import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.Constants;
-
-import org.apache.commons.io.IOUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
-
-import androidx.preference.PreferenceManager;
-
-import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
-import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
+import android.app.ActivityManager
+import android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+import android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.ContentResolver
+import android.content.Context
+import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
+import android.net.Uri
+import android.provider.OpenableColumns
+import android.provider.Settings
+import android.text.TextUtils
+import android.webkit.MimeTypeMap
+import androidx.preference.PreferenceManager
+import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
+import org.apache.commons.io.IOUtils
+import java.io.File
+import java.io.IOException
+import java.nio.charset.StandardCharsets
+import java.util.*
 
 /**
  * General util methods.
@@ -46,252 +38,270 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIB
  * E-mail: DenBond7@gmail.com
  */
 
-public class GeneralUtil {
-  /**
-   * Checking for an Internet connection.
-   * See https://developer.android.com/training/monitoring-device-state/connectivity-monitoring#DetermineConnection.
-   * Because {@link NetworkInfo#isConnectedOrConnecting()} is deprecated we will use {@link NetworkInfo#isConnected()}
-   *
-   * @param context Interface to global information about an application environment.
-   * @return <tt>boolean</tt> true - a connection available, false if otherwise.
-   */
-  public static boolean isConnected(Context context) {
-    ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-    NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-    return activeNetwork != null && activeNetwork.isConnected();
-  }
+class GeneralUtil {
+  companion object {
+    /**
+     * Check is the app foregrounded or visible.
+     *
+     * @return true if the app is foregrounded or visible.
+     */
+    @JvmStatic
+    fun isAppForegrounded(): Boolean {
+      val appProcessInfo = ActivityManager.RunningAppProcessInfo()
+      ActivityManager.getMyMemoryState(appProcessInfo)
+      return appProcessInfo.importance == IMPORTANCE_FOREGROUND || appProcessInfo.importance == IMPORTANCE_VISIBLE
+    }
 
-  /**
-   * Show the application system settings screen.
-   *
-   * @param context Interface to global information about an application environment.
-   */
-  public static void showAppSettingScreen(Context context) {
-    Intent intent = new Intent();
-    intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-    Uri uri = Uri.fromParts("package", context.getPackageName(), null);
-    intent.setData(uri);
-    context.startActivity(intent);
-  }
+    /**
+     * This method checks is it a debug build.
+     *
+     * @return true - if the current build is a debug build.
+     */
+    @JvmStatic
+    fun isDebugBuild(): Boolean = "debug" == BuildConfig.BUILD_TYPE
 
-  /**
-   * Read a file by his Uri and return him as {@link String}.
-   *
-   * @param uri The {@link Uri} of the file.
-   * @return <tt>{@link String}</tt> which contains a file.
-   * @throws IOException will thrown for example if the file not found
-   */
-  public static String readFileFromUriToString(Context context, Uri uri) throws IOException {
-    InputStream inputStream = context.getContentResolver().openInputStream(uri);
-    return inputStream != null ? IOUtils.toString(inputStream, StandardCharsets.UTF_8) : null;
-  }
+    /**
+     * Checking for an Internet connection.
+     * See https://developer.android.com/training/monitoring-device-state/connectivity-monitoring#DetermineConnection.
+     * Because [NetworkInfo.isConnectedOrConnecting] is deprecated we will use [NetworkInfo.isConnected]
+     *
+     * @param context Interface to global information about an application environment.
+     * @return <tt>boolean</tt> true - a connection available, false if otherwise.
+     */
+    @JvmStatic
+    fun isConnected(context: Context): Boolean {
+      val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+      val activeNetwork = cm.activeNetworkInfo
+      return activeNetwork != null && activeNetwork.isConnected
+    }
 
-  /**
-   * Remove all comments from the given HTML {@link String}.
-   *
-   * @param text The given string.
-   * @return <tt>{@link String}</tt> which doesn't contain HTML comments.
-   */
-  public static String removeAllComments(String text) {
-    return TextUtils.isEmpty(text) ? text : text.replaceAll("<!--[\\s\\S]*?-->", "");
-  }
+    /**
+     * Show the application system settings screen.
+     *
+     * @param context Interface to global information about an application environment.
+     */
+    @JvmStatic
+    fun showAppSettingScreen(context: Context) {
+      val intent = Intent()
+      intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+      val uri = Uri.fromParts("package", context.packageName, null)
+      intent.data = uri
+      context.startActivity(intent)
+    }
 
-  /**
-   * Get a file size from his Uri.
-   *
-   * @param fileUri The {@link Uri} of the file.
-   * @return The size of the file in bytes.
-   */
-  public static long getFileSizeFromUri(Context context, Uri fileUri) {
-    long fileSize = -1;
+    /**
+     * Read a file by his Uri and return him as [String].
+     *
+     * @param uri The [Uri] of the file.
+     * @return <tt>[String]</tt> which contains a file.
+     * @throws IOException will thrown for example if the file not found
+     */
+    @JvmStatic
+    @Throws(IOException::class)
+    fun readFileFromUriToString(context: Context, uri: Uri): String? {
+      val inputStream = context.contentResolver.openInputStream(uri)
+      return if (inputStream != null) IOUtils.toString(inputStream, StandardCharsets.UTF_8) else null
+    }
 
-    if (fileUri != null) {
-      if (ContentResolver.SCHEME_FILE.equalsIgnoreCase(fileUri.getScheme())) {
-        fileSize = new File(fileUri.getPath()).length();
-      } else {
-        Cursor returnCursor = context.getContentResolver().query(fileUri,
-            new String[]{OpenableColumns.SIZE}, null, null, null);
+    /**
+     * Remove all comments from the given HTML [String].
+     *
+     * @param text The given string.
+     * @return <tt>[String]</tt> which doesn't contain HTML comments.
+     */
+    @JvmStatic
+    fun removeAllComments(text: String): String {
+      return if (TextUtils.isEmpty(text)) text else text.replace("<!--[\\s\\S]*?-->".toRegex(), "")
+    }
 
-        if (returnCursor != null) {
-          if (returnCursor.moveToFirst()) {
-            int index = returnCursor.getColumnIndex(OpenableColumns.SIZE);
-            if (index >= 0) {
-              fileSize = returnCursor.getLong(index);
+    /**
+     * Get a file size from his Uri.
+     *
+     * @param fileUri The [Uri] of the file.
+     * @return The size of the file in bytes.
+     */
+    @JvmStatic
+    fun getFileSizeFromUri(context: Context, fileUri: Uri?): Long {
+      var fileSize: Long = -1
+
+      if (fileUri != null) {
+        if (ContentResolver.SCHEME_FILE.equals(fileUri.scheme!!, ignoreCase = true)) {
+          fileSize = File(fileUri.path).length()
+        } else {
+          val returnCursor = context.contentResolver.query(fileUri,
+              arrayOf(OpenableColumns.SIZE), null, null, null)
+
+          if (returnCursor != null) {
+            if (returnCursor.moveToFirst()) {
+              val index = returnCursor.getColumnIndex(OpenableColumns.SIZE)
+              if (index >= 0) {
+                fileSize = returnCursor.getLong(index)
+              }
             }
-          }
 
-          returnCursor.close();
+            returnCursor.close()
+          }
         }
+      }
+
+      return fileSize
+    }
+
+    /**
+     * Get a file name from his Uri.
+     *
+     * @param fileUri The [Uri] of the file.
+     * @return The file name.
+     */
+    @JvmStatic
+    fun getFileNameFromUri(context: Context, fileUri: Uri?): String? {
+      var fileName: String? = null
+
+      if (fileUri != null) {
+        if (ContentResolver.SCHEME_FILE.equals(fileUri.scheme!!, ignoreCase = true)) {
+          fileName = File(fileUri.path).name
+        } else {
+          val returnCursor = context.contentResolver.query(fileUri,
+              arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+
+          if (returnCursor != null) {
+            if (returnCursor.moveToFirst()) {
+              val index = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+              if (index >= 0) {
+                fileName = returnCursor.getString(index)
+              }
+            }
+
+            returnCursor.close()
+          }
+        }
+      }
+
+      return fileName
+    }
+
+    /**
+     * Write to the file some data by his Uri and return him as [String].
+     *
+     * @param context Interface to global information about an application environment.
+     * @param data    The data which will be written.
+     * @param uri     The [Uri] of the file.
+     * @return the number of bytes copied, or -1 if &gt; Integer.MAX_VALUE
+     * @throws IOException if an I/O error occurs
+     */
+    @JvmStatic
+    @Throws(IOException::class)
+    fun writeFileFromStringToUri(context: Context, uri: Uri, data: String): Int {
+      val inputStream = IOUtils.toInputStream(data, StandardCharsets.UTF_8)
+      val outputStream = context.contentResolver.openOutputStream(uri)
+      return IOUtils.copy(inputStream, outputStream)
+    }
+
+    /**
+     * Generate an unique extra key using the application id and the class name.
+     *
+     * @param key The key of the new extra key.
+     * @param c   The class where a new extra key will be created.
+     * @return The new extra key.
+     */
+    @JvmStatic
+    fun generateUniqueExtraKey(key: String, c: Class<*>): String {
+      return BuildConfig.APPLICATION_ID + "." + c.simpleName + "." + key
+    }
+
+    /**
+     * Insert arbitrary string at regular interval into another string
+     *
+     * @param template       String template which will be inserted to the original string.
+     * @param originalString The original string which will be formatted.
+     * @param groupSize      Group size
+     * @return The formatted string.
+     */
+    @JvmStatic
+    fun doSectionsInText(template: String?, originalString: String?, groupSize: Int): String? {
+
+      if (template == null || originalString == null || groupSize <= 0 || originalString.length <= groupSize) {
+        return originalString
+      }
+
+      val stringBuilder = StringBuilder(originalString)
+
+      var i = stringBuilder.length
+      while (i > 0) {
+        stringBuilder.insert(i, template)
+        i -= groupSize
+      }
+      return stringBuilder.toString()
+    }
+
+    /**
+     * Check is current email valid.
+     *
+     * @param email The current email.
+     * @return true if the email has valid format, otherwise false.
+     */
+    @JvmStatic
+    fun isEmailValid(email: CharSequence): Boolean {
+      return !TextUtils.isEmpty(email) && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    /**
+     * Get a mime type of the input [Uri]
+     *
+     * @param context Interface to global information about an application environment.
+     * @param uri     The [Uri] of the file.
+     * @return A mime type of of the [Uri].
+     */
+    @JvmStatic
+    fun getFileMimeTypeFromUri(context: Context, uri: Uri): String? {
+      if (ContentResolver.SCHEME_CONTENT.equals(uri.scheme!!, ignoreCase = true)) {
+        val contentResolver = context.contentResolver
+        return contentResolver.getType(uri)
+      } else {
+        val fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase())
       }
     }
 
-    return fileSize;
-  }
-
-  /**
-   * Get a file name from his Uri.
-   *
-   * @param fileUri The {@link Uri} of the file.
-   * @return The file name.
-   */
-  public static String getFileNameFromUri(Context context, Uri fileUri) {
-    String fileName = null;
-
-    if (fileUri != null) {
-      if (ContentResolver.SCHEME_FILE.equalsIgnoreCase(fileUri.getScheme())) {
-        fileName = new File(fileUri.getPath()).getName();
-      } else {
-        Cursor returnCursor = context.getContentResolver().query(fileUri,
-            new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null);
-
-        if (returnCursor != null) {
-          if (returnCursor.moveToFirst()) {
-            int index = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-            if (index >= 0) {
-              fileName = returnCursor.getString(index);
-            }
-          }
-
-          returnCursor.close();
-        }
-      }
+    /**
+     * Generate a unique name for [androidx.test.espresso.IdlingResource]
+     *
+     * @param aClass The class where we will use [androidx.test.espresso.IdlingResource]
+     * @return A generated name.
+     */
+    @JvmStatic
+    fun genIdlingResourcesName(aClass: Class<*>): String {
+      return aClass.javaClass.toString() + "-" + UUID.randomUUID()
     }
 
-    return fileName;
-  }
-
-  /**
-   * Write to the file some data by his Uri and return him as {@link String}.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param data    The data which will be written.
-   * @param uri     The {@link Uri} of the file.
-   * @return the number of bytes copied, or -1 if &gt; Integer.MAX_VALUE
-   * @throws IOException if an I/O error occurs
-   */
-  public static int writeFileFromStringToUri(Context context, Uri uri, String data) throws IOException {
-    InputStream inputStream = IOUtils.toInputStream(data, StandardCharsets.UTF_8);
-    OutputStream outputStream = context.getContentResolver().openOutputStream(uri);
-    return IOUtils.copy(inputStream, outputStream);
-  }
-
-  /**
-   * Generate an unique extra key using the application id and the class name.
-   *
-   * @param key The key of the new extra key.
-   * @param c   The class where a new extra key will be created.
-   * @return The new extra key.
-   */
-  public static String generateUniqueExtraKey(String key, Class c) {
-    return BuildConfig.APPLICATION_ID + "." + c.getSimpleName() + "." + key;
-  }
-
-  /**
-   * Insert arbitrary string at regular interval into another string
-   *
-   * @param template       String template which will be inserted to the original string.
-   * @param originalString The original string which will be formatted.
-   * @param groupSize      Group size
-   * @return The formatted string.
-   */
-  public static String doSectionsInText(String template, String originalString, int groupSize) {
-
-    if (template == null || originalString == null || groupSize <= 0 || originalString.length() <= groupSize) {
-      return originalString;
+    /**
+     * Clear the [ClipData]
+     *
+     * @param context Interface to global information about an application environment.
+     */
+    @JvmStatic
+    fun clearClipboard(context: Context) {
+      val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+      clipboard.primaryClip = ClipData.newPlainText(null, "")
     }
 
-    StringBuilder stringBuilder = new StringBuilder(originalString);
+    /**
+     * Generate order number for an attachment. This value will be used for the notifications ordering.
+     *
+     * @param context Interface to global information about an application environment.
+     * @return The generated order number.
+     */
+    @JvmStatic
+    fun genAttOrderId(context: Context): Int {
+      var lastId = SharedPreferencesHelper.getInt(PreferenceManager.getDefaultSharedPreferences(context),
+          Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, 0)
 
-    for (int i = stringBuilder.length(); i > 0; i -= groupSize) {
-      stringBuilder.insert(i, template);
+      lastId++
+
+      SharedPreferencesHelper.setInt(PreferenceManager.getDefaultSharedPreferences(context),
+          Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, lastId)
+
+      return lastId
     }
-    return stringBuilder.toString();
-  }
-
-  /**
-   * Check is current email valid.
-   *
-   * @param email The current email.
-   * @return true if the email has valid format, otherwise false.
-   */
-  public static boolean isEmailValid(CharSequence email) {
-    return !TextUtils.isEmpty(email) && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
-  }
-
-  /**
-   * Get a mime type of the input {@link Uri}
-   *
-   * @param context Interface to global information about an application environment.
-   * @param uri     The {@link Uri} of the file.
-   * @return A mime type of of the {@link Uri}.
-   */
-  public static String getFileMimeTypeFromUri(Context context, Uri uri) {
-    if (ContentResolver.SCHEME_CONTENT.equalsIgnoreCase(uri.getScheme())) {
-      ContentResolver contentResolver = context.getContentResolver();
-      return contentResolver.getType(uri);
-    } else {
-      String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-      return MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
-    }
-  }
-
-  /**
-   * Generate a unique name for {@link androidx.test.espresso.IdlingResource}
-   *
-   * @param aClass The class where we will use {@link androidx.test.espresso.IdlingResource}
-   * @return A generated name.
-   */
-  public static String genIdlingResourcesName(Class<?> aClass) {
-    return aClass.getClass() + "-" + UUID.randomUUID();
-  }
-
-  /**
-   * Clear the {@link ClipData}
-   *
-   * @param context Interface to global information about an application environment.
-   */
-  public static void clearClipboard(Context context) {
-    ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-    if (clipboard != null) {
-      clipboard.setPrimaryClip(ClipData.newPlainText(null, ""));
-    }
-  }
-
-  /**
-   * Check is the app foregrounded or visible.
-   *
-   * @return true if the app is foregrounded or visible.
-   */
-  public static boolean isAppForegrounded() {
-    ActivityManager.RunningAppProcessInfo appProcessInfo = new ActivityManager.RunningAppProcessInfo();
-    ActivityManager.getMyMemoryState(appProcessInfo);
-    return appProcessInfo.importance == IMPORTANCE_FOREGROUND || appProcessInfo.importance == IMPORTANCE_VISIBLE;
-  }
-
-  /**
-   * Generate order number for an attachment. This value will be used for the notifications ordering.
-   *
-   * @param context Interface to global information about an application environment.
-   * @return The generated order number.
-   */
-  public static int genAttOrderId(Context context) {
-    int lastId = SharedPreferencesHelper.getInt(PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, 0);
-
-    lastId++;
-
-    SharedPreferencesHelper.setInt(PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, lastId);
-
-    return lastId;
-  }
-
-  /**
-   * This method checks is it a debug build.
-   *
-   * @return true - if the current build is a debug build.
-   */
-  public static boolean isDebugBuild() {
-    return "debug".equals(BuildConfig.BUILD_TYPE);
   }
 }

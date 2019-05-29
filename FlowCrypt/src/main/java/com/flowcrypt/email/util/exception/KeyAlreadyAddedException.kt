@@ -3,9 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.exception;
+package com.flowcrypt.email.util.exception
 
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 
 /**
  * This exception means that the key already added.
@@ -16,15 +16,4 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
  * E-mail: DenBond7@gmail.com
  */
 
-public class KeyAlreadyAddedException extends Exception {
-  private NodeKeyDetails keyDetails;
-
-  public KeyAlreadyAddedException(NodeKeyDetails keyDetails, String errorMsg) {
-    super(errorMsg);
-    this.keyDetails = keyDetails;
-  }
-
-  public NodeKeyDetails getKeyDetails() {
-    return keyDetails;
-  }
-}
+class KeyAlreadyAddedException(val keyDetails: NodeKeyDetails, errorMsg: String) : Exception(errorMsg)

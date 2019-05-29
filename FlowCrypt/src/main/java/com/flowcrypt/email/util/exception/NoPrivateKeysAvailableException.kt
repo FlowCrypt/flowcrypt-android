@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.exception;
+package com.flowcrypt.email.util.exception
 
-import android.content.Context;
+import android.content.Context
 
-import com.flowcrypt.email.R;
+import com.flowcrypt.email.R
 
 /**
  * This exception means no private keys available for a given email account.
@@ -17,15 +17,5 @@ import com.flowcrypt.email.R;
  * Time: 10:22
  * E-mail: DenBond7@gmail.com
  */
-public class NoPrivateKeysAvailableException extends FlowCryptException {
-  private String email;
-
-  public NoPrivateKeysAvailableException(Context context, String email) {
-    super(context.getString(R.string.there_are_no_private_keys, email));
-    this.email = email;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-}
+class NoPrivateKeysAvailableException(context: Context, val email: String)
+  : FlowCryptException(context.getString(R.string.there_are_no_private_keys, email))

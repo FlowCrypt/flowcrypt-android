@@ -16,14 +16,14 @@ import org.acra.ACRA;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ExceptionUtil extends ExceptionResolver {
+public class ExceptionUtil{
   /**
    * Handle an input {@link Exception} by {@link ACRA}.
    *
    * @param e An input {@link Exception}
    */
   public static void handleError(Throwable e) {
-    if (ExceptionResolver.isHandlingNeeded(e)) {
+    if (ExceptionResolver.INSTANCE.isHandlingNeeded(e)) {
       if (ACRA.isInitialised()) {
         ACRA.getErrorReporter().handleException(new ManualHandledException(e));
       }

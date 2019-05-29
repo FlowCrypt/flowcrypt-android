@@ -3,25 +3,23 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.google.gson;
+package com.flowcrypt.email.util.google.gson
 
-import com.flowcrypt.email.service.actionqueue.actions.Action;
-import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction;
-import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction;
-import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTableAction;
-import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction;
-import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction;
-import com.google.gson.Gson;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-
-import java.lang.reflect.Type;
+import com.flowcrypt.email.service.actionqueue.actions.Action
+import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
+import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction
+import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTableAction
+import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
+import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction
+import com.google.gson.Gson
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonParseException
+import java.lang.reflect.Type
 
 /**
- * This class describes information how serialize and deserialize {@link Action} objects using {@link Gson} framework.
+ * This class describes information how serialize and deserialize [Action] objects using [Gson] framework.
  *
  * @author Denis Bondarenko
  * Date: 30.01.2018
@@ -29,32 +27,23 @@ import java.lang.reflect.Type;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ActionJsonDeserializer implements JsonDeserializer<Action> {
+class ActionJsonDeserializer : JsonDeserializer<Action> {
 
-  @Override
-  public Action deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws
-      JsonParseException {
-    JsonObject jsonObject = json.getAsJsonObject();
-    Action.ActionType type = Action.ActionType.valueOf(jsonObject.get(Action.TAG_NAME_ACTION_TYPE).getAsString());
+  @Throws(JsonParseException::class)
+  override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Action {
+    val jsonObject = json.asJsonObject
+    val type = Action.ActionType.valueOf(jsonObject.get(Action.TAG_NAME_ACTION_TYPE).asString)
 
-    switch (type) {
-      case BACKUP_PRIVATE_KEY_TO_INBOX:
-        return context.deserialize(json, BackupPrivateKeyToInboxAction.class);
+    return when (type) {
+      Action.ActionType.BACKUP_PRIVATE_KEY_TO_INBOX -> context.deserialize(json, BackupPrivateKeyToInboxAction::class.java)
 
-      case REGISTER_USER_PUBLIC_KEY:
-        return context.deserialize(json, RegisterUserPublicKeyAction.class);
+      Action.ActionType.REGISTER_USER_PUBLIC_KEY -> context.deserialize(json, RegisterUserPublicKeyAction::class.java)
 
-      case SEND_WELCOME_TEST_EMAIL:
-        return context.deserialize(json, SendWelcomeTestEmailAction.class);
+      Action.ActionType.SEND_WELCOME_TEST_EMAIL -> context.deserialize(json, SendWelcomeTestEmailAction::class.java)
 
-      case FILL_USER_ID_EMAILS_KEYS_TABLE:
-        return context.deserialize(json, FillUserIdEmailsKeysTableAction.class);
+      Action.ActionType.FILL_USER_ID_EMAILS_KEYS_TABLE -> context.deserialize(json, FillUserIdEmailsKeysTableAction::class.java)
 
-      case ENCRYPT_PRIVATE_KEYS:
-        return context.deserialize(json, EncryptPrivateKeysIfNeededAction.class);
-
-      default:
-        throw new IllegalArgumentException("Unknown action type");
+      Action.ActionType.ENCRYPT_PRIVATE_KEYS -> context.deserialize(json, EncryptPrivateKeysIfNeededAction::class.java)
     }
   }
 }

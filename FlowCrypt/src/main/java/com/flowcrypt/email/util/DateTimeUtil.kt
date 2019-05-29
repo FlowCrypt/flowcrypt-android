@@ -3,14 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util;
+package com.flowcrypt.email.util
 
-import android.content.Context;
-import android.text.format.DateFormat;
-import android.text.format.DateUtils;
-
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import android.content.Context
+import android.text.format.DateFormat
+import android.text.format.DateUtils
+import java.util.*
 
 /**
  * This class can be used to work with datea and time.
@@ -21,40 +19,42 @@ import java.util.GregorianCalendar;
  * E-mail: DenBond7@gmail.com
  */
 
-public class DateTimeUtil {
+class DateTimeUtil {
+  companion object {
+    /**
+     * Format date and time using the next logic:
+     *
+     *
+     *
+     *  * If the day of the date equals the current day, we return only time in a locale time
+     * format. For example 10:00 AM
+     *  * If the day of the date not equals the current day, we return only date in a locale date
+     * format without year. For example Jun 5
+     *
+     *
+     * @param context Interface to global information about an application environment.
+     * @param date    This is the date, which we want to format.
+     * @return The formatted date.
+     */
+    @JvmStatic
+    fun formatSameDayTime(context: Context, date: Long): String {
+      val calendarOfDate = GregorianCalendar()
+      calendarOfDate.timeInMillis = date
 
-  /**
-   * Format date and time using the next logic:
-   * <p>
-   * <ul>
-   * <li>If the day of the date equals the current day, we return only time in a locale time
-   * format. For example 10:00 AM</li>
-   * <li>If the day of the date not equals the current day, we return only date in a locale date
-   * format without year. For example Jun 5</li>
-   * </ul>
-   *
-   * @param context Interface to global information about an application environment.
-   * @param date    This is the date, which we want to format.
-   * @return The formatted date.
-   */
-  public static String formatSameDayTime(Context context, long date) {
-    Calendar calendarOfDate = new GregorianCalendar();
-    calendarOfDate.setTimeInMillis(date);
+      val currentCalendar = Calendar.getInstance()
 
-    Calendar currentCalendar = Calendar.getInstance();
-
-    if (calendarOfDate.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)) {
-      boolean isTheSameDay = calendarOfDate.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH)
-          && calendarOfDate.get(Calendar.DAY_OF_MONTH) == currentCalendar.get(Calendar.DAY_OF_MONTH);
-      if (isTheSameDay) {
-        return DateFormat.getTimeFormat(context).format(calendarOfDate.getTime());
+      if (calendarOfDate.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)) {
+        val isTheSameDay = calendarOfDate.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH) && calendarOfDate.get(Calendar.DAY_OF_MONTH) == currentCalendar.get(Calendar.DAY_OF_MONTH)
+        if (isTheSameDay) {
+          return DateFormat.getTimeFormat(context).format(calendarOfDate.time)
+        } else {
+          val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_NO_YEAR or DateUtils.FORMAT_ABBREV_MONTH
+          return DateUtils.formatDateTime(context, calendarOfDate.time.time, flags)
+        }
       } else {
-        int flags = DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_NO_YEAR | DateUtils.FORMAT_ABBREV_MONTH;
-        return DateUtils.formatDateTime(context, calendarOfDate.getTime().getTime(), flags);
+        val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH
+        return DateUtils.formatDateTime(context, calendarOfDate.time.time, flags)
       }
-    } else {
-      int flags = DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_ABBREV_MONTH;
-      return DateUtils.formatDateTime(context, calendarOfDate.getTime().getTime(), flags);
     }
   }
 }

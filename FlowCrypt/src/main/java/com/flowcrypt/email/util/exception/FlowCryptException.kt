@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.exception;
+package com.flowcrypt.email.util.exception
 
-import android.os.Build;
+import android.os.Build
 
-import androidx.annotation.RequiresApi;
+import androidx.annotation.RequiresApi
 
 /**
  * The base exception class.
@@ -18,24 +18,15 @@ import androidx.annotation.RequiresApi;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class FlowCryptException extends Exception {
-  public FlowCryptException() {
-  }
+abstract class FlowCryptException : Exception {
+  constructor()
 
-  public FlowCryptException(String message) {
-    super(message);
-  }
+  constructor(message: String) : super(message)
 
-  public FlowCryptException(String message, Throwable cause) {
-    super(message, cause);
-  }
+  constructor(message: String, cause: Throwable) : super(message, cause)
 
-  public FlowCryptException(Throwable cause) {
-    super(cause);
-  }
+  constructor(cause: Throwable) : super(cause)
 
   @RequiresApi(api = Build.VERSION_CODES.N)
-  public FlowCryptException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-    super(message, cause, enableSuppression, writableStackTrace);
-  }
+  constructor(message: String, cause: Throwable, enableSuppression: Boolean, writableStackTrace: Boolean) : super(message, cause, enableSuppression, writableStackTrace)
 }

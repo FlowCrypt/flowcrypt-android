@@ -3,24 +3,19 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util;
+package com.flowcrypt.email.util
 
-import android.net.Uri;
-import android.text.TextUtils;
-
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.api.email.model.ExtraActionInfo;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import android.net.Uri
+import android.text.TextUtils
+import com.flowcrypt.email.api.email.model.ExtraActionInfo
+import java.util.*
 
 /**
  * This class defines the parser of 'mailto' URIs.
- * It depends on the <a href="https://tools.ietf.org/html/rfc6068">document</a> which defines the format of Uniform
+ * It depends on the [document](https://tools.ietf.org/html/rfc6068) which defines the format of Uniform
  * Resource Identifiers (URIs) to identify resources that are reached using Internet mail.
- * <p>
+ *
+ *
  * See details here https://github.com/k9mail/k-9/blob/master/k9mail/src/main/java/com/fsck/k9/helper/MailTo.java
  *
  * @author Denis Bondarenko
@@ -29,94 +24,95 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 
-public class RFC6068Parser {
-  private static final String MAILTO_SCHEME = "mailto";
-  private static final String TO = "to";
-  private static final String BODY = "body";
-  private static final String CC = "cc";
-  private static final String BCC = "bcc";
-  private static final String SUBJECT = "subject";
+class RFC6068Parser {
+  companion object {
+    private const val MAILTO_SCHEME = "mailto"
+    private const val TO = "to"
+    private const val BODY = "body"
+    private const val CC = "cc"
+    private const val BCC = "bcc"
+    private const val SUBJECT = "subject"
 
-  public static boolean isMailTo(Uri uri) {
-    return uri != null && MAILTO_SCHEME.equals(uri.getScheme());
-  }
-
-  public static ExtraActionInfo parse(Uri uri) throws NullPointerException, IllegalArgumentException {
-    if (uri == null) {
-      throw new NullPointerException("Argument 'uri' must not be null");
+    @JvmStatic
+    fun isMailTo(uri: Uri?): Boolean {
+      return uri != null && MAILTO_SCHEME == uri.scheme
     }
 
-    if (!isMailTo(uri)) {
-      throw new IllegalArgumentException("Not a mailto scheme");
+    @JvmStatic
+    @Throws(NullPointerException::class, IllegalArgumentException::class)
+    fun parse(uri: Uri?): ExtraActionInfo {
+      if (uri == null) {
+        throw NullPointerException("Argument 'uri' must not be null")
+      }
+
+      if (!isMailTo(uri)) {
+        throw IllegalArgumentException("Not a mailto scheme")
+      }
+
+      val schemaSpecific = uri.schemeSpecificPart
+      var end = schemaSpecific.indexOf('?')
+      if (end == -1) {
+        end = schemaSpecific.length
+      }
+
+      val newUri = Uri.parse("foo://bar?" + uri.encodedQuery!!)
+      val params = CaseInsensitiveParamWrapper(newUri)
+
+      // Extract the recipient's email address from the mailto URI if there's one.
+      val recipient = Uri.decode(schemaSpecific.substring(0, end))
+
+      var toList = params.getQueryParameters(TO)
+      if (recipient.length != 0) {
+        toList.add(0, recipient)
+      }
+
+      toList = checkToList(toList)
+
+      val ccList = params.getQueryParameters(CC)
+      val bccList = params.getQueryParameters(BCC)
+
+      val subject = getFirstParameterValue(params, SUBJECT)
+      val body = getFirstParameterValue(params, BODY)
+
+      return ExtraActionInfo(emptyList(), toList, ccList, bccList,
+          subject ?: "", body ?: "")
     }
 
-    String schemaSpecific = uri.getSchemeSpecificPart();
-    int end = schemaSpecific.indexOf('?');
-    if (end == -1) {
-      end = schemaSpecific.length();
-    }
-
-    Uri newUri = Uri.parse("foo://bar?" + uri.getEncodedQuery());
-    CaseInsensitiveParamWrapper params = new CaseInsensitiveParamWrapper(newUri);
-
-    // Extract the recipient's email address from the mailto URI if there's one.
-    String recipient = Uri.decode(schemaSpecific.substring(0, end));
-
-    ArrayList<String> toList = params.getQueryParameters(TO);
-    if (recipient.length() != 0) {
-      toList.add(0, recipient);
-    }
-
-    toList = checkToList(toList);
-
-    ArrayList<String> ccList = params.getQueryParameters(CC);
-    ArrayList<String> bccList = params.getQueryParameters(BCC);
-
-    String subject = getFirstParameterValue(params, SUBJECT);
-    String body = getFirstParameterValue(params, BODY);
-
-    return new ExtraActionInfo(Collections.<AttachmentInfo>emptyList(), toList, ccList, bccList,
-        subject == null ? "" : subject, body == null ? "" : body);
-  }
-
-  private static ArrayList<String> checkToList(ArrayList<String> toList) {
-    ArrayList<String> newToList = new ArrayList<>();
-    if (!toList.isEmpty()) {
-      for (String section : toList) {
-        if (!TextUtils.isEmpty(section)) {
-          if (section.indexOf(',') != -1) {
-            String[] arraysRecipients = section.split(",");
-            newToList.addAll(new ArrayList<>(Arrays.asList(arraysRecipients)));
-          } else {
-            newToList.add(section);
+    private fun checkToList(toList: ArrayList<String>): ArrayList<String> {
+      val newToList = ArrayList<String>()
+      if (!toList.isEmpty()) {
+        for (section in toList) {
+          if (!TextUtils.isEmpty(section)) {
+            if (section.indexOf(',') != -1) {
+              val arraysRecipients = section.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+              newToList.addAll(ArrayList(Arrays.asList(*arraysRecipients)))
+            } else {
+              newToList.add(section)
+            }
           }
         }
       }
-    }
-    return newToList;
-  }
-
-  private static String getFirstParameterValue(CaseInsensitiveParamWrapper params, String paramName) {
-    List<String> paramValues = params.getQueryParameters(paramName);
-    return (paramValues.isEmpty()) ? null : paramValues.get(0);
-  }
-
-  private static class CaseInsensitiveParamWrapper {
-    private final Uri uri;
-
-    CaseInsensitiveParamWrapper(Uri uri) {
-      this.uri = uri;
+      return newToList
     }
 
-    ArrayList<String> getQueryParameters(String key) {
-      ArrayList<String> params = new ArrayList<>();
-      for (String paramName : uri.getQueryParameterNames()) {
-        if (paramName.equalsIgnoreCase(key)) {
-          params.addAll(uri.getQueryParameters(paramName));
+    private fun getFirstParameterValue(params: CaseInsensitiveParamWrapper, paramName: String): String? {
+      val paramValues = params.getQueryParameters(paramName)
+      return if (paramValues.isEmpty()) null else paramValues[0]
+    }
+  }
+
+
+  private class CaseInsensitiveParamWrapper internal constructor(private val uri: Uri) {
+
+    internal fun getQueryParameters(key: String): ArrayList<String> {
+      val params = ArrayList<String>()
+      for (paramName in uri.queryParameterNames) {
+        if (paramName.equals(key, ignoreCase = true)) {
+          params.addAll(uri.getQueryParameters(paramName))
         }
       }
 
-      return params;
+      return params
     }
   }
 }

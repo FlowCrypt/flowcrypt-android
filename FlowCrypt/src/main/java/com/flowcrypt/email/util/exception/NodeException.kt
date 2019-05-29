@@ -3,9 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.exception;
+package com.flowcrypt.email.util.exception
 
-import com.flowcrypt.email.api.retrofit.response.model.node.Error;
+import com.flowcrypt.email.api.retrofit.response.model.node.Error
 
 /**
  * It's a base Node exception.
@@ -15,25 +15,14 @@ import com.flowcrypt.email.api.retrofit.response.model.node.Error;
  * Time: 10:08 AM
  * E-mail: DenBond7@gmail.com
  */
-public class NodeException extends Exception {
-  private Error nodeError;
-
-  public NodeException(Error nodeError) {
-    this.nodeError = nodeError;
-  }
-
-  @Override
-  public String getMessage() {
-    StringBuilder builder = new StringBuilder();
+open class NodeException(val nodeError: Error?) : Exception() {
+  override val message: String = {
+    val builder = StringBuilder()
     if (nodeError != null) {
-      builder.append("Error :").append(nodeError.getMsg()).append("\n");
-      builder.append("Stack :").append(nodeError.getStack()).append("\n");
-      builder.append("Type :").append(nodeError.getType());
+      builder.append("Error :").append(nodeError.msg).append("\n")
+      builder.append("Stack :").append(nodeError.stack).append("\n")
+      builder.append("Type :").append(nodeError.type)
     }
-    return builder.toString();
-  }
-
-  public Error getNodeError() {
-    return nodeError;
-  }
+    builder
+  }.toString()
 }

@@ -14,7 +14,7 @@ package com.flowcrypt.email.util.exception;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ExceptionUtil extends ExceptionResolver {
+public class ExceptionUtil{
   public static void handleError(Throwable e) {
     //Don't modify it
   }

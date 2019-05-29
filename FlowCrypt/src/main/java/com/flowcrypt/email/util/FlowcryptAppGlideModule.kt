@@ -3,13 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util;
+package com.flowcrypt.email.util
 
-import com.bumptech.glide.annotation.GlideModule;
-import com.bumptech.glide.module.AppGlideModule;
+import com.bumptech.glide.annotation.GlideModule
+import com.bumptech.glide.module.AppGlideModule
 
 /**
- * {@link AppGlideModule} implementation of the application.
+ * [AppGlideModule] implementation of the application.
  * See http://sjudd.github.io/glide/doc/generatedapi.html for more details.
  *
  * @author Denis Bondarenko
@@ -19,5 +19,4 @@ import com.bumptech.glide.module.AppGlideModule;
  */
 
 @GlideModule
-public class FlowcryptAppGlideModule extends AppGlideModule {
-}
+class FlowcryptAppGlideModule : AppGlideModule()

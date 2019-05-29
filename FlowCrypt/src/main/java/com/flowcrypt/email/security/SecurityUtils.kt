@@ -215,7 +215,7 @@ class SecurityUtils {
 
       if (longIds.isEmpty()) {
         if (account.email.equals(senderEmail, ignoreCase = true)) {
-          throw NoKeyAvailableException(context, account.email, null)
+          throw NoKeyAvailableException(context, account.email)
         } else {
           longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(context, account.email)
           if (longIds.isEmpty()) {
