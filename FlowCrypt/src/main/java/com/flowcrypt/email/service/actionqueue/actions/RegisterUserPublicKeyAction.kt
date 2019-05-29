@@ -3,20 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.service.actionqueue.actions;
+package com.flowcrypt.email.service.actionqueue.actions
 
-import android.content.Context;
-import android.os.Parcel;
-
-import com.flowcrypt.email.api.retrofit.ApiHelper;
-import com.flowcrypt.email.api.retrofit.ApiService;
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
-import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
-import com.flowcrypt.email.util.exception.ApiException;
-
-import java.io.IOException;
-
-import retrofit2.Response;
+import android.content.Context
+import android.os.Parcel
+import android.os.Parcelable
+import com.flowcrypt.email.api.retrofit.ApiHelper
+import com.flowcrypt.email.api.retrofit.ApiService
+import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
+import com.flowcrypt.email.util.exception.ApiException
+import com.google.gson.annotations.SerializedName
+import java.io.IOException
 
 /**
  * This action describes a task which registers a user public key
@@ -28,59 +25,53 @@ import retrofit2.Response;
  * E-mail: DenBond7@gmail.com
  */
 
-public class RegisterUserPublicKeyAction extends Action {
-  public static final Creator<RegisterUserPublicKeyAction> CREATOR = new Creator<RegisterUserPublicKeyAction>() {
-    @Override
-    public RegisterUserPublicKeyAction createFromParcel(Parcel source) {
-      return new RegisterUserPublicKeyAction(source);
-    }
+data class RegisterUserPublicKeyAction @JvmOverloads constructor(override var id: Long = 0,
+                                                                 override var email: String? = null,
+                                                                 override val version: Int = 0,
+                                                                 private val publicKey: String) : Action {
+  @SerializedName(Action.TAG_NAME_ACTION_TYPE)
+  override val type: Action.Type = Action.Type.REGISTER_USER_PUBLIC_KEY
 
-    @Override
-    public RegisterUserPublicKeyAction[] newArray(int size) {
-      return new RegisterUserPublicKeyAction[size];
-    }
-  };
+  @Throws(IOException::class)
+  override fun run(context: Context) {
+    val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+    val body = InitialLegacySubmitModel(email!!, publicKey)
+    val response = apiService.postInitialLegacySubmit(body).execute()
 
-  private String publicKey;
+    val (apiError) = response.body() ?: throw IllegalArgumentException("The response is null!")
 
-  public RegisterUserPublicKeyAction(String email, String publicKey) {
-    super(email, ActionType.REGISTER_USER_PUBLIC_KEY);
-    this.publicKey = publicKey;
-  }
-
-
-  protected RegisterUserPublicKeyAction(Parcel in) {
-    super(in);
-    this.publicKey = in.readString();
-  }
-
-  @Override
-  public void run(Context context) throws IOException {
-    ApiService apiService = ApiHelper.getInstance(context).getRetrofit().create(ApiService.class);
-    InitialLegacySubmitModel body = new InitialLegacySubmitModel(getEmail(), publicKey);
-    Response<InitialLegacySubmitResponse> response = apiService.postInitialLegacySubmit(body).execute();
-
-    InitialLegacySubmitResponse initialLegacySubmitResponse = response.body();
-    if (initialLegacySubmitResponse == null) {
-      throw new IllegalArgumentException("The response is null!");
-    }
-
-    if (initialLegacySubmitResponse.getApiError() != null) {
-      int code = initialLegacySubmitResponse.getApiError().getCode();
+    if (apiError != null) {
+      val code = apiError.code
       if (code < 400 || code >= 500) {
-        throw new ApiException(initialLegacySubmitResponse.getApiError());
+        throw ApiException(apiError)
       }
     }
   }
 
-  @Override
-  public int describeContents() {
-    return 0;
+  constructor(source: Parcel) : this(
+      source.readLong(),
+      source.readString(),
+      source.readInt(),
+      source.readString()!!
+  )
+
+  override fun describeContents(): Int {
+    return 0
   }
 
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
-    dest.writeString(this.publicKey);
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeLong(id)
+        writeString(email)
+        writeInt(version)
+        writeString(publicKey)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<RegisterUserPublicKeyAction> = object : Parcelable.Creator<RegisterUserPublicKeyAction> {
+      override fun createFromParcel(source: Parcel): RegisterUserPublicKeyAction = RegisterUserPublicKeyAction(source)
+      override fun newArray(size: Int): Array<RegisterUserPublicKeyAction?> = arrayOfNulls(size)
+    }
   }
 }

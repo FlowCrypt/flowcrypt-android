@@ -3,26 +3,19 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.service.actionqueue.actions;
+package com.flowcrypt.email.service.actionqueue.actions
 
-import android.content.Context;
-import android.os.Parcel;
-import android.text.TextUtils;
-
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
-import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
-import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.model.PgpKeyInfo;
-import com.flowcrypt.email.security.KeysStorageImpl;
-
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.MimeBodyPart;
+import android.content.Context
+import android.os.Parcel
+import android.os.Parcelable
+import android.text.TextUtils
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
+import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.security.KeysStorageImpl
+import com.google.gson.annotations.SerializedName
 
 /**
  * This action describes a task which backups a private key to INBOX.
@@ -32,63 +25,59 @@ import javax.mail.internet.MimeBodyPart;
  * Time: 16:58
  * E-mail: DenBond7@gmail.com
  */
+data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var id: Long = 0,
+                                                                   override var email: String? = null,
+                                                                   override val version: Int = 0,
+                                                                   private val privateKeyLongId: String) : Action {
+  @SerializedName(Action.TAG_NAME_ACTION_TYPE)
+  override val type: Action.Type = Action.Type.BACKUP_PRIVATE_KEY_TO_INBOX
 
-public class BackupPrivateKeyToInboxAction extends Action {
-  public static final Creator<BackupPrivateKeyToInboxAction> CREATOR = new Creator<BackupPrivateKeyToInboxAction>() {
-    @Override
-    public BackupPrivateKeyToInboxAction createFromParcel(Parcel source) {
-      return new BackupPrivateKeyToInboxAction(source);
-    }
+  @Throws(Exception::class)
+  override fun run(context: Context) {
+    val account = AccountDaoSource().getAccountInformation(context, email)
+    val keysStorage = KeysStorageImpl.getInstance(context)
+    val pgpKeyInfo = keysStorage.getPgpPrivateKey(privateKeyLongId)
+    if (account != null && pgpKeyInfo != null && !TextUtils.isEmpty(pgpKeyInfo.private)) {
+      val session = OpenStoreHelper.getAccountSess(context, account)
+      val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
 
-    @Override
-    public BackupPrivateKeyToInboxAction[] newArray(int size) {
-      return new BackupPrivateKeyToInboxAction[size];
-    }
-  };
+      val (encryptedKey) = NodeCallsExecutor.encryptKey(pgpKeyInfo.private!!,
+          keysStorage.getPassphrase(privateKeyLongId)!!)
 
-  private String privateKeyLongId;
-
-  public BackupPrivateKeyToInboxAction(String email, String privateKeyLongId) {
-    super(email, ActionType.BACKUP_PRIVATE_KEY_TO_INBOX);
-    this.privateKeyLongId = privateKeyLongId;
-  }
-
-
-  protected BackupPrivateKeyToInboxAction(Parcel in) {
-    super(in);
-    this.privateKeyLongId = in.readString();
-  }
-
-  @Override
-  public void run(Context context) throws Exception {
-    AccountDao account = new AccountDaoSource().getAccountInformation(context, getEmail());
-    KeysStorageImpl keysStorage = KeysStorageImpl.getInstance(context);
-    PgpKeyInfo pgpKeyInfo = keysStorage.getPgpPrivateKey(privateKeyLongId);
-    if (account != null && pgpKeyInfo != null && !TextUtils.isEmpty(pgpKeyInfo.getPrivate())) {
-      Session session = OpenStoreHelper.getAccountSess(context, account);
-      Transport transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account);
-
-      EncryptKeyResult encryptKeyResult = NodeCallsExecutor.encryptKey(pgpKeyInfo.getPrivate(),
-          keysStorage.getPassphrase(privateKeyLongId));
-
-      if (TextUtils.isEmpty(encryptKeyResult.getEncryptedKey())) {
-        throw new IllegalStateException("An error occurred during encrypting some key");
+      if (TextUtils.isEmpty(encryptedKey)) {
+        throw IllegalStateException("An error occurred during encrypting some key")
       }
 
-      MimeBodyPart mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(account, encryptKeyResult.getEncryptedKey());
-      Message message = EmailUtil.genMsgWithPrivateKeys(context, account, session, mimeBodyPart);
-      transport.sendMessage(message, message.getAllRecipients());
+      val mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(account, encryptedKey!!)
+      val message = EmailUtil.genMsgWithPrivateKeys(context, account, session, mimeBodyPart)
+      transport.sendMessage(message, message.allRecipients)
     }
   }
 
-  @Override
-  public int describeContents() {
-    return 0;
+  constructor(source: Parcel) : this(
+      source.readLong(),
+      source.readString(),
+      source.readInt(),
+      source.readString()!!
+  )
+
+  override fun describeContents(): Int {
+    return 0
   }
 
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
-    dest.writeString(this.privateKeyLongId);
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeLong(id)
+        writeString(email)
+        writeInt(version)
+        writeString(privateKeyLongId)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<BackupPrivateKeyToInboxAction> = object : Parcelable.Creator<BackupPrivateKeyToInboxAction> {
+      override fun createFromParcel(source: Parcel): BackupPrivateKeyToInboxAction = BackupPrivateKeyToInboxAction(source)
+      override fun newArray(size: Int): Array<BackupPrivateKeyToInboxAction?> = arrayOfNulls(size)
+    }
   }
 }

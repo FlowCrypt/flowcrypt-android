@@ -3,18 +3,16 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.service.actionqueue.actions;
+package com.flowcrypt.email.service.actionqueue.actions
 
-import android.content.Context;
-import android.os.Parcel;
-
-import com.flowcrypt.email.api.retrofit.ApiHelper;
-import com.flowcrypt.email.api.retrofit.ApiService;
-import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
-import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse;
-import com.flowcrypt.email.util.exception.ApiException;
-
-import retrofit2.Response;
+import android.content.Context
+import android.os.Parcel
+import android.os.Parcelable
+import com.flowcrypt.email.api.retrofit.ApiHelper
+import com.flowcrypt.email.api.retrofit.ApiService
+import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.util.exception.ApiException
+import com.google.gson.annotations.SerializedName
 
 /**
  * This action describes a task which sends a welcome message to the user
@@ -26,55 +24,50 @@ import retrofit2.Response;
  * E-mail: DenBond7@gmail.com
  */
 
-public class SendWelcomeTestEmailAction extends Action {
-  public static final Creator<SendWelcomeTestEmailAction> CREATOR = new Creator<SendWelcomeTestEmailAction>() {
-    @Override
-    public SendWelcomeTestEmailAction createFromParcel(Parcel source) {
-      return new SendWelcomeTestEmailAction(source);
-    }
+data class SendWelcomeTestEmailAction @JvmOverloads constructor(override var id: Long = 0,
+                                                                override var email: String? = null,
+                                                                override val version: Int = 0,
+                                                                private val publicKey: String) : Action, Parcelable {
+  @SerializedName(Action.TAG_NAME_ACTION_TYPE)
+  override val type: Action.Type = Action.Type.SEND_WELCOME_TEST_EMAIL
 
-    @Override
-    public SendWelcomeTestEmailAction[] newArray(int size) {
-      return new SendWelcomeTestEmailAction[size];
-    }
-  };
-  private String publicKey;
+  @Throws(Exception::class)
+  override fun run(context: Context) {
+    val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+    val body = TestWelcomeModel(email!!, publicKey)
+    val response = apiService.postTestWelcome(body).execute()
 
-  public SendWelcomeTestEmailAction(String email, String publicKey) {
-    super(email, ActionType.SEND_WELCOME_TEST_EMAIL);
-    this.publicKey = publicKey;
-  }
+    val (apiError) = response.body() ?: throw IllegalArgumentException("The response is null!")
 
-  protected SendWelcomeTestEmailAction(Parcel in) {
-    super(in);
-    this.publicKey = in.readString();
-  }
-
-  @Override
-  public void run(Context context) throws Exception {
-    ApiService apiService = ApiHelper.getInstance(context).getRetrofit().create(ApiService.class);
-    TestWelcomeModel body = new TestWelcomeModel(getEmail(), publicKey);
-    Response<TestWelcomeResponse> response = apiService.postTestWelcome(body).execute();
-
-    TestWelcomeResponse testWelcomeResponse = response.body();
-
-    if (testWelcomeResponse == null) {
-      throw new IllegalArgumentException("The response is null!");
-    }
-
-    if (testWelcomeResponse.getApiError() != null) {
-      throw new ApiException(testWelcomeResponse.getApiError());
+    if (apiError != null) {
+      throw ApiException(apiError)
     }
   }
 
-  @Override
-  public int describeContents() {
-    return 0;
+  constructor(source: Parcel) : this(
+      source.readLong(),
+      source.readString(),
+      source.readInt(),
+      source.readString()!!
+  )
+
+  override fun describeContents(): Int {
+    return 0
   }
 
-  @Override
-  public void writeToParcel(Parcel dest, int flags) {
-    super.writeToParcel(dest, flags);
-    dest.writeString(this.publicKey);
+  override fun writeToParcel(dest: Parcel, flags: Int) =
+      with(dest) {
+        writeLong(id)
+        writeString(email)
+        writeInt(version)
+        writeString(publicKey)
+      }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<SendWelcomeTestEmailAction> = object : Parcelable.Creator<SendWelcomeTestEmailAction> {
+      override fun createFromParcel(source: Parcel): SendWelcomeTestEmailAction = SendWelcomeTestEmailAction(source)
+      override fun newArray(size: Int): Array<SendWelcomeTestEmailAction?> = arrayOfNulls(size)
+    }
   }
 }

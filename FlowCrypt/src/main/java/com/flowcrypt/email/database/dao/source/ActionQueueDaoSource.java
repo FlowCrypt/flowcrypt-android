@@ -14,7 +14,7 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 
 import com.flowcrypt.email.service.actionqueue.actions.Action;
-import com.flowcrypt.email.service.actionqueue.actions.Action.ActionType;
+import com.flowcrypt.email.service.actionqueue.actions.Action.Type;
 import com.flowcrypt.email.util.google.gson.ActionJsonDeserializer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -141,19 +141,19 @@ public class ActionQueueDaoSource extends BaseDaoSource {
   }
 
   /**
-   * Get the list of {@link Action} object from the local database for some email using some {@link ActionType}.
+   * Get the list of {@link Action} object from the local database for some email using some {@link Type}.
    *
    * @param context    Interface to global information about an application environment.
    * @param account    An account information.
-   * @param actionType An action type.
+   * @param type An action type.
    * @return The list of {@link Action};
    */
   @NonNull
-  public List<Action> getActionsByType(Context context, AccountDao account, ActionType actionType) {
+  public List<Action> getActionsByType(Context context, AccountDao account, Type type) {
     List<Action> actions = new ArrayList<>();
-    if (account != null && actionType != null) {
+    if (account != null && type != null) {
       String selection = ActionQueueDaoSource.COL_EMAIL + " = ? AND " + ActionQueueDaoSource.COL_ACTION_TYPE + " = ?";
-      String[] selectionArgs = new String[]{account.getEmail(), actionType.getValue()};
+      String[] selectionArgs = new String[]{account.getEmail(), type.getValue()};
       Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, selectionArgs, null);
 
       if (cursor != null) {
@@ -220,7 +220,7 @@ public class ActionQueueDaoSource extends BaseDaoSource {
       return null;
     }
 
-    contentValues.put(COL_ACTION_TYPE, action.getActionType().getValue());
+    contentValues.put(COL_ACTION_TYPE, action.getType().getValue());
     contentValues.put(COL_ACTION_JSON, gson.toJson(action));
     return contentValues;
   }

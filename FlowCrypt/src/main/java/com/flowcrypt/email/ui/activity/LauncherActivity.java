@@ -86,7 +86,7 @@ public class LauncherActivity extends BaseActivity {
           .getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, true);
 
       if (isCheckKeysNeeded) {
-        new ActionQueueDaoSource().addAction(this, new EncryptPrivateKeysIfNeededAction(account.getEmail()));
+        new ActionQueueDaoSource().addAction(this, new EncryptPrivateKeysIfNeededAction(0, account.getEmail(), 0));
       }
 
       EmailSyncService.startEmailSyncService(this);

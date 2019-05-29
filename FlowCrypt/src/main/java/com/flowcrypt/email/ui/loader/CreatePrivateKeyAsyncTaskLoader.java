@@ -106,15 +106,15 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
       ActionQueueDaoSource daoSource = new ActionQueueDaoSource();
 
       if (!saveCreatedPrivateKeyAsBackupToInbox(nodeKeyDetails)) {
-        daoSource.addAction(getContext(), new BackupPrivateKeyToInboxAction(email, nodeKeyDetails.getLongId()));
+        daoSource.addAction(getContext(), new BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.getLongId()));
       }
 
       if (!registerUserPublicKey(nodeKeyDetails)) {
-        daoSource.addAction(getContext(), new RegisterUserPublicKeyAction(email, nodeKeyDetails.getPublicKey()));
+        daoSource.addAction(getContext(), new RegisterUserPublicKeyAction(0, email, 0, nodeKeyDetails.getPublicKey()));
       }
 
       if (!requestingTestMsgWithNewPublicKey(nodeKeyDetails)) {
-        daoSource.addAction(getContext(), new SendWelcomeTestEmailAction(email, nodeKeyDetails.getPublicKey()));
+        daoSource.addAction(getContext(), new SendWelcomeTestEmailAction(0, email, 0, nodeKeyDetails.getPublicKey()));
       }
 
       return new LoaderResult(nodeKeyDetails.getLongId(), null);

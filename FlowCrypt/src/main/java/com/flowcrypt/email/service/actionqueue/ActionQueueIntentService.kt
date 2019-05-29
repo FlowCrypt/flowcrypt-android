@@ -3,29 +3,23 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.service.actionqueue;
+package com.flowcrypt.email.service.actionqueue
 
-import android.app.IntentService;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.ResultReceiver;
-
-import com.flowcrypt.email.jobscheduler.JobIdManager;
-import com.flowcrypt.email.service.actionqueue.actions.Action;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.LogsUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-
-import java.util.ArrayList;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.JobIntentService;
+import android.app.IntentService
+import android.content.Context
+import android.content.Intent
+import android.os.Handler
+import android.os.ResultReceiver
+import androidx.core.app.JobIntentService
+import com.flowcrypt.email.jobscheduler.JobIdManager
+import com.flowcrypt.email.service.actionqueue.actions.Action
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import java.util.*
 
 /**
- * An {@link IntentService} subclass for handling asynchronous task requests ({@link Action}) in
+ * An [IntentService] subclass for handling asynchronous task requests ([Action]) in
  * a service on a separate handler thread.
  *
  * @author Denis Bondarenko
@@ -33,78 +27,76 @@ import androidx.core.app.JobIntentService;
  * Time: 16:54
  * E-mail: DenBond7@gmail.com
  */
-public class ActionQueueIntentService extends JobIntentService {
-  public static final String ACTION_RUN_ACTIONS = GeneralUtil.generateUniqueExtraKey("ACTION_RUN_ACTIONS",
-      ActionQueueIntentService.class);
-
-  private static final String TAG = ActionQueueIntentService.class.getSimpleName();
-  private static final String EXTRA_KEY_ACTIONS = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACTIONS",
-      ActionQueueIntentService.class);
-  private static final String EXTRA_KEY_RESULTS_RECEIVER = GeneralUtil.generateUniqueExtraKey
-      ("EXTRA_KEY_RESULTS_RECEIVER", ActionQueueIntentService.class);
-
-  /**
-   * Starts this service to perform action {@link #ACTION_RUN_ACTIONS}. If the service is already performing a task
-   * this action will be queued.
-   *
-   * @param context                Interface to global information about an application environment;
-   * @param actions                A list of {@link Action} objects.
-   * @param resultReceiverCallBack An implementation of {@link android.os.ResultReceiver}.
-   * @see IntentService
-   */
-
-  public static void appendActionsToQueue(Context context, ArrayList<Action> actions,
-                                          ActionResultReceiver.ResultReceiverCallBack resultReceiverCallBack) {
-    ActionResultReceiver resultReceiver = new ActionResultReceiver(new Handler(context.getMainLooper()));
-    resultReceiver.setResultReceiverCallBack(resultReceiverCallBack);
-
-    Intent intent = new Intent(context, ActionQueueIntentService.class);
-    intent.setAction(ACTION_RUN_ACTIONS);
-    intent.putExtra(EXTRA_KEY_ACTIONS, actions);
-    intent.putExtra(EXTRA_KEY_RESULTS_RECEIVER, resultReceiver);
-
-    enqueueWork(context, ActionQueueIntentService.class, JobIdManager.JOB_TYPE_ACTION_QUEUE, intent);
+class ActionQueueIntentService : JobIntentService() {
+  override fun onCreate() {
+    super.onCreate()
+    LogsUtil.d(TAG, "onCreate")
   }
 
-  @Override
-  public void onCreate() {
-    super.onCreate();
-    LogsUtil.d(TAG, "onCreate");
+  override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    LogsUtil.d(TAG, "onStartCommand")
+    return super.onStartCommand(intent, flags, startId)
   }
 
-  @Override
-  public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
-    LogsUtil.d(TAG, "onStartCommand");
-    return super.onStartCommand(intent, flags, startId);
-  }
-
-  @Override
-  protected void onHandleWork(@NonNull Intent intent) {
-    final String intentAction = intent.getAction();
-    if (ACTION_RUN_ACTIONS.equals(intentAction)) {
-      final ArrayList<Action> actions = intent.getParcelableArrayListExtra(EXTRA_KEY_ACTIONS);
-      final ResultReceiver resultReceiver = intent.getParcelableExtra(EXTRA_KEY_RESULTS_RECEIVER);
+  override fun onHandleWork(intent: Intent) {
+    val intentAction = intent.action
+    if (ACTION_RUN_ACTIONS == intentAction) {
+      val actions = intent.getParcelableArrayListExtra<Action>(EXTRA_KEY_ACTIONS)
+      val resultReceiver = intent.getParcelableExtra<ResultReceiver>(EXTRA_KEY_RESULTS_RECEIVER)
 
       if (actions != null && !actions.isEmpty()) {
-        LogsUtil.d(TAG, "Received " + actions.size() + " action(s) for run in the queue");
-        for (Action action : actions) {
+        LogsUtil.d(TAG, "Received " + actions.size + " action(s) for run in the queue")
+        for (action in actions) {
           if (action != null) {
-            LogsUtil.d(TAG, "Run " + action.getClass().getSimpleName());
+            LogsUtil.d(TAG, "Run " + action.javaClass.simpleName)
             try {
-              action.run(getApplicationContext());
-              Bundle successBundle = ActionResultReceiver.generateSuccessBundle(action);
-              resultReceiver.send(ActionResultReceiver.RESULT_CODE_OK, successBundle);
-              LogsUtil.d(TAG, action.getClass().getSimpleName() + ": success");
-            } catch (Exception e) {
-              e.printStackTrace();
-              ExceptionUtil.handleError(e);
-              Bundle errorBundle = ActionResultReceiver.generateErrorBundle(action, e);
-              resultReceiver.send(ActionResultReceiver.RESULT_CODE_ERROR, errorBundle);
-              LogsUtil.d(TAG, action.getClass().getSimpleName() + ": an error occurred");
+              action.run(applicationContext)
+              val successBundle = ActionResultReceiver.generateSuccessBundle(action)
+              resultReceiver.send(ActionResultReceiver.RESULT_CODE_OK, successBundle)
+              LogsUtil.d(TAG, action.javaClass.simpleName + ": success")
+            } catch (e: Exception) {
+              e.printStackTrace()
+              ExceptionUtil.handleError(e)
+              val errorBundle = ActionResultReceiver.generateErrorBundle(action, e)
+              resultReceiver.send(ActionResultReceiver.RESULT_CODE_ERROR, errorBundle)
+              LogsUtil.d(TAG, action.javaClass.simpleName + ": an error occurred")
             }
           }
         }
       }
+    }
+  }
+
+  companion object {
+    val ACTION_RUN_ACTIONS = GeneralUtil.generateUniqueExtraKey("ACTION_RUN_ACTIONS",
+        ActionQueueIntentService::class.java)
+
+    private val TAG = ActionQueueIntentService::class.java.simpleName
+    private val EXTRA_KEY_ACTIONS = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACTIONS",
+        ActionQueueIntentService::class.java)
+    private val EXTRA_KEY_RESULTS_RECEIVER = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_RESULTS_RECEIVER", ActionQueueIntentService::class.java)
+
+    /**
+     * Starts this service to perform action [.ACTION_RUN_ACTIONS]. If the service is already performing a task
+     * this action will be queued.
+     *
+     * @param context                Interface to global information about an application environment;
+     * @param actions                A list of [Action] objects.
+     * @param resultReceiverCallBack An implementation of [android.os.ResultReceiver].
+     * @see IntentService
+     */
+    @JvmStatic
+    fun appendActionsToQueue(context: Context, actions: ArrayList<Action>,
+                             resultReceiverCallBack: ActionResultReceiver.ResultReceiverCallBack) {
+      val resultReceiver = ActionResultReceiver(Handler(context.mainLooper))
+      resultReceiver.setResultReceiverCallBack(resultReceiverCallBack)
+
+      val intent = Intent(context, ActionQueueIntentService::class.java)
+      intent.action = ACTION_RUN_ACTIONS
+      intent.putExtra(EXTRA_KEY_ACTIONS, actions)
+      intent.putExtra(EXTRA_KEY_RESULTS_RECEIVER, resultReceiver)
+
+      enqueueWork(context, ActionQueueIntentService::class.java, JobIdManager.JOB_TYPE_ACTION_QUEUE, intent)
     }
   }
 }
