@@ -73,7 +73,6 @@ import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan;
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView;
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
-import com.flowcrypt.email.util.ArraysUtil;
 import com.flowcrypt.email.util.GeneralUtil;
 import com.flowcrypt.email.util.UIUtil;
 import com.flowcrypt.email.util.exception.ExceptionUtil;
@@ -1433,7 +1432,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
 
   private String prepareRecipients(String[] recipients) {
     StringBuilder stringBuilder = new StringBuilder();
-    if (!ArraysUtil.isEmpty(recipients)) {
+    if (recipients != null && recipients.length > 0) {
       for (String s : recipients) {
         stringBuilder.append(s).append(" ");
       }
