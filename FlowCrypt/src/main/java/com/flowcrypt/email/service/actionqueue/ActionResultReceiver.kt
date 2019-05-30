@@ -37,11 +37,13 @@ class ActionResultReceiver
   override fun onReceiveResult(resultCode: Int, resultData: Bundle) {
     if (resultReceiverCallBack != null) {
       val action = resultData.getParcelable<Action>(EXTRA_KEY_ACTION)
-      val e = resultData.getSerializable(EXTRA_KEY_EXCEPTION) as Exception
       when (resultCode) {
-        RESULT_CODE_OK -> resultReceiverCallBack!!.onSuccess(action)
+        RESULT_CODE_OK -> resultReceiverCallBack!!.onSuccess(resultData.getParcelable(EXTRA_KEY_ACTION))
 
-        RESULT_CODE_ERROR -> resultReceiverCallBack!!.onError(e, action)
+        RESULT_CODE_ERROR -> {
+          val e = resultData.getSerializable(EXTRA_KEY_EXCEPTION) as java.lang.Exception
+          resultReceiverCallBack!!.onError(e, action)
+        }
       }
     }
   }

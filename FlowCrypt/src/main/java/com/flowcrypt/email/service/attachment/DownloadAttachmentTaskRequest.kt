@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.service.attachment;
+package com.flowcrypt.email.service.attachment
 
-import android.content.Context;
+import android.content.Context
 
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 
 /**
  * This class will be used to define information about a new download attachment task.
@@ -18,20 +18,6 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo;
  * E-mail: DenBond7@gmail.com
  */
 
-public class DownloadAttachmentTaskRequest {
-  private Context context;
-  private AttachmentInfo att;
-
-  public DownloadAttachmentTaskRequest(Context context, AttachmentInfo attInfo) {
-    this.context = context != null ? context.getApplicationContext() : null;
-    this.att = attInfo;
-  }
-
-  public Context getContext() {
-    return context;
-  }
-
-  public AttachmentInfo getAttInfo() {
-    return att;
-  }
+class DownloadAttachmentTaskRequest(context: Context, val attInfo: AttachmentInfo) {
+  val context: Context = context.applicationContext
 }
