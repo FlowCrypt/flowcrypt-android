@@ -3,35 +3,28 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.service;
+package com.flowcrypt.email.service
 
-import android.app.Service;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Binder;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.IBinder;
-import android.os.Looper;
-import android.os.Message;
-import android.os.Messenger;
-import android.os.RemoteException;
-import android.text.TextUtils;
-
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.KeyImportModel;
-import com.flowcrypt.email.util.LogsUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.google.android.gms.common.util.CollectionUtils;
-
-import java.lang.ref.WeakReference;
-import java.util.List;
-
-import androidx.annotation.Nullable;
+import android.app.Service
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.os.Binder
+import android.os.Handler
+import android.os.HandlerThread
+import android.os.IBinder
+import android.os.Looper
+import android.os.Message
+import android.os.Messenger
+import android.os.RemoteException
+import android.text.TextUtils
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportModel
+import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.google.android.gms.common.util.CollectionUtils
+import java.lang.ref.WeakReference
 
 /**
  * This service will be used to do checking clipboard to find a valid key while the
@@ -43,173 +36,156 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public class CheckClipboardToFindKeyService extends Service implements ClipboardManager.OnPrimaryClipChangedListener {
-  public static final String TAG = CheckClipboardToFindKeyService.class.getSimpleName();
+class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClipChangedListener {
 
-  private volatile Looper serviceWorkerLooper;
-  private volatile ServiceWorkerHandler serviceWorkerHandler;
+  @Volatile
+  private lateinit var serviceWorkerLooper: Looper
+  @Volatile
+  private lateinit var serviceWorkerHandler: ServiceWorkerHandler
 
-  private KeyImportModel keyImportModel;
-  private IBinder localBinder;
-  private ClipboardManager clipboardManager;
-  private Messenger replyMessenger;
-  private boolean isPrivateKeyMode;
+  var keyImportModel: KeyImportModel? = null
+    private set
+  private val localBinder: IBinder
+  private lateinit var clipboardManager: ClipboardManager
+  private val replyMessenger: Messenger
+  var isPrivateKeyMode: Boolean = false
 
-  public CheckClipboardToFindKeyService() {
-    this.localBinder = new LocalBinder();
-    this.replyMessenger = new Messenger(new ReplyHandler(this));
+  init {
+    this.localBinder = LocalBinder()
+    this.replyMessenger = Messenger(ReplyHandler(this))
   }
 
-  @Override
-  public void onCreate() {
-    super.onCreate();
-    LogsUtil.d(TAG, "onCreate");
+  override fun onCreate() {
+    super.onCreate()
+    LogsUtil.d(TAG, "onCreate")
 
-    clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-    if (clipboardManager != null) {
-      clipboardManager.addPrimaryClipChangedListener(this);
-    }
+    clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboardManager.addPrimaryClipChangedListener(this)
 
-    HandlerThread handlerThread = new HandlerThread(TAG);
-    handlerThread.start();
+    val handlerThread = HandlerThread(TAG)
+    handlerThread.start()
 
-    serviceWorkerLooper = handlerThread.getLooper();
-    serviceWorkerHandler = new ServiceWorkerHandler(serviceWorkerLooper);
+    serviceWorkerLooper = handlerThread.looper
+    serviceWorkerHandler = ServiceWorkerHandler(serviceWorkerLooper)
 
-    checkClipboard();
+    checkClipboard()
   }
 
-  @Nullable
-  @Override
-  public IBinder onBind(Intent intent) {
-    LogsUtil.d(TAG, "onBind:" + intent);
-    return localBinder;
+  override fun onBind(intent: Intent): IBinder? {
+    LogsUtil.d(TAG, "onBind:$intent")
+    return localBinder
   }
 
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-    LogsUtil.d(TAG, "onDestroy");
+  override fun onDestroy() {
+    super.onDestroy()
+    LogsUtil.d(TAG, "onDestroy")
 
-    serviceWorkerLooper.quit();
-
-    if (clipboardManager != null) {
-      clipboardManager.removePrimaryClipChangedListener(this);
-    }
+    serviceWorkerLooper.quit()
+    clipboardManager.removePrimaryClipChangedListener(this)
   }
 
-  @Override
-  public void onPrimaryClipChanged() {
-    checkClipboard();
+  override fun onPrimaryClipChanged() {
+    checkClipboard()
   }
 
-  public KeyImportModel getKeyImportModel() {
-    return keyImportModel;
-  }
-
-  public boolean isPrivateKeyMode() {
-    return isPrivateKeyMode;
-  }
-
-  public void setPrivateKeyMode(boolean isPrivateKeyMode) {
-    this.isPrivateKeyMode = isPrivateKeyMode;
-  }
-
-  private void checkClipboard() {
-    keyImportModel = null;
+  private fun checkClipboard() {
+    keyImportModel = null
     if (clipboardManager.hasPrimaryClip()) {
-      ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
-      CharSequence privateKeyFromClipboard = item.getText();
+      val item = clipboardManager.primaryClip!!.getItemAt(0)
+      val privateKeyFromClipboard = item.text
       if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
-        checkClipboardText(privateKeyFromClipboard.toString());
+        checkClipboardText(privateKeyFromClipboard.toString())
       }
     }
   }
 
-  private void checkClipboardText(String clipboardText) {
-    Message message = serviceWorkerHandler.obtainMessage();
-    message.what = ServiceWorkerHandler.MESSAGE_WHAT;
-    message.obj = clipboardText;
-    message.replyTo = replyMessenger;
-    serviceWorkerHandler.removeMessages(ServiceWorkerHandler.MESSAGE_WHAT);
-    serviceWorkerHandler.sendMessage(message);
+  private fun checkClipboardText(clipboardText: String) {
+    val message = serviceWorkerHandler.obtainMessage()
+    message.what = ServiceWorkerHandler.MESSAGE_WHAT
+    message.obj = clipboardText
+    message.replyTo = replyMessenger
+    serviceWorkerHandler.removeMessages(ServiceWorkerHandler.MESSAGE_WHAT)
+    serviceWorkerHandler.sendMessage(message)
   }
 
   /**
    * The incoming handler realization. This handler will be used to communicate with current
    * service and the worker thread.
    */
-  private static class ReplyHandler extends Handler {
-    static final int MESSAGE_WHAT = 1;
-    private final WeakReference<CheckClipboardToFindKeyService> weakRef;
+  private class ReplyHandler internal constructor(checkClipboardToFindKeyService: CheckClipboardToFindKeyService) : Handler() {
+    private val weakRef: WeakReference<CheckClipboardToFindKeyService>
 
-    ReplyHandler(CheckClipboardToFindKeyService checkClipboardToFindKeyService) {
-      this.weakRef = new WeakReference<>(checkClipboardToFindKeyService);
+    init {
+      this.weakRef = WeakReference(checkClipboardToFindKeyService)
     }
 
-    @Override
-    public void handleMessage(Message message) {
-      switch (message.what) {
-        case MESSAGE_WHAT:
-          if (weakRef.get() != null) {
-            CheckClipboardToFindKeyService checkClipboardToFindKeyService = weakRef.get();
+    override fun handleMessage(message: Message) {
+      when (message.what) {
+        MESSAGE_WHAT -> if (weakRef.get() != null) {
+          val checkClipboardToFindKeyService = weakRef.get()
 
-            String key = (String) message.obj;
+          val key = message.obj as String
 
-            checkClipboardToFindKeyService.keyImportModel = new KeyImportModel(null, key,
-                weakRef.get().isPrivateKeyMode, KeyDetails.Type.CLIPBOARD);
-            LogsUtil.d(TAG, "Found a valid private key in clipboard");
-          }
-          break;
+          checkClipboardToFindKeyService?.keyImportModel = KeyImportModel(null, key,
+              weakRef.get()!!.isPrivateKeyMode, KeyDetails.Type.CLIPBOARD)
+          LogsUtil.d(TAG, "Found a valid private key in clipboard")
+        }
       }
+    }
+
+    companion object {
+      internal val MESSAGE_WHAT = 1
     }
   }
 
   /**
-   * This handler will be used by the instance of {@link HandlerThread} to receive message from
+   * This handler will be used by the instance of [HandlerThread] to receive message from
    * the UI thread.
    */
-  private static final class ServiceWorkerHandler extends Handler {
-    static final int MESSAGE_WHAT = 1;
+  private class ServiceWorkerHandler internal constructor(looper: Looper) : Handler(looper) {
 
-    ServiceWorkerHandler(Looper looper) {
-      super(looper);
-    }
-
-    @Override
-    public void handleMessage(Message msg) {
-      switch (msg.what) {
-        case MESSAGE_WHAT:
-          String clipboardText = (String) msg.obj;
+    override fun handleMessage(msg: Message) {
+      when (msg.what) {
+        MESSAGE_WHAT -> {
+          val clipboardText = msg.obj as String
           try {
-            List<NodeKeyDetails> nodeKeyDetails = NodeCallsExecutor.parseKeys(clipboardText);
+            val nodeKeyDetails = NodeCallsExecutor.parseKeys(clipboardText)
             if (!CollectionUtils.isEmpty(nodeKeyDetails)) {
-              sendReply(msg);
+              sendReply(msg)
             }
-          } catch (Exception e) {
-            e.printStackTrace();
+          } catch (e: Exception) {
+            e.printStackTrace()
           }
-          break;
+
+        }
       }
     }
 
-    private void sendReply(Message msg) {
+    private fun sendReply(msg: Message) {
       try {
-        Messenger messenger = msg.replyTo;
-        messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT, msg.obj));
-      } catch (RemoteException e) {
-        e.printStackTrace();
-        ExceptionUtil.handleError(e);
+        val messenger = msg.replyTo
+        messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_WHAT, msg.obj))
+      } catch (e: RemoteException) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
       }
+
+    }
+
+    companion object {
+      internal const val MESSAGE_WHAT = 1
     }
   }
 
   /**
    * The local binder realization.
    */
-  public class LocalBinder extends Binder {
-    public CheckClipboardToFindKeyService getService() {
-      return CheckClipboardToFindKeyService.this;
-    }
+  inner class LocalBinder : Binder() {
+    val service: CheckClipboardToFindKeyService
+      get() = this@CheckClipboardToFindKeyService
+  }
+
+  companion object {
+    val TAG = CheckClipboardToFindKeyService::class.java.simpleName
   }
 }

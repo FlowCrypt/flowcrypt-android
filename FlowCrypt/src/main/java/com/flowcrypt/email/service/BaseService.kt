@@ -3,15 +3,15 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.service;
+package com.flowcrypt.email.service
 
-import android.app.Service;
-import android.os.Messenger;
+import android.app.Service
+import android.os.Messenger
 
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 
 /**
- * The base {@link Service} class for a between threads communication.
+ * The base [Service] class for a between threads communication.
  *
  * @author Denis Bondarenko
  * Date: 16.02.2018
@@ -19,83 +19,64 @@ import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseService extends Service {
-  public static final int REPLY_OK = 0;
-  public static final int REPLY_ERROR = 1;
-  public static final int REPLY_ACTION_PROGRESS = 2;
-
-  public interface OnServiceCallback {
+abstract class BaseService : Service() {
+  interface OnServiceCallback {
     /**
-     * In this method we can handle response after run some action via {@link BaseService}
+     * In this method we can handle response after run some action via [BaseService]
      *
      * @param requestCode The unique request code for identifies the some action. Must be unique
-     *                    over all project.
+     * over all project.
      * @param resultCode  The result code of a run action.
      * @param obj         The object which returned from the service.
      */
-    void onReplyReceived(int requestCode, int resultCode, Object obj);
+    fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any)
 
     /**
-     * In this method we can handle a progress state after run some action via {@link BaseService}
+     * In this method we can handle a progress state after run some action via [BaseService]
      *
      * @param requestCode The unique request code for identifies the some action. Must be unique
-     *                    over all project.
+     * over all project.
      * @param resultCode  The result code of a run action.
      * @param obj         The object which returned from the service.
      */
-    void onProgressReplyReceived(int requestCode, int resultCode, Object obj);
+    fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any)
 
     /**
-     * In this method we can handle en error after run some action via {@link BaseService}
+     * In this method we can handle en error after run some action via [BaseService]
      *
      * @param requestCode The unique request code for identifies the some action. Must be unique
-     *                    over all project.
-     * @param errorType   The {@link SyncErrorTypes}.
+     * over all project.
+     * @param errorType   The [SyncErrorTypes].
      * @param e           The exception which occurred.
      */
-    void onErrorHappened(int requestCode, int errorType, Exception e);
+    fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception)
   }
 
   /**
-   * This class can be used to create a new action for {@link BaseService}
+   * This class can be used to create a new action for [BaseService]
    */
-  public static class Action {
-    private String ownerKey;
-    private int requestCode;
-    private Object object;
+  class Action
+  /**
+   * The constructor.
+   *
+   * @param ownerKey    The name of reply to [Messenger]
+   * @param requestCode The unique request code which identify some action
+   * @param object      The object which will be passed to [BaseService].
+   */
+  (val ownerKey: String, val requestCode: Int, val `object`: Any?) {
 
-    /**
-     * The constructor.
-     *
-     * @param ownerKey    The name of reply to {@link Messenger}
-     * @param requestCode The unique request code which identify some action
-     * @param object      The object which will be passed to {@link BaseService}.
-     */
-    public Action(String ownerKey, int requestCode, Object object) {
-      this.ownerKey = ownerKey;
-      this.requestCode = requestCode;
-      this.object = object;
-    }
-
-    @Override
-    public String toString() {
+    override fun toString(): String {
       return "Action{" +
-          "ownerKey='" + ownerKey + '\'' +
+          "ownerKey='" + ownerKey + '\''.toString() +
           ", requestCode=" + requestCode +
-          ", object=" + object +
-          '}';
+          ", object=" + `object` +
+          '}'.toString()
     }
+  }
 
-    public String getOwnerKey() {
-      return ownerKey;
-    }
-
-    public int getRequestCode() {
-      return requestCode;
-    }
-
-    public Object getObject() {
-      return object;
-    }
+  companion object {
+    const val REPLY_OK = 0
+    const val REPLY_ERROR = 1
+    const val REPLY_ACTION_PROGRESS = 2
   }
 }

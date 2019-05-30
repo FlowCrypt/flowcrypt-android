@@ -3,67 +3,57 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.service;
+package com.flowcrypt.email.service
 
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.text.TextUtils;
-import android.util.Log;
-
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.api.email.model.MessageFlag;
-import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
-import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
-import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper;
-import com.flowcrypt.email.api.retrofit.node.NodeService;
-import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest;
-import com.flowcrypt.email.api.retrofit.response.node.EncryptedFileResult;
-import com.flowcrypt.email.database.MessageState;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource;
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService;
-import com.flowcrypt.email.jobscheduler.JobIdManager;
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
-import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.security.SecurityUtils;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.LogsUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.NoKeyAvailableException;
-import com.google.android.gms.common.util.CollectionUtils;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.JobIntentService;
-import androidx.core.content.FileProvider;
-import retrofit2.Response;
+import android.content.ContentValues
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.text.TextUtils
+import android.util.Log
+import androidx.core.app.JobIntentService
+import androidx.core.content.FileProvider
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.api.email.model.MessageFlag
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
+import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
+import com.flowcrypt.email.api.retrofit.node.NodeService
+import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest
+import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
+import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
+import com.flowcrypt.email.jobscheduler.JobIdManager
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.NoKeyAvailableException
+import com.google.android.gms.common.util.CollectionUtils
+import org.apache.commons.io.FileUtils
+import org.apache.commons.io.IOUtils
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.InputStream
+import java.nio.charset.StandardCharsets
+import java.util.*
+import javax.mail.MessagingException
+import javax.mail.Session
+import javax.mail.internet.MimeMessage
 
 /**
- * This service creates a new outgoing message using the given {@link OutgoingMessageInfo}.
+ * This service creates a new outgoing message using the given [OutgoingMessageInfo].
  *
  * @author DenBond7
  * Date: 22.05.2017
@@ -71,274 +61,269 @@ import retrofit2.Response;
  * E-mail: DenBond7@gmail.com
  */
 
-public class PrepareOutgoingMessagesJobIntentService extends JobIntentService {
-  private static final String EXTRA_KEY_OUTGOING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey
-      ("EXTRA_KEY_OUTGOING_MESSAGE_INFO", PrepareOutgoingMessagesJobIntentService.class);
-  private static final String TAG = PrepareOutgoingMessagesJobIntentService.class.getSimpleName();
+class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
-  private MessageDaoSource msgDaoSource;
-  private Session sess;
-  private AccountDao account;
-  private File attsCacheDir;
+  private val msgDaoSource: MessageDaoSource = MessageDaoSource()
+  private var sess: Session? = null
+  private var account: AccountDao? = null
+  private var attsCacheDir: File? = null
 
-  /**
-   * Enqueue a new task for {@link PrepareOutgoingMessagesJobIntentService}.
-   *
-   * @param context         Interface to global information about an application environment.
-   * @param outgoingMsgInfo {@link OutgoingMessageInfo} which contains information about an outgoing message.
-   */
-  public static void enqueueWork(Context context, OutgoingMessageInfo outgoingMsgInfo) {
-    if (outgoingMsgInfo != null) {
-      Intent intent = new Intent(context, PrepareOutgoingMessagesJobIntentService.class);
-      intent.putExtra(EXTRA_KEY_OUTGOING_MESSAGE_INFO, outgoingMsgInfo);
-
-      enqueueWork(context, PrepareOutgoingMessagesJobIntentService.class,
-          JobIdManager.JOB_TYPE_PREPARE_OUT_GOING_MESSAGE, intent);
-    }
+  override fun onCreate() {
+    super.onCreate()
+    LogsUtil.d(TAG, "onCreate")
+    account = AccountDaoSource().getActiveAccountInformation(applicationContext)
+    sess = OpenStoreHelper.getAccountSess(applicationContext, account)
   }
 
-  @Override
-  public void onCreate() {
-    super.onCreate();
-    LogsUtil.d(TAG, "onCreate");
-    msgDaoSource = new MessageDaoSource();
-    account = new AccountDaoSource().getActiveAccountInformation(getApplicationContext());
-    sess = OpenStoreHelper.getAccountSess(getApplicationContext(), account);
+  override fun onDestroy() {
+    super.onDestroy()
+    LogsUtil.d(TAG, "onDestroy")
   }
 
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-    LogsUtil.d(TAG, "onDestroy");
+  override fun onStopCurrentWork(): Boolean {
+    LogsUtil.d(TAG, "onStopCurrentWork")
+    return super.onStopCurrentWork()
   }
 
-  @Override
-  public boolean onStopCurrentWork() {
-    LogsUtil.d(TAG, "onStopCurrentWork");
-    return super.onStopCurrentWork();
-  }
-
-  @Override
-  protected void onHandleWork(@NonNull Intent intent) {
-    LogsUtil.d(TAG, "onHandleWork");
+  override fun onHandleWork(intent: Intent) {
+    LogsUtil.d(TAG, "onHandleWork")
     if (intent.hasExtra(EXTRA_KEY_OUTGOING_MESSAGE_INFO)) {
-      OutgoingMessageInfo outgoingMsgInfo = intent.getParcelableExtra(EXTRA_KEY_OUTGOING_MESSAGE_INFO);
-      long uid = outgoingMsgInfo.getUid();
-      String email = account.getEmail();
-      String label = JavaEmailConstants.FOLDER_OUTBOX;
+      val outgoingMsgInfo = intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
+      val uid = outgoingMsgInfo.uid
+      val email = account!!.email
+      val label = JavaEmailConstants.FOLDER_OUTBOX
 
       if (msgDaoSource.getMsg(this, email, label, uid) != null) {
         //todo-DenBond7 need to think about resolving a situation, when a message was created but the
         // attachments were not added.
-        return;
+        return
       }
 
-      LogsUtil.d(TAG, "Received a new job: " + outgoingMsgInfo);
-      Uri newMsgUri = null;
+      LogsUtil.d(TAG, "Received a new job: $outgoingMsgInfo")
+      var newMsgUri: Uri? = null
 
       try {
-        setupIfNeeded();
-        updateContactsLastUseDateTime(outgoingMsgInfo);
+        setupIfNeeded()
+        updateContactsLastUseDateTime(outgoingMsgInfo)
 
-        List<String> pubKeys = null;
-        if (outgoingMsgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-          String senderEmail = outgoingMsgInfo.getFrom();
-          pubKeys = SecurityUtils.getRecipientsPubKeys(this, outgoingMsgInfo.getAllRecipients(), account, senderEmail);
+        var pubKeys: List<String>? = null
+        if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+          val senderEmail = outgoingMsgInfo.from
+          pubKeys = SecurityUtils.getRecipientsPubKeys(this, outgoingMsgInfo.getAllRecipients(), account!!, senderEmail!!)
         }
 
-        String rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys);
-        MimeMessage mimeMsg = new MimeMessage(sess, IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8));
+        val rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys!!)
+        val mimeMsg = MimeMessage(sess, IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8))
 
-        File msgAttsCacheDir = new File(attsCacheDir, UUID.randomUUID().toString());
+        val msgAttsCacheDir = File(attsCacheDir, UUID.randomUUID().toString())
 
-        ContentValues contentValues = prepareContentValues(outgoingMsgInfo, uid, mimeMsg, rawMsg, msgAttsCacheDir);
-        newMsgUri = msgDaoSource.addRow(this, contentValues);
+        val contentValues = prepareContentValues(outgoingMsgInfo, uid, mimeMsg, rawMsg, msgAttsCacheDir)
+        newMsgUri = msgDaoSource.addRow(this, contentValues)
 
         if (newMsgUri != null) {
-          int msgsCount = msgDaoSource.getOutboxMsgs(this, email).size();
-          new ImapLabelsDaoSource().updateLabelMsgsCount(this, email, label, msgsCount);
+          val msgsCount = msgDaoSource.getOutboxMsgs(this, email).size
+          ImapLabelsDaoSource().updateLabelMsgsCount(this, email, label, msgsCount)
 
-          boolean hasAtts = !CollectionUtils.isEmpty(outgoingMsgInfo.getAtts())
-              || !CollectionUtils.isEmpty(outgoingMsgInfo.getForwardedAtts());
+          val hasAtts = !CollectionUtils.isEmpty(outgoingMsgInfo.atts) || !CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)
 
           if (hasAtts) {
             if (!msgAttsCacheDir.exists()) {
               if (!msgAttsCacheDir.mkdir()) {
-                Log.e(TAG, "Create cache directory " + attsCacheDir.getName() + " filed!");
-                msgDaoSource.updateMsgState(this, email, label, uid, MessageState.ERROR_CACHE_PROBLEM);
-                return;
+                Log.e(TAG, "Create cache directory " + attsCacheDir!!.name + " filed!")
+                msgDaoSource.updateMsgState(this, email, label, uid, MessageState.ERROR_CACHE_PROBLEM)
+                return
               }
             }
 
-            addAttsToCache(outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir);
+            addAttsToCache(outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir)
           }
 
-          if (CollectionUtils.isEmpty(outgoingMsgInfo.getForwardedAtts())) {
-            msgDaoSource.updateMsgState(this, email, label, uid, MessageState.QUEUED);
-            MessagesSenderJobService.schedule(getApplicationContext());
+          if (CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)) {
+            msgDaoSource.updateMsgState(this, email, label, uid, MessageState.QUEUED)
+            MessagesSenderJobService.schedule(applicationContext)
           } else {
-            ForwardedAttachmentsDownloaderJobService.schedule(getApplicationContext());
+            ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
           }
         }
-      } catch (Exception e) {
-        e.printStackTrace();
-        ExceptionUtil.handleError(e);
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
 
         if (newMsgUri == null) {
-          ContentValues contentValues = MessageDaoSource.prepareContentValues(email, label, uid, outgoingMsgInfo);
-          newMsgUri = msgDaoSource.addRow(this, contentValues);
+          val contentValues = MessageDaoSource.prepareContentValues(email, label, uid, outgoingMsgInfo)
+          newMsgUri = msgDaoSource.addRow(this, contentValues)
         }
 
-        if (e instanceof NoKeyAvailableException) {
-          NoKeyAvailableException exception = (NoKeyAvailableException) e;
-          String errorMsg = TextUtils.isEmpty(exception.getAlias()) ? exception.getEmail() : exception.getAlias();
+        if (e is NoKeyAvailableException) {
+          val errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
 
-          ContentValues contentValues = new ContentValues();
-          contentValues.put(MessageDaoSource.COL_STATE, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.getValue());
-          contentValues.put(MessageDaoSource.COL_ERROR_MSG, errorMsg);
+          val contentValues = ContentValues()
+          contentValues.put(MessageDaoSource.COL_STATE, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value)
+          contentValues.put(MessageDaoSource.COL_ERROR_MSG, errorMsg)
 
-          msgDaoSource.updateMsg(this, email, label, uid, contentValues);
+          msgDaoSource.updateMsg(this, email, label, uid, contentValues)
         } else {
-          msgDaoSource.updateMsgState(this, email, label, uid, MessageState.ERROR_DURING_CREATION);
+          msgDaoSource.updateMsgState(this, email, label, uid, MessageState.ERROR_DURING_CREATION)
         }
       }
 
       if (newMsgUri != null) {
-        int newMsgsCount = msgDaoSource.getOutboxMsgs(this, email).size();
-        new ImapLabelsDaoSource().updateLabelMsgsCount(this, email, label, newMsgsCount);
+        val newMsgsCount = msgDaoSource.getOutboxMsgs(this, email).size
+        ImapLabelsDaoSource().updateLabelMsgsCount(this, email, label, newMsgsCount)
       }
     }
   }
 
-  @NonNull
-  private ContentValues prepareContentValues(OutgoingMessageInfo msgInfo, long generatedUID, MimeMessage mimeMsg,
-                                             String rawMsg, File attsCacheDir)
-      throws MessagingException {
-    ContentValues contentValues = MessageDaoSource.prepareContentValues(account.getEmail(),
-        JavaEmailConstants.FOLDER_OUTBOX, mimeMsg, generatedUID, false);
-    boolean hasAtts = !CollectionUtils.isEmpty(msgInfo.getAtts())
-        || !CollectionUtils.isEmpty(msgInfo.getForwardedAtts());
-    boolean isEncrypted = msgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED;
-    int msgStateValue = msgInfo.isForwarded() ? MessageState.NEW_FORWARDED.getValue() : MessageState.NEW.getValue();
+  @Throws(MessagingException::class)
+  private fun prepareContentValues(msgInfo: OutgoingMessageInfo, generatedUID: Long, mimeMsg: MimeMessage,
+                                   rawMsg: String, attsCacheDir: File): ContentValues {
+    val contentValues = MessageDaoSource.prepareContentValues(account!!.email,
+        JavaEmailConstants.FOLDER_OUTBOX, mimeMsg, generatedUID, false)
+    val hasAtts = !CollectionUtils.isEmpty(msgInfo.atts) || !CollectionUtils.isEmpty(msgInfo.forwardedAtts)
+    val isEncrypted = msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
+    val msgStateValue = if (msgInfo.isForwarded) MessageState.NEW_FORWARDED.value else MessageState.NEW.value
 
-    contentValues.put(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS, rawMsg);
-    contentValues.put(MessageDaoSource.COL_FLAGS, MessageFlag.SEEN.getValue());
-    contentValues.put(MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS, hasAtts);
-    contentValues.put(MessageDaoSource.COL_IS_ENCRYPTED, isEncrypted);
-    contentValues.put(MessageDaoSource.COL_STATE, msgStateValue);
-    contentValues.put(MessageDaoSource.COL_ATTACHMENTS_DIRECTORY, attsCacheDir.getName());
+    contentValues.put(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS, rawMsg)
+    contentValues.put(MessageDaoSource.COL_FLAGS, MessageFlag.SEEN.value)
+    contentValues.put(MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS, hasAtts)
+    contentValues.put(MessageDaoSource.COL_IS_ENCRYPTED, isEncrypted)
+    contentValues.put(MessageDaoSource.COL_STATE, msgStateValue)
+    contentValues.put(MessageDaoSource.COL_ATTACHMENTS_DIRECTORY, attsCacheDir.name)
 
-    return contentValues;
+    return contentValues
   }
 
-  private void addAttsToCache(OutgoingMessageInfo msgInfo, long uid, List<String> pubKeys, File attsCacheDir) {
-    AttachmentDaoSource attDaoSource = new AttachmentDaoSource();
-    List<AttachmentInfo> cachedAtts = new ArrayList<>();
+  private fun addAttsToCache(msgInfo: OutgoingMessageInfo, uid: Long, pubKeys: List<String>, attsCacheDir: File) {
+    val attDaoSource = AttachmentDaoSource()
+    val cachedAtts = ArrayList<AttachmentInfo>()
 
-    NodeService nodeService = NodeRetrofitHelper.getRetrofit().create(NodeService.class);
-    if (!CollectionUtils.isEmpty(msgInfo.getAtts())) {
-      for (AttachmentInfo att : msgInfo.getAtts()) {
-        if (TextUtils.isEmpty(att.getType())) {
-          att.setType(Constants.MIME_TYPE_BINARY_DATA);
+    val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
+    if (!CollectionUtils.isEmpty(msgInfo.atts)) {
+      for (att in msgInfo.atts!!) {
+        if (TextUtils.isEmpty(att.type)) {
+          att.type = Constants.MIME_TYPE_BINARY_DATA
         }
 
         try {
-          Uri origFileUri = att.getUri();
-          InputStream inputStream = null;
+          val origFileUri = att.uri
+          var inputStream: InputStream? = null
           if (origFileUri != null) {
-            inputStream = getContentResolver().openInputStream(origFileUri);
-          } else if (!TextUtils.isEmpty(att.getRawData())) {
-            inputStream = new ByteArrayInputStream(att.getRawData().getBytes());
+            inputStream = contentResolver.openInputStream(origFileUri)
+          } else if (!TextUtils.isEmpty(att.rawData)) {
+            inputStream = ByteArrayInputStream(att.rawData!!.toByteArray())
           }
 
           if (inputStream == null) {
-            continue;
+            continue
           }
 
-          if (msgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-            File encryptedTempFile = new File(attsCacheDir, att.getName() + Constants.PGP_FILE_EXT);
-            EncryptFileRequest request = new EncryptFileRequest(this, origFileUri, att.getName(), pubKeys);
+          if (msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+            val encryptedTempFile = File(attsCacheDir, att.name!! + Constants.PGP_FILE_EXT)
+            val request = EncryptFileRequest(this, origFileUri!!, att.name!!, pubKeys)
 
-            Response<EncryptedFileResult> response = nodeService.encryptFile(request).execute();
-            EncryptedFileResult encryptedFileResult = response.body();
+            val response = nodeService.encryptFile(request).execute()
+            val encryptedFileResult = response.body()
 
             if (encryptedFileResult == null) {
-              ExceptionUtil.handleError(new NullPointerException("encryptedFileResult == null"));
-              continue;
+              ExceptionUtil.handleError(NullPointerException("encryptedFileResult == null"))
+              continue
             }
 
-            if (encryptedFileResult.getError() != null) {
-              ExceptionUtil.handleError(new Exception(encryptedFileResult.getError().getMsg()));
-              continue;
+            if (encryptedFileResult.error != null) {
+              ExceptionUtil.handleError(Exception(encryptedFileResult.error.msg))
+              continue
             }
 
-            byte[] encryptedBytes = encryptedFileResult.getEncryptedBytes();
-            FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes);
-            Uri uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile);
-            att.setUri(uri);
-            att.setName(encryptedTempFile.getName());
+            val encryptedBytes = encryptedFileResult.encryptedBytes
+            FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes!!)
+            val uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile)
+            att.uri = uri
+            att.name = encryptedTempFile.name
           } else {
-            File cachedAtt = new File(attsCacheDir, att.getName());
-            FileUtils.copyInputStreamToFile(inputStream, cachedAtt);
-            Uri uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt);
-            att.setUri(uri);
+            val cachedAtt = File(attsCacheDir, att.name)
+            FileUtils.copyInputStreamToFile(inputStream, cachedAtt)
+            val uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt)
+            att.uri = uri
           }
 
-          cachedAtts.add(att);
+          cachedAtts.add(att)
           if (origFileUri != null) {
-            if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(origFileUri.getAuthority())) {
-              getContentResolver().delete(origFileUri, null, null);
+            if (Constants.FILE_PROVIDER_AUTHORITY.equals(origFileUri.authority!!, ignoreCase = true)) {
+              contentResolver.delete(origFileUri, null, null)
             }
           }
-        } catch (Exception e) {
-          e.printStackTrace();
-          ExceptionUtil.handleError(e);
+        } catch (e: Exception) {
+          e.printStackTrace()
+          ExceptionUtil.handleError(e)
         }
+
       }
     }
 
-    if (!CollectionUtils.isEmpty(msgInfo.getForwardedAtts())) {
-      for (AttachmentInfo att : msgInfo.getForwardedAtts()) {
-        if (TextUtils.isEmpty(att.getType())) {
-          att.setType(Constants.MIME_TYPE_BINARY_DATA);
+    if (!CollectionUtils.isEmpty(msgInfo.forwardedAtts)) {
+      for (att in msgInfo.forwardedAtts!!) {
+        if (TextUtils.isEmpty(att.type)) {
+          att.type = Constants.MIME_TYPE_BINARY_DATA
         }
 
-        if (msgInfo.getEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-          AttachmentInfo encryptedAtt = att.copy(JavaEmailConstants.FOLDER_OUTBOX);
-          encryptedAtt.setName(encryptedAtt.getName() + Constants.PGP_FILE_EXT);
-          cachedAtts.add(encryptedAtt);
+        if (msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+          val encryptedAtt = att.copy(JavaEmailConstants.FOLDER_OUTBOX)
+          encryptedAtt.name = encryptedAtt.name!! + Constants.PGP_FILE_EXT
+          cachedAtts.add(encryptedAtt)
         } else {
-          cachedAtts.add(att.copy(JavaEmailConstants.FOLDER_OUTBOX));
+          cachedAtts.add(att.copy(JavaEmailConstants.FOLDER_OUTBOX))
         }
       }
     }
 
-    attDaoSource.addRows(this, account.getEmail(), JavaEmailConstants.FOLDER_OUTBOX, uid, cachedAtts);
+    attDaoSource.addRows(this, account!!.email, JavaEmailConstants.FOLDER_OUTBOX, uid, cachedAtts)
   }
 
-  private void setupIfNeeded() {
+  private fun setupIfNeeded() {
     if (attsCacheDir == null) {
-      attsCacheDir = new File(getCacheDir(), Constants.ATTACHMENTS_CACHE_DIR);
-      if (!attsCacheDir.exists()) {
-        if (!attsCacheDir.mkdirs()) {
-          throw new IllegalStateException("Create cache directory " + attsCacheDir.getName() + " filed!");
+      attsCacheDir = File(cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
+      if (!attsCacheDir!!.exists()) {
+        if (!attsCacheDir!!.mkdirs()) {
+          throw IllegalStateException("Create cache directory " + attsCacheDir!!.name + " filed!")
         }
       }
     }
   }
 
   /**
-   * Update the {@link ContactsDaoSource#COL_LAST_USE} field in the {@link ContactsDaoSource#TABLE_NAME_CONTACTS}.
+   * Update the [ContactsDaoSource.COL_LAST_USE] field in the [ContactsDaoSource.TABLE_NAME_CONTACTS].
    *
-   * @param msgInfo - {@link OutgoingMessageInfo} which contains information about an outgoing message.
+   * @param msgInfo - [OutgoingMessageInfo] which contains information about an outgoing message.
    */
-  private void updateContactsLastUseDateTime(OutgoingMessageInfo msgInfo) {
-    ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
+  private fun updateContactsLastUseDateTime(msgInfo: OutgoingMessageInfo) {
+    val contactsDaoSource = ContactsDaoSource()
 
-    for (String contact : msgInfo.getAllRecipients()) {
-      int updateResult = contactsDaoSource.updateLastUse(this, contact);
+    for (contact in msgInfo.getAllRecipients()) {
+      val updateResult = contactsDaoSource.updateLastUse(this, contact)
       if (updateResult == -1) {
-        contactsDaoSource.addRow(this, new PgpContact(contact, null));
+        contactsDaoSource.addRow(this, PgpContact(contact, null))
+      }
+    }
+  }
+
+  companion object {
+    private val EXTRA_KEY_OUTGOING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_OUTGOING_MESSAGE_INFO", PrepareOutgoingMessagesJobIntentService::class.java)
+    private val TAG = PrepareOutgoingMessagesJobIntentService::class.java.simpleName
+
+    /**
+     * Enqueue a new task for [PrepareOutgoingMessagesJobIntentService].
+     *
+     * @param context         Interface to global information about an application environment.
+     * @param outgoingMsgInfo [OutgoingMessageInfo] which contains information about an outgoing message.
+     */
+    @JvmStatic
+    fun enqueueWork(context: Context, outgoingMsgInfo: OutgoingMessageInfo?) {
+      if (outgoingMsgInfo != null) {
+        val intent = Intent(context, PrepareOutgoingMessagesJobIntentService::class.java)
+        intent.putExtra(EXTRA_KEY_OUTGOING_MESSAGE_INFO, outgoingMsgInfo)
+
+        enqueueWork(context, PrepareOutgoingMessagesJobIntentService::class.java,
+            JobIdManager.JOB_TYPE_PREPARE_OUT_GOING_MESSAGE, intent)
       }
     }
   }

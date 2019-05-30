@@ -3,37 +3,34 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.service;
+package com.flowcrypt.email.service
 
-import android.content.Context;
-import android.content.Intent;
-import android.text.TextUtils;
-
-import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.jobscheduler.JobIdManager;
-import com.flowcrypt.email.model.EmailAndNamePair;
-import com.flowcrypt.email.model.PgpContact;
-
-import java.util.ArrayList;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.JobIntentService;
+import android.content.Context
+import android.content.Intent
+import android.text.TextUtils
+import androidx.core.app.JobIntentService
+import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.jobscheduler.JobIdManager
+import com.flowcrypt.email.model.EmailAndNamePair
+import com.flowcrypt.email.model.PgpContact
+import java.util.*
 
 /**
  * This service does update a name of some email entry or creates a new email entry if it not
  * exists.
- * <p>
+ *
+ *
  * Used a next logic:
- * <ul>
- * <li> if email in db:
- * <ul>
- * <li>if db_row.name is null and bool(name) == true:
+ *
+ *  *  if email in db:
+ *
+ *  * if db_row.name is null and bool(name) == true:
  * "save that person's name into the existing DB record"
- * </ul>
- * <li> else:
+ *
+ *  *  else:
  * "save that email, name pair into DB like so: new PgpContact(email, name);"
- * </ul>
+ *
  *
  * @author DenBond7
  * Date: 22.05.2017
@@ -41,46 +38,42 @@ import androidx.core.app.JobIntentService;
  * E-mail: DenBond7@gmail.com
  */
 
-public class EmailAndNameUpdaterService extends JobIntentService {
-  private static final String EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME = BuildConfig.APPLICATION_ID +
-      ".EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME";
-  private ContactsDaoSource contactsDaoSource;
+class EmailAndNameUpdaterService : JobIntentService() {
+  private var contactsDaoSource: ContactsDaoSource = ContactsDaoSource()
 
-  /**
-   * Enqueue a new task for {@link EmailAndNameUpdaterService}.
-   *
-   * @param context           Interface to global information about an application environment.
-   * @param emailAndNamePairs A list of EmailAndNamePair objects.
-   */
-  public static void enqueueWork(Context context, ArrayList<EmailAndNamePair> emailAndNamePairs) {
-    if (emailAndNamePairs != null && !emailAndNamePairs.isEmpty()) {
-      Intent intent = new Intent(context, EmailAndNameUpdaterService.class);
-      intent.putExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME, emailAndNamePairs);
+  override fun onHandleWork(intent: Intent) {
+    if (intent.hasExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME)) {
+      val pairs = intent.getParcelableArrayListExtra<EmailAndNamePair>(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME)
 
-      enqueueWork(context, EmailAndNameUpdaterService.class, JobIdManager.JOB_TYPE_EMAIL_AND_NAME_UPDATE, intent);
+      for ((email, name) in pairs) {
+        val pgpContact = contactsDaoSource.getPgpContact(applicationContext, email)
+        if (pgpContact != null) {
+          if (TextUtils.isEmpty(pgpContact.name)) {
+            contactsDaoSource.updateNameOfPgpContact(applicationContext, email, name)
+          }
+        } else {
+          contactsDaoSource.addRow(applicationContext, PgpContact(email!!, name))
+        }
+      }
     }
   }
 
-  @Override
-  public void onCreate() {
-    super.onCreate();
-    contactsDaoSource = new ContactsDaoSource();
-  }
+  companion object {
+    private const val EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME = BuildConfig.APPLICATION_ID + ".EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME"
 
-  @Override
-  protected void onHandleWork(@NonNull Intent intent) {
-    if (intent.hasExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME)) {
-      ArrayList<EmailAndNamePair> pairs = intent.getParcelableArrayListExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME);
+    /**
+     * Enqueue a new task for [EmailAndNameUpdaterService].
+     *
+     * @param context           Interface to global information about an application environment.
+     * @param emailAndNamePairs A list of EmailAndNamePair objects.
+     */
+    @JvmStatic
+    fun enqueueWork(context: Context, emailAndNamePairs: ArrayList<EmailAndNamePair>?) {
+      if (emailAndNamePairs != null && !emailAndNamePairs.isEmpty()) {
+        val intent = Intent(context, EmailAndNameUpdaterService::class.java)
+        intent.putExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME, emailAndNamePairs)
 
-      for (EmailAndNamePair pair : pairs) {
-        PgpContact pgpContact = contactsDaoSource.getPgpContact(getApplicationContext(), pair.getEmail());
-        if (pgpContact != null) {
-          if (TextUtils.isEmpty(pgpContact.getName())) {
-            contactsDaoSource.updateNameOfPgpContact(getApplicationContext(), pair.getEmail(), pair.getName());
-          }
-        } else {
-          contactsDaoSource.addRow(getApplicationContext(), new PgpContact(pair.getEmail(), pair.getName()));
-        }
+        enqueueWork(context, EmailAndNameUpdaterService::class.java, JobIdManager.JOB_TYPE_EMAIL_AND_NAME_UPDATE, intent)
       }
     }
   }
