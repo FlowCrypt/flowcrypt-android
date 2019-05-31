@@ -3,18 +3,16 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email;
+package com.flowcrypt.email
 
-import android.app.Application;
-import android.app.job.JobScheduler;
-import android.content.Context;
-
-import com.flowcrypt.email.jobscheduler.JobIdManager;
-import com.flowcrypt.email.jobscheduler.SyncJobService;
-import com.flowcrypt.email.ui.NotificationChannelManager;
-import com.flowcrypt.email.util.GeneralUtil;
-
-import androidx.fragment.app.FragmentManager;
+import android.app.Application
+import android.app.job.JobScheduler
+import android.content.Context
+import androidx.fragment.app.FragmentManager
+import com.flowcrypt.email.jobscheduler.JobIdManager
+import com.flowcrypt.email.jobscheduler.SyncJobService
+import com.flowcrypt.email.ui.NotificationChannelManager
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * The application class for FlowCrypt. Base class for maintaining global application state.
@@ -24,31 +22,27 @@ import androidx.fragment.app.FragmentManager;
  * Time: 4:53 PM
  * E-mail: DenBond7@gmail.com
  */
-public abstract class BaseApplication extends Application {
+abstract class BaseApplication : Application() {
 
-  public abstract void initAcra();
+  abstract fun initAcra()
 
-  public abstract void initLeakCanary();
+  abstract fun initLeakCanary()
 
-  @Override
-  public void onCreate() {
-    super.onCreate();
-    NotificationChannelManager.registerNotificationChannels(this);
+  override fun onCreate() {
+    super.onCreate()
+    NotificationChannelManager.registerNotificationChannels(this)
 
-    initLeakCanary();
-    FragmentManager.enableDebugLogging(GeneralUtil.isDebugBuild());
+    initLeakCanary()
+    FragmentManager.enableDebugLogging(GeneralUtil.isDebugBuild())
 
-    JobScheduler scheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
-    if (scheduler != null) {
-      scheduler.cancel(JobIdManager.JOB_TYPE_SYNC);
-    }
-    SyncJobService.schedule(this);
+    val scheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+    scheduler.cancel(JobIdManager.JOB_TYPE_SYNC)
+    SyncJobService.schedule(this)
   }
 
-  @Override
-  protected void attachBaseContext(Context base) {
-    super.attachBaseContext(base);
-    initAcra();
+  override fun attachBaseContext(base: Context) {
+    super.attachBaseContext(base)
+    initAcra()
   }
 }
 
