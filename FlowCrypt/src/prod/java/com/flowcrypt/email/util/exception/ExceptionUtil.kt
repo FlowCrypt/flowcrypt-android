@@ -3,12 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.exception;
-
-import org.acra.ACRA;
+package com.flowcrypt.email.util.exception
 
 /**
- * This class describes methods for a work with {@link Exception}
+ * This class describes methods for a work with [Exception]
  *
  * @author Denis Bondarenko
  * Date: 25.01.2018
@@ -16,16 +14,19 @@ import org.acra.ACRA;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ExceptionUtil{
-  /**
-   * Handle an input {@link Exception} by {@link ACRA}.
-   *
-   * @param e An input {@link Exception}
-   */
-  public static void handleError(Throwable e) {
-    if (ExceptionResolver.INSTANCE.isHandlingNeeded(e)) {
-      if (ACRA.isInitialised()) {
-        ACRA.getErrorReporter().handleException(new ManualHandledException(e));
+class ExceptionUtil {
+  companion object {
+    /**
+     * Handle an input [Exception] by [ACRA].
+     *
+     * @param e An input [Exception]
+     */
+    @JvmStatic
+    fun handleError(e: Throwable) {
+      if (ExceptionResolver.INSTANCE.isHandlingNeeded(e)) {
+        if (ACRA.isInitialised()) {
+          ACRA.getErrorReporter().handleException(ManualHandledException(e))
+        }
       }
     }
   }

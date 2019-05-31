@@ -3,10 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.util.exception;
+package com.flowcrypt.email.util.exception
 
 /**
- * This class describes methods for a work with {@link Exception}. The test development version.
+ * This class describes methods for a work with [Exception]. The test development version.
  *
  * @author Denis Bondarenko
  * Date: 02/01/2019
@@ -14,8 +14,11 @@ package com.flowcrypt.email.util.exception;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ExceptionUtil{
-  public static void handleError(Throwable e) {
-    //Don't modify it
+class ExceptionUtil {
+  companion object {
+    @JvmStatic
+    fun handleError(e: Throwable) {
+      //Don't modify it
+    }
   }
 }

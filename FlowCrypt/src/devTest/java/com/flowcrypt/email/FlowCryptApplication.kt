@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email;
+package com.flowcrypt.email
 
 /**
  * The application class for FlowCrypt. Base class for maintaining global application state.
@@ -15,15 +15,15 @@ package com.flowcrypt.email;
  * E-mail: DenBond7@gmail.com
  */
 
-public class FlowCryptApplication extends BaseApplication {
+class FlowCryptApplication : BaseApplication() {
 
   @Override
-  public void initAcra() {
+  fun initAcra() {
     //Don't modify it
   }
 
   @Override
-  public void initLeakCanary() {
+  fun initLeakCanary() {
     //Don't modify it
   }
 }

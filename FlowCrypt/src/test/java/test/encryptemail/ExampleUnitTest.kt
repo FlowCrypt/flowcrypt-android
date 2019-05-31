@@ -3,20 +3,20 @@
  * Contributors: DenBond7
  */
 
-package test.encryptemail;
+package test.encryptemail
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 /**
  * Example local unit test, which will execute on the development machine (host).
  *
- * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
+ * @see [Testing documentation](http://d.android.com/tools/testing)
  */
-public class ExampleUnitTest {
+class ExampleUnitTest {
   @Test
-  public void additionIsCorrect() throws Exception {
-    assertEquals(4, 2 + 2);
+  @Throws(Exception::class)
+  fun additionIsCorrect() {
+    assertEquals(4, (2 + 2).toLong())
   }
 }
