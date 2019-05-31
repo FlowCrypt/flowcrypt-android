@@ -35,7 +35,7 @@ class CheckNewMessagesSyncTask(ownerKey: String,
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
     val email = account.email
-    val folderAlias = localFolder.folderAlias
+    val folderAlias = localFolder.folderAlias!!
     val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, email)
 
     val folder = store.getFolder(localFolder.fullName) as IMAPFolder

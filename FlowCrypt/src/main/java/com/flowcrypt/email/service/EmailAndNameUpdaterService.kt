@@ -49,7 +49,7 @@ class EmailAndNameUpdaterService : JobIntentService() {
         val pgpContact = contactsDaoSource.getPgpContact(applicationContext, email)
         if (pgpContact != null) {
           if (TextUtils.isEmpty(pgpContact.name)) {
-            contactsDaoSource.updateNameOfPgpContact(applicationContext, email, name)
+            email?.let { contactsDaoSource.updateNameOfPgpContact(applicationContext, it, name) }
           }
         } else {
           contactsDaoSource.addRow(applicationContext, PgpContact(email!!, name))

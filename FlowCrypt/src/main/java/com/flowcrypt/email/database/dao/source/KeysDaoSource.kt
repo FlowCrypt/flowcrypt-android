@@ -3,27 +3,21 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database.dao.source;
+package com.flowcrypt.email.database.dao.source
 
-import android.content.ContentProviderOperation;
-import android.content.ContentProviderResult;
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
-import android.provider.BaseColumns;
-import android.text.TextUtils;
-
-import com.flowcrypt.email.database.dao.KeysDao;
-import com.google.android.gms.common.util.CollectionUtils;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import android.content.ContentProviderOperation
+import android.content.ContentProviderResult
+import android.content.ContentValues
+import android.content.Context
+import android.net.Uri
+import android.provider.BaseColumns
+import android.text.TextUtils
+import com.flowcrypt.email.database.dao.KeysDao
+import com.google.android.gms.common.util.CollectionUtils
+import java.util.*
 
 /**
- * This class describe creating of table which has name {@link KeysDaoSource#TABLE_NAME_KEYS},
+ * This class describe creating of table which has name [KeysDaoSource.TABLE_NAME_KEYS],
  * add, delete and update rows.
  *
  * @author DenBond7
@@ -32,52 +26,31 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 
-public class KeysDaoSource extends BaseDaoSource {
-  public static final String TABLE_NAME_KEYS = "keys";
+class KeysDaoSource : BaseDaoSource() {
 
-  public static final String COL_LONG_ID = "long_id";
-  public static final String COL_SOURCE = "source";
-  public static final String COL_PUBLIC_KEY = "public_key";
-  public static final String COL_PRIVATE_KEY = "private_key";
-  public static final String COL_PASSPHRASE = "passphrase";
-
-  public static final String KEYS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
-      TABLE_NAME_KEYS + " (" +
-      BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-      COL_LONG_ID + " VARCHAR(16) NOT NULL, " +
-      COL_SOURCE + " VARCHAR(20) NOT NULL, " +
-      COL_PUBLIC_KEY + " BLOB NOT NULL, " +
-      COL_PRIVATE_KEY + " BLOB NOT NULL, " +
-      COL_PASSPHRASE + " varchar(100) DEFAULT NULL " + ");";
-
-  public static final String CREATE_INDEX_LONG_ID_IN_KEYS = UNIQUE_INDEX_PREFIX + COL_LONG_ID + "_in_" +
-      TABLE_NAME_KEYS + " ON " + TABLE_NAME_KEYS + " (" + COL_LONG_ID + ")";
-
-  @Override
-  public String getTableName() {
-    return TABLE_NAME_KEYS;
-  }
+  override val tableName: String = TABLE_NAME_KEYS
 
   /**
    * Add information about a key to the database.
    *
    * @param context Interface to global information about an application environment.
-   * @param keysDao The {@link KeysDao} object which contain information about a key.
-   * @return <tt>{@link Uri}</tt> which contain information about an inserted row or null if the
+   * @param keysDao The [KeysDao] object which contain information about a key.
+   * @return <tt>[Uri]</tt> which contain information about an inserted row or null if the
    * row not inserted.
    */
-  public Uri addRow(Context context, KeysDao keysDao) {
-    ContentResolver contentResolver = context.getContentResolver();
+  fun addRow(context: Context, keysDao: KeysDao?): Uri? {
+    val contentResolver = context.contentResolver
     if (keysDao != null && contentResolver != null) {
-      ContentValues contentValues = new ContentValues();
-      contentValues.put(COL_LONG_ID, keysDao.getLongId());
-      contentValues.put(COL_SOURCE, keysDao.getPrivateKeySourceType().toString());
-      contentValues.put(COL_PUBLIC_KEY, keysDao.getPublicKey());
-      contentValues.put(COL_PRIVATE_KEY, keysDao.getPrivateKey());
-      contentValues.put(COL_PASSPHRASE, keysDao.getPassphrase());
+      val contentValues = ContentValues()
+      contentValues.put(COL_LONG_ID, keysDao.longId)
+      contentValues.put(COL_SOURCE, keysDao.privateKeySourceType!!.toString())
+      contentValues.put(COL_PUBLIC_KEY, keysDao.publicKey)
+      contentValues.put(COL_PRIVATE_KEY, keysDao.privateKey)
+      contentValues.put(COL_PASSPHRASE, keysDao.passphrase)
 
-      return contentResolver.insert(getBaseContentUri(), contentValues);
-    } else return null;
+      return contentResolver.insert(baseContentUri, contentValues)
+    } else
+      return null
   }
 
   /**
@@ -85,23 +58,23 @@ public class KeysDaoSource extends BaseDaoSource {
    *
    * @param context Interface to global information about an application environment.
    * @param longId  The key longid parameter.
-   * @return <tt>{@link Boolean}</tt> true - if the key already exists in the database, false -
+   * @return <tt>[Boolean]</tt> true - if the key already exists in the database, false -
    * otherwise.
    */
-  public boolean hasKey(Context context, String longId) {
-    ContentResolver contentResolver = context.getContentResolver();
-    Cursor cursor = contentResolver.query(getBaseContentUri(), null, COL_LONG_ID + " = ?", new String[]{longId}, null);
+  fun hasKey(context: Context, longId: String): Boolean {
+    val contentResolver = context.contentResolver
+    val cursor = contentResolver.query(baseContentUri, null, "$COL_LONG_ID = ?", arrayOf(longId), null)
 
-    boolean result = false;
+    var result = false
 
     if (cursor != null) {
       if (cursor.moveToFirst()) {
-        result = true;
+        result = true
       }
-      cursor.close();
+      cursor.close()
     }
 
-    return result;
+    return result
   }
 
   /**
@@ -110,21 +83,21 @@ public class KeysDaoSource extends BaseDaoSource {
    * @param context Interface to global information about an application environment.
    * @return The list of avalible keys longids.
    */
-  public List<String> getAllKeysLongIds(Context context) {
-    ContentResolver contentResolver = context.getContentResolver();
-    Cursor cursor = contentResolver.query(getBaseContentUri(), new String[]{COL_LONG_ID}, null, null, null);
+  fun getAllKeysLongIds(context: Context): List<String> {
+    val contentResolver = context.contentResolver
+    val cursor = contentResolver.query(baseContentUri, arrayOf(COL_LONG_ID), null, null, null)
 
-    List<String> longIds = new ArrayList<>();
+    val longIds = ArrayList<String>()
 
     if (cursor != null) {
       while (cursor.moveToNext()) {
-        longIds.add(cursor.getString(cursor.getColumnIndex(COL_LONG_ID)));
+        longIds.add(cursor.getString(cursor.getColumnIndex(COL_LONG_ID)))
       }
 
-      cursor.close();
+      cursor.close()
     }
 
-    return longIds;
+    return longIds
   }
 
   /**
@@ -134,36 +107,60 @@ public class KeysDaoSource extends BaseDaoSource {
    * @param keyLognId The key longid.
    * @return The count of deleted rows. Will be 1 if information about the key was deleted or -1 otherwise.
    */
-  public int removeKey(Context context, String keyLognId) {
-    if (!TextUtils.isEmpty(keyLognId)) {
+  fun removeKey(context: Context, keyLognId: String): Int {
+    return if (!TextUtils.isEmpty(keyLognId)) {
 
-      ContentResolver contentResolver = context.getContentResolver();
-      if (contentResolver != null) {
-        return contentResolver.delete(getBaseContentUri(), COL_LONG_ID + " = ?", new String[]{keyLognId});
-      } else return -1;
-    } else return -1;
+      val contentResolver = context.contentResolver
+      contentResolver?.delete(baseContentUri, "$COL_LONG_ID = ?", arrayOf(keyLognId)) ?: -1
+    } else
+      -1
   }
 
   /**
    * This method update information about some private keys.
    *
    * @param context Interface to global information about an application environment.
-   * @param keys    The list of {@link KeysDao} which contains information about the private keys.
-   * @return the {@link ContentProviderResult} array.
+   * @param keys    The list of [KeysDao] which contains information about the private keys.
+   * @return the [ContentProviderResult] array.
    */
-  public ContentProviderResult[] updateKeys(Context context, Collection<KeysDao> keys) throws Exception {
-    ContentResolver contentResolver = context.getContentResolver();
-    if (!CollectionUtils.isEmpty(keys)) {
-      ArrayList<ContentProviderOperation> contentProviderOperations = new ArrayList<>();
-      for (KeysDao keysDao : keys) {
-        contentProviderOperations.add(ContentProviderOperation.newUpdate(getBaseContentUri())
-            .withValue(COL_PRIVATE_KEY, keysDao.getPrivateKey())
-            .withValue(COL_PASSPHRASE, keysDao.getPassphrase())
-            .withSelection(COL_LONG_ID + "= ?", new String[]{keysDao.getLongId()})
+  @Throws(Exception::class)
+  fun updateKeys(context: Context, keys: Collection<KeysDao>): Array<ContentProviderResult> {
+    val contentResolver = context.contentResolver
+    return if (!CollectionUtils.isEmpty(keys)) {
+      val contentProviderOperations = ArrayList<ContentProviderOperation>()
+      for ((longId, _, _, privateKey, passphrase) in keys) {
+        contentProviderOperations.add(ContentProviderOperation.newUpdate(baseContentUri)
+            .withValue(COL_PRIVATE_KEY, privateKey)
+            .withValue(COL_PASSPHRASE, passphrase)
+            .withSelection("$COL_LONG_ID= ?", arrayOf(longId!!))
             .withYieldAllowed(true)
-            .build());
+            .build())
       }
-      return contentResolver.applyBatch(getBaseContentUri().getAuthority(), contentProviderOperations);
-    } else return new ContentProviderResult[0];
+      contentResolver.applyBatch(baseContentUri.authority!!, contentProviderOperations)
+    } else {
+      emptyArray()
+    }
+  }
+
+  companion object {
+    const val TABLE_NAME_KEYS = "keys"
+
+    const val COL_LONG_ID = "long_id"
+    const val COL_SOURCE = "source"
+    const val COL_PUBLIC_KEY = "public_key"
+    const val COL_PRIVATE_KEY = "private_key"
+    const val COL_PASSPHRASE = "passphrase"
+
+    const val KEYS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
+        TABLE_NAME_KEYS + " (" +
+        BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        COL_LONG_ID + " VARCHAR(16) NOT NULL, " +
+        COL_SOURCE + " VARCHAR(20) NOT NULL, " +
+        COL_PUBLIC_KEY + " BLOB NOT NULL, " +
+        COL_PRIVATE_KEY + " BLOB NOT NULL, " +
+        COL_PASSPHRASE + " varchar(100) DEFAULT NULL " + ");"
+
+    const val CREATE_INDEX_LONG_ID_IN_KEYS = UNIQUE_INDEX_PREFIX + COL_LONG_ID + "_in_" +
+        TABLE_NAME_KEYS + " ON " + TABLE_NAME_KEYS + " (" + COL_LONG_ID + ")"
   }
 }

@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database.dao.source;
+package com.flowcrypt.email.database.dao.source
 
 /**
  * This object describes information about an account alias.
@@ -14,63 +14,9 @@ package com.flowcrypt.email.database.dao.source;
  * E-mail: DenBond7@gmail.com
  */
 
-public class AccountAliasesDao {
-
-  private String email;
-  private String accountType;
-  private String sendAsEmail;
-  private String displayName;
-  private boolean isDefault;
-  private String verificationStatus;
-
-  public AccountAliasesDao() {
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
-  public String getAccountType() {
-    return accountType;
-  }
-
-  public void setAccountType(String accountType) {
-    this.accountType = accountType;
-  }
-
-  public String getSendAsEmail() {
-    return sendAsEmail;
-  }
-
-  public void setSendAsEmail(String sendAsEmail) {
-    this.sendAsEmail = sendAsEmail;
-  }
-
-  public String getDisplayName() {
-    return displayName;
-  }
-
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
-  }
-
-  public boolean isDefault() {
-    return isDefault;
-  }
-
-  public void setDefault(boolean aDefault) {
-    isDefault = aDefault;
-  }
-
-  public String getVerificationStatus() {
-    return verificationStatus;
-  }
-
-  public void setVerificationStatus(String verificationStatus) {
-    this.verificationStatus = verificationStatus;
-  }
-}
+data class AccountAliasesDao constructor(var email: String? = null,
+                                         var accountType: String? = null,
+                                         var sendAsEmail: String? = null,
+                                         var displayName: String? = null,
+                                         var isDefault: Boolean = false,
+                                         var verificationStatus: String? = null)

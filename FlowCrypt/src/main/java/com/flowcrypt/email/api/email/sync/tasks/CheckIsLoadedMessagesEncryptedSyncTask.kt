@@ -36,7 +36,7 @@ class CheckIsLoadedMessagesEncryptedSyncTask(ownerKey: String,
 
     val msgDaoSource = MessageDaoSource()
 
-    val uidList = msgDaoSource.getNotCheckedUIDs(context, account.email, folder)
+    val uidList = msgDaoSource.getNotCheckedUIDs(context, account.email, folder!!)
 
     if (uidList.isEmpty()) {
       return

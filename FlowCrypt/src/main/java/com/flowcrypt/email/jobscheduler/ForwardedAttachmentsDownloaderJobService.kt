@@ -181,7 +181,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
           var pubKeys: List<String>? = null
           if (details.isEncrypted) {
             val senderEmail = EmailUtil.getFirstAddressString(details.from)
-            pubKeys = SecurityUtils.getRecipientsPubKeys(context, details.allRecipients, account, senderEmail)
+            pubKeys = SecurityUtils.getRecipientsPubKeys(context, details.allRecipients.toMutableList(), account, senderEmail)
           }
 
           val atts = attDaoSource.getAttInfoList(context, account.email,
@@ -279,7 +279,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
         if (att.uri != null) {
           val contentValues = ContentValues()
           contentValues.put(AttachmentDaoSource.COL_FILE_URI, att.uri!!.toString())
-          attDaoSource.update(context, att.email, att.folder, att.uid.toLong(), att.id, contentValues)
+          attDaoSource.update(context, att.email, att.folder, att.uid.toLong(), att.id!!, contentValues)
         }
       }
       return msgState

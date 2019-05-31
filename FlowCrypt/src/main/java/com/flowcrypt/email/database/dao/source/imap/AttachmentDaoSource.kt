@@ -3,23 +3,18 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database.dao.source.imap;
+package com.flowcrypt.email.database.dao.source.imap
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
-import android.provider.BaseColumns;
-import android.text.TextUtils;
-
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.database.dao.source.BaseDaoSource;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import androidx.annotation.NonNull;
+import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
+import android.net.Uri
+import android.provider.BaseColumns
+import android.text.TextUtils
+import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.database.dao.source.BaseDaoSource
+import com.google.android.gms.common.util.CollectionUtils
+import java.util.*
 
 /**
  * @author Denis Bondarenko
@@ -28,141 +23,27 @@ import androidx.annotation.NonNull;
  * E-mail: DenBond7@gmail.com
  */
 
-public class AttachmentDaoSource extends BaseDaoSource {
-  public static final String TABLE_NAME_ATTACHMENT = "attachment";
+class AttachmentDaoSource : BaseDaoSource() {
 
-  public static final String COL_EMAIL = "email";
-  public static final String COL_FOLDER = "folder";
-  public static final String COL_UID = "uid";
-  public static final String COL_NAME = "name";
-  public static final String COL_ENCODED_SIZE_IN_BYTES = "encodedSize";
-  public static final String COL_TYPE = "type";
-  public static final String COL_ATTACHMENT_ID = "attachment_id";
-  public static final String COL_FILE_URI = "file_uri";
-  public static final String COL_FORWARDED_FOLDER = "forwarded_folder";
-  public static final String COL_FORWARDED_UID = "forwarded_uid";
-
-  public static final String ATTACHMENT_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
-      TABLE_NAME_ATTACHMENT + " (" +
-      BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-      COL_EMAIL + " VARCHAR(100) NOT NULL, " +
-      COL_FOLDER + " TEXT NOT NULL, " +
-      COL_UID + " INTEGER NOT NULL, " +
-      COL_NAME + " TEXT NOT NULL, " +
-      COL_ENCODED_SIZE_IN_BYTES + " INTEGER DEFAULT 0, " +
-      COL_TYPE + " VARCHAR(100) NOT NULL, " +
-      COL_ATTACHMENT_ID + " TEXT NOT NULL, " +
-      COL_FILE_URI + " TEXT, " +
-      COL_FORWARDED_FOLDER + " TEXT, " +
-      COL_FORWARDED_UID + " INTEGER DEFAULT -1 " + ");";
-
-  public static final String CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT =
-      UNIQUE_INDEX_PREFIX + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER + "_" + COL_ATTACHMENT_ID + "_in_"
-          + TABLE_NAME_ATTACHMENT + " ON " + TABLE_NAME_ATTACHMENT + " (" + COL_EMAIL + ", " + COL_UID
-          + ", " + COL_FOLDER + ", " + COL_ATTACHMENT_ID + ")";
-
-  /**
-   * Prepare content values for insert to the database.
-   *
-   * @param email   The email that the message linked.
-   * @param label   The folder label.
-   * @param uid     The message UID.
-   * @param attInfo The attachment info which will be added to the database.
-   * @return generated {@link ContentValues}
-   */
-  @NonNull
-  public static ContentValues prepareContentValues(String email, String label, long uid, AttachmentInfo attInfo) {
-    ContentValues contentValues = prepareContentValuesFromAttInfo(attInfo);
-    contentValues.put(COL_EMAIL, email);
-    contentValues.put(COL_FOLDER, label);
-    contentValues.put(COL_UID, uid);
-
-    return contentValues;
-  }
-
-  /**
-   * Prepare content values for insert to the database.
-   *
-   * @param attInfo The attachment info which will be added to the database.
-   * @return generated {@link ContentValues}
-   */
-  @NonNull
-  public static ContentValues prepareContentValuesFromAttInfo(AttachmentInfo attInfo) {
-    ContentValues contentValues = new ContentValues();
-
-    if (!TextUtils.isEmpty(attInfo.getEmail())) {
-      contentValues.put(COL_EMAIL, attInfo.getEmail());
-    }
-
-    if (!TextUtils.isEmpty(attInfo.getFolder())) {
-      contentValues.put(COL_FOLDER, attInfo.getFolder());
-    }
-
-    if (attInfo.getUid() != 0) {
-      contentValues.put(COL_UID, attInfo.getUid());
-    }
-
-    contentValues.put(COL_NAME, attInfo.getName());
-    contentValues.put(COL_ENCODED_SIZE_IN_BYTES, attInfo.getEncodedSize());
-    contentValues.put(COL_TYPE, attInfo.getType());
-    contentValues.put(COL_ATTACHMENT_ID, attInfo.getId());
-    if (attInfo.getUri() != null) {
-      contentValues.put(COL_FILE_URI, attInfo.getUri().toString());
-    }
-    contentValues.put(COL_FORWARDED_FOLDER, attInfo.getFwdFolder());
-    contentValues.put(COL_FORWARDED_UID, attInfo.getFwdUid());
-
-    return contentValues;
-  }
-
-  /**
-   * Generate an {@link AttachmentInfo} object from the current cursor position.
-   *
-   * @param cursor The {@link Cursor} which contains information about an
-   *               {@link AttachmentInfo} object.
-   * @return A generated {@link AttachmentInfo}.
-   */
-  public static AttachmentInfo getAttInfo(Cursor cursor) {
-    return new AttachmentInfo(null,
-        cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
-        cursor.getString(cursor.getColumnIndex(COL_FOLDER)),
-        cursor.getInt(cursor.getColumnIndex(COL_UID)),
-        cursor.getString(cursor.getColumnIndex(COL_FORWARDED_FOLDER)),
-        cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)),
-        cursor.getString(cursor.getColumnIndex(COL_NAME)),
-        cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)),
-        cursor.getString(cursor.getColumnIndex(COL_TYPE)),
-        cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)),
-        null,
-        false,
-        !cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))
-            && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0, 0
-
-    );
-  }
-
-  @Override
-  public String getTableName() {
-    return TABLE_NAME_ATTACHMENT;
-  }
+  override val tableName: String = TABLE_NAME_ATTACHMENT
 
   /**
    * Add a new attachment details to the database.
    *
    * @param context Interface to global information about an application environment.
    * @param email   The email that the message linked.
-   * @param label   The folder label where exists message which contains a current
-   *                attachment.
+   * @param label   The folder label where exists message which contains a current attachment.
    * @param uid     The message UID.
    * @param attInfo The attachment details which will be added to the database.
-   * @return A {@link Uri} of the created row.
+   * @return A [Uri] of the created row.
    */
-  public Uri addRow(Context context, String email, String label, long uid, AttachmentInfo attInfo) {
-    ContentResolver contentResolver = context.getContentResolver();
-    if (attInfo != null && label != null && contentResolver != null) {
-      ContentValues contentValues = prepareContentValues(email, label, uid, attInfo);
-      return contentResolver.insert(getBaseContentUri(), contentValues);
-    } else return null;
+  fun addRow(context: Context, email: String, label: String?, uid: Long, attInfo: AttachmentInfo?): Uri? {
+    val contentResolver = context.contentResolver
+    return if (attInfo != null && label != null && contentResolver != null) {
+      val contentValues = prepareContentValues(email, label, uid, attInfo)
+      contentResolver.insert(baseContentUri, contentValues)
+    } else
+      null
   }
 
   /**
@@ -170,14 +51,15 @@ public class AttachmentDaoSource extends BaseDaoSource {
    *
    * @param context Interface to global information about an application environment.
    * @param attInfo The attachment details which will be added to the database.
-   * @return A {@link Uri} of the created row.
+   * @return A [Uri] of the created row.
    */
-  public Uri addRow(Context context, AttachmentInfo attInfo) {
-    ContentResolver contentResolver = context.getContentResolver();
+  fun addRow(context: Context, attInfo: AttachmentInfo?): Uri? {
+    val contentResolver = context.contentResolver
     if (attInfo != null && contentResolver != null) {
-      ContentValues contentValues = prepareContentValuesFromAttInfo(attInfo);
-      return contentResolver.insert(getBaseContentUri(), contentValues);
-    } else return null;
+      val contentValues = prepareContentValuesFromAttInfo(attInfo)
+      return contentResolver.insert(baseContentUri, contentValues)
+    } else
+      return null
   }
 
   /**
@@ -190,34 +72,36 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @param attInfoList The attachments list.
    * @return the number of newly created rows.
    */
-  public int addRows(Context context, String email, String label, long uid, List<AttachmentInfo> attInfoList) {
-    if (attInfoList != null) {
-      ContentResolver contentResolver = context.getContentResolver();
-      ContentValues[] contentValuesArray = new ContentValues[attInfoList.size()];
+  fun addRows(context: Context, email: String, label: String, uid: Long, attInfoList: List<AttachmentInfo>?): Int {
+    return if (!CollectionUtils.isEmpty(attInfoList)) {
+      val contentResolver = context.contentResolver
+      val contentValuesArray = arrayOfNulls<ContentValues>(attInfoList!!.size)
 
-      for (int i = 0; i < attInfoList.size(); i++) {
-        AttachmentInfo attachmentInfo = attInfoList.get(i);
-        ContentValues contentValues = prepareContentValues(email, label, uid, attachmentInfo);
+      for (i in attInfoList.indices) {
+        val attachmentInfo = attInfoList[i]
+        val contentValues = prepareContentValues(email, label, uid, attachmentInfo)
 
-        contentValuesArray[i] = contentValues;
+        contentValuesArray[i] = contentValues
       }
 
-      return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
-    } else return 0;
+      contentResolver.bulkInsert(baseContentUri, contentValuesArray)
+    } else
+      0
   }
 
   /**
    * This method add rows per single transaction.
    *
    * @param context       Interface to global information about an application environment.
-   * @param contentValues The array of prepared {@link ContentValues}.
+   * @param contentValues The array of prepared [ContentValues].
    * @return the number of newly created rows.
    */
-  public int addRows(Context context, ContentValues[] contentValues) {
-    if (contentValues != null) {
-      ContentResolver contentResolver = context.getContentResolver();
-      return contentResolver.bulkInsert(getBaseContentUri(), contentValues);
-    } else return 0;
+  fun addRows(context: Context, contentValues: Array<ContentValues>?): Int {
+    return if (contentValues != null) {
+      val contentResolver = context.contentResolver
+      contentResolver.bulkInsert(baseContentUri, contentValues)
+    } else
+      0
   }
 
   /**
@@ -228,43 +112,44 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @param label         The folder that the attachment linked.
    * @param uid           The message UID that the attachment linked.
    * @param attId         The unique attachment id.
-   * @param contentValues The {@link ContentValues} which contains new information.
+   * @param contentValues The [ContentValues] which contains new information.
    * @return The count of the updated row or -1 up.
    */
-  public int update(Context context, String email, String label, long uid, String attId, ContentValues contentValues) {
-    ContentResolver contentResolver = context.getContentResolver();
-    if (email != null && label != null && contentResolver != null) {
-      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? AND " + COL_ATTACHMENT_ID +
-          " = ? ";
-      String[] selectionArgs = new String[]{email, label, String.valueOf(uid), attId};
-      return contentResolver.update(getBaseContentUri(), contentValues, where, selectionArgs);
-    } else return -1;
+  fun update(context: Context, email: String?, label: String?, uid: Long, attId: String, contentValues: ContentValues): Int {
+    val contentResolver = context.contentResolver
+    return if (email != null && label != null && contentResolver != null) {
+      val where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? AND " + COL_ATTACHMENT_ID +
+          " = ? "
+      val selectionArgs = arrayOf(email, label, uid.toString(), attId)
+      contentResolver.update(baseContentUri, contentValues, where, selectionArgs)
+    } else
+      -1
   }
 
   /**
-   * Get all {@link AttachmentInfo} objects from the database for some message.
+   * Get all [AttachmentInfo] objects from the database for some message.
    *
    * @param email The email that the message linked.
    * @param label The folder label.
    * @param uid   The message UID.
-   * @return A  list of {@link AttachmentInfo} objects.
+   * @return A  list of [AttachmentInfo] objects.
    */
-  public ArrayList<AttachmentInfo> getAttInfoList(Context context, String email, String label, long uid) {
-    ContentResolver contentResolver = context.getContentResolver();
-    String selection = COL_EMAIL + " = ?" + " AND " + COL_FOLDER + " = ?" + " AND " + COL_UID + " = ?";
-    String[] selectionArgs = new String[]{email, label, String.valueOf(uid)};
-    Cursor cursor = contentResolver.query(getBaseContentUri(), null, selection, selectionArgs, null);
+  fun getAttInfoList(context: Context, email: String, label: String, uid: Long): ArrayList<AttachmentInfo> {
+    val contentResolver = context.contentResolver
+    val selection = "$COL_EMAIL = ? AND $COL_FOLDER = ? AND $COL_UID = ?"
+    val selectionArgs = arrayOf(email, label, uid.toString())
+    val cursor = contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
 
-    ArrayList<AttachmentInfo> attInfoList = new ArrayList<>();
+    val attInfoList = ArrayList<AttachmentInfo>()
 
     if (cursor != null) {
       while (cursor.moveToNext()) {
-        attInfoList.add(getAttInfo(cursor));
+        attInfoList.add(getAttInfo(cursor))
       }
-      cursor.close();
+      cursor.close()
     }
 
-    return attInfoList;
+    return attInfoList
   }
 
   /**
@@ -275,12 +160,13 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @param label   The folder label.
    * @return The number of deleted rows.
    */
-  public int deleteCachedAttInfo(Context context, String email, String label) {
-    ContentResolver contentResolver = context.getContentResolver();
-    if (email != null && label != null && contentResolver != null) {
-      String where = COL_EMAIL + " = ? AND " + COL_FOLDER + " = ?";
-      return contentResolver.delete(getBaseContentUri(), where, new String[]{email, label});
-    } else return -1;
+  fun deleteCachedAttInfo(context: Context, email: String?, label: String?): Int {
+    val contentResolver = context.contentResolver
+    return if (email != null && label != null && contentResolver != null) {
+      val where = "$COL_EMAIL = ? AND $COL_FOLDER = ?"
+      contentResolver.delete(baseContentUri, where, arrayOf(email, label))
+    } else
+      -1
   }
 
   /**
@@ -292,11 +178,122 @@ public class AttachmentDaoSource extends BaseDaoSource {
    * @param uid     The message UID.
    * @return The number of rows deleted.
    */
-  public int deleteAtts(Context context, String email, String label, long uid) {
-    ContentResolver contentResolver = context.getContentResolver();
-    if (email != null && label != null && contentResolver != null) {
-      String where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? ";
-      return contentResolver.delete(getBaseContentUri(), where, new String[]{email, label, String.valueOf(uid)});
-    } else return -1;
+  fun deleteAtts(context: Context, email: String?, label: String?, uid: Long): Int {
+    val contentResolver = context.contentResolver
+    return if (email != null && label != null && contentResolver != null) {
+      val where = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
+      contentResolver.delete(baseContentUri, where, arrayOf(email, label, uid.toString()))
+    } else
+      -1
+  }
+
+  companion object {
+    const val TABLE_NAME_ATTACHMENT = "attachment"
+
+    const val COL_EMAIL = "email"
+    const val COL_FOLDER = "folder"
+    const val COL_UID = "uid"
+    const val COL_NAME = "name"
+    const val COL_ENCODED_SIZE_IN_BYTES = "encodedSize"
+    const val COL_TYPE = "type"
+    const val COL_ATTACHMENT_ID = "attachment_id"
+    const val COL_FILE_URI = "file_uri"
+    const val COL_FORWARDED_FOLDER = "forwarded_folder"
+    const val COL_FORWARDED_UID = "forwarded_uid"
+
+    const val ATTACHMENT_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
+        TABLE_NAME_ATTACHMENT + " (" +
+        BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        COL_EMAIL + " VARCHAR(100) NOT NULL, " +
+        COL_FOLDER + " TEXT NOT NULL, " +
+        COL_UID + " INTEGER NOT NULL, " +
+        COL_NAME + " TEXT NOT NULL, " +
+        COL_ENCODED_SIZE_IN_BYTES + " INTEGER DEFAULT 0, " +
+        COL_TYPE + " VARCHAR(100) NOT NULL, " +
+        COL_ATTACHMENT_ID + " TEXT NOT NULL, " +
+        COL_FILE_URI + " TEXT, " +
+        COL_FORWARDED_FOLDER + " TEXT, " +
+        COL_FORWARDED_UID + " INTEGER DEFAULT -1 " + ");"
+
+    const val CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT = (
+        UNIQUE_INDEX_PREFIX + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER + "_" + COL_ATTACHMENT_ID + "_in_"
+            + TABLE_NAME_ATTACHMENT + " ON " + TABLE_NAME_ATTACHMENT + " (" + COL_EMAIL + ", " + COL_UID
+            + ", " + COL_FOLDER + ", " + COL_ATTACHMENT_ID + ")")
+
+    /**
+     * Prepare content values for insert to the database.
+     *
+     * @param email   The email that the message linked.
+     * @param label   The folder label.
+     * @param uid     The message UID.
+     * @param attInfo The attachment info which will be added to the database.
+     * @return generated [ContentValues]
+     */
+    fun prepareContentValues(email: String, label: String, uid: Long, attInfo: AttachmentInfo): ContentValues {
+      val contentValues = prepareContentValuesFromAttInfo(attInfo)
+      contentValues.put(COL_EMAIL, email)
+      contentValues.put(COL_FOLDER, label)
+      contentValues.put(COL_UID, uid)
+
+      return contentValues
+    }
+
+    /**
+     * Prepare content values for insert to the database.
+     *
+     * @param attInfo The attachment info which will be added to the database.
+     * @return generated [ContentValues]
+     */
+    fun prepareContentValuesFromAttInfo(attInfo: AttachmentInfo): ContentValues {
+      val contentValues = ContentValues()
+
+      if (!TextUtils.isEmpty(attInfo.email)) {
+        contentValues.put(COL_EMAIL, attInfo.email)
+      }
+
+      if (!TextUtils.isEmpty(attInfo.folder)) {
+        contentValues.put(COL_FOLDER, attInfo.folder)
+      }
+
+      if (attInfo.uid != 0) {
+        contentValues.put(COL_UID, attInfo.uid)
+      }
+
+      contentValues.put(COL_NAME, attInfo.name)
+      contentValues.put(COL_ENCODED_SIZE_IN_BYTES, attInfo.encodedSize)
+      contentValues.put(COL_TYPE, attInfo.type)
+      contentValues.put(COL_ATTACHMENT_ID, attInfo.id)
+      if (attInfo.uri != null) {
+        contentValues.put(COL_FILE_URI, attInfo.uri!!.toString())
+      }
+      contentValues.put(COL_FORWARDED_FOLDER, attInfo.fwdFolder)
+      contentValues.put(COL_FORWARDED_UID, attInfo.fwdUid)
+
+      return contentValues
+    }
+
+    /**
+     * Generate an [AttachmentInfo] object from the current cursor position.
+     *
+     * @param cursor The [Cursor] which contains information about an
+     * [AttachmentInfo] object.
+     * @return A generated [AttachmentInfo].
+     */
+    @JvmStatic
+    fun getAttInfo(cursor: Cursor): AttachmentInfo {
+      return AttachmentInfo(null,
+          cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
+          cursor.getString(cursor.getColumnIndex(COL_FOLDER)),
+          cursor.getInt(cursor.getColumnIndex(COL_UID)),
+          cursor.getString(cursor.getColumnIndex(COL_FORWARDED_FOLDER)),
+          cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)),
+          cursor.getString(cursor.getColumnIndex(COL_NAME)),
+          cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)),
+          cursor.getString(cursor.getColumnIndex(COL_TYPE)),
+          cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)), null,
+          false,
+          !cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER)) && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0, 0
+      )
+    }
   }
 }

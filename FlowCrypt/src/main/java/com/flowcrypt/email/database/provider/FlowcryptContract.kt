@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database.provider;
+package com.flowcrypt.email.database.provider
 
-import android.net.Uri;
+import android.net.Uri
 
-import com.flowcrypt.email.BuildConfig;
+import com.flowcrypt.email.BuildConfig
 
 /**
  * The contract between the Flowcrypt provider and an application. Contains definitions for the
@@ -18,12 +18,15 @@ import com.flowcrypt.email.BuildConfig;
  * Time: 11:53
  * E-mail: DenBond7@gmail.com
  */
-public class FlowcryptContract {
-  public static final String AUTHORITY = BuildConfig.APPLICATION_ID + "." +
-      SecurityContentProvider.class.getSimpleName();
+class FlowcryptContract {
+  companion object {
+    @JvmField
+    val AUTHORITY = BuildConfig.APPLICATION_ID + "." + SecurityContentProvider::class.java.simpleName
 
-  public static final Uri AUTHORITY_URI = Uri.parse("content://" + AUTHORITY);
+    @JvmField
+    val AUTHORITY_URI: Uri = Uri.parse("content://$AUTHORITY")
 
-  public static final String CLEAN_DATABASE = "/clean";
-  public static final String ERASE_DATABASE = "/erase";
+    const val CLEAN_DATABASE = "/clean"
+    const val ERASE_DATABASE = "/erase"
+  }
 }

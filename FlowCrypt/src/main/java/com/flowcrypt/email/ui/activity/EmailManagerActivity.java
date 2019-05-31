@@ -622,7 +622,7 @@ public class EmailManagerActivity extends BaseEmailListActivity
       getContentResolver().delete(uri, null, new String[]{account.getEmail()});
     }
 
-    if (accountDaoList != null && !accountDaoList.isEmpty()) {
+    if (!accountDaoList.isEmpty()) {
       AccountDao newActiveAccount = accountDaoList.get(0);
       new AccountDaoSource().setActiveAccount(EmailManagerActivity.this, newActiveAccount.getEmail());
       EmailSyncService.switchAccount(EmailManagerActivity.this);

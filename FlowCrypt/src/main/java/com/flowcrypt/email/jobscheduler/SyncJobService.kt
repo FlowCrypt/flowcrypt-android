@@ -119,13 +119,11 @@ class SyncJobService : JobService(), SyncListener {
                                      updateMsgs: Array<Message>, ownerKey: String, requestCode: Int) {
     try {
       val msgDaoSource = MessageDaoSource()
-
-      val mapOfUIDsAndMsgsFlags = msgDaoSource.getMapOfUIDAndMsgFlags(applicationContext, account.email, localFolder.folderAlias)
-
+      val folderAlias = localFolder.folderAlias!!
+      val mapOfUIDsAndMsgsFlags = msgDaoSource.getMapOfUIDAndMsgFlags(applicationContext, account.email, folderAlias)
       val uidSet = HashSet(mapOfUIDsAndMsgsFlags.keys)
       val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(uidSet, remoteFolder, updateMsgs)
 
-      val folderAlias = localFolder.folderAlias
       val generalMsgDetailsBeforeUpdate = msgDaoSource.getNewMsgs(applicationContext, account.email, folderAlias)
 
       msgDaoSource.deleteMsgsByUID(applicationContext, account.email, localFolder.folderAlias,
@@ -196,19 +194,17 @@ class SyncJobService : JobService(), SyncListener {
       val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
 
       val msgDaoSource = MessageDaoSource()
-
-      val mapOfUIDAndMsgFlags = msgDaoSource.getMapOfUIDAndMsgFlags(context, account.email, localFolder.folderAlias)
+      val folderAlias = localFolder.folderAlias!!
+      val mapOfUIDAndMsgFlags = msgDaoSource.getMapOfUIDAndMsgFlags(context, account.email, folderAlias)
 
       val uids = HashSet(mapOfUIDAndMsgFlags.keys)
 
       val newCandidates = EmailUtil.genNewCandidates(uids, remoteFolder, newMsgs)
 
-      msgDaoSource.addRows(context, account.email, localFolder.folderAlias, remoteFolder, newCandidates,
+      msgDaoSource.addRows(context, account.email, folderAlias, remoteFolder, newCandidates,
           msgsEncryptionStates, !GeneralUtil.isAppForegrounded(), isEncryptedModeEnabled)
 
       if (!GeneralUtil.isAppForegrounded()) {
-        val folderAlias = localFolder.folderAlias
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && newCandidates.size == 0) {
           return
         }
@@ -300,7 +296,7 @@ class SyncJobService : JobService(), SyncListener {
           .setPeriodic(INTERVAL_MILLIS)
           .setPersisted(true)
 
-      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         jobInfoBuilder.setRequiresBatteryNotLow(true)
       }
 

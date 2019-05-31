@@ -423,7 +423,7 @@ class AttachmentDownloadManagerService : Service() {
         }
 
         val source = AccountDaoSource()
-        val account = source.getAccountInformation(context, att.email)
+        val account = source.getAccountInformation(context, att.email!!)
 
         if (account == null) {
           if (listener != null) {
@@ -435,8 +435,8 @@ class AttachmentDownloadManagerService : Service() {
         val session = OpenStoreHelper.getAttsSess(context, account)
         val store = OpenStoreHelper.openStore(context, account, session)
 
-        val (fullName) = ImapLabelsDaoSource().getFolder(context, att.email, att.folder)
-            ?: if (source.getAccountInformation(context, att.email) == null) {
+        val (fullName) = ImapLabelsDaoSource().getFolder(context, att.email!!, att.folder!!)
+            ?: if (source.getAccountInformation(context, att.email!!) == null) {
               if (listener != null) {
                 listener!!.onCanceled(this.att)
 

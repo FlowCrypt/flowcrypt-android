@@ -109,7 +109,8 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         var pubKeys: List<String>? = null
         if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
           val senderEmail = outgoingMsgInfo.from
-          pubKeys = SecurityUtils.getRecipientsPubKeys(this, outgoingMsgInfo.getAllRecipients(), account!!, senderEmail!!)
+          pubKeys = SecurityUtils.getRecipientsPubKeys(this,
+              outgoingMsgInfo.getAllRecipients().toMutableList(), account!!, senderEmail!!)
         }
 
         val rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys!!)

@@ -37,7 +37,7 @@ class RefreshMessagesSyncTask(ownerKey: String,
   @Throws(Exception::class)
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
-    val folderName = localFolder.folderAlias
+    val folderName = localFolder.folderAlias!!
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
     imapFolder.open(Folder.READ_ONLY)
 

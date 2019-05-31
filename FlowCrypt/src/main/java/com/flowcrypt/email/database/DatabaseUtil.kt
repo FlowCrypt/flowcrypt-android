@@ -3,13 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database;
+package com.flowcrypt.email.database
 
-import android.content.Context;
+import android.content.Context
 
-import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource;
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 
 /**
  * This class describes methods which help to work with the local database.
@@ -19,18 +19,21 @@ import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
  * Time: 14:46
  * E-mail: DenBond7@gmail.com
  */
-public class DatabaseUtil {
-  /**
-   * Clean the cache information about some folder.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   An owner of the folder;
-   * @param folder  A folder in a local database.
-   */
-  public static void cleanFolderCache(Context context, String email, String folder) {
-    if (!JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(folder)) {
-      new MessageDaoSource().deleteCachedMsgs(context, email, folder);
-      new AttachmentDaoSource().deleteCachedAttInfo(context, email, folder);
+class DatabaseUtil {
+  companion object {
+    /**
+     * Clean the cache information about some folder.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param email   An owner of the folder;
+     * @param folder  A folder in a local database.
+     */
+    @JvmStatic
+    fun cleanFolderCache(context: Context, email: String, folder: String) {
+      if (!JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)) {
+        MessageDaoSource().deleteCachedMsgs(context, email, folder)
+        AttachmentDaoSource().deleteCachedAttInfo(context, email, folder)
+      }
     }
   }
 }

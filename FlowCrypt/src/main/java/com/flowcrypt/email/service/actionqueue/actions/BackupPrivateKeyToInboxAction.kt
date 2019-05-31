@@ -26,7 +26,7 @@ import com.google.gson.annotations.SerializedName
  * E-mail: DenBond7@gmail.com
  */
 data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var id: Long = 0,
-                                                                   override var email: String? = null,
+                                                                   override var email: String,
                                                                    override val version: Int = 0,
                                                                    private val privateKeyLongId: String) : Action {
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
@@ -56,7 +56,7 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
 
   constructor(source: Parcel) : this(
       source.readLong(),
-      source.readString(),
+      source.readString()!!,
       source.readInt(),
       source.readString()!!
   )

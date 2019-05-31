@@ -240,7 +240,7 @@ class EmailSyncService : BaseService(), SyncListener {
         "count: " + msgs.size)
     try {
       val email = account.email
-      val folderAlias = localFolder.folderAlias
+      val folderAlias = localFolder.folderAlias!!
 
       val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(this, email)
 
@@ -275,7 +275,7 @@ class EmailSyncService : BaseService(), SyncListener {
     LogsUtil.d(TAG, "onMessagesReceived:message count: " + newMsgs.size)
     try {
       val email = account.email
-      val folderAlias = localFolder.folderAlias
+      val folderAlias = localFolder.folderAlias!!
 
       val msgDaoSource = MessageDaoSource()
       val folderType = FoldersManager.getFolderType(localFolder)
@@ -343,7 +343,7 @@ class EmailSyncService : BaseService(), SyncListener {
     LogsUtil.d(TAG, "onRefreshMessagesReceived: imapFolder = " + remoteFolder.fullName + " newMessages " +
         "count: " + newMsgs.size + ", updateMessages count = " + updateMsgs.size)
     val email = account.email
-    val folderAlias = localFolder.folderAlias
+    val folderAlias = localFolder.folderAlias!!
 
     try {
       val msgsDaoSource = MessageDaoSource()
@@ -481,7 +481,7 @@ class EmailSyncService : BaseService(), SyncListener {
   override fun onMsgChanged(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                             msg: javax.mail.Message, ownerKey: String, requestCode: Int) {
     val email = account.email
-    val folderAlias = localFolder.folderAlias
+    val folderAlias = localFolder.folderAlias!!
     val folderType = FoldersManager.getFolderType(localFolder)
 
     if (!GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX) {
@@ -506,7 +506,7 @@ class EmailSyncService : BaseService(), SyncListener {
   override fun onIdentificationToEncryptionCompleted(account: AccountDao, localFolder: LocalFolder,
                                                      remoteFolder: IMAPFolder, ownerKey: String, requestCode: Int) {
     val email = account.email
-    val folderAlias = localFolder.folderAlias
+    val folderAlias = localFolder.folderAlias!!
     val folderType = FoldersManager.getFolderType(localFolder)
 
     if (folderType === FoldersManager.FolderType.INBOX && !GeneralUtil.isAppForegrounded()) {

@@ -3,22 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database.dao.source;
+package com.flowcrypt.email.database.dao.source
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
-import android.provider.BaseColumns;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import androidx.annotation.Nullable;
+import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
+import android.net.Uri
+import android.provider.BaseColumns
+import java.util.*
 
 /**
- * This object describes a logic of work with {@link AccountAliasesDao}.
+ * This object describes a logic of work with [AccountAliasesDao].
  *
  * @author Denis Bondarenko
  * Date: 26.10.2017
@@ -26,72 +21,25 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public class AccountAliasesDaoSource extends BaseDaoSource {
-  public static final String VERIFICATION_STATUS_ACCEPTED = "accepted";
+class AccountAliasesDaoSource : BaseDaoSource() {
 
-  public static final String TABLE_NAME_ACCOUNTS_ALIASES = "accounts_aliases";
-
-  public static final String COL_EMAIL = "email";
-  public static final String COL_ACCOUNT_TYPE = "account_type";
-  public static final String COL_SEND_AS_EMAIL = "send_as_email";
-  public static final String COL_DISPLAY_NAME = "display_name";
-  public static final String COL_IS_DEFAULT = "is_default";
-  public static final String COL_VERIFICATION_STATUS = "verification_status";
-
-  public static final String ACCOUNTS_ALIASES_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
-      TABLE_NAME_ACCOUNTS_ALIASES + " (" +
-      BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-      COL_EMAIL + " VARCHAR(100) NOT NULL, " +
-      COL_ACCOUNT_TYPE + " VARCHAR(100) NOT NULL, " +
-      COL_SEND_AS_EMAIL + " VARCHAR(100) NOT NULL, " +
-      COL_DISPLAY_NAME + " TEXT DEFAULT NULL, " +
-      COL_IS_DEFAULT + " INTEGER DEFAULT 0, " +
-      COL_VERIFICATION_STATUS + " TEXT NOT NULL " + ");";
-
-  public static final String CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES = UNIQUE_INDEX_PREFIX
-      + COL_EMAIL + "_" + COL_ACCOUNT_TYPE + "_" + COL_SEND_AS_EMAIL + "_in_" + TABLE_NAME_ACCOUNTS_ALIASES
-      + " ON " + TABLE_NAME_ACCOUNTS_ALIASES + " (" + COL_EMAIL + ", " + COL_ACCOUNT_TYPE + ", " +
-      COL_SEND_AS_EMAIL + ")";
+  override val tableName: String = TABLE_NAME_ACCOUNTS_ALIASES
 
   /**
-   * Generate the {@link AccountAliasesDao} from the current cursor position;
-   *
-   * @param cursor The cursor from which to get the data.
-   * @return {@link AccountAliasesDao}.
-   */
-  public static AccountAliasesDao getCurrent(Cursor cursor) {
-    AccountAliasesDao dao = new AccountAliasesDao();
-    String accountEmail = cursor.getString(cursor.getColumnIndex(COL_EMAIL));
-    dao.setEmail(accountEmail != null ? accountEmail.toLowerCase() : null);
-    dao.setAccountType(cursor.getString(cursor.getColumnIndex(COL_ACCOUNT_TYPE)));
-    String sendAsEmail = cursor.getString(cursor.getColumnIndex(COL_SEND_AS_EMAIL));
-    dao.setSendAsEmail(sendAsEmail != null ? sendAsEmail.toLowerCase() : null);
-    dao.setDisplayName(cursor.getString(cursor.getColumnIndex(COL_DISPLAY_NAME)));
-    dao.setDefault(cursor.getInt(cursor.getColumnIndex(COL_IS_DEFAULT)) == 1);
-    dao.setVerificationStatus(cursor.getString(cursor.getColumnIndex(COL_VERIFICATION_STATUS)));
-    return dao;
-  }
-
-  @Override
-  public String getTableName() {
-    return TABLE_NAME_ACCOUNTS_ALIASES;
-  }
-
-  /**
-   * Save information about an account alias using the {@link AccountAliasesDao};
+   * Save information about an account alias using the [AccountAliasesDao];
    *
    * @param context Interface to global information about an application environment;
    * @param dao     The user's alias information.
-   * @return The created {@link Uri} or null;
+   * @return The created [Uri] or null;
    */
-  public Uri addRow(Context context, AccountAliasesDao dao) {
-    ContentResolver contentResolver = context.getContentResolver();
+  fun addRow(context: Context, dao: AccountAliasesDao?): Uri? {
+    val contentResolver = context.contentResolver
     if (dao != null && contentResolver != null) {
-      ContentValues contentValues = generateContentValues(dao);
-      if (contentValues == null) return null;
+      val contentValues = generateContentValues(dao) ?: return null
 
-      return contentResolver.insert(getBaseContentUri(), contentValues);
-    } else return null;
+      return contentResolver.insert(baseContentUri, contentValues)
+    } else
+      return null
   }
 
   /**
@@ -100,116 +48,159 @@ public class AccountAliasesDaoSource extends BaseDaoSource {
    * @param context Interface to global information about an application environment.
    * @param list    The list of an account aliases.
    */
-  public int addRows(Context context, List<AccountAliasesDao> list) {
-    if (list != null && !list.isEmpty()) {
-      ContentResolver contentResolver = context.getContentResolver();
-      ContentValues[] contentValuesArray = new ContentValues[list.size()];
+  fun addRows(context: Context, list: List<AccountAliasesDao>?): Int {
+    return if (list != null && !list.isEmpty()) {
+      val contentResolver = context.contentResolver
+      val contentValuesArray = arrayOfNulls<ContentValues>(list.size)
 
-      for (int i = 0; i < list.size(); i++) {
-        AccountAliasesDao accountAliasesDao = list.get(i);
-        contentValuesArray[i] = generateContentValues(accountAliasesDao);
+      for (i in list.indices) {
+        val accountAliasesDao = list[i]
+        contentValuesArray[i] = generateContentValues(accountAliasesDao)
       }
 
-      return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
-    } else return 0;
+      contentResolver.bulkInsert(baseContentUri, contentValuesArray)
+    } else
+      0
   }
 
   /**
-   * Get the list of {@link AccountAliasesDao} object from the local database for some email.
+   * Get the list of [AccountAliasesDao] object from the local database for some email.
    *
    * @param context Interface to global information about an application environment.
    * @param account An account information.
-   * @return The list of {@link AccountAliasesDao};
+   * @return The list of [AccountAliasesDao];
    */
-  public List<AccountAliasesDao> getAliases(Context context, AccountDao account) {
-    List<AccountAliasesDao> accountAliasesDaoList = new ArrayList<>();
+  fun getAliases(context: Context, account: AccountDao?): List<AccountAliasesDao> {
+    val accountAliasesDaoList = ArrayList<AccountAliasesDao>()
     if (account != null) {
-      String selection = AccountDaoSource.COL_EMAIL + " = ? AND " + AccountDaoSource.COL_ACCOUNT_TYPE + " = ?";
-      String[] selectionArgs = new String[]{account.getEmail(), account.getAccountType()};
-      Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, selectionArgs, null);
+      val selection = AccountDaoSource.COL_EMAIL + " = ? AND " + AccountDaoSource.COL_ACCOUNT_TYPE + " = ?"
+      val selectionArgs = arrayOf(account.email, account.accountType!!)
+      val cursor = context.contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
 
       if (cursor != null) {
         while (cursor.moveToNext()) {
-          accountAliasesDaoList.add(getCurrent(cursor));
+          accountAliasesDaoList.add(getCurrent(cursor))
         }
       }
 
-      if (cursor != null) {
-        cursor.close();
-      }
+      cursor?.close()
     }
 
-    return accountAliasesDaoList;
+    return accountAliasesDaoList
   }
 
   /**
-   * Update information about aliases of some {@link AccountDao}.
+   * Update information about aliases of some [AccountDao].
    *
    * @param context Interface to global information about an application environment.
    * @param account The object which contains information about an email account.
    * @param list    The list of an account aliases.
-   * @return The count of updated rows. Will be 1 if information about {@link AccountDao} was
+   * @return The count of updated rows. Will be 1 if information about [AccountDao] was
    * updated or -1 otherwise.
    */
-  public int updateAliases(Context context, AccountDao account, List<AccountAliasesDao> list) {
-    deleteAccountAliases(context, account);
-    return addRows(context, list);
+  fun updateAliases(context: Context, account: AccountDao, list: List<AccountAliasesDao>): Int {
+    deleteAccountAliases(context, account)
+    return addRows(context, list)
   }
 
   /**
-   * Delete information about aliases of some {@link AccountDao}.
+   * Delete information about aliases of some [AccountDao].
    *
    * @param context Interface to global information about an application environment.
    * @param account The object which contains information about an email account.
-   * @return The count of deleted rows. Will be 1 if information about {@link AccountDao} was
+   * @return The count of deleted rows. Will be 1 if information about [AccountDao] was
    * deleted or -1 otherwise.
    */
-  public int deleteAccountAliases(Context context, AccountDao account) {
+  fun deleteAccountAliases(context: Context, account: AccountDao?): Int {
     if (account != null) {
-      String email = account.getEmail();
-      if (email == null) {
-        return -1;
-      } else {
-        email = email.toLowerCase();
-      }
+      var email = account.email
+      email = email.toLowerCase()
 
-      String type = account.getAccountType();
+      var type = account.accountType
       if (type == null) {
-        return -1;
+        return -1
       } else {
-        type = type.toLowerCase();
+        type = type.toLowerCase()
       }
 
-      ContentResolver contentResolver = context.getContentResolver();
-      if (contentResolver != null) {
-        String where = COL_EMAIL + " = ? AND " + COL_ACCOUNT_TYPE + " = ?";
-        return contentResolver.delete(getBaseContentUri(), where, new String[]{email, type});
-      } else return -1;
-    } else return -1;
+      val contentResolver = context.contentResolver
+      return if (contentResolver != null) {
+        val where = "$COL_EMAIL = ? AND $COL_ACCOUNT_TYPE = ?"
+        contentResolver.delete(baseContentUri, where, arrayOf(email, type))
+      } else
+        -1
+    } else
+      return -1
   }
 
   /**
-   * Generate a {@link ContentValues} using {@link AccountAliasesDao}.
+   * Generate a [ContentValues] using [AccountAliasesDao].
    *
-   * @param accountAliasesDao The {@link AccountAliasesDao} object;
-   * @return The generated {@link ContentValues}.
+   * @param accountAliasesDao The [AccountAliasesDao] object;
+   * @return The generated [ContentValues].
    */
-  @Nullable
-  private ContentValues generateContentValues(AccountAliasesDao accountAliasesDao) {
-    ContentValues contentValues = new ContentValues();
-    if (accountAliasesDao.getEmail() != null) {
-      contentValues.put(COL_EMAIL, accountAliasesDao.getEmail().toLowerCase());
+  private fun generateContentValues(accountAliasesDao: AccountAliasesDao): ContentValues? {
+    val contentValues = ContentValues()
+    if (accountAliasesDao.email != null) {
+      contentValues.put(COL_EMAIL, accountAliasesDao.email!!.toLowerCase())
     } else {
-      return null;
+      return null
     }
 
-    contentValues.put(COL_ACCOUNT_TYPE, accountAliasesDao.getAccountType());
-    contentValues.put(COL_DISPLAY_NAME, accountAliasesDao.getDisplayName());
-    contentValues.put(COL_SEND_AS_EMAIL, accountAliasesDao.getSendAsEmail().toLowerCase());
-    contentValues.put(COL_SEND_AS_EMAIL, accountAliasesDao.getSendAsEmail().toLowerCase());
-    contentValues.put(COL_IS_DEFAULT, accountAliasesDao.isDefault());
-    contentValues.put(COL_VERIFICATION_STATUS, accountAliasesDao.getVerificationStatus());
-    return contentValues;
+    contentValues.put(COL_ACCOUNT_TYPE, accountAliasesDao.accountType)
+    contentValues.put(COL_DISPLAY_NAME, accountAliasesDao.displayName)
+    contentValues.put(COL_SEND_AS_EMAIL, accountAliasesDao.sendAsEmail!!.toLowerCase())
+    contentValues.put(COL_SEND_AS_EMAIL, accountAliasesDao.sendAsEmail!!.toLowerCase())
+    contentValues.put(COL_IS_DEFAULT, accountAliasesDao.isDefault)
+    contentValues.put(COL_VERIFICATION_STATUS, accountAliasesDao.verificationStatus)
+    return contentValues
   }
 
+  companion object {
+    const val VERIFICATION_STATUS_ACCEPTED = "accepted"
+
+    const val TABLE_NAME_ACCOUNTS_ALIASES = "accounts_aliases"
+
+    const val COL_EMAIL = "email"
+    const val COL_ACCOUNT_TYPE = "account_type"
+    const val COL_SEND_AS_EMAIL = "send_as_email"
+    const val COL_DISPLAY_NAME = "display_name"
+    const val COL_IS_DEFAULT = "is_default"
+    const val COL_VERIFICATION_STATUS = "verification_status"
+
+    const val ACCOUNTS_ALIASES_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
+        TABLE_NAME_ACCOUNTS_ALIASES + " (" +
+        BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        COL_EMAIL + " VARCHAR(100) NOT NULL, " +
+        COL_ACCOUNT_TYPE + " VARCHAR(100) NOT NULL, " +
+        COL_SEND_AS_EMAIL + " VARCHAR(100) NOT NULL, " +
+        COL_DISPLAY_NAME + " TEXT DEFAULT NULL, " +
+        COL_IS_DEFAULT + " INTEGER DEFAULT 0, " +
+        COL_VERIFICATION_STATUS + " TEXT NOT NULL " + ");"
+
+    const val CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES = (UNIQUE_INDEX_PREFIX
+        + COL_EMAIL + "_" + COL_ACCOUNT_TYPE + "_" + COL_SEND_AS_EMAIL + "_in_" + TABLE_NAME_ACCOUNTS_ALIASES
+        + " ON " + TABLE_NAME_ACCOUNTS_ALIASES + " (" + COL_EMAIL + ", " + COL_ACCOUNT_TYPE + ", " +
+        COL_SEND_AS_EMAIL + ")")
+
+    /**
+     * Generate the [AccountAliasesDao] from the current cursor position;
+     *
+     * @param cursor The cursor from which to get the data.
+     * @return [AccountAliasesDao].
+     */
+    @JvmStatic
+    fun getCurrent(cursor: Cursor): AccountAliasesDao {
+      val dao = AccountAliasesDao()
+      val accountEmail = cursor.getString(cursor.getColumnIndex(COL_EMAIL))
+      dao.email = accountEmail?.toLowerCase()
+      dao.accountType = cursor.getString(cursor.getColumnIndex(COL_ACCOUNT_TYPE))
+      val sendAsEmail = cursor.getString(cursor.getColumnIndex(COL_SEND_AS_EMAIL))
+      dao.sendAsEmail = sendAsEmail?.toLowerCase()
+      dao.displayName = cursor.getString(cursor.getColumnIndex(COL_DISPLAY_NAME))
+      dao.isDefault = cursor.getInt(cursor.getColumnIndex(COL_IS_DEFAULT)) == 1
+      dao.verificationStatus = cursor.getString(cursor.getColumnIndex(COL_VERIFICATION_STATUS))
+      return dao
+    }
+  }
 }

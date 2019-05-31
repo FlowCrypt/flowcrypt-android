@@ -3,30 +3,23 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database.dao.source;
+package com.flowcrypt.email.database.dao.source
 
-import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
-import android.provider.BaseColumns;
-
-import com.flowcrypt.email.service.actionqueue.actions.Action;
-import com.flowcrypt.email.service.actionqueue.actions.Action.Type;
-import com.flowcrypt.email.util.google.gson.ActionJsonDeserializer;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
+import android.net.Uri
+import android.provider.BaseColumns
+import com.flowcrypt.email.service.actionqueue.actions.Action
+import com.flowcrypt.email.service.actionqueue.actions.Action.Type
+import com.flowcrypt.email.util.google.gson.ActionJsonDeserializer
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import java.util.*
 
 /**
- * This object describes a logic of working with {@link Action} in the local database.
+ * This object describes a logic of working with [Action] in the local database.
  *
  * @author Denis Bondarenko
  * Date: 30.01.2018
@@ -34,195 +27,187 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ActionQueueDaoSource extends BaseDaoSource {
-  public static final String TABLE_NAME_ACTION_QUEUE = "action_queue";
+class ActionQueueDaoSource : BaseDaoSource() {
 
-  public static final String COL_EMAIL = "email";
-  public static final String COL_ACTION_TYPE = "action_type";
-  public static final String COL_ACTION_JSON = "action_json";
+  private val gson: Gson = GsonBuilder().registerTypeAdapter(Action::class.java, ActionJsonDeserializer()).create()
 
-  public static final String ACTION_QUEUE_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
-      TABLE_NAME_ACTION_QUEUE + " (" +
-      BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-      COL_EMAIL + " VARCHAR(100) NOT NULL, " +
-      COL_ACTION_TYPE + " TEXT NOT NULL, " +
-      COL_ACTION_JSON + " TEXT NOT NULL " + ");";
-
-  private Gson gson;
-
-  public ActionQueueDaoSource() {
-    gson = new GsonBuilder().registerTypeAdapter(Action.class, new ActionJsonDeserializer()).create();
-  }
-
-  @Override
-  public String getTableName() {
-    return TABLE_NAME_ACTION_QUEUE;
-  }
+  override val tableName: String = TABLE_NAME_ACTION_QUEUE
 
   /**
-   * Save information about an {@link Action} to the database;
+   * Save information about an [Action] to the database;
    *
    * @param context Interface to global information about an application environment;
-   * @param action  An input {@link Action}.
-   * @return The created {@link Uri} or null;
+   * @param action  An input [Action].
+   * @return The created [Uri] or null;
    */
-  public Uri addAction(Context context, Action action) {
-    ContentResolver contentResolver = context.getContentResolver();
+  fun addAction(context: Context, action: Action?): Uri? {
+    val contentResolver = context.contentResolver
     if (action != null && contentResolver != null) {
-      ContentValues contentValues = generateContentValues(action);
-      if (contentValues == null) return null;
+      val contentValues = generateContentValues(action) ?: return null
 
-      return contentResolver.insert(getBaseContentUri(), contentValues);
-    } else return null;
+      return contentResolver.insert(baseContentUri, contentValues)
+    } else
+      return null
   }
 
   /**
-   * Save information about an {@link Action} to the database;
+   * Save information about an [Action] to the database;
    *
    * @param sqLiteDatabase An instance of the local database;
-   * @param action         An input {@link Action}.
+   * @param action         An input [Action].
    * @return the row ID of the newly inserted row, or -1 if an error occurred;
    */
-  public long addAction(SQLiteDatabase sqLiteDatabase, Action action) {
+  fun addAction(sqLiteDatabase: SQLiteDatabase?, action: Action?): Long {
     if (action != null && sqLiteDatabase != null) {
-      ContentValues contentValues = generateContentValues(action);
-      if (contentValues == null) return -1;
+      val contentValues = generateContentValues(action) ?: return -1
 
-      return sqLiteDatabase.insert(TABLE_NAME_ACTION_QUEUE, null, contentValues);
-    } else return -1;
+      return sqLiteDatabase.insert(TABLE_NAME_ACTION_QUEUE, null, contentValues)
+    } else
+      return -1
   }
 
   /**
    * This method add rows per single transaction.
    *
    * @param context Interface to global information about an application environment.
-   * @param actions The list of {@link Action} objects.
+   * @param actions The list of [Action] objects.
    */
-  public int addActions(Context context, List<Action> actions) {
-    if (actions != null && !actions.isEmpty()) {
-      ContentResolver contentResolver = context.getContentResolver();
-      ContentValues[] contentValuesArray = new ContentValues[actions.size()];
+  fun addActions(context: Context, actions: List<Action>?): Int {
+    return if (actions != null && actions.isNotEmpty()) {
+      val contentResolver = context.contentResolver
+      val contentValuesArray = arrayOfNulls<ContentValues>(actions.size)
 
-      for (int i = 0; i < actions.size(); i++) {
-        Action action = actions.get(i);
-        contentValuesArray[i] = generateContentValues(action);
+      for (i in actions.indices) {
+        val action = actions[i]
+        contentValuesArray[i] = generateContentValues(action)
       }
 
-      return contentResolver.bulkInsert(getBaseContentUri(), contentValuesArray);
-    } else return 0;
+      contentResolver.bulkInsert(baseContentUri, contentValuesArray)
+    } else
+      0
   }
 
   /**
-   * Get the list of {@link Action} object from the local database for some email.
+   * Get the list of [Action] object from the local database for some email.
    *
    * @param context Interface to global information about an application environment.
    * @param account An account information.
-   * @return The list of {@link Action};
+   * @return The list of [Action];
    */
-  public List<Action> getActions(Context context, AccountDao account) {
-    List<Action> actions = new ArrayList<>();
+  fun getActions(context: Context, account: AccountDao?): List<Action> {
+    val actions = ArrayList<Action>()
     if (account != null) {
-      String selection = ActionQueueDaoSource.COL_EMAIL + " = ? OR " + ActionQueueDaoSource.COL_EMAIL + " = ?";
-      String[] selectionArgs = new String[]{account.getEmail(), Action.USER_SYSTEM};
-      Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, selectionArgs, null);
+      val selection = "$COL_EMAIL = ? OR $COL_EMAIL = ?"
+      val selectionArgs = arrayOf(account.email, Action.USER_SYSTEM)
+      val cursor = context.contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
 
       if (cursor != null) {
         while (cursor.moveToNext()) {
-          actions.add(getCurrentAction(context, cursor));
+          getCurrentAction(cursor)?.let { actions.add(it) }
         }
       }
 
-      if (cursor != null) {
-        cursor.close();
-      }
+      cursor?.close()
     }
 
-    return actions;
+    return actions
   }
 
   /**
-   * Get the list of {@link Action} object from the local database for some email using some {@link Type}.
+   * Get the list of [Action] object from the local database for some email using some [Type].
    *
    * @param context    Interface to global information about an application environment.
    * @param account    An account information.
    * @param type An action type.
-   * @return The list of {@link Action};
+   * @return The list of [Action];
    */
-  @NonNull
-  public List<Action> getActionsByType(Context context, AccountDao account, Type type) {
-    List<Action> actions = new ArrayList<>();
+  fun getActionsByType(context: Context, account: AccountDao?, type: Type?): List<Action> {
+    val actions = ArrayList<Action>()
     if (account != null && type != null) {
-      String selection = ActionQueueDaoSource.COL_EMAIL + " = ? AND " + ActionQueueDaoSource.COL_ACTION_TYPE + " = ?";
-      String[] selectionArgs = new String[]{account.getEmail(), type.getValue()};
-      Cursor cursor = context.getContentResolver().query(getBaseContentUri(), null, selection, selectionArgs, null);
+      val selection = "$COL_EMAIL = ? AND $COL_ACTION_TYPE = ?"
+      val selectionArgs = arrayOf(account.email, type.value)
+      val cursor = context.contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
 
       if (cursor != null) {
         while (cursor.moveToNext()) {
-          actions.add(getCurrentAction(context, cursor));
+          getCurrentAction(cursor)?.let { actions.add(it) }
         }
       }
 
-      if (cursor != null) {
-        cursor.close();
-      }
+      cursor?.close()
     }
 
-    return actions;
+    return actions
   }
 
   /**
-   * Delete an {@link Action} from the database.
+   * Delete an [Action] from the database.
    *
    * @param context Interface to global information about an application environment.
-   * @param action  An input {@link Action} which will be deleted.
-   * @return The count of deleted rows. Will be 1 if information about {@link Action} was
+   * @param action  An input [Action] which will be deleted.
+   * @return The count of deleted rows. Will be 1 if information about [Action] was
    * deleted or -1 otherwise.
    */
-  public int deleteAction(Context context, Action action) {
-    if (action != null) {
-      ContentResolver contentResolver = context.getContentResolver();
+  fun deleteAction(context: Context, action: Action?): Int {
+    return if (action != null) {
+      val contentResolver = context.contentResolver
       if (contentResolver != null) {
-        String actionId = String.valueOf(action.getId());
-        return contentResolver.delete(getBaseContentUri().buildUpon().appendPath(actionId).build(), null, null);
-      } else return -1;
-    } else return -1;
+        val actionId = action.id.toString()
+        contentResolver.delete(baseContentUri.buildUpon().appendPath(actionId).build(), null, null)
+      } else
+        -1
+    } else
+      -1
   }
 
   /**
-   * Generate the {@link Action} from the current cursor position;
+   * Generate the [Action] from the current cursor position;
    *
-   * @param context Interface to global information about an application environment;
    * @param cursor  The cursor from which to get the data.
-   * @return {@link Action}.
+   * @return [Action].
    */
-  private Action getCurrentAction(Context context, Cursor cursor) {
-    Action action = gson.fromJson(cursor.getString(cursor.getColumnIndex(COL_ACTION_JSON)), Action.class);
-    if (action != null) {
-      action.setId(cursor.getLong(cursor.getColumnIndex(_ID)));
-      return action;
+  private fun getCurrentAction(cursor: Cursor): Action? {
+    val action = gson.fromJson(cursor.getString(cursor.getColumnIndex(COL_ACTION_JSON)), Action::class.java)
+    return if (action != null) {
+      action.id = cursor.getLong(cursor.getColumnIndex(BaseColumns._ID))
+      action
     } else {
-      return null;
+      null
     }
   }
 
   /**
-   * Generate a {@link ContentValues} using {@link Action}.
+   * Generate a [ContentValues] using [Action].
    *
-   * @param action The {@link Action} object;
-   * @return The generated {@link ContentValues}.
+   * @param action The [Action] object;
+   * @return The generated [ContentValues].
    */
-  @Nullable
-  private ContentValues generateContentValues(Action action) {
-    ContentValues contentValues = new ContentValues();
-    if (action.getEmail() != null) {
-      contentValues.put(COL_EMAIL, action.getEmail().toLowerCase());
+  private fun generateContentValues(action: Action): ContentValues? {
+    val contentValues = ContentValues()
+    if (action.email != null) {
+      contentValues.put(COL_EMAIL, action.email!!.toLowerCase())
     } else {
-      return null;
+      return null
     }
 
-    contentValues.put(COL_ACTION_TYPE, action.getType().getValue());
-    contentValues.put(COL_ACTION_JSON, gson.toJson(action));
-    return contentValues;
+    contentValues.put(COL_ACTION_TYPE, action.type.value)
+    contentValues.put(COL_ACTION_JSON, gson.toJson(action))
+    return contentValues
+  }
+
+  companion object {
+    const val TABLE_NAME_ACTION_QUEUE = "action_queue"
+
+    const val COL_EMAIL = "email"
+    const val COL_ACTION_TYPE = "action_type"
+    const val COL_ACTION_JSON = "action_json"
+
+    const val ACTION_QUEUE_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
+        TABLE_NAME_ACTION_QUEUE + " (" +
+        BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        COL_EMAIL + " VARCHAR(100) NOT NULL, " +
+        COL_ACTION_TYPE + " TEXT NOT NULL, " +
+        COL_ACTION_JSON + " TEXT NOT NULL " + ");"
   }
 }
 

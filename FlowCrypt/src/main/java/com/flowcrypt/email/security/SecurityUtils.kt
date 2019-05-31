@@ -146,10 +146,8 @@ class SecurityUtils {
         val measure = zxcvbn.measure(passPhrase!!, Arrays.asList(*Constants.PASSWORD_WEAK_WORDS)).guesses
         val passwordStrength = NodeCallsExecutor.zxcvbnStrengthBar(measure)
 
-        if (passwordStrength != null) {
-          when (passwordStrength.word!!.word) {
-            Constants.PASSWORD_QUALITY_WEAK, Constants.PASSWORD_QUALITY_POOR -> throw PrivateKeyStrengthException("Pass phrase too weak")
-          }
+        when (passwordStrength.word!!.word) {
+          Constants.PASSWORD_QUALITY_WEAK, Constants.PASSWORD_QUALITY_POOR -> throw PrivateKeyStrengthException("Pass phrase too weak")
         }
 
         val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(private!!)
@@ -182,13 +180,13 @@ class SecurityUtils {
      */
     @JvmStatic
     @Throws(NoKeyAvailableException::class, IOException::class, NodeException::class)
-    fun getRecipientsPubKeys(context: Context, contacts: List<String>,
+    fun getRecipientsPubKeys(context: Context, contacts: MutableList<String>,
                              account: AccountDao, senderEmail: String): List<String> {
       val publicKeys = ArrayList<String>()
       val pgpContacts = ContactsDaoSource().getPgpContacts(context, contacts)
 
       for (pgpContact in pgpContacts) {
-        if (pgpContact != null && !TextUtils.isEmpty(pgpContact.pubkey)) {
+        if (!TextUtils.isEmpty(pgpContact.pubkey)) {
           pgpContact.pubkey?.let { publicKeys.add(it) }
         }
       }
