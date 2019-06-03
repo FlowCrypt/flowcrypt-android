@@ -3,46 +3,40 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base;
+package com.flowcrypt.email.ui.activity.base
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.IBinder;
-import android.text.TextUtils;
-import android.view.View;
-import android.widget.TextView;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.KeyImportModel;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
-import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
-import com.flowcrypt.email.ui.loader.ParseKeysFromResourceAsyncTaskLoader;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.NodeException;
-import com.google.android.material.snackbar.Snackbar;
-
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.Loader;
+import android.Manifest
+import android.app.Activity
+import android.content.ClipboardManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Bundle
+import android.os.IBinder
+import android.text.TextUtils
+import android.view.View
+import android.widget.TextView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.loader.app.LoaderManager
+import androidx.loader.content.Loader
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportModel
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.service.CheckClipboardToFindKeyService
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
+import com.flowcrypt.email.ui.loader.ParseKeysFromResourceAsyncTaskLoader
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.NodeException
+import com.google.android.material.snackbar.Snackbar
+import java.io.FileNotFoundException
+import java.util.*
 
 /**
  * The base import key activity. This activity defines a logic of import a key (private or
@@ -54,418 +48,381 @@ import androidx.loader.content.Loader;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseImportKeyActivity extends BaseBackStackSyncActivity
-    implements View.OnClickListener, LoaderManager.LoaderCallbacks<LoaderResult> {
+abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClickListener, LoaderManager.LoaderCallbacks<LoaderResult> {
 
-  public static final String KEY_EXTRA_IS_SYNC_ENABLE
-      = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_SYNC_ENABLE", BaseImportKeyActivity.class);
+  protected lateinit var checkClipboardToFindKeyService: CheckClipboardToFindKeyService
+  protected lateinit var layoutContentView: View
+  protected lateinit var layoutProgress: View
+  protected lateinit var textViewTitle: TextView
+  protected lateinit var buttonLoadFromFile: View
 
-  public static final String KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND
-      = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND",
-      BaseImportKeyActivity.class);
+  @JvmField
+  protected var keyImportModel: KeyImportModel? = null
+  @JvmField
+  protected var isCheckingClipboardEnabled = true
+  protected var isClipboardServiceBound: Boolean = false
 
-  public static final String KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD
-      = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD",
-      BaseImportKeyActivity.class);
+  private lateinit var clipboardManager: ClipboardManager
+  private var isCheckingPrivateKeyNow: Boolean = false
+  private var throwErrorIfDuplicateFound: Boolean = false
 
-  public static final String KEY_EXTRA_TITLE
-      = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", BaseImportKeyActivity.class);
-  private static final String WRONG_STRUCTURE_ERROR = "Cannot parse key: could not determine pgpType";
-  private static final int REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 10;
-  private static final int REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 11;
+  private var title: String? = null
 
-  protected ClipboardManager clipboardManager;
-  protected KeyImportModel keyImportModel;
-  protected CheckClipboardToFindKeyService checkClipboardToFindKeyService;
-
-  protected View layoutContentView;
-  protected View layoutProgress;
-  protected TextView textViewTitle;
-  protected View buttonLoadFromFile;
-
-  protected boolean isCheckingPrivateKeyNow;
-  protected boolean throwErrorIfDuplicateFound;
-  protected boolean isCheckingClipboardEnabled = true;
-  protected boolean isClipboardServiceBound;
-
-  private String title;
-
-  private ServiceConnection clipboardConn = new ServiceConnection() {
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-      CheckClipboardToFindKeyService.LocalBinder binder = (CheckClipboardToFindKeyService.LocalBinder) service;
-      checkClipboardToFindKeyService = binder.getService();
-      checkClipboardToFindKeyService.setPrivateKeyMode(isPrivateKeyMode());
-      isClipboardServiceBound = true;
+  private val clipboardConn = object : ServiceConnection {
+    override fun onServiceConnected(name: ComponentName, service: IBinder) {
+      val binder = service as CheckClipboardToFindKeyService.LocalBinder
+      checkClipboardToFindKeyService = binder.service
+      checkClipboardToFindKeyService.isPrivateKeyMode = isPrivateKeyMode
+      isClipboardServiceBound = true
     }
 
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-      isClipboardServiceBound = false;
+    override fun onServiceDisconnected(name: ComponentName) {
+      isClipboardServiceBound = false
     }
-  };
-
-  public abstract void onKeyFound(KeyDetails.Type type, ArrayList<NodeKeyDetails> keyDetailsList);
-
-  public abstract boolean isPrivateKeyMode();
-
-  public static Intent newIntent(Context context, String title, Class<?> cls) {
-    return newIntent(context, title, false, cls);
   }
 
-  public static Intent newIntent(Context context, String title, boolean isThrowErrorIfDuplicateFoundEnabled,
-                                 Class<?> cls) {
-    return newIntent(context, title, null, isThrowErrorIfDuplicateFoundEnabled, cls);
-  }
+  abstract val isPrivateKeyMode: Boolean
 
-  public static Intent newIntent(Context context, String title, KeyImportModel model,
-                                 boolean isThrowErrorIfDuplicateFoundEnabled, Class<?> cls) {
-    return newIntent(context, true, title, model, isThrowErrorIfDuplicateFoundEnabled, cls);
-  }
+  override val rootView: View
+    get() = findViewById(R.id.layoutContent)
 
-  public static Intent newIntent(Context context, boolean isSyncEnabled, String title, KeyImportModel model,
-                                 boolean isThrowErrorIfDuplicateFoundEnabled, Class<?> cls) {
-    Intent intent = new Intent(context, cls);
-    intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnabled);
-    intent.putExtra(KEY_EXTRA_TITLE, title);
-    intent.putExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, model);
-    intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFoundEnabled);
-    return intent;
-  }
+  override val isSyncEnabled: Boolean
+    get() = intent == null || intent.getBooleanExtra(KEY_EXTRA_IS_SYNC_ENABLE, true)
 
-  @Override
-  public View getRootView() {
-    return findViewById(R.id.layoutContent);
-  }
+  abstract fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>)
 
-  @Override
-  public boolean isSyncEnabled() {
-    return getIntent() == null || getIntent().getBooleanExtra(KEY_EXTRA_IS_SYNC_ENABLE, true);
-  }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+    bindService(Intent(this, CheckClipboardToFindKeyService::class.java), clipboardConn, Context.BIND_AUTO_CREATE)
 
-    bindService(new Intent(this, CheckClipboardToFindKeyService.class), clipboardConn, Context.BIND_AUTO_CREATE);
-
-    if (getIntent() != null) {
-      this.throwErrorIfDuplicateFound = getIntent().getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false);
-      this.keyImportModel = getIntent().getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD);
-      this.title = getIntent().getStringExtra(KEY_EXTRA_TITLE);
+    if (intent != null) {
+      this.throwErrorIfDuplicateFound = intent.getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false)
+      this.keyImportModel = intent.getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD)
+      this.title = intent.getStringExtra(KEY_EXTRA_TITLE)
     }
 
-    clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-    initViews();
+    clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    initViews()
 
     if (keyImportModel != null) {
-      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this)
     }
   }
 
-  @Override
-  public void onResume() {
-    super.onResume();
+  override fun onResume() {
+    super.onResume()
     if (isClipboardServiceBound && !isCheckingPrivateKeyNow && isCheckingClipboardEnabled) {
-      keyImportModel = checkClipboardToFindKeyService.getKeyImportModel();
+      keyImportModel = checkClipboardToFindKeyService.keyImportModel
       if (keyImportModel != null) {
-        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
+        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this)
       }
     }
   }
 
-  @Override
-  public void onPause() {
-    super.onPause();
-    isCheckingClipboardEnabled = true;
+  public override fun onPause() {
+    super.onPause()
+    isCheckingClipboardEnabled = true
   }
 
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
+  override fun onDestroy() {
+    super.onDestroy()
     if (isClipboardServiceBound) {
-      unbindService(clipboardConn);
-      isClipboardServiceBound = false;
+      unbindService(clipboardConn)
+      isClipboardServiceBound = false
     }
   }
 
-  @Override
-  public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    switch (requestCode) {
-      case REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM:
-        isCheckingClipboardEnabled = false;
+  public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    when (requestCode) {
+      REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM -> {
+        isCheckingClipboardEnabled = false
 
-        switch (resultCode) {
-          case Activity.RESULT_OK:
-            if (data != null) {
-              if (data.getData() != null) {
-                handleSelectedFile(data.getData());
-              } else {
-                showInfoSnackbar(getRootView(), getString(R.string.please_use_another_app_to_choose_file),
-                    Snackbar.LENGTH_LONG);
-              }
+        when (resultCode) {
+          Activity.RESULT_OK -> if (data != null) {
+            if (data.data != null) {
+              handleSelectedFile(data.data!!)
+            } else {
+              showInfoSnackbar(rootView, getString(R.string.please_use_another_app_to_choose_file),
+                  Snackbar.LENGTH_LONG)
             }
-            break;
+          }
         }
-        break;
+      }
 
-      default:
-        super.onActivityResult(requestCode, resultCode, data);
+      else -> super.onActivityResult(requestCode, resultCode, data)
     }
 
   }
 
-  @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    switch (requestCode) {
-      case REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE:
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          selectFile();
-        } else {
-          showAccessDeniedWarning();
-        }
-        break;
+  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    when (requestCode) {
+      REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE -> if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        selectFile()
+      } else {
+        showAccessDeniedWarning()
+      }
     }
   }
 
-  @Override
-  public void onBackPressed() {
+  override fun onBackPressed() {
     if (isCheckingPrivateKeyNow) {
-      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_file);
-      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_clipboard);
-      isCheckingPrivateKeyNow = false;
-      UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
+      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_file)
+      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_clipboard)
+      isCheckingPrivateKeyNow = false
+      UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
     } else {
-      super.onBackPressed();
+      super.onBackPressed()
     }
   }
 
-  @Override
-  public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.buttonLoadFromFile:
-        dismissSnackBar();
+  override fun onClick(v: View) {
+    when (v.id) {
+      R.id.buttonLoadFromFile -> {
+        dismissSnackBar()
 
-        boolean isPermissionGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-            == PackageManager.PERMISSION_GRANTED;
+        val isPermissionGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
 
         if (isPermissionGranted) {
-          selectFile();
+          selectFile()
         } else {
           if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            showReadSdCardExplanation();
+            showReadSdCardExplanation()
           } else {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE);
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE)
           }
         }
-        break;
+      }
 
-      case R.id.buttonLoadFromClipboard:
-        dismissSnackBar();
+      R.id.buttonLoadFromClipboard -> {
+        dismissSnackBar()
 
         if (clipboardManager.hasPrimaryClip()) {
-          ClipData clipData = clipboardManager.getPrimaryClip();
+          val clipData = clipboardManager.primaryClip
           if (clipData != null) {
-            ClipData.Item item = clipData.getItemAt(0);
-            CharSequence privateKeyFromClipboard = item.getText();
+            val item = clipData.getItemAt(0)
+            val privateKeyFromClipboard = item.text
             if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
-              keyImportModel = new KeyImportModel(null, privateKeyFromClipboard.toString(),
-                  isPrivateKeyMode(), KeyDetails.Type.CLIPBOARD);
+              keyImportModel = KeyImportModel(null, privateKeyFromClipboard.toString(),
+                  isPrivateKeyMode, KeyDetails.Type.CLIPBOARD)
 
-              LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this);
+              LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this)
             } else {
-              showClipboardIsEmptyInfoDialog();
+              showClipboardIsEmptyInfoDialog()
             }
           }
         } else {
-          showClipboardIsEmptyInfoDialog();
+          showClipboardIsEmptyInfoDialog()
         }
-        break;
+      }
     }
   }
 
-  @NonNull
-  @Override
-  public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-    switch (id) {
-      case R.id.loader_id_validate_key_from_file:
-        isCheckingPrivateKeyNow = true;
-        UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-        return new ParseKeysFromResourceAsyncTaskLoader(getApplicationContext(), keyImportModel, true);
+  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
+    return when (id) {
+      R.id.loader_id_validate_key_from_file -> {
+        isCheckingPrivateKeyNow = true
+        UIUtil.exchangeViewVisibility(applicationContext, true, layoutProgress, layoutContentView)
+        ParseKeysFromResourceAsyncTaskLoader(applicationContext, keyImportModel, true)
+      }
 
-      case R.id.loader_id_validate_key_from_clipboard:
-        isCheckingPrivateKeyNow = true;
-        UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-        return new ParseKeysFromResourceAsyncTaskLoader(getApplicationContext(), keyImportModel, false);
+      R.id.loader_id_validate_key_from_clipboard -> {
+        isCheckingPrivateKeyNow = true
+        UIUtil.exchangeViewVisibility(applicationContext, true, layoutProgress, layoutContentView)
+        ParseKeysFromResourceAsyncTaskLoader(applicationContext, keyImportModel, false)
+      }
 
-      default:
-        return new Loader<>(this);
+      else -> Loader(this)
     }
   }
 
-  @Override
-  public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
-    handleLoaderResult(loader, loaderResult);
+  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
+    handleLoaderResult(loader, loaderResult)
   }
 
-  @Override
-  public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
-    switch (loader.getId()) {
-      case R.id.loader_id_validate_key_from_file:
-      case R.id.loader_id_validate_key_from_clipboard:
-        isCheckingPrivateKeyNow = false;
-        UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
+  override fun onLoaderReset(loader: Loader<LoaderResult>) {
+    when (loader.id) {
+      R.id.loader_id_validate_key_from_file, R.id.loader_id_validate_key_from_clipboard -> {
+        isCheckingPrivateKeyNow = false
+        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+      }
     }
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public void onSuccess(int loaderId, Object result) {
-    switch (loaderId) {
-      case R.id.loader_id_validate_key_from_file:
-        isCheckingPrivateKeyNow = false;
-        UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-        ArrayList<NodeKeyDetails> keysFromFile = (ArrayList<NodeKeyDetails>) result;
+  override fun onSuccess(loaderId: Int, result: Any?) {
+    when (loaderId) {
+      R.id.loader_id_validate_key_from_file -> {
+        isCheckingPrivateKeyNow = false
+        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+        val keysFromFile = result as ArrayList<NodeKeyDetails>?
 
-        if (!keysFromFile.isEmpty()) {
-          onKeyFound(KeyDetails.Type.FILE, keysFromFile);
+        if (keysFromFile!!.isNotEmpty()) {
+          onKeyFound(KeyDetails.Type.FILE, keysFromFile)
         } else {
-          showInfoSnackbar(getRootView(), getString(R.string.file_has_wrong_pgp_structure,
-              isPrivateKeyMode() ? getString(R.string.private_) : getString(R.string.public_)));
+          showInfoSnackbar(rootView, getString(R.string.file_has_wrong_pgp_structure,
+              if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)))
         }
-        break;
+      }
 
-      case R.id.loader_id_validate_key_from_clipboard:
-        isCheckingPrivateKeyNow = false;
-        UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-        ArrayList<NodeKeyDetails> keysFromClipboard = (ArrayList<NodeKeyDetails>) result;
-        if (!keysFromClipboard.isEmpty()) {
-          onKeyFound(KeyDetails.Type.CLIPBOARD, keysFromClipboard);
+      R.id.loader_id_validate_key_from_clipboard -> {
+        isCheckingPrivateKeyNow = false
+        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+        val keysFromClipboard = result as ArrayList<NodeKeyDetails>?
+        if (!keysFromClipboard!!.isEmpty()) {
+          onKeyFound(KeyDetails.Type.CLIPBOARD, keysFromClipboard)
         } else {
-          showInfoSnackbar(getRootView(), getString(R.string.clipboard_has_wrong_structure,
-              isPrivateKeyMode() ? getString(R.string.private_) : getString(R.string.public_)));
+          showInfoSnackbar(rootView, getString(R.string.clipboard_has_wrong_structure,
+              if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)))
         }
-        break;
+      }
 
-      default:
-        super.onSuccess(loaderId, result);
+      else -> super.onSuccess(loaderId, result)
     }
   }
 
-  @Override
-  public void onError(int loaderId, Exception e) {
-    switch (loaderId) {
-      case R.id.loader_id_validate_key_from_file:
-      case R.id.loader_id_validate_key_from_clipboard:
-        isCheckingPrivateKeyNow = false;
-        UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
+  override fun onError(loaderId: Int, e: Exception?) {
+    when (loaderId) {
+      R.id.loader_id_validate_key_from_file, R.id.loader_id_validate_key_from_clipboard -> {
+        isCheckingPrivateKeyNow = false
+        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
 
-        String errorMsg = e.getMessage();
+        var errorMsg = e!!.message
 
-        if (e instanceof FileNotFoundException) {
-          errorMsg = getString(R.string.file_not_found);
+        if (e is FileNotFoundException) {
+          errorMsg = getString(R.string.file_not_found)
         }
 
-        if (e instanceof NodeException) {
-          NodeException nodeException = (NodeException) e;
+        if (e is NodeException) {
+          val nodeException = e as NodeException?
 
-          if (WRONG_STRUCTURE_ERROR.equals(nodeException.getNodeError().getMsg())) {
-            String mode = isPrivateKeyMode() ? getString(R.string.private_) : getString(R.string.public_);
-            switch (loaderId) {
-              case R.id.loader_id_validate_key_from_file:
-                errorMsg = getString(R.string.file_has_wrong_pgp_structure, mode);
-                break;
-              case R.id.loader_id_validate_key_from_clipboard:
-                errorMsg = getString(R.string.clipboard_has_wrong_structure, mode);
-                break;
+          if (WRONG_STRUCTURE_ERROR == nodeException!!.nodeError!!.msg) {
+            val mode = if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)
+            when (loaderId) {
+              R.id.loader_id_validate_key_from_file -> errorMsg = getString(R.string.file_has_wrong_pgp_structure, mode)
+              R.id.loader_id_validate_key_from_clipboard -> errorMsg = getString(R.string.clipboard_has_wrong_structure, mode)
             }
           }
         }
 
-        showInfoSnackbar(getRootView(), errorMsg);
-        break;
+        showInfoSnackbar(rootView, errorMsg)
+      }
 
-      default:
-        super.onError(loaderId, e);
+      else -> super.onError(loaderId, e)
     }
   }
 
-  @Override
-  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
+  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
 
   }
 
-  @Override
-  public void onErrorHappened(int requestCode, int errorType, Exception e) {
+  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
 
   }
 
   /**
    * Handle a selected file.
    *
-   * @param uri A {@link Uri} of the selected file.
+   * @param uri A [Uri] of the selected file.
    */
-  protected void handleSelectedFile(@NonNull Uri uri) {
-    keyImportModel = new KeyImportModel(uri, null, isPrivateKeyMode(), KeyDetails.Type.FILE);
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_file, null, this);
+  protected open fun handleSelectedFile(uri: Uri) {
+    keyImportModel = KeyImportModel(uri, null, isPrivateKeyMode, KeyDetails.Type.FILE)
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_file, null, this)
   }
 
-  protected void initViews() {
-    layoutContentView = findViewById(R.id.layoutContentView);
-    layoutProgress = findViewById(R.id.layoutProgress);
+  protected open fun initViews() {
+    layoutContentView = findViewById(R.id.layoutContentView)
+    layoutProgress = findViewById(R.id.layoutProgress)
 
-    textViewTitle = findViewById(R.id.textViewTitle);
-    textViewTitle.setText(title);
+    textViewTitle = findViewById(R.id.textViewTitle)
+    textViewTitle.text = title
 
-    buttonLoadFromFile = findViewById(R.id.buttonLoadFromFile);
-    buttonLoadFromFile.setOnClickListener(this);
+    buttonLoadFromFile = findViewById(R.id.buttonLoadFromFile)
+    buttonLoadFromFile.setOnClickListener(this)
 
-    if (findViewById(R.id.buttonLoadFromClipboard) != null) {
-      findViewById(R.id.buttonLoadFromClipboard).setOnClickListener(this);
+    if (findViewById<View>(R.id.buttonLoadFromClipboard) != null) {
+      findViewById<View>(R.id.buttonLoadFromClipboard).setOnClickListener(this)
     }
   }
 
-  private void showAccessDeniedWarning() {
-    UIUtil.showSnackbar(getRootView(), getString(R.string.access_to_read_the_sdcard_id_denied),
-        getString(R.string.change), new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            GeneralUtil.showAppSettingScreen(BaseImportKeyActivity.this);
-          }
-        });
+  private fun showAccessDeniedWarning() {
+    UIUtil.showSnackbar(rootView, getString(R.string.access_to_read_the_sdcard_id_denied),
+        getString(R.string.change), View.OnClickListener { GeneralUtil.showAppSettingScreen(this@BaseImportKeyActivity) })
   }
 
   /**
    * Show an explanation to the user for readOption the sdcard.
    * After the user sees the explanation, we try again to request the permission.
    */
-  private void showReadSdCardExplanation() {
-    UIUtil.showSnackbar(getRootView(), getString(R.string.read_sdcard_permission_explanation_text),
-        getString(R.string.do_request), new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            ActivityCompat.requestPermissions(BaseImportKeyActivity.this,
-                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE);
-          }
-        });
+  private fun showReadSdCardExplanation() {
+    UIUtil.showSnackbar(rootView, getString(R.string.read_sdcard_permission_explanation_text),
+        getString(R.string.do_request), View.OnClickListener {
+      ActivityCompat.requestPermissions(this@BaseImportKeyActivity,
+          arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+          REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE)
+    })
   }
 
-  private void selectFile() {
-    Intent intent = new Intent();
-    intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
-    intent.addCategory(Intent.CATEGORY_OPENABLE);
-    intent.setType("*/*");
+  private fun selectFile() {
+    val intent = Intent()
+    intent.action = Intent.ACTION_OPEN_DOCUMENT
+    intent.addCategory(Intent.CATEGORY_OPENABLE)
+    intent.type = "*/*"
     startActivityForResult(Intent.createChooser(intent, getString(R.string.select_key_to_import)),
-        REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM);
+        REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM)
   }
 
-  private void showClipboardIsEmptyInfoDialog() {
-    String dialogMsg = getString(R.string.hint_clipboard_is_empty, isPrivateKeyMode() ?
-        getString(R.string.private_) : getString(R.string.public_), getString(R.string.app_name));
-    InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(getString(R.string.hint), dialogMsg);
-    infoDialogFragment.show(getSupportFragmentManager(), InfoDialogFragment.class.getSimpleName());
+  private fun showClipboardIsEmptyInfoDialog() {
+    val dialogMsg = getString(R.string.hint_clipboard_is_empty, if (isPrivateKeyMode)
+      getString(R.string.private_)
+    else
+      getString(R.string.public_), getString(R.string.app_name))
+    val infoDialogFragment = InfoDialogFragment.newInstance(getString(R.string.hint), dialogMsg)
+    infoDialogFragment.show(supportFragmentManager, InfoDialogFragment::class.java.simpleName)
+  }
+
+  companion object {
+
+    val KEY_EXTRA_IS_SYNC_ENABLE = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_SYNC_ENABLE", BaseImportKeyActivity::class.java)
+
+    val KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND",
+        BaseImportKeyActivity::class.java)
+
+    val KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD",
+        BaseImportKeyActivity::class.java)
+
+    val KEY_EXTRA_TITLE = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", BaseImportKeyActivity::class.java)
+    private val WRONG_STRUCTURE_ERROR = "Cannot parse key: could not determine pgpType"
+    private val REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 10
+    private val REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 11
+
+    @JvmStatic
+    fun newIntent(context: Context, title: String, cls: Class<*>): Intent {
+      return newIntent(context, title, false, cls)
+    }
+
+    @JvmStatic
+    fun newIntent(context: Context, title: String, isThrowErrorIfDuplicateFoundEnabled: Boolean,
+                  cls: Class<*>): Intent {
+      return newIntent(context, title, null, isThrowErrorIfDuplicateFoundEnabled, cls)
+    }
+
+    @JvmStatic
+    fun newIntent(context: Context, title: String, model: KeyImportModel?,
+                  isThrowErrorIfDuplicateFoundEnabled: Boolean, cls: Class<*>): Intent {
+      return newIntent(context, true, title, model, isThrowErrorIfDuplicateFoundEnabled, cls)
+    }
+
+    @JvmStatic
+    fun newIntent(context: Context, isSyncEnabled: Boolean, title: String, model: KeyImportModel?,
+                  isThrowErrorIfDuplicateFoundEnabled: Boolean, cls: Class<*>): Intent {
+      val intent = Intent(context, cls)
+      intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnabled)
+      intent.putExtra(KEY_EXTRA_TITLE, title)
+      intent.putExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, model)
+      intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFoundEnabled)
+      return intent
+    }
   }
 }

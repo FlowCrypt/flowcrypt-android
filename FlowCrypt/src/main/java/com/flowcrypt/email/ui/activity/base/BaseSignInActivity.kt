@@ -3,24 +3,19 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base;
+package com.flowcrypt.email.ui.activity.base
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity;
-import com.flowcrypt.email.ui.activity.BaseNodeActivity;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.google.GoogleApiClientHelper;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity
+import com.flowcrypt.email.ui.activity.BaseNodeActivity
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.google.GoogleApiClientHelper
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.api.GoogleApiClient
 
 /**
  * This activity will be a common point of a sign-in logic.
@@ -31,102 +26,88 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseSignInActivity extends BaseNodeActivity implements View.OnClickListener,
-    GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
-  protected static final int REQUEST_CODE_SIGN_IN = 10;
-  protected static final int REQUEST_CODE_ADD_OTHER_ACCOUNT = 11;
-
-  private static final String KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT =
-      GeneralUtil.generateUniqueExtraKey("KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT", BaseSignInActivity.class);
+abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
   /**
    * The main entry point for Google Play services integration.
    */
-  protected GoogleApiClient client;
-  protected boolean isRunSignInWithGmailNeeded;
+  protected lateinit var client: GoogleApiClient
+  protected var isRunSignInWithGmailNeeded: Boolean = false
 
-  protected GoogleSignInAccount sign;
+  @JvmField
+  protected var sign: GoogleSignInAccount? = null
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
 
     if (savedInstanceState != null) {
-      this.sign = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT);
+      this.sign = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT)
     }
 
-    initGoogleApiClient();
-    initViews();
+    initGoogleApiClient()
+    initViews()
   }
 
-  @Override
-  protected void onSaveInstanceState(Bundle outState) {
-    super.onSaveInstanceState(outState);
-    outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, sign);
+  override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, sign)
   }
 
-  @Override
-  public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    switch (requestCode) {
-      case REQUEST_CODE_ADD_OTHER_ACCOUNT:
-        switch (resultCode) {
-          case AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL:
-            this.isRunSignInWithGmailNeeded = true;
-            break;
-        }
-        break;
+  public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    when (requestCode) {
+      REQUEST_CODE_ADD_OTHER_ACCOUNT -> when (resultCode) {
+        AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL -> this.isRunSignInWithGmailNeeded = true
+      }
 
-      default:
-        super.onActivityResult(requestCode, resultCode, data);
+      else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
 
-  @Override
-  public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.buttonSignInWithGmail:
-        GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, getRootView(), REQUEST_CODE_SIGN_IN);
-        break;
+  override fun onClick(v: View) {
+    when (v.id) {
+      R.id.buttonSignInWithGmail -> GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, rootView, REQUEST_CODE_SIGN_IN)
 
-      case R.id.buttonOtherEmailProvider:
-        if (GeneralUtil.isConnected(this)) {
-          startActivityForResult(new Intent(this, AddNewAccountManuallyActivity.class), REQUEST_CODE_ADD_OTHER_ACCOUNT);
-        } else {
-          showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
-        }
-        break;
+      R.id.buttonOtherEmailProvider -> if (GeneralUtil.isConnected(this)) {
+        startActivityForResult(Intent(this, AddNewAccountManuallyActivity::class.java), REQUEST_CODE_ADD_OTHER_ACCOUNT)
+      } else {
+        showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
+      }
     }
   }
 
-  @Override
-  public void onConnected(@Nullable Bundle bundle) {
+  override fun onConnected(bundle: Bundle?) {
     if (this.isRunSignInWithGmailNeeded) {
-      this.isRunSignInWithGmailNeeded = false;
-      GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, getRootView(), REQUEST_CODE_SIGN_IN);
+      this.isRunSignInWithGmailNeeded = false
+      GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, rootView, REQUEST_CODE_SIGN_IN)
     }
   }
 
-  @Override
-  public void onConnectionSuspended(int i) {
+  override fun onConnectionSuspended(i: Int) {
 
   }
 
-  @Override
-  public void onConnectionFailed(@NonNull ConnectionResult connResult) {
-    showInfoSnackbar(getRootView(), connResult.getErrorMessage());
+  override fun onConnectionFailed(connResult: ConnectionResult) {
+    showInfoSnackbar(rootView, connResult.errorMessage)
   }
 
-  protected void initGoogleApiClient() {
-    GoogleSignInOptions googleSignInOptions = GoogleApiClientHelper.generateGoogleSignInOptions();
-    client = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, googleSignInOptions);
+  protected fun initGoogleApiClient() {
+    val googleSignInOptions = GoogleApiClientHelper.generateGoogleSignInOptions()
+    client = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, googleSignInOptions)
   }
 
-  private void initViews() {
-    if (findViewById(R.id.buttonSignInWithGmail) != null) {
-      findViewById(R.id.buttonSignInWithGmail).setOnClickListener(this);
+  private fun initViews() {
+    if (findViewById<View>(R.id.buttonSignInWithGmail) != null) {
+      findViewById<View>(R.id.buttonSignInWithGmail).setOnClickListener(this)
     }
 
-    if (findViewById(R.id.buttonOtherEmailProvider) != null) {
-      findViewById(R.id.buttonOtherEmailProvider).setOnClickListener(this);
+    if (findViewById<View>(R.id.buttonOtherEmailProvider) != null) {
+      findViewById<View>(R.id.buttonOtherEmailProvider).setOnClickListener(this)
     }
+  }
+
+  companion object {
+    protected const val REQUEST_CODE_SIGN_IN = 10
+    protected const val REQUEST_CODE_ADD_OTHER_ACCOUNT = 11
+
+    private val KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT = GeneralUtil.generateUniqueExtraKey("KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT", BaseSignInActivity::class.java)
   }
 }

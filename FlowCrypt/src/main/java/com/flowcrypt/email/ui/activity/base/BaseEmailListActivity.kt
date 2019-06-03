@@ -3,206 +3,159 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base;
+package com.flowcrypt.email.ui.activity.base
 
-import android.os.Bundle;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
-import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService;
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
-import com.flowcrypt.email.service.EmailSyncService;
-import com.flowcrypt.email.ui.activity.EmailManagerActivity;
-import com.flowcrypt.email.ui.activity.fragment.EmailListFragment;
-import com.flowcrypt.email.util.GeneralUtil;
-
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-import androidx.test.espresso.idling.CountingIdlingResource;
+import androidx.annotation.VisibleForTesting
+import androidx.test.espresso.idling.CountingIdlingResource
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes
+import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.ui.activity.EmailManagerActivity
+import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
- * The base {@link android.app.Activity} for displaying messages.
+ * The base [android.app.Activity] for displaying messages.
  *
  * @author Denis Bondarenko
  * Date: 26.04.2018
  * Time: 16:45
  * E-mail: DenBond7@gmail.com
  */
-public abstract class BaseEmailListActivity extends BaseSyncActivity implements
-    EmailListFragment.OnManageEmailsListener {
-  protected CountingIdlingResource msgsCountingIdlingResource;
-  protected boolean hasMoreMsgs = true;
+abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnManageEmailsListener {
+  @JvmField
+  val msgsIdlingResource: CountingIdlingResource =
+      CountingIdlingResource(GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java), GeneralUtil.isDebugBuild())
+  private var hasMoreMsgs = true
 
-  public abstract void refreshFoldersFromCache();
+  abstract fun refreshFoldersFromCache()
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    String name = GeneralUtil.genIdlingResourcesName(EmailManagerActivity.class);
-    msgsCountingIdlingResource = new CountingIdlingResource(name, GeneralUtil.isDebugBuild());
-  }
-
-  @Override
-  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
-    switch (requestCode) {
-      case R.id.syns_request_code_load_next_messages:
-        refreshFoldersFromCache();
-        switch (resultCode) {
-          case EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE:
-            hasMoreMsgs = true;
-            onNextMsgsLoaded(true);
-            break;
-
-          default:
-            hasMoreMsgs = false;
-            onNextMsgsLoaded(false);
-            break;
-        }
-
-        if (!msgsCountingIdlingResource.isIdleNow()) {
-          msgsCountingIdlingResource.decrement();
-        }
-        break;
-    }
-  }
-
-  @Override
-  public void onErrorHappened(int requestCode, int errorType, Exception e) {
-    switch (requestCode) {
-      case R.id.syns_request_code_load_next_messages:
-        if (!msgsCountingIdlingResource.isIdleNow()) {
-          msgsCountingIdlingResource.decrement();
-        }
-        onErrorOccurred(requestCode, errorType, e);
-        break;
-    }
-  }
-
-  @Override
-  public void onProgressReplyReceived(int requestCode, int resultCode, Object obj) {
-    switch (requestCode) {
-      case R.id.syns_request_code_load_next_messages:
-        switch (resultCode) {
-          case R.id.progress_id_start_of_loading_new_messages:
-            updateActionProgressState(0, "Starting");
-            break;
-
-          case R.id.progress_id_adding_task_to_queue:
-            updateActionProgressState(10, "Queuing");
-            break;
-
-          case R.id.progress_id_queue_is_not_empty:
-            updateActionProgressState(15, "Queue is not empty");
-            break;
-
-          case R.id.progress_id_thread_is_cancalled_and_done:
-            updateActionProgressState(15, "Thread is cancelled and done");
-            break;
-
-          case R.id.progress_id_thread_is_done:
-            updateActionProgressState(15, "Thread is done");
-            break;
-
-          case R.id.progress_id_thread_is_cancalled:
-            updateActionProgressState(15, "Thread is cancelled");
-            break;
-
-          case R.id.progress_id_running_task:
-            updateActionProgressState(20, "Running task");
-            break;
-
-          case R.id.progress_id_resetting_connection:
-            updateActionProgressState(30, "Resetting connection");
-            break;
-
-          case R.id.progress_id_connecting_to_email_server:
-            updateActionProgressState(40, "Connecting");
-            break;
-
-          case R.id.progress_id_running_smtp_action:
-            updateActionProgressState(50, "Running SMTP action");
-            break;
-
-          case R.id.progress_id_running_imap_action:
-            updateActionProgressState(60, "Running IMAP action");
-            break;
-
-          case R.id.progress_id_opening_store:
-            updateActionProgressState(70, "Opening store");
-            break;
-
-          case R.id.progress_id_getting_list_of_emails:
-            updateActionProgressState(80, "Getting list of emails");
-            break;
-        }
-        break;
-
-    }
-  }
-
-  @Override
-  public boolean hasMoreMsgs() {
-    return hasMoreMsgs;
-  }
-
-  @Override
-  public void onSyncServiceConnected() {
-    syncServiceConnected();
-  }
-
-  @Override
   @VisibleForTesting
-  public CountingIdlingResource getMsgsCountingIdlingResource() {
-    return msgsCountingIdlingResource;
+  override fun getMsgsCountingIdlingResource(): CountingIdlingResource {
+    return msgsIdlingResource
+  }
+
+  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
+    when (requestCode) {
+      R.id.syns_request_code_load_next_messages -> {
+        refreshFoldersFromCache()
+        when (resultCode) {
+          EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE -> {
+            hasMoreMsgs = true
+            onNextMsgsLoaded(true)
+          }
+
+          else -> {
+            hasMoreMsgs = false
+            onNextMsgsLoaded(false)
+          }
+        }
+
+        if (!msgsIdlingResource.isIdleNow) {
+          msgsIdlingResource.decrement()
+        }
+      }
+    }
+  }
+
+  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
+    when (requestCode) {
+      R.id.syns_request_code_load_next_messages -> {
+        if (!msgsIdlingResource.isIdleNow) {
+          msgsIdlingResource.decrement()
+        }
+        onErrorOccurred(requestCode, errorType, e)
+      }
+    }
+  }
+
+  override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
+    when (requestCode) {
+      R.id.syns_request_code_load_next_messages -> when (resultCode) {
+        R.id.progress_id_start_of_loading_new_messages -> updateActionProgressState(0, "Starting")
+
+        R.id.progress_id_adding_task_to_queue -> updateActionProgressState(10, "Queuing")
+
+        R.id.progress_id_queue_is_not_empty -> updateActionProgressState(15, "Queue is not empty")
+
+        R.id.progress_id_thread_is_cancalled_and_done -> updateActionProgressState(15, "Thread is cancelled and done")
+
+        R.id.progress_id_thread_is_done -> updateActionProgressState(15, "Thread is done")
+
+        R.id.progress_id_thread_is_cancalled -> updateActionProgressState(15, "Thread is cancelled")
+
+        R.id.progress_id_running_task -> updateActionProgressState(20, "Running task")
+
+        R.id.progress_id_resetting_connection -> updateActionProgressState(30, "Resetting connection")
+
+        R.id.progress_id_connecting_to_email_server -> updateActionProgressState(40, "Connecting")
+
+        R.id.progress_id_running_smtp_action -> updateActionProgressState(50, "Running SMTP action")
+
+        R.id.progress_id_running_imap_action -> updateActionProgressState(60, "Running IMAP action")
+
+        R.id.progress_id_opening_store -> updateActionProgressState(70, "Opening store")
+
+        R.id.progress_id_getting_list_of_emails -> updateActionProgressState(80, "Getting list of emails")
+      }
+    }
+  }
+
+  override fun hasMoreMsgs(): Boolean {
+    return hasMoreMsgs
+  }
+
+  override fun onSyncServiceConnected() {
+    syncServiceConnected()
   }
 
   /**
-   * Notify {@link EmailListFragment} that the activity already connected to the {@link EmailSyncService}
+   * Notify [EmailListFragment] that the activity already connected to the [EmailSyncService]
    */
-  protected void syncServiceConnected() {
-    EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
-        .findFragmentById(R.id.emailListFragment);
+  protected fun syncServiceConnected() {
+    val emailListFragment = supportFragmentManager
+        .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    if (emailListFragment != null) {
-      emailListFragment.onSyncServiceConnected();
-    }
+    emailListFragment?.onSyncServiceConnected()
   }
 
   /**
    * Handle an error from the sync service.
    *
-   * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-   * @param errorType   The {@link SyncErrorTypes}
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
+   * @param errorType   The [SyncErrorTypes]
    * @param e           The exception which happened.
    */
-  protected void onErrorOccurred(int requestCode, int errorType, Exception e) {
-    EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
-        .findFragmentById(R.id.emailListFragment);
+  protected fun onErrorOccurred(requestCode: Int, errorType: Int, e: Exception) {
+    val emailListFragment = supportFragmentManager
+        .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
     if (emailListFragment != null) {
-      emailListFragment.onErrorOccurred(requestCode, errorType, e);
-      updateActionProgressState(100, null);
+      emailListFragment.onErrorOccurred(requestCode, errorType, e)
+      updateActionProgressState(100, null)
     }
   }
 
   /**
    * Update the list of emails after changing the folder.
    */
-  protected void onFolderChanged() {
-    EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
-        .findFragmentById(R.id.emailListFragment);
+  protected fun onFolderChanged() {
+    val emailListFragment = supportFragmentManager
+        .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
     if (emailListFragment != null) {
-      emailListFragment.updateList(true, false);
-      updateActionProgressState(100, null);
+      emailListFragment.updateList(true, false)
+      updateActionProgressState(100, null)
     }
 
-    if (getCurrentFolder() != null) {
-      boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(getCurrentFolder().getFullName());
-      if (getCurrentFolder() != null && isOutbox) {
-        ForwardedAttachmentsDownloaderJobService.schedule(getApplicationContext());
-        MessagesSenderJobService.schedule(getApplicationContext());
+    if (currentFolder != null) {
+      val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder.fullName, ignoreCase = true)
+      if (currentFolder != null && isOutbox) {
+        ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
+        MessagesSenderJobService.schedule(applicationContext)
       }
     }
   }
@@ -213,13 +166,11 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
    * @param progress The action progress.
    * @param message  The user friendly message.
    */
-  protected void updateActionProgressState(int progress, String message) {
-    EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
-        .findFragmentById(R.id.emailListFragment);
+  protected fun updateActionProgressState(progress: Int, message: String?) {
+    val emailListFragment = supportFragmentManager
+        .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    if (emailListFragment != null) {
-      emailListFragment.setActionProgress(progress, message);
-    }
+    emailListFragment?.setActionProgress(progress, message)
   }
 
   /**
@@ -227,13 +178,13 @@ public abstract class BaseEmailListActivity extends BaseSyncActivity implements
    *
    * @param needToRefreshList true if we must reload the emails list.
    */
-  protected void onNextMsgsLoaded(boolean needToRefreshList) {
-    EmailListFragment emailListFragment = (EmailListFragment) getSupportFragmentManager()
-        .findFragmentById(R.id.emailListFragment);
+  protected fun onNextMsgsLoaded(needToRefreshList: Boolean) {
+    val emailListFragment = supportFragmentManager
+        .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
     if (emailListFragment != null) {
-      emailListFragment.onNextMsgsLoaded(needToRefreshList);
-      emailListFragment.setActionProgress(100, null);
+      emailListFragment.onNextMsgsLoaded(needToRefreshList)
+      emailListFragment.setActionProgress(100, null)
     }
   }
 }

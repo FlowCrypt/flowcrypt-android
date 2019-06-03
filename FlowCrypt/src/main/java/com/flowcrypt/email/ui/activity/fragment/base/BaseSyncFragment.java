@@ -89,7 +89,7 @@ public abstract class BaseSyncFragment extends BaseFragment {
   public boolean isSyncServiceConnected() {
     BaseSyncActivity baseSyncActivity = (BaseSyncActivity) getActivity();
     if (baseSyncActivity != null) {
-      return baseSyncActivity.isSyncServiceConnected();
+      return baseSyncActivity.isSyncServiceBound;
     } else throw new NullPointerException("BaseSyncActivity is null!");
   }
 }

@@ -277,8 +277,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
 
       case R.id.syns_request_code_force_load_new_messages:
         onForceLoadNewMsgsCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE);
-        if (!msgsCountingIdlingResource.isIdleNow()) {
-          msgsCountingIdlingResource.decrement();
+        if (!msgsIdlingResource.isIdleNow()) {
+          msgsIdlingResource.decrement();
         }
         break;
 
@@ -301,8 +301,8 @@ public class EmailManagerActivity extends BaseEmailListActivity
   public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.syns_request_code_force_load_new_messages:
-        if (!msgsCountingIdlingResource.isIdleNow()) {
-          msgsCountingIdlingResource.decrement();
+        if (!msgsIdlingResource.isIdleNow()) {
+          msgsIdlingResource.decrement();
         }
         onErrorOccurred(requestCode, errorType, e);
         break;

@@ -78,7 +78,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   fun registerIdlingResource() {
     val activity = activityTestRule?.activity ?: return
     if (activity is SearchMessagesActivity) {
-      IdlingRegistry.getInstance().register(activity.msgsCountingIdlingResource)
+      IdlingRegistry.getInstance().register(activity.msgsIdlingResource)
     }
   }
 
@@ -86,7 +86,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   fun unregisterIdlingResource() {
     val activity = activityTestRule?.activity ?: return
     if (activity is SearchMessagesActivity) {
-      IdlingRegistry.getInstance().unregister(activity.msgsCountingIdlingResource)
+      IdlingRegistry.getInstance().unregister(activity.msgsIdlingResource)
     }
   }
 

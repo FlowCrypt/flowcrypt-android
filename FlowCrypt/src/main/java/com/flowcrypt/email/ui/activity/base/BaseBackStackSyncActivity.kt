@@ -3,12 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base;
+package com.flowcrypt.email.ui.activity.base
 
-import android.view.MenuItem;
+import android.view.MenuItem
 
 /**
- * The base back stack sync {@link android.app.Activity}
+ * The base back stack sync [android.app.Activity]
  *
  * @author DenBond7
  * Date: 27.06.2017
@@ -16,35 +16,26 @@ import android.view.MenuItem;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseBackStackSyncActivity extends BaseSyncActivity {
-  @Override
-  public boolean isDisplayHomeAsUpEnabled() {
-    return true;
-  }
+abstract class BaseBackStackSyncActivity : BaseSyncActivity() {
+  override val isDisplayHomeAsUpEnabled: Boolean = true
 
-  @Override
-  public boolean isSyncEnabled() {
-    return true;
-  }
+  override val isSyncEnabled: Boolean = true
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case android.R.id.home:
-        onBackPressed();
-        return true;
-
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+      android.R.id.home -> {
+        onBackPressed()
+        return true
+      }
     }
-    return super.onOptionsItemSelected(item);
+    return super.onOptionsItemSelected(item)
   }
 
-  @Override
-  public void onProgressReplyReceived(int requestCode, int resultCode, Object obj) {
+  override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
 
   }
 
-  @Override
-  public void onSyncServiceConnected() {
+  override fun onSyncServiceConnected() {
 
   }
 }

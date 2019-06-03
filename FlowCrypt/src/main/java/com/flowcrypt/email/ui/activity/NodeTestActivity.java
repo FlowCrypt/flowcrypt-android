@@ -46,15 +46,12 @@ public class NodeTestActivity extends AppCompatActivity implements View.OnClickL
   private long allTestsStartTime;
   private RequestsManager requestsManager;
 
-  public NodeTestActivity() {
-    Node node = Node.getInstance(getApplication());
-    requestsManager = node.getRequestsManager();
-  }
-
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     initViews();
+    Node node = Node.getInstance(getApplication());
+    requestsManager = node.getRequestsManager();
     requestsManager.getData().observe(this, this);
   }
 

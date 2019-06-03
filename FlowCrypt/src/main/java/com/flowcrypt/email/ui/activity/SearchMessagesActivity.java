@@ -114,8 +114,8 @@ public class SearchMessagesActivity extends BaseEmailListActivity implements Sea
   public void onErrorHappened(int requestCode, int errorType, Exception e) {
     switch (requestCode) {
       case R.id.sync_request_code_search_messages:
-        if (!msgsCountingIdlingResource.isIdleNow()) {
-          msgsCountingIdlingResource.decrement();
+        if (!msgsIdlingResource.isIdleNow()) {
+          msgsIdlingResource.decrement();
         }
         onErrorOccurred(requestCode, errorType, e);
         break;

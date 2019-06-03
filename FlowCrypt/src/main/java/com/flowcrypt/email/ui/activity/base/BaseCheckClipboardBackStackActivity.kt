@@ -3,18 +3,16 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base;
+package com.flowcrypt.email.ui.activity.base
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.Bundle;
-import android.os.IBinder;
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.Bundle
+import android.os.IBinder
 
-import com.flowcrypt.email.service.CheckClipboardToFindKeyService;
-
-import androidx.annotation.Nullable;
+import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 
 /**
  * This activity describes a logic of checking the clipboard in the background and find the private
@@ -27,37 +25,34 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseCheckClipboardBackStackActivity extends BaseBackStackActivity implements ServiceConnection {
-  protected boolean isBound;
-  protected CheckClipboardToFindKeyService service;
+abstract class BaseCheckClipboardBackStackActivity : BaseBackStackActivity(), ServiceConnection {
+  @JvmField
+  protected var isBound: Boolean = false
+  protected lateinit var service: CheckClipboardToFindKeyService
 
-  public abstract boolean isPrivateKeyChecking();
+  abstract val isPrivateKeyChecking: Boolean
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    bindService(new Intent(this, CheckClipboardToFindKeyService.class), this, Context.BIND_AUTO_CREATE);
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    bindService(Intent(this, CheckClipboardToFindKeyService::class.java), this, Context.BIND_AUTO_CREATE)
   }
 
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
+  override fun onDestroy() {
+    super.onDestroy()
     if (isBound) {
-      unbindService(this);
-      isBound = false;
+      unbindService(this)
+      isBound = false
     }
   }
 
-  @Override
-  public void onServiceConnected(ComponentName name, IBinder service) {
-    CheckClipboardToFindKeyService.LocalBinder binder = (CheckClipboardToFindKeyService.LocalBinder) service;
-    this.service = binder.getService();
-    this.service.setPrivateKeyMode(isPrivateKeyChecking());
-    isBound = true;
+  override fun onServiceConnected(name: ComponentName, service: IBinder) {
+    val binder = service as CheckClipboardToFindKeyService.LocalBinder
+    this.service = binder.service
+    this.service.isPrivateKeyMode = isPrivateKeyChecking
+    isBound = true
   }
 
-  @Override
-  public void onServiceDisconnected(ComponentName name) {
-    isBound = false;
+  override fun onServiceDisconnected(name: ComponentName) {
+    isBound = false
   }
 }

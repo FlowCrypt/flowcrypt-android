@@ -3,54 +3,48 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base;
+package com.flowcrypt.email.ui.activity.base
 
-import android.app.Activity;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.os.Bundle;
-import android.text.Editable;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.TextUtils;
-import android.text.TextWatcher;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.StyleSpan;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.node.NodeRepository;
-import com.flowcrypt.email.api.retrofit.response.model.node.Error;
-import com.flowcrypt.email.api.retrofit.response.model.node.Word;
-import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
-import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel;
-import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
-import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.idling.SingleIdlingResources;
-import com.google.android.material.snackbar.Snackbar;
-
-import org.apache.commons.io.IOUtils;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-import androidx.core.content.ContextCompat;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
+import android.app.Activity
+import android.graphics.Color
+import android.graphics.PorterDuff
+import android.os.Bundle
+import android.text.Editable
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.TextUtils
+import android.text.TextWatcher
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
+import android.view.View
+import android.widget.Button
+import android.widget.EditText
+import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
+import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.Status
+import com.flowcrypt.email.api.retrofit.node.NodeRepository
+import com.flowcrypt.email.api.retrofit.response.model.node.Word
+import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
+import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.idling.SingleIdlingResources
+import com.google.android.material.snackbar.Snackbar
+import org.apache.commons.io.IOUtils
+import java.io.IOException
+import java.nio.charset.StandardCharsets
+import java.util.*
 
 /**
  * @author Denis Bondarenko
@@ -58,350 +52,302 @@ import androidx.lifecycle.ViewModelProviders;
  * Time: 14:53
  * E-mail: DenBond7@gmail.com
  */
-public abstract class BasePassPhraseManagerActivity extends BaseBackStackActivity implements View.OnClickListener,
-    TextWatcher, Observer<NodeResponseWrapper> {
+abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnClickListener, TextWatcher, Observer<NodeResponseWrapper<*>> {
 
-  public static final String KEY_EXTRA_ACCOUNT_DAO =
-      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT_DAO", BasePassPhraseManagerActivity.class);
-  private static final long DELAY = 350;
+  protected lateinit var layoutProgress: View
+  protected lateinit var layoutContentView: View
+  protected lateinit var btnSetPassPhrase: View
+  protected lateinit var layoutSecondPasswordCheck: View
+  protected lateinit var layoutFirstPasswordCheck: View
+  protected lateinit var layoutSuccess: View
+  protected lateinit var editTextKeyPassword: EditText
+  protected lateinit var editTextKeyPasswordSecond: EditText
+  protected lateinit var progressBarPasswordQuality: ProgressBar
+  protected lateinit var textViewPasswordQualityInfo: TextView
+  protected lateinit var textViewSuccessTitle: TextView
+  protected lateinit var textViewSuccessSubTitle: TextView
+  protected lateinit var textViewFirstPasswordCheckTitle: TextView
+  protected lateinit var textViewSecondPasswordCheckTitle: TextView
+  protected lateinit var btnSuccess: Button
 
-  protected View layoutProgress;
-  protected View layoutContentView;
-  protected View btnSetPassPhrase;
-  protected View layoutSecondPasswordCheck;
-  protected View layoutFirstPasswordCheck;
-  protected View layoutSuccess;
-  protected EditText editTextKeyPassword;
-  protected EditText editTextKeyPasswordSecond;
-  protected ProgressBar progressBarPasswordQuality;
-  protected TextView textViewPasswordQualityInfo;
-  protected TextView textViewSuccessTitle;
-  protected TextView textViewSuccessSubTitle;
-  protected TextView textViewFirstPasswordCheckTitle;
-  protected TextView textViewSecondPasswordCheckTitle;
-  protected Button btnSuccess;
+  @JvmField
+  protected var account: AccountDao? = null
+  @JvmField
+  protected var isBackEnabled = true
 
-  protected AccountDao account;
-  protected boolean isBackEnabled = true;
+  @get:VisibleForTesting
+  var idlingForPassphraseChecking: SingleIdlingResources? = null
+    private set
+  private lateinit var viewModel: PasswordStrengthViewModel
+  private var strengthBarResult: ZxcvbnStrengthBarResult? = null
+  private var timer: Timer? = null
 
-  private SingleIdlingResources idlingForPassphraseChecking;
-  private PasswordStrengthViewModel viewModel;
-  private ZxcvbnStrengthBarResult strengthBarResult;
-  private Timer timer;
+  override val contentViewResourceId: Int = R.layout.activity_pass_phrase_manager
 
-  public abstract void onConfirmPassPhraseSuccess();
+  override val rootView: View
+    get() = findViewById(R.id.layoutContent)
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_pass_phrase_manager;
-  }
+  abstract fun onConfirmPassPhraseSuccess()
 
-  @Override
-  public View getRootView() {
-    return findViewById(R.id.layoutContent);
-  }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-
-    if (getIntent() == null) {
-      finish();
+    if (intent == null) {
+      finish()
     }
 
-    this.account = getIntent().getParcelableExtra(KEY_EXTRA_ACCOUNT_DAO);
+    this.account = intent.getParcelableExtra(KEY_EXTRA_ACCOUNT_DAO)
 
     if (account == null) {
-      finish();
+      finish()
     }
 
-    initViews();
+    initViews()
 
-    idlingForPassphraseChecking = new SingleIdlingResources();
-    timer = new Timer();
-    viewModel = ViewModelProviders.of(this).get(PasswordStrengthViewModel.class);
-    viewModel.init(new NodeRepository());
-    viewModel.getResponsesLiveData().observe(this, this);
+    idlingForPassphraseChecking = SingleIdlingResources()
+    timer = Timer()
+
+    viewModel = ViewModelProviders.of(this).get(PasswordStrengthViewModel::class.java)
+    viewModel.init(NodeRepository())
+    viewModel.responsesLiveData.observe(this, this)
   }
 
-  @Override
-  public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.buttonSetPassPhrase:
-        if (TextUtils.isEmpty(editTextKeyPassword.getText().toString())) {
-          showInfoSnackbar(getRootView(), getString(R.string.passphrase_must_be_non_empty), Snackbar.LENGTH_LONG);
-        } else {
-          if (getSnackBar() != null) {
-            getSnackBar().dismiss();
-          }
+  override fun onClick(v: View) {
+    when (v.id) {
+      R.id.buttonSetPassPhrase -> if (TextUtils.isEmpty(editTextKeyPassword.text.toString())) {
+        showInfoSnackbar(rootView, getString(R.string.passphrase_must_be_non_empty), Snackbar.LENGTH_LONG)
+      } else {
+        if (snackBar != null) {
+          snackBar!!.dismiss()
+        }
 
-          if (strengthBarResult != null && strengthBarResult.getWord() != null) {
-            switch (strengthBarResult.getWord().getWord()) {
-              case Constants.PASSWORD_QUALITY_WEAK:
-              case Constants.PASSWORD_QUALITY_POOR:
-                InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance("",
-                    getString(R.string.select_stronger_pass_phrase));
-                infoDialogFragment.show(getSupportFragmentManager(), InfoDialogFragment.class.getSimpleName());
-                break;
-
-              default:
-                UIUtil.exchangeViewVisibility(this, true, layoutSecondPasswordCheck, layoutFirstPasswordCheck);
-                break;
+        if (strengthBarResult != null && strengthBarResult!!.word != null) {
+          when (strengthBarResult!!.word!!.word) {
+            Constants.PASSWORD_QUALITY_WEAK, Constants.PASSWORD_QUALITY_POOR -> {
+              val infoDialogFragment = InfoDialogFragment.newInstance("",
+                  getString(R.string.select_stronger_pass_phrase))
+              infoDialogFragment.show(supportFragmentManager, InfoDialogFragment::class.java.simpleName)
             }
+
+            else -> UIUtil.exchangeViewVisibility(this, true, layoutSecondPasswordCheck, layoutFirstPasswordCheck)
           }
         }
-        break;
+      }
 
-      case R.id.imageButtonShowPasswordHint:
-        if (getSnackBar() != null) {
-          getSnackBar().dismiss();
+      R.id.imageButtonShowPasswordHint -> {
+        if (snackBar != null) {
+          snackBar!!.dismiss()
         }
 
         try {
-          WebViewInfoDialogFragment webViewInfoDialogFragment = WebViewInfoDialogFragment.newInstance("",
-              IOUtils.toString(getAssets().open("html/pass_phrase_hint.htm"), StandardCharsets.UTF_8));
-          webViewInfoDialogFragment.show(getSupportFragmentManager(), WebViewInfoDialogFragment.class.getSimpleName());
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-        break;
-
-      case R.id.buttonUseAnotherPassPhrase:
-        if (getSnackBar() != null) {
-          getSnackBar().dismiss();
+          val webViewInfoDialogFragment = WebViewInfoDialogFragment.newInstance("",
+              IOUtils.toString(assets.open("html/pass_phrase_hint.htm"), StandardCharsets.UTF_8))
+          webViewInfoDialogFragment.show(supportFragmentManager, WebViewInfoDialogFragment::class.java.simpleName)
+        } catch (e: IOException) {
+          e.printStackTrace()
         }
 
-        editTextKeyPasswordSecond.setText(null);
-        editTextKeyPassword.setText(null);
-        UIUtil.exchangeViewVisibility(this, false, layoutSecondPasswordCheck, layoutFirstPasswordCheck);
-        break;
+      }
 
-      case R.id.buttonConfirmPassPhrases:
-        if (TextUtils.isEmpty(editTextKeyPasswordSecond.getText().toString())) {
-          showInfoSnackbar(getRootView(), getString(R.string.passphrase_must_be_non_empty), Snackbar.LENGTH_LONG);
+      R.id.buttonUseAnotherPassPhrase -> {
+        if (snackBar != null) {
+          snackBar!!.dismiss()
+        }
+
+        editTextKeyPasswordSecond.text = null
+        editTextKeyPassword.text = null
+        UIUtil.exchangeViewVisibility(this, false, layoutSecondPasswordCheck, layoutFirstPasswordCheck)
+      }
+
+      R.id.buttonConfirmPassPhrases -> if (TextUtils.isEmpty(editTextKeyPasswordSecond.text.toString())) {
+        showInfoSnackbar(rootView, getString(R.string.passphrase_must_be_non_empty), Snackbar.LENGTH_LONG)
+      } else {
+        if (snackBar != null) {
+          snackBar!!.dismiss()
+        }
+
+        if (editTextKeyPassword.text.toString() == editTextKeyPasswordSecond.text.toString()) {
+          onConfirmPassPhraseSuccess()
         } else {
-          if (getSnackBar() != null) {
-            getSnackBar().dismiss();
-          }
-
-          if (editTextKeyPassword.getText().toString().equals(editTextKeyPasswordSecond.getText().toString())) {
-            onConfirmPassPhraseSuccess();
-          } else {
-            editTextKeyPasswordSecond.setText(null);
-            showInfoSnackbar(getRootView(), getString(R.string.pass_phrases_do_not_match), Snackbar.LENGTH_LONG);
-          }
+          editTextKeyPasswordSecond.text = null
+          showInfoSnackbar(rootView, getString(R.string.pass_phrases_do_not_match), Snackbar.LENGTH_LONG)
         }
-        break;
+      }
 
-      case R.id.buttonSuccess:
-        setResult(Activity.RESULT_OK);
-        finish();
-        break;
+      R.id.buttonSuccess -> {
+        setResult(Activity.RESULT_OK)
+        finish()
+      }
     }
   }
 
-  @Override
-  public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+  override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
 
   }
 
-  @Override
-  public void onTextChanged(CharSequence s, int start, int before, int count) {
+  override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
 
   }
 
-  @Override
-  public void afterTextChanged(Editable editable) {
-    idlingForPassphraseChecking.setIdleState(false);
-    final String passphrase = editable.toString();
-    timer.cancel();
-    timer = new Timer();
-    timer.schedule(
-        new TimerTask() {
-          @Override
-          public void run() {
-            runOnUiThread(new TimerTask() {
-              @Override
-              public void run() {
-                viewModel.check(passphrase);
+  override fun afterTextChanged(editable: Editable) {
+    idlingForPassphraseChecking!!.setIdleState(false)
+    val passphrase = editable.toString()
+    timer!!.cancel()
+    timer = Timer()
+    timer!!.schedule(
+        object : TimerTask() {
+          override fun run() {
+            runOnUiThread(object : TimerTask() {
+              override fun run() {
+                viewModel.check(passphrase)
               }
-            });
+            })
           }
         },
         DELAY
-    );
+    )
 
     if (TextUtils.isEmpty(editable)) {
-      textViewPasswordQualityInfo.setText(R.string.passphrase_must_be_non_empty);
+      textViewPasswordQualityInfo.setText(R.string.passphrase_must_be_non_empty)
     }
   }
 
-  @Override
-  public void onChanged(NodeResponseWrapper nodeResponseWrapper) {
-    switch (nodeResponseWrapper.getRequestCode()) {
-      case R.id.live_data_id_check_passphrase_strength:
-        idlingForPassphraseChecking.setIdleState(true);
+  override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {
+    when (nodeResponseWrapper.requestCode) {
+      R.id.live_data_id_check_passphrase_strength -> {
+        idlingForPassphraseChecking!!.setIdleState(true)
 
-        switch (nodeResponseWrapper.getStatus()) {
-          case SUCCESS:
-            strengthBarResult = (ZxcvbnStrengthBarResult) nodeResponseWrapper.getResult();
-            updateStrengthViews();
-            break;
+        when (nodeResponseWrapper.status) {
+          Status.SUCCESS -> {
+            strengthBarResult = nodeResponseWrapper.result as ZxcvbnStrengthBarResult?
+            updateStrengthViews()
+          }
 
-          case ERROR:
-            if (nodeResponseWrapper.getResult() != null) {
-              Error error = nodeResponseWrapper.getResult().getError();
-              Toast.makeText(this, error.toString(), Toast.LENGTH_SHORT).show();
+          Status.ERROR -> if (nodeResponseWrapper.result != null) {
+            val error = nodeResponseWrapper.result.error
+            Toast.makeText(this, error!!.toString(), Toast.LENGTH_SHORT).show()
+          }
+
+          Status.EXCEPTION -> if (nodeResponseWrapper.result != null) {
+            val throwable = nodeResponseWrapper.exception
+            if (throwable != null) {
+              Toast.makeText(this, throwable.message, Toast.LENGTH_SHORT).show()
             }
-            break;
-
-          case EXCEPTION:
-            if (nodeResponseWrapper.getResult() != null) {
-              Throwable throwable = nodeResponseWrapper.getException();
-              if (throwable != null) {
-                Toast.makeText(this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
-              }
-            }
-            break;
+          }
         }
-        break;
-    }
-  }
-
-  @VisibleForTesting
-  public SingleIdlingResources getIdlingForPassphraseChecking() {
-    return idlingForPassphraseChecking;
-  }
-
-  protected void initViews() {
-    layoutProgress = findViewById(R.id.layoutProgress);
-    layoutContentView = findViewById(R.id.layoutContentView);
-    layoutFirstPasswordCheck = findViewById(R.id.layoutFirstPasswordCheck);
-    layoutSecondPasswordCheck = findViewById(R.id.layoutSecondPasswordCheck);
-    layoutSuccess = findViewById(R.id.layoutSuccess);
-    textViewSuccessTitle = findViewById(R.id.textViewSuccessTitle);
-    textViewSuccessSubTitle = findViewById(R.id.textViewSuccessSubTitle);
-    textViewFirstPasswordCheckTitle = findViewById(R.id.textViewFirstPasswordCheckTitle);
-    textViewSecondPasswordCheckTitle = findViewById(R.id.textViewSecondPasswordCheckTitle);
-    btnSuccess = findViewById(R.id.buttonSuccess);
-
-    editTextKeyPassword = findViewById(R.id.editTextKeyPassword);
-    editTextKeyPassword.addTextChangedListener(this);
-    editTextKeyPasswordSecond = findViewById(R.id.editTextKeyPasswordSecond);
-    progressBarPasswordQuality = findViewById(R.id.progressBarPasswordQuality);
-    textViewPasswordQualityInfo = findViewById(R.id.textViewPasswordQualityInfo);
-    btnSetPassPhrase = findViewById(R.id.buttonSetPassPhrase);
-    btnSetPassPhrase.setOnClickListener(this);
-    findViewById(R.id.imageButtonShowPasswordHint).setOnClickListener(this);
-    findViewById(R.id.buttonConfirmPassPhrases).setOnClickListener(this);
-    findViewById(R.id.buttonUseAnotherPassPhrase).setOnClickListener(this);
-    btnSuccess.setOnClickListener(this);
-  }
-
-  private void updateStrengthViews() {
-    if (strengthBarResult == null || strengthBarResult.getWord() == null) {
-      return;
-    }
-
-    Word word = strengthBarResult.getWord();
-
-    switch (word.getWord()) {
-      case Constants.PASSWORD_QUALITY_WEAK:
-      case Constants.PASSWORD_QUALITY_POOR:
-        btnSetPassPhrase.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.silver),
-            PorterDuff.Mode.MULTIPLY);
-        break;
-
-      default:
-        btnSetPassPhrase.getBackground().setColorFilter(ContextCompat.getColor(this, R.color.colorPrimary),
-            PorterDuff.Mode.MULTIPLY);
-        break;
-    }
-
-    int color = parseColor();
-
-    progressBarPasswordQuality.setProgress(word.getBar());
-    progressBarPasswordQuality.getProgressDrawable().setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
-
-    String qualityValue = getLocalizedPasswordQualityValue(word);
-
-    Spannable qualityValueSpannable = new SpannableString(qualityValue);
-    qualityValueSpannable.setSpan(new ForegroundColorSpan(color), 0, qualityValueSpannable.length(),
-        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-    qualityValueSpannable.setSpan(new StyleSpan(android.graphics.Typeface.BOLD), 0,
-        qualityValueSpannable.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-    textViewPasswordQualityInfo.setText(qualityValueSpannable);
-    textViewPasswordQualityInfo.append(" ");
-    textViewPasswordQualityInfo.append(getString(R.string.password_quality_subtext));
-
-    Spannable timeSpannable = new SpannableString(strengthBarResult.getTime());
-    timeSpannable.setSpan(new ForegroundColorSpan(color), 0, timeSpannable.length(),
-        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-    textViewPasswordQualityInfo.append(" ");
-    textViewPasswordQualityInfo.append(timeSpannable);
-    textViewPasswordQualityInfo.append(")");
-  }
-
-  private int parseColor() {
-    int color;
-    try {
-      color = Color.parseColor(strengthBarResult.getWord().getColor());
-    } catch (IllegalArgumentException e) {
-      e.printStackTrace();
-
-      switch (strengthBarResult.getWord().getColor()) {
-        case "orange":
-          color = Color.parseColor("#FFA500");
-          break;
-
-        case "darkorange":
-          color = Color.parseColor("#FF8C00");
-          break;
-
-        case "darkred":
-          color = Color.parseColor("#8B0000");
-          break;
-
-        default:
-          color = Color.DKGRAY;
       }
     }
-    return color;
   }
 
-  private String getLocalizedPasswordQualityValue(Word passwordStrength) {
-    String qualityValue = passwordStrength.getWord();
+  protected open fun initViews() {
+    layoutProgress = findViewById(R.id.layoutProgress)
+    layoutContentView = findViewById(R.id.layoutContentView)
+    layoutFirstPasswordCheck = findViewById(R.id.layoutFirstPasswordCheck)
+    layoutSecondPasswordCheck = findViewById(R.id.layoutSecondPasswordCheck)
+    layoutSuccess = findViewById(R.id.layoutSuccess)
+    textViewSuccessTitle = findViewById(R.id.textViewSuccessTitle)
+    textViewSuccessSubTitle = findViewById(R.id.textViewSuccessSubTitle)
+    textViewFirstPasswordCheckTitle = findViewById(R.id.textViewFirstPasswordCheckTitle)
+    textViewSecondPasswordCheckTitle = findViewById(R.id.textViewSecondPasswordCheckTitle)
+    btnSuccess = findViewById(R.id.buttonSuccess)
+
+    editTextKeyPassword = findViewById(R.id.editTextKeyPassword)
+    editTextKeyPassword.addTextChangedListener(this)
+    editTextKeyPasswordSecond = findViewById(R.id.editTextKeyPasswordSecond)
+    progressBarPasswordQuality = findViewById(R.id.progressBarPasswordQuality)
+    textViewPasswordQualityInfo = findViewById(R.id.textViewPasswordQualityInfo)
+    btnSetPassPhrase = findViewById(R.id.buttonSetPassPhrase)
+    btnSetPassPhrase.setOnClickListener(this)
+    findViewById<View>(R.id.imageButtonShowPasswordHint).setOnClickListener(this)
+    findViewById<View>(R.id.buttonConfirmPassPhrases).setOnClickListener(this)
+    findViewById<View>(R.id.buttonUseAnotherPassPhrase).setOnClickListener(this)
+    btnSuccess.setOnClickListener(this)
+  }
+
+  private fun updateStrengthViews() {
+    if (strengthBarResult == null || strengthBarResult!!.word == null) {
+      return
+    }
+
+    val word = strengthBarResult!!.word
+
+    when (word!!.word) {
+      Constants.PASSWORD_QUALITY_WEAK, Constants.PASSWORD_QUALITY_POOR -> btnSetPassPhrase.background.setColorFilter(ContextCompat.getColor(this, R.color.silver),
+          PorterDuff.Mode.MULTIPLY)
+
+      else -> btnSetPassPhrase.background.setColorFilter(ContextCompat.getColor(this, R.color.colorPrimary),
+          PorterDuff.Mode.MULTIPLY)
+    }
+
+    val color = parseColor()
+
+    progressBarPasswordQuality.progress = word.bar
+    progressBarPasswordQuality.progressDrawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
+
+    val qualityValue = getLocalizedPasswordQualityValue(word)
+
+    val qualityValueSpannable = SpannableString(qualityValue)
+    qualityValueSpannable.setSpan(ForegroundColorSpan(color), 0, qualityValueSpannable.length,
+        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    qualityValueSpannable.setSpan(StyleSpan(android.graphics.Typeface.BOLD), 0,
+        qualityValueSpannable.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    textViewPasswordQualityInfo.text = qualityValueSpannable
+    textViewPasswordQualityInfo.append(" ")
+    textViewPasswordQualityInfo.append(getString(R.string.password_quality_subtext))
+
+    val timeSpannable = SpannableString(strengthBarResult!!.time)
+    timeSpannable.setSpan(ForegroundColorSpan(color), 0, timeSpannable.length,
+        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    textViewPasswordQualityInfo.append(" ")
+    textViewPasswordQualityInfo.append(timeSpannable)
+    textViewPasswordQualityInfo.append(")")
+  }
+
+  private fun parseColor(): Int {
+    return try {
+      Color.parseColor(strengthBarResult!!.word!!.color)
+    } catch (e: IllegalArgumentException) {
+      e.printStackTrace()
+
+      when (strengthBarResult!!.word!!.color) {
+        "orange" -> Color.parseColor("#FFA500")
+
+        "darkorange" -> Color.parseColor("#FF8C00")
+
+        "darkred" -> Color.parseColor("#8B0000")
+
+        else -> Color.DKGRAY
+      }
+    }
+  }
+
+  private fun getLocalizedPasswordQualityValue(passwordStrength: Word): String? {
+    var qualityValue = passwordStrength.word
 
     if (qualityValue != null) {
-      switch (qualityValue) {
-        case Constants.PASSWORD_QUALITY_PERFECT:
-          qualityValue = getString(R.string.password_quality_perfect);
-          break;
+      when (qualityValue) {
+        Constants.PASSWORD_QUALITY_PERFECT -> qualityValue = getString(R.string.password_quality_perfect)
 
-        case Constants.PASSWORD_QUALITY_GREAT:
-          qualityValue = getString(R.string.password_quality_great);
-          break;
+        Constants.PASSWORD_QUALITY_GREAT -> qualityValue = getString(R.string.password_quality_great)
 
-        case Constants.PASSWORD_QUALITY_GOOD:
-          qualityValue = getString(R.string.password_quality_good);
-          break;
+        Constants.PASSWORD_QUALITY_GOOD -> qualityValue = getString(R.string.password_quality_good)
 
-        case Constants.PASSWORD_QUALITY_REASONABLE:
-          qualityValue = getString(R.string.password_quality_reasonable);
-          break;
+        Constants.PASSWORD_QUALITY_REASONABLE -> qualityValue = getString(R.string.password_quality_reasonable)
 
-        case Constants.PASSWORD_QUALITY_POOR:
-          qualityValue = getString(R.string.password_quality_poor);
-          break;
+        Constants.PASSWORD_QUALITY_POOR -> qualityValue = getString(R.string.password_quality_poor)
 
-        case Constants.PASSWORD_QUALITY_WEAK:
-          qualityValue = getString(R.string.password_quality_weak);
-          break;
+        Constants.PASSWORD_QUALITY_WEAK -> qualityValue = getString(R.string.password_quality_weak)
       }
 
-      qualityValue = qualityValue.toUpperCase();
+      qualityValue = qualityValue!!.toUpperCase()
     }
 
-    return qualityValue;
+    return qualityValue
+  }
+
+  companion object {
+    @JvmField
+    val KEY_EXTRA_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT_DAO", BasePassPhraseManagerActivity::class.java)
+    private const val DELAY: Long = 350
   }
 }

@@ -29,7 +29,7 @@ abstract class BaseService : Service() {
      * @param resultCode  The result code of a run action.
      * @param obj         The object which returned from the service.
      */
-    fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any)
+    fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?)
 
     /**
      * In this method we can handle a progress state after run some action via [BaseService]
@@ -39,7 +39,7 @@ abstract class BaseService : Service() {
      * @param resultCode  The result code of a run action.
      * @param obj         The object which returned from the service.
      */
-    fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any)
+    fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?)
 
     /**
      * In this method we can handle en error after run some action via [BaseService]

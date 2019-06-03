@@ -3,40 +3,35 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base;
+package com.flowcrypt.email.ui.activity.base
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.os.Messenger;
-import android.os.RemoteException;
-import android.view.MenuItem;
-import android.view.View;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.node.Node;
-import com.flowcrypt.email.service.BaseService;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.LogsUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.idling.NodeIdlingResource;
-import com.google.android.material.appbar.AppBarLayout;
-import com.google.android.material.snackbar.Snackbar;
-
-import java.lang.ref.WeakReference;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.lifecycle.Observer;
-import androidx.loader.content.Loader;
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.Bundle
+import android.os.Handler
+import android.os.Message
+import android.os.Messenger
+import android.os.RemoteException
+import android.view.MenuItem
+import android.view.View
+import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.Observer
+import androidx.loader.content.Loader
+import com.flowcrypt.email.R
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.node.Node
+import com.flowcrypt.email.service.BaseService
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.idling.NodeIdlingResource
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.snackbar.Snackbar
+import java.lang.ref.WeakReference
 
 /**
  * This is a base activity. This class describes a base logic for all activities.
@@ -46,24 +41,24 @@ import androidx.loader.content.Loader;
  * Time: 22:21.
  * E-mail: DenBond7@gmail.com
  */
-public abstract class BaseActivity extends AppCompatActivity implements BaseService.OnServiceCallback {
-  protected final String tag;
-  protected NodeIdlingResource nodeIdlingResource;
+abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback {
+  protected val tag: String = javaClass.simpleName
+  @get:VisibleForTesting
+  val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
 
-  private Snackbar snackbar;
-  private Toolbar toolbar;
-  private AppBarLayout appBarLayout;
-
-  public BaseActivity() {
-    tag = getClass().getSimpleName();
-  }
+  var snackBar: Snackbar? = null
+    private set
+  var toolbar: Toolbar? = null
+    private set
+  var appBarLayout: AppBarLayout? = null
+    private set
 
   /**
    * This method can used to change "HomeAsUpEnabled" behavior.
    *
    * @return true if we want to show "HomeAsUpEnabled", false otherwise.
    */
-  public abstract boolean isDisplayHomeAsUpEnabled();
+  abstract val isDisplayHomeAsUpEnabled: Boolean
 
   /**
    * Get the content view resources id. This method must return an resources id of a layout
@@ -71,98 +66,75 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    *
    * @return The content view resources id.
    */
-  public abstract int getContentViewResourceId();
+  abstract val contentViewResourceId: Int
 
   /**
    * Get root view which will be used for show Snackbar.
    */
-  public abstract View getRootView();
+  abstract val rootView: View
 
-  @Override
-  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
+  val replyMessengerName: String
+    get() = javaClass.simpleName + "_" + hashCode()
+
+  val isNodeReady: Boolean
+    get() = if (Node.getInstance(application).liveData.value == null) {
+      false
+    } else {
+      Node.getInstance(application).liveData.value!!
+    }
+
+  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
 
   }
 
-  @Override
-  public void onProgressReplyReceived(int requestCode, int resultCode, Object obj) {
+  override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
 
   }
 
-  @Override
-  public void onErrorHappened(int requestCode, int errorType, Exception e) {
+  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
 
   }
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    registerNodeIdlingResources();
-    LogsUtil.d(tag, "onCreate");
-    if (getContentViewResourceId() != 0) {
-      setContentView(getContentViewResourceId());
-      initScreenViews();
+  public override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    registerNodeIdlingResources()
+    LogsUtil.d(tag, "onCreate")
+    if (contentViewResourceId != 0) {
+      setContentView(contentViewResourceId)
+      initScreenViews()
     }
   }
 
-  @Override
-  public void onStart() {
-    super.onStart();
-    LogsUtil.d(tag, "onStart");
+  public override fun onStart() {
+    super.onStart()
+    LogsUtil.d(tag, "onStart")
   }
 
-  @Override
-  public void onResume() {
-    super.onResume();
-    LogsUtil.d(tag, "onResume");
+  public override fun onResume() {
+    super.onResume()
+    LogsUtil.d(tag, "onResume")
   }
 
-  @Override
-  public void onStop() {
-    super.onStop();
-    LogsUtil.d(tag, "onStop");
+  public override fun onStop() {
+    super.onStop()
+    LogsUtil.d(tag, "onStop")
   }
 
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
-    LogsUtil.d(tag, "onDestroy");
+  public override fun onDestroy() {
+    super.onDestroy()
+    LogsUtil.d(tag, "onDestroy")
   }
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case android.R.id.home:
-        if (isDisplayHomeAsUpEnabled()) {
-          finish();
-          return true;
-        } else return super.onOptionsItemSelected(item);
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
+      android.R.id.home -> if (isDisplayHomeAsUpEnabled) {
+        finish()
+        true
+      } else
+        super.onOptionsItemSelected(item)
 
-      default:
-        return super.onOptionsItemSelected(item);
+      else -> super.onOptionsItemSelected(item)
     }
-  }
-
-  @VisibleForTesting
-  public NodeIdlingResource getNodeIdlingResource() {
-    return nodeIdlingResource;
-  }
-
-  public Toolbar getToolbar() {
-    return toolbar;
-  }
-
-  public AppBarLayout getAppBarLayout() {
-    return appBarLayout;
-  }
-
-  /**
-   * Show information as Snackbar.
-   *
-   * @param view        The view to find a parent from.
-   * @param messageText The text to show.  Can be formatted text.
-   */
-  public void showInfoSnackbar(View view, String messageText) {
-    showInfoSnackbar(view, messageText, Snackbar.LENGTH_INDEFINITE);
   }
 
   /**
@@ -172,13 +144,10 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    * @param messageText The text to show.  Can be formatted text.
    * @param duration    How long to display the message.
    */
-  public void showInfoSnackbar(View view, String messageText, int duration) {
-    snackbar = Snackbar.make(view, messageText, duration).setAction(android.R.string.ok, new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-      }
-    });
-    snackbar.show();
+  @JvmOverloads
+  fun showInfoSnackbar(view: View, messageText: String?, duration: Int = Snackbar.LENGTH_INDEFINITE) {
+    snackBar = Snackbar.make(view, messageText ?: "", duration).setAction(android.R.string.ok) { }
+    snackBar!!.show()
   }
 
   /**
@@ -189,9 +158,9 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    * @param buttonName      The text of the Snackbar button
    * @param onClickListener The Snackbar button click listener.
    */
-  public void showSnackbar(View view, String messageText, String buttonName,
-                           @NonNull View.OnClickListener onClickListener) {
-    showSnackbar(view, messageText, buttonName, Snackbar.LENGTH_INDEFINITE, onClickListener);
+  fun showSnackbar(view: View, messageText: String, buttonName: String,
+                   onClickListener: View.OnClickListener) {
+    showSnackbar(view, messageText, buttonName, Snackbar.LENGTH_INDEFINITE, onClickListener)
   }
 
   /**
@@ -203,152 +172,130 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    * @param duration        How long to display the message.
    * @param onClickListener The Snackbar button click listener.
    */
-  public void showSnackbar(View view, String messageText, String buttonName, int duration,
-                           @NonNull View.OnClickListener onClickListener) {
-    snackbar = Snackbar.make(view, messageText, duration).setAction(buttonName, onClickListener);
-    snackbar.show();
+  fun showSnackbar(view: View, messageText: String, buttonName: String, duration: Int,
+                   onClickListener: View.OnClickListener) {
+    snackBar = Snackbar.make(view, messageText, duration).setAction(buttonName, onClickListener)
+    snackBar!!.show()
   }
 
-  public Snackbar getSnackBar() {
-    return snackbar;
-  }
-
-  public void dismissSnackBar() {
-    if (snackbar != null) {
-      snackbar.dismiss();
+  fun dismissSnackBar() {
+    if (snackBar != null) {
+      snackBar!!.dismiss()
     }
   }
 
-  public void handleLoaderResult(Loader loader, LoaderResult loaderResult) {
+  fun handleLoaderResult(loader: Loader<*>, loaderResult: LoaderResult?) {
     if (loaderResult != null) {
-      if (loaderResult.getResult() != null) {
-        onSuccess(loader.getId(), loaderResult.getResult());
-      } else if (loaderResult.getException() != null) {
-        onError(loader.getId(), loaderResult.getException());
-      } else {
-        showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
+      when {
+        loaderResult.result != null -> onSuccess(loader.id, loaderResult.result)
+        loaderResult.exception != null -> onError(loader.id, loaderResult.exception)
+        else -> showInfoSnackbar(rootView, getString(R.string.unknown_error))
       }
     } else {
-      showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
+      showInfoSnackbar(rootView, getString(R.string.unknown_error))
     }
   }
 
-  public void onError(int loaderId, Exception e) {
+  open fun onError(loaderId: Int, e: Exception?) {
 
   }
 
-  public void onSuccess(int loaderId, Object result) {
+  open fun onSuccess(loaderId: Int, result: Any?) {
 
-  }
-
-  public String getReplyMessengerName() {
-    return getClass().getSimpleName() + "_" + hashCode();
   }
 
   /**
-   * Check is current {@link Activity} connected to some service.
+   * Check is current [Activity] connected to some service.
    *
    * @return true if current activity connected to the service, otherwise false.
    */
-  protected boolean checkServiceBound(boolean isBound) {
+  protected fun checkServiceBound(isBound: Boolean): Boolean {
     if (!isBound) {
       if (GeneralUtil.isDebugBuild()) {
-        LogsUtil.d(tag, "Activity not connected to the service");
+        LogsUtil.d(tag, "Activity not connected to the service")
       }
-      return true;
+      return true
     }
-    return false;
+    return false
   }
 
-  protected void bindService(Class<?> cls, ServiceConnection conn) {
-    bindService(new Intent(this, cls), conn, Context.BIND_AUTO_CREATE);
-    LogsUtil.d(tag, "bind to " + cls.getSimpleName());
+  protected fun bindService(cls: Class<*>, conn: ServiceConnection) {
+    bindService(Intent(this, cls), conn, Context.BIND_AUTO_CREATE)
+    LogsUtil.d(tag, "bind to " + cls.simpleName)
   }
 
   /**
    * Disconnect from a service
    */
-  protected void unbindService(Class<?> cls, ServiceConnection conn) {
-    unbindService(conn);
-    LogsUtil.d(tag, "unbind from " + cls.getSimpleName());
+  protected fun unbindService(cls: Class<*>, conn: ServiceConnection) {
+    unbindService(conn)
+    LogsUtil.d(tag, "unbind from " + cls.simpleName)
   }
 
   /**
-   * Register a reply {@link Messenger} to receive notifications from some service.
+   * Register a reply [Messenger] to receive notifications from some service.
    *
-   * @param what             A {@link Message#what}}
-   * @param serviceMessenger A service {@link Messenger}
-   * @param replyToMessenger A reply to {@link Messenger}
+   * @param what             A [Message.what]}
+   * @param serviceMessenger A service [Messenger]
+   * @param replyToMessenger A reply to [Messenger]
    */
-  protected void registerReplyMessenger(int what, Messenger serviceMessenger, Messenger replyToMessenger) {
-    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), -1, null);
+  protected fun registerReplyMessenger(what: Int, serviceMessenger: Messenger, replyToMessenger: Messenger) {
+    val action = BaseService.Action(replyMessengerName, -1, null)
 
-    Message message = Message.obtain(null, what, action);
-    message.replyTo = replyToMessenger;
+    val message = Message.obtain(null, what, action)
+    message.replyTo = replyToMessenger
     try {
-      serviceMessenger.send(message);
-    } catch (RemoteException e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
+      serviceMessenger.send(message)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
     }
   }
 
   /**
-   * Unregister a reply {@link Messenger} from some service.
+   * Unregister a reply [Messenger] from some service.
    *
-   * @param what             A {@link Message#what}}
-   * @param serviceMessenger A service {@link Messenger}
-   * @param replyToMessenger A reply to {@link Messenger}
+   * @param what             A [Message.what]}
+   * @param serviceMessenger A service [Messenger]
+   * @param replyToMessenger A reply to [Messenger]
    */
-  protected void unregisterReplyMessenger(int what, Messenger serviceMessenger, Messenger replyToMessenger) {
-    BaseService.Action action = new BaseService.Action(getReplyMessengerName(), -1, null);
+  protected fun unregisterReplyMessenger(what: Int, serviceMessenger: Messenger, replyToMessenger: Messenger) {
+    val action = BaseService.Action(replyMessengerName, -1, null)
 
-    Message message = Message.obtain(null, what, action);
-    message.replyTo = replyToMessenger;
+    val message = Message.obtain(null, what, action)
+    message.replyTo = replyToMessenger
     try {
-      serviceMessenger.send(message);
-    } catch (RemoteException e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
+      serviceMessenger.send(message)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
     }
   }
 
-  public boolean isNodeReady() {
-    if (Node.getInstance(getApplication()).getLiveData().getValue() == null) {
-      return false;
-    }
-
-    return Node.getInstance(getApplication()).getLiveData().getValue();
-  }
-
-  protected void onNodeStateChanged(boolean isReady) {
+  protected open fun onNodeStateChanged(isReady: Boolean) {
 
   }
 
-  private void registerNodeIdlingResources() {
-    nodeIdlingResource = new NodeIdlingResource();
-    Node.getInstance(getApplication()).getLiveData().observe(this, new Observer<Boolean>() {
-      @Override
-      public void onChanged(Boolean aBoolean) {
-        nodeIdlingResource.setIdleState(aBoolean);
-        onNodeStateChanged(aBoolean);
-      }
-    });
+  private fun registerNodeIdlingResources() {
+    Node.getInstance(application).liveData.observe(this, Observer { aBoolean ->
+      nodeIdlingResource.setIdleState(aBoolean!!)
+      onNodeStateChanged(aBoolean)
+    })
   }
 
-  private void initScreenViews() {
-    appBarLayout = findViewById(R.id.appBarLayout);
-    setupToolbar();
+  private fun initScreenViews() {
+    appBarLayout = findViewById(R.id.appBarLayout)
+    setupToolbar()
   }
 
-  private void setupToolbar() {
-    toolbar = findViewById(R.id.toolbar);
+  private fun setupToolbar() {
+    toolbar = findViewById(R.id.toolbar)
     if (toolbar != null) {
-      setSupportActionBar(toolbar);
+      setSupportActionBar(toolbar)
     }
 
-    if (getSupportActionBar() != null) {
-      getSupportActionBar().setDisplayHomeAsUpEnabled(isDisplayHomeAsUpEnabled());
+    if (supportActionBar != null) {
+      supportActionBar!!.setDisplayHomeAsUpEnabled(isDisplayHomeAsUpEnabled)
     }
   }
 
@@ -356,35 +303,26 @@ public abstract class BaseActivity extends AppCompatActivity implements BaseServ
    * The incoming handler realization. This handler will be used to communicate with a service and other Android
    * components.
    */
-  protected static class ReplyHandler extends Handler {
-    private final WeakReference<BaseService.OnServiceCallback> weakRef;
+  protected class ReplyHandler internal constructor(onServiceCallback: BaseService.OnServiceCallback) : Handler() {
+    private val weakRef: WeakReference<BaseService.OnServiceCallback> = WeakReference(onServiceCallback)
 
-    ReplyHandler(BaseService.OnServiceCallback onServiceCallback) {
-      this.weakRef = new WeakReference<>(onServiceCallback);
-    }
-
-    @Override
-    public void handleMessage(Message message) {
+    override fun handleMessage(message: Message) {
       if (weakRef.get() != null) {
-        BaseService.OnServiceCallback onServiceCallback = weakRef.get();
-        switch (message.what) {
-          case BaseService.REPLY_OK:
-            onServiceCallback.onReplyReceived(message.arg1, message.arg2, message.obj);
-            break;
+        when (message.what) {
+          BaseService.REPLY_OK -> weakRef.get()?.onReplyReceived(message.arg1, message.arg2, message.obj)
 
-          case BaseService.REPLY_ERROR:
-            Exception exception = null;
+          BaseService.REPLY_ERROR -> {
+            var exception: Exception? = null
 
-            if (message.obj instanceof Exception) {
-              exception = (Exception) message.obj;
+            if (message.obj is Exception) {
+              exception = message.obj as Exception
             }
 
-            onServiceCallback.onErrorHappened(message.arg1, message.arg2, exception);
-            break;
+            weakRef.get()?.onErrorHappened(message.arg1, message.arg2, exception!!)
+          }
 
-          case BaseService.REPLY_ACTION_PROGRESS:
-            onServiceCallback.onProgressReplyReceived(message.arg1, message.arg2, message.obj);
-            break;
+          BaseService.REPLY_ACTION_PROGRESS -> weakRef.get()?.onProgressReplyReceived(message.arg1, message.arg2,
+              message.obj)
         }
       }
     }

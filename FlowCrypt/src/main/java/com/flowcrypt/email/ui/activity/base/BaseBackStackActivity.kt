@@ -3,20 +3,18 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.base;
+package com.flowcrypt.email.ui.activity.base
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.view.MenuItem;
-
-import com.flowcrypt.email.ui.activity.BaseNodeActivity;
+import android.app.Activity
+import android.view.MenuItem
+import com.flowcrypt.email.ui.activity.BaseNodeActivity
 
 /**
  * The base back stack activity. In this activity we add the back stack functionality. The
- * extended class must implement {@link BaseBackStackActivity#getContentViewResourceId()} method
- * to define the content view resources id. And the in {@link Activity#onCreate(Bundle)} method
+ * extended class must implement [BaseBackStackActivity.getContentViewResourceId] method
+ * to define the content view resources id. And the in [Activity.onCreate] method
  * we setup the toolbar if it exist in the contents and call
- * {@link androidx.appcompat.app.ActionBar#setDisplayHomeAsUpEnabled(boolean)} to implement the
+ * [androidx.appcompat.app.ActionBar.setDisplayHomeAsUpEnabled] to implement the
  * back stack functionality.
  *
  * @author DenBond7
@@ -25,21 +23,18 @@ import com.flowcrypt.email.ui.activity.BaseNodeActivity;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseBackStackActivity extends BaseNodeActivity {
+abstract class BaseBackStackActivity : BaseNodeActivity() {
 
-  @Override
-  public boolean isDisplayHomeAsUpEnabled() {
-    return true;
-  }
+  override val isDisplayHomeAsUpEnabled: Boolean
+    get() = true
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case android.R.id.home:
-        onBackPressed();
-        return true;
-
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+      android.R.id.home -> {
+        onBackPressed()
+        return true
+      }
     }
-    return super.onOptionsItemSelected(item);
+    return super.onOptionsItemSelected(item)
   }
 }
