@@ -3,26 +3,22 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.widget;
+package com.flowcrypt.email.ui.widget
 
-import android.content.Context;
-import android.content.res.ColorStateList;
-import android.database.Cursor;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.util.UIUtil;
-import com.hootsuite.nachos.ChipConfiguration;
-import com.hootsuite.nachos.chip.Chip;
-import com.hootsuite.nachos.chip.ChipCreator;
-import com.hootsuite.nachos.chip.ChipSpan;
-import com.hootsuite.nachos.chip.ChipSpanChipCreator;
-
-import androidx.annotation.NonNull;
+import android.content.Context
+import android.content.res.ColorStateList
+import android.database.Cursor
+import com.flowcrypt.email.R
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.util.UIUtil
+import com.hootsuite.nachos.ChipConfiguration
+import com.hootsuite.nachos.chip.Chip
+import com.hootsuite.nachos.chip.ChipCreator
+import com.hootsuite.nachos.chip.ChipSpan
+import com.hootsuite.nachos.chip.ChipSpanChipCreator
 
 /**
- * This {@link ChipSpanChipCreator} responsible for displaying {@link Chip}.
+ * This [ChipSpanChipCreator] responsible for displaying [Chip].
  *
  * @author Denis Bondarenko
  * Date: 31.07.2017
@@ -30,92 +26,82 @@ import androidx.annotation.NonNull;
  * E-mail: DenBond7@gmail.com
  */
 
-public class CustomChipSpanChipCreator implements ChipCreator<PGPContactChipSpan> {
-  private int backgroundColorPgpExists;
-  private int backgroundColorPgpNotExists;
-  private int textColorPgpExists;
-  private int textColorNoPgpNoExists;
+class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSpan> {
+  private val backgroundColorPgpExists: Int = UIUtil.getColor(context, R.color.colorPrimary)
+  private val backgroundColorPgpNotExists: Int = UIUtil.getColor(context, R.color.aluminum)
+  private val textColorPgpExists: Int = UIUtil.getColor(context, android.R.color.white)
+  private val textColorNoPgpNoExists: Int = UIUtil.getColor(context, R.color.dark)
 
-  public CustomChipSpanChipCreator(Context context) {
-    backgroundColorPgpExists = UIUtil.getColor(context, R.color.colorPrimary);
-    textColorPgpExists = UIUtil.getColor(context, android.R.color.white);
-    backgroundColorPgpNotExists = UIUtil.getColor(context, R.color.aluminum);
-    textColorNoPgpNoExists = UIUtil.getColor(context, R.color.dark);
+  override fun createChip(context: Context, text: CharSequence, data: Any?): PGPContactChipSpan {
+    return PGPContactChipSpan(context, text, null, data)
   }
 
-  @Override
-  public PGPContactChipSpan createChip(@NonNull Context context, @NonNull CharSequence text, Object data) {
-    return new PGPContactChipSpan(context, text, null, data);
+  override fun createChip(context: Context, pgpContactChipSpan: PGPContactChipSpan): PGPContactChipSpan {
+    return PGPContactChipSpan(context, pgpContactChipSpan)
   }
 
-  @Override
-  public PGPContactChipSpan createChip(@NonNull Context context, @NonNull PGPContactChipSpan pgpContactChipSpan) {
-    return new PGPContactChipSpan(context, pgpContactChipSpan);
-  }
-
-  @Override
-  public void configureChip(@NonNull PGPContactChipSpan span, @NonNull ChipConfiguration chipConfiguration) {
-    int chipSpacing = chipConfiguration.getChipSpacing();
+  override fun configureChip(span: PGPContactChipSpan, chipConfiguration: ChipConfiguration) {
+    val chipSpacing = chipConfiguration.chipSpacing
     if (chipSpacing != -1) {
-      span.setLeftMargin(chipSpacing / 2);
-      span.setRightMargin(chipSpacing / 2);
+      span.setLeftMargin(chipSpacing / 2)
+      span.setRightMargin(chipSpacing / 2)
     }
 
-    int chipTextColor = chipConfiguration.getChipTextColor();
+    val chipTextColor = chipConfiguration.chipTextColor
     if (chipTextColor != -1) {
-      span.setTextColor(chipTextColor);
+      span.setTextColor(chipTextColor)
     }
 
-    int chipTextSize = chipConfiguration.getChipTextSize();
+    val chipTextSize = chipConfiguration.chipTextSize
     if (chipTextSize != -1) {
-      span.setTextSize(chipTextSize);
+      span.setTextSize(chipTextSize)
     }
 
-    int chipHeight = chipConfiguration.getChipHeight();
+    val chipHeight = chipConfiguration.chipHeight
     if (chipHeight != -1) {
-      span.setChipHeight(chipHeight);
+      span.setChipHeight(chipHeight)
     }
 
-    int chipVerticalSpacing = chipConfiguration.getChipVerticalSpacing();
+    val chipVerticalSpacing = chipConfiguration.chipVerticalSpacing
     if (chipVerticalSpacing != -1) {
-      span.setChipVerticalSpacing(chipVerticalSpacing);
+      span.setChipVerticalSpacing(chipVerticalSpacing)
     }
 
-    int maxAvailableWidth = chipConfiguration.getMaxAvailableWidth();
+    val maxAvailableWidth = chipConfiguration.maxAvailableWidth
     if (maxAvailableWidth != -1) {
-      span.setMaxAvailableWidth(maxAvailableWidth);
+      span.setMaxAvailableWidth(maxAvailableWidth)
     }
 
     if (span.hasPgp() != null) {
-      updateChipSpanBackground(span, span.hasPgp());
-    } else if (span.getData() != null && span.getData() instanceof Cursor) {
-      Cursor cursor = (Cursor) span.getData();
-      if (cursor != null && !cursor.isClosed()) {
-        PgpContact pgpContact = new ContactsDaoSource().getCurrentPgpContact(cursor);
-        span.setHasPgp(pgpContact.getHasPgp());
-        updateChipSpanBackground(span, pgpContact.getHasPgp());
+      updateChipSpanBackground(span, span.hasPgp()!!)
+    } else if (span.data != null && span.data is Cursor) {
+      val cursor = span.data as Cursor?
+      if (cursor != null && !cursor.isClosed) {
+        val (_, _, _, hasPgp) = ContactsDaoSource().getCurrentPgpContact(cursor)
+        span.setHasPgp(hasPgp)
+        updateChipSpanBackground(span, hasPgp)
       }
     } else {
-      ColorStateList chipBackground = chipConfiguration.getChipBackground();
+      val chipBackground = chipConfiguration.chipBackground
       if (chipBackground != null) {
-        span.setBackgroundColor(chipBackground);
+        span.setBackgroundColor(chipBackground)
       }
     }
   }
 
   /**
-   * Update the {@link ChipSpan} background.
+   * Update the [ChipSpan] background.
    *
-   * @param span   The {@link ChipSpan} object.
+   * @param span   The [ChipSpan] object.
    * @param hasPgp true if the contact has pgp key, otherwise false.
    */
-  private void updateChipSpanBackground(@NonNull PGPContactChipSpan span, boolean hasPgp) {
+  private fun updateChipSpanBackground(span: PGPContactChipSpan, hasPgp: Boolean) {
     if (hasPgp) {
-      span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExists));
-      span.setTextColor(textColorPgpExists);
+      span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExists))
+      span.setTextColor(textColorPgpExists)
     } else {
-      span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpNotExists));
-      span.setTextColor(textColorNoPgpNoExists);
+      span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpNotExists))
+      span.setTextColor(textColorNoPgpNoExists)
     }
   }
 }

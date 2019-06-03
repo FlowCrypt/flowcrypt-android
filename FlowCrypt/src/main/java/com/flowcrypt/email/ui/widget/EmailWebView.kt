@@ -3,27 +3,26 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.widget;
+package com.flowcrypt.email.ui.widget
 
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.util.AttributeSet;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.ui.activity.CreateMessageActivity;
-
-import androidx.browser.customtabs.CustomTabsIntent;
-import androidx.core.content.ContextCompat;
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.util.AttributeSet
+import android.view.View
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.content.ContextCompat
+import com.flowcrypt.email.R
+import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
 
 /**
- * The custom realization of {@link WebView}
+ * The custom realization of [WebView]
  *
  * @author Denis Bondarenko
  * Date: 02.09.2017
@@ -31,122 +30,107 @@ import androidx.core.content.ContextCompat;
  * E-mail: DenBond7@gmail.com
  */
 
-public class EmailWebView extends WebView {
-  private OnPageFinishedListener onPageFinishedListener;
+class EmailWebView : WebView {
+  private var onPageFinishedListener: OnPageFinishedListener? = null
 
-  public EmailWebView(Context context) {
-    super(context);
-  }
+  constructor(context: Context) : super(context)
 
-  public EmailWebView(Context context, AttributeSet attrs) {
-    super(context, attrs);
-  }
+  constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
-  public EmailWebView(Context context, AttributeSet attrs, int defStyleAttr) {
-    super(context, attrs, defStyleAttr);
-  }
+  constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
   /**
-   * This method does job of configure the current {@link WebView}
+   * This method does job of configure the current [WebView]
    */
-  public void configure() {
-    setVerticalScrollBarEnabled(false);
-    setScrollBarStyle(SCROLLBARS_INSIDE_OVERLAY);
-    setOverScrollMode(OVER_SCROLL_NEVER);
-    setWebViewClient(new CustomWebClient(getContext()));
-    setWebChromeClient(new WebChromeClient() {
-      @Override
-      public void onProgressChanged(WebView view, int newProgress) {
-        super.onProgressChanged(view, newProgress);
+  fun configure() {
+    isVerticalScrollBarEnabled = false
+    scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
+    overScrollMode = View.OVER_SCROLL_NEVER
+    webViewClient = CustomWebClient(context)
+    webChromeClient = object : WebChromeClient() {
+      override fun onProgressChanged(view: WebView, newProgress: Int) {
+        super.onProgressChanged(view, newProgress)
         if (newProgress == 100) {
           if (onPageFinishedListener != null) {
-            onPageFinishedListener.onPageFinished();
+            onPageFinishedListener!!.onPageFinished()
           }
         }
       }
-    });
+    }
 
-    WebSettings webSettings = this.getSettings();
+    val webSettings = this.settings
 
-    webSettings.setUseWideViewPort(true);
-    webSettings.setLoadWithOverviewMode(true);
-    webSettings.setSupportZoom(true);
-    webSettings.setBuiltInZoomControls(true);
-    webSettings.setDisplayZoomControls(false);
-    webSettings.setLoadsImagesAutomatically(true);
-    webSettings.setLoadsImagesAutomatically(true);
-    webSettings.setJavaScriptEnabled(false);
-    webSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.SINGLE_COLUMN);
+    webSettings.useWideViewPort = true
+    webSettings.loadWithOverviewMode = true
+    webSettings.setSupportZoom(true)
+    webSettings.builtInZoomControls = true
+    webSettings.displayZoomControls = false
+    webSettings.loadsImagesAutomatically = true
+    webSettings.loadsImagesAutomatically = true
+    webSettings.javaScriptEnabled = false
+    webSettings.layoutAlgorithm = WebSettings.LayoutAlgorithm.SINGLE_COLUMN
   }
 
-  public void setOnPageFinishedListener(OnPageFinishedListener onPageFinishedListener) {
-    this.onPageFinishedListener = onPageFinishedListener;
+  fun setOnPageFinishedListener(onPageFinishedListener: OnPageFinishedListener) {
+    this.onPageFinishedListener = onPageFinishedListener
   }
 
-  public interface OnPageFinishedListener {
-    void onPageFinished();
+  interface OnPageFinishedListener {
+    fun onPageFinished()
   }
 
   /**
-   * The custom realization of {@link WebViewClient}
+   * The custom realization of [WebViewClient]
    */
-  private static class CustomWebClient extends WebViewClient {
-    private Context context;
+  private class CustomWebClient internal constructor(private val context: Context) : WebViewClient() {
 
-    CustomWebClient(Context context) {
-      this.context = context;
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public boolean shouldOverrideUrlLoading(WebView view, String url) {
-      if (url.startsWith(SCHEME_MAILTO)) {
-        handleEmailLinks(Uri.parse(url));
-        return false;
+    override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
+      return if (url.startsWith(SCHEME_MAILTO)) {
+        handleEmailLinks(Uri.parse(url))
+        false
       } else {
-        showUrlUsingChromeCustomTabs(Uri.parse(url));
-        return true;
+        showUrlUsingChromeCustomTabs(Uri.parse(url))
+        true
       }
     }
 
-    @Override
-    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-      if (request.getUrl().getScheme().equalsIgnoreCase("mailto")) {
-        handleEmailLinks(request.getUrl());
+    override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+      if ("mailto".equals(request.url.scheme, ignoreCase = true)) {
+        handleEmailLinks(request.url)
       } else {
-        showUrlUsingChromeCustomTabs(request.getUrl());
+        showUrlUsingChromeCustomTabs(request.url)
       }
 
-      return true;
+      return true
     }
 
     /**
      * Handle email links and open the internal compose screen.
      *
-     * @param uri {@link Uri} with mailto: scheme.
+     * @param uri [Uri] with mailto: scheme.
      */
-    private void handleEmailLinks(Uri uri) {
-      Intent intent = CreateMessageActivity.generateIntent(context, null, MessageEncryptionType.ENCRYPTED);
-      intent.setAction(Intent.ACTION_SENDTO);
-      intent.setData(uri);
-      context.startActivity(intent);
+    private fun handleEmailLinks(uri: Uri) {
+      val intent = CreateMessageActivity.generateIntent(context, null, MessageEncryptionType.ENCRYPTED)
+      intent.action = Intent.ACTION_SENDTO
+      intent.data = uri
+      context.startActivity(intent)
     }
 
 
     /**
-     * Use {@link CustomTabsIntent} to show some url.
+     * Use [CustomTabsIntent] to show some url.
      *
-     * @param uri The {@link Uri} which contains a url.
+     * @param uri The [Uri] which contains a url.
      */
-    private void showUrlUsingChromeCustomTabs(Uri uri) {
-      CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-      CustomTabsIntent customTabsIntent = builder.build();
-      builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary));
+    private fun showUrlUsingChromeCustomTabs(uri: Uri) {
+      val builder = CustomTabsIntent.Builder()
+      val customTabsIntent = builder.build()
+      builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary))
 
-      Intent intent = new Intent(Intent.ACTION_VIEW);
-      intent.setData(uri);
-      if (intent.resolveActivity(context.getPackageManager()) != null) {
-        customTabsIntent.launchUrl(context, uri);
+      val intent = Intent(Intent.ACTION_VIEW)
+      intent.data = uri
+      if (intent.resolveActivity(context.packageManager) != null) {
+        customTabsIntent.launchUrl(context, uri)
       }
     }
   }

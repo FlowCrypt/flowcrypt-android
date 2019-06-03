@@ -15,173 +15,163 @@
  */
 
 
-package com.flowcrypt.email.ui.widget;
+package com.flowcrypt.email.ui.widget
 
-import android.content.Context;
-import android.graphics.Rect;
-import android.util.AttributeSet;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewParent;
-import android.webkit.WebView;
-import android.widget.ScrollView;
-
-import java.util.ArrayList;
-import java.util.List;
+import android.content.Context
+import android.graphics.Rect
+import android.util.AttributeSet
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.webkit.WebView
+import android.widget.ScrollView
+import java.util.*
 
 /**
- * A {@link ScrollView} that will never lock scrolling in a particular direction.
- * <p>
+ * A [ScrollView] that will never lock scrolling in a particular direction.
+ *
  * Usually ScrollView will capture all touch events once a drag has begun. In some cases,
  * we want to delegate those touches to children as normal, even in the middle of a drag. This is
  * useful when there are childviews like a WebView that handles scrolling in the horizontal direction
  * even while the ScrollView drags vertically.
- * <p>
+ *
  * This is only tested to work for ScrollViews where the content scrolls in one direction.
- * <p>
- * <p>
+ *
  * See https://github.com/k9mail/k-9
  */
-public class NonLockingScrollView extends ScrollView {
+class NonLockingScrollView : ScrollView {
   /**
    * The list of children who should always receive touch events, and not have them intercepted.
    */
-  private final List<View> childrenNeedingAllTouches = new ArrayList<>();
-  private final Rect hitFrame = new Rect();
+  private val childrenNeedingAllTouches = ArrayList<View>()
+  private val hitFrame = Rect()
   /**
    * Whether or not the contents of this view is being dragged by one of the children in
-   * {@link #childrenNeedingAllTouches}.
+   * [.childrenNeedingAllTouches].
    */
-  private boolean inCustomDrag;
-  private boolean skipWebViewScroll = true;
+  private var inCustomDrag: Boolean = false
+  private var skipWebViewScroll = true
 
-  public NonLockingScrollView(Context context) {
-    super(context);
-  }
+  constructor(context: Context) : super(context)
 
-  public NonLockingScrollView(Context context, AttributeSet attrs) {
-    super(context, attrs);
-  }
+  constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
-  public NonLockingScrollView(Context context, AttributeSet attrs, int defStyle) {
-    super(context, attrs, defStyle);
-  }
+  constructor(context: Context, attrs: AttributeSet, defStyle: Int) : super(context, attrs, defStyle)
 
-  @Override
-  public boolean onInterceptTouchEvent(MotionEvent ev) {
-    final int action = getActionMasked(ev);
-    final boolean isUp = action == MotionEvent.ACTION_UP;
+  override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+    val action = getActionMasked(ev)
+    val isUp = action == MotionEvent.ACTION_UP
 
     if (isUp && inCustomDrag) {
       // An up event after a drag should be intercepted so that child views don't handle
       // click events falsely after a drag.
-      inCustomDrag = false;
-      onTouchEvent(ev);
-      return true;
+      inCustomDrag = false
+      onTouchEvent(ev)
+      return true
     }
 
     if (!inCustomDrag && !isEventOverChild(ev, childrenNeedingAllTouches)) {
-      return super.onInterceptTouchEvent(ev);
+      return super.onInterceptTouchEvent(ev)
     }
 
     // Note the normal scrollview implementation is to intercept all touch events after it has
     // detected a drag starting. We will handle this ourselves.
-    inCustomDrag = super.onInterceptTouchEvent(ev);
+    inCustomDrag = super.onInterceptTouchEvent(ev)
     if (inCustomDrag) {
-      onTouchEvent(ev);
+      onTouchEvent(ev)
     }
 
     // Don't intercept events - pass them on to children as normal.
-    return false;
+    return false
   }
 
-  @Override
-  protected void onFinishInflate() {
-    super.onFinishInflate();
-    setupDelegationOfTouchAndHierarchyChangeEvents();
+  override fun onFinishInflate() {
+    super.onFinishInflate()
+    setupDelegationOfTouchAndHierarchyChangeEvents()
   }
 
-  @Override
-  public void requestChildFocus(View child, View focused) {
+  override fun requestChildFocus(child: View, focused: View) {
     /*
      * Normally a ScrollView will scroll the child into view.
      * Prevent this when a MessageWebView is first touched,
      * assuming it already is at least partially in view.
      *
      */
-    if (skipWebViewScroll && focused instanceof EmailWebView && focused.getGlobalVisibleRect(new Rect())) {
-      skipWebViewScroll = false;
-      super.requestChildFocus(child, child);
-      ViewParent parent = getParent();
-      if (parent != null) {
-        parent.requestChildFocus(this, focused);
-      }
+    if (skipWebViewScroll && focused is EmailWebView && focused.getGlobalVisibleRect(Rect())) {
+      skipWebViewScroll = false
+      super.requestChildFocus(child, child)
+      val parent = parent
+      parent?.requestChildFocus(this, focused)
     } else {
-      super.requestChildFocus(child, focused);
+      super.requestChildFocus(child, focused)
     }
   }
 
-  private static boolean canViewReceivePointerEvents(View child) {
-    return child.getVisibility() == VISIBLE || (child.getAnimation() != null);
+  private fun canViewReceivePointerEvents(child: View): Boolean {
+    return child.visibility == View.VISIBLE || child.animation != null
   }
 
-  private int getActionMasked(MotionEvent ev) {
+  private fun getActionMasked(ev: MotionEvent): Int {
     // Equivalent to MotionEvent.getActionMasked() which is in API 8+
-    return ev.getAction() & MotionEvent.ACTION_MASK;
+    return ev.action and MotionEvent.ACTION_MASK
   }
 
-  private void setupDelegationOfTouchAndHierarchyChangeEvents() {
-    OnHierarchyChangeListener listener = new HierarchyTreeChangeListener();
-    setOnHierarchyChangeListener(listener);
-    for (int i = 0, childCount = getChildCount(); i < childCount; i++) {
-      listener.onChildViewAdded(this, getChildAt(i));
+  private fun setupDelegationOfTouchAndHierarchyChangeEvents() {
+    val listener = HierarchyTreeChangeListener()
+    setOnHierarchyChangeListener(listener)
+    var i = 0
+    val childCount = childCount
+    while (i < childCount) {
+      listener.onChildViewAdded(this, getChildAt(i))
+      i++
     }
   }
 
-  private boolean isEventOverChild(MotionEvent ev, List<View> children) {
-    final int actionIndex = ev.getActionIndex();
-    final float x = ev.getX(actionIndex) + getScrollX();
-    final float y = ev.getY(actionIndex) + getScrollY();
+  private fun isEventOverChild(ev: MotionEvent, children: List<View>): Boolean {
+    val actionIndex = ev.actionIndex
+    val x = ev.getX(actionIndex) + scrollX
+    val y = ev.getY(actionIndex) + scrollY
 
-    for (View child : children) {
+    for (child in children) {
       if (!canViewReceivePointerEvents(child)) {
-        continue;
+        continue
       }
-      child.getHitRect(hitFrame);
+      child.getHitRect(hitFrame)
 
       // child can receive the motion event.
-      if (hitFrame.contains((int) x, (int) y)) {
-        return true;
+      if (hitFrame.contains(x.toInt(), y.toInt())) {
+        return true
       }
     }
-    return false;
+    return false
   }
 
-  private class HierarchyTreeChangeListener implements OnHierarchyChangeListener {
-    @Override
-    public void onChildViewAdded(View parent, View child) {
-      if (child instanceof WebView) {
-        childrenNeedingAllTouches.add(child);
-      } else if (child instanceof ViewGroup) {
-        ViewGroup childGroup = (ViewGroup) child;
-        childGroup.setOnHierarchyChangeListener(this);
-        for (int i = 0, childCount = childGroup.getChildCount(); i < childCount; i++) {
-          onChildViewAdded(childGroup, childGroup.getChildAt(i));
+  private inner class HierarchyTreeChangeListener : OnHierarchyChangeListener {
+    override fun onChildViewAdded(parent: View, child: View) {
+      if (child is WebView) {
+        childrenNeedingAllTouches.add(child)
+      } else if (child is ViewGroup) {
+        child.setOnHierarchyChangeListener(this)
+        var i = 0
+        val childCount = child.childCount
+        while (i < childCount) {
+          onChildViewAdded(child, child.getChildAt(i))
+          i++
         }
       }
     }
 
-    @Override
-    public void onChildViewRemoved(View parent, View child) {
-      if (child instanceof WebView) {
-        childrenNeedingAllTouches.remove(child);
-      } else if (child instanceof ViewGroup) {
-        ViewGroup childGroup = (ViewGroup) child;
-        for (int i = 0, childCount = childGroup.getChildCount(); i < childCount; i++) {
-          onChildViewRemoved(childGroup, childGroup.getChildAt(i));
+    override fun onChildViewRemoved(parent: View, child: View) {
+      if (child is WebView) {
+        childrenNeedingAllTouches.remove(child)
+      } else if (child is ViewGroup) {
+        var i = 0
+        val childCount = child.childCount
+        while (i < childCount) {
+          onChildViewRemoved(child, child.getChildAt(i))
+          i++
         }
-        childGroup.setOnHierarchyChangeListener(null);
+        child.setOnHierarchyChangeListener(null)
       }
     }
   }

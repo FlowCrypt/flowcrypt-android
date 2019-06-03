@@ -994,8 +994,7 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
     pgpContactsNachoTextView.setIllegalCharacters(',');
     pgpContactsNachoTextView.addChipTerminator(' ', ChipTerminatorHandler.BEHAVIOR_CHIPIFY_TO_TERMINATOR);
     pgpContactsNachoTextView.setChipTokenizer(new SingleCharacterSpanChipTokenizer(getContext(),
-        new CustomChipSpanChipCreator(getContext()), PGPContactChipSpan.class,
-        SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE));
+        new CustomChipSpanChipCreator(getContext()), PGPContactChipSpan.class));
     pgpContactsNachoTextView.setAdapter(preparePgpContactAdapter());
     pgpContactsNachoTextView.setOnFocusChangeListener(this);
     pgpContactsNachoTextView.setListener(this);

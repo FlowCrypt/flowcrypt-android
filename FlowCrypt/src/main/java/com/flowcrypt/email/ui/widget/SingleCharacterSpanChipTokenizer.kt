@@ -3,62 +3,58 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.widget;
+package com.flowcrypt.email.ui.widget
 
-import android.content.Context;
+import android.content.Context
 
-import com.hootsuite.nachos.NachoTextView;
-import com.hootsuite.nachos.chip.ChipCreator;
-import com.hootsuite.nachos.tokenizer.SpanChipTokenizer;
-
-import androidx.annotation.NonNull;
+import com.hootsuite.nachos.NachoTextView
+import com.hootsuite.nachos.chip.Chip
+import com.hootsuite.nachos.chip.ChipCreator
+import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
 
 /**
- * Define a custom chip separator in {@link NachoTextView}
+ * Define a custom chip separator in [NachoTextView]
  *
  * @author DenBond7
  * Date: 19.05.2017
  * Time: 14:14
  * E-mail: DenBond7@gmail.com
  */
-@SuppressWarnings("unchecked")
-public class SingleCharacterSpanChipTokenizer extends SpanChipTokenizer {
-  public static final char CHIP_SEPARATOR_WHITESPACE = ' ';
-  private final char symbol;
+class SingleCharacterSpanChipTokenizer<C : Chip>
+@JvmOverloads constructor(context: Context,
+                          chipCreator: ChipCreator<C>,
+                          chipClass: Class<C>,
+                          private val symbol: Char = CHIP_SEPARATOR_WHITESPACE) : SpanChipTokenizer<C>(context,
+    chipCreator, chipClass) {
+  override fun findTokenStart(text: CharSequence, cursor: Int): Int {
+    var i = cursor
 
-  public SingleCharacterSpanChipTokenizer(Context context, @NonNull ChipCreator chipCreator,
-                                          @NonNull Class chipClass, char symbol) {
-    super(context, chipCreator, chipClass);
-    this.symbol = symbol;
-  }
-
-  @Override
-  public int findTokenStart(CharSequence text, int cursor) {
-    int i = cursor;
-
-    while (i > 0 && text.charAt(i - 1) != symbol) {
-      i--;
+    while (i > 0 && text[i - 1] != symbol) {
+      i--
     }
-    while (i < cursor && text.charAt(i) == symbol) {
-      i++;
+    while (i < cursor && text[i] == symbol) {
+      i++
     }
 
-    return i;
+    return i
   }
 
-  @Override
-  public int findTokenEnd(CharSequence text, int cursor) {
-    int i = cursor;
-    int len = text.length();
+  override fun findTokenEnd(text: CharSequence, cursor: Int): Int {
+    var i = cursor
+    val len = text.length
 
     while (i < len) {
-      if (text.charAt(i) == symbol) {
-        return i;
+      if (text[i] == symbol) {
+        return i
       } else {
-        i++;
+        i++
       }
     }
 
-    return len;
+    return len
+  }
+
+  companion object {
+    const val CHIP_SEPARATOR_WHITESPACE = ' '
   }
 }

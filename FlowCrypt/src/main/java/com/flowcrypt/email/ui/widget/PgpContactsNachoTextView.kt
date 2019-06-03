@@ -3,141 +3,122 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.widget;
+package com.flowcrypt.email.ui.widget
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
-import android.text.Editable;
-import android.text.Layout;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.SuggestionSpan;
-import android.util.AttributeSet;
-import android.view.ActionMode;
-import android.view.GestureDetector;
-import android.view.HapticFeedbackConstants;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.View;
-import android.widget.AdapterView;
-
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.hootsuite.nachos.NachoTextView;
-import com.hootsuite.nachos.chip.Chip;
-
-import java.util.Arrays;
-import java.util.List;
-
-import androidx.annotation.NonNull;
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.SuggestionSpan
+import android.util.AttributeSet
+import android.view.ActionMode
+import android.view.GestureDetector
+import android.view.HapticFeedbackConstants
+import android.view.Menu
+import android.view.MenuItem
+import android.view.MotionEvent
+import android.view.View
+import android.widget.AdapterView
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.hootsuite.nachos.NachoTextView
+import com.hootsuite.nachos.chip.Chip
+import java.util.*
 
 /**
- * The custom realization of {@link NachoTextView}.
+ * The custom realization of [NachoTextView].
  *
  * @author DenBond7
  * Date: 19.05.2017
  * Time: 8:52
  * E-mail: DenBond7@gmail.com
  */
+class PgpContactsNachoTextView(context: Context, attrs: AttributeSet) : NachoTextView(context, attrs) {
+  private val gestureDetector: GestureDetector
+  private var listener: OnChipLongClickListener? = null
+  private val gestureListener: ChipLongClickOnGestureListener
 
-public class PgpContactsNachoTextView extends NachoTextView {
-  private GestureDetector gestureDetector;
-  private OnChipLongClickListener listener;
-  private ChipLongClickOnGestureListener gestureListener;
-
-  public PgpContactsNachoTextView(Context context, AttributeSet attrs) {
-    super(context, attrs);
-    this.gestureListener = new ChipLongClickOnGestureListener();
-    this.gestureDetector = new GestureDetector(getContext(), gestureListener);
-    setCustomSelectionActionModeCallback(new CustomActionModeCallback());
+  init {
+    this.gestureListener = ChipLongClickOnGestureListener()
+    this.gestureDetector = GestureDetector(getContext(), gestureListener)
+    customSelectionActionModeCallback = CustomActionModeCallback()
   }
 
   /**
    * This method prevents add a duplicate email from the dropdown to TextView.
    */
-  @Override
-  public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-    CharSequence text = this.getFilter().convertResultToString(this.getAdapter().getItem(position));
+  override fun onItemClick(adapterView: AdapterView<*>?, view: View?, position: Int, id: Long) {
+    val text = this.filter.convertResultToString(this.adapter.getItem(position))
 
     if (!getText().toString().contains(text)) {
-      super.onItemClick(adapterView, view, position, id);
+      super.onItemClick(adapterView, view, position, id)
     }
 
   }
 
-  @Override
-  public String toString() {
+  override fun toString(): String {
     //Todo In this code I received a crash. Need to fix it.
     try {
-      return super.toString();
-    } catch (Exception e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
+      return super.toString()
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
     }
-    return getText().toString();
+
+    return text.toString()
   }
 
-  @Override
-  public boolean onTouchEvent(@NonNull MotionEvent event) {
-    gestureDetector.onTouchEvent(event);
-    return super.onTouchEvent(event);
+  override fun onTouchEvent(event: MotionEvent): Boolean {
+    gestureDetector.onTouchEvent(event)
+    return super.onTouchEvent(event)
   }
 
-  @Override
-  public boolean performClick() {
-    return super.performClick();
-  }
+  override fun onTextContextMenuItem(id: Int): Boolean {
+    val start = selectionStart
+    val end = selectionEnd
 
-  @Override
-  public boolean onTextContextMenuItem(int id) {
-    int start = getSelectionStart();
-    int end = getSelectionEnd();
+    when (id) {
+      android.R.id.cut -> {
+        setClipboardData(ClipData.newPlainText(null, removeSuggestionSpans(getTextWithPlainTextSpans(start, end))))
+        text.delete(selectionStart, selectionEnd)
+        return true
+      }
 
-    switch (id) {
-      case android.R.id.cut:
-        setClipboardData(ClipData.newPlainText(null, removeSuggestionSpans(getTextWithPlainTextSpans(start, end))));
-        getText().delete(getSelectionStart(), getSelectionEnd());
-        return true;
+      android.R.id.copy -> {
+        setClipboardData(ClipData.newPlainText(null, removeSuggestionSpans(getTextWithPlainTextSpans(start, end))))
+        return true
+      }
 
-      case android.R.id.copy:
-        setClipboardData(ClipData.newPlainText(null, removeSuggestionSpans(getTextWithPlainTextSpans(start, end))));
-        return true;
-
-      case android.R.id.paste:
-        StringBuilder stringBuilder = new StringBuilder();
-        ClipboardManager clipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-        if (clipboardManager != null) {
-          ClipData clip = clipboardManager.getPrimaryClip();
-          if (clip != null) {
-            for (int i = 0; i < clip.getItemCount(); i++) {
-              stringBuilder.append(clip.getItemAt(i).coerceToStyledText(getContext()));
-            }
-          }
-
-          List<String> emails = getChipValues();
-          if (emails.contains(stringBuilder.toString())) {
-            clipboardManager.setPrimaryClip(ClipData.newPlainText(null, " "));
+      android.R.id.paste -> {
+        val stringBuilder = StringBuilder()
+        val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = clipboardManager.primaryClip
+        if (clip != null) {
+          for (i in 0 until clip.itemCount) {
+            stringBuilder.append(clip.getItemAt(i).coerceToStyledText(context))
           }
         }
 
-        return super.onTextContextMenuItem(id);
+        val emails = chipValues
+        if (emails.contains(stringBuilder.toString())) {
+          clipboardManager.primaryClip = ClipData.newPlainText(null, " ")
+        }
 
-      default:
-        return super.onTextContextMenuItem(id);
+        return super.onTextContextMenuItem(id)
+      }
+
+      else -> return super.onTextContextMenuItem(id)
     }
   }
 
-  public void setListener(OnChipLongClickListener listener) {
-    this.listener = listener;
+  fun setListener(listener: OnChipLongClickListener) {
+    this.listener = listener
   }
 
-  private void setClipboardData(ClipData clip) {
-    ClipboardManager clipboard = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
-    if (clipboard != null) {
-      clipboard.setPrimaryClip(clip);
-    }
+  private fun setClipboardData(clip: ClipData) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.primaryClip = clip
   }
 
   /**
@@ -147,151 +128,149 @@ public class PgpContactsNachoTextView extends NachoTextView {
    * @param end   The end position of the selected text.
    * @return A formatted text.
    */
-  private CharSequence getTextWithPlainTextSpans(int start, int end) {
-    Editable editable = getText();
+  private fun getTextWithPlainTextSpans(start: Int, end: Int): CharSequence {
+    val editable = text
 
-    if (getChipTokenizer() != null) {
-      StringBuilder stringBuilder = new StringBuilder();
+    if (chipTokenizer != null) {
+      val stringBuilder = StringBuilder()
 
-      List<Chip> chips = Arrays.asList(getChipTokenizer().findAllChips(start, end, editable));
-      for (int i = 0; i < chips.size(); i++) {
-        Chip chip = chips.get(i);
-        stringBuilder.append(chip.getText());
-        if (i != chips.size() - 1) {
-          stringBuilder.append(SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE);
+      val chips = Arrays.asList(*chipTokenizer!!.findAllChips(start, end, editable))
+      for (i in chips.indices) {
+        val chip = chips[i]
+        stringBuilder.append(chip.text)
+        if (i != chips.size - 1) {
+          stringBuilder.append(SingleCharacterSpanChipTokenizer.CHIP_SEPARATOR_WHITESPACE)
         }
       }
 
-      return stringBuilder.toString();
+      return stringBuilder.toString()
     }
-    return editable.subSequence(start, end).toString();
+    return editable.subSequence(start, end).toString()
   }
 
-  private CharSequence removeSuggestionSpans(CharSequence text) {
-    if (text instanceof Spanned) {
-      Spannable spannable;
-      if (text instanceof Spannable) {
-        spannable = (Spannable) text;
+  private fun removeSuggestionSpans(text: CharSequence): CharSequence {
+    var text = text
+    if (text is Spanned) {
+      val spannable: Spannable
+      if (text is Spannable) {
+        spannable = text
       } else {
-        spannable = new SpannableString(text);
-        text = spannable;
+        spannable = SpannableString(text)
+        text = spannable
       }
 
-      SuggestionSpan[] spans = spannable.getSpans(0, text.length(), SuggestionSpan.class);
-      for (SuggestionSpan span : spans) {
-        spannable.removeSpan(span);
+      val spans = spannable.getSpans(0, text.length, SuggestionSpan::class.java)
+      for (span in spans) {
+        spannable.removeSpan(span)
       }
     }
-    return text;
+    return text
   }
 
-  public interface OnChipLongClickListener {
+  interface OnChipLongClickListener {
     /**
      * Called when a chip in this TextView is long clicked.
      *
      * @param nachoTextView A current view
-     * @param chip          the {@link Chip} that was clicked
-     * @param event         the {@link MotionEvent} that caused the touch
+     * @param chip          the [Chip] that was clicked
+     * @param event         the [MotionEvent] that caused the touch
      */
-    void onChipLongClick(NachoTextView nachoTextView, @NonNull Chip chip, MotionEvent event);
+    fun onChipLongClick(nachoTextView: NachoTextView, chip: Chip, event: MotionEvent)
   }
 
   /**
-   * A custom realization of {@link ActionMode.Callback} which describes a logic of the text manipulation.
+   * A custom realization of [ActionMode.Callback] which describes a logic of the text manipulation.
    */
-  private class CustomActionModeCallback implements ActionMode.Callback {
+  private inner class CustomActionModeCallback : ActionMode.Callback {
 
-    @Override
-    public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-      return true;
+    override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+      return true
     }
 
-    @Override
-    public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-      boolean isMenuModified = false;
-      for (int i = 0; i < menu.size(); i++) {
-        MenuItem menuItem = menu.getItem(i);
+    override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
+      var isMenuModified = false
+      for (i in 0 until menu.size()) {
+        val menuItem = menu.getItem(i)
         if (menuItem != null) {
-          switch (menuItem.getItemId()) {
-            case android.R.id.cut:
-            case android.R.id.copy:
-              break;
+          when (menuItem.itemId) {
+            android.R.id.cut, android.R.id.copy -> {
+            }
 
-            default:
-              menu.removeItem(menuItem.getItemId());
-              isMenuModified = true;
+            else -> {
+              menu.removeItem(menuItem.itemId)
+              isMenuModified = true
+            }
           }
         }
       }
 
-      return isMenuModified;
+      return isMenuModified
     }
 
-    @Override
-    public boolean onActionItemClicked(ActionMode mode, MenuItem menuItem) {
-      switch (menuItem.getItemId()) {
-        case android.R.id.copy:
-          onTextContextMenuItem(android.R.id.copy);
-          mode.finish();
-          return true;
+    override fun onActionItemClicked(mode: ActionMode, menuItem: MenuItem): Boolean {
+      when (menuItem.itemId) {
+        android.R.id.copy -> {
+          onTextContextMenuItem(android.R.id.copy)
+          mode.finish()
+          return true
+        }
       }
-      return false;
+      return false
     }
 
-    @Override
-    public void onDestroyActionMode(ActionMode mode) {
+    override fun onDestroyActionMode(mode: ActionMode) {
 
     }
   }
 
-  private class ChipLongClickOnGestureListener extends GestureDetector.SimpleOnGestureListener {
-    public void onLongPress(MotionEvent event) {
-      super.onLongPress(event);
-      performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+  private inner class ChipLongClickOnGestureListener : GestureDetector.SimpleOnGestureListener() {
+    override fun onLongPress(event: MotionEvent) {
+      super.onLongPress(event)
+      performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
 
       if (listener != null) {
-        Chip chip = findLongClickedChip(event);
+        val chip = findLongClickedChip(event)
 
         if (chip != null) {
-          listener.onChipLongClick(PgpContactsNachoTextView.this, chip, event);
+          listener!!.onChipLongClick(this@PgpContactsNachoTextView, chip, event)
         }
       }
     }
 
-    private Chip findLongClickedChip(MotionEvent event) {
-      if (getChipTokenizer() == null) {
-        return null;
+    private fun findLongClickedChip(event: MotionEvent): Chip? {
+      if (chipTokenizer == null) {
+        return null
       }
 
-      Editable text = getText();
-      int offset = getOffsetForPosition(event.getX(), event.getY());
-      List<Chip> chips = getAllChips();
-      for (Chip chip : chips) {
-        int chipStart = getChipTokenizer().findChipStart(chip, text);
-        int chipEnd = getChipTokenizer().findChipEnd(chip, text);
-        if (chipStart <= offset && offset <= chipEnd) {
-          float eventX = event.getX();
-          float startX = getPrimaryHorizontalForX(chipStart);
-          float endX = getPrimaryHorizontalForX(chipEnd - 1);
+      val text = text
+      val offset = getOffsetForPosition(event.x, event.y)
+      val chips = allChips
+      for (chip in chips) {
+        val chipStart = chipTokenizer!!.findChipStart(chip, text)
+        val chipEnd = chipTokenizer!!.findChipEnd(chip, text)
+        if (offset in chipStart..chipEnd) {
+          val eventX = event.x
+          val startX = getPrimaryHorizontalForX(chipStart)
+          val endX = getPrimaryHorizontalForX(chipEnd - 1)
 
-          int offsetLineNumber = getLineForOffset(offset);
-          int chipLineNumber = getLineForOffset(chipEnd - 1);
+          val offsetLineNumber = getLineForOffset(offset)
+          val chipLineNumber = getLineForOffset(chipEnd - 1)
 
-          if (startX <= eventX && eventX <= endX && offsetLineNumber == chipLineNumber) {
-            return chip;
+          if ((eventX in startX..endX) && offsetLineNumber == chipLineNumber) {
+            return chip
           }
         }
       }
-      return null;
+      return null
     }
 
-    private float getPrimaryHorizontalForX(int offset) {
-      Layout layout = getLayout();
-      return layout.getPrimaryHorizontal(offset);
+    private fun getPrimaryHorizontalForX(offset: Int): Float {
+      val layout = layout
+      return layout.getPrimaryHorizontal(offset)
     }
 
-    private int getLineForOffset(int offset) {
-      return getLayout().getLineForOffset(offset);
+    private fun getLineForOffset(offset: Int): Int {
+      return layout.getLineForOffset(offset)
     }
   }
 }
