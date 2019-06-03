@@ -3,23 +3,20 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.adapter;
+package com.flowcrypt.email.ui.adapter
 
-import android.content.Context;
-import android.text.TextUtils;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.TextView;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
-import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.util.UIUtil;
-
-import java.util.ArrayList;
-import java.util.List;
+import android.content.Context
+import android.text.TextUtils
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
+import android.widget.TextView
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
+import com.flowcrypt.email.database.dao.source.KeysDaoSource
+import com.flowcrypt.email.util.UIUtil
+import java.util.*
 
 /**
  * This adapter can be used to show info about public keys from the https://flowcrypt.com/attester/lookup/email/.
@@ -30,94 +27,97 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 
-public class AttesterKeyAdapter extends BaseAdapter {
-  private List<LookUpEmailResponse> responses;
-  private List<String> keysLongIds;
+class AttesterKeyAdapter(context: Context, responses: List<LookUpEmailResponse>) : BaseAdapter() {
+  private var responses: List<LookUpEmailResponse>? = null
+  private val keysLongIds: List<String>
 
-  public AttesterKeyAdapter(Context context, List<LookUpEmailResponse> responses) {
-    this.responses = responses;
+  init {
+    this.responses = responses
 
     if (this.responses == null) {
-      this.responses = new ArrayList<>();
+      this.responses = ArrayList()
     }
 
-    this.keysLongIds = new KeysDaoSource().getAllKeysLongIds(context);
+    this.keysLongIds = KeysDaoSource().getAllKeysLongIds(context)
   }
 
-  @Override
-  public int getCount() {
-    return responses.size();
+  override fun getCount(): Int {
+    return responses!!.size
   }
 
-  @Override
-  public LookUpEmailResponse getItem(int position) {
-    return responses.get(position);
+  override fun getItem(position: Int): LookUpEmailResponse {
+    return responses!![position]
   }
 
-  @Override
-  public long getItemId(int position) {
-    return position;
+  override fun getItemId(position: Int): Long {
+    return position.toLong()
   }
 
-  @Override
-  public View getView(int position, View convertView, ViewGroup parent) {
-    LookUpEmailResponse lookUpEmailResponse = getItem(position);
-    Context context = parent.getContext();
-    AttesterKeyAdapter.ViewHolder viewHolder;
-    if (convertView == null) {
-      viewHolder = new AttesterKeyAdapter.ViewHolder();
-      convertView = LayoutInflater.from(context).inflate(R.layout.attester_key_item, parent, false);
+  override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+    var view = convertView
+    val lookUpEmailResponse = getItem(position)
+    val context = parent.context
+    val viewHolder: ViewHolder
+    if (view == null) {
+      viewHolder = ViewHolder()
+      view = LayoutInflater.from(context).inflate(R.layout.attester_key_item, parent, false)
 
-      viewHolder.textViewKeyOwner = convertView.findViewById(R.id.textViewKeyOwner);
-      viewHolder.textViewKeyAttesterStatus = convertView.findViewById(R.id.textViewKeyAttesterStatus);
-      convertView.setTag(viewHolder);
+      viewHolder.textViewKeyOwner = view!!.findViewById(R.id.textViewKeyOwner)
+      viewHolder.textViewKeyAttesterStatus = view.findViewById(R.id.textViewKeyAttesterStatus)
+      view.tag = viewHolder
     } else {
-      viewHolder = (AttesterKeyAdapter.ViewHolder) convertView.getTag();
+      viewHolder = view.tag as ViewHolder
     }
 
-    updateView(lookUpEmailResponse, context, viewHolder);
+    updateView(lookUpEmailResponse, context, viewHolder)
 
-    return convertView;
+    return view
   }
 
-  private void updateView(LookUpEmailResponse lookUpEmailResponse, Context context, ViewHolder viewHolder) {
-    viewHolder.textViewKeyOwner.setText(lookUpEmailResponse.getEmail());
+  private fun updateView(lookUpEmailResponse: LookUpEmailResponse, context: Context, viewHolder: ViewHolder) {
+    viewHolder.textViewKeyOwner!!.text = lookUpEmailResponse.email
 
-    if (TextUtils.isEmpty(lookUpEmailResponse.getPubKey())) {
-      viewHolder.textViewKeyAttesterStatus.setText(R.string.no_public_key_recorded);
-      viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.orange));
-    } else if (isPublicKeyMatched(lookUpEmailResponse)) {
-      viewHolder.textViewKeyAttesterStatus.setText(R.string.submitted_can_receive_encrypted_email);
-      viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.colorPrimary));
-    } else {
-      viewHolder.textViewKeyAttesterStatus.setText(R.string.wrong_public_key_recorded);
-      viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.red));
+    when {
+      TextUtils.isEmpty(lookUpEmailResponse.pubKey) -> {
+        viewHolder.textViewKeyAttesterStatus!!.setText(R.string.no_public_key_recorded)
+        viewHolder.textViewKeyAttesterStatus!!.setTextColor(UIUtil.getColor(context, R.color.orange))
+      }
+
+      isPublicKeyMatched(lookUpEmailResponse) -> {
+        viewHolder.textViewKeyAttesterStatus!!.setText(R.string.submitted_can_receive_encrypted_email)
+        viewHolder.textViewKeyAttesterStatus!!.setTextColor(UIUtil.getColor(context, R.color.colorPrimary))
+      }
+
+      else -> {
+        viewHolder.textViewKeyAttesterStatus!!.setText(R.string.wrong_public_key_recorded)
+        viewHolder.textViewKeyAttesterStatus!!.setTextColor(UIUtil.getColor(context, R.color.red))
+      }
     }
   }
 
   /**
    * Check is public key found, and the longid does not match any longids of saved keys.
    *
-   * @param lookUpEmailResponse The {@link LookUpEmailResponse} object which contains info about a public key from
-   *                            the Attester API.
+   * @param lookUpEmailResponse The [LookUpEmailResponse] object which contains info about a public key from
+   * the Attester API.
    * @return true if public key found, and the longid does not match any longids of saved keys, otherwise false.
    */
-  private boolean isPublicKeyMatched(LookUpEmailResponse lookUpEmailResponse) {
+  private fun isPublicKeyMatched(lookUpEmailResponse: LookUpEmailResponse): Boolean {
 
-    for (String longId : keysLongIds) {
-      if (longId.equals(lookUpEmailResponse.getLongId())) {
-        return true;
+    for (longId in keysLongIds) {
+      if (longId == lookUpEmailResponse.longId) {
+        return true
       }
     }
 
-    return false;
+    return false
   }
 
   /**
    * The view holder implementation for a better performance.
    */
-  private static class ViewHolder {
-    TextView textViewKeyOwner;
-    TextView textViewKeyAttesterStatus;
+  private class ViewHolder {
+    internal var textViewKeyOwner: TextView? = null
+    internal var textViewKeyAttesterStatus: TextView? = null
   }
 }

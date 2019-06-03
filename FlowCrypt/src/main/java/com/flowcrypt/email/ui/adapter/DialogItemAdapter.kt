@@ -3,23 +3,19 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.adapter;
+package com.flowcrypt.email.ui.adapter
 
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.TextView;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.DialogItem;
-
-import java.util.ArrayList;
-import java.util.List;
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
+import android.widget.TextView
+import com.flowcrypt.email.R
+import com.flowcrypt.email.model.DialogItem
 
 /**
- * This adapter can be used with {@link DialogItem}
+ * This adapter can be used with [DialogItem]
  *
  * @author Denis Bondarenko
  * Date: 01.08.2017
@@ -27,59 +23,47 @@ import java.util.List;
  * E-mail: DenBond7@gmail.com
  */
 
-public class DialogItemAdapter extends BaseAdapter {
-  private LayoutInflater inflater;
-  private List<DialogItem> items;
+class DialogItemAdapter(context: Context,
+                        val items: List<DialogItem> = emptyList()) : BaseAdapter() {
+  private val inflater: LayoutInflater = LayoutInflater.from(context)
 
-  public DialogItemAdapter(Context context, List<DialogItem> items) {
-    this.items = items;
-    this.inflater = LayoutInflater.from(context);
-
-    if (this.items == null) {
-      this.items = new ArrayList<>();
-    }
+  override fun getCount(): Int {
+    return items.size
   }
 
-  @Override
-  public int getCount() {
-    return items.size();
+  override fun getItem(position: Int): DialogItem {
+    return items[position]
   }
 
-  @Override
-  public DialogItem getItem(int position) {
-    return items.get(position);
+  override fun getItemId(position: Int): Long {
+    return position.toLong()
   }
 
-  @Override
-  public long getItemId(int position) {
-    return position;
-  }
+  override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+    var view = convertView
+    val dialogItem = getItem(position)
 
-  @Override
-  public View getView(int position, View convertView, ViewGroup parent) {
-    DialogItem dialogItem = getItem(position);
-
-    ViewHolder viewHolder;
-    if (convertView == null) {
-      viewHolder = new ViewHolder();
-      convertView = inflater.inflate(R.layout.dialog_item, parent, false);
-      viewHolder.textViewItemTitle = convertView.findViewById(R.id.textViewDialogItem);
-      convertView.setTag(viewHolder);
+    val viewHolder: ViewHolder
+    if (view == null) {
+      viewHolder = ViewHolder()
+      view = inflater.inflate(R.layout.dialog_item, parent, false)
+      viewHolder.textViewItemTitle = view!!.findViewById(R.id.textViewDialogItem)
+      view.tag = viewHolder
     } else {
-      viewHolder = (ViewHolder) convertView.getTag();
+      viewHolder = view.tag as ViewHolder
     }
 
-    updateView(dialogItem, viewHolder);
+    updateView(dialogItem, viewHolder)
 
-    return convertView;
+    return view
   }
 
-  private void updateView(DialogItem dialogItem, ViewHolder viewHolder) {
-    viewHolder.textViewItemTitle.setText(dialogItem.getTitle());
-    viewHolder.textViewItemTitle.setCompoundDrawablesWithIntrinsicBounds(dialogItem.getIconResourceId(), 0, 0, 0);
+  private fun updateView(dialogItem: DialogItem, viewHolder: ViewHolder) {
+    viewHolder.textViewItemTitle!!.text = dialogItem.title
+    viewHolder.textViewItemTitle!!.setCompoundDrawablesWithIntrinsicBounds(dialogItem.iconResourceId, 0, 0, 0)
   }
 
-  private static class ViewHolder {
-    TextView textViewItemTitle;
+  private class ViewHolder {
+    internal var textViewItemTitle: TextView? = null
   }
 }

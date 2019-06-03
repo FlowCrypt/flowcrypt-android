@@ -3,20 +3,20 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.adapter;
+package com.flowcrypt.email.ui.adapter
 
-import android.content.Context;
-import android.database.Cursor;
-import android.text.TextUtils;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.CursorAdapter;
-import android.widget.ImageButton;
-import android.widget.TextView;
+import android.content.Context
+import android.database.Cursor
+import android.text.TextUtils
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.CursorAdapter
+import android.widget.ImageButton
+import android.widget.TextView
 
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
+import com.flowcrypt.email.R
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 
 /**
  * This adapter describes logic to prepare show contacts from the database.
@@ -27,74 +27,58 @@ import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ContactsListCursorAdapter extends CursorAdapter {
-  private OnDeleteContactListener listener;
-  private boolean isDeleteEnabled;
+class ContactsListCursorAdapter @JvmOverloads constructor(context: Context,
+                                                          c: Cursor,
+                                                          autoRequery: Boolean,
+                                                          private val listener: OnDeleteContactListener?,
+                                                          private val isDeleteEnabled: Boolean = true) :
+    CursorAdapter(context, c, autoRequery) {
 
-  public ContactsListCursorAdapter(Context context, Cursor c, boolean autoRequery,
-                                   OnDeleteContactListener listener) {
-    this(context, c, autoRequery, listener, true);
+  override fun newView(context: Context, cursor: Cursor, parent: ViewGroup): View {
+    return LayoutInflater.from(context).inflate(R.layout.contact_item, parent, false)
   }
 
-  public ContactsListCursorAdapter(Context context, Cursor c, boolean autoRequery,
-                                   OnDeleteContactListener listener, boolean isDeleteEnabled) {
-    super(context, c, autoRequery);
-    this.listener = listener;
-    this.isDeleteEnabled = isDeleteEnabled;
-  }
+  override fun bindView(view: View, context: Context, cursor: Cursor) {
+    val textViewName = view.findViewById<TextView>(R.id.textViewName)
+    val textViewEmail = view.findViewById<TextView>(R.id.textViewEmail)
+    val textViewOnlyEmail = view.findViewById<TextView>(R.id.textViewOnlyEmail)
+    val imageButtonDeleteContact = view.findViewById<ImageButton>(R.id.imageButtonDeleteContact)
 
-  @Override
-  public View newView(Context context, Cursor cursor, ViewGroup parent) {
-    return LayoutInflater.from(context).inflate(R.layout.contact_item, parent, false);
-  }
-
-  @Override
-  public void bindView(View view, Context context, Cursor cursor) {
-    TextView textViewName = view.findViewById(R.id.textViewName);
-    TextView textViewEmail = view.findViewById(R.id.textViewEmail);
-    TextView textViewOnlyEmail = view.findViewById(R.id.textViewOnlyEmail);
-    ImageButton imageButtonDeleteContact = view.findViewById(R.id.imageButtonDeleteContact);
-
-    String name = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_NAME));
-    final String email = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL));
+    val name = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_NAME))
+    val email = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL))
 
     if (TextUtils.isEmpty(name)) {
-      textViewName.setVisibility(View.GONE);
-      textViewEmail.setVisibility(View.GONE);
-      textViewOnlyEmail.setVisibility(View.VISIBLE);
+      textViewName.visibility = View.GONE
+      textViewEmail.visibility = View.GONE
+      textViewOnlyEmail.visibility = View.VISIBLE
 
-      textViewOnlyEmail.setText(email);
-      textViewEmail.setText(null);
-      textViewName.setText(null);
+      textViewOnlyEmail.text = email
+      textViewEmail.text = null
+      textViewName.text = null
     } else {
-      textViewName.setVisibility(View.VISIBLE);
-      textViewEmail.setVisibility(View.VISIBLE);
-      textViewOnlyEmail.setVisibility(View.GONE);
+      textViewName.visibility = View.VISIBLE
+      textViewEmail.visibility = View.VISIBLE
+      textViewOnlyEmail.visibility = View.GONE
 
-      textViewEmail.setText(email);
-      textViewName.setText(name);
-      textViewOnlyEmail.setText(null);
+      textViewEmail.text = email
+      textViewName.text = name
+      textViewOnlyEmail.text = null
     }
 
     if (isDeleteEnabled) {
-      imageButtonDeleteContact.setVisibility(View.VISIBLE);
-      imageButtonDeleteContact.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-          if (listener != null) {
-            listener.onClick(email);
-          }
-        }
-      });
+      imageButtonDeleteContact.visibility = View.VISIBLE
+      imageButtonDeleteContact.setOnClickListener {
+        listener?.onClick(email)
+      }
     } else {
-      imageButtonDeleteContact.setVisibility(View.GONE);
+      imageButtonDeleteContact.visibility = View.GONE
     }
   }
 
   /**
    * This listener can be used to determinate when a contact was deleted.
    */
-  public interface OnDeleteContactListener {
-    void onClick(String email);
+  interface OnDeleteContactListener {
+    fun onClick(email: String)
   }
 }

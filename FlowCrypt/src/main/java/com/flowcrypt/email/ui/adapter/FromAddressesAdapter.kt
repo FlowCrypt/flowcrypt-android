@@ -3,76 +3,66 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.adapter;
+package com.flowcrypt.email.ui.adapter
 
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.TextView;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.util.UIUtil;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.TextView
+import com.flowcrypt.email.R
+import com.flowcrypt.email.util.UIUtil
+import java.util.*
 
 /**
- * This is a custom realization of {@link ArrayAdapter} which can be used for showing the sender addresses.
+ * This is a custom realization of [ArrayAdapter] which can be used for showing the sender addresses.
  *
  * @author Denis Bondarenko
  * Date: 28.11.2018
  * Time: 5:22 PM
  * E-mail: DenBond7@gmail.com
  */
-public class FromAddressesAdapter<T> extends ArrayAdapter<T> {
-  private Map<String, Boolean> keysAvailability;
-  private int originalColor;
-  private boolean useKeysInfo;
+class FromAddressesAdapter<T>(context: Context,
+                              resource: Int,
+                              textViewResId: Int,
+                              objects: List<T>) : ArrayAdapter<T>(context, resource, textViewResId, objects) {
+  private val keysAvailability: MutableMap<String, Boolean>?
+  private var originalColor: Int = 0
+  private var useKeysInfo: Boolean = false
 
-  public FromAddressesAdapter(@NonNull Context context, int resource, int textViewResId, @NonNull List<T> objects) {
-    super(context, resource, textViewResId, objects);
-    keysAvailability = new HashMap<>();
+  init {
+    keysAvailability = HashMap()
   }
 
-  @Override
-  public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-    View view = super.getDropDownView(position, convertView, parent);
+  override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
+    val view = super.getDropDownView(position, convertView, parent)
 
-    TextView textView = view.findViewById(android.R.id.text1);
+    val textView = view.findViewById<TextView>(android.R.id.text1)
 
-    if (textView != null) {
-      textView.setTextColor(isEnabled(position) ? originalColor : UIUtil.getColor(getContext(), R.color.gray));
-    }
+    textView?.setTextColor(if (isEnabled(position)) originalColor else UIUtil.getColor(context, R.color.gray))
 
-    return view;
+    return view
   }
 
-  @Override
-  public boolean isEnabled(int position) {
-    if (position < 0 || position >= getCount()) {
-      return super.isEnabled(position);
+  override fun isEnabled(position: Int): Boolean {
+    if (position < 0 || position >= count) {
+      return super.isEnabled(position)
     }
 
-    if (useKeysInfo && getItem(position) instanceof String) {
-      String email = (String) getItem(position);
-      Boolean result = keysAvailability.get(email);
-      return result == null ? super.isEnabled(position) : result;
+    return if (useKeysInfo && getItem(position) is String) {
+      val email = getItem(position) as String
+      val result = keysAvailability!![email]
+      result ?: super.isEnabled(position)
     } else {
-      return super.isEnabled(position);
+      super.isEnabled(position)
     }
   }
 
-  @Override
-  public void setDropDownViewResource(int resource) {
-    super.setDropDownViewResource(resource);
-    TextView textView = (TextView) LayoutInflater.from(getContext()).inflate(resource, null);
-    originalColor = textView.getCurrentTextColor();
+  override fun setDropDownViewResource(resource: Int) {
+    super.setDropDownViewResource(resource)
+    val textView = LayoutInflater.from(context).inflate(resource, null) as TextView
+    originalColor = textView.currentTextColor
   }
 
   /**
@@ -80,9 +70,9 @@ public class FromAddressesAdapter<T> extends ArrayAdapter<T> {
    *
    * @param useKeysInfo true if we want to check the key available, otherwise false.
    */
-  public void setUseKeysInfo(boolean useKeysInfo) {
-    this.useKeysInfo = useKeysInfo;
-    notifyDataSetChanged();
+  fun setUseKeysInfo(useKeysInfo: Boolean) {
+    this.useKeysInfo = useKeysInfo
+    notifyDataSetChanged()
   }
 
   /**
@@ -91,9 +81,9 @@ public class FromAddressesAdapter<T> extends ArrayAdapter<T> {
    * @param emailAddress The given email address
    * @param hasPgp       true if we have a private key for the given email address, otherwise false
    */
-  public void updateKeyAvailability(String emailAddress, boolean hasPgp) {
+  fun updateKeyAvailability(emailAddress: String, hasPgp: Boolean) {
     if (keysAvailability != null) {
-      keysAvailability.put(emailAddress, hasPgp);
+      keysAvailability[emailAddress] = hasPgp
     }
   }
 
@@ -103,8 +93,8 @@ public class FromAddressesAdapter<T> extends ArrayAdapter<T> {
    * @param emailAddress The given email address
    * @return true if the given email address has a private key, otherwise false.
    */
-  public boolean hasPrvKey(String emailAddress) {
-    Boolean result = keysAvailability.get(emailAddress);
-    return keysAvailability.containsKey(emailAddress) && result != null && result;
+  fun hasPrvKey(emailAddress: String): Boolean {
+    val result = keysAvailability!![emailAddress]
+    return keysAvailability.containsKey(emailAddress) && result != null && result
   }
 }
