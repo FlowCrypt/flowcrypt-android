@@ -3,50 +3,40 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.notifications;
+package com.flowcrypt.email.ui.notifications
 
-import android.app.Notification.InboxStyle;
-import android.app.NotificationManager;
-import android.content.Context;
-import android.os.Build;
-import android.service.notification.StatusBarNotification;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.TextUtils;
-import android.text.style.ForegroundColorSpan;
-
-import androidx.annotation.Nullable;
-import androidx.core.app.NotificationManagerCompat;
-import androidx.core.content.ContextCompat;
+import android.app.Notification.InboxStyle
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.TextUtils
+import android.text.style.ForegroundColorSpan
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 
 /**
- * A base class for {@link android.app.Notification}
+ * A base class for [android.app.Notification]
  *
  * @author Denis Bondarenko
  * Date: 27.06.2018
  * Time: 12:09
  * E-mail: DenBond7@gmail.com
  */
-public abstract class CustomNotificationManager {
-  protected Context context;
-  protected NotificationManagerCompat notificationManagerCompat;
+abstract class CustomNotificationManager(protected var context: Context) {
+  protected var notificationManagerCompat: NotificationManagerCompat = NotificationManagerCompat.from(context)
 
-  public CustomNotificationManager(Context context) {
-    this.context = context;
-    this.notificationManagerCompat = NotificationManagerCompat.from(context);
-  }
-
-  public abstract String getGroupName();
-
-  public abstract int getGroupId();
+  abstract val groupName: String
+  abstract val groupId: Int
 
   /**
    * Cancel a previously shown notification.
    *
    * @param notificationId the ID of the notification
    */
-  public void cancel(int notificationId) {
-    cancel(null, notificationId);
+  fun cancel(notificationId: Int) {
+    cancel(null, notificationId)
   }
 
   /**
@@ -55,67 +45,64 @@ public abstract class CustomNotificationManager {
    * @param tag            the string identifier of the notification.
    * @param notificationId The notification id.
    */
-  public void cancel(@Nullable String tag, int notificationId) {
-    notificationManagerCompat.cancel(tag, notificationId);
+  fun cancel(tag: String?, notificationId: Int) {
+    notificationManagerCompat.cancel(tag, notificationId)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      NotificationManager notificationManager =
-          (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+      val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-      if (notificationManager != null) {
-        int messageCount = 0;
-        for (StatusBarNotification statusBarNotification : notificationManager.getActiveNotifications()) {
-          if (getGroupName().equals(statusBarNotification.getNotification().getGroup())) {
-            messageCount++;
-          }
+      var messageCount = 0
+      for (statusBarNotification in notificationManager.activeNotifications) {
+        if (groupName == statusBarNotification.notification.group) {
+          messageCount++
         }
+      }
 
-        if (messageCount == 1) {
-          notificationManager.cancel(getGroupId());
-        }
+      if (messageCount == 1) {
+        notificationManager.cancel(groupId)
       }
     }
   }
 
   /**
-   * Prepare formatted line for {@link InboxStyle}
+   * Prepare formatted line for [InboxStyle]
    *
    * @param context  Interface to global information about an application environment.
    * @param username A sender name.
    * @param subject  An incoming message subject.
    * @return A formatted line.
    */
-  protected Spannable formatInboxStyleLine(Context context, String username, String subject) {
-    StringBuilder builder = new StringBuilder();
+  protected fun formatInboxStyleLine(context: Context, username: String, subject: String?): Spannable {
+    val builder = StringBuilder()
     if (!TextUtils.isEmpty(username)) {
-      builder.append(username).append("   ");
+      builder.append(username).append("   ")
     }
 
     if (!TextUtils.isEmpty(subject)) {
-      builder.append(subject);
+      builder.append(subject)
     }
 
-    Spannable spannable = new SpannableString(builder);
+    val spannable = SpannableString(builder)
     if (!TextUtils.isEmpty(username)) {
-      int color = ContextCompat.getColor(context, android.R.color.black);
-      spannable.setSpan(new ForegroundColorSpan(color), 0, username.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+      val color = ContextCompat.getColor(context, android.R.color.black)
+      spannable.setSpan(ForegroundColorSpan(color), 0, username.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
-    return spannable;
+    return spannable
   }
 
   /**
-   * Format an input text via apply {@link ForegroundColorSpan} to it.
+   * Format an input text via apply [ForegroundColorSpan] to it.
    *
    * @param text  An input text.
    * @param color A color which will be used for change the text style.
    * @return A formatted text.
    */
-  protected Spannable formatText(String text, int color) {
+  protected fun formatText(text: String?, color: Int): Spannable {
     if (TextUtils.isEmpty(text)) {
-      return new SpannableString("");
+      return SpannableString("")
     }
 
-    Spannable spannable = new SpannableString(text);
-    spannable.setSpan(new ForegroundColorSpan(color), 0, text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-    return spannable;
+    val spannable = SpannableString(text)
+    spannable.setSpan(ForegroundColorSpan(color), 0, text!!.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+    return spannable
   }
 }

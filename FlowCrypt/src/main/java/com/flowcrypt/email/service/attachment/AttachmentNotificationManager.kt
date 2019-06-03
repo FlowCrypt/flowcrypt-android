@@ -18,8 +18,8 @@ import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.ui.NotificationChannelManager
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager
+import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import java.util.*
 
 /**
@@ -33,13 +33,8 @@ import java.util.*
 
 class AttachmentNotificationManager(context: Context) : CustomNotificationManager(context) {
 
-  override fun getGroupName(): String {
-    return GROUP_NAME_ATTACHMENTS
-  }
-
-  override fun getGroupId(): Int {
-    return NOTIFICATIONS_GROUP_ATTACHMENTS
-  }
+  override val groupName: String = GROUP_NAME_ATTACHMENTS
+  override val groupId: Int = NOTIFICATIONS_GROUP_ATTACHMENTS
 
   /**
    * Show a [android.app.Notification] which notify that a new attachment was added to the loading queue.

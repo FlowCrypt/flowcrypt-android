@@ -27,11 +27,11 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.broadcastreceivers.MarkMessagesAsOldBroadcastReceiver
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
-import com.flowcrypt.email.ui.NotificationChannelManager
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager
+import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
 import java.util.*
@@ -46,13 +46,8 @@ import java.util.*
  */
 class MessagesNotificationManager(context: Context) : CustomNotificationManager(context) {
 
-  override fun getGroupName(): String {
-    return GROUP_NAME_FLOWCRYPT_MESSAGES
-  }
-
-  override fun getGroupId(): Int {
-    return NOTIFICATIONS_GROUP_MESSAGES
-  }
+  override val groupName: String = GROUP_NAME_FLOWCRYPT_MESSAGES
+  override val groupId: Int = NOTIFICATIONS_GROUP_MESSAGES
 
   /**
    * Show a [Notification] of an incoming message.

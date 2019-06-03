@@ -11,7 +11,7 @@ import android.content.Context
 import androidx.fragment.app.FragmentManager
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.jobscheduler.SyncJobService
-import com.flowcrypt.email.ui.NotificationChannelManager
+import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
