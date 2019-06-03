@@ -3,31 +3,22 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.loader;
+package com.flowcrypt.email.ui.loader
 
-import android.content.Context;
-
-import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
-import com.flowcrypt.email.api.retrofit.ApiHelper;
-import com.flowcrypt.email.api.retrofit.ApiService;
-import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel;
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.google.api.services.gmail.Gmail;
-import com.google.api.services.gmail.model.ListSendAsResponse;
-import com.google.api.services.gmail.model.SendAs;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import androidx.loader.content.AsyncTaskLoader;
-import retrofit2.Response;
+import android.content.Context
+import androidx.loader.content.AsyncTaskLoader
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.retrofit.ApiHelper
+import com.flowcrypt.email.api.retrofit.ApiService
+import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import java.io.IOException
+import java.util.*
 
 /**
  * This loader does job of receiving information about an array of public
@@ -39,98 +30,87 @@ import retrofit2.Response;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LoadAccountKeysInfo extends AsyncTaskLoader<LoaderResult> {
-  /**
-   * An user account.
-   */
-  private AccountDao account;
+class LoadAccountKeysInfo(context: Context,
+                          private val account: AccountDao?) : AsyncTaskLoader<LoaderResult>(context) {
 
-  public LoadAccountKeysInfo(Context context, AccountDao account) {
-    super(context);
-    this.account = account;
-    onContentChanged();
+  init {
+    onContentChanged()
   }
 
-  @Override
-  public void onStartLoading() {
+  public override fun onStartLoading() {
     if (takeContentChanged()) {
-      forceLoad();
+      forceLoad()
     }
   }
 
-  @Override
-  public LoaderResult loadInBackground() {
+  override fun loadInBackground(): LoaderResult? {
     if (account != null) {
-      List<String> emails = new ArrayList<>();
-      try {
-        switch (account.getAccountType()) {
-          case AccountDao.ACCOUNT_TYPE_GOOGLE:
-            emails.addAll(getAvailableGmailAliases(account));
-            break;
+      val emails = ArrayList<String>()
+      return try {
+        when (account.accountType) {
+          AccountDao.ACCOUNT_TYPE_GOOGLE -> emails.addAll(getAvailableGmailAliases(account))
 
-          default:
-            emails.add(account.getEmail());
-            break;
+          else -> emails.add(account.email)
         }
 
-        return new LoaderResult(getLookUpEmailsResponse(emails), null);
-      } catch (IOException e) {
-        e.printStackTrace();
-        ExceptionUtil.handleError(e);
-        return new LoaderResult(null, e);
+        LoaderResult(getLookUpEmailsResponse(emails), null)
+      } catch (e: IOException) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        LoaderResult(null, e)
       }
+
     } else {
-      return new LoaderResult(null, new NullPointerException("AccountDao is null!"));
+      return LoaderResult(null, NullPointerException("AccountDao is null!"))
     }
   }
 
-  @Override
-  public void onStopLoading() {
-    cancelLoad();
+  public override fun onStopLoading() {
+    cancelLoad()
   }
 
   /**
-   * Get available Gmail aliases for an input {@link AccountDao}.
+   * Get available Gmail aliases for an input [AccountDao].
    *
-   * @param account The {@link AccountDao} object which contains information about an email account.
+   * @param account The [AccountDao] object which contains information about an email account.
    * @return The list of available Gmail aliases.
    */
-  private Collection<? extends String> getAvailableGmailAliases(AccountDao account) {
-    List<String> emails = new ArrayList<>();
-    emails.add(account.getEmail());
+  private fun getAvailableGmailAliases(account: AccountDao): Collection<String> {
+    val emails = ArrayList<String>()
+    emails.add(account.email)
 
     try {
-      Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), account);
-      ListSendAsResponse aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute();
-      for (SendAs alias : aliases.getSendAs()) {
-        if (alias.getVerificationStatus() != null) {
-          emails.add(alias.getSendAsEmail());
+      val gmail = GmailApiHelper.generateGmailApiService(context, account)
+      val aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
+      for (alias in aliases.sendAs) {
+        if (alias.verificationStatus != null) {
+          emails.add(alias.sendAsEmail)
         }
       }
-    } catch (IOException e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
+    } catch (e: IOException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
     }
 
-    return emails;
+    return emails
   }
 
   /**
-   * Get {@link LookUpEmailsResponse} object which contain a remote information about
-   * {@link PgpContact}.
+   * Get [LookUpEmailsResponse] object which contain a remote information about
+   * [PgpContact].
    *
    * @param emails Used to generate a request to the server.
-   * @return {@link LookUpEmailsResponse}
+   * @return [LookUpEmailsResponse]
    * @throws IOException
    */
-  private List<LookUpEmailResponse> getLookUpEmailsResponse(List<String> emails) throws IOException {
-    ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
-    Response<LookUpEmailsResponse> response = apiService.postLookUpEmails(new PostLookUpEmailsModel(emails)).execute();
-    LookUpEmailsResponse lookUpEmailsResponse = response.body();
+  @Throws(IOException::class)
+  private fun getLookUpEmailsResponse(emails: List<String>): List<LookUpEmailResponse>? {
+    val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+    val response = apiService.postLookUpEmails(PostLookUpEmailsModel(emails)).execute()
+    val lookUpEmailsResponse = response.body()
 
-    if (lookUpEmailsResponse != null) {
-      return lookUpEmailsResponse.getResults();
-    }
-    return new ArrayList<>();
+    return if (lookUpEmailsResponse != null) {
+      lookUpEmailsResponse.results
+    } else ArrayList()
   }
 }

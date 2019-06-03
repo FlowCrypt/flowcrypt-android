@@ -3,35 +3,28 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.loader;
+package com.flowcrypt.email.ui.loader
 
-import android.content.Context;
-import android.text.TextUtils;
-
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.SearchBackupsUtil;
-import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.NodeException;
-import com.google.android.gms.auth.GoogleAuthException;
-import com.sun.mail.imap.IMAPFolder;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Store;
-
-import androidx.annotation.Nullable;
-import androidx.loader.content.AsyncTaskLoader;
+import android.content.Context
+import android.text.TextUtils
+import androidx.loader.content.AsyncTaskLoader
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.SearchBackupsUtil
+import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.NodeException
+import com.google.android.gms.auth.GoogleAuthException
+import com.sun.mail.imap.IMAPFolder
+import java.io.IOException
+import java.util.*
+import javax.mail.Folder
+import javax.mail.MessagingException
+import javax.mail.Session
+import javax.mail.Store
 
 /**
  * This loader finds and returns a user backup of private keys from the mail.
@@ -41,120 +34,111 @@ import androidx.loader.content.AsyncTaskLoader;
  * Time: 22:28.
  * E-mail: DenBond7@gmail.com
  */
-public class LoadPrivateKeysFromMailAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
+class LoadPrivateKeysFromMailAsyncTaskLoader(context: Context,
+                                             private val account: AccountDao) : AsyncTaskLoader<LoaderResult>(context) {
+  private var data: LoaderResult? = null
+  private var isActionStarted: Boolean = false
+  private var isLoaderReset: Boolean = false
 
-  /**
-   * An user account.
-   */
-  private AccountDao account;
-  private LoaderResult data;
-  private boolean isActionStarted;
-  private boolean isLoaderReset;
-
-  public LoadPrivateKeysFromMailAsyncTaskLoader(Context context, AccountDao account) {
-    super(context);
-    this.account = account;
-  }
-
-  @Override
-  public void onStartLoading() {
+  public override fun onStartLoading() {
     if (data != null) {
-      deliverResult(data);
+      deliverResult(data)
     } else {
       if (!isActionStarted) {
-        forceLoad();
+        forceLoad()
       }
     }
   }
 
-  @Override
-  public LoaderResult loadInBackground() {
-    isActionStarted = true;
-    ArrayList<NodeKeyDetails> privateKeyDetailsList = new ArrayList<>();
+  override fun loadInBackground(): LoaderResult? {
+    isActionStarted = true
+    val privateKeyDetailsList = ArrayList<NodeKeyDetails>()
 
-    try {
-      Session session = OpenStoreHelper.getAccountSess(getContext(), account);
+    return try {
+      val session = OpenStoreHelper.getAccountSess(context, account)
 
-      switch (account.getAccountType()) {
-        case AccountDao.ACCOUNT_TYPE_GOOGLE:
-          privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(getContext(), account, session));
-          break;
+      when (account.accountType) {
+        AccountDao.ACCOUNT_TYPE_GOOGLE -> privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(context, account, session))
 
-        default:
-          privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(session));
-          break;
+        else -> privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(session))
       }
-      return new LoaderResult(privateKeyDetailsList, null);
-    } catch (Exception e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
-      return new LoaderResult(null, e);
+      LoaderResult(privateKeyDetailsList, null)
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+      LoaderResult(null, e)
     }
   }
 
-  @Override
-  public void deliverResult(@Nullable LoaderResult data) {
-    this.data = data;
-    super.deliverResult(data);
+  override fun deliverResult(data: LoaderResult?) {
+    this.data = data
+    super.deliverResult(data)
   }
 
-  @Override
-  protected void onReset() {
-    super.onReset();
-    this.isLoaderReset = true;
+  override fun onReset() {
+    super.onReset()
+    this.isLoaderReset = true
   }
 
   /**
-   * Get a list of {@link NodeKeyDetails} using the standard <b>JavaMail API</b>
+   * Get a list of [NodeKeyDetails] using the standard **JavaMail API**
    *
-   * @param session A {@link Session} object.
-   * @return A list of {@link NodeKeyDetails}
+   * @param session A [Session] object.
+   * @return A list of [NodeKeyDetails]
    * @throws MessagingException
    * @throws IOException
    * @throws GoogleAuthException
    */
-  private Collection<? extends NodeKeyDetails> getPrivateKeyBackupsUsingJavaMailAPI(Session session)
-      throws MessagingException, IOException, GoogleAuthException {
-    ArrayList<NodeKeyDetails> details = new ArrayList<>();
-    Store store = null;
+  @Throws(MessagingException::class, IOException::class, GoogleAuthException::class)
+  private fun getPrivateKeyBackupsUsingJavaMailAPI(session: Session): Collection<NodeKeyDetails> {
+    val details = ArrayList<NodeKeyDetails>()
+    var store: Store? = null
     try {
-      store = OpenStoreHelper.openStore(getContext(), account, session);
-      Folder[] folders = store.getDefaultFolder().list("*");
+      store = OpenStoreHelper.openStore(context, account, session)
+      val folders = store.defaultFolder.list("*")
 
-      for (Folder folder : folders) {
-        boolean containsNoSelectAttr = EmailUtil.containsNoSelectAttr((IMAPFolder) folder);
-        if (!isLoadInBackgroundCanceled() && !isLoaderReset && !containsNoSelectAttr) {
-          folder.open(Folder.READ_ONLY);
+      for (folder in folders) {
+        val containsNoSelectAttr = EmailUtil.containsNoSelectAttr(folder as IMAPFolder)
+        if (!isLoadInBackgroundCanceled && !isLoaderReset && !containsNoSelectAttr) {
+          folder.open(Folder.READ_ONLY)
 
-          Message[] foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(account.getEmail()));
+          val foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(account.email))
 
-          for (Message message : foundMsgs) {
-            String backup = EmailUtil.getKeyFromMimeMsg(message);
+          for (message in foundMsgs) {
+            val backup = EmailUtil.getKeyFromMimeMsg(message)
 
             if (TextUtils.isEmpty(backup)) {
-              continue;
+              continue
             }
 
             try {
-              details.addAll(NodeCallsExecutor.parseKeys(backup));
-            } catch (NodeException e) {
-              e.printStackTrace();
-              ExceptionUtil.handleError(e);
+              details.addAll(NodeCallsExecutor.parseKeys(backup))
+            } catch (e: NodeException) {
+              e.printStackTrace()
+              ExceptionUtil.handleError(e)
             }
+
           }
 
-          folder.close(false);
+          folder.close(false)
         }
       }
 
-      store.close();
-    } catch (MessagingException | IOException | GoogleAuthException e) {
-      e.printStackTrace();
-      if (store != null) {
-        store.close();
-      }
-      throw e;
+      store.close()
+    } catch (e: MessagingException) {
+      e.printStackTrace()
+      store?.close()
+      throw e
+    } catch (e: IOException) {
+      e.printStackTrace()
+      store?.close()
+      throw e
+    } catch (e: GoogleAuthException) {
+      e.printStackTrace()
+      store?.close()
+      throw e
     }
-    return details;
+
+    return details
   }
 }

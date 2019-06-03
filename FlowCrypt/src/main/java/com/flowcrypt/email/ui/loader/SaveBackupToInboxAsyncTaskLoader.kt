@@ -3,23 +3,16 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.loader;
+package com.flowcrypt.email.ui.loader
 
-import android.content.Context;
-
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
-import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Transport;
-
-import androidx.annotation.Nullable;
-import androidx.loader.content.AsyncTaskLoader;
+import android.content.Context
+import androidx.loader.content.AsyncTaskLoader
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
+import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.util.exception.ExceptionUtil
 
 /**
  * This loader can be used for saving a backup of private keys of some account.
@@ -29,46 +22,38 @@ import androidx.loader.content.AsyncTaskLoader;
  * Time: 17:28
  * E-mail: DenBond7@gmail.com
  */
-public class SaveBackupToInboxAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
-  private final AccountDao account;
-  private boolean isActionStarted;
-  private LoaderResult data;
+class SaveBackupToInboxAsyncTaskLoader(context: Context,
+                                       private val account: AccountDao) : AsyncTaskLoader<LoaderResult>(context) {
+  private var isActionStarted: Boolean = false
+  private var data: LoaderResult? = null
 
-  public SaveBackupToInboxAsyncTaskLoader(Context context, AccountDao account) {
-    super(context);
-    this.account = account;
-  }
-
-  @Override
-  public void onStartLoading() {
+  public override fun onStartLoading() {
     if (data != null) {
-      deliverResult(data);
+      deliverResult(data)
     } else {
       if (!isActionStarted) {
-        forceLoad();
+        forceLoad()
       }
     }
   }
 
-  @Override
-  public LoaderResult loadInBackground() {
-    isActionStarted = true;
-    try {
-      Session sess = OpenStoreHelper.getAccountSess(getContext(), account);
-      Transport transport = SmtpProtocolUtil.prepareSmtpTransport(getContext(), sess, account);
-      Message msg = EmailUtil.genMsgWithAllPrivateKeys(getContext(), account, sess);
-      transport.sendMessage(msg, msg.getAllRecipients());
-      return new LoaderResult(true, null);
-    } catch (Exception e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
-      return new LoaderResult(null, e);
+  override fun loadInBackground(): LoaderResult? {
+    isActionStarted = true
+    return try {
+      val sess = OpenStoreHelper.getAccountSess(context, account)
+      val transport = SmtpProtocolUtil.prepareSmtpTransport(context, sess, account)
+      val msg = EmailUtil.genMsgWithAllPrivateKeys(context, account, sess)
+      transport.sendMessage(msg, msg.allRecipients)
+      LoaderResult(true, null)
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+      LoaderResult(null, e)
     }
   }
 
-  @Override
-  public void deliverResult(@Nullable LoaderResult data) {
-    this.data = data;
-    super.deliverResult(data);
+  override fun deliverResult(data: LoaderResult?) {
+    this.data = data
+    super.deliverResult(data)
   }
 }

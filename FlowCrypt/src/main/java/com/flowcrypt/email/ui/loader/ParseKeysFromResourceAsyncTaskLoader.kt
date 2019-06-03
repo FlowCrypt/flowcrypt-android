@@ -3,22 +3,20 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.loader;
+package com.flowcrypt.email.ui.loader
 
-import android.content.Context;
-import android.net.Uri;
-import android.text.TextUtils;
-
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.model.KeyImportModel;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-
-import java.util.ArrayList;
-
-import androidx.loader.content.AsyncTaskLoader;
+import android.content.Context
+import android.net.Uri
+import android.text.TextUtils
+import androidx.loader.content.AsyncTaskLoader
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportModel
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import java.util.*
 
 /**
  * This loader parses keys from the given resource (string or file).
@@ -29,79 +27,74 @@ import androidx.loader.content.AsyncTaskLoader;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ParseKeysFromResourceAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
-  /**
-   * Max size of a key is 256k.
-   */
-  private static final int MAX_SIZE_IN_BYTES = 256 * 1024;
-  private KeyImportModel keyImportModel;
-  private boolean isCheckSizeEnabled;
+class ParseKeysFromResourceAsyncTaskLoader(context: Context,
+                                           private val keyImportModel: KeyImportModel?,
+                                           private val isCheckSizeEnabled: Boolean) :
+    AsyncTaskLoader<LoaderResult>(context) {
 
-  public ParseKeysFromResourceAsyncTaskLoader(Context context, KeyImportModel model, boolean isCheckSizeEnabled) {
-    super(context);
-    this.keyImportModel = model;
-    this.isCheckSizeEnabled = isCheckSizeEnabled;
-    onContentChanged();
+  init {
+    onContentChanged()
   }
 
-  @Override
-  public void onStartLoading() {
+  public override fun onStartLoading() {
     if (takeContentChanged()) {
-      forceLoad();
+      forceLoad()
     }
   }
 
-  @Override
-  public LoaderResult loadInBackground() {
-    ArrayList<NodeKeyDetails> list = new ArrayList<>();
+  override fun loadInBackground(): LoaderResult? {
+    val list = ArrayList<NodeKeyDetails>()
     try {
       if (keyImportModel != null) {
-        String armoredKey = null;
-        switch (keyImportModel.getType()) {
-          case FILE:
-            if (isCheckSizeEnabled && isKeyTooBig(keyImportModel.getFileUri())) {
-              return new LoaderResult(null, new IllegalArgumentException("The file is too big"));
+        val armoredKey: String?
+        when (keyImportModel.type) {
+          KeyDetails.Type.FILE -> {
+            if (isCheckSizeEnabled && isKeyTooBig(keyImportModel.fileUri)) {
+              return LoaderResult(null, IllegalArgumentException("The file is too big"))
             }
 
-            if (keyImportModel.getFileUri() == null) {
-              throw new NullPointerException("Uri is null!");
+            if (keyImportModel.fileUri == null) {
+              throw NullPointerException("Uri is null!")
             }
 
-            armoredKey = GeneralUtil.readFileFromUriToString(getContext(), keyImportModel.getFileUri());
-            break;
+            armoredKey = GeneralUtil.readFileFromUriToString(context, keyImportModel.fileUri)
+          }
 
-          case CLIPBOARD:
-          case EMAIL:
-            armoredKey = keyImportModel.getKeyString();
-            break;
+          KeyDetails.Type.CLIPBOARD, KeyDetails.Type.EMAIL -> armoredKey = keyImportModel.keyString
+          else -> throw IllegalStateException("Unsupported : ${keyImportModel.type}")
         }
 
         if (!TextUtils.isEmpty(armoredKey)) {
-          list.addAll(NodeCallsExecutor.parseKeys(armoredKey));
+          list.addAll(NodeCallsExecutor.parseKeys(armoredKey!!))
         }
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
-      return new LoaderResult(null, e);
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+      return LoaderResult(null, e)
     }
 
-    return new LoaderResult(list, null);
+    return LoaderResult(list, null)
   }
 
-  @Override
-  public void onStopLoading() {
-    cancelLoad();
+  public override fun onStopLoading() {
+    cancelLoad()
   }
 
   /**
-   * Check that the key size not bigger then {@link #MAX_SIZE_IN_BYTES}.
+   * Check that the key size not bigger then [.MAX_SIZE_IN_BYTES].
    *
-   * @param fileUri The {@link Uri} of the selected file.
-   * @return true if the key size not bigger then {@link #MAX_SIZE_IN_BYTES}, otherwise false
+   * @param fileUri The [Uri] of the selected file.
+   * @return true if the key size not bigger then [.MAX_SIZE_IN_BYTES], otherwise false
    */
-  private boolean isKeyTooBig(Uri fileUri) {
-    long fileSize = GeneralUtil.getFileSizeFromUri(getContext(), fileUri);
-    return fileSize > MAX_SIZE_IN_BYTES;
+  private fun isKeyTooBig(fileUri: Uri?): Boolean {
+    return GeneralUtil.getFileSizeFromUri(context, fileUri) > MAX_SIZE_IN_BYTES
+  }
+
+  companion object {
+    /**
+     * Max size of a key is 256k.
+     */
+    private const val MAX_SIZE_IN_BYTES = 256 * 1024
   }
 }

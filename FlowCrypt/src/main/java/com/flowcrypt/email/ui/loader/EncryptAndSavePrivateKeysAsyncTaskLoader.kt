@@ -3,38 +3,33 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.loader;
+package com.flowcrypt.email.ui.loader
 
-import android.content.Context;
-import android.net.Uri;
-import android.text.TextUtils;
-import android.util.Pair;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult;
-import com.flowcrypt.email.database.dao.KeysDao;
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.KeyAlreadyAddedException;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import androidx.loader.content.AsyncTaskLoader;
+import android.content.Context
+import android.text.TextUtils
+import android.util.Pair
+import androidx.loader.content.AsyncTaskLoader
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.KeysDao
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.dao.source.KeysDaoSource
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.KeyAlreadyAddedException
+import java.util.*
 
 /**
  * This loader try to encrypt and save encrypted key with entered password by
- * {@link KeyStoreCryptoManager} to the database.
- * <p>
+ * [KeyStoreCryptoManager] to the database.
+ *
+ *
  * Return true if one or more key saved, false otherwise;
  *
  * @author DenBond7
@@ -43,112 +38,101 @@ import androidx.loader.content.AsyncTaskLoader;
  * E-mail: DenBond7@gmail.com
  */
 
-public class EncryptAndSavePrivateKeysAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
-  private List<NodeKeyDetails> details;
-  private KeyDetails.Type type;
-  private String passphrase;
+class EncryptAndSavePrivateKeysAsyncTaskLoader(context: Context,
+                                               details: ArrayList<NodeKeyDetails>,
+                                               private val type: KeyDetails.Type,
+                                               private val passphrase: String) :
+    AsyncTaskLoader<LoaderResult>(context) {
+  private val details: List<NodeKeyDetails>
 
-  private KeysDaoSource keysDaoSource;
+  private val keysDaoSource: KeysDaoSource
 
-  public EncryptAndSavePrivateKeysAsyncTaskLoader(Context context, ArrayList<NodeKeyDetails> details,
-                                                  KeyDetails.Type type, String passphrase) {
-    super(context);
-    this.details = details;
-    this.type = type;
-    this.passphrase = passphrase;
-    this.keysDaoSource = new KeysDaoSource();
-    onContentChanged();
+  init {
+    this.details = details
+    this.keysDaoSource = KeysDaoSource()
+    onContentChanged()
   }
 
-  @Override
-  public LoaderResult loadInBackground() {
-    List<NodeKeyDetails> acceptedKeysList = new ArrayList<>();
+  override fun loadInBackground(): LoaderResult? {
+    val acceptedKeysList = ArrayList<NodeKeyDetails>()
     try {
-      KeyStoreCryptoManager keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(getContext());
-      for (NodeKeyDetails keyDetails : details) {
-        String tempPassphrase = passphrase;
-        if (keyDetails.isPrivate()) {
-          String decryptedKey;
-          if (keyDetails.isDecrypted()) {
-            tempPassphrase = "";
-            decryptedKey = keyDetails.getPrivateKey();
+      val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
+      for (keyDetails in details) {
+        var tempPassphrase = passphrase
+        if (keyDetails.isPrivate) {
+          val decryptedKey: String?
+          if (keyDetails.isDecrypted!!) {
+            tempPassphrase = ""
+            decryptedKey = keyDetails.privateKey
           } else {
-            DecryptKeyResult decryptKeyResult = NodeCallsExecutor.decryptKey(keyDetails.getPrivateKey(), passphrase);
-            decryptedKey = decryptKeyResult.getDecryptedKey();
+            val (decryptedKey1) = NodeCallsExecutor.decryptKey(keyDetails.privateKey!!, passphrase)
+            decryptedKey = decryptedKey1
           }
 
           if (!TextUtils.isEmpty(decryptedKey)) {
-            if (!keysDaoSource.hasKey(getContext(), keyDetails.getLongId())) {
-              KeysDao keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, type, keyDetails, tempPassphrase);
-              Uri uri = keysDaoSource.addRow(getContext(), keysDao);
+            if (!keysDaoSource.hasKey(context, keyDetails.longId!!)) {
+              val keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, type, keyDetails, tempPassphrase)
+              val uri = keysDaoSource.addRow(context, keysDao)
 
-              List<PgpContact> contacts = keyDetails.getPgpContacts();
-              List<Pair<String, String>> pairs = new ArrayList<>();
-              if (contacts != null) {
-                ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-                pairs = genPairs(keyDetails, contacts, contactsDaoSource);
-              }
+              val contactsDaoSource = ContactsDaoSource()
+              val pairs: List<Pair<String, String>> = genPairs(keyDetails, keyDetails.pgpContacts, contactsDaoSource)
 
               if (uri != null) {
-                acceptedKeysList.add(keyDetails);
-                UserIdEmailsKeysDaoSource userIdEmailsKeysDaoSource = new UserIdEmailsKeysDaoSource();
+                acceptedKeysList.add(keyDetails)
+                val userIdEmailsKeysDaoSource = UserIdEmailsKeysDaoSource()
 
-                for (Pair<String, String> pair : pairs) {
-                  userIdEmailsKeysDaoSource.addRow(getContext(), pair.first, pair.second);
+                for (pair in pairs) {
+                  userIdEmailsKeysDaoSource.addRow(context, pair.first, pair.second)
                 }
               }
-            } else if (details.size() == 1) {
-              return new LoaderResult(null, new KeyAlreadyAddedException(keyDetails,
-                  getContext().getString(R.string.the_key_already_added)));
+            } else if (details.size == 1) {
+              return LoaderResult(null, KeyAlreadyAddedException(keyDetails,
+                  context.getString(R.string.the_key_already_added)))
             } else {
-              acceptedKeysList.add(keyDetails);
+              acceptedKeysList.add(keyDetails)
             }
-          } else if (details.size() == 1) {
-            return new LoaderResult(null, new IllegalArgumentException(getContext().getString(R.string
-                .password_is_incorrect)));
+          } else if (details.size == 1) {
+            return LoaderResult(null, IllegalArgumentException(context.getString(R.string
+                .password_is_incorrect)))
           }
-        } else if (details.size() == 1) {
-          return new LoaderResult(null, new IllegalArgumentException(getContext().getString(R.string.not_private_key)));
+        } else if (details.size == 1) {
+          return LoaderResult(null, IllegalArgumentException(context.getString(R.string.not_private_key)))
         }
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
-      return new LoaderResult(null, e);
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+      return LoaderResult(null, e)
     }
 
-    return new LoaderResult(acceptedKeysList, null);
+    return LoaderResult(acceptedKeysList, null)
   }
 
-  @Override
-  public void onStartLoading() {
+  public override fun onStartLoading() {
     if (takeContentChanged()) {
-      forceLoad();
+      forceLoad()
     }
   }
 
-  @Override
-  public void onStopLoading() {
-    cancelLoad();
+  public override fun onStopLoading() {
+    cancelLoad()
   }
 
-  private List<Pair<String, String>> genPairs(NodeKeyDetails keyDetails, List<PgpContact> contacts,
-                                              ContactsDaoSource daoSource) {
-    List<Pair<String, String>> pairs = new ArrayList<>();
-    for (PgpContact pgpContact : contacts) {
-      if (pgpContact != null) {
-        pgpContact.setPubkey(keyDetails.getPublicKey());
-        PgpContact temp = daoSource.getPgpContact(getContext(), pgpContact.getEmail());
-        if (GeneralUtil.isEmailValid(pgpContact.getEmail()) && temp == null) {
-          new ContactsDaoSource().addRow(getContext(), pgpContact);
-          //todo-DenBond7 Need to resolve a situation with different public keys.
-          //For example we can have a situation when we have to different public
-          // keys with the same email
-        }
-
-        pairs.add(Pair.create(keyDetails.getLongId(), pgpContact.getEmail()));
+  private fun genPairs(keyDetails: NodeKeyDetails, contacts: List<PgpContact>,
+                       daoSource: ContactsDaoSource): List<Pair<String, String>> {
+    val pairs = ArrayList<Pair<String, String>>()
+    for (pgpContact in contacts) {
+      pgpContact.pubkey = keyDetails.publicKey
+      val temp = daoSource.getPgpContact(context, pgpContact.email)
+      if (GeneralUtil.isEmailValid(pgpContact.email) && temp == null) {
+        ContactsDaoSource().addRow(context, pgpContact)
+        //todo-DenBond7 Need to resolve a situation with different public keys.
+        //For example we can have a situation when we have to different public
+        // keys with the same email
       }
+
+      pairs.add(Pair.create(keyDetails.longId, pgpContact.email))
     }
-    return pairs;
+    return pairs
   }
 }

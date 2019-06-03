@@ -3,52 +3,43 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.loader;
+package com.flowcrypt.email.ui.loader
 
-import android.content.Context;
-import android.text.TextUtils;
-
-import com.flowcrypt.email.api.retrofit.ApiHelper;
-import com.flowcrypt.email.api.retrofit.ApiService;
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
-import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel;
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.NodeException;
-import com.google.android.gms.common.util.CollectionUtils;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import androidx.annotation.Nullable;
-import androidx.loader.content.AsyncTaskLoader;
-import retrofit2.Response;
+import android.content.Context
+import android.text.TextUtils
+import androidx.loader.content.AsyncTaskLoader
+import com.flowcrypt.email.api.retrofit.ApiHelper
+import com.flowcrypt.email.api.retrofit.ApiService
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.NodeException
+import com.google.android.gms.common.util.CollectionUtils
+import java.io.IOException
+import java.util.*
 
 /**
  * This loader do next job for all input emails:
- * <p>
- * <ul>
- * <li>a) look up the email in the database;
- * <li>b) if there is a record for that email and has_pgp==true, we can use the `pubkey` instead of
+ *
+ *  * a) look up the email in the database;
+ *  * b) if there is a record for that email and has_pgp==true, we can use the `pubkey` instead of
  * querying Attester;
- * <li>c) if there is a record but `has_pgp==false`, do `flowcrypt.com/attester/lookup/email` API call
+ *  * c) if there is a record but `has_pgp==false`, do `flowcrypt.com/attester/lookup/email` API call
  * to see if you can now get the pubkey. If a pubkey is available, save it back to the database.
- * <li>e) no record in the db found:<ol>
- * <li>save an empty record eg `new PgpContact(email, null);` - this means we don't know if they have PGP yet
- * <li>look up the email on `flowcrypt.com/attester/lookup/email`
- * <li>if pubkey comes back, create something like `new PgpContact(js, email, null, pubkey,
+ *  * e) no record in the db found:
+ *  1. save an empty record eg `new PgpContact(email, null);` - this means we don't know if they have PGP yet
+ *  1. look up the email on `flowcrypt.com/attester/lookup/email`
+ *  1. if pubkey comes back, create something like `new PgpContact(js, email, null, pubkey,
  * client);`. The PgpContact constructor will define has_pgp, longid, fingerprint, etc
  * for you. Then save that object into database.
- * <li>if no pubkey found, create `new PgpContact(js, email, null, null, null, null);` - this
+ *  1. if no pubkey found, create `new PgpContact(js, email, null, null, null, null);` - this
  * means we know they don't currently have PGP
- * <p>
  *
  * @author DenBond7
  * Date: 19.05.2017
@@ -56,112 +47,111 @@ import retrofit2.Response;
  * E-mail: DenBond7@gmail.com
  */
 
-public class UpdateInfoAboutPgpContactsAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
-  private List<String> emails;
+class UpdateInfoAboutPgpContactsAsyncTaskLoader(context: Context,
+                                                private val emails: List<String>) : AsyncTaskLoader<LoaderResult>(context) {
 
-  public UpdateInfoAboutPgpContactsAsyncTaskLoader(Context context, List<String> emails) {
-    super(context);
-    this.emails = emails;
-    onContentChanged();
+  init {
+    onContentChanged()
   }
 
-  @Override
-  public LoaderResult loadInBackground() {
-    ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
-    return getLoaderResult(contactsDaoSource);
+  override fun loadInBackground(): LoaderResult? {
+    val contactsDaoSource = ContactsDaoSource()
+    return getLoaderResult(contactsDaoSource)
   }
 
-  @Override
-  public void onStopLoading() {
-    cancelLoad();
+  public override fun onStopLoading() {
+    cancelLoad()
   }
 
-  @Override
-  public void onStartLoading() {
+  public override fun onStartLoading() {
     if (takeContentChanged()) {
-      forceLoad();
+      forceLoad()
     }
   }
 
-  private LoaderResult getLoaderResult(ContactsDaoSource contactsDaoSource) {
-    boolean isAllInfoReceived = true;
-    List<PgpContact> pgpContacts = new ArrayList<>();
+  private fun getLoaderResult(contactsDaoSource: ContactsDaoSource): LoaderResult {
+    var isAllInfoReceived = true
+    val pgpContacts = ArrayList<PgpContact>()
     try {
-      for (String email : emails) {
+      for (email in emails) {
         if (GeneralUtil.isEmailValid(email)) {
-          if (email != null) {
-            email = email.toLowerCase();
-          }
+          val emailLowerCase = email.toLowerCase()
 
-          PgpContact localPgpContact = contactsDaoSource.getPgpContact(getContext(), email);
+          var localPgpContact = contactsDaoSource.getPgpContact(context, emailLowerCase)
 
           if (localPgpContact == null) {
-            localPgpContact = new PgpContact(email, null);
-            contactsDaoSource.addRow(getContext(), localPgpContact);
+            localPgpContact = PgpContact(emailLowerCase, null)
+            contactsDaoSource.addRow(context, localPgpContact)
           }
 
           try {
-            if (!localPgpContact.getHasPgp()) {
-              PgpContact remotePgpContact = getPgpContactInfoFromServer(email);
+            if (!localPgpContact.hasPgp) {
+              val remotePgpContact = getPgpContactInfoFromServer(emailLowerCase)
               if (remotePgpContact != null) {
-                contactsDaoSource.updatePgpContact(getContext(), localPgpContact, remotePgpContact);
-                localPgpContact = contactsDaoSource.getPgpContact(getContext(), email);
+                contactsDaoSource.updatePgpContact(context, localPgpContact, remotePgpContact)
+                localPgpContact = contactsDaoSource.getPgpContact(context, emailLowerCase)
               }
             }
-          } catch (Exception e) {
-            isAllInfoReceived = false;
-            e.printStackTrace();
-            ExceptionUtil.handleError(e);
+          } catch (e: Exception) {
+            isAllInfoReceived = false
+            e.printStackTrace()
+            ExceptionUtil.handleError(e)
           }
 
-          pgpContacts.add(localPgpContact);
+          localPgpContact?.let { pgpContacts.add(it) }
         }
       }
-      return new LoaderResult(new UpdateInfoAboutPgpContactsResult(emails, isAllInfoReceived, pgpContacts), null);
-    } catch (Exception e) {
-      e.printStackTrace();
-      ExceptionUtil.handleError(e);
-      return new LoaderResult(null, e);
+      return LoaderResult(UpdateInfoAboutPgpContactsResult(emails, isAllInfoReceived, pgpContacts), null)
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+      return LoaderResult(null, e)
     }
+
   }
 
   /**
-   * Get information about {@link PgpContact} from the remote server.
+   * Get information about [PgpContact] from the remote server.
    *
    * @param email Used to generate a request to the server.
-   * @return {@link PgpContact}
+   * @return [PgpContact]
    * @throws IOException
    */
-  @Nullable
-  private PgpContact getPgpContactInfoFromServer(String email) throws IOException, NodeException {
-    LookUpEmailResponse response = getLookUpEmailResponse(email);
+  @Throws(IOException::class, NodeException::class)
+  private fun getPgpContactInfoFromServer(email: String): PgpContact? {
+    val response = getLookUpEmailResponse(email)
 
     if (response != null) {
-      if (!TextUtils.isEmpty(response.getPubKey())) {
-        String client = response.hasCryptup() ? ContactsDaoSource.CLIENT_FLOWCRYPT : ContactsDaoSource.CLIENT_PGP;
-        List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(response.getPubKey());
+      if (!TextUtils.isEmpty(response.pubKey)) {
+        val client = if (response.hasCryptup()) {
+          ContactsDaoSource.CLIENT_FLOWCRYPT
+        } else {
+          ContactsDaoSource.CLIENT_PGP
+        }
+        val details = NodeCallsExecutor.parseKeys(response.pubKey!!)
         if (!CollectionUtils.isEmpty(details)) {
-          PgpContact pgpContact = details.get(0).getPrimaryPgpContact();
-          pgpContact.setClient(client);
-          return pgpContact;
+          val pgpContact = details[0].primaryPgpContact
+          pgpContact.client = client
+          return pgpContact
         }
       }
     }
 
-    return null;
+    return null
   }
 
   /**
-   * Get {@link LookUpEmailResponse} object which contain a remote information about
-   * {@link PgpContact}.
+   * Get [LookUpEmailResponse] object which contain a remote information about
+   * [PgpContact].
    *
    * @param email Used to generate a request to the server.
-   * @return {@link LookUpEmailResponse}
+   * @return [LookUpEmailResponse]
    * @throws IOException
    */
-  private LookUpEmailResponse getLookUpEmailResponse(String email) throws IOException {
-    ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
-    Response<LookUpEmailResponse> response = apiService.postLookUpEmail(new PostLookUpEmailModel(email)).execute();
-    return response.body();
+  @Throws(IOException::class)
+  private fun getLookUpEmailResponse(email: String): LookUpEmailResponse? {
+    val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+    val response = apiService.postLookUpEmail(PostLookUpEmailModel(email)).execute()
+    return response.body()
   }
 }

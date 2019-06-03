@@ -3,52 +3,35 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.loader;
+package com.flowcrypt.email.ui.loader
 
-import android.content.Context;
-import android.net.Uri;
-
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.gmail.GmailApiHelper;
-import com.flowcrypt.email.api.email.protocol.OpenStoreHelper;
-import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil;
-import com.flowcrypt.email.api.retrofit.ApiHelper;
-import com.flowcrypt.email.api.retrofit.ApiService;
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel;
-import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel;
-import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse;
-import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult;
-import com.flowcrypt.email.database.dao.KeysDao;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource;
-import com.flowcrypt.email.database.dao.source.KeysDaoSource;
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.security.KeyStoreCryptoManager;
-import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction;
-import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction;
-import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.google.api.services.gmail.Gmail;
-import com.google.api.services.gmail.model.ListSendAsResponse;
-import com.google.api.services.gmail.model.SendAs;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.mail.Message;
-import javax.mail.Session;
-import javax.mail.Transport;
-
-import androidx.annotation.Nullable;
-import androidx.loader.content.AsyncTaskLoader;
-import retrofit2.Response;
+import android.content.Context
+import androidx.loader.content.AsyncTaskLoader
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
+import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
+import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
+import com.flowcrypt.email.api.retrofit.ApiHelper
+import com.flowcrypt.email.api.retrofit.ApiService
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
+import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.KeysDao
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
+import com.flowcrypt.email.database.dao.source.KeysDaoSource
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
+import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
+import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import java.io.IOException
+import java.util.*
 
 /**
  * This loader does job of creating a private key and returns the private key long id as result.
@@ -58,81 +41,69 @@ import retrofit2.Response;
  * Time: 12:36.
  * E-mail: DenBond7@gmail.com
  */
-public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResult> {
-  private final String passphrase;
-  private final AccountDao account;
-  private boolean isActionStarted;
-  private LoaderResult data;
+class CreatePrivateKeyAsyncTaskLoader(context: Context,
+                                      private val account: AccountDao,
+                                      private val passphrase: String) : AsyncTaskLoader<LoaderResult>(context) {
+  private var isActionStarted: Boolean = false
+  private var data: LoaderResult? = null
 
-  public CreatePrivateKeyAsyncTaskLoader(Context context, AccountDao account, String passphrase) {
-    super(context);
-    this.account = account;
-    this.passphrase = passphrase;
-  }
-
-  @Override
-  public void onStartLoading() {
+  public override fun onStartLoading() {
     if (data != null) {
-      deliverResult(data);
+      deliverResult(data)
     } else {
       if (!isActionStarted) {
-        forceLoad();
+        forceLoad()
       }
     }
   }
 
-  @Override
-  public LoaderResult loadInBackground() {
-    String email = account.getEmail();
-    isActionStarted = true;
-    NodeKeyDetails nodeKeyDetails = null;
+  override fun loadInBackground(): LoaderResult? {
+    val email = account.email
+    isActionStarted = true
+    var nodeKeyDetails: NodeKeyDetails? = null
     try {
-      KeyStoreCryptoManager manager = KeyStoreCryptoManager.getInstance(getContext());
+      val manager = KeyStoreCryptoManager.getInstance(context)
 
-      GenerateKeyResult result = NodeCallsExecutor.genKey(passphrase, genContacts());
-      nodeKeyDetails = result.getKey();
+      val (key) = NodeCallsExecutor.genKey(passphrase, genContacts())
+      nodeKeyDetails = key
 
-      KeysDao keysDao = KeysDao.generateKeysDao(manager, KeyDetails.Type.NEW, nodeKeyDetails, passphrase);
+      val keysDao = KeysDao.generateKeysDao(manager, KeyDetails.Type.NEW, nodeKeyDetails!!, passphrase)
 
-      Uri uri = new KeysDaoSource().addRow(getContext(), keysDao);
+      val uri = KeysDaoSource().addRow(context, keysDao)
+          ?: return LoaderResult(null, NullPointerException("Cannot save the generated private key"))
 
-      if (uri == null) {
-        return new LoaderResult(null, new NullPointerException("Cannot save the generated private key"));
-      }
+      UserIdEmailsKeysDaoSource().addRow(context, nodeKeyDetails.longId!!,
+          nodeKeyDetails.primaryPgpContact.email)
 
-      new UserIdEmailsKeysDaoSource().addRow(getContext(), nodeKeyDetails.getLongId(),
-          nodeKeyDetails.getPrimaryPgpContact().getEmail());
-
-      ActionQueueDaoSource daoSource = new ActionQueueDaoSource();
+      val daoSource = ActionQueueDaoSource()
 
       if (!saveCreatedPrivateKeyAsBackupToInbox(nodeKeyDetails)) {
-        daoSource.addAction(getContext(), new BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.getLongId()));
+        daoSource.addAction(context, BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.longId!!))
       }
 
       if (!registerUserPublicKey(nodeKeyDetails)) {
-        daoSource.addAction(getContext(), new RegisterUserPublicKeyAction(0, email, 0, nodeKeyDetails.getPublicKey()));
+        daoSource.addAction(context, RegisterUserPublicKeyAction(0, email, 0, nodeKeyDetails.publicKey!!))
       }
 
       if (!requestingTestMsgWithNewPublicKey(nodeKeyDetails)) {
-        daoSource.addAction(getContext(), new SendWelcomeTestEmailAction(0, email, 0, nodeKeyDetails.getPublicKey()));
+        daoSource.addAction(context, SendWelcomeTestEmailAction(0, email, 0, nodeKeyDetails.publicKey!!))
       }
 
-      return new LoaderResult(nodeKeyDetails.getLongId(), null);
-    } catch (Exception e) {
-      e.printStackTrace();
+      return LoaderResult(nodeKeyDetails.longId, null)
+    } catch (e: Exception) {
+      e.printStackTrace()
       if (nodeKeyDetails != null) {
-        new KeysDaoSource().removeKey(getContext(), nodeKeyDetails.getLongId());
-        new UserIdEmailsKeysDaoSource().removeKey(getContext(), nodeKeyDetails.getLongId());
+        KeysDaoSource().removeKey(context, nodeKeyDetails.longId!!)
+        UserIdEmailsKeysDaoSource().removeKey(context, nodeKeyDetails.longId!!)
       }
-      ExceptionUtil.handleError(e);
-      return new LoaderResult(null, e);
+      ExceptionUtil.handleError(e)
+      return LoaderResult(null, e)
     }
   }
 
-  @Override
-  public void deliverResult(@Nullable LoaderResult data) {
-    this.data = data;
-    super.deliverResult(data);
+  override fun deliverResult(data: LoaderResult?) {
+    this.data = data
+    super.deliverResult(data)
   }
 
   /**
@@ -140,42 +111,42 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
    *
    * @return true if message was send.
    */
-  private boolean saveCreatedPrivateKeyAsBackupToInbox(NodeKeyDetails keyDetails) {
+  private fun saveCreatedPrivateKeyAsBackupToInbox(keyDetails: NodeKeyDetails): Boolean {
     try {
-      Session session = OpenStoreHelper.getAccountSess(getContext(), account);
-      Transport transport = SmtpProtocolUtil.prepareSmtpTransport(getContext(), session, account);
-      Message msg = EmailUtil.genMsgWithPrivateKeys(getContext(), account, session,
-          EmailUtil.genBodyPartWithPrivateKey(account, keyDetails.getPrivateKey()));
-      transport.sendMessage(msg, msg.getAllRecipients());
-    } catch (Exception e) {
-      e.printStackTrace();
-      return false;
+      val session = OpenStoreHelper.getAccountSess(context, account)
+      val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
+      val msg = EmailUtil.genMsgWithPrivateKeys(context, account, session,
+          EmailUtil.genBodyPartWithPrivateKey(account, keyDetails.privateKey!!))
+      transport.sendMessage(msg, msg.allRecipients)
+    } catch (e: Exception) {
+      e.printStackTrace()
+      return false
     }
-    return true;
+
+    return true
   }
 
-  private List<PgpContact> genContacts() throws Exception {
-    PgpContact pgpContactMain = new PgpContact(account.getEmail(), account.getDisplayName());
-    List<PgpContact> contacts = new ArrayList<>();
+  @Throws(Exception::class)
+  private fun genContacts(): List<PgpContact> {
+    val pgpContactMain = PgpContact(account.email, account.displayName)
+    val contacts = ArrayList<PgpContact>()
 
-    switch (account.getAccountType()) {
-      case AccountDao.ACCOUNT_TYPE_GOOGLE:
-        contacts.add(pgpContactMain);
-        Gmail gmail = GmailApiHelper.generateGmailApiService(getContext(), account);
-        ListSendAsResponse aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute();
-        for (SendAs alias : aliases.getSendAs()) {
-          if (alias.getVerificationStatus() != null) {
-            contacts.add(new PgpContact(alias.getSendAsEmail(), alias.getDisplayName()));
+    when (account.accountType) {
+      AccountDao.ACCOUNT_TYPE_GOOGLE -> {
+        contacts.add(pgpContactMain)
+        val gmail = GmailApiHelper.generateGmailApiService(context, account)
+        val aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
+        for (alias in aliases.sendAs) {
+          if (alias.verificationStatus != null) {
+            contacts.add(PgpContact(alias.sendAsEmail, alias.displayName))
           }
         }
-        break;
+      }
 
-      default:
-        contacts.add(pgpContactMain);
-        break;
+      else -> contacts.add(pgpContactMain)
     }
 
-    return contacts;
+    return contacts
   }
 
   /**
@@ -187,17 +158,16 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
    * @param keyDetails Details of the created key.
    * @return true if no errors.
    */
-  private boolean registerUserPublicKey(NodeKeyDetails keyDetails) {
-    try {
-      ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
-      InitialLegacySubmitModel model = new InitialLegacySubmitModel(account.getEmail(), keyDetails.getPublicKey());
-      Response<InitialLegacySubmitResponse> response = apiService.postInitialLegacySubmit(model).execute();
-      InitialLegacySubmitResponse body = response.body();
-      return body != null && (body.getApiError() == null ||
-          !(body.getApiError().getCode() >= 400 && body.getApiError().getCode() < 500));
-    } catch (IOException e) {
-      e.printStackTrace();
-      return false;
+  private fun registerUserPublicKey(keyDetails: NodeKeyDetails): Boolean {
+    return try {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val model = InitialLegacySubmitModel(account.email, keyDetails.publicKey!!)
+      val response = apiService.postInitialLegacySubmit(model).execute()
+      val body = response.body()
+      body != null && (body.apiError == null || body.apiError.code !in 400..499)
+    } catch (e: IOException) {
+      e.printStackTrace()
+      false
     }
   }
 
@@ -207,17 +177,17 @@ public class CreatePrivateKeyAsyncTaskLoader extends AsyncTaskLoader<LoaderResul
    * @param keyDetails Details of the created key.
    * @return true if no errors.
    */
-  private boolean requestingTestMsgWithNewPublicKey(NodeKeyDetails keyDetails) {
-    try {
-      ApiService apiService = ApiHelper.getInstance(getContext()).getRetrofit().create(ApiService.class);
-      TestWelcomeModel model = new TestWelcomeModel(account.getEmail(), keyDetails.getPublicKey());
-      Response<TestWelcomeResponse> response = apiService.postTestWelcome(model).execute();
+  private fun requestingTestMsgWithNewPublicKey(keyDetails: NodeKeyDetails): Boolean {
+    return try {
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val model = TestWelcomeModel(account.email, keyDetails.publicKey!!)
+      val response = apiService.postTestWelcome(model).execute()
 
-      TestWelcomeResponse testWelcomeResponse = response.body();
-      return testWelcomeResponse != null && testWelcomeResponse.isSent();
-    } catch (IOException e) {
-      e.printStackTrace();
-      return false;
+      val testWelcomeResponse = response.body()
+      testWelcomeResponse != null && testWelcomeResponse.isSent
+    } catch (e: IOException) {
+      e.printStackTrace()
+      false
     }
   }
 }
