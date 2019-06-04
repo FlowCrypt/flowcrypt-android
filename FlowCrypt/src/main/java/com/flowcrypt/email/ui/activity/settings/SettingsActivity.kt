@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.settings;
+package com.flowcrypt.email.ui.activity.settings
 
-import android.view.View;
+import android.view.View
 
-import com.flowcrypt.email.R;
+import com.flowcrypt.email.R
 
 /**
  * The settings activity which contains all application settings.
@@ -18,15 +18,11 @@ import com.flowcrypt.email.R;
  * E-mail: DenBond7@gmail.com
  */
 
-public class SettingsActivity extends BaseSettingsActivity {
+class SettingsActivity : BaseSettingsActivity() {
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_settings;
-  }
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_settings
 
-  @Override
-  public View getRootView() {
-    return null;
-  }
+  override val rootView: View
+    get() = View(this)
 }

@@ -3,14 +3,14 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.settings;
+package com.flowcrypt.email.ui.activity.settings
 
-import android.content.Intent;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.content.Intent
+import android.view.Menu
+import android.view.MenuItem
 
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
+import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
 
 /**
  * The base settings activity which describes a general logic..
@@ -21,22 +21,20 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseSettingsActivity extends BaseBackStackActivity {
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    getMenuInflater().inflate(R.menu.activity_settings, menu);
-    return true;
+abstract class BaseSettingsActivity : BaseBackStackActivity() {
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    menuInflater.inflate(R.menu.activity_settings, menu)
+    return true
   }
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.menuActionHelp:
-        startActivity(new Intent(this, FeedbackActivity.class));
-        return true;
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
+      R.id.menuActionHelp -> {
+        startActivity(Intent(this, FeedbackActivity::class.java))
+        true
+      }
 
-      default:
-        return super.onOptionsItemSelected(item);
+      else -> super.onOptionsItemSelected(item)
     }
   }
 }

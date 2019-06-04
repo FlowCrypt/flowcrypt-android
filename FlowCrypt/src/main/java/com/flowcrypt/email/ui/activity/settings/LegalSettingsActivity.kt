@@ -3,25 +3,21 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.settings;
+package com.flowcrypt.email.ui.activity.settings
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.WebView;
-
-import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
-import com.google.android.material.tabs.TabLayout;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentStatePagerAdapter;
-import androidx.viewpager.widget.ViewPager;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.webkit.WebView
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentStatePagerAdapter
+import androidx.viewpager.widget.ViewPager
+import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.google.android.material.tabs.TabLayout
 
 /**
  * This Activity consists information about a legal.
@@ -32,97 +28,88 @@ import androidx.viewpager.widget.ViewPager;
  * E-mail: DenBond7@gmail.com
  */
 
-public class LegalSettingsActivity extends BaseSettingsActivity {
-  private static final int TAB_POSITION_PRIVACY = 0;
-  private static final int TAB_POSITION_TERMS = 1;
-  private static final int TAB_POSITION_LICENCE = 2;
-  private static final int TAB_POSITION_SOURCES = 3;
+class LegalSettingsActivity : BaseSettingsActivity() {
 
-  private TabPagerAdapter tabPagerAdapter;
-  private ViewPager viewPager;
-  private TabLayout tabLayout;
+  private var tabPagerAdapter: TabPagerAdapter? = null
+  private var viewPager: ViewPager? = null
+  private var tabLayout: TabLayout? = null
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_legal;
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_legal
+
+  override val rootView: View
+    get() = View(this)
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    initViews()
+    updateViews()
   }
 
-  @Override
-  public View getRootView() {
-    return null;
+  private fun initViews() {
+    viewPager = findViewById(R.id.viewPager)
+    tabLayout = findViewById(R.id.tabLayout)
   }
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    initViews();
-    updateViews();
-  }
-
-  private void initViews() {
-    viewPager = findViewById(R.id.viewPager);
-    tabLayout = findViewById(R.id.tabLayout);
-  }
-
-  private void updateViews() {
+  private fun updateViews() {
     if (tabPagerAdapter == null) {
-      tabPagerAdapter = new TabPagerAdapter(getSupportFragmentManager());
+      tabPagerAdapter = TabPagerAdapter(supportFragmentManager)
     }
-    viewPager.setAdapter(tabPagerAdapter);
-    tabLayout.setupWithViewPager(viewPager);
+    viewPager!!.adapter = tabPagerAdapter
+    tabLayout!!.setupWithViewPager(viewPager)
   }
 
   /**
-   * The fragment with {@link WebView} as the root view. The {@link WebView} initialized by a
+   * The fragment with [WebView] as the root view. The [WebView] initialized by a
    * html file from the assets directory.
    */
-  public static class WebViewFragment extends BaseFragment {
-    static final String KEY_ASSETS_PATH = BuildConfig.APPLICATION_ID + "" + ".KEY_ASSETS_PATH";
-    private String assetsPath;
-    private WebView webView;
+  class WebViewFragment : BaseFragment() {
+    private var assetsPath: String? = null
+    private var webView: WebView? = null
 
-    /**
-     * Generate an instance of the {@link WebViewFragment}.
-     *
-     * @param assetsPath The path to a html in the assets directory.
-     * @return <tt>{@link WebViewFragment}</tt>
-     */
-    public static WebViewFragment newInstance(String assetsPath) {
-      Bundle args = new Bundle();
-      args.putString(KEY_ASSETS_PATH, assetsPath);
-
-      WebViewFragment webViewFragment = new WebViewFragment();
-      webViewFragment.setArguments(args);
-      return webViewFragment;
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-      super.onCreate(savedInstanceState);
-      Bundle args = getArguments();
+    override fun onCreate(savedInstanceState: Bundle?) {
+      super.onCreate(savedInstanceState)
+      val args = arguments
       if (args != null) {
-        this.assetsPath = args.getString(KEY_ASSETS_PATH);
+        this.assetsPath = args.getString(KEY_ASSETS_PATH)
       }
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?): View? {
 
-      webView = new WebView(getContext());
-      webView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-          ViewGroup.LayoutParams.MATCH_PARENT));
+      webView = WebView(context)
+      webView!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+          ViewGroup.LayoutParams.MATCH_PARENT)
 
-      return webView;
+      return webView
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-      super.onViewCreated(view, savedInstanceState);
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+      super.onViewCreated(view, savedInstanceState)
 
       if (webView != null) {
-        webView.loadUrl("file:///android_asset/" + assetsPath);
+        webView!!.loadUrl("file:///android_asset/" + assetsPath!!)
+      }
+    }
+
+    companion object {
+      internal const val KEY_ASSETS_PATH = BuildConfig.APPLICATION_ID + "" + ".KEY_ASSETS_PATH"
+
+      /**
+       * Generate an instance of the [WebViewFragment].
+       *
+       * @param assetsPath The path to a html in the assets directory.
+       * @return <tt>[WebViewFragment]</tt>
+       */
+      @JvmStatic
+      fun newInstance(assetsPath: String): WebViewFragment {
+        val args = Bundle()
+        args.putString(KEY_ASSETS_PATH, assetsPath)
+
+        val webViewFragment = WebViewFragment()
+        webViewFragment.arguments = args
+        return webViewFragment
       }
     }
   }
@@ -130,58 +117,45 @@ public class LegalSettingsActivity extends BaseSettingsActivity {
   /**
    * The adapter which contains information about tabs.
    */
-  private class TabPagerAdapter extends FragmentStatePagerAdapter {
-    private static final int TAB_COUNT = 4;
+  private inner class TabPagerAdapter internal constructor(fragmentManager: FragmentManager) : FragmentStatePagerAdapter(fragmentManager) {
 
-    TabPagerAdapter(FragmentManager fragmentManager) {
-      super(fragmentManager);
-    }
+    override fun getItem(i: Int): Fragment? {
+      when (i) {
+        TAB_POSITION_PRIVACY -> return WebViewFragment.newInstance("html/privacy.htm")
 
-    @Override
-    public Fragment getItem(int i) {
-      switch (i) {
-        case TAB_POSITION_PRIVACY:
-          return WebViewFragment.newInstance("html/privacy.htm");
+        TAB_POSITION_TERMS -> return WebViewFragment.newInstance("html/terms.htm")
 
-        case TAB_POSITION_TERMS:
-          return WebViewFragment.newInstance("html/terms.htm");
+        TAB_POSITION_LICENCE -> return WebViewFragment.newInstance("html/license.htm")
 
-        case TAB_POSITION_LICENCE:
-          return WebViewFragment.newInstance("html/license.htm");
-
-        case TAB_POSITION_SOURCES:
-          return WebViewFragment.newInstance("html/sources.htm");
+        TAB_POSITION_SOURCES -> return WebViewFragment.newInstance("html/sources.htm")
       }
 
-      return null;
+      return null
     }
 
-    @Override
-    public int getCount() {
-      return TAB_COUNT;
+    override fun getCount(): Int {
+      return 4
     }
 
-    @Override
-    public CharSequence getPageTitle(int position) {
-      String title = null;
-      switch (position) {
-        case TAB_POSITION_PRIVACY:
-          title = getString(R.string.privacy);
-          break;
+    override fun getPageTitle(position: Int): CharSequence? {
+      var title: String? = null
+      when (position) {
+        TAB_POSITION_PRIVACY -> title = getString(R.string.privacy)
 
-        case TAB_POSITION_TERMS:
-          title = getString(R.string.terms);
-          break;
+        TAB_POSITION_TERMS -> title = getString(R.string.terms)
 
-        case TAB_POSITION_LICENCE:
-          title = getString(R.string.licence);
-          break;
+        TAB_POSITION_LICENCE -> title = getString(R.string.licence)
 
-        case TAB_POSITION_SOURCES:
-          title = getString(R.string.sources);
-          break;
+        TAB_POSITION_SOURCES -> title = getString(R.string.sources)
       }
-      return title;
+      return title
     }
+  }
+
+  companion object {
+    private const val TAB_POSITION_PRIVACY = 0
+    private const val TAB_POSITION_TERMS = 1
+    private const val TAB_POSITION_LICENCE = 2
+    private const val TAB_POSITION_SOURCES = 3
   }
 }

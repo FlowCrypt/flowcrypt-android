@@ -3,11 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.settings;
+package com.flowcrypt.email.ui.activity.settings
 
-import android.view.View;
+import android.view.View
 
-import com.flowcrypt.email.R;
+import com.flowcrypt.email.R
 
 /**
  * This activity contains actions which related to Security options.
@@ -17,14 +17,10 @@ import com.flowcrypt.email.R;
  * Time: 10:48.
  * E-mail: DenBond7@gmail.com
  */
-public class SecuritySettingsActivity extends BaseSettingsActivity {
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_security_settings;
-  }
+class SecuritySettingsActivity : BaseSettingsActivity() {
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_security_settings
 
-  @Override
-  public View getRootView() {
-    return null;
-  }
+  override val rootView: View
+    get() = View(this)
 }

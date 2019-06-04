@@ -3,34 +3,31 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.settings;
+package com.flowcrypt.email.ui.activity.settings
 
-import android.os.Bundle;
-import android.os.PersistableBundle;
-import android.text.TextUtils;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.EditText;
-
-import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.BaseResponse;
-import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest;
-import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel;
-import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
-import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.Loader;
+import android.os.Bundle
+import android.os.PersistableBundle
+import android.text.TextUtils
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.EditText
+import androidx.loader.app.LoaderManager
+import androidx.loader.content.Loader
+import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.ApiName
+import com.flowcrypt.email.api.retrofit.BaseResponse
+import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest
+import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
+import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
+import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
 
 /**
  * The feedback activity. Anywhere there is a question mark, it should take the user to this
@@ -42,148 +39,130 @@ import androidx.loader.content.Loader;
  * E-mail: DenBond7@gmail.com
  */
 
-public class FeedbackActivity extends BaseBackStackSyncActivity implements LoaderManager.LoaderCallbacks<LoaderResult> {
-  private static final String KEY_IS_MESSAGE_SENT = BuildConfig.APPLICATION_ID + ".KEY_IS_MESSAGE_SENT";
+class FeedbackActivity : BaseBackStackSyncActivity(), LoaderManager.LoaderCallbacks<LoaderResult> {
 
-  private View progressBar;
-  private View layoutInput;
-  private View layoutContent;
-  private EditText editTextUserMsg;
+  private lateinit var progressBar: View
+  private lateinit var layoutInput: View
+  override lateinit var rootView: View
+  private lateinit var editTextUserMsg: EditText
 
-  private AccountDao account;
-  private boolean isMsgSent;
+  private var account: AccountDao? = null
+  private var isMsgSent: Boolean = false
 
-  @Override
-  public View getRootView() {
-    return layoutContent;
-  }
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_feedback
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_feedback;
-  }
+  private val isInformationValid: Boolean
+    get() {
+      return if (TextUtils.isEmpty(editTextUserMsg.text.toString())) {
+        UIUtil.showInfoSnackbar(editTextUserMsg, getString(R.string.your_message_must_be_non_empty))
+        false
+      } else {
+        true
+      }
+    }
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
     if (savedInstanceState != null) {
-      this.isMsgSent = savedInstanceState.getBoolean(KEY_IS_MESSAGE_SENT);
+      this.isMsgSent = savedInstanceState.getBoolean(KEY_IS_MESSAGE_SENT)
     }
 
-    initViews();
+    initViews()
 
-    account = new AccountDaoSource().getActiveAccountInformation(this);
+    account = AccountDaoSource().getActiveAccountInformation(this)
   }
 
-  @Override
-  public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-    super.onSaveInstanceState(outState, outPersistentState);
-    outState.putBoolean(KEY_IS_MESSAGE_SENT, isMsgSent);
+  override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
+    super.onSaveInstanceState(outState, outPersistentState)
+    outState.putBoolean(KEY_IS_MESSAGE_SENT, isMsgSent)
   }
 
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    getMenuInflater().inflate(R.menu.activity_feedback, menu);
-    return true;
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    menuInflater.inflate(R.menu.activity_feedback, menu)
+    return true
   }
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.menuActionSend:
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+      R.id.menuActionSend -> {
         if (!isMsgSent) {
-          if (isInformationValid()) {
+          if (isInformationValid) {
             if (GeneralUtil.isConnected(this)) {
-              UIUtil.hideSoftInput(this, editTextUserMsg);
-              LoaderManager.getInstance(this).restartLoader(R.id.loader_id_post_help_feedback, null, this);
+              UIUtil.hideSoftInput(this, editTextUserMsg)
+              LoaderManager.getInstance(this).restartLoader(R.id.loader_id_post_help_feedback, null, this)
             } else {
-              UIUtil.showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
+              UIUtil.showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
             }
           }
         } else {
-          UIUtil.showInfoSnackbar(getRootView(), getString(R.string
-              .you_already_sent_this_message));
+          UIUtil.showInfoSnackbar(rootView, getString(R.string
+              .you_already_sent_this_message))
         }
-        return true;
+        return true
+      }
 
-      default:
-        return super.onOptionsItemSelected(item);
+      else -> return super.onOptionsItemSelected(item)
     }
   }
 
-  @Override
-  @NonNull
-  public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-    switch (id) {
-      case R.id.loader_id_post_help_feedback:
-        UIUtil.exchangeViewVisibility(this, true, progressBar, layoutInput);
-        String text = editTextUserMsg.getText().toString() + "\n\n" + "Android v" + BuildConfig.VERSION_CODE;
+  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
+    when (id) {
+      R.id.loader_id_post_help_feedback -> {
+        UIUtil.exchangeViewVisibility(this, true, progressBar, layoutInput)
+        val text = editTextUserMsg.text.toString() + "\n\n" + "Android v" + BuildConfig.VERSION_CODE
 
-        return new ApiServiceAsyncTaskLoader(getApplicationContext(),
-            new PostHelpFeedbackRequest(new PostHelpFeedbackModel(account.getEmail(), text)));
-      default:
-        return new Loader<>(this);
+        return ApiServiceAsyncTaskLoader(applicationContext, PostHelpFeedbackRequest(ApiName.POST_HELP_FEEDBACK,
+            PostHelpFeedbackModel(account!!.email, text)))
+      }
+      else -> return Loader(this)
     }
   }
 
-  @Override
-  public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
-    switch (loader.getId()) {
-      case R.id.loader_id_post_help_feedback:
-        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutInput);
+  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult?) {
+    when (loader.id) {
+      R.id.loader_id_post_help_feedback -> {
+        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutInput)
         if (loaderResult != null) {
-          if (loaderResult.getResult() != null) {
-            BaseResponse baseResponse = (BaseResponse) loaderResult.getResult();
-            PostHelpFeedbackResponse response = (PostHelpFeedbackResponse) baseResponse.getResponseModel();
-            if (response.isSent()) {
-              this.isMsgSent = true;
-              showBackAction(response);
-            } else if (response.getApiError() != null) {
-              UIUtil.showInfoSnackbar(getRootView(), response.getApiError().getMsg());
+          if (loaderResult.result != null) {
+            val baseResponse = loaderResult.result as BaseResponse<*>?
+            val response = baseResponse!!.responseModel as PostHelpFeedbackResponse?
+            if (response!!.isSent) {
+              this.isMsgSent = true
+              showBackAction(response)
+            } else if (response.apiError != null) {
+              UIUtil.showInfoSnackbar(rootView, response.apiError.msg!!)
             } else {
-              UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
+              UIUtil.showInfoSnackbar(rootView, getString(R.string.unknown_error))
             }
-          } else if (loaderResult.getException() != null) {
-            UIUtil.showInfoSnackbar(getRootView(), loaderResult.getException().getMessage());
+          } else if (loaderResult.exception != null) {
+            UIUtil.showInfoSnackbar(rootView, loaderResult.exception!!.message ?: "")
           } else {
-            UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
+            UIUtil.showInfoSnackbar(rootView, getString(R.string.unknown_error))
           }
         } else {
-          UIUtil.showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
+          UIUtil.showInfoSnackbar(rootView, getString(R.string.unknown_error))
         }
-
-        break;
+      }
     }
   }
 
-  @Override
-  public void onLoaderReset(Loader<LoaderResult> loader) {
+  override fun onLoaderReset(loader: Loader<LoaderResult>) {
 
   }
 
-  private void showBackAction(PostHelpFeedbackResponse response) {
-    UIUtil.showSnackbar(getRootView(), response.getText(), getString(R.string.back),
-        new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            finish();
-          }
-        });
+  private fun showBackAction(response: PostHelpFeedbackResponse) {
+    UIUtil.showSnackbar(rootView, response.text!!, getString(R.string.back), View.OnClickListener { finish() })
   }
 
-  private void initViews() {
-    editTextUserMsg = findViewById(R.id.editTextUserMessage);
-    progressBar = findViewById(R.id.progressBar);
-    layoutInput = findViewById(R.id.layoutInput);
-    layoutContent = findViewById(R.id.layoutContent);
+  private fun initViews() {
+    editTextUserMsg = findViewById(R.id.editTextUserMessage)
+    progressBar = findViewById(R.id.progressBar)
+    layoutInput = findViewById(R.id.layoutInput)
+    rootView = findViewById(R.id.layoutContent)
   }
 
-  private boolean isInformationValid() {
-    if (TextUtils.isEmpty(editTextUserMsg.getText().toString())) {
-      UIUtil.showInfoSnackbar(editTextUserMsg, getString(R.string.your_message_must_be_non_empty));
-      return false;
-    } else {
-      return true;
-    }
+  companion object {
+    private const val KEY_IS_MESSAGE_SENT = BuildConfig.APPLICATION_ID + ".KEY_IS_MESSAGE_SENT"
   }
 }

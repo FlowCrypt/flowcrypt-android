@@ -28,7 +28,7 @@ import com.flowcrypt.email.database.dao.source.ContactsDaoSource
  */
 
 class ContactsListCursorAdapter @JvmOverloads constructor(context: Context,
-                                                          c: Cursor,
+                                                          c: Cursor?,
                                                           autoRequery: Boolean,
                                                           private val listener: OnDeleteContactListener?,
                                                           private val isDeleteEnabled: Boolean = true) :

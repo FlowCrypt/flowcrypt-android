@@ -3,24 +3,19 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.settings;
+package com.flowcrypt.email.ui.activity.settings
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.view.View;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
-import com.flowcrypt.email.ui.activity.fragment.KeysListFragment;
-
-import java.util.List;
-
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
+import android.app.Activity
+import android.os.Bundle
+import android.view.View
+import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
+import com.flowcrypt.email.ui.activity.fragment.KeysListFragment
 
 /**
- * This {@link Activity} shows information about available keys in the database.
- * <p>
+ * This [Activity] shows information about available keys in the database.
+ *
+ *
  * Here we can import new keys.
  *
  * @author DenBond7
@@ -29,39 +24,32 @@ import androidx.fragment.app.Fragment;
  * E-mail: DenBond7@gmail.com
  */
 
-public class KeysSettingsActivity extends BaseBackStackActivity {
+class KeysSettingsActivity : BaseBackStackActivity() {
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_keys_settings
+
+  override val rootView: View
+    get() = View(this)
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
 
     if (savedInstanceState == null) {
-      KeysListFragment keysListFragment = KeysListFragment.newInstance();
-      getSupportFragmentManager().beginTransaction().replace(R.id.layoutContent, keysListFragment).commitNow();
+      val keysListFragment = KeysListFragment.newInstance()
+      supportFragmentManager.beginTransaction().replace(R.id.layoutContent, keysListFragment).commitNow()
     }
   }
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_keys_settings;
-  }
-
-  @Override
-  public View getRootView() {
-    return null;
-  }
-
-  @Override
-  protected void onNodeStateChanged(boolean isReady) {
-    super.onNodeStateChanged(isReady);
+  override fun onNodeStateChanged(isReady: Boolean) {
+    super.onNodeStateChanged(isReady)
     if (isReady) {
-      List<Fragment> fragmentList = getSupportFragmentManager().getFragments();
+      val fragmentList = supportFragmentManager.fragments
 
-      for (Fragment fragment : fragmentList) {
-        if (fragment instanceof KeysListFragment) {
-          KeysListFragment keysListFragment = (KeysListFragment) fragment;
-          keysListFragment.fetchKeys();
-          return;
+      for (fragment in fragmentList) {
+        if (fragment is KeysListFragment) {
+          fragment.fetchKeys()
+          return
         }
       }
     }

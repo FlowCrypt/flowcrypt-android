@@ -3,27 +3,21 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.settings;
+package com.flowcrypt.email.ui.activity.settings
 
-import android.os.Bundle;
-import android.view.View;
-import android.widget.ListView;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
-import com.flowcrypt.email.ui.adapter.AttesterKeyAdapter;
-import com.flowcrypt.email.ui.loader.LoadAccountKeysInfo;
-import com.flowcrypt.email.util.UIUtil;
-
-import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.Loader;
+import android.os.Bundle
+import android.view.View
+import android.widget.ListView
+import androidx.loader.app.LoaderManager
+import androidx.loader.content.Loader
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
+import com.flowcrypt.email.ui.adapter.AttesterKeyAdapter
+import com.flowcrypt.email.ui.loader.LoadAccountKeysInfo
+import com.flowcrypt.email.util.UIUtil
 
 /**
  * Basically, this Activity gets all known addresses of the user, and then submits one call with all addresses to
@@ -35,93 +29,75 @@ import androidx.loader.content.Loader;
  * E-mail: DenBond7@gmail.com
  */
 
-public class AttesterSettingsActivity extends BaseBackStackActivity implements
-    LoaderManager.LoaderCallbacks<LoaderResult> {
-  private View progressBar;
-  private View emptyView;
-  private View layoutContent;
-  private ListView listViewKeys;
+class AttesterSettingsActivity : BaseBackStackActivity(), LoaderManager.LoaderCallbacks<LoaderResult> {
+  private var progressBar: View? = null
+  private var emptyView: View? = null
+  private var layoutContent: View? = null
+  private var listViewKeys: ListView? = null
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    initViews();
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_attester_settings
+
+  override val rootView: View
+    get() = findViewById(R.id.screenContent)
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    initViews()
   }
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_attester_settings;
-  }
-
-  @Override
-  public View getRootView() {
-    return findViewById(R.id.screenContent);
-  }
-
-  @Override
-  @NonNull
-  public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-    switch (id) {
-      case R.id.loader_id_load_keys_info_from_attester:
-        UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-        return new LoadAccountKeysInfo(this,
-            new AccountDaoSource().getActiveAccountInformation(this));
-      default:
-        return new Loader<>(this);
+  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
+    return when (id) {
+      R.id.loader_id_load_keys_info_from_attester -> {
+        UIUtil.exchangeViewVisibility(this, true, progressBar!!, layoutContent!!)
+        LoadAccountKeysInfo(this,
+            AccountDaoSource().getActiveAccountInformation(this))
+      }
+      else -> Loader(this)
     }
   }
 
-  @Override
-  public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
-    handleLoaderResult(loader, loaderResult);
+  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
+    handleLoaderResult(loader, loaderResult)
   }
 
-  @Override
-  public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
-    switch (loader.getId()) {
-      default:
-        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
-    }
+  override fun onLoaderReset(loader: Loader<LoaderResult>) {
+    UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutContent!!)
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public void onSuccess(int loaderId, Object result) {
-    switch (loaderId) {
-      case R.id.loader_id_load_keys_info_from_attester:
-        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
-        List<LookUpEmailResponse> responses = (List<LookUpEmailResponse>) result;
-        if (responses != null && !responses.isEmpty()) {
-          listViewKeys.setAdapter(new AttesterKeyAdapter(this, responses));
+  override fun onSuccess(loaderId: Int, result: Any?) {
+    when (loaderId) {
+      R.id.loader_id_load_keys_info_from_attester -> {
+        UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutContent!!)
+        val responses = result as List<LookUpEmailResponse>?
+        if (responses != null && responses.isNotEmpty()) {
+          listViewKeys!!.adapter = AttesterKeyAdapter(this, responses)
         } else {
-          UIUtil.exchangeViewVisibility(this, true, emptyView, layoutContent);
+          UIUtil.exchangeViewVisibility(this, true, emptyView!!, layoutContent!!)
         }
-        break;
+      }
 
-      default:
-        super.onSuccess(loaderId, result);
+      else -> super.onSuccess(loaderId, result)
     }
   }
 
-  @Override
-  public void onError(int loaderId, Exception e) {
-    switch (loaderId) {
-      case R.id.loader_id_load_keys_info_from_attester:
-        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
-        showInfoSnackbar(getRootView(), e.getMessage());
-        break;
+  override fun onError(loaderId: Int, e: Exception?) {
+    when (loaderId) {
+      R.id.loader_id_load_keys_info_from_attester -> {
+        UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutContent!!)
+        showInfoSnackbar(rootView, e!!.message)
+      }
 
-      default:
-        super.onError(loaderId, e);
+      else -> super.onError(loaderId, e)
     }
   }
 
-  private void initViews() {
-    this.progressBar = findViewById(R.id.progressBar);
-    this.layoutContent = findViewById(R.id.layoutContent);
-    this.emptyView = findViewById(R.id.emptyView);
-    listViewKeys = findViewById(R.id.listViewKeys);
+  private fun initViews() {
+    this.progressBar = findViewById(R.id.progressBar)
+    this.layoutContent = findViewById(R.id.layoutContent)
+    this.emptyView = findViewById(R.id.emptyView)
+    listViewKeys = findViewById(R.id.listViewKeys)
 
-    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_keys_info_from_attester, null, this);
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_keys_info_from_attester, null, this)
   }
 }
