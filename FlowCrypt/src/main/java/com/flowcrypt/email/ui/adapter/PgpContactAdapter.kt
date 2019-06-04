@@ -30,7 +30,7 @@ import com.hootsuite.nachos.NachoTextView
  */
 
 class PgpContactAdapter(context: Context,
-                        c: Cursor,
+                        c: Cursor?,
                         autoRequery: Boolean) : CursorAdapter(context, c, autoRequery) {
 
   override fun newView(context: Context, cursor: Cursor, parent: ViewGroup): View {

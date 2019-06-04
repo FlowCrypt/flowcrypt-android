@@ -3,110 +3,93 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.base;
+package com.flowcrypt.email.ui.activity.fragment.base
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Bundle;
-import android.text.SpannableStringBuilder;
-import android.text.TextUtils;
-import android.text.format.Formatter;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.FilterQueryProvider;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.ScrollView;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.FoldersManager;
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.api.email.model.ExtraActionInfo;
-import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
-import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
-import com.flowcrypt.email.api.email.model.ServiceInfo;
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
-import com.flowcrypt.email.database.dao.source.AccountAliasesDao;
-import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.model.MessageType;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.ui.activity.CreateMessageActivity;
-import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity;
-import com.flowcrypt.email.ui.activity.SelectContactsActivity;
-import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment;
-import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener;
-import com.flowcrypt.email.ui.adapter.FromAddressesAdapter;
-import com.flowcrypt.email.ui.adapter.PgpContactAdapter;
-import com.flowcrypt.email.ui.loader.LoadGmailAliasesLoader;
-import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader;
-import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator;
-import com.flowcrypt.email.ui.widget.PGPContactChipSpan;
-import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView;
-import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.google.android.gms.common.util.CollectionUtils;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.textfield.TextInputLayout;
-import com.hootsuite.nachos.NachoTextView;
-import com.hootsuite.nachos.chip.Chip;
-import com.hootsuite.nachos.terminator.ChipTerminatorHandler;
-import com.hootsuite.nachos.tokenizer.ChipTokenizer;
-import com.hootsuite.nachos.validator.ChipifyingNachoValidator;
-
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.mail.internet.InternetAddress;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.Loader;
+import android.Manifest
+import android.app.Activity
+import android.content.ContentResolver
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.TextUtils
+import android.text.format.Formatter
+import android.util.Log
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.FilterQueryProvider
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.ScrollView
+import android.widget.Spinner
+import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import androidx.loader.app.LoaderManager
+import androidx.loader.content.Loader
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.api.email.model.ExtraActionInfo
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.api.email.model.ServiceInfo
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.database.dao.source.AccountAliasesDao
+import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
+import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
+import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity
+import com.flowcrypt.email.ui.activity.SelectContactsActivity
+import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
+import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener
+import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
+import com.flowcrypt.email.ui.adapter.PgpContactAdapter
+import com.flowcrypt.email.ui.loader.LoadGmailAliasesLoader
+import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader
+import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
+import com.flowcrypt.email.ui.widget.PGPContactChipSpan
+import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
+import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.google.android.gms.common.util.CollectionUtils
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputLayout
+import com.hootsuite.nachos.NachoTextView
+import com.hootsuite.nachos.chip.Chip
+import com.hootsuite.nachos.terminator.ChipTerminatorHandler
+import com.hootsuite.nachos.validator.ChipifyingNachoValidator
+import org.apache.commons.io.FileUtils
+import java.io.File
+import java.io.IOException
+import java.util.*
+import java.util.regex.Pattern
+import javax.mail.internet.InternetAddress
 
 /**
  * This fragment describe a logic of sent an encrypted or standard message.
@@ -117,742 +100,794 @@ import androidx.loader.content.Loader;
  * E-mail: DenBond7@gmail.com
  */
 
-public class CreateMessageFragment extends BaseSyncFragment implements View.OnFocusChangeListener,
-    AdapterView.OnItemSelectedListener, View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
-  private static final int REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100;
-  private static final int REQUEST_CODE_IMPORT_PUBLIC_KEY = 101;
-  private static final int REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102;
-  private static final int REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT = 103;
-  private static final int REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE = 104;
-  private static final int REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO = 105;
-  private static final String TAG = CreateMessageFragment.class.getSimpleName();
+class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, AdapterView.OnItemSelectedListener, View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
 
-  private OnMessageSendListener onMsgSendListener;
-  private OnChangeMessageEncryptionTypeListener listener;
-  private List<PgpContact> pgpContactsTo;
-  private List<PgpContact> pgpContactsCc;
-  private List<PgpContact> pgpContactsBcc;
-  private ArrayList<AttachmentInfo> atts;
-  private FoldersManager.FolderType folderType;
-  private IncomingMessageInfo msgInfo;
-  private ServiceInfo serviceInfo;
-  private AccountDao account;
-  private FromAddressesAdapter<String> fromAddrs;
-  private PgpContact pgpContactWithNoPublicKey;
-  private ExtraActionInfo extraActionInfo;
-  private MessageType messageType = MessageType.NEW;
-  private File draftCacheDir;
+  private var onMsgSendListener: OnMessageSendListener? = null
+  private var listener: OnChangeMessageEncryptionTypeListener? = null
+  private var pgpContactsTo: MutableList<PgpContact>? = null
+  private var pgpContactsCc: MutableList<PgpContact>? = null
+  private var pgpContactsBcc: MutableList<PgpContact>? = null
+  private val atts: ArrayList<AttachmentInfo>?
+  private var folderType: FoldersManager.FolderType? = null
+  private var msgInfo: IncomingMessageInfo? = null
+  private var serviceInfo: ServiceInfo? = null
+  private var account: AccountDao? = null
+  private var fromAddrs: FromAddressesAdapter<String>? = null
+  private var pgpContactWithNoPublicKey: PgpContact? = null
+  private var extraActionInfo: ExtraActionInfo? = null
+  private var messageType = MessageType.NEW
+  private var draftCacheDir: File? = null
 
-  private ViewGroup layoutAtts;
-  private EditText editTextFrom;
-  private Spinner spinnerFrom;
-  private PgpContactsNachoTextView recipientsTo;
-  private PgpContactsNachoTextView recipientsCc;
-  private PgpContactsNachoTextView recipientsBcc;
-  private EditText editTextEmailSubject;
-  private EditText editTextEmailMsg;
-  private TextInputLayout textInputLayoutMsg;
-  private ScrollView layoutContent;
-  private View progressBarTo;
-  private View progressBarCc;
-  private View progressBarBcc;
-  private View layoutCc;
-  private View layoutBcc;
-  private LinearLayout progressBarAndButtonLayout;
-  private ImageButton imageButtonAliases;
-  private View imageButtonAdditionalRecipientsVisibility;
+  private var layoutAtts: ViewGroup? = null
+  private var editTextFrom: EditText? = null
+  private var spinnerFrom: Spinner? = null
+  private var recipientsTo: PgpContactsNachoTextView? = null
+  private var recipientsCc: PgpContactsNachoTextView? = null
+  private var recipientsBcc: PgpContactsNachoTextView? = null
+  private var editTextEmailSubject: EditText? = null
+  private var editTextEmailMsg: EditText? = null
+  private var textInputLayoutMsg: TextInputLayout? = null
+  private var layoutContent: ScrollView? = null
+  private var progressBarTo: View? = null
+  private var progressBarCc: View? = null
+  private var progressBarBcc: View? = null
+  private var layoutCc: View? = null
+  private var layoutBcc: View? = null
+  private var progressBarAndButtonLayout: LinearLayout? = null
+  private var imageButtonAliases: ImageButton? = null
+  private var imageButtonAdditionalRecipientsVisibility: View? = null
 
-  private boolean isContactsUpdateEnabled = true;
-  private boolean isUpdateToCompleted = true;
-  private boolean isUpdateCcCompleted = true;
-  private boolean isUpdateBccCompleted = true;
-  private boolean isIncomingMsgInfoUsed;
-  private boolean isMsgSentToQueue;
-  private int originalColor;
+  private var isContactsUpdateEnabled = true
+  private var isUpdateToCompleted = true
+  private var isUpdateCcCompleted = true
+  private var isUpdateBccCompleted = true
+  private var isIncomingMsgInfoUsed: Boolean = false
+  private var isMsgSentToQueue: Boolean = false
+  private var originalColor: Int = 0
 
-  public CreateMessageFragment() {
-    pgpContactsTo = new ArrayList<>();
-    pgpContactsCc = new ArrayList<>();
-    pgpContactsBcc = new ArrayList<>();
-    atts = new ArrayList<>();
-  }
+  override val contentView: View?
+    get() = layoutContent
 
-  @Override
-  public void onAttach(Context context) {
-    super.onAttach(context);
-    if (context instanceof OnMessageSendListener) {
-      this.onMsgSendListener = (OnMessageSendListener) context;
-    } else throw new IllegalArgumentException(context.toString() + " must implement " +
-        OnMessageSendListener.class.getSimpleName());
+  /**
+   * Generate an outgoing message info from entered information by user.
+   *
+   * @return <tt>OutgoingMessageInfo</tt> Return a created OutgoingMessageInfo object which
+   * contains information about an outgoing message.
+   */
+  private fun getOutgoingMsgInfo(): OutgoingMessageInfo {
+    val messageInfo = OutgoingMessageInfo()
 
-    if (context instanceof OnChangeMessageEncryptionTypeListener) {
-      this.listener = (OnChangeMessageEncryptionTypeListener) context;
-    } else throw new IllegalArgumentException(context.toString() + " must implement " +
-        OnChangeMessageEncryptionTypeListener.class.getSimpleName());
-  }
+    /*if (msgInfo != null && !TextUtils.isEmpty(msgInfo.getHtmlMsgBlock())) {
+      //todo-denbond7 Need to think how forward HTML
+    }*/
+    messageInfo.msg = editTextEmailMsg!!.text.toString()
+    messageInfo.subject = editTextEmailSubject!!.text.toString()
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setHasOptionsMenu(true);
-
-    initDraftCacheDir();
-
-    account = new AccountDaoSource().getActiveAccountInformation(getContext());
-    fromAddrs = new FromAddressesAdapter<>(getContext(), android.R.layout.simple_list_item_1, android.R.id.text1,
-        new ArrayList<String>());
-    fromAddrs.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-    fromAddrs.setUseKeysInfo(listener.getMsgEncryptionType()
-        == MessageEncryptionType.ENCRYPTED);
-    if (account != null) {
-      fromAddrs.add(account.getEmail());
-      fromAddrs.updateKeyAvailability(account.getEmail(), !CollectionUtils.isEmpty(
-          new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail())));
+    if (msgInfo != null && !TextUtils.isEmpty(msgInfo!!.getOrigRawMsgWithoutAtts())) {
+      messageInfo.rawReplyMsg = TextUtils.substring(msgInfo!!.getOrigRawMsgWithoutAtts(), 0, Math.min(10000,
+          msgInfo!!.getOrigRawMsgWithoutAtts()!!.length))
     }
 
-    initExtras(getActivity().getIntent());
+    messageInfo.toRecipients = recipientsTo!!.chipValues
+    messageInfo.ccRecipients = recipientsCc!!.chipValues
+    messageInfo.bccRecipients = recipientsBcc!!.chipValues
+    messageInfo.from = editTextFrom!!.text.toString()
+    messageInfo.uid = EmailUtil.genOutboxUID(context!!)
+
+    return messageInfo
   }
 
-  @Override
-  public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    return inflater.inflate(R.layout.fragment_create_message, container, false);
+  /**
+   * Do a lot of checks to validate an outgoing message info.
+   *
+   * @return <tt>Boolean</tt> true if all information is correct, false otherwise.
+   */
+  private val isDataCorrect: Boolean
+    get() {
+      recipientsTo!!.chipifyAllUnterminatedTokens()
+      recipientsCc!!.chipifyAllUnterminatedTokens()
+      recipientsBcc!!.chipifyAllUnterminatedTokens()
+
+      if (!fromAddrs!!.isEnabled(spinnerFrom!!.selectedItemPosition)) {
+        showInfoSnackbar(recipientsTo!!, getString(R.string.no_key_available))
+        return false
+      }
+
+      if (TextUtils.isEmpty(recipientsTo!!.text.toString())) {
+        showInfoSnackbar(recipientsTo!!, getString(R.string.text_must_not_be_empty,
+            getString(R.string.prompt_recipients_to)))
+        recipientsTo!!.requestFocus()
+        return false
+      }
+
+      val hasNotValidEmail = (hasNotValidEmail(recipientsTo!!) || hasNotValidEmail(recipientsCc!!)
+          || hasNotValidEmail(recipientsBcc!!))
+
+      if (!hasNotValidEmail) {
+        if (listener!!.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
+          if (!TextUtils.isEmpty(recipientsTo!!.text) && pgpContactsTo!!.isEmpty()) {
+            showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_to)
+            return false
+          }
+
+          if (!TextUtils.isEmpty(recipientsCc!!.text) && pgpContactsCc!!.isEmpty()) {
+            showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_cc)
+            return false
+          }
+
+          if (!TextUtils.isEmpty(recipientsBcc!!.text) && pgpContactsBcc!!.isEmpty()) {
+            showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_bcc)
+            return false
+          }
+
+          if (hasRecipientWithoutPgp(true, pgpContactsTo!!)
+              || hasRecipientWithoutPgp(true, pgpContactsCc!!)
+              || hasRecipientWithoutPgp(true, pgpContactsBcc!!)) {
+            return false
+          }
+        }
+      } else
+        return false
+
+      if (TextUtils.isEmpty(editTextEmailSubject!!.text.toString())) {
+        showInfoSnackbar(editTextEmailSubject!!, getString(R.string.text_must_not_be_empty,
+            getString(R.string.prompt_subject)))
+        editTextEmailSubject!!.requestFocus()
+        return false
+      }
+
+      if (atts != null && atts.isEmpty() && TextUtils.isEmpty(editTextEmailMsg!!.text.toString())) {
+        showInfoSnackbar(editTextEmailMsg!!, getString(R.string.sending_message_must_not_be_empty))
+        editTextEmailMsg!!.requestFocus()
+        return false
+      }
+
+      return if (atts != null && !atts.isEmpty() && hasExternalStorageUris(this.atts)) {
+        val isPermissionGranted = ContextCompat.checkSelfPermission(context!!,
+            Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+        if (isPermissionGranted) {
+          requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+              REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE)
+          false
+        } else {
+          true
+        }
+      } else {
+        true
+      }
+    }
+
+  /**
+   * Generate a forwarded attachments list.
+   *
+   * @return The generated list.
+   */
+  private val forwardedAtts: ArrayList<AttachmentInfo>
+    get() {
+      val atts = ArrayList<AttachmentInfo>()
+
+      for (att in this.atts!!) {
+        if (att.id != null && att.isForwarded) {
+          atts.add(att)
+        }
+      }
+
+      return atts
+    }
+
+  init {
+    pgpContactsTo = ArrayList()
+    pgpContactsCc = ArrayList()
+    pgpContactsBcc = ArrayList()
+    atts = ArrayList()
   }
 
-  @Override
-  public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-    initViews(view);
+  override fun onAttach(context: Context?) {
+    super.onAttach(context)
+    if (context is OnMessageSendListener) {
+      this.onMsgSendListener = context
+    } else
+      throw IllegalArgumentException(context!!.toString() + " must implement " +
+          OnMessageSendListener::class.java.simpleName)
+
+    if (context is OnChangeMessageEncryptionTypeListener) {
+      this.listener = context
+    } else
+      throw IllegalArgumentException(context.toString() + " must implement " +
+          OnChangeMessageEncryptionTypeListener::class.java.simpleName)
+  }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setHasOptionsMenu(true)
+
+    initDraftCacheDir()
+
+    account = AccountDaoSource().getActiveAccountInformation(context!!)
+    fromAddrs = FromAddressesAdapter(context!!, android.R.layout.simple_list_item_1, android.R.id.text1,
+        ArrayList())
+    fromAddrs!!.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+    fromAddrs!!.setUseKeysInfo(listener!!.msgEncryptionType === MessageEncryptionType.ENCRYPTED)
+    if (account != null) {
+      fromAddrs!!.add(account!!.email)
+      fromAddrs!!.updateKeyAvailability(account!!.email, !CollectionUtils.isEmpty(
+          UserIdEmailsKeysDaoSource().getLongIdsByEmail(context!!, account!!.email)))
+    }
+
+    initExtras(activity!!.intent)
+  }
+
+  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    return inflater.inflate(R.layout.fragment_create_message, container, false)
+  }
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    initViews(view)
 
     if ((msgInfo != null || extraActionInfo != null) && !isIncomingMsgInfoUsed) {
-      this.isIncomingMsgInfoUsed = true;
-      updateViews();
+      this.isIncomingMsgInfoUsed = true
+      updateViews()
     }
 
-    showAtts();
+    showAtts()
   }
 
-  @Override
-  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
+  override fun onActivityCreated(savedInstanceState: Bundle?) {
+    super.onActivityCreated(savedInstanceState)
 
-    if (account != null && AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
-      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_email_aliases, null, this);
+    if (account != null && AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account!!.accountType!!, ignoreCase = true)) {
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_email_aliases, null, this)
     }
 
-    boolean isEncryptedMode = listener.getMsgEncryptionType() ==
-        MessageEncryptionType.ENCRYPTED;
-    if (msgInfo != null && GeneralUtil.isConnected(getContext()) && isEncryptedMode) {
-      updateRecipients();
+    val isEncryptedMode = listener!!.msgEncryptionType === MessageEncryptionType.ENCRYPTED
+    if (msgInfo != null && GeneralUtil.isConnected(context!!) && isEncryptedMode) {
+      updateRecipients()
     }
   }
 
-  @Override
-  public void onDestroy() {
-    super.onDestroy();
+  override fun onDestroy() {
+    super.onDestroy()
     if (!isMsgSentToQueue) {
-      for (AttachmentInfo attInfo : atts) {
-        if (attInfo.getUri() != null) {
-          if (Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(attInfo.getUri().getAuthority())) {
-            getContext().getContentResolver().delete(attInfo.getUri(), null, null);
+      for ((_, _, _, _, _, _, _, _, _, _, uri) in atts!!) {
+        if (uri != null) {
+          if (Constants.FILE_PROVIDER_AUTHORITY.equals(uri.authority!!, ignoreCase = true)) {
+            context!!.contentResolver.delete(uri, null, null)
           }
         }
       }
     }
   }
 
-  @Override
-  public View getContentView() {
-    return layoutContent;
-  }
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    when (requestCode) {
+      REQUEST_CODE_NO_PGP_FOUND_DIALOG -> when (resultCode) {
+        NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL -> listener!!.onMsgEncryptionTypeChanged(MessageEncryptionType.STANDARD)
 
-  @Override
-  public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    switch (requestCode) {
-      case REQUEST_CODE_NO_PGP_FOUND_DIALOG:
-        switch (resultCode) {
-          case NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL:
-            listener.onMsgEncryptionTypeChanged(MessageEncryptionType.STANDARD);
-            break;
+        NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY -> if (data != null) {
+          val pgpContact = data.getParcelableExtra<PgpContact>(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
 
-          case NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY:
-            if (data != null) {
-              PgpContact pgpContact = data.getParcelableExtra(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT);
-
-              if (pgpContact != null) {
-                startActivityForResult(ImportPublicKeyActivity.newIntent(getContext(),
-                    getString(R.string.import_public_key), pgpContact), REQUEST_CODE_IMPORT_PUBLIC_KEY);
-              }
-            }
-
-            break;
-
-          case NoPgpFoundDialogFragment.RESULT_CODE_COPY_FROM_OTHER_CONTACT:
-            if (data != null) {
-              pgpContactWithNoPublicKey = data.getParcelableExtra(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT);
-
-              if (pgpContactWithNoPublicKey != null) {
-                startActivityForResult(SelectContactsActivity.newIntent(getContext(),
-                    getString(R.string.use_public_key_from), false), REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT);
-              }
-            }
-
-            break;
-
-          case NoPgpFoundDialogFragment.RESULT_CODE_REMOVE_CONTACT:
-            if (data != null) {
-              PgpContact pgpContact = data.getParcelableExtra(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT);
-
-              if (pgpContact != null) {
-                removePgpContact(pgpContact, recipientsTo, pgpContactsTo);
-                removePgpContact(pgpContact, recipientsCc, pgpContactsCc);
-                removePgpContact(pgpContact, recipientsBcc, pgpContactsBcc);
-              }
-            }
-            break;
-        }
-        break;
-
-      case REQUEST_CODE_IMPORT_PUBLIC_KEY:
-        switch (resultCode) {
-          case Activity.RESULT_OK:
-            Toast.makeText(getContext(), R.string.the_key_successfully_imported, Toast.LENGTH_SHORT).show();
-            updateRecipients();
-            break;
-        }
-        break;
-
-      case REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT:
-        switch (resultCode) {
-          case Activity.RESULT_OK:
-            if (data != null) {
-              PgpContact pgpContact = data.getParcelableExtra(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT);
-
-              if (pgpContact != null) {
-                pgpContactWithNoPublicKey.setPubkey(pgpContact.getPubkey());
-                new ContactsDaoSource().updatePgpContact(getContext(), pgpContactWithNoPublicKey);
-
-                Toast.makeText(getContext(), R.string.key_successfully_copied, Toast.LENGTH_LONG).show();
-                updateRecipients();
-              }
-            }
-            break;
+          if (pgpContact != null) {
+            startActivityForResult(ImportPublicKeyActivity.newIntent(context,
+                getString(R.string.import_public_key), pgpContact), REQUEST_CODE_IMPORT_PUBLIC_KEY)
+          }
         }
 
-        pgpContactWithNoPublicKey = null;
-        break;
+        NoPgpFoundDialogFragment.RESULT_CODE_COPY_FROM_OTHER_CONTACT -> if (data != null) {
+          pgpContactWithNoPublicKey = data.getParcelableExtra(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
 
-      case REQUEST_CODE_GET_CONTENT_FOR_SENDING:
-        switch (resultCode) {
-          case Activity.RESULT_OK:
-            if (data != null && data.getData() != null) {
-              AttachmentInfo attachmentInfo = EmailUtil.getAttInfoFromUri(getContext(), data.getData());
-              if (hasAbilityToAddAtt(attachmentInfo)) {
-                atts.add(attachmentInfo);
-                showAtts();
-              } else {
-                showInfoSnackbar(getView(), getString(R.string.template_warning_max_total_attachments_size,
-                    FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
-                    Snackbar.LENGTH_LONG);
-              }
-            } else {
-              showInfoSnackbar(getView(), getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG);
-            }
-            break;
+          if (pgpContactWithNoPublicKey != null) {
+            startActivityForResult(SelectContactsActivity.newIntent(context,
+                getString(R.string.use_public_key_from), false), REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT)
+          }
         }
-        break;
 
-      default:
-        super.onActivityResult(requestCode, resultCode, data);
+        NoPgpFoundDialogFragment.RESULT_CODE_REMOVE_CONTACT -> if (data != null) {
+          val pgpContact = data.getParcelableExtra<PgpContact>(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
+
+          if (pgpContact != null) {
+            removePgpContact(pgpContact, recipientsTo!!, pgpContactsTo)
+            removePgpContact(pgpContact, recipientsCc!!, pgpContactsCc)
+            removePgpContact(pgpContact, recipientsBcc!!, pgpContactsBcc)
+          }
+        }
+      }
+
+      REQUEST_CODE_IMPORT_PUBLIC_KEY -> when (resultCode) {
+        Activity.RESULT_OK -> {
+          Toast.makeText(context, R.string.the_key_successfully_imported, Toast.LENGTH_SHORT).show()
+          updateRecipients()
+        }
+      }
+
+      REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT -> {
+        when (resultCode) {
+          Activity.RESULT_OK -> if (data != null) {
+            val pgpContact = data.getParcelableExtra<PgpContact>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
+
+            if (pgpContact != null) {
+              pgpContactWithNoPublicKey!!.pubkey = pgpContact.pubkey
+              ContactsDaoSource().updatePgpContact(context!!, pgpContactWithNoPublicKey)
+
+              Toast.makeText(context, R.string.key_successfully_copied, Toast.LENGTH_LONG).show()
+              updateRecipients()
+            }
+          }
+        }
+
+        pgpContactWithNoPublicKey = null
+      }
+
+      REQUEST_CODE_GET_CONTENT_FOR_SENDING -> when (resultCode) {
+        Activity.RESULT_OK -> if (data != null && data.data != null) {
+          val attachmentInfo = EmailUtil.getAttInfoFromUri(context, data.data)
+          if (hasAbilityToAddAtt(attachmentInfo)) {
+            attachmentInfo?.let { atts!!.add(it) }
+            showAtts()
+          } else {
+            showInfoSnackbar(view!!, getString(R.string.template_warning_max_total_attachments_size,
+                FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES.toLong())),
+                Snackbar.LENGTH_LONG)
+          }
+        } else {
+          showInfoSnackbar(view!!, getString(R.string.can_not_attach_this_file), Snackbar.LENGTH_LONG)
+        }
+      }
+
+      else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
 
-  @Override
-  public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-    super.onCreateOptionsMenu(menu, inflater);
-    inflater.inflate(R.menu.fragment_secure_compose, menu);
+  override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+    super.onCreateOptionsMenu(menu, inflater)
+    inflater!!.inflate(R.menu.fragment_secure_compose, menu)
   }
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.menuActionSend:
-        if (getSnackBar() != null) {
-          getSnackBar().dismiss();
+  override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+    when (item!!.itemId) {
+      R.id.menuActionSend -> {
+        if (snackBar != null) {
+          snackBar!!.dismiss()
         }
 
         if (isUpdateToCompleted && isUpdateCcCompleted && isUpdateBccCompleted) {
-          UIUtil.hideSoftInput(getContext(), getView());
-          if (isDataCorrect()) {
-            sendMsg();
-            this.isMsgSentToQueue = true;
+          UIUtil.hideSoftInput(context!!, view)
+          if (isDataCorrect) {
+            sendMsg()
+            this.isMsgSentToQueue = true
           }
         } else {
-          Toast.makeText(getContext(), R.string.please_wait_while_information_about_contacts_will_be_updated,
-              Toast.LENGTH_SHORT).show();
+          Toast.makeText(context, R.string.please_wait_while_information_about_contacts_will_be_updated,
+              Toast.LENGTH_SHORT).show()
         }
-        return true;
+        return true
+      }
 
-      case R.id.menuActionAttachFile:
-        attachFile();
-        return true;
+      R.id.menuActionAttachFile -> {
+        attachFile()
+        return true
+      }
 
-      default:
-        return super.onOptionsItemSelected(item);
+      else -> return super.onOptionsItemSelected(item)
     }
   }
 
-  @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-    switch (requestCode) {
-      case REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE:
-        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          sendMsg();
-        } else {
-          Toast.makeText(getActivity(), R.string.cannot_send_attachment_without_read_permission,
-              Toast.LENGTH_LONG).show();
-        }
-        break;
+  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    when (requestCode) {
+      REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE -> if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        sendMsg()
+      } else {
+        Toast.makeText(activity, R.string.cannot_send_attachment_without_read_permission,
+            Toast.LENGTH_LONG).show()
+      }
 
-      case REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO:
-        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          addAtts();
-          showAtts();
-        } else {
-          Toast.makeText(getActivity(), R.string.cannot_send_attachment_without_read_permission,
-              Toast.LENGTH_LONG).show();
-        }
-        break;
+      REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO -> if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        addAtts()
+        showAtts()
+      } else {
+        Toast.makeText(activity, R.string.cannot_send_attachment_without_read_permission,
+            Toast.LENGTH_LONG).show()
+      }
 
-      default:
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+      else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
   }
 
-  @NonNull
-  @Override
-  public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-    switch (id) {
-      case R.id.loader_id_load_info_about_pgp_contacts_to:
-        pgpContactsTo.clear();
-        progressBarTo.setVisibility(View.VISIBLE);
-        isUpdateToCompleted = false;
-        return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(), recipientsTo.getChipAndTokenValues());
+  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
+    when (id) {
+      R.id.loader_id_load_info_about_pgp_contacts_to -> {
+        pgpContactsTo!!.clear()
+        progressBarTo!!.visibility = View.VISIBLE
+        isUpdateToCompleted = false
+        return UpdateInfoAboutPgpContactsAsyncTaskLoader(context!!, recipientsTo!!.chipAndTokenValues)
+      }
 
-      case R.id.loader_id_load_info_about_pgp_contacts_cc:
-        pgpContactsCc.clear();
-        progressBarCc.setVisibility(View.VISIBLE);
-        isUpdateCcCompleted = false;
-        return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(), recipientsCc.getChipAndTokenValues());
+      R.id.loader_id_load_info_about_pgp_contacts_cc -> {
+        pgpContactsCc!!.clear()
+        progressBarCc!!.visibility = View.VISIBLE
+        isUpdateCcCompleted = false
+        return UpdateInfoAboutPgpContactsAsyncTaskLoader(context!!, recipientsCc!!.chipAndTokenValues)
+      }
 
-      case R.id.loader_id_load_info_about_pgp_contacts_bcc:
-        pgpContactsBcc.clear();
-        progressBarBcc.setVisibility(View.VISIBLE);
-        isUpdateBccCompleted = false;
-        return new UpdateInfoAboutPgpContactsAsyncTaskLoader(getContext(), recipientsBcc.getChipAndTokenValues());
+      R.id.loader_id_load_info_about_pgp_contacts_bcc -> {
+        pgpContactsBcc!!.clear()
+        progressBarBcc!!.visibility = View.VISIBLE
+        isUpdateBccCompleted = false
+        return UpdateInfoAboutPgpContactsAsyncTaskLoader(context!!, recipientsBcc!!.chipAndTokenValues)
+      }
 
-      case R.id.loader_id_load_email_aliases:
-        return new LoadGmailAliasesLoader(getContext(), account);
+      R.id.loader_id_load_email_aliases -> return LoadGmailAliasesLoader(context!!, account!!)
 
-      default:
-        return super.onCreateLoader(id, args);
+      else -> return super.onCreateLoader(id, args)
     }
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public void onSuccess(int loaderId, Object result) {
-    switch (loaderId) {
-      case R.id.loader_id_load_info_about_pgp_contacts_to:
-        isUpdateToCompleted = true;
-        pgpContactsTo = getInfoAboutPgpContacts((UpdateInfoAboutPgpContactsResult) result, progressBarTo, R.string.to);
+  override fun onSuccess(loaderId: Int, result: Any?) {
+    when (loaderId) {
+      R.id.loader_id_load_info_about_pgp_contacts_to -> {
+        isUpdateToCompleted = true
+        pgpContactsTo = getInfoAboutPgpContacts(result as UpdateInfoAboutPgpContactsResult?, progressBarTo!!, R.string.to)
 
-        if (pgpContactsTo != null && !pgpContactsTo.isEmpty()) {
-          updateChips(recipientsTo, pgpContactsTo);
+        if (pgpContactsTo != null && pgpContactsTo!!.isNotEmpty()) {
+          updateChips(recipientsTo!!, pgpContactsTo!!)
         }
-        break;
+      }
 
-      case R.id.loader_id_load_info_about_pgp_contacts_cc:
-        isUpdateCcCompleted = true;
-        pgpContactsCc = getInfoAboutPgpContacts((UpdateInfoAboutPgpContactsResult) result, progressBarCc, R.string.cc);
+      R.id.loader_id_load_info_about_pgp_contacts_cc -> {
+        isUpdateCcCompleted = true
+        pgpContactsCc = getInfoAboutPgpContacts(result as UpdateInfoAboutPgpContactsResult?, progressBarCc!!, R.string.cc)
 
-        if (pgpContactsCc != null && !pgpContactsCc.isEmpty()) {
-          updateChips(recipientsCc, pgpContactsCc);
+        if (pgpContactsCc != null && pgpContactsCc!!.isNotEmpty()) {
+          updateChips(recipientsCc!!, pgpContactsCc!!)
         }
-        break;
+      }
 
-      case R.id.loader_id_load_info_about_pgp_contacts_bcc:
-        isUpdateBccCompleted = true;
-        pgpContactsBcc = getInfoAboutPgpContacts((UpdateInfoAboutPgpContactsResult) result,
-            progressBarBcc, R.string.bcc);
+      R.id.loader_id_load_info_about_pgp_contacts_bcc -> {
+        isUpdateBccCompleted = true
+        pgpContactsBcc = getInfoAboutPgpContacts(result as UpdateInfoAboutPgpContactsResult?,
+            progressBarBcc!!, R.string.bcc)
 
-        if (pgpContactsBcc != null && !pgpContactsBcc.isEmpty()) {
-          updateChips(recipientsBcc, pgpContactsBcc);
+        if (pgpContactsBcc != null && pgpContactsBcc!!.isNotEmpty()) {
+          updateChips(recipientsBcc!!, pgpContactsBcc!!)
         }
-        break;
+      }
 
-      case R.id.loader_id_load_email_aliases:
-        List<AccountAliasesDao> accountAliasesDaoList = (List<AccountAliasesDao>) result;
-        List<String> aliases = new ArrayList<>();
-        aliases.add(account.getEmail());
+      R.id.loader_id_load_email_aliases -> {
+        val accountAliasesDaoList = result as List<AccountAliasesDao>?
+        val aliases = ArrayList<String>()
+        aliases.add(account!!.email)
 
-        for (AccountAliasesDao accountAliasesDao : accountAliasesDaoList) {
-          aliases.add(accountAliasesDao.getSendAsEmail());
+        for ((_, _, sendAsEmail) in accountAliasesDaoList!!) {
+          sendAsEmail?.let { aliases.add(it) }
         }
 
-        fromAddrs.clear();
-        fromAddrs.addAll(aliases);
+        fromAddrs!!.clear()
+        fromAddrs!!.addAll(aliases)
 
-        for (String email : aliases) {
-          fromAddrs.updateKeyAvailability(email, !CollectionUtils.isEmpty(new UserIdEmailsKeysDaoSource()
-              .getLongIdsByEmail(getContext(), email)));
+        for (email in aliases) {
+          fromAddrs!!.updateKeyAvailability(email, !CollectionUtils.isEmpty(UserIdEmailsKeysDaoSource()
+              .getLongIdsByEmail(context!!, email)))
         }
 
         if (msgInfo != null) {
-          prepareAliasForReplyIfNeeded(aliases);
-        } else if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-          showFirstMatchedAliasWithPrvKey(aliases);
+          prepareAliasForReplyIfNeeded(aliases)
+        } else if (listener!!.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
+          showFirstMatchedAliasWithPrvKey(aliases)
         }
 
-        if (fromAddrs.getCount() == 1) {
-          if (imageButtonAliases.getVisibility() == View.VISIBLE) {
-            imageButtonAliases.setVisibility(View.INVISIBLE);
+        if (fromAddrs!!.count == 1) {
+          if (imageButtonAliases!!.visibility == View.VISIBLE) {
+            imageButtonAliases!!.visibility = View.INVISIBLE
           }
         } else {
-          if (serviceInfo == null || serviceInfo.isFromFieldEditable()) {
-            imageButtonAliases.setVisibility(View.VISIBLE);
+          if (serviceInfo == null || serviceInfo!!.isFromFieldEditable) {
+            imageButtonAliases!!.visibility = View.VISIBLE
           } else {
-            imageButtonAliases.setVisibility(View.INVISIBLE);
+            imageButtonAliases!!.visibility = View.INVISIBLE
           }
         }
 
-        new AccountAliasesDaoSource().updateAliases(getContext(), account, accountAliasesDaoList);
-        break;
+        AccountAliasesDaoSource().updateAliases(context!!, account!!, accountAliasesDaoList)
+      }
 
-      default:
-        super.onSuccess(loaderId, result);
+      else -> super.onSuccess(loaderId, result)
     }
   }
 
-  @Override
-  public void onError(int loaderId, Exception e) {
-    switch (loaderId) {
-      case R.id.loader_id_load_info_about_pgp_contacts_to:
-        super.onError(loaderId, e);
-        isUpdateToCompleted = true;
-        progressBarTo.setVisibility(View.INVISIBLE);
-        break;
+  override fun onError(loaderId: Int, e: Exception?) {
+    when (loaderId) {
+      R.id.loader_id_load_info_about_pgp_contacts_to -> {
+        super.onError(loaderId, e)
+        isUpdateToCompleted = true
+        progressBarTo!!.visibility = View.INVISIBLE
+      }
 
-      case R.id.loader_id_load_info_about_pgp_contacts_cc:
-        super.onError(loaderId, e);
-        isUpdateCcCompleted = true;
-        progressBarCc.setVisibility(View.INVISIBLE);
-        break;
+      R.id.loader_id_load_info_about_pgp_contacts_cc -> {
+        super.onError(loaderId, e)
+        isUpdateCcCompleted = true
+        progressBarCc!!.visibility = View.INVISIBLE
+      }
 
-      case R.id.loader_id_load_info_about_pgp_contacts_bcc:
-        super.onError(loaderId, e);
-        isUpdateBccCompleted = true;
-        progressBarBcc.setVisibility(View.INVISIBLE);
-        break;
-
-      case R.id.loader_id_load_email_aliases:
-        break;
-    }
-  }
-
-  @Override
-  public void onLoaderReset(Loader<LoaderResult> loader) {
-    super.onLoaderReset(loader);
-  }
-
-  @Override
-  public void onFocusChange(View v, boolean hasFocus) {
-    switch (v.getId()) {
-      case R.id.editTextRecipientTo:
-        runUpdatePgpContactsAction(pgpContactsTo, progressBarTo, R.id.loader_id_load_info_about_pgp_contacts_to,
-            hasFocus);
-        break;
-
-      case R.id.editTextRecipientCc:
-        runUpdatePgpContactsAction(pgpContactsCc, progressBarCc, R.id.loader_id_load_info_about_pgp_contacts_cc,
-            hasFocus);
-        break;
-
-      case R.id.editTextRecipientBcc:
-        runUpdatePgpContactsAction(pgpContactsBcc, progressBarBcc, R.id.loader_id_load_info_about_pgp_contacts_bcc,
-            hasFocus);
-        break;
-
-      case R.id.editTextEmailSubject:
-      case R.id.editTextEmailMessage:
-        if (hasFocus) {
-          boolean isExpandButtonNeeded = false;
-          if (TextUtils.isEmpty(recipientsCc.getText())) {
-            layoutCc.setVisibility(View.GONE);
-            isExpandButtonNeeded = true;
-          }
-
-          if (TextUtils.isEmpty(recipientsBcc.getText())) {
-            layoutBcc.setVisibility(View.GONE);
-            isExpandButtonNeeded = true;
-          }
-
-          if (isExpandButtonNeeded) {
-            imageButtonAdditionalRecipientsVisibility.setVisibility(View.VISIBLE);
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-            layoutParams.gravity = Gravity.TOP | Gravity.END;
-            progressBarAndButtonLayout.setLayoutParams(layoutParams);
-          }
-        }
-        break;
-    }
-  }
-
-  @Override
-  public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-    switch (parent.getId()) {
-      case R.id.spinnerFrom:
-        editTextFrom.setText((CharSequence) parent.getAdapter().getItem(position));
-        if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-          ArrayAdapter adapter = (ArrayAdapter) parent.getAdapter();
-          int colorGray = UIUtil.getColor(getContext(), R.color.gray);
-          editTextFrom.setTextColor(adapter.isEnabled(position) ? originalColor : colorGray);
-        } else {
-          editTextFrom.setTextColor(originalColor);
-        }
-        break;
-    }
-  }
-
-  @Override
-  public void onNothingSelected(AdapterView<?> parent) {
-
-  }
-
-  @Override
-  public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.imageButtonAliases:
-        if (fromAddrs.getCount() > 1) {
-          spinnerFrom.performClick();
-        }
-        break;
-
-      case R.id.imageButtonAdditionalRecipientsVisibility:
-        layoutCc.setVisibility(View.VISIBLE);
-        layoutBcc.setVisibility(View.VISIBLE);
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.MATCH_PARENT);
-        layoutParams.gravity = Gravity.TOP | Gravity.END;
-
-        progressBarAndButtonLayout.setLayoutParams(layoutParams);
-        v.setVisibility(View.GONE);
-        recipientsCc.requestFocus();
-        break;
-    }
-  }
-
-  @Override
-  public void onChipLongClick(NachoTextView nachoTextView, @NonNull Chip chip, MotionEvent event) {
-  }
-
-  public void onMsgEncryptionTypeChange(MessageEncryptionType messageEncryptionType) {
-    String emailMassageHint = null;
-    if (messageEncryptionType != null) {
-      switch (messageEncryptionType) {
-        case ENCRYPTED:
-          emailMassageHint = getString(R.string.prompt_compose_security_email);
-          recipientsTo.getOnFocusChangeListener().onFocusChange(recipientsTo, false);
-          recipientsCc.getOnFocusChangeListener().onFocusChange(recipientsCc, false);
-          recipientsBcc.getOnFocusChangeListener().onFocusChange(recipientsBcc, false);
-          fromAddrs.setUseKeysInfo(true);
-
-          int colorGray = UIUtil.getColor(getContext(), R.color.gray);
-          boolean isItemEnabled = fromAddrs.isEnabled(spinnerFrom.getSelectedItemPosition());
-          editTextFrom.setTextColor(isItemEnabled ? originalColor : colorGray);
-
-          break;
-
-        case STANDARD:
-          emailMassageHint = getString(R.string.prompt_compose_standard_email);
-          pgpContactsTo.clear();
-          pgpContactsCc.clear();
-          pgpContactsBcc.clear();
-          isUpdateToCompleted = true;
-          isUpdateCcCompleted = true;
-          isUpdateBccCompleted = true;
-          fromAddrs.setUseKeysInfo(false);
-          editTextFrom.setTextColor(originalColor);
-          break;
+      R.id.loader_id_load_info_about_pgp_contacts_bcc -> {
+        super.onError(loaderId, e)
+        isUpdateBccCompleted = true
+        progressBarBcc!!.visibility = View.INVISIBLE
       }
     }
-    textInputLayoutMsg.setHint(emailMassageHint);
   }
 
-  private void attachFile() {
-    Intent intent = new Intent();
-    intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
-    intent.addCategory(Intent.CATEGORY_OPENABLE);
-    intent.setType("*/*");
+  override fun onFocusChange(v: View, hasFocus: Boolean) {
+    when (v.id) {
+      R.id.editTextRecipientTo -> runUpdatePgpContactsAction(pgpContactsTo, progressBarTo, R.id.loader_id_load_info_about_pgp_contacts_to,
+          hasFocus)
+
+      R.id.editTextRecipientCc -> runUpdatePgpContactsAction(pgpContactsCc, progressBarCc, R.id.loader_id_load_info_about_pgp_contacts_cc,
+          hasFocus)
+
+      R.id.editTextRecipientBcc -> runUpdatePgpContactsAction(pgpContactsBcc, progressBarBcc, R.id.loader_id_load_info_about_pgp_contacts_bcc,
+          hasFocus)
+
+      R.id.editTextEmailSubject, R.id.editTextEmailMessage -> if (hasFocus) {
+        var isExpandButtonNeeded = false
+        if (TextUtils.isEmpty(recipientsCc!!.text)) {
+          layoutCc!!.visibility = View.GONE
+          isExpandButtonNeeded = true
+        }
+
+        if (TextUtils.isEmpty(recipientsBcc!!.text)) {
+          layoutBcc!!.visibility = View.GONE
+          isExpandButtonNeeded = true
+        }
+
+        if (isExpandButtonNeeded) {
+          imageButtonAdditionalRecipientsVisibility!!.visibility = View.VISIBLE
+          val layoutParams = FrameLayout.LayoutParams(
+              FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT)
+          layoutParams.gravity = Gravity.TOP or Gravity.END
+          progressBarAndButtonLayout!!.layoutParams = layoutParams
+        }
+      }
+    }
+  }
+
+  override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+    when (parent.id) {
+      R.id.spinnerFrom -> {
+        editTextFrom!!.setText(parent.adapter.getItem(position) as CharSequence)
+        if (listener!!.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
+          val adapter = parent.adapter as ArrayAdapter<*>
+          val colorGray = UIUtil.getColor(context!!, R.color.gray)
+          editTextFrom!!.setTextColor(if (adapter.isEnabled(position)) originalColor else colorGray)
+        } else {
+          editTextFrom!!.setTextColor(originalColor)
+        }
+      }
+    }
+  }
+
+  override fun onNothingSelected(parent: AdapterView<*>) {
+
+  }
+
+  override fun onClick(v: View) {
+    when (v.id) {
+      R.id.imageButtonAliases -> if (fromAddrs!!.count > 1) {
+        spinnerFrom!!.performClick()
+      }
+
+      R.id.imageButtonAdditionalRecipientsVisibility -> {
+        layoutCc!!.visibility = View.VISIBLE
+        layoutBcc!!.visibility = View.VISIBLE
+        val layoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.MATCH_PARENT)
+        layoutParams.gravity = Gravity.TOP or Gravity.END
+
+        progressBarAndButtonLayout!!.layoutParams = layoutParams
+        v.visibility = View.GONE
+        recipientsCc!!.requestFocus()
+      }
+    }
+  }
+
+  override fun onChipLongClick(nachoTextView: NachoTextView, chip: Chip, event: MotionEvent) {}
+
+  fun onMsgEncryptionTypeChange(messageEncryptionType: MessageEncryptionType?) {
+    var emailMassageHint: String? = null
+    if (messageEncryptionType != null) {
+      when (messageEncryptionType) {
+        MessageEncryptionType.ENCRYPTED -> {
+          emailMassageHint = getString(R.string.prompt_compose_security_email)
+          recipientsTo!!.onFocusChangeListener.onFocusChange(recipientsTo, false)
+          recipientsCc!!.onFocusChangeListener.onFocusChange(recipientsCc, false)
+          recipientsBcc!!.onFocusChangeListener.onFocusChange(recipientsBcc, false)
+          fromAddrs!!.setUseKeysInfo(true)
+
+          val colorGray = UIUtil.getColor(context!!, R.color.gray)
+          val isItemEnabled = fromAddrs!!.isEnabled(spinnerFrom!!.selectedItemPosition)
+          editTextFrom!!.setTextColor(if (isItemEnabled) originalColor else colorGray)
+        }
+
+        MessageEncryptionType.STANDARD -> {
+          emailMassageHint = getString(R.string.prompt_compose_standard_email)
+          pgpContactsTo!!.clear()
+          pgpContactsCc!!.clear()
+          pgpContactsBcc!!.clear()
+          isUpdateToCompleted = true
+          isUpdateCcCompleted = true
+          isUpdateBccCompleted = true
+          fromAddrs!!.setUseKeysInfo(false)
+          editTextFrom!!.setTextColor(originalColor)
+        }
+      }
+    }
+    textInputLayoutMsg!!.hint = emailMassageHint
+  }
+
+  private fun attachFile() {
+    val intent = Intent()
+    intent.action = Intent.ACTION_OPEN_DOCUMENT
+    intent.addCategory(Intent.CATEGORY_OPENABLE)
+    intent.type = "*/*"
     startActivityForResult(Intent.createChooser(intent, getString(R.string.choose_attachment)),
-        REQUEST_CODE_GET_CONTENT_FOR_SENDING);
+        REQUEST_CODE_GET_CONTENT_FOR_SENDING)
   }
 
-  private void initExtras(Intent intent) {
+  private fun initExtras(intent: Intent?) {
     if (intent != null) {
       if (intent.hasExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE)) {
-        this.messageType = (MessageType) intent.getSerializableExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE);
+        this.messageType = intent.getSerializableExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE) as MessageType
       }
 
-      if (!TextUtils.isEmpty(intent.getAction()) && intent.getAction().startsWith("android.intent.action")) {
-        this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(getContext(), intent);
+      if (!TextUtils.isEmpty(intent.action) && intent.action!!.startsWith("android.intent.action")) {
+        this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(context!!, intent)
 
-        if (hasExternalStorageUris(extraActionInfo.getAtts())) {
-          boolean isPermissionGranted = ContextCompat.checkSelfPermission(getContext(),
-              Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
+        if (hasExternalStorageUris(extraActionInfo!!.atts)) {
+          val isPermissionGranted = ContextCompat.checkSelfPermission(context!!,
+              Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
           if (isPermissionGranted) {
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO);
+            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO)
           } else {
-            addAtts();
+            addAtts()
           }
         } else {
-          addAtts();
+          addAtts()
         }
       } else {
-        this.serviceInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_SERVICE_INFO);
-        this.msgInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO);
+        this.serviceInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_SERVICE_INFO)
+        this.msgInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO)
 
-        if (msgInfo != null && msgInfo.getLocalFolder() != null) {
-          this.folderType = FoldersManager.getFolderType(msgInfo.getLocalFolder());
+        if (msgInfo != null && msgInfo!!.localFolder != null) {
+          this.folderType = FoldersManager.getFolderType(msgInfo!!.localFolder)
         }
 
-        if (this.serviceInfo != null && this.serviceInfo.getAtts() != null) {
-          atts.addAll(this.serviceInfo.getAtts());
+        if (this.serviceInfo != null && this.serviceInfo!!.atts != null) {
+          atts!!.addAll(this.serviceInfo!!.atts!!)
         }
       }
     }
   }
 
-  private void initDraftCacheDir() {
-    draftCacheDir = new File(getContext().getCacheDir(), Constants.DRAFT_CACHE_DIR);
+  private fun initDraftCacheDir() {
+    draftCacheDir = File(context!!.cacheDir, Constants.DRAFT_CACHE_DIR)
 
-    if (!draftCacheDir.exists()) {
-      if (!draftCacheDir.mkdir()) {
-        Log.e(TAG, "Create cache directory " + draftCacheDir.getName() + " filed!");
+    if (!draftCacheDir!!.exists()) {
+      if (!draftCacheDir!!.mkdir()) {
+        Log.e(TAG, "Create cache directory " + draftCacheDir!!.name + " filed!")
       }
     }
   }
 
-  private void addAtts() {
-    String sizeWarningMsg = getString(R.string.template_warning_max_total_attachments_size,
-        FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES));
+  private fun addAtts() {
+    val sizeWarningMsg = getString(R.string.template_warning_max_total_attachments_size,
+        FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES.toLong()))
 
-    for (AttachmentInfo attachmentInfo : extraActionInfo.getAtts()) {
+    for (attachmentInfo in extraActionInfo!!.atts) {
       if (hasAbilityToAddAtt(attachmentInfo)) {
 
-        if (TextUtils.isEmpty(attachmentInfo.getName())) {
-          String msg = "attachmentInfo.getName() == null, uri = " + attachmentInfo.getUri();
-          ExceptionUtil.handleError(new NullPointerException(msg));
-          continue;
+        if (TextUtils.isEmpty(attachmentInfo.name)) {
+          val msg = "attachmentInfo.getName() == null, uri = " + attachmentInfo.uri!!
+          ExceptionUtil.handleError(NullPointerException(msg))
+          continue
         }
 
-        File draftAtt = new File(draftCacheDir, attachmentInfo.getName());
+        val draftAtt = File(draftCacheDir, attachmentInfo.name)
 
         try {
-          InputStream inputStream = getContext().getContentResolver().openInputStream(attachmentInfo.getUri());
+          val inputStream = context!!.contentResolver.openInputStream(attachmentInfo.uri!!)
 
           if (inputStream != null) {
-            FileUtils.copyInputStreamToFile(inputStream, draftAtt);
-            Uri uri = FileProvider.getUriForFile(getContext(), Constants.FILE_PROVIDER_AUTHORITY, draftAtt);
-            attachmentInfo.setUri(uri);
-            atts.add(attachmentInfo);
+            FileUtils.copyInputStreamToFile(inputStream, draftAtt)
+            val uri = FileProvider.getUriForFile(context!!, Constants.FILE_PROVIDER_AUTHORITY, draftAtt)
+            attachmentInfo.uri = uri
+            atts!!.add(attachmentInfo)
           }
-        } catch (IOException e) {
-          e.printStackTrace();
-          ExceptionUtil.handleError(e);
+        } catch (e: IOException) {
+          e.printStackTrace()
+          ExceptionUtil.handleError(e)
 
           if (!draftAtt.delete()) {
-            Log.e(TAG, "Delete " + draftAtt.getName() + " filed!");
+            Log.e(TAG, "Delete " + draftAtt.name + " filed!")
           }
         }
+
       } else {
-        Toast.makeText(getContext(), sizeWarningMsg, Toast.LENGTH_SHORT).show();
-        break;
+        Toast.makeText(context, sizeWarningMsg, Toast.LENGTH_SHORT).show()
+        break
       }
     }
   }
 
-  private void updateRecipients() {
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_info_about_pgp_contacts_to, null, this);
+  private fun updateRecipients() {
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_info_about_pgp_contacts_to, null, this)
 
-    if (layoutCc.getVisibility() == View.VISIBLE) {
-      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_info_about_pgp_contacts_cc, null, this);
+    if (layoutCc!!.visibility == View.VISIBLE) {
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_info_about_pgp_contacts_cc, null, this)
     } else {
-      recipientsCc.setText((CharSequence) null);
-      pgpContactsCc.clear();
+      recipientsCc!!.setText(null as CharSequence?)
+      pgpContactsCc!!.clear()
     }
 
-    if (layoutBcc.getVisibility() == View.VISIBLE) {
-      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_info_about_pgp_contacts_bcc, null, this);
+    if (layoutBcc!!.visibility == View.VISIBLE) {
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_info_about_pgp_contacts_bcc, null, this)
     } else {
-      recipientsBcc.setText((CharSequence) null);
-      pgpContactsBcc.clear();
+      recipientsBcc!!.setText(null as CharSequence?)
+      pgpContactsBcc!!.clear()
     }
   }
 
   /**
-   * Get information about some {@link PgpContact}s.
+   * Get information about some [PgpContact]s.
    *
    * @param result                  An API result (lookup API).
-   * @param progressBar             A {@link ProgressBar} which is showing an action progress.
+   * @param progressBar             A [ProgressBar] which is showing an action progress.
    * @param additionalToastStringId A hint string id.
    */
-  private List<PgpContact> getInfoAboutPgpContacts(UpdateInfoAboutPgpContactsResult result,
-                                                   View progressBar, int additionalToastStringId) {
-    progressBar.setVisibility(View.INVISIBLE);
+  private fun getInfoAboutPgpContacts(result: UpdateInfoAboutPgpContactsResult?,
+                                      progressBar: View, additionalToastStringId: Int): MutableList<PgpContact>? {
+    progressBar.visibility = View.INVISIBLE
 
-    List<PgpContact> pgpContacts = null;
+    var pgpContacts: MutableList<PgpContact>? = null
 
-    if (result != null && result.getUpdatedPgpContacts() != null) {
-      pgpContacts = result.getUpdatedPgpContacts();
+    if (result?.updatedPgpContacts != null) {
+      pgpContacts = result.updatedPgpContacts.toMutableList()
     }
 
-    if (result == null || !result.isAllInfoReceived()) {
-      Toast.makeText(getContext(), getString(R.string.info_about_some_contacts_not_received,
-          getString(additionalToastStringId)), Toast.LENGTH_SHORT).show();
+    if (result == null || !result.isAllInfoReceived) {
+      Toast.makeText(context, getString(R.string.info_about_some_contacts_not_received,
+          getString(additionalToastStringId)), Toast.LENGTH_SHORT).show()
     }
 
-    return pgpContacts;
+    return pgpContacts
   }
 
   /**
-   * Run an action to update information about some {@link PgpContact}s.
+   * Run an action to update information about some [PgpContact]s.
    *
-   * @param pgpContacts Old {@link PgpContact}s
-   * @param progressBar A {@link ProgressBar} which is showing an action progress.
+   * @param pgpContacts Old [PgpContact]s
+   * @param progressBar A [ProgressBar] which is showing an action progress.
    * @param loaderId    A loader id.
    * @param hasFocus    A value which indicates the view focus.
    * @return A modified contacts list.
    */
-  private List<PgpContact> runUpdatePgpContactsAction(List<PgpContact> pgpContacts, View progressBar,
-                                                      int loaderId, boolean hasFocus) {
-    if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-      progressBar.setVisibility(hasFocus ? View.INVISIBLE : View.VISIBLE);
+  private fun runUpdatePgpContactsAction(pgpContacts: MutableList<PgpContact>?, progressBar: View?,
+                                         loaderId: Int, hasFocus: Boolean): List<PgpContact>? {
+    if (listener!!.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
+      progressBar!!.visibility = if (hasFocus) View.INVISIBLE else View.VISIBLE
       if (hasFocus) {
-        pgpContacts.clear();
+        pgpContacts!!.clear()
       } else {
         if (isContactsUpdateEnabled) {
-          if (isAdded()) {
-            LoaderManager.getInstance(this).restartLoader(loaderId, null, this);
+          if (isAdded) {
+            LoaderManager.getInstance(this).restartLoader(loaderId, null, this)
           }
         } else {
-          progressBar.setVisibility(View.INVISIBLE);
+          progressBar.visibility = View.INVISIBLE
         }
       }
     }
 
-    return pgpContacts;
+    return pgpContacts
   }
 
   /**
@@ -861,87 +896,59 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    *
    * @param aliases A list of Gmail aliases.
    */
-  private void prepareAliasForReplyIfNeeded(List<String> aliases) {
-    MessageEncryptionType messageEncryptionType = listener.getMsgEncryptionType();
+  private fun prepareAliasForReplyIfNeeded(aliases: List<String>) {
+    val messageEncryptionType = listener!!.msgEncryptionType
 
-    List<InternetAddress> toAddresses;
-    if (folderType == FoldersManager.FolderType.SENT) {
-      toAddresses = msgInfo.getFrom();
+    val toAddresses: List<InternetAddress>? = if (folderType === FoldersManager.FolderType.SENT) {
+      msgInfo!!.getFrom()
     } else {
-      toAddresses = msgInfo.getTo();
+      msgInfo!!.getTo()
     }
 
     if (!CollectionUtils.isEmpty(toAddresses)) {
-      String firstFoundedAlias = null;
-      for (InternetAddress toAddress : toAddresses) {
+      var firstFoundedAlias: String? = null
+      for (toAddress in toAddresses!!) {
         if (firstFoundedAlias == null) {
-          for (String alias : aliases) {
-            if (alias.equalsIgnoreCase(toAddress.getAddress())) {
-              if (messageEncryptionType == MessageEncryptionType.ENCRYPTED && fromAddrs.hasPrvKey(alias)) {
-                firstFoundedAlias = alias;
+          for (alias in aliases) {
+            if (alias.equals(toAddress.address, ignoreCase = true)) {
+              firstFoundedAlias = if (messageEncryptionType === MessageEncryptionType.ENCRYPTED
+                  && fromAddrs!!.hasPrvKey(alias)) {
+                alias
               } else {
-                firstFoundedAlias = alias;
+                alias
               }
-              break;
+              break
             }
           }
         } else {
-          break;
+          break
         }
       }
 
       if (firstFoundedAlias != null) {
-        int position = fromAddrs.getPosition(firstFoundedAlias);
+        val position = fromAddrs!!.getPosition(firstFoundedAlias)
         if (position != -1) {
-          spinnerFrom.setSelection(position);
+          spinnerFrom!!.setSelection(position)
         }
       }
     }
   }
 
-  private void showFirstMatchedAliasWithPrvKey(List<String> aliases) {
-    String firstFoundedAliasWithPrvKey = null;
-    for (String alias : aliases) {
-      if (fromAddrs.hasPrvKey(alias)) {
-        firstFoundedAliasWithPrvKey = alias;
-        break;
+  private fun showFirstMatchedAliasWithPrvKey(aliases: List<String>) {
+    var firstFoundedAliasWithPrvKey: String? = null
+    for (alias in aliases) {
+      if (fromAddrs!!.hasPrvKey(alias)) {
+        firstFoundedAliasWithPrvKey = alias
+        break
       }
     }
 
     if (firstFoundedAliasWithPrvKey != null) {
-      int position = fromAddrs.getPosition(firstFoundedAliasWithPrvKey);
+      val position = fromAddrs!!.getPosition(firstFoundedAliasWithPrvKey)
       if (position != -1) {
-        spinnerFrom.setSelection(position);
+        spinnerFrom!!.setSelection(position)
       }
     }
-  }
-
-  /**
-   * Generate an outgoing message info from entered information by user.
-   *
-   * @return <tt>OutgoingMessageInfo</tt> Return a created OutgoingMessageInfo object which
-   * contains information about an outgoing message.
-   */
-  private OutgoingMessageInfo getOutgoingMsgInfo() {
-    OutgoingMessageInfo messageInfo = new OutgoingMessageInfo();
-    /*if (msgInfo != null && !TextUtils.isEmpty(msgInfo.getHtmlMsgBlock())) {
-      //todo-denbond7 Need to think how forward HTML
-    }*/
-    messageInfo.setMsg(editTextEmailMsg.getText().toString());
-    messageInfo.setSubject(editTextEmailSubject.getText().toString());
-
-    if (msgInfo != null && !TextUtils.isEmpty(msgInfo.getOrigRawMsgWithoutAtts())) {
-      messageInfo.setRawReplyMsg(TextUtils.substring(msgInfo.getOrigRawMsgWithoutAtts(), 0, Math.min(10000,
-          msgInfo.getOrigRawMsgWithoutAtts().length())));
-    }
-
-    messageInfo.setToRecipients(recipientsTo.getChipValues());
-    messageInfo.setCcRecipients(recipientsCc.getChipValues());
-    messageInfo.setBccRecipients(recipientsBcc.getChipValues());
-    messageInfo.setFrom(editTextFrom.getText().toString());
-    messageInfo.setUid(EmailUtil.genOutboxUID(getContext()));
-
-    return messageInfo;
   }
 
   /**
@@ -949,181 +956,100 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    *
    * @return true if all recipients have PGP, other wise false.
    */
-  private boolean hasRecipientWithoutPgp(boolean isRemoveActionEnabled, List<PgpContact> pgpContacts) {
-    for (PgpContact pgpContact : pgpContacts) {
-      if (!pgpContact.getHasPgp()) {
-        showNoPgpFoundDialog(pgpContact, isRemoveActionEnabled);
-        return true;
+  private fun hasRecipientWithoutPgp(isRemoveActionEnabled: Boolean, pgpContacts: List<PgpContact>): Boolean {
+    for (pgpContact in pgpContacts) {
+      if (!pgpContact.hasPgp) {
+        showNoPgpFoundDialog(pgpContact, isRemoveActionEnabled)
+        return true
       }
     }
 
-    return false;
+    return false
   }
 
   /**
    * This method does update chips in the recipients field.
    *
-   * @param view        A view which contains input {@link PgpContact}(s).
-   * @param pgpContacts The input {@link PgpContact}(s)
+   * @param view        A view which contains input [PgpContact](s).
+   * @param pgpContacts The input [PgpContact](s)
    */
-  private void updateChips(PgpContactsNachoTextView view, List<PgpContact> pgpContacts) {
-    SpannableStringBuilder builder = new SpannableStringBuilder(view.getText());
+  private fun updateChips(view: PgpContactsNachoTextView, pgpContacts: List<PgpContact>) {
+    val builder = SpannableStringBuilder(view.text)
 
-    PGPContactChipSpan[] pgpContactChipSpans = builder.getSpans(0, view.length(), PGPContactChipSpan.class);
+    val pgpContactChipSpans = builder.getSpans(0, view.length(), PGPContactChipSpan::class.java)
 
-    if (pgpContactChipSpans.length > 0) {
-      for (PgpContact pgpContact : pgpContacts) {
-        for (PGPContactChipSpan pgpContactChipSpan : pgpContactChipSpans) {
-          if (pgpContact.getEmail().equalsIgnoreCase(pgpContactChipSpan.getText().toString())) {
-            pgpContactChipSpan.setHasPgp(pgpContact.getHasPgp());
-            break;
+    if (pgpContactChipSpans.isNotEmpty()) {
+      for ((email, _, _, hasPgp) in pgpContacts) {
+        for (pgpContactChipSpan in pgpContactChipSpans) {
+          if (email.equals(pgpContactChipSpan.text.toString(), ignoreCase = true)) {
+            pgpContactChipSpan.setHasPgp(hasPgp)
+            break
           }
         }
       }
-      view.invalidateChips();
+      view.invalidateChips()
     }
   }
 
   /**
-   * Init an input {@link NachoTextView} using custom settings.
+   * Init an input [NachoTextView] using custom settings.
    *
-   * @param pgpContactsNachoTextView An input {@link NachoTextView}
+   * @param pgpContactsNachoTextView An input [NachoTextView]
    */
-  private void initChipsView(PgpContactsNachoTextView pgpContactsNachoTextView) {
-    pgpContactsNachoTextView.setNachoValidator(new ChipifyingNachoValidator());
-    pgpContactsNachoTextView.setIllegalCharacters(',');
-    pgpContactsNachoTextView.addChipTerminator(' ', ChipTerminatorHandler.BEHAVIOR_CHIPIFY_TO_TERMINATOR);
-    pgpContactsNachoTextView.setChipTokenizer(new SingleCharacterSpanChipTokenizer(getContext(),
-        new CustomChipSpanChipCreator(getContext()), PGPContactChipSpan.class));
-    pgpContactsNachoTextView.setAdapter(preparePgpContactAdapter());
-    pgpContactsNachoTextView.setOnFocusChangeListener(this);
-    pgpContactsNachoTextView.setListener(this);
+  private fun initChipsView(pgpContactsNachoTextView: PgpContactsNachoTextView) {
+    pgpContactsNachoTextView.setNachoValidator(ChipifyingNachoValidator())
+    pgpContactsNachoTextView.setIllegalCharacters(',')
+    pgpContactsNachoTextView.addChipTerminator(' ', ChipTerminatorHandler.BEHAVIOR_CHIPIFY_TO_TERMINATOR)
+    pgpContactsNachoTextView.chipTokenizer = SingleCharacterSpanChipTokenizer(context!!,
+        CustomChipSpanChipCreator(context!!), PGPContactChipSpan::class.java)
+    pgpContactsNachoTextView.setAdapter(preparePgpContactAdapter())
+    pgpContactsNachoTextView.onFocusChangeListener = this
+    pgpContactsNachoTextView.setListener(this)
   }
 
-  /**
-   * Do a lot of checks to validate an outgoing message info.
-   *
-   * @return <tt>Boolean</tt> true if all information is correct, false otherwise.
-   */
-  private boolean isDataCorrect() {
-    recipientsTo.chipifyAllUnterminatedTokens();
-    recipientsCc.chipifyAllUnterminatedTokens();
-    recipientsBcc.chipifyAllUnterminatedTokens();
-
-    if (!fromAddrs.isEnabled(spinnerFrom.getSelectedItemPosition())) {
-      showInfoSnackbar(recipientsTo, getString(R.string.no_key_available));
-      return false;
-    }
-
-    if (TextUtils.isEmpty(recipientsTo.getText().toString())) {
-      showInfoSnackbar(recipientsTo, getString(R.string.text_must_not_be_empty,
-          getString(R.string.prompt_recipients_to)));
-      recipientsTo.requestFocus();
-      return false;
-    }
-
-    boolean hasNotValidEmail = hasNotValidEmail(recipientsTo) || hasNotValidEmail(recipientsCc)
-        || hasNotValidEmail(recipientsBcc);
-
-    if (!hasNotValidEmail) {
-      if (listener.getMsgEncryptionType() == MessageEncryptionType.ENCRYPTED) {
-        if (!TextUtils.isEmpty(recipientsTo.getText()) && pgpContactsTo.isEmpty()) {
-          showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_to);
-          return false;
-        }
-
-        if (!TextUtils.isEmpty(recipientsCc.getText()) && pgpContactsCc.isEmpty()) {
-          showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_cc);
-          return false;
-        }
-
-        if (!TextUtils.isEmpty(recipientsBcc.getText()) && pgpContactsBcc.isEmpty()) {
-          showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_bcc);
-          return false;
-        }
-
-        if (hasRecipientWithoutPgp(true, pgpContactsTo)
-            || hasRecipientWithoutPgp(true, pgpContactsCc)
-            || hasRecipientWithoutPgp(true, pgpContactsBcc)) {
-          return false;
-        }
-      }
-    } else return false;
-
-    if (TextUtils.isEmpty(editTextEmailSubject.getText().toString())) {
-      showInfoSnackbar(editTextEmailSubject, getString(R.string.text_must_not_be_empty,
-          getString(R.string.prompt_subject)));
-      editTextEmailSubject.requestFocus();
-      return false;
-    }
-
-    if ((atts != null && atts.isEmpty()) && TextUtils.isEmpty(editTextEmailMsg.getText().toString())) {
-      showInfoSnackbar(editTextEmailMsg, getString(R.string.sending_message_must_not_be_empty));
-      editTextEmailMsg.requestFocus();
-      return false;
-    }
-
-    if (atts != null && !atts.isEmpty() && hasExternalStorageUris(this.atts)) {
-      boolean isPermissionGranted = ContextCompat.checkSelfPermission(getContext(),
-          Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
-      if (isPermissionGranted) {
-        requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-            REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE);
-        return false;
+  private fun showUpdateContactsSnackBar(loaderId: Int) {
+    showSnackbar(view!!, getString(R.string.please_update_information_about_contacts),
+        getString(R.string.update), Snackbar.LENGTH_LONG, View.OnClickListener {
+      if (GeneralUtil.isConnected(context!!)) {
+        LoaderManager.getInstance(this@CreateMessageFragment).restartLoader(loaderId, null,
+            this@CreateMessageFragment)
       } else {
-        return true;
+        showInfoSnackbar(view!!, getString(R.string.internet_connection_is_not_available))
       }
-    } else {
-      return true;
-    }
+    })
   }
 
-  private void showUpdateContactsSnackBar(final int loaderId) {
-    showSnackbar(getView(), getString(R.string.please_update_information_about_contacts),
-        getString(R.string.update), Snackbar.LENGTH_LONG, new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            if (GeneralUtil.isConnected(getContext())) {
-              LoaderManager.getInstance(CreateMessageFragment.this).restartLoader(loaderId, null,
-                  CreateMessageFragment.this);
-            } else {
-              showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available));
-            }
-          }
-        });
-  }
-
-  private boolean hasExternalStorageUris(List<AttachmentInfo> attachmentInfoList) {
-    for (AttachmentInfo attachmentInfo : attachmentInfoList) {
-      if (attachmentInfo.getUri() != null
-          && ContentResolver.SCHEME_FILE.equalsIgnoreCase(attachmentInfo.getUri().getScheme())) {
-        return true;
+  private fun hasExternalStorageUris(attachmentInfoList: List<AttachmentInfo>): Boolean {
+    for ((_, _, _, _, _, _, _, _, _, _, uri) in attachmentInfoList) {
+      if (uri != null && ContentResolver.SCHEME_FILE.equals(uri.scheme!!, ignoreCase = true)) {
+        return true
       }
     }
-    return false;
+    return false
   }
 
   /**
-   * Remove the current {@link PgpContact} from recipients.
+   * Remove the current [PgpContact] from recipients.
    *
-   * @param pgpContact               The {@link PgpContact} which will be removed.
-   * @param pgpContactsNachoTextView The {@link NachoTextView} which contains the delete candidate.
+   * @param pgpContact               The [PgpContact] which will be removed.
+   * @param pgpContactsNachoTextView The [NachoTextView] which contains the delete candidate.
    * @param pgpContacts              The list which contains the delete candidate.
    */
-  private void removePgpContact(PgpContact pgpContact, PgpContactsNachoTextView pgpContactsNachoTextView,
-                                List<PgpContact> pgpContacts) {
-    ChipTokenizer chipTokenizer = pgpContactsNachoTextView.getChipTokenizer();
-    for (Chip chip : pgpContactsNachoTextView.getAllChips()) {
-      if (pgpContact.getEmail()
-          .equalsIgnoreCase(chip.getText().toString()) && chipTokenizer != null) {
-        chipTokenizer.deleteChip(chip, pgpContactsNachoTextView.getText());
+  private fun removePgpContact(pgpContact: PgpContact, pgpContactsNachoTextView: PgpContactsNachoTextView,
+                               pgpContacts: MutableList<PgpContact>?) {
+    val chipTokenizer = pgpContactsNachoTextView.chipTokenizer
+    for (chip in pgpContactsNachoTextView.allChips) {
+      if (pgpContact.email
+              .equals(chip.text.toString(), ignoreCase = true) && chipTokenizer != null) {
+        chipTokenizer.deleteChip(chip, pgpContactsNachoTextView.text)
       }
     }
 
-    for (Iterator<PgpContact> iterator = pgpContacts.iterator(); iterator.hasNext(); ) {
-      PgpContact next = iterator.next();
-      if (next.getEmail().equalsIgnoreCase(next.getEmail())) {
-        iterator.remove();
+    val iterator = pgpContacts!!.iterator()
+    while (iterator.hasNext()) {
+      val next = iterator.next()
+      if (next.email.equals(next.email, ignoreCase = true)) {
+        iterator.remove()
       }
     }
   }
@@ -1133,362 +1059,338 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    *
    * @param view The root fragment view.
    */
-  private void initViews(View view) {
-    layoutContent = view.findViewById(R.id.scrollView);
-    layoutAtts = view.findViewById(R.id.layoutAtts);
-    layoutCc = view.findViewById(R.id.layoutCc);
-    layoutBcc = view.findViewById(R.id.layoutBcc);
-    progressBarAndButtonLayout = view.findViewById(R.id.progressBarAndButtonLayout);
+  private fun initViews(view: View) {
+    layoutContent = view.findViewById(R.id.scrollView)
+    layoutAtts = view.findViewById(R.id.layoutAtts)
+    layoutCc = view.findViewById(R.id.layoutCc)
+    layoutBcc = view.findViewById(R.id.layoutBcc)
+    progressBarAndButtonLayout = view.findViewById(R.id.progressBarAndButtonLayout)
 
-    recipientsTo = view.findViewById(R.id.editTextRecipientTo);
-    recipientsCc = view.findViewById(R.id.editTextRecipientCc);
-    recipientsBcc = view.findViewById(R.id.editTextRecipientBcc);
+    recipientsTo = view.findViewById(R.id.editTextRecipientTo)
+    recipientsCc = view.findViewById(R.id.editTextRecipientCc)
+    recipientsBcc = view.findViewById(R.id.editTextRecipientBcc)
 
-    initChipsView(recipientsTo);
-    initChipsView(recipientsCc);
-    initChipsView(recipientsBcc);
+    initChipsView(recipientsTo!!)
+    initChipsView(recipientsCc!!)
+    initChipsView(recipientsBcc!!)
 
-    spinnerFrom = view.findViewById(R.id.spinnerFrom);
-    spinnerFrom.setOnItemSelectedListener(this);
-    spinnerFrom.setAdapter(fromAddrs);
+    spinnerFrom = view.findViewById(R.id.spinnerFrom)
+    spinnerFrom!!.onItemSelectedListener = this
+    spinnerFrom!!.adapter = fromAddrs
 
-    editTextFrom = view.findViewById(R.id.editTextFrom);
-    originalColor = editTextFrom.getCurrentTextColor();
+    editTextFrom = view.findViewById(R.id.editTextFrom)
+    originalColor = editTextFrom!!.currentTextColor
 
-    imageButtonAliases = view.findViewById(R.id.imageButtonAliases);
+    imageButtonAliases = view.findViewById(R.id.imageButtonAliases)
     if (imageButtonAliases != null) {
-      imageButtonAliases.setOnClickListener(this);
+      imageButtonAliases!!.setOnClickListener(this)
     }
 
-    imageButtonAdditionalRecipientsVisibility = view.findViewById(R.id.imageButtonAdditionalRecipientsVisibility);
+    imageButtonAdditionalRecipientsVisibility = view.findViewById(R.id.imageButtonAdditionalRecipientsVisibility)
     if (imageButtonAdditionalRecipientsVisibility != null) {
-      imageButtonAdditionalRecipientsVisibility.setOnClickListener(this);
+      imageButtonAdditionalRecipientsVisibility!!.setOnClickListener(this)
     }
 
-    editTextEmailSubject = view.findViewById(R.id.editTextEmailSubject);
-    editTextEmailSubject.setOnFocusChangeListener(this);
-    editTextEmailMsg = view.findViewById(R.id.editTextEmailMessage);
-    editTextEmailMsg.setOnFocusChangeListener(this);
-    textInputLayoutMsg = view.findViewById(R.id.textInputLayoutEmailMessage);
+    editTextEmailSubject = view.findViewById(R.id.editTextEmailSubject)
+    editTextEmailSubject!!.onFocusChangeListener = this
+    editTextEmailMsg = view.findViewById(R.id.editTextEmailMessage)
+    editTextEmailMsg!!.onFocusChangeListener = this
+    textInputLayoutMsg = view.findViewById(R.id.textInputLayoutEmailMessage)
 
-    progressBarTo = view.findViewById(R.id.progressBarTo);
-    progressBarCc = view.findViewById(R.id.progressBarCc);
-    progressBarBcc = view.findViewById(R.id.progressBarBcc);
+    progressBarTo = view.findViewById(R.id.progressBarTo)
+    progressBarCc = view.findViewById(R.id.progressBarCc)
+    progressBarBcc = view.findViewById(R.id.progressBarBcc)
   }
 
   /**
    * Update views on the screen. This method can be called when we need to update the current
    * screen.
    */
-  private void updateViews() {
-    onMsgEncryptionTypeChange(listener.getMsgEncryptionType());
+  private fun updateViews() {
+    onMsgEncryptionTypeChange(listener!!.msgEncryptionType)
 
     if (extraActionInfo != null) {
-      updateViewsFromExtraActionInfo();
+      updateViewsFromExtraActionInfo()
     } else {
       if (msgInfo != null) {
-        updateViewsFromIncomingMsgInfo();
-        recipientsTo.chipifyAllUnterminatedTokens();
-        recipientsCc.chipifyAllUnterminatedTokens();
-        editTextEmailSubject.setText(prepareReplySubject(msgInfo.getSubject()));
+        updateViewsFromIncomingMsgInfo()
+        recipientsTo!!.chipifyAllUnterminatedTokens()
+        recipientsCc!!.chipifyAllUnterminatedTokens()
+        editTextEmailSubject!!.setText(prepareReplySubject(msgInfo!!.getSubject()))
       }
 
       if (serviceInfo != null) {
-        updateViewsFromServiceInfo();
+        updateViewsFromServiceInfo()
       }
     }
   }
 
-  private void updateViewsFromExtraActionInfo() {
-    setupPgpFromExtraActionInfo(recipientsTo, extraActionInfo.getToAddresses().toArray(new String[0]));
-    setupPgpFromExtraActionInfo(recipientsCc, extraActionInfo.getCcAddresses().toArray(new String[0]));
-    setupPgpFromExtraActionInfo(recipientsBcc, extraActionInfo.getBccAddresses().toArray(new String[0]));
+  private fun updateViewsFromExtraActionInfo() {
+    setupPgpFromExtraActionInfo(recipientsTo, extraActionInfo!!.toAddresses.toTypedArray())
+    setupPgpFromExtraActionInfo(recipientsCc, extraActionInfo!!.ccAddresses.toTypedArray())
+    setupPgpFromExtraActionInfo(recipientsBcc, extraActionInfo!!.bccAddresses.toTypedArray())
 
-    editTextEmailSubject.setText(extraActionInfo.getSubject());
-    editTextEmailMsg.setText(extraActionInfo.getBody());
+    editTextEmailSubject!!.setText(extraActionInfo!!.subject)
+    editTextEmailMsg!!.setText(extraActionInfo!!.body)
 
-    if (TextUtils.isEmpty(recipientsTo.getText())) {
-      recipientsTo.requestFocus();
-      return;
+    if (TextUtils.isEmpty(recipientsTo!!.text)) {
+      recipientsTo!!.requestFocus()
+      return
     }
 
-    if (TextUtils.isEmpty(editTextEmailSubject.getText())) {
-      editTextEmailSubject.requestFocus();
-      return;
+    if (TextUtils.isEmpty(editTextEmailSubject!!.text)) {
+      editTextEmailSubject!!.requestFocus()
+      return
     }
 
-    editTextEmailMsg.requestFocus();
+    editTextEmailMsg!!.requestFocus()
   }
 
-  private void updateViewsFromServiceInfo() {
-    recipientsTo.setFocusable(serviceInfo.isToFieldEditable());
-    recipientsTo.setFocusableInTouchMode(serviceInfo.isToFieldEditable());
+  private fun updateViewsFromServiceInfo() {
+    recipientsTo!!.isFocusable = serviceInfo!!.isToFieldEditable
+    recipientsTo!!.isFocusableInTouchMode = serviceInfo!!.isToFieldEditable
     //todo-denbond7 Need to add a similar option for recipientsCc and recipientsBcc
 
-    editTextEmailSubject.setFocusable(serviceInfo.isSubjectEditable());
-    editTextEmailSubject.setFocusableInTouchMode(serviceInfo.isSubjectEditable());
+    editTextEmailSubject!!.isFocusable = serviceInfo!!.isSubjectEditable
+    editTextEmailSubject!!.isFocusableInTouchMode = serviceInfo!!.isSubjectEditable
 
-    editTextEmailMsg.setFocusable(serviceInfo.isMsgEditable());
-    editTextEmailMsg.setFocusableInTouchMode(serviceInfo.isMsgEditable());
+    editTextEmailMsg!!.isFocusable = serviceInfo!!.isMsgEditable
+    editTextEmailMsg!!.isFocusableInTouchMode = serviceInfo!!.isMsgEditable
 
-    if (!TextUtils.isEmpty(serviceInfo.getSystemMsg())) {
-      editTextEmailMsg.setText(serviceInfo.getSystemMsg());
+    if (!TextUtils.isEmpty(serviceInfo!!.systemMsg)) {
+      editTextEmailMsg!!.setText(serviceInfo!!.systemMsg)
     }
   }
 
-  private void updateViewsFromIncomingMsgInfo() {
-    switch (messageType) {
-      case REPLY:
-        updateViewsIfReplyMode();
-        break;
+  private fun updateViewsFromIncomingMsgInfo() {
+    when (messageType) {
+      MessageType.REPLY -> updateViewsIfReplyMode()
 
-      case REPLY_ALL:
-        updateViewsIfReplyAllMode();
-        break;
+      MessageType.REPLY_ALL -> updateViewsIfReplyAllMode()
 
-      case FORWARD:
-        updateViewsIfFwdMode();
-        break;
+      MessageType.FORWARD -> updateViewsIfFwdMode()
     }
   }
 
-  private void updateViewsIfFwdMode() {
-    if (!CollectionUtils.isEmpty(msgInfo.getAtts())) {
-      for (AttachmentInfo att : msgInfo.getAtts()) {
+  private fun updateViewsIfFwdMode() {
+    if (!CollectionUtils.isEmpty(msgInfo!!.atts)) {
+      for (att in msgInfo!!.atts!!) {
         if (hasAbilityToAddAtt(att)) {
-          atts.add(att);
+          atts!!.add(att)
         } else {
-          showInfoSnackbar(getView(), getString(R.string.template_warning_max_total_attachments_size,
-              FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES)),
-              Snackbar.LENGTH_LONG);
+          showInfoSnackbar(view!!, getString(R.string.template_warning_max_total_attachments_size,
+              FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES.toLong())),
+              Snackbar.LENGTH_LONG)
         }
       }
     }
 
-    editTextEmailMsg.setText(getString(R.string.forward_template, msgInfo.getFrom().get(0).getAddress(),
-        EmailUtil.genForwardedMsgDate(msgInfo.getReceiveDate()), msgInfo.getSubject(),
-        prepareRecipientsLineForForwarding(msgInfo.getTo())));
+    editTextEmailMsg!!.setText(getString(R.string.forward_template, msgInfo!!.getFrom()!![0].address,
+        EmailUtil.genForwardedMsgDate(msgInfo!!.getReceiveDate()), msgInfo!!.getSubject(),
+        prepareRecipientsLineForForwarding(msgInfo!!.getTo())))
 
-    if (!CollectionUtils.isEmpty(msgInfo.getCc())) {
-      editTextEmailMsg.append("Cc: ");
-      editTextEmailMsg.append(prepareRecipientsLineForForwarding(msgInfo.getCc()));
-      editTextEmailMsg.append("\n\n");
+    if (!CollectionUtils.isEmpty(msgInfo!!.getCc())) {
+      editTextEmailMsg!!.append("Cc: ")
+      editTextEmailMsg!!.append(prepareRecipientsLineForForwarding(msgInfo!!.getCc()))
+      editTextEmailMsg!!.append("\n\n")
     }
 
-    if (!CollectionUtils.isEmpty(msgInfo.getMsgBlocks())) {
-      for (MsgBlock block : msgInfo.getMsgBlocks()) {
-        if (block != null) {
-          switch (block.getType()) {
-            case DECRYPTED_TEXT:
-            case PLAIN_TEXT:
-              editTextEmailMsg.append("\n\n");
-              editTextEmailMsg.append(block.getContent());
-              break;
+    if (!CollectionUtils.isEmpty(msgInfo!!.msgBlocks)) {
+      for (block in msgInfo!!.msgBlocks!!) {
+        when (block.type) {
+          MsgBlock.Type.DECRYPTED_TEXT, MsgBlock.Type.PLAIN_TEXT -> {
+            editTextEmailMsg!!.append("\n\n")
+            editTextEmailMsg!!.append(block.content)
+          }
 
-            case PUBLIC_KEY:
-              //TODO-denbond7 add implementation of the public key view
-              break;
+          MsgBlock.Type.PUBLIC_KEY -> {
           }
         }
       }
-    } else if (!msgInfo.hasPlainText() && msgInfo.getHtmlMsgBlock() != null) {
-      Toast.makeText(getContext(), R.string.cannot_forward_html_emails, Toast.LENGTH_LONG).show();
+    } else if (!msgInfo!!.hasPlainText() && msgInfo!!.getHtmlMsgBlock() != null) {
+      Toast.makeText(context, R.string.cannot_forward_html_emails, Toast.LENGTH_LONG).show()
     }
   }
 
-  private void updateViewsIfReplyAllMode() {
-    if (folderType == FoldersManager.FolderType.SENT || folderType == FoldersManager.FolderType.OUTBOX) {
-      recipientsTo.setText(prepareRecipients(msgInfo.getTo()));
+  private fun updateViewsIfReplyAllMode() {
+    if (folderType === FoldersManager.FolderType.SENT || folderType === FoldersManager.FolderType.OUTBOX) {
+      recipientsTo!!.setText(prepareRecipients(msgInfo!!.getTo()))
 
-      if (msgInfo.getCc() != null && msgInfo.getCc().size() != 0) {
-        layoutCc.setVisibility(View.VISIBLE);
-        recipientsCc.append(prepareRecipients(msgInfo.getCc()));
+      if (msgInfo!!.getCc() != null && msgInfo!!.getCc()!!.isNotEmpty()) {
+        layoutCc!!.visibility = View.VISIBLE
+        recipientsCc!!.append(prepareRecipients(msgInfo!!.getCc()))
       }
     } else {
-      recipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
+      recipientsTo!!.setText(prepareRecipients(msgInfo!!.getFrom()))
 
-      Set<InternetAddress> ccSet = new HashSet<>();
+      val ccSet = HashSet<InternetAddress>()
 
-      if (!CollectionUtils.isEmpty(msgInfo.getTo())) {
-        for (InternetAddress address : msgInfo.getTo()) {
-          if (!account.getEmail().equalsIgnoreCase(address.getAddress())) {
-            ccSet.add(address);
+      if (!CollectionUtils.isEmpty(msgInfo!!.getTo())) {
+        for (address in msgInfo!!.getTo()!!) {
+          if (!account!!.email.equals(address.address, ignoreCase = true)) {
+            ccSet.add(address)
           }
         }
 
-        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType())) {
-          List<AccountAliasesDao> accountAliases = new AccountAliasesDaoSource().getAliases(getContext(), account);
-          for (AccountAliasesDao dao : accountAliases) {
-            Iterator<InternetAddress> iterator = ccSet.iterator();
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account!!.accountType!!, ignoreCase = true)) {
+          val accountAliases = AccountAliasesDaoSource().getAliases(context!!, account)
+          for ((_, _, sendAsEmail) in accountAliases) {
+            val iterator = ccSet.iterator()
 
             while (iterator.hasNext()) {
-              if (dao.getSendAsEmail().equalsIgnoreCase(iterator.next().getAddress())) {
-                iterator.remove();
+              if (sendAsEmail!!.equals(iterator.next().address, ignoreCase = true)) {
+                iterator.remove()
               }
             }
           }
         }
       }
 
-      if (!CollectionUtils.isEmpty(msgInfo.getCc())) {
-        for (InternetAddress address : msgInfo.getCc()) {
-          if (!account.getEmail().equalsIgnoreCase(address.getAddress())) {
-            ccSet.add(address);
+      if (!CollectionUtils.isEmpty(msgInfo!!.getCc())) {
+        for (address in msgInfo!!.getCc()!!) {
+          if (!account!!.email.equals(address.address, ignoreCase = true)) {
+            ccSet.add(address)
           }
         }
       }
 
       if (!ccSet.isEmpty()) {
-        layoutCc.setVisibility(View.VISIBLE);
-        recipientsCc.append(prepareRecipients(ccSet));
+        layoutCc!!.visibility = View.VISIBLE
+        recipientsCc!!.append(prepareRecipients(ccSet))
       }
     }
 
-    if (!TextUtils.isEmpty(recipientsTo.getText()) || !TextUtils.isEmpty(recipientsCc.getText())) {
-      editTextEmailMsg.requestFocus();
+    if (!TextUtils.isEmpty(recipientsTo!!.text) || !TextUtils.isEmpty(recipientsCc!!.text)) {
+      editTextEmailMsg!!.requestFocus()
     }
   }
 
-  private void updateViewsIfReplyMode() {
+  private fun updateViewsIfReplyMode() {
     if (folderType != null) {
-      switch (folderType) {
-        case SENT:
-        case OUTBOX:
-          recipientsTo.setText(prepareRecipients(msgInfo.getTo()));
-          break;
+      when (folderType) {
+        FoldersManager.FolderType.SENT, FoldersManager.FolderType.OUTBOX -> recipientsTo!!.setText(prepareRecipients(msgInfo!!.getTo()))
 
-        default:
-          recipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
-          break;
+        else -> recipientsTo!!.setText(prepareRecipients(msgInfo!!.getFrom()))
       }
     } else {
-      recipientsTo.setText(prepareRecipients(msgInfo.getFrom()));
+      recipientsTo!!.setText(prepareRecipients(msgInfo!!.getFrom()))
     }
 
-    if (!TextUtils.isEmpty(recipientsTo.getText())) {
-      editTextEmailMsg.requestFocus();
-    }
-  }
-
-  private void setupPgpFromExtraActionInfo(PgpContactsNachoTextView pgpContactsNachoTextView,
-                                           String[] addresses) {
-    if (addresses != null && addresses.length > 0) {
-      pgpContactsNachoTextView.setText(prepareRecipients(addresses));
-      pgpContactsNachoTextView.chipifyAllUnterminatedTokens();
-      pgpContactsNachoTextView.getOnFocusChangeListener().onFocusChange(pgpContactsNachoTextView, false);
+    if (!TextUtils.isEmpty(recipientsTo!!.text)) {
+      editTextEmailMsg!!.requestFocus()
     }
   }
 
-  private String prepareRecipientsLineForForwarding(List<InternetAddress> recipients) {
-    StringBuilder stringBuilder = new StringBuilder();
-    if (!CollectionUtils.isEmpty(recipients)) {
-      stringBuilder.append(recipients.get(0));
+  private fun setupPgpFromExtraActionInfo(pgpContactsNachoTextView: PgpContactsNachoTextView?,
+                                          addresses: Array<String>?) {
+    if (addresses != null && addresses.isNotEmpty()) {
+      pgpContactsNachoTextView!!.setText(prepareRecipients(addresses))
+      pgpContactsNachoTextView.chipifyAllUnterminatedTokens()
+      pgpContactsNachoTextView.onFocusChangeListener.onFocusChange(pgpContactsNachoTextView, false)
+    }
+  }
 
-      if (recipients.size() > 1) {
-        for (int i = 1; i < recipients.size(); i++) {
-          String recipient = recipients.get(0).getAddress();
-          stringBuilder.append(", ");
-          stringBuilder.append(recipient);
+  private fun prepareRecipientsLineForForwarding(recipients: List<InternetAddress>?): String {
+    val stringBuilder = StringBuilder()
+    return if (!CollectionUtils.isEmpty(recipients)) {
+      stringBuilder.append(recipients!![0])
+
+      if (recipients.size > 1) {
+        for (i in 1 until recipients.size) {
+          val recipient = recipients[0].address
+          stringBuilder.append(", ")
+          stringBuilder.append(recipient)
         }
       }
 
-      return stringBuilder.toString();
-    } else return "";
+      stringBuilder.toString()
+    } else
+      ""
   }
 
-  @NonNull
-  private String prepareReplySubject(String subject) {
-    String prefix = null;
+  private fun prepareReplySubject(subject: String?): String {
+    var prefix: String? = null
 
-    switch (messageType) {
-      case REPLY:
-      case REPLY_ALL:
-        prefix = "Re";
-        break;
+    when (messageType) {
+      MessageType.REPLY, MessageType.REPLY_ALL -> prefix = "Re"
 
-      case FORWARD:
-        prefix = "Fwd";
-        break;
+      MessageType.FORWARD -> prefix = "Fwd"
     }
 
     if (!TextUtils.isEmpty(prefix)) {
       if (TextUtils.isEmpty(subject)) {
-        return getString(R.string.template_reply_subject, prefix, "");
+        return getString(R.string.template_reply_subject, prefix, "")
       }
 
-      Pattern pattern = Pattern.compile("^(" + prefix + ": )", Pattern.CASE_INSENSITIVE);
-      Matcher matcher = pattern.matcher(subject);
+      val pattern = Pattern.compile("^($prefix: )", Pattern.CASE_INSENSITIVE)
+      val matcher = pattern.matcher(subject)
 
-      if (matcher.find()) {
-        return subject;
-      }
+      return if (matcher.find()) {
+        ""
+      } else getString(R.string.template_reply_subject, prefix, subject)
 
-      return getString(R.string.template_reply_subject, prefix, subject);
     } else {
-      return subject;
+      return ""
     }
   }
 
-  private String prepareRecipients(String[] recipients) {
-    StringBuilder stringBuilder = new StringBuilder();
-    if (recipients != null && recipients.length > 0) {
-      for (String s : recipients) {
-        stringBuilder.append(s).append(" ");
+  private fun prepareRecipients(recipients: Array<String>?): String {
+    val stringBuilder = StringBuilder()
+    if (recipients != null && recipients.isNotEmpty()) {
+      for (s in recipients) {
+        stringBuilder.append(s).append(" ")
       }
     }
 
-    return stringBuilder.toString();
+    return stringBuilder.toString()
   }
 
-  private String prepareRecipients(Collection<InternetAddress> recipients) {
-    StringBuilder stringBuilder = new StringBuilder();
+  private fun prepareRecipients(recipients: Collection<InternetAddress>?): String {
+    val stringBuilder = StringBuilder()
     if (!CollectionUtils.isEmpty(recipients)) {
-      for (InternetAddress s : recipients) {
-        stringBuilder.append(s.getAddress()).append(" ");
+      for (s in recipients!!) {
+        stringBuilder.append(s.address).append(" ")
       }
     }
 
-    return stringBuilder.toString();
+    return stringBuilder.toString()
   }
 
   /**
-   * Prepare a {@link PgpContactAdapter} for the {@link NachoTextView} object.
+   * Prepare a [PgpContactAdapter] for the [NachoTextView] object.
    *
-   * @return <tt>{@link PgpContactAdapter}</tt>
+   * @return <tt>[PgpContactAdapter]</tt>
    */
-  private PgpContactAdapter preparePgpContactAdapter() {
-    PgpContactAdapter pgpContactAdapter = new PgpContactAdapter(getContext(), null, true);
+  private fun preparePgpContactAdapter(): PgpContactAdapter {
+    val pgpContactAdapter = PgpContactAdapter(context!!, null, true)
     //setup a search contacts logic in the database
-    pgpContactAdapter.setFilterQueryProvider(new FilterQueryProvider() {
-      @Override
-      public Cursor runQuery(CharSequence constraint) {
-        Uri uri = new ContactsDaoSource().getBaseContentUri();
-        String selection = ContactsDaoSource.COL_EMAIL + " LIKE ?";
-        String[] selectionArgs = new String[]{"%" + constraint + "%"};
-        String sortOrder = ContactsDaoSource.COL_LAST_USE + " DESC";
+    pgpContactAdapter.filterQueryProvider = FilterQueryProvider { constraint ->
+      val uri = ContactsDaoSource().baseContentUri
+      val selection = ContactsDaoSource.COL_EMAIL + " LIKE ?"
+      val selectionArgs = arrayOf("%$constraint%")
+      val sortOrder = ContactsDaoSource.COL_LAST_USE + " DESC"
 
-        return getContext().getContentResolver().query(uri, null, selection, selectionArgs, sortOrder);
-      }
-    });
+      context!!.contentResolver.query(uri, null, selection, selectionArgs, sortOrder)
+    }
 
-    return pgpContactAdapter;
+    return pgpContactAdapter
   }
 
   /**
-   * Check is the given {@link PgpContactsNachoTextView} has a not valid email.
+   * Check is the given [PgpContactsNachoTextView] has a not valid email.
    *
    * @return <tt>boolean</tt> true - if has, otherwise false..
    */
-  private boolean hasNotValidEmail(PgpContactsNachoTextView pgpContactsNachoTextView) {
-    List<String> emails = pgpContactsNachoTextView.getChipAndTokenValues();
-    for (String email : emails) {
+  private fun hasNotValidEmail(pgpContactsNachoTextView: PgpContactsNachoTextView): Boolean {
+    val emails = pgpContactsNachoTextView.chipAndTokenValues
+    for (email in emails) {
       if (!GeneralUtil.isEmailValid(email)) {
-        showInfoSnackbar(pgpContactsNachoTextView, getString(R.string.error_some_email_is_not_valid, email));
-        pgpContactsNachoTextView.requestFocus();
-        return true;
+        showInfoSnackbar(pgpContactsNachoTextView, getString(R.string.error_some_email_is_not_valid, email))
+        pgpContactsNachoTextView.requestFocus()
+        return true
       }
     }
-    return false;
+    return false
   }
 
   /**
@@ -1497,124 +1399,113 @@ public class CreateMessageFragment extends BaseSyncFragment implements View.OnFo
    * @param newAttInfo The new attachment which will be maybe added.
    * @return true if the attachment can be added, otherwise false.
    */
-  private boolean hasAbilityToAddAtt(AttachmentInfo newAttInfo) {
-    int totalSizeOfAtts = 0;
+  private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
+    var totalSizeOfAtts = 0
 
-    for (AttachmentInfo attachmentInfo : atts) {
-      totalSizeOfAtts += attachmentInfo.getEncodedSize();
+    for ((_, _, _, _, _, _, _, encodedSize) in atts!!) {
+      totalSizeOfAtts += encodedSize.toInt()
     }
 
-    totalSizeOfAtts += newAttInfo.getEncodedSize();
+    totalSizeOfAtts += newAttInfo!!.encodedSize.toInt()
 
-    return totalSizeOfAtts < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES;
+    return totalSizeOfAtts < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
   }
 
 
   /**
    * Show a dialog where we can select different actions.
    *
-   * @param pgpContact            The {@link PgpContact} which will be used when we select the
-   *                              remove action.
+   * @param pgpContact            The [PgpContact] which will be used when we select the remove action.
    * @param isRemoveActionEnabled true if we want to show the remove action, false otherwise.
    */
-  private void showNoPgpFoundDialog(PgpContact pgpContact, boolean isRemoveActionEnabled) {
-    NoPgpFoundDialogFragment dialogFragment = NoPgpFoundDialogFragment.newInstance(pgpContact, isRemoveActionEnabled);
-    dialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG);
-    dialogFragment.show(getFragmentManager(), NoPgpFoundDialogFragment.class.getSimpleName());
+  private fun showNoPgpFoundDialog(pgpContact: PgpContact, isRemoveActionEnabled: Boolean) {
+    val dialogFragment = NoPgpFoundDialogFragment.newInstance(pgpContact, isRemoveActionEnabled)
+    dialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG)
+    dialogFragment.show(fragmentManager!!, NoPgpFoundDialogFragment::class.java.simpleName)
   }
 
   /**
    * Send a message.
    */
-  private void sendMsg() {
-    dismissCurrentSnackBar();
+  private fun sendMsg() {
+    dismissCurrentSnackBar()
 
-    isContactsUpdateEnabled = false;
-    OutgoingMessageInfo msgInfo = getOutgoingMsgInfo();
+    isContactsUpdateEnabled = false
+    val msgInfo = getOutgoingMsgInfo()
 
-    ArrayList<AttachmentInfo> forwardedAttInfoList = getForwardedAtts();
-    ArrayList<AttachmentInfo> attachmentInfoList = new ArrayList<>(this.atts);
-    attachmentInfoList.removeAll(forwardedAttInfoList);
+    val forwardedAttInfoList = forwardedAtts
+    val attachmentInfoList = ArrayList(this.atts!!)
+    attachmentInfoList.removeAll(forwardedAttInfoList)
 
-    msgInfo.setAtts(attachmentInfoList);
-    msgInfo.setForwardedAtts(forwardedAttInfoList);
-    msgInfo.setEncryptionType(listener.getMsgEncryptionType());
-    msgInfo.setForwarded(messageType == MessageType.FORWARD);
+    msgInfo.atts = attachmentInfoList
+    msgInfo.forwardedAtts = forwardedAttInfoList
+    msgInfo.encryptionType = listener!!.msgEncryptionType
+    msgInfo.isForwarded = messageType === MessageType.FORWARD
 
     if (onMsgSendListener != null) {
-      onMsgSendListener.sendMsg(msgInfo);
+      onMsgSendListener!!.sendMsg(msgInfo)
     }
-  }
-
-  /**
-   * Generate a forwarded attachments list.
-   *
-   * @return The generated list.
-   */
-  private ArrayList<AttachmentInfo> getForwardedAtts() {
-    ArrayList<AttachmentInfo> atts = new ArrayList<>();
-
-    for (AttachmentInfo att : this.atts) {
-      if (att.getId() != null && att.isForwarded()) {
-        atts.add(att);
-      }
-    }
-
-    return atts;
   }
 
   /**
    * Show attachments which were added.
    */
-  private void showAtts() {
-    if (!atts.isEmpty()) {
-      layoutAtts.removeAllViews();
-      LayoutInflater layoutInflater = LayoutInflater.from(getContext());
-      for (final AttachmentInfo att : atts) {
-        final View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutAtts, false);
+  private fun showAtts() {
+    if (atts!!.isNotEmpty()) {
+      layoutAtts!!.removeAllViews()
+      val layoutInflater = LayoutInflater.from(context)
+      for (att in atts) {
+        val rootView = layoutInflater.inflate(R.layout.attachment_item, layoutAtts, false)
 
-        TextView textViewAttName = rootView.findViewById(R.id.textViewAttchmentName);
-        textViewAttName.setText(att.getName());
+        val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttchmentName)
+        textViewAttName.text = att.name
 
-        TextView textViewAttSize = rootView.findViewById(R.id.textViewAttSize);
-        if (att.getEncodedSize() > 0) {
-          textViewAttSize.setVisibility(View.VISIBLE);
-          textViewAttSize.setText(Formatter.formatFileSize(getContext(), att.getEncodedSize()));
+        val textViewAttSize = rootView.findViewById<TextView>(R.id.textViewAttSize)
+        if (att.encodedSize > 0) {
+          textViewAttSize.visibility = View.VISIBLE
+          textViewAttSize.text = Formatter.formatFileSize(context, att.encodedSize)
         } else {
-          textViewAttSize.setVisibility(View.GONE);
+          textViewAttSize.visibility = View.GONE
         }
 
-        View imageButtonDownloadAtt = rootView.findViewById(R.id.imageButtonDownloadAtt);
-        imageButtonDownloadAtt.setVisibility(View.GONE);
+        val imageButtonDownloadAtt = rootView.findViewById<View>(R.id.imageButtonDownloadAtt)
+        imageButtonDownloadAtt.visibility = View.GONE
 
-        if (!att.isProtected()) {
-          View imageButtonClearAtt = rootView.findViewById(R.id.imageButtonClearAtt);
-          imageButtonClearAtt.setVisibility(View.VISIBLE);
-          imageButtonClearAtt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-              atts.remove(att);
-              layoutAtts.removeView(rootView);
+        if (!att.isProtected) {
+          val imageButtonClearAtt = rootView.findViewById<View>(R.id.imageButtonClearAtt)
+          imageButtonClearAtt.visibility = View.VISIBLE
+          imageButtonClearAtt.setOnClickListener {
+            atts.remove(att)
+            layoutAtts!!.removeView(rootView)
 
-              //Remove a temp file which was created by our app
-              Uri uri = att.getUri();
-              if (uri != null && Constants.FILE_PROVIDER_AUTHORITY.equalsIgnoreCase(uri.getAuthority())) {
-                getContext().getContentResolver().delete(uri, null, null);
-              }
+            //Remove a temp file which was created by our app
+            val uri = att.uri
+            if (uri != null && Constants.FILE_PROVIDER_AUTHORITY.equals(uri.authority!!, ignoreCase = true)) {
+              context!!.contentResolver.delete(uri, null, null)
             }
-          });
+          }
         }
-        layoutAtts.addView(rootView);
+        layoutAtts!!.addView(rootView)
       }
     } else {
-      layoutAtts.removeAllViews();
+      layoutAtts!!.removeAllViews()
     }
   }
 
   /**
    * This interface will be used when we send a message.
    */
-  public interface OnMessageSendListener {
-    void sendMsg(OutgoingMessageInfo outgoingMsgInfo);
+  interface OnMessageSendListener {
+    fun sendMsg(outgoingMsgInfo: OutgoingMessageInfo)
+  }
+
+  companion object {
+    private const val REQUEST_CODE_NO_PGP_FOUND_DIALOG = 100
+    private const val REQUEST_CODE_IMPORT_PUBLIC_KEY = 101
+    private const val REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102
+    private const val REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT = 103
+    private const val REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE = 104
+    private const val REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO = 105
+    private val TAG = CreateMessageFragment::class.java.simpleName
   }
 }

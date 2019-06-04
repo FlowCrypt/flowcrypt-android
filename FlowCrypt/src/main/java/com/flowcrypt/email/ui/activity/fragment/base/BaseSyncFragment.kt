@@ -3,19 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.base;
+package com.flowcrypt.email.ui.activity.fragment.base
 
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.View;
-import android.widget.TextView;
+import android.os.Bundle
+import android.text.TextUtils
+import android.view.View
+import android.widget.TextView
 
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
-import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
-import com.flowcrypt.email.util.UIUtil;
-
-import androidx.annotation.Nullable;
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes
+import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
+import com.flowcrypt.email.util.UIUtil
 
 /**
  * The base fragment which must used when we will work with an email provider.
@@ -26,70 +24,66 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BaseSyncFragment extends BaseFragment {
+abstract class BaseSyncFragment : BaseFragment() {
 
-  protected View progressView;
-  protected View statusView;
-  protected TextView textViewStatusInfo;
+  @JvmField
+  protected var progressView: View? = null
+  @JvmField
+  protected var statusView: View? = null
+  @JvmField
+  protected var textViewStatusInfo: TextView? = null
 
   /**
    * Get a content view which contains a UI.
    *
    * @return <tt>View</tt> Return a progress view.
    */
-  public abstract View getContentView();
-
-  @Override
-  public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-    progressView = view.findViewById(R.id.viewIdProgressView);
-    statusView = view.findViewById(R.id.viewIdStatusView);
-    textViewStatusInfo = view.findViewById(R.id.viewIdTextViewStatusInfo);
-    if (progressView == null || statusView == null || textViewStatusInfo == null) {
-      throw new IllegalArgumentException("The layout file of this fragment not contains " +
-          "some needed views");
-    }
-  }
-
-  /**
-   * Handle an error from the sync service.
-   *
-   * @param requestCode The unique request code for the reply to {@link android.os.Messenger}.
-   * @param errorType   The {@link SyncErrorTypes}
-   * @param e           The exception which happened.
-   */
-  public void onErrorOccurred(int requestCode, int errorType, Exception e) {
-    getContentView().setVisibility(View.GONE);
-
-    switch (errorType) {
-      case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
-        textViewStatusInfo.setText(R.string.there_was_syncing_problem);
-        break;
-
-      default:
-        if (e != null && !TextUtils.isEmpty(e.getMessage())) {
-          textViewStatusInfo.setText(e.getMessage());
-        } else {
-          textViewStatusInfo.setText(R.string.unknown_error);
-        }
-        break;
-    }
-
-    UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
-    if (getSnackBar() != null) {
-      getSnackBar().dismiss();
-    }
-  }
+  abstract val contentView: View?
 
   /**
    * Check is we connected to the sync service.
    *
    * @return true if we connected, otherwise false.
    */
-  public boolean isSyncServiceConnected() {
-    BaseSyncActivity baseSyncActivity = (BaseSyncActivity) getActivity();
-    if (baseSyncActivity != null) {
-      return baseSyncActivity.isSyncServiceBound;
-    } else throw new NullPointerException("BaseSyncActivity is null!");
+  val isSyncServiceConnected: Boolean
+    get() {
+      val baseSyncActivity = activity as BaseSyncActivity?
+      return baseSyncActivity?.isSyncServiceBound ?: throw NullPointerException("BaseSyncActivity is null!")
+    }
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    progressView = view.findViewById(R.id.viewIdProgressView)
+    statusView = view.findViewById(R.id.viewIdStatusView)
+    textViewStatusInfo = view.findViewById(R.id.viewIdTextViewStatusInfo)
+    if (progressView == null || statusView == null || textViewStatusInfo == null) {
+      throw IllegalArgumentException("The layout file of this fragment not contains " + "some needed views")
+    }
+  }
+
+  /**
+   * Handle an error from the sync service.
+   *
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
+   * @param errorType   The [SyncErrorTypes]
+   * @param e           The exception which happened.
+   */
+  open fun onErrorOccurred(requestCode: Int, errorType: Int, e: Exception?) {
+    contentView?.visibility = View.GONE
+
+    when (errorType) {
+      SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> textViewStatusInfo!!.setText(R.string.there_was_syncing_problem)
+
+      else -> if (e != null && !TextUtils.isEmpty(e.message)) {
+        textViewStatusInfo!!.text = e.message
+      } else {
+        textViewStatusInfo!!.setText(R.string.unknown_error)
+      }
+    }
+
+    UIUtil.exchangeViewVisibility(context, false, progressView!!, statusView!!)
+    if (snackBar != null) {
+      snackBar!!.dismiss()
+    }
   }
 }

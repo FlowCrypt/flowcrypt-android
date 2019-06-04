@@ -3,13 +3,13 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.base;
+package com.flowcrypt.email.ui.activity.fragment.base
 
-import androidx.preference.ListPreference;
-import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.ListPreference
+import androidx.preference.PreferenceFragmentCompat
 
 /**
- * The base realization of {@link PreferenceFragmentCompat}.
+ * The base realization of [PreferenceFragmentCompat].
  *
  * @author DenBond7
  * Date: 26.05.2017
@@ -17,21 +17,21 @@ import androidx.preference.PreferenceFragmentCompat;
  * E-mail: DenBond7@gmail.com
  */
 
-public abstract class BasePreferenceFragment extends PreferenceFragmentCompat {
+abstract class BasePreferenceFragment : PreferenceFragmentCompat() {
   /**
-   * This method helps to generate a summary for {@link ListPreference}
+   * This method helps to generate a summary for [ListPreference]
    *
    * @param value   The preference current value;
    * @param values  The preferences entry values;
    * @param entries The preferences entries;
    * @return A generated summary.
    */
-  protected CharSequence generateSummary(String value, CharSequence[] values, CharSequence[] entries) {
-    for (int i = 0; i < values.length; i++) {
-      if (values[i].equals(value)) {
-        return entries[i];
+  protected fun generateSummary(value: String, values: Array<CharSequence>, entries: Array<CharSequence>): CharSequence {
+    for (i in values.indices) {
+      if (values[i] == value) {
+        return entries[i]
       }
     }
-    return "";
+    return ""
   }
 }
