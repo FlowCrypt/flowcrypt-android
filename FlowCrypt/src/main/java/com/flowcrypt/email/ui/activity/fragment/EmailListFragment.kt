@@ -3,67 +3,49 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment;
+package com.flowcrypt.email.ui.activity.fragment
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.database.Cursor;
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.SparseBooleanArray;
-import android.view.ActionMode;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
-import com.flowcrypt.email.api.email.model.LocalFolder;
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
-import com.flowcrypt.email.database.DatabaseUtil;
-import com.flowcrypt.email.database.MessageState;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource;
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService;
-import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
-import com.flowcrypt.email.ui.activity.SearchMessagesActivity;
-import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
-import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
-import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment;
-import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment;
-import com.flowcrypt.email.ui.adapter.MessageListAdapter;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-import com.google.android.gms.auth.GoogleAuthException;
-import com.google.android.gms.auth.UserRecoverableAuthException;
-import com.google.android.material.snackbar.Snackbar;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.mail.AuthenticationFailedException;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.CursorLoader;
-import androidx.loader.content.Loader;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.test.espresso.idling.CountingIdlingResource;
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.database.Cursor
+import android.os.Bundle
+import android.text.TextUtils
+import android.util.SparseBooleanArray
+import android.view.*
+import android.widget.*
+import androidx.loader.app.LoaderManager
+import androidx.loader.content.CursorLoader
+import androidx.loader.content.Loader
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.test.espresso.idling.CountingIdlingResource
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.model.GeneralMessageDetails
+import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes
+import com.flowcrypt.email.database.DatabaseUtil
+import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.ui.activity.MessageDetailsActivity
+import com.flowcrypt.email.ui.activity.SearchMessagesActivity
+import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
+import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.adapter.MessageListAdapter
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.ManualHandledException
+import com.google.android.gms.auth.GoogleAuthException
+import com.google.android.gms.auth.UserRecoverableAuthException
+import com.google.android.material.snackbar.Snackbar
+import java.util.*
+import javax.mail.AuthenticationFailedException
 
 /**
  * This fragment used for show messages list. ListView is the base view in this fragment. After
@@ -75,255 +57,200 @@ import androidx.test.espresso.idling.CountingIdlingResource;
  * E-mail: DenBond7@gmail.com
  */
 
-public class EmailListFragment extends BaseSyncFragment implements AdapterView.OnItemClickListener,
-    AbsListView.OnScrollListener, SwipeRefreshLayout.OnRefreshListener, AbsListView.MultiChoiceModeListener {
+class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, AbsListView.OnScrollListener, SwipeRefreshLayout.OnRefreshListener, AbsListView.MultiChoiceModeListener {
 
-  private static final int REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10;
-  private static final int REQUEST_CODE_DELETE_MESSAGES = 11;
-  private static final int REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 12;
+  private var listView: ListView? = null
+  private var emptyView: TextView? = null
+  private var footerProgressView: View? = null
+  private var swipeRefreshLayout: SwipeRefreshLayout? = null
+  private var textViewActionProgress: TextView? = null
+  private var progressBarActionProgress: ProgressBar? = null
 
-  private static final int TIMEOUT_BETWEEN_REQUESTS = 500;
-  private static final int LOADING_SHIFT_IN_ITEMS = 5;
+  private var adapter: MessageListAdapter? = null
+  private var listener: OnManageEmailsListener? = null
+  private var baseSyncActivity: BaseSyncActivity? = null
+  private var actionMode: ActionMode? = null
+  private var checkedItemPositions: SparseBooleanArray? = null
+  private var activeMsgDetails: GeneralMessageDetails? = null
 
-  private ListView listView;
-  private TextView emptyView;
-  private View footerProgressView;
-  private SwipeRefreshLayout swipeRefreshLayout;
-  private TextView textViewActionProgress;
-  private ProgressBar progressBarActionProgress;
+  private var isFetchMesgsNeeded: Boolean = false
+  private var areNewMsgsLoadingNow: Boolean = false
+  private var forceFirstLoadNeeded: Boolean = false
+  private var isEncryptedModeEnabled: Boolean = false
+  private var isSaveChoicesNeeded: Boolean = false
+  private var timeOfLastRequestEnd: Long = 0
+  private var lastFirstVisiblePos: Int = 0
+  private var originalStatusBarColor: Int = 0
 
-  private MessageListAdapter adapter;
-  private OnManageEmailsListener listener;
-  private BaseSyncActivity baseSyncActivity;
-  private ActionMode actionMode;
-  private SparseBooleanArray checkedItemPositions;
-  private GeneralMessageDetails activeMsgDetails;
-
-  private boolean isFetchMesgsNeeded;
-  private boolean areNewMsgsLoadingNow;
-  private boolean forceFirstLoadNeeded;
-  private boolean isEncryptedModeEnabled;
-  private boolean isSaveChoicesNeeded;
-  private long timeOfLastRequestEnd;
-  private int lastFirstVisiblePos;
-  private int originalStatusBarColor;
-
-  private LoaderManager.LoaderCallbacks<Cursor> callbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
-    @NonNull
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-      switch (id) {
-        case R.id.loader_id_load_messages_from_cache:
-          changeViewsVisibility();
-          return prepareCursorLoader();
-
-        default:
-          return new Loader<>(getContext());
-      }
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-      switch (loader.getId()) {
-        case R.id.loader_id_load_messages_from_cache:
-          handleCursor(data);
-          break;
-      }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-      switch (loader.getId()) {
-        case R.id.loader_id_load_messages_from_cache:
-          adapter.swapCursor(null);
-          break;
-      }
-    }
-  };
-
-  @Override
-  public void onAttach(Context context) {
-    super.onAttach(context);
-
-    if (context instanceof OnManageEmailsListener) {
-      this.listener = (OnManageEmailsListener) context;
-    } else throw new IllegalArgumentException(context.toString() + " must implement " +
-        OnManageEmailsListener.class.getSimpleName());
-
-    if (context instanceof BaseSyncActivity) {
-      this.baseSyncActivity = (BaseSyncActivity) context;
-    } else throw new IllegalArgumentException(context.toString() + " must implement " +
-        BaseSyncActivity.class.getSimpleName());
-
-    this.originalStatusBarColor = getActivity().getWindow().getStatusBarColor();
-  }
-
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    this.adapter = new MessageListAdapter(getContext(), null);
-
-    AccountDaoSource accountDaoSource = new AccountDaoSource();
-    AccountDao account = accountDaoSource.getActiveAccountInformation(getContext());
-    this.isEncryptedModeEnabled = accountDaoSource.isEncryptedModeEnabled(getContext(), account.getEmail());
-  }
-
-  @Override
-  public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    return inflater.inflate(R.layout.fragment_email_list, container, false);
-  }
-
-  @Override
-  public View getContentView() {
-    return listView;
-  }
-
-  @Override
-  public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-    initViews(view);
-  }
-
-  @Override
-  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
-    if (listener.getCurrentFolder() != null) {
-      if (!TextUtils.isEmpty(listener.getCurrentFolder().getSearchQuery())) {
-        swipeRefreshLayout.setEnabled(false);
-      }
-
-      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache, null, callbacks);
-    }
-  }
-
-  @Override
-  public void onPause() {
-    super.onPause();
-    if (getSnackBar() != null) {
-      getSnackBar().dismiss();
-    }
-  }
-
-  @Override
-  public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    switch (requestCode) {
-      case REQUEST_CODE_SHOW_MESSAGE_DETAILS:
-        switch (resultCode) {
-          case MessageDetailsActivity.RESULT_CODE_UPDATE_LIST:
-            updateList(false, false);
-            break;
+  private val callbacks = object : LoaderManager.LoaderCallbacks<Cursor> {
+    override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
+      return when (id) {
+        R.id.loader_id_load_messages_from_cache -> {
+          changeViewsVisibility()
+          prepareCursorLoader()
         }
-        break;
 
-      case REQUEST_CODE_DELETE_MESSAGES:
-        switch (resultCode) {
-          case Activity.RESULT_OK:
-            deleteSelectedMsgs();
-            break;
-        }
-        break;
+        else -> Loader(context!!)
+      }
+    }
 
-      case REQUEST_CODE_RETRY_TO_SEND_MESSAGES:
-        switch (resultCode) {
-          case Activity.RESULT_OK:
-            if (activeMsgDetails != null) {
-              new MessageDaoSource().updateMsgState(getContext(),
-                  activeMsgDetails.getEmail(), activeMsgDetails.getLabel(),
-                  activeMsgDetails.getUid(), MessageState.QUEUED);
-              MessagesSenderJobService.schedule(getContext());
-            }
-            break;
-        }
-        break;
+    override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
+      when (loader.id) {
+        R.id.loader_id_load_messages_from_cache -> handleCursor(data)
+      }
+    }
 
-      default:
-        super.onActivityResult(requestCode, resultCode, data);
-        break;
+    override fun onLoaderReset(loader: Loader<Cursor>) {
+      when (loader.id) {
+        R.id.loader_id_load_messages_from_cache -> adapter!!.swapCursor(null)
+      }
     }
   }
 
-  @Override
-  public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-    activeMsgDetails = (GeneralMessageDetails) parent.getAdapter().getItem(position);
+  override val contentView: View?
+    get() = listView
+
+  override fun onAttach(context: Context?) {
+    super.onAttach(context)
+
+    if (context is OnManageEmailsListener) {
+      this.listener = context
+    } else
+      throw IllegalArgumentException(context!!.toString() + " must implement " +
+          OnManageEmailsListener::class.java.simpleName)
+
+    if (context is BaseSyncActivity) {
+      this.baseSyncActivity = context
+    } else
+      throw IllegalArgumentException(context.toString() + " must implement " +
+          BaseSyncActivity::class.java.simpleName)
+
+    this.originalStatusBarColor = activity!!.window.statusBarColor
+  }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    this.adapter = MessageListAdapter(context!!, null)
+
+    val accountDaoSource = AccountDaoSource()
+    val account = accountDaoSource.getActiveAccountInformation(context!!)
+    this.isEncryptedModeEnabled = accountDaoSource.isEncryptedModeEnabled(context!!, account!!.email)
+  }
+
+  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    return inflater.inflate(R.layout.fragment_email_list, container, false)
+  }
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    initViews(view)
+  }
+
+  override fun onActivityCreated(savedInstanceState: Bundle?) {
+    super.onActivityCreated(savedInstanceState)
+    if (listener!!.currentFolder != null) {
+      if (!TextUtils.isEmpty(listener!!.currentFolder!!.searchQuery)) {
+        swipeRefreshLayout!!.isEnabled = false
+      }
+
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache, null, callbacks)
+    }
+  }
+
+  override fun onPause() {
+    super.onPause()
+    if (snackBar != null) {
+      snackBar!!.dismiss()
+    }
+  }
+
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    when (requestCode) {
+      REQUEST_CODE_SHOW_MESSAGE_DETAILS -> when (resultCode) {
+        MessageDetailsActivity.RESULT_CODE_UPDATE_LIST -> updateList(false, false)
+      }
+
+      REQUEST_CODE_DELETE_MESSAGES -> when (resultCode) {
+        Activity.RESULT_OK -> deleteSelectedMsgs()
+      }
+
+      REQUEST_CODE_RETRY_TO_SEND_MESSAGES -> when (resultCode) {
+        Activity.RESULT_OK -> if (activeMsgDetails != null) {
+          MessageDaoSource().updateMsgState(context!!,
+              activeMsgDetails!!.email, activeMsgDetails!!.label,
+              activeMsgDetails!!.uid.toLong(), MessageState.QUEUED)
+          MessagesSenderJobService.schedule(context!!)
+        }
+      }
+
+      else -> super.onActivityResult(requestCode, resultCode, data)
+    }
+  }
+
+  override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+    activeMsgDetails = parent.adapter.getItem(position) as GeneralMessageDetails
     if (activeMsgDetails != null) {
-      boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFullName());
-      boolean isRawMsgAvailable = !TextUtils.isEmpty(activeMsgDetails.getRawMsgWithoutAtts());
-      if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(getContext())) {
-        if (activeMsgDetails.getMsgState() != null) {
-          switch (activeMsgDetails.getMsgState()) {
-            case ERROR_ORIGINAL_MESSAGE_MISSING:
-            case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
-            case ERROR_CACHE_PROBLEM:
-            case ERROR_DURING_CREATION:
-            case ERROR_SENDING_FAILED:
-            case ERROR_PRIVATE_KEY_NOT_FOUND:
-              handleOutgoingMsgWhichHasSomeError(activeMsgDetails);
-              break;
+      val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)
+      val isRawMsgAvailable = !TextUtils.isEmpty(activeMsgDetails!!.rawMsgWithoutAtts)
+      if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context!!)) {
+        when (activeMsgDetails!!.msgState) {
+          MessageState.ERROR_ORIGINAL_MESSAGE_MISSING, MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND, MessageState.ERROR_CACHE_PROBLEM, MessageState.ERROR_DURING_CREATION, MessageState.ERROR_SENDING_FAILED, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> handleOutgoingMsgWhichHasSomeError(activeMsgDetails!!)
 
-            default:
-              startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
-                  listener.getCurrentFolder(), activeMsgDetails), REQUEST_CODE_SHOW_MESSAGE_DETAILS);
-              break;
-          }
-
-        } else {
-          startActivityForResult(MessageDetailsActivity.getIntent(getContext(),
-              listener.getCurrentFolder(), activeMsgDetails), REQUEST_CODE_SHOW_MESSAGE_DETAILS);
+          else -> startActivityForResult(MessageDetailsActivity.getIntent(context,
+              listener!!.currentFolder, activeMsgDetails), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
         }
       } else {
-        showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG);
+        showInfoSnackbar(getView()!!, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
       }
     }
   }
 
-  @Override
-  public void onRefresh() {
-    if (getSnackBar() != null) {
-      getSnackBar().dismiss();
+  override fun onRefresh() {
+    if (snackBar != null) {
+      snackBar!!.dismiss()
     }
 
-    LocalFolder localFolder = listener.getCurrentFolder();
+    val localFolder = listener!!.currentFolder
 
     if (localFolder == null) {
-      swipeRefreshLayout.setRefreshing(false);
-      return;
+      swipeRefreshLayout!!.isRefreshing = false
+      return
     }
 
-    boolean isEmpty = TextUtils.isEmpty(localFolder.getFullName());
-    boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(localFolder.getFullName());
+    val isEmpty = TextUtils.isEmpty(localFolder.fullName)
+    val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)
     if (isEmpty || isOutbox) {
-      swipeRefreshLayout.setRefreshing(false);
+      swipeRefreshLayout!!.isRefreshing = false
     } else {
-      emptyView.setVisibility(View.GONE);
+      emptyView!!.visibility = View.GONE
 
-      if (GeneralUtil.isConnected(getContext())) {
-        if (adapter.getCount() > 0) {
-          swipeRefreshLayout.setRefreshing(true);
-          refreshMsgs();
+      if (GeneralUtil.isConnected(context!!)) {
+        if (adapter!!.count > 0) {
+          swipeRefreshLayout!!.isRefreshing = true
+          refreshMsgs()
         } else {
-          swipeRefreshLayout.setRefreshing(false);
+          swipeRefreshLayout!!.isRefreshing = false
 
-          if (adapter.getCount() == 0) {
-            UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
+          if (adapter!!.count == 0) {
+            UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
           }
 
-          loadNextMsgs(-1);
+          loadNextMsgs(-1)
         }
       } else {
-        swipeRefreshLayout.setRefreshing(false);
+        swipeRefreshLayout!!.isRefreshing = false
 
-        if (adapter.getCount() == 0) {
-          textViewStatusInfo.setText(R.string.no_connection);
-          UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
+        if (adapter!!.count == 0) {
+          textViewStatusInfo!!.setText(R.string.no_connection)
+          UIUtil.exchangeViewVisibility(context, false, progressView!!, statusView!!)
         }
 
-        showInfoSnackbar(getView(), getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG);
+        showInfoSnackbar(view!!, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
       }
     }
   }
 
-  @Override
-  public void onScrollStateChanged(AbsListView view, int scrollState) {
+  override fun onScrollStateChanged(view: AbsListView, scrollState: Int) {
 
   }
 
@@ -332,191 +259,172 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    *
    * @param view             The view whose scroll state is being reported
    * @param firstVisibleItem the index of the first visible cell (ignore if
-   *                         visibleItemCount == 0)
+   * visibleItemCount == 0)
    * @param visibleItemCount the number of visible cells
    * @param totalCount       the number of items in the list adaptor
    */
-  @Override
-  public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalCount) {
-    if (listener.getCurrentFolder() != null && !(firstVisibleItem == 0 && visibleItemCount == 1 && totalCount == 1)) {
-      boolean hasMoreMsgs = listener.hasMoreMsgs();
+  override fun onScroll(view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int, totalCount: Int) {
+    if (listener!!.currentFolder != null && !(firstVisibleItem == 0 && visibleItemCount == 1 && totalCount == 1)) {
+      val hasMoreMsgs = listener!!.hasMoreMsgs()
       if (!areNewMsgsLoadingNow
           && System.currentTimeMillis() - timeOfLastRequestEnd > TIMEOUT_BETWEEN_REQUESTS
           && hasMoreMsgs
           && firstVisibleItem + visibleItemCount >= totalCount - LOADING_SHIFT_IN_ITEMS
-          && !JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFullName())) {
-        loadNextMsgs(adapter.getCount());
+          && !JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)) {
+        loadNextMsgs(adapter!!.count)
       }
     }
   }
 
-  @Override
-  public void onErrorOccurred(final int requestCode, int errorType, Exception e) {
-    switch (requestCode) {
-      case R.id.syns_request_code_load_next_messages:
-        areNewMsgsLoadingNow = false;
-        if (e instanceof UserRecoverableAuthException) {
+  override fun onErrorOccurred(requestCode: Int, errorType: Int, e: Exception?) {
+    when (requestCode) {
+      R.id.syns_request_code_load_next_messages -> {
+        areNewMsgsLoadingNow = false
+        if (e is UserRecoverableAuthException) {
           super.onErrorOccurred(requestCode, errorType,
-              new Exception(getString(R.string.gmail_user_recoverable_auth_exception)));
-          showSnackbar(getView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
-              Snackbar.LENGTH_INDEFINITE, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                  listener.onRetryGoogleAuth();
-                }
-              });
-        } else if (e instanceof GoogleAuthException || e.getMessage().equalsIgnoreCase("ServiceDisabled")) {
+              Exception(getString(R.string.gmail_user_recoverable_auth_exception)))
+          showSnackbar(view!!, getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
+              Snackbar.LENGTH_INDEFINITE, View.OnClickListener { listener!!.onRetryGoogleAuth() })
+        } else if (e is GoogleAuthException || e!!.message.equals("ServiceDisabled", ignoreCase = true)) {
           super.onErrorOccurred(requestCode, errorType,
-              new Exception(getString(R.string.google_auth_exception_service_disabled)));
+              Exception(getString(R.string.google_auth_exception_service_disabled)))
         } else {
-          super.onErrorOccurred(requestCode, errorType, e);
+          super.onErrorOccurred(requestCode, errorType, e)
         }
 
-        footerProgressView.setVisibility(View.GONE);
-        emptyView.setVisibility(View.GONE);
+        footerProgressView!!.visibility = View.GONE
+        emptyView!!.visibility = View.GONE
 
-        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
-        DatabaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
-            listener.getCurrentFolder().getFullName());
+        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache)
+        DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao.email,
+            listener!!.currentFolder!!.fullName)
 
-        switch (errorType) {
-          case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
-            showConnLostHint();
-            break;
+        when (errorType) {
+          SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> showConnLostHint()
         }
-        break;
+      }
 
-      case R.id.syns_request_code_force_load_new_messages:
-        areNewMsgsLoadingNow = false;
-        swipeRefreshLayout.setRefreshing(false);
-        switch (errorType) {
-          case SyncErrorTypes.ACTION_FAILED_SHOW_TOAST:
-            Toast.makeText(getContext(), R.string.failed_please_try_again_later, Toast.LENGTH_SHORT).show();
-            break;
+      R.id.syns_request_code_force_load_new_messages -> {
+        areNewMsgsLoadingNow = false
+        swipeRefreshLayout!!.isRefreshing = false
+        when (errorType) {
+          SyncErrorTypes.ACTION_FAILED_SHOW_TOAST -> Toast.makeText(context, R.string.failed_please_try_again_later, Toast.LENGTH_SHORT).show()
 
-          case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
-            showConnProblemHint();
-            break;
+          SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> showConnProblemHint()
         }
-        break;
+      }
 
-      case R.id.syns_request_code_update_label_passive:
-      case R.id.syns_request_code_update_label_active:
-        if (listener.getCurrentFolder() == null) {
-          String errorMsg = getString(R.string.failed_load_labels_from_email_server);
+      R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> if (listener!!.currentFolder == null) {
+        var errorMsg = getString(R.string.failed_load_labels_from_email_server)
 
-          if (e instanceof AuthenticationFailedException) {
-            if (getString(R.string.gmail_imap_disabled_error).equalsIgnoreCase(e.getMessage())) {
-              errorMsg = getString(R.string.it_seems_imap_access_is_disabled);
-            }
+        if (e is AuthenticationFailedException) {
+          if (getString(R.string.gmail_imap_disabled_error).equals(e.message, ignoreCase = true)) {
+            errorMsg = getString(R.string.it_seems_imap_access_is_disabled)
           }
-
-          super.onErrorOccurred(requestCode, errorType, new Exception(errorMsg));
-          setSupportActionBarTitle(null);
         }
-        break;
 
-      case R.id.sync_request_code_search_messages:
-        areNewMsgsLoadingNow = false;
-        super.onErrorOccurred(requestCode, errorType, e);
-        break;
+        super.onErrorOccurred(requestCode, errorType, Exception(errorMsg))
+        setSupportActionBarTitle("")
+      }
+
+      R.id.sync_request_code_search_messages -> {
+        areNewMsgsLoadingNow = false
+        super.onErrorOccurred(requestCode, errorType, e)
+      }
     }
   }
 
-  @Override
-  public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-    swipeRefreshLayout.setEnabled(false);
-    MenuInflater inflater = mode.getMenuInflater();
-    inflater.inflate(R.menu.message_list_context_menu, menu);
-    return true;
+  override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+    swipeRefreshLayout!!.isEnabled = false
+    val inflater = mode.menuInflater
+    inflater.inflate(R.menu.message_list_context_menu, menu)
+    return true
   }
 
-  @Override
-  public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-    this.actionMode = mode;
-    getActivity().getWindow().setStatusBarColor(UIUtil.getColor(getContext(), R.color.dark));
-    return false;
+  override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
+    this.actionMode = mode
+    activity!!.window.statusBarColor = UIUtil.getColor(context!!, R.color.dark)
+    return false
   }
 
-  @Override
-  public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.menuActionDeleteMessage:
-        SparseBooleanArray checkedItemPositions = listView.getCheckedItemPositions();
+  override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+    return when (item.itemId) {
+      R.id.menuActionDeleteMessage -> {
+        val checkedItemPositions = listView!!.checkedItemPositions
 
-        TwoWayDialogFragment twoWayDialogFragment = TwoWayDialogFragment.newInstance("",
-            getResources().getQuantityString(R.plurals.delete_messages, checkedItemPositions.size(),
-                checkedItemPositions.size()), getString(android.R.string.ok), getString(R.string.cancel), true);
-        twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_DELETE_MESSAGES);
-        twoWayDialogFragment.show(getFragmentManager(), TwoWayDialogFragment.class.getSimpleName());
+        val twoWayDialogFragment = TwoWayDialogFragment.newInstance("",
+            resources.getQuantityString(R.plurals.delete_messages, checkedItemPositions.size(),
+                checkedItemPositions.size()), getString(android.R.string.ok), getString(R.string.cancel), true)
+        twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_DELETE_MESSAGES)
+        twoWayDialogFragment.show(fragmentManager!!, TwoWayDialogFragment::class.java.simpleName)
 
-        return false;
-      default:
-        return false;
+        false
+      }
+      else -> false
     }
   }
 
-  @Override
-  public void onDestroyActionMode(ActionMode mode) {
-    getActivity().getWindow().setStatusBarColor(originalStatusBarColor);
+  override fun onDestroyActionMode(mode: ActionMode) {
+    activity!!.window.statusBarColor = originalStatusBarColor
 
-    actionMode = null;
-    adapter.clearSelection();
-    swipeRefreshLayout.setEnabled(true);
+    actionMode = null
+    adapter!!.clearSelection()
+    swipeRefreshLayout!!.isEnabled = true
     if (isSaveChoicesNeeded) {
-      checkedItemPositions = listView.getCheckedItemPositions().clone();
+      checkedItemPositions = listView!!.checkedItemPositions.clone()
     } else {
       if (checkedItemPositions != null) {
-        checkedItemPositions.clear();
+        checkedItemPositions!!.clear()
       }
     }
   }
 
-  @Override
-  public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
-    adapter.updateItemState(position, checked);
-    mode.setTitle(listView.getCheckedItemCount() > 0 ? String.valueOf(listView.getCheckedItemCount()) : null);
+  override fun onItemCheckedStateChanged(mode: ActionMode, position: Int, id: Long, checked: Boolean) {
+    adapter!!.updateItemState(position, checked)
+    mode.title = if (listView!!.checkedItemCount > 0) listView!!.checkedItemCount.toString() else null
   }
 
   /**
    * Update a current messages list.
    *
    * @param isFolderChanged         if true we destroy a previous loader to reset position, if false we
-   *                                try to load a new messages.
+   * try to load a new messages.
    * @param isForceClearCacheNeeded true if we need to forcefully clean the database cache.
    */
-  public void updateList(boolean isFolderChanged, boolean isForceClearCacheNeeded) {
-    if (listener.getCurrentFolder() != null) {
-      isFetchMesgsNeeded = !isFolderChanged;
+  fun updateList(isFolderChanged: Boolean, isForceClearCacheNeeded: Boolean) {
+    if (listener!!.currentFolder != null) {
+      isFetchMesgsNeeded = !isFolderChanged
 
       if (isFolderChanged) {
-        adapter.clearSelection();
-        if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFullName())) {
-          listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+        adapter!!.clearSelection()
+        if (JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)) {
+          listView!!.choiceMode = ListView.CHOICE_MODE_MULTIPLE_MODAL
         } else {
-          listView.setChoiceMode(ListView.CHOICE_MODE_NONE);
+          listView!!.choiceMode = ListView.CHOICE_MODE_NONE
           if (checkedItemPositions != null) {
-            checkedItemPositions.clear();
+            checkedItemPositions!!.clear()
           }
         }
 
-        if (getSnackBar() != null) {
-          getSnackBar().dismiss();
+        if (snackBar != null) {
+          snackBar!!.dismiss()
         }
 
-        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
-        boolean isEmptyFolferAliases = TextUtils.isEmpty(listener.getCurrentFolder().getFolderAlias());
-        if (isEmptyFolferAliases || !isItSyncOrOutboxFolder(listener.getCurrentFolder()) || isForceClearCacheNeeded) {
-          LocalFolder folder = listener.getCurrentFolder();
+        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache)
+        val isEmptyFolferAliases = TextUtils.isEmpty(listener!!.currentFolder!!.folderAlias)
+        if (isEmptyFolferAliases || !isItSyncOrOutboxFolder(listener!!.currentFolder!!) || isForceClearCacheNeeded) {
+          val folder = listener!!.currentFolder
 
-          String folderName = TextUtils.isEmpty(folder.getSearchQuery()) ? folder.getFullName() :
-              SearchMessagesActivity.SEARCH_FOLDER_NAME;
-          DatabaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(), folderName);
+          val folderName = if (TextUtils.isEmpty(folder!!.searchQuery))
+            folder.fullName
+          else
+            SearchMessagesActivity.SEARCH_FOLDER_NAME
+          DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao.email, folderName)
         }
       }
 
-      if (adapter.getCount() == 0) {
-        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache, null, callbacks);
+      if (adapter!!.count == 0) {
+        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache, null, callbacks)
       }
     }
   }
@@ -526,10 +434,10 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    *
    * @param isRefreshListNeeded true if we must refresh the emails list.
    */
-  public void onForceLoadNewMsgsCompleted(boolean isRefreshListNeeded) {
-    swipeRefreshLayout.setRefreshing(false);
-    if (isRefreshListNeeded || adapter.getCount() == 0) {
-      updateList(false, false);
+  fun onForceLoadNewMsgsCompleted(isRefreshListNeeded: Boolean) {
+    swipeRefreshLayout!!.isRefreshing = false
+    if (isRefreshListNeeded || adapter!!.count == 0) {
+      updateList(false, false)
     }
   }
 
@@ -538,19 +446,19 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    *
    * @param isUpdateListNeeded true if we must reload the emails list.
    */
-  public void onNextMsgsLoaded(boolean isUpdateListNeeded) {
-    footerProgressView.setVisibility(View.GONE);
-    progressView.setVisibility(View.GONE);
+  fun onNextMsgsLoaded(isUpdateListNeeded: Boolean) {
+    footerProgressView!!.visibility = View.GONE
+    progressView!!.visibility = View.GONE
 
-    if (isUpdateListNeeded || adapter.getCount() == 0) {
-      updateList(false, false);
-    } else if (adapter.getCount() == 0) {
-      emptyView.setText(isEncryptedModeEnabled ? R.string.no_encrypted_messages : R.string.no_results);
-      UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
+    if (isUpdateListNeeded || adapter!!.count == 0) {
+      updateList(false, false)
+    } else if (adapter!!.count == 0) {
+      emptyView!!.setText(if (isEncryptedModeEnabled) R.string.no_encrypted_messages else R.string.no_results)
+      UIUtil.exchangeViewVisibility(context, false, progressView!!, emptyView!!)
     }
 
-    areNewMsgsLoadingNow = false;
-    timeOfLastRequestEnd = System.currentTimeMillis();
+    areNewMsgsLoadingNow = false
+    timeOfLastRequestEnd = System.currentTimeMillis()
   }
 
   /**
@@ -559,19 +467,19 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    * @param progress The progress
    * @param message  The user friendly message.
    */
-  public void setActionProgress(int progress, String message) {
+  fun setActionProgress(progress: Int, message: String?) {
     if (progressBarActionProgress != null) {
-      progressBarActionProgress.setProgress(progress);
-      progressBarActionProgress.setVisibility(progress == 100 ? View.GONE : View.VISIBLE);
+      progressBarActionProgress!!.progress = progress
+      progressBarActionProgress!!.visibility = if (progress == 100) View.GONE else View.VISIBLE
     }
 
     if (textViewActionProgress != null) {
       if (progress != 100) {
-        textViewActionProgress.setText(getString(R.string.progress_message, progress, message));
-        textViewActionProgress.setVisibility(View.VISIBLE);
+        textViewActionProgress!!.text = getString(R.string.progress_message, progress, message)
+        textViewActionProgress!!.visibility = View.VISIBLE
       } else {
-        textViewActionProgress.setText(null);
-        textViewActionProgress.setVisibility(View.GONE);
+        textViewActionProgress!!.text = null
+        textViewActionProgress!!.visibility = View.GONE
       }
     }
   }
@@ -579,259 +487,240 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
   /**
    * Reload the folder messages.
    */
-  public void reloadMsgs() {
-    LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache);
-    DatabaseUtil.cleanFolderCache(getContext(), listener.getCurrentAccountDao().getEmail(),
-        listener.getCurrentFolder().getFullName());
-    UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-    loadNextMsgs(0);
+  fun reloadMsgs() {
+    LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache)
+    DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao.email,
+        listener!!.currentFolder!!.fullName)
+    UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+    loadNextMsgs(0)
   }
 
-  public void onSyncServiceConnected() {
+  fun onSyncServiceConnected() {
     if (forceFirstLoadNeeded) {
-      loadNextMsgs(0);
-      forceFirstLoadNeeded = false;
+      loadNextMsgs(0)
+      forceFirstLoadNeeded = false
     }
   }
 
-  public void onFilterMsgs(boolean isEncryptedModeEnabled) {
-    this.isEncryptedModeEnabled = isEncryptedModeEnabled;
+  fun onFilterMsgs(isEncryptedModeEnabled: Boolean) {
+    this.isEncryptedModeEnabled = isEncryptedModeEnabled
 
     if (isEncryptedModeEnabled) {
-      lastFirstVisiblePos = listView.getFirstVisiblePosition();
+      lastFirstVisiblePos = listView!!.firstVisiblePosition
     }
 
-    updateList(true, true);
+    updateList(true, true)
   }
 
-  public void onDrawerStateChanged(boolean isOpen) {
-    isSaveChoicesNeeded = isOpen;
+  fun onDrawerStateChanged(isOpen: Boolean) {
+    isSaveChoicesNeeded = isOpen
     if (isOpen) {
       if (actionMode != null) {
-        actionMode.finish();
+        actionMode!!.finish()
       }
     } else {
-      if (checkedItemPositions != null && checkedItemPositions.size() > 0) {
-        for (int i = 0; i < checkedItemPositions.size(); i++) {
-          int key = checkedItemPositions.keyAt(i);
-          boolean value = checkedItemPositions.valueAt(i);
-          listView.setItemChecked(key, value);
+      if (checkedItemPositions != null && checkedItemPositions!!.size() > 0) {
+        for (i in 0 until checkedItemPositions!!.size()) {
+          val key = checkedItemPositions!!.keyAt(i)
+          val value = checkedItemPositions!!.valueAt(i)
+          listView!!.setItemChecked(key, value)
         }
       }
     }
   }
 
-  private void showConnProblemHint() {
-    showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
-        Snackbar.LENGTH_LONG, new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            onRefresh();
-          }
-        });
+  private fun showConnProblemHint() {
+    showSnackbar(view!!, getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
+        Snackbar.LENGTH_LONG, View.OnClickListener { onRefresh() })
   }
 
-  private void showConnLostHint() {
-    showSnackbar(getView(), getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
-        Snackbar.LENGTH_LONG, new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-            loadNextMsgs(-1);
-          }
-        });
+  private fun showConnLostHint() {
+    showSnackbar(view!!, getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
+        Snackbar.LENGTH_LONG, View.OnClickListener {
+      UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+      loadNextMsgs(-1)
+    })
   }
 
-  private void showFiledLoadLabelsHint() {
-    showSnackbar(getView(), getString(R.string.failed_load_labels_from_email_server), getString(R.string.retry),
-        Snackbar.LENGTH_LONG, new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            setSupportActionBarTitle(getString(R.string.loading));
-            UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-            ((BaseSyncActivity) getActivity()).updateLabels(R.id.syns_request_code_update_label_active, false);
-          }
-        });
+  private fun showFiledLoadLabelsHint() {
+    showSnackbar(view!!, getString(R.string.failed_load_labels_from_email_server), getString(R.string.retry),
+        Snackbar.LENGTH_LONG, View.OnClickListener {
+      setSupportActionBarTitle(getString(R.string.loading))
+      UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+      (activity as BaseSyncActivity).updateLabels(R.id.syns_request_code_update_label_active, false)
+    })
   }
 
-  private void deleteSelectedMsgs() {
-    SparseBooleanArray checkedItemPositions = listView.getCheckedItemPositions();
+  private fun deleteSelectedMsgs() {
+    val checkedItemPositions = listView!!.checkedItemPositions
 
     if (checkedItemPositions != null && checkedItemPositions.size() > 0) {
-      List<GeneralMessageDetails> detailsList = new ArrayList<>();
-      for (int i = 0; i < checkedItemPositions.size(); i++) {
-        int key = checkedItemPositions.keyAt(i);
-        GeneralMessageDetails details = adapter.getItem(key);
+      val detailsList = ArrayList<GeneralMessageDetails>()
+      for (i in 0 until checkedItemPositions.size()) {
+        val key = checkedItemPositions.keyAt(i)
+        val details = adapter!!.getItem(key)
         if (details != null) {
-          detailsList.add(details);
+          detailsList.add(details)
         }
       }
 
-      MessageDaoSource msgDaoSource = new MessageDaoSource();
-      int countOfDelMsgs = 0;
-      for (GeneralMessageDetails generalMsgDetails : detailsList) {
-        if (msgDaoSource.deleteOutgoingMsg(getContext(), generalMsgDetails) > 0) {
-          countOfDelMsgs++;
+      val msgDaoSource = MessageDaoSource()
+      var countOfDelMsgs = 0
+      for (generalMsgDetails in detailsList) {
+        if (msgDaoSource.deleteOutgoingMsg(context!!, generalMsgDetails) > 0) {
+          countOfDelMsgs++
         }
       }
 
       if (countOfDelMsgs > 0) {
-        Toast.makeText(getContext(), getResources().getQuantityString(R.plurals.messages_deleted,
-            countOfDelMsgs, countOfDelMsgs), Toast.LENGTH_LONG).show();
+        Toast.makeText(context, resources.getQuantityString(R.plurals.messages_deleted,
+            countOfDelMsgs, countOfDelMsgs), Toast.LENGTH_LONG).show()
       }
 
-      actionMode.finish();
+      actionMode!!.finish()
     }
   }
 
-  private void changeViewsVisibility() {
-    emptyView.setVisibility(View.GONE);
-    statusView.setVisibility(View.GONE);
+  private fun changeViewsVisibility() {
+    emptyView!!.visibility = View.GONE
+    statusView!!.visibility = View.GONE
 
-    if (!isFetchMesgsNeeded || adapter.getCount() == 0) {
-      UIUtil.exchangeViewVisibility(getContext(), true, progressView, listView);
+    if (!isFetchMesgsNeeded || adapter!!.count == 0) {
+      UIUtil.exchangeViewVisibility(context, true, progressView!!, listView!!)
     }
 
-    if (getSupportActionBar() != null) {
-      getSupportActionBar().setTitle(listener.getCurrentFolder().getFolderAlias());
+    if (supportActionBar != null) {
+      supportActionBar!!.title = listener!!.currentFolder!!.folderAlias
     }
   }
 
-  private void handleCursor(Cursor data) {
-    adapter.setLocalFolder(listener.getCurrentFolder());
-    adapter.swapCursor(data);
-    if (data != null && data.getCount() != 0) {
-      emptyView.setVisibility(View.GONE);
-      statusView.setVisibility(View.GONE);
+  private fun handleCursor(data: Cursor?) {
+    adapter!!.localFolder = listener!!.currentFolder
+    adapter!!.swapCursor(data)
+    if (data != null && data.count != 0) {
+      emptyView!!.visibility = View.GONE
+      statusView!!.visibility = View.GONE
 
       if (!isEncryptedModeEnabled && lastFirstVisiblePos != 0) {
-        listView.setSelection(lastFirstVisiblePos);
-        lastFirstVisiblePos = 0;
+        listView!!.setSelection(lastFirstVisiblePos)
+        lastFirstVisiblePos = 0
       }
 
-      UIUtil.exchangeViewVisibility(getContext(), false, progressView, listView);
+      UIUtil.exchangeViewVisibility(context, false, progressView!!, listView!!)
     } else {
-      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFullName())) {
-        isFetchMesgsNeeded = true;
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)) {
+        isFetchMesgsNeeded = true
       }
 
       if (!isFetchMesgsNeeded) {
-        isFetchMesgsNeeded = true;
-        if (GeneralUtil.isConnected(getContext())) {
-          if (isSyncServiceConnected()) {
-            loadNextMsgs(0);
+        isFetchMesgsNeeded = true
+        if (GeneralUtil.isConnected(context!!)) {
+          if (isSyncServiceConnected) {
+            loadNextMsgs(0)
           } else {
-            forceFirstLoadNeeded = true;
+            forceFirstLoadNeeded = true
           }
         } else {
-          textViewStatusInfo.setText(R.string.no_connection);
-          UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
-          showRetrySnackBar();
+          textViewStatusInfo!!.setText(R.string.no_connection)
+          UIUtil.exchangeViewVisibility(context, false, progressView!!, statusView!!)
+          showRetrySnackBar()
         }
       } else {
-        emptyView.setText(isEncryptedModeEnabled ?
-            R.string.no_encrypted_messages : R.string.no_results);
-        UIUtil.exchangeViewVisibility(getContext(), false, progressView, emptyView);
+        emptyView!!.setText(if (isEncryptedModeEnabled) {
+          R.string.no_encrypted_messages
+        } else {
+          R.string.no_results
+        })
+        UIUtil.exchangeViewVisibility(context, false, progressView!!, emptyView!!)
       }
     }
   }
 
-  private Loader<Cursor> prepareCursorLoader() {
-    String selection = MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
-        + (isEncryptedModeEnabled ? " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" : "");
+  private fun prepareCursorLoader(): Loader<Cursor> {
+    var selection = (MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
+        + if (isEncryptedModeEnabled) " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" else "")
 
-    if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(listener.getCurrentFolder().getFolderAlias())) {
-      selection += " AND " + MessageDaoSource.COL_STATE + " NOT IN (" + MessageState.SENT.getValue()
-          + ", " + MessageState.SENT_WITHOUT_LOCAL_COPY.getValue() + ")";
+    if (JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.folderAlias!!, ignoreCase = true)) {
+      selection += (" AND " + MessageDaoSource.COL_STATE + " NOT IN (" + MessageState.SENT.value
+          + ", " + MessageState.SENT_WITHOUT_LOCAL_COPY.value + ")")
     }
 
-    return new CursorLoader(getContext(), new MessageDaoSource().getBaseContentUri(), null, selection,
-        new String[]{listener.getCurrentAccountDao().getEmail(), listener.getCurrentFolder().getFolderAlias()},
-        MessageDaoSource.COL_RECEIVED_DATE + " DESC");
+    return CursorLoader(context!!, MessageDaoSource().baseContentUri, null, selection,
+        arrayOf<String>(listener!!.currentAccountDao.email, listener!!.currentFolder!!.folderAlias!!),
+        MessageDaoSource.COL_RECEIVED_DATE + " DESC")
   }
 
-  private void handleOutgoingMsgWhichHasSomeError(final GeneralMessageDetails details) {
-    String message = null;
+  private fun handleOutgoingMsgWhichHasSomeError(details: GeneralMessageDetails) {
+    var message: String? = null
 
-    switch (details.getMsgState()) {
-      case ERROR_ORIGINAL_MESSAGE_MISSING:
-      case ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND:
-        message = getString(R.string.message_failed_to_forward);
-        break;
+    when (details.msgState) {
+      MessageState.ERROR_ORIGINAL_MESSAGE_MISSING, MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND -> message = getString(R.string.message_failed_to_forward)
 
-      case ERROR_CACHE_PROBLEM:
-        message = getString(R.string.there_is_problem_with_cache);
-        break;
+      MessageState.ERROR_CACHE_PROBLEM -> message = getString(R.string.there_is_problem_with_cache)
 
-      case ERROR_DURING_CREATION:
-        message = getString(R.string.error_happened_during_creation, getString(R.string.support_email));
-        break;
+      MessageState.ERROR_DURING_CREATION -> message = getString(R.string.error_happened_during_creation, getString(R.string.support_email))
 
-      case ERROR_PRIVATE_KEY_NOT_FOUND:
-        String errorMsg = details.getErrorMsg();
-        if (errorMsg.equalsIgnoreCase(details.getEmail())) {
-          message = getString(R.string.no_key_available_for_your_email_account, getString(R.string.support_email));
+      MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> {
+        val errorMsg = details.errorMsg
+        if (errorMsg!!.equals(details.email, ignoreCase = true)) {
+          message = getString(R.string.no_key_available_for_your_email_account, getString(R.string.support_email))
         } else {
-          message = getString(R.string.no_key_available_for_your_emails, errorMsg, details.getEmail(),
-              getString(R.string.support_email));
+          message = getString(R.string.no_key_available_for_your_emails, errorMsg, details.email,
+              getString(R.string.support_email))
         }
-        break;
+      }
 
-      case ERROR_SENDING_FAILED:
-        TwoWayDialogFragment twoWayDialogFragment = TwoWayDialogFragment.newInstance("",
-            getString(R.string.message_failed_to_send), getString(R.string.retry), getString(R.string.cancel), true);
-        twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_RETRY_TO_SEND_MESSAGES);
-        twoWayDialogFragment.show(getFragmentManager(), TwoWayDialogFragment.class.getSimpleName());
-        return;
+      MessageState.ERROR_SENDING_FAILED -> {
+        val twoWayDialogFragment = TwoWayDialogFragment.newInstance("",
+            getString(R.string.message_failed_to_send), getString(R.string.retry), getString(R.string.cancel), true)
+        twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_RETRY_TO_SEND_MESSAGES)
+        twoWayDialogFragment.show(fragmentManager!!, TwoWayDialogFragment::class.java.simpleName)
+        return
+      }
     }
 
-    InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(null, message, null, false, true, false);
-    infoDialogFragment.setOnInfoDialogButtonClickListener(new InfoDialogFragment.OnInfoDialogButtonClickListener() {
-      @Override
-      public void onInfoDialogButtonClick() {
-        int deletedRows = new MessageDaoSource().deleteOutgoingMsg(getContext(), details);
+    val infoDialogFragment = InfoDialogFragment.newInstance(null, message!!, null, false, true, false)
+    infoDialogFragment.onInfoDialogButtonClickListener = object : InfoDialogFragment.OnInfoDialogButtonClickListener {
+      override fun onInfoDialogButtonClick() {
+        val deletedRows = MessageDaoSource().deleteOutgoingMsg(context!!, details)
         if (deletedRows > 0) {
-          Toast.makeText(getContext(), R.string.message_was_deleted, Toast.LENGTH_SHORT).show();
+          Toast.makeText(context, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
         } else {
           ExceptionUtil.handleError(
-              new ManualHandledException("Can't delete outgoing messages which have some errors."));
+              ManualHandledException("Can't delete outgoing messages which have some errors."))
         }
       }
-    });
+    }
 
-    infoDialogFragment.show(getActivity().getSupportFragmentManager(), InfoDialogFragment.class.getSimpleName());
+    infoDialogFragment.show(activity!!.supportFragmentManager, InfoDialogFragment::class.java.simpleName)
   }
 
-  private boolean isItSyncOrOutboxFolder(LocalFolder localFolder) {
-    return localFolder.getFullName().equalsIgnoreCase(JavaEmailConstants.FOLDER_INBOX)
-        || localFolder.getFullName().equalsIgnoreCase(JavaEmailConstants.FOLDER_OUTBOX);
+  private fun isItSyncOrOutboxFolder(localFolder: LocalFolder): Boolean {
+    return localFolder.fullName.equals(JavaEmailConstants.FOLDER_INBOX, ignoreCase = true) || localFolder.fullName.equals(JavaEmailConstants.FOLDER_OUTBOX, ignoreCase = true)
   }
 
   /**
-   * Show a {@link Snackbar} with a "Retry" button when a "no connection" issue happened.
+   * Show a [Snackbar] with a "Retry" button when a "no connection" issue happened.
    */
-  private void showRetrySnackBar() {
-    showSnackbar(getView(), getString(R.string.no_connection), getString(R.string.retry),
-        Snackbar.LENGTH_LONG, new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            if (GeneralUtil.isConnected(getContext())) {
-              UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-              loadNextMsgs(-1);
-            } else {
-              showRetrySnackBar();
-            }
-          }
-        });
+  private fun showRetrySnackBar() {
+    showSnackbar(view!!, getString(R.string.no_connection), getString(R.string.retry),
+        Snackbar.LENGTH_LONG, View.OnClickListener {
+      if (GeneralUtil.isConnected(context!!)) {
+        UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+        loadNextMsgs(-1)
+      } else {
+        showRetrySnackBar()
+      }
+    })
   }
 
   /**
    * Try to load a new messages from an IMAP server.
    */
-  private void refreshMsgs() {
-    areNewMsgsLoadingNow = false;
-    listener.getMsgsCountingIdlingResource().increment();
-    baseSyncActivity.refreshMsgs(R.id.syns_request_code_force_load_new_messages, listener.getCurrentFolder());
+  private fun refreshMsgs() {
+    areNewMsgsLoadingNow = false
+    listener!!.msgsCountingIdlingResource.increment()
+    baseSyncActivity!!.refreshMsgs(R.id.syns_request_code_force_load_new_messages, listener!!.currentFolder!!)
   }
 
   /**
@@ -839,59 +728,64 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
    *
    * @param totalItemsCount The count of already loaded messages.
    */
-  private void loadNextMsgs(final int totalItemsCount) {
-    if (GeneralUtil.isConnected(getContext())) {
-      footerProgressView.setVisibility(View.VISIBLE);
-      areNewMsgsLoadingNow = true;
-      listener.getMsgsCountingIdlingResource().increment();
-      LocalFolder localFolder = listener.getCurrentFolder();
-      if (TextUtils.isEmpty(localFolder.getSearchQuery())) {
-        baseSyncActivity.loadNextMsgs(R.id.syns_request_code_load_next_messages, localFolder, totalItemsCount);
+  private fun loadNextMsgs(totalItemsCount: Int) {
+    if (GeneralUtil.isConnected(context!!)) {
+      footerProgressView!!.visibility = View.VISIBLE
+      areNewMsgsLoadingNow = true
+      listener!!.msgsCountingIdlingResource.increment()
+      val localFolder = listener!!.currentFolder
+      if (TextUtils.isEmpty(localFolder!!.searchQuery)) {
+        baseSyncActivity!!.loadNextMsgs(R.id.syns_request_code_load_next_messages, localFolder, totalItemsCount)
       } else {
-        baseSyncActivity.searchNextMsgs(R.id.sync_request_code_search_messages, localFolder, totalItemsCount);
+        baseSyncActivity!!.searchNextMsgs(R.id.sync_request_code_search_messages, localFolder, totalItemsCount)
       }
     } else {
-      footerProgressView.setVisibility(View.GONE);
-      showSnackbar(getView(), getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
-          Snackbar.LENGTH_LONG, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-              loadNextMsgs(totalItemsCount);
-            }
-          });
+      footerProgressView!!.visibility = View.GONE
+      showSnackbar(view!!, getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
+          Snackbar.LENGTH_LONG, View.OnClickListener { loadNextMsgs(totalItemsCount) })
     }
   }
 
-  private void initViews(View view) {
-    textViewActionProgress = view.findViewById(R.id.textViewActionProgress);
-    progressBarActionProgress = view.findViewById(R.id.progressBarActionProgress);
+  private fun initViews(view: View) {
+    textViewActionProgress = view.findViewById(R.id.textViewActionProgress)
+    progressBarActionProgress = view.findViewById(R.id.progressBarActionProgress)
 
-    listView = view.findViewById(R.id.listViewMessages);
-    listView.setOnItemClickListener(this);
-    listView.setMultiChoiceModeListener(this);
+    listView = view.findViewById(R.id.listViewMessages)
+    listView!!.onItemClickListener = this
+    listView!!.setMultiChoiceModeListener(this)
 
-    footerProgressView = LayoutInflater.from(getContext()).inflate(R.layout.list_view_progress_footer, listView, false);
-    footerProgressView.setVisibility(View.GONE);
+    footerProgressView = LayoutInflater.from(context).inflate(R.layout.list_view_progress_footer, listView, false)
+    footerProgressView!!.visibility = View.GONE
 
-    listView.addFooterView(footerProgressView);
-    listView.setAdapter(adapter);
-    listView.setOnScrollListener(this);
+    listView!!.addFooterView(footerProgressView)
+    listView!!.adapter = adapter
+    listView!!.setOnScrollListener(this)
 
-    emptyView = view.findViewById(R.id.emptyView);
-    swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
-    swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary);
-    swipeRefreshLayout.setOnRefreshListener(this);
+    emptyView = view.findViewById(R.id.emptyView)
+    swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
+    swipeRefreshLayout!!.setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
+    swipeRefreshLayout!!.setOnRefreshListener(this)
   }
 
-  public interface OnManageEmailsListener {
-    boolean hasMoreMsgs();
+  interface OnManageEmailsListener {
 
-    AccountDao getCurrentAccountDao();
+    val currentAccountDao: AccountDao
 
-    LocalFolder getCurrentFolder();
+    val currentFolder: LocalFolder?
 
-    void onRetryGoogleAuth();
+    val msgsCountingIdlingResource: CountingIdlingResource
+    fun hasMoreMsgs(): Boolean
 
-    CountingIdlingResource getMsgsCountingIdlingResource();
+    fun onRetryGoogleAuth()
+  }
+
+  companion object {
+
+    private val REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10
+    private val REQUEST_CODE_DELETE_MESSAGES = 11
+    private val REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 12
+
+    private val TIMEOUT_BETWEEN_REQUESTS = 500
+    private val LOADING_SHIFT_IN_ITEMS = 5
   }
 }

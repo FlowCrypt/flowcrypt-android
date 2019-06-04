@@ -3,12 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment;
+package com.flowcrypt.email.ui.activity.fragment
 
-import android.os.Bundle;
+import android.os.Bundle
 
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment;
+import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 
 /**
  * The main settings fragment.
@@ -20,10 +20,9 @@ import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment;
  */
 
 
-public class MainSettingsFragment extends BasePreferenceFragment {
+class MainSettingsFragment : BasePreferenceFragment() {
 
-  @Override
-  public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-    addPreferencesFromResource(R.xml.preferences_main_settings);
+  override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    addPreferencesFromResource(R.xml.preferences_main_settings)
   }
 }

@@ -3,24 +3,18 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment;
+package com.flowcrypt.email.ui.activity.fragment
 
-import android.content.Context;
-import android.text.format.DateFormat;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.model.PgpContact;
-
-import java.util.Date;
-import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+import android.content.Context
+import android.text.format.DateFormat
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import java.util.*
 
 /**
  * This adapter will be used to show a list of private keys.
@@ -30,80 +24,51 @@ import androidx.recyclerview.widget.RecyclerView;
  * Time: 6:24 PM
  * E-mail: DenBond7@gmail.com
  */
-public class PrivateKeysRecyclerViewAdapter extends RecyclerView.Adapter<PrivateKeysRecyclerViewAdapter.ViewHolder> {
+class PrivateKeysRecyclerViewAdapter(context: Context,
+                                     private var list: List<NodeKeyDetails>?,
+                                     private val listener: OnKeySelectedListener?) : RecyclerView.Adapter<PrivateKeysRecyclerViewAdapter.ViewHolder>() {
+  private val dateFormat: java.text.DateFormat = DateFormat.getMediumDateFormat(context)
 
-  private final OnKeySelectedListener listener;
-  private List<NodeKeyDetails> list;
-  private java.text.DateFormat dateFormat;
-
-  public PrivateKeysRecyclerViewAdapter(Context context, List<NodeKeyDetails> items, OnKeySelectedListener listener) {
-    this.list = items;
-    this.listener = listener;
-    this.dateFormat = DateFormat.getMediumDateFormat(context);
+  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    val view = LayoutInflater.from(parent.context).inflate(R.layout.key_item, parent, false)
+    return ViewHolder(view)
   }
 
-  @NonNull
-  @Override
-  public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-    View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.key_item, parent, false);
-    return new ViewHolder(view);
-  }
+  override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
+    val nodeKeyDetails = list!![position]
+    val (email) = nodeKeyDetails.primaryPgpContact
 
-  @Override
-  public void onBindViewHolder(@NonNull final ViewHolder viewHolder, final int position) {
-    final NodeKeyDetails nodeKeyDetails = list.get(position);
-    if (nodeKeyDetails != null) {
-      PgpContact pgpContact = nodeKeyDetails.getPrimaryPgpContact();
+    viewHolder.textViewKeyOwner.text = email
+    viewHolder.textViewKeywords.text = nodeKeyDetails.keywords
 
-      viewHolder.textViewKeyOwner.setText(pgpContact.getEmail());
-      viewHolder.textViewKeywords.setText(nodeKeyDetails.getKeywords());
-
-      long timestamp = nodeKeyDetails.getCreated();
-      if (timestamp != -1) {
-        viewHolder.textViewCreationDate.setText(dateFormat.format(new Date(timestamp)));
-      } else {
-        viewHolder.textViewCreationDate.setText(null);
-      }
+    val timestamp = nodeKeyDetails.created
+    if (timestamp != -1L) {
+      viewHolder.textViewCreationDate.text = dateFormat.format(Date(timestamp))
     } else {
-      viewHolder.textViewKeyOwner.setText(null);
-      viewHolder.textViewKeywords.setText(null);
-      viewHolder.textViewCreationDate.setText(null);
+      viewHolder.textViewCreationDate.text = null
     }
 
-    viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if (listener != null) {
-          listener.onKeySelected(viewHolder.getAdapterPosition(), nodeKeyDetails);
-        }
-      }
-    });
-  }
-
-  @Override
-  public int getItemCount() {
-    return list.size();
-  }
-
-  public void swap(List<NodeKeyDetails> nodeKeyDetailsList) {
-    this.list = nodeKeyDetailsList;
-    notifyDataSetChanged();
-  }
-
-  public interface OnKeySelectedListener {
-    void onKeySelected(int position, NodeKeyDetails nodeKeyDetails);
-  }
-
-  class ViewHolder extends RecyclerView.ViewHolder {
-    final TextView textViewKeyOwner;
-    final TextView textViewKeywords;
-    final TextView textViewCreationDate;
-
-    ViewHolder(View view) {
-      super(view);
-      textViewKeyOwner = view.findViewById(R.id.textViewKeyOwner);
-      textViewKeywords = view.findViewById(R.id.textViewKeywords);
-      textViewCreationDate = view.findViewById(R.id.textViewCreationDate);
+    viewHolder.itemView.setOnClickListener {
+      listener?.onKeySelected(viewHolder.adapterPosition, nodeKeyDetails)
     }
+  }
+
+  override fun getItemCount(): Int {
+    return list!!.size
+  }
+
+  fun swap(nodeKeyDetailsList: List<NodeKeyDetails>) {
+    this.list = nodeKeyDetailsList
+    notifyDataSetChanged()
+  }
+
+  interface OnKeySelectedListener {
+    fun onKeySelected(position: Int, nodeKeyDetails: NodeKeyDetails?)
+  }
+
+  inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    val textViewKeyOwner: TextView = view.findViewById(R.id.textViewKeyOwner)
+    val textViewKeywords: TextView = view.findViewById(R.id.textViewKeywords)
+    val textViewCreationDate: TextView = view.findViewById(R.id.textViewCreationDate)
   }
 }

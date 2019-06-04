@@ -3,76 +3,49 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment;
+package com.flowcrypt.email.ui.activity.fragment
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.text.format.DateFormat;
-import android.text.format.Formatter;
-import android.transition.TransitionManager;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.CompoundButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.FoldersManager;
-import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails;
-import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
-import com.flowcrypt.email.api.email.model.LocalFolder;
-import com.flowcrypt.email.api.email.model.ServiceInfo;
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes;
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptError;
-import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock;
-import com.flowcrypt.email.api.retrofit.response.model.node.Error;
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock;
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.model.MessageType;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService;
-import com.flowcrypt.email.ui.activity.CreateMessageActivity;
-import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity;
-import com.flowcrypt.email.ui.activity.MessageDetailsActivity;
-import com.flowcrypt.email.ui.activity.base.BaseSyncActivity;
-import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment;
-import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment;
-import com.flowcrypt.email.ui.widget.EmailWebView;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.flowcrypt.email.util.exception.ManualHandledException;
-import com.google.android.gms.common.util.CollectionUtils;
-import com.google.android.material.snackbar.Snackbar;
-
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
+import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.text.TextUtils
+import android.text.format.DateFormat
+import android.text.format.Formatter
+import android.transition.TransitionManager
+import android.view.*
+import android.widget.*
+import androidx.core.content.ContextCompat
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.model.*
+import com.flowcrypt.email.api.email.sync.SyncErrorTypes
+import com.flowcrypt.email.api.retrofit.response.model.node.*
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
+import com.flowcrypt.email.ui.activity.CreateMessageActivity
+import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
+import com.flowcrypt.email.ui.activity.MessageDetailsActivity
+import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
+import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
+import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
+import com.flowcrypt.email.ui.widget.EmailWebView
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.ManualHandledException
+import com.google.android.gms.common.util.CollectionUtils
+import com.google.android.material.snackbar.Snackbar
+import java.nio.charset.StandardCharsets
+import java.util.*
 
 /**
  * This fragment describe details of some message.
@@ -82,232 +55,193 @@ import androidx.core.content.ContextCompat;
  * Time: 16:29
  * E-mail: DenBond7@gmail.com
  */
-public class MessageDetailsFragment extends BaseSyncFragment implements View.OnClickListener {
-  private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100;
-  private static final int REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 101;
-  private static final int REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102;
+class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
-  private TextView textViewSenderAddress;
-  private TextView textViewDate;
-  private TextView textViewSubject;
-  private View viewFooterOfHeader;
-  private ViewGroup layoutMsgParts;
-  private View layoutContent;
-  private View imageBtnReplyAll;
-  private View progressBarActionRunning;
-  private View layoutMsgContainer;
-  private View layoutReplyBtns;
+  private var textViewSenderAddress: TextView? = null
+  private var textViewDate: TextView? = null
+  private var textViewSubject: TextView? = null
+  private var viewFooterOfHeader: View? = null
+  private var layoutMsgParts: ViewGroup? = null
+  private var layoutContent: View? = null
+  private var imageBtnReplyAll: View? = null
+  private var progressBarActionRunning: View? = null
+  override var contentView: View? = null
+    private set
+  private var layoutReplyBtns: View? = null
 
-  private java.text.DateFormat dateFormat;
-  private IncomingMessageInfo msgInfo;
-  private GeneralMessageDetails details;
-  private LocalFolder localFolder;
-  private FoldersManager.FolderType folderType;
+  private var dateFormat: java.text.DateFormat? = null
+  private var msgInfo: IncomingMessageInfo? = null
+  private var details: GeneralMessageDetails? = null
+  private var localFolder: LocalFolder? = null
+  private var folderType: FoldersManager.FolderType? = null
 
-  private boolean isAdditionalActionEnabled;
-  private boolean isDeleteActionEnabled;
-  private boolean isArchiveActionEnabled;
-  private boolean isMoveToInboxActionEnabled;
-  private OnActionListener onActionListener;
-  private AttachmentInfo lastClickedAtt;
-  private MessageEncryptionType msgEncryptType = MessageEncryptionType.STANDARD;
-  private ArrayList<AttachmentInfo> atts;
+  private var isAdditionalActionEnabled: Boolean = false
+  private var isDeleteActionEnabled: Boolean = false
+  private var isArchiveActionEnabled: Boolean = false
+  private var isMoveToInboxActionEnabled: Boolean = false
+  private var onActionListener: OnActionListener? = null
+  private var lastClickedAtt: AttachmentInfo? = null
+  private var msgEncryptType = MessageEncryptionType.STANDARD
+  private var atts: ArrayList<AttachmentInfo>? = null
 
-  public MessageDetailsFragment() {
+  override fun onAttach(context: Context?) {
+    super.onAttach(context)
+    if (context is BaseSyncActivity) {
+      this.onActionListener = context as OnActionListener?
+    } else
+      throw IllegalArgumentException(context!!.toString() + " must implement " +
+          OnActionListener::class.java.simpleName)
   }
 
-  @Override
-  public void onAttach(Context context) {
-    super.onAttach(context);
-    if (context instanceof BaseSyncActivity) {
-      this.onActionListener = (OnActionListener) context;
-    } else throw new IllegalArgumentException(context.toString() + " must implement " +
-        OnActionListener.class.getSimpleName());
-  }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setHasOptionsMenu(true)
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setHasOptionsMenu(true);
-
-    dateFormat = DateFormat.getTimeFormat(getContext());
-    Intent activityIntent = getActivity().getIntent();
+    dateFormat = DateFormat.getTimeFormat(context)
+    val activityIntent = activity!!.intent
 
     if (activityIntent != null) {
-      this.details = activityIntent.getParcelableExtra(MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS);
-      this.localFolder = activityIntent.getParcelableExtra(MessageDetailsActivity.EXTRA_KEY_FOLDER);
+      this.details = activityIntent.getParcelableExtra(MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS)
+      this.localFolder = activityIntent.getParcelableExtra(MessageDetailsActivity.EXTRA_KEY_FOLDER)
     }
 
-    updateActionsVisibility(localFolder);
+    updateActionsVisibility(localFolder)
   }
 
-  @Override
-  public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    return inflater.inflate(R.layout.fragment_message_details, container, false);
+  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    return inflater.inflate(R.layout.fragment_message_details, container, false)
   }
 
-  @Override
-  public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-    initViews(view);
-    updateViews();
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    initViews(view)
+    updateViews()
   }
 
-  @Override
-  public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    switch (requestCode) {
-      case REQUEST_CODE_START_IMPORT_KEY_ACTIVITY:
-        switch (resultCode) {
-          case Activity.RESULT_OK:
-            Toast.makeText(getContext(), R.string.key_successfully_imported, Toast.LENGTH_SHORT).show();
-            UIUtil.exchangeViewVisibility(getContext(), true, progressView, layoutMsgContainer);
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    when (requestCode) {
+      REQUEST_CODE_START_IMPORT_KEY_ACTIVITY -> when (resultCode) {
+        Activity.RESULT_OK -> {
+          Toast.makeText(context, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show()
+          UIUtil.exchangeViewVisibility(context, true, progressView!!, contentView!!)
 
-            MessageDetailsActivity activity = (MessageDetailsActivity) getBaseActivity();
-            activity.decryptMsg();
-            break;
+          val activity = baseActivity as MessageDetailsActivity
+          activity.decryptMsg()
         }
-        break;
+      }
 
-      case REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION:
-        switch (resultCode) {
-          case Activity.RESULT_OK:
-            List<AttachmentInfo> atts;
-            if (data != null) {
-              atts = data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST);
+      REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION -> when (resultCode) {
+        Activity.RESULT_OK -> {
+          val atts: List<AttachmentInfo>
+          if (data != null) {
+            atts = data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST)
 
-              if (!CollectionUtils.isEmpty(atts)) {
-                makeAttsProtected(atts);
-                sendTemplateMsgWithPublicKey(atts.get(0));
-              }
+            if (!CollectionUtils.isEmpty(atts)) {
+              makeAttsProtected(atts)
+              sendTemplateMsgWithPublicKey(atts[0])
             }
-
-            break;
+          }
         }
-        break;
+      }
 
-      default:
-        super.onActivityResult(requestCode, resultCode, data);
+      else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
 
-  @Override
-  public View getContentView() {
-    return layoutMsgContainer;
+  override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+    super.onCreateOptionsMenu(menu, inflater)
+    inflater!!.inflate(R.menu.fragment_message_details, menu)
   }
 
-  @Override
-  public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-    super.onCreateOptionsMenu(menu, inflater);
-    inflater.inflate(R.menu.fragment_message_details, menu);
-  }
+  override fun onPrepareOptionsMenu(menu: Menu?) {
+    super.onPrepareOptionsMenu(menu)
 
-  @Override
-  public void onPrepareOptionsMenu(Menu menu) {
-    super.onPrepareOptionsMenu(menu);
-
-    MenuItem menuItemArchiveMsg = menu.findItem(R.id.menuActionArchiveMessage);
-    MenuItem menuItemDeleteMsg = menu.findItem(R.id.menuActionDeleteMessage);
-    MenuItem menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox);
+    val menuItemArchiveMsg = menu!!.findItem(R.id.menuActionArchiveMessage)
+    val menuItemDeleteMsg = menu.findItem(R.id.menuActionDeleteMessage)
+    val menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox)
 
     if (menuItemArchiveMsg != null) {
-      menuItemArchiveMsg.setVisible(isArchiveActionEnabled && isAdditionalActionEnabled);
+      menuItemArchiveMsg.isVisible = isArchiveActionEnabled && isAdditionalActionEnabled
     }
 
     if (menuItemDeleteMsg != null) {
-      menuItemDeleteMsg.setVisible(isDeleteActionEnabled && isAdditionalActionEnabled);
+      menuItemDeleteMsg.isVisible = isDeleteActionEnabled && isAdditionalActionEnabled
     }
 
     if (menuActionMoveToInbox != null) {
-      menuActionMoveToInbox.setVisible(isMoveToInboxActionEnabled && isAdditionalActionEnabled);
+      menuActionMoveToInbox.isVisible = isMoveToInboxActionEnabled && isAdditionalActionEnabled
     }
   }
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.menuActionArchiveMessage:
-      case R.id.menuActionDeleteMessage:
-      case R.id.menuActionMoveToInbox:
-        runMsgAction(item.getItemId());
-        return true;
+  override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+    return when (item!!.itemId) {
+      R.id.menuActionArchiveMessage, R.id.menuActionDeleteMessage, R.id.menuActionMoveToInbox -> {
+        runMsgAction(item.itemId)
+        true
+      }
 
-      default:
-        return super.onOptionsItemSelected(item);
+      else -> super.onOptionsItemSelected(item)
     }
   }
 
-  @Override
-  public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.layoutReplyButton:
-        startActivity(CreateMessageActivity.generateIntent(getContext(), msgInfo, MessageType.REPLY, msgEncryptType));
-        break;
+  override fun onClick(v: View) {
+    when (v.id) {
+      R.id.layoutReplyButton -> startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY, msgEncryptType))
 
-      case R.id.imageButtonReplyAll:
-      case R.id.layoutReplyAllButton:
-        startActivity(CreateMessageActivity.generateIntent(getContext(), msgInfo, MessageType.REPLY_ALL,
-            msgEncryptType));
-        break;
+      R.id.imageButtonReplyAll, R.id.layoutReplyAllButton -> startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY_ALL,
+          msgEncryptType))
 
-      case R.id.layoutFwdButton:
-        if (msgEncryptType == MessageEncryptionType.ENCRYPTED) {
-          Toast.makeText(getContext(), R.string.cannot_forward_encrypted_attachments,
-              Toast.LENGTH_LONG).show();
+      R.id.layoutFwdButton -> {
+        if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
+          Toast.makeText(context, R.string.cannot_forward_encrypted_attachments,
+              Toast.LENGTH_LONG).show()
         } else {
           if (!CollectionUtils.isEmpty(atts)) {
-            for (AttachmentInfo att : atts) {
-              att.setForwarded(true);
+            for (att in atts!!) {
+              att.isForwarded = true
             }
           }
 
-          msgInfo.setAtts(atts);
+          msgInfo!!.atts = atts
         }
-        startActivity(CreateMessageActivity.generateIntent(getContext(), msgInfo, MessageType.FORWARD, msgEncryptType));
-        break;
+        startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.FORWARD, msgEncryptType))
+      }
     }
   }
 
-  @Override
-  public void onErrorOccurred(final int requestCode, int errorType, Exception e) {
-    super.onErrorOccurred(requestCode, errorType, e);
-    isAdditionalActionEnabled = true;
-    UIUtil.exchangeViewVisibility(getContext(), false, progressBarActionRunning, layoutContent);
-    if (getActivity() != null) {
-      getActivity().invalidateOptionsMenu();
+  override fun onErrorOccurred(requestCode: Int, errorType: Int, e: Exception?) {
+    super.onErrorOccurred(requestCode, errorType, e)
+    isAdditionalActionEnabled = true
+    UIUtil.exchangeViewVisibility(context, false, progressBarActionRunning!!, layoutContent!!)
+    if (activity != null) {
+      activity!!.invalidateOptionsMenu()
     }
 
-    switch (requestCode) {
-      case R.id.syns_request_code_load_message_details:
-        switch (errorType) {
-          case SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST:
-            showConnLostHint();
-            return;
+    when (requestCode) {
+      R.id.syns_request_code_load_message_details -> when (errorType) {
+        SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> {
+          showConnLostHint()
+          return
         }
-        break;
+      }
 
-      case R.id.syns_request_archive_message:
-      case R.id.syns_request_delete_message:
-      case R.id.syns_request_move_message_to_inbox:
-        UIUtil.exchangeViewVisibility(getContext(), false, statusView, layoutMsgContainer);
-        showRetryActionHint(requestCode, e);
-        break;
+      R.id.syns_request_archive_message, R.id.syns_request_delete_message, R.id.syns_request_move_message_to_inbox -> {
+        UIUtil.exchangeViewVisibility(context, false, statusView!!, contentView!!)
+        showRetryActionHint(requestCode, e!!)
+      }
     }
   }
 
-  @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-    switch (requestCode) {
-      case REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE:
-        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          Intent intent = AttachmentDownloadManagerService.newIntent(getContext(), lastClickedAtt);
-          getContext().startService(intent);
-        } else {
-          Toast.makeText(getActivity(), R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG).show();
-        }
-        break;
+  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    when (requestCode) {
+      REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE -> if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        val intent = AttachmentDownloadManagerService.newIntent(context!!, lastClickedAtt!!)
+        context!!.startService(intent)
+      } else {
+        Toast.makeText(activity, R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG).show()
+      }
 
-      default:
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+      else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
   }
 
@@ -316,31 +250,29 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    *
    * @param msgInfo An incoming message info
    */
-  public void showIncomingMsgInfo(IncomingMessageInfo msgInfo) {
-    this.msgInfo = msgInfo;
-    imageBtnReplyAll.setVisibility(View.VISIBLE);
-    isAdditionalActionEnabled = true;
-    if (getActivity() != null) {
-      getActivity().invalidateOptionsMenu();
+  fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
+    this.msgInfo = msgInfo
+    imageBtnReplyAll!!.visibility = View.VISIBLE
+    isAdditionalActionEnabled = true
+    if (activity != null) {
+      activity!!.invalidateOptionsMenu()
     }
-    msgInfo.setLocalFolder(localFolder);
-    updateMsgBody();
-    UIUtil.exchangeViewVisibility(getContext(), false, progressView, layoutMsgContainer);
+    msgInfo.localFolder = localFolder
+    updateMsgBody()
+    UIUtil.exchangeViewVisibility(context, false, progressView!!, contentView!!)
   }
 
   /**
    * Show info about an error.
    */
-  public void showErrorInfo(Error error, Throwable e) {
-    if (error != null) {
-      textViewStatusInfo.setText(error.getMsg());
-    } else if (e != null) {
-      textViewStatusInfo.setText(e.getMessage());
-    } else {
-      textViewStatusInfo.setText(R.string.unknown_error);
+  fun showErrorInfo(error: Error?, e: Throwable?) {
+    when {
+      error != null -> textViewStatusInfo!!.text = error.msg
+      e != null -> textViewStatusInfo!!.text = e.message
+      else -> textViewStatusInfo!!.setText(R.string.unknown_error)
     }
 
-    UIUtil.exchangeViewVisibility(getContext(), false, progressView, statusView);
+    UIUtil.exchangeViewVisibility(context, false, progressView!!, statusView!!)
   }
 
   /**
@@ -348,143 +280,128 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    *
    * @param details This object contains general message details.
    */
-  public void updateMsgDetails(GeneralMessageDetails details) {
-    this.details = details;
+  fun updateMsgDetails(details: GeneralMessageDetails) {
+    this.details = details
   }
 
-  public void updateAttInfos(ArrayList<AttachmentInfo> attInfoList) {
-    this.atts = attInfoList;
-    showAttsIfTheyExist();
+  fun updateAttInfos(attInfoList: ArrayList<AttachmentInfo>) {
+    this.atts = attInfoList
+    showAttsIfTheyExist()
   }
 
-  protected void updateMsgBody() {
+  private fun updateMsgBody() {
     if (msgInfo != null) {
-      updateMsgView();
-      showAttsIfTheyExist();
+      updateMsgView()
+      showAttsIfTheyExist()
     }
   }
 
-  private void showRetryActionHint(final int requestCode, Exception e) {
-    showSnackbar(getView(), e.getMessage(), getString(R.string.retry), Snackbar.LENGTH_LONG,
-        new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            switch (requestCode) {
-              case R.id.syns_request_archive_message:
-                runMsgAction(R.id.menuActionArchiveMessage);
-                break;
+  private fun showRetryActionHint(requestCode: Int, e: Exception) {
+    showSnackbar(view!!, e.message ?: "", getString(R.string.retry), Snackbar.LENGTH_LONG,
+        View.OnClickListener {
+          when (requestCode) {
+            R.id.syns_request_archive_message -> runMsgAction(R.id.menuActionArchiveMessage)
 
-              case R.id.syns_request_delete_message:
-                runMsgAction(R.id.menuActionDeleteMessage);
-                break;
+            R.id.syns_request_delete_message -> runMsgAction(R.id.menuActionDeleteMessage)
 
-              case R.id.syns_request_move_message_to_inbox:
-                runMsgAction(R.id.menuActionMoveToInbox);
-                break;
-            }
+            R.id.syns_request_move_message_to_inbox -> runMsgAction(R.id.menuActionMoveToInbox)
           }
-        });
+        })
   }
 
-  private void showConnLostHint() {
-    showSnackbar(getView(), getString(R.string.failed_load_message_from_email_server),
-        getString(R.string.retry), new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            UIUtil.exchangeViewVisibility(getContext(), true, progressView, statusView);
-            ((BaseSyncActivity) getBaseActivity()).loadMsgDetails(
-                R.id.syns_request_code_load_message_details, localFolder,
-                details.getUid());
-          }
-        });
+  private fun showConnLostHint() {
+    showSnackbar(view!!, getString(R.string.failed_load_message_from_email_server),
+        getString(R.string.retry), View.OnClickListener {
+      UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+      (baseActivity as BaseSyncActivity).loadMsgDetails(
+          R.id.syns_request_code_load_message_details, localFolder!!,
+          details!!.uid)
+    })
   }
 
-  private void makeAttsProtected(List<AttachmentInfo> atts) {
-    for (AttachmentInfo att : atts) {
-      att.setProtected(true);
+  private fun makeAttsProtected(atts: List<AttachmentInfo>) {
+    for (att in atts) {
+      att.isProtected = true
     }
   }
 
   /**
    * Show a dialog where the user can select some public key which will be attached to a message.
    */
-  private void showSendersPublicKeyDialog() {
-    ChoosePublicKeyDialogFragment fragment = ChoosePublicKeyDialogFragment.newInstance(details.getEmail());
-    fragment.setTargetFragment(MessageDetailsFragment.this, REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION);
-    fragment.show(getFragmentManager(), ChoosePublicKeyDialogFragment.class.getSimpleName());
+  private fun showSendersPublicKeyDialog() {
+    val fragment = ChoosePublicKeyDialogFragment.newInstance(details!!.email)
+    fragment.setTargetFragment(this@MessageDetailsFragment, REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION)
+    fragment.show(fragmentManager!!, ChoosePublicKeyDialogFragment::class.java.simpleName)
   }
 
   /**
    * Send a template message with a sender public key.
    *
-   * @param att An {@link AttachmentInfo} object which contains information about a sender public key.
+   * @param att An [AttachmentInfo] object which contains information about a sender public key.
    */
-  private void sendTemplateMsgWithPublicKey(AttachmentInfo att) {
-    List<AttachmentInfo> atts = null;
+  private fun sendTemplateMsgWithPublicKey(att: AttachmentInfo?) {
+    var atts: MutableList<AttachmentInfo>? = null
     if (att != null) {
-      atts = new ArrayList<>();
-      att.setProtected(true);
-      atts.add(att);
+      atts = ArrayList()
+      att.isProtected = true
+      atts.add(att)
     }
 
-    startActivity(CreateMessageActivity.generateIntent(getContext(), msgInfo, MessageType.REPLY,
+    startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY,
         MessageEncryptionType.STANDARD,
-        new ServiceInfo(false,
+        ServiceInfo(false,
             false,
             false,
             false,
             false,
             false,
             getString(R.string.message_was_encrypted_for_wrong_key),
-            atts)));
+            atts)))
   }
 
   /**
-   * Update actions visibility using {@link FoldersManager.FolderType}
+   * Update actions visibility using [FoldersManager.FolderType]
    *
    * @param localFolder The localFolder where current message exists.
    */
-  private void updateActionsVisibility(LocalFolder localFolder) {
-    folderType = FoldersManager.getFolderType(localFolder);
+  private fun updateActionsVisibility(localFolder: LocalFolder?) {
+    folderType = FoldersManager.getFolderType(localFolder)
 
     if (folderType != null) {
-      switch (folderType) {
-        case INBOX:
-          if (JavaEmailConstants.EMAIL_PROVIDER_GMAIL.equalsIgnoreCase(EmailUtil.getDomain(details.getEmail()))) {
-            isArchiveActionEnabled = true;
+      when (folderType) {
+        FoldersManager.FolderType.INBOX -> {
+          if (JavaEmailConstants.EMAIL_PROVIDER_GMAIL.equals(EmailUtil.getDomain(details!!.email), ignoreCase = true)) {
+            isArchiveActionEnabled = true
           }
-          isDeleteActionEnabled = true;
-          break;
+          isDeleteActionEnabled = true
+        }
 
-        case SENT:
-          isDeleteActionEnabled = true;
-          break;
+        FoldersManager.FolderType.SENT -> isDeleteActionEnabled = true
 
-        case TRASH:
-          isMoveToInboxActionEnabled = true;
-          isDeleteActionEnabled = false;
-          break;
+        FoldersManager.FolderType.TRASH -> {
+          isMoveToInboxActionEnabled = true
+          isDeleteActionEnabled = false
+        }
 
-        case DRAFTS:
-        case OUTBOX:
-          isMoveToInboxActionEnabled = false;
-          isArchiveActionEnabled = false;
-          isDeleteActionEnabled = true;
-          break;
+        FoldersManager.FolderType.DRAFTS, FoldersManager.FolderType.OUTBOX -> {
+          isMoveToInboxActionEnabled = false
+          isArchiveActionEnabled = false
+          isDeleteActionEnabled = true
+        }
 
-        default:
-          isMoveToInboxActionEnabled = true;
-          isArchiveActionEnabled = false;
-          isDeleteActionEnabled = true;
-          break;
+        else -> {
+          isMoveToInboxActionEnabled = true
+          isArchiveActionEnabled = false
+          isDeleteActionEnabled = true
+        }
       }
     } else {
-      isArchiveActionEnabled = false;
-      isMoveToInboxActionEnabled = false;
-      isDeleteActionEnabled = true;
+      isArchiveActionEnabled = false
+      isMoveToInboxActionEnabled = false
+      isDeleteActionEnabled = true
     }
 
-    getActivity().invalidateOptionsMenu();
+    activity!!.invalidateOptionsMenu()
   }
 
   /**
@@ -492,256 +409,231 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    *
    * @param menuId The action menu id.
    */
-  private void runMsgAction(final int menuId) {
-    boolean isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(details.getLabel());
-    if (GeneralUtil.isConnected(getContext()) || isOutbox) {
+  private fun runMsgAction(menuId: Int) {
+    val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)
+    if (GeneralUtil.isConnected(context!!) || isOutbox) {
       if (!isOutbox) {
-        isAdditionalActionEnabled = false;
-        getActivity().invalidateOptionsMenu();
-        statusView.setVisibility(View.GONE);
-        UIUtil.exchangeViewVisibility(getContext(), true, progressBarActionRunning, layoutContent);
+        isAdditionalActionEnabled = false
+        activity!!.invalidateOptionsMenu()
+        statusView!!.visibility = View.GONE
+        UIUtil.exchangeViewVisibility(context, true, progressBarActionRunning!!, layoutContent!!)
       }
 
-      switch (menuId) {
-        case R.id.menuActionArchiveMessage:
-          onActionListener.onArchiveMsgClicked();
-          break;
+      when (menuId) {
+        R.id.menuActionArchiveMessage -> onActionListener!!.onArchiveMsgClicked()
 
-        case R.id.menuActionDeleteMessage:
-          onActionListener.onDeleteMsgClicked();
-          break;
+        R.id.menuActionDeleteMessage -> onActionListener!!.onDeleteMsgClicked()
 
-        case R.id.menuActionMoveToInbox:
-          onActionListener.onMoveMsgToInboxClicked();
-          break;
+        R.id.menuActionMoveToInbox -> onActionListener!!.onMoveMsgToInboxClicked()
       }
     } else {
-      showSnackbar(getView(), getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
-          Snackbar.LENGTH_LONG, new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-              runMsgAction(menuId);
-            }
-          });
+      showSnackbar(view!!, getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
+          Snackbar.LENGTH_LONG, View.OnClickListener { runMsgAction(menuId) })
     }
   }
 
-  private void initViews(View view) {
-    textViewSenderAddress = view.findViewById(R.id.textViewSenderAddress);
-    textViewDate = view.findViewById(R.id.textViewDate);
-    textViewSubject = view.findViewById(R.id.textViewSubject);
-    viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader);
-    layoutMsgParts = view.findViewById(R.id.layoutMessageParts);
-    layoutMsgContainer = view.findViewById(R.id.layoutMessageContainer);
-    layoutReplyBtns = view.findViewById(R.id.layoutReplyButtons);
-    progressBarActionRunning = view.findViewById(R.id.progressBarActionRunning);
+  private fun initViews(view: View) {
+    textViewSenderAddress = view.findViewById(R.id.textViewSenderAddress)
+    textViewDate = view.findViewById(R.id.textViewDate)
+    textViewSubject = view.findViewById(R.id.textViewSubject)
+    viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader)
+    layoutMsgParts = view.findViewById(R.id.layoutMessageParts)
+    contentView = view.findViewById(R.id.layoutMessageContainer)
+    layoutReplyBtns = view.findViewById(R.id.layoutReplyButtons)
+    progressBarActionRunning = view.findViewById(R.id.progressBarActionRunning)
 
-    layoutContent = view.findViewById(R.id.layoutContent);
-    imageBtnReplyAll = view.findViewById(R.id.imageButtonReplyAll);
-    imageBtnReplyAll.setOnClickListener(this);
+    layoutContent = view.findViewById(R.id.layoutContent)
+    imageBtnReplyAll = view.findViewById(R.id.imageButtonReplyAll)
+    imageBtnReplyAll!!.setOnClickListener(this)
   }
 
-  private void updateViews() {
+  private fun updateViews() {
     if (details != null) {
-      String subject = TextUtils.isEmpty(details.getSubject()) ? getString(R.string.no_subject) : details.getSubject();
+      val subject = if (TextUtils.isEmpty(details!!.subject)) getString(R.string.no_subject) else details!!.subject
 
-      if (folderType == FoldersManager.FolderType.SENT) {
-        textViewSenderAddress.setText(EmailUtil.getFirstAddressString(details.getTo()));
+      if (folderType === FoldersManager.FolderType.SENT) {
+        textViewSenderAddress!!.text = EmailUtil.getFirstAddressString(details!!.to)
       } else {
-        textViewSenderAddress.setText(EmailUtil.getFirstAddressString(details.getFrom()));
+        textViewSenderAddress!!.text = EmailUtil.getFirstAddressString(details!!.from)
       }
-      textViewSubject.setText(subject);
-      if (JavaEmailConstants.FOLDER_OUTBOX.equalsIgnoreCase(details.getLabel())) {
-        textViewDate.setText(dateFormat.format(details.getSentDate()));
+      textViewSubject!!.text = subject
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
+        textViewDate!!.text = dateFormat!!.format(details!!.sentDate)
       } else {
-        textViewDate.setText(dateFormat.format(details.getReceivedDate()));
+        textViewDate!!.text = dateFormat!!.format(details!!.receivedDate)
       }
     }
 
-    updateMsgBody();
+    updateMsgBody()
   }
 
-  private void showAttsIfTheyExist() {
-    if (details != null && details.getHasAtts()) {
-      LayoutInflater layoutInflater = LayoutInflater.from(getContext());
+  private fun showAttsIfTheyExist() {
+    if (details != null && details!!.hasAtts) {
+      val layoutInflater = LayoutInflater.from(context)
 
       if (!CollectionUtils.isEmpty(atts)) {
-        for (final AttachmentInfo att : atts) {
-          View rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMsgParts, false);
+        for (att in atts!!) {
+          val rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMsgParts, false)
 
-          TextView textViewAttName = rootView.findViewById(R.id.textViewAttchmentName);
-          textViewAttName.setText(att.getName());
+          val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttchmentName)
+          textViewAttName.text = att.name
 
-          TextView textViewAttSize = rootView.findViewById(R.id.textViewAttSize);
-          textViewAttSize.setText(Formatter.formatFileSize(getContext(), att.getEncodedSize()));
+          val textViewAttSize = rootView.findViewById<TextView>(R.id.textViewAttSize)
+          textViewAttSize.text = Formatter.formatFileSize(context, att.encodedSize)
 
-          final View button = rootView.findViewById(R.id.imageButtonDownloadAtt);
-          button.setOnClickListener(getDownloadAttClickListener(att));
+          val button = rootView.findViewById<View>(R.id.imageButtonDownloadAtt)
+          button.setOnClickListener(getDownloadAttClickListener(att))
 
-          if (att.getUri() != null) {
-            View layoutAtt = rootView.findViewById(R.id.layoutAtt);
-            layoutAtt.setOnClickListener(getOpenFileClickListener(att, button));
+          if (att.uri != null) {
+            val layoutAtt = rootView.findViewById<View>(R.id.layoutAtt)
+            layoutAtt.setOnClickListener(getOpenFileClickListener(att, button))
           }
 
-          layoutMsgParts.addView(rootView);
+          layoutMsgParts!!.addView(rootView)
         }
       }
     }
   }
 
-  private View.OnClickListener getOpenFileClickListener(final AttachmentInfo att, final View button) {
-    return new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        if (att.getUri().getLastPathSegment().endsWith(Constants.PGP_FILE_EXT)) {
-          button.performClick();
-        } else {
-          Intent intentOpenFile = new Intent(Intent.ACTION_VIEW, att.getUri());
-          intentOpenFile.setAction(Intent.ACTION_VIEW);
-          intentOpenFile.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-          intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-          if (intentOpenFile.resolveActivity(getContext().getPackageManager()) != null) {
-            startActivity(intentOpenFile);
-          }
+  private fun getOpenFileClickListener(att: AttachmentInfo, button: View): View.OnClickListener {
+    return View.OnClickListener {
+      if (att.uri!!.lastPathSegment!!.endsWith(Constants.PGP_FILE_EXT)) {
+        button.performClick()
+      } else {
+        val intentOpenFile = Intent(Intent.ACTION_VIEW, att.uri)
+        intentOpenFile.action = Intent.ACTION_VIEW
+        intentOpenFile.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        if (intentOpenFile.resolveActivity(context!!.packageManager) != null) {
+          startActivity(intentOpenFile)
         }
       }
-    };
+    }
   }
 
-  private View.OnClickListener getDownloadAttClickListener(final AttachmentInfo att) {
-    return new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        lastClickedAtt = att;
-        lastClickedAtt.setOrderNumber(GeneralUtil.genAttOrderId(getContext()));
-        boolean isPermissionGranted = ContextCompat.checkSelfPermission(getContext(),
-            Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
-        if (isPermissionGranted) {
-          requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-              REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE);
-        } else {
-          getContext().startService(AttachmentDownloadManagerService.newIntent
-              (getContext(), lastClickedAtt));
-        }
+  private fun getDownloadAttClickListener(att: AttachmentInfo): View.OnClickListener {
+    return View.OnClickListener {
+      lastClickedAtt = att
+      lastClickedAtt!!.orderNumber = GeneralUtil.genAttOrderId(context!!)
+      val isPermissionGranted = ContextCompat.checkSelfPermission(context!!,
+          Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+      if (isPermissionGranted) {
+        requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+            REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE)
+      } else {
+        context!!.startService(AttachmentDownloadManagerService.newIntent(context!!, lastClickedAtt!!))
       }
-    };
+    }
   }
 
-  private void updateMsgView() {
-    layoutMsgParts.removeAllViews();
-    if (msgInfo.hasHtmlText()) {
-      MsgBlock block = msgInfo.getHtmlMsgBlock();
-      addWebView(block);
-    } else if (msgInfo.getMsgBlocks() != null && !msgInfo.getMsgBlocks().isEmpty()) {
-      boolean isFirstMsgPartText = true;
-      for (MsgBlock block : msgInfo.getMsgBlocks()) {
-        LayoutInflater layoutInflater = LayoutInflater.from(getContext());
-        if (block != null) {
-          switch (block.getType()) {
-            case DECRYPTED_TEXT:
-              msgEncryptType = MessageEncryptionType.ENCRYPTED;
-              layoutMsgParts.addView(genDecryptedTextPart(block, layoutInflater));
-              break;
-
-            case PLAIN_TEXT:
-              layoutMsgParts.addView(genTextPart(block, layoutInflater));
-              if (isFirstMsgPartText) {
-                viewFooterOfHeader.setVisibility(View.VISIBLE);
-              }
-              break;
-
-            case PUBLIC_KEY:
-              layoutMsgParts.addView(genPublicKeyPart((PublicKeyMsgBlock) block, layoutInflater));
-              break;
-
-            case DECRYPT_ERROR:
-              msgEncryptType = MessageEncryptionType.ENCRYPTED;
-              layoutMsgParts.addView(genDecryptErrorPart((DecryptErrorMsgBlock) block, layoutInflater));
-              break;
-
-            case DECRYPTED_ATT:
-              //Todo-denbond7 Add support of that
-              break;
-
-            default:
-              layoutMsgParts.addView(genDefPart(block, layoutInflater, R.layout.message_part_other,
-                  layoutMsgParts));
-              break;
+  private fun updateMsgView() {
+    layoutMsgParts!!.removeAllViews()
+    if (msgInfo!!.hasHtmlText()) {
+      val block = msgInfo!!.getHtmlMsgBlock()
+      addWebView(block!!)
+    } else if (msgInfo!!.msgBlocks != null && msgInfo!!.msgBlocks!!.isNotEmpty()) {
+      var isFirstMsgPartText = true
+      for (block in msgInfo!!.msgBlocks!!) {
+        val layoutInflater = LayoutInflater.from(context)
+        when (block.type) {
+          MsgBlock.Type.DECRYPTED_TEXT -> {
+            msgEncryptType = MessageEncryptionType.ENCRYPTED
+            layoutMsgParts!!.addView(genDecryptedTextPart(block, layoutInflater))
           }
+
+          MsgBlock.Type.PLAIN_TEXT -> {
+            layoutMsgParts!!.addView(genTextPart(block, layoutInflater))
+            if (isFirstMsgPartText) {
+              viewFooterOfHeader!!.visibility = View.VISIBLE
+            }
+          }
+
+          MsgBlock.Type.PUBLIC_KEY -> layoutMsgParts!!.addView(genPublicKeyPart(block as PublicKeyMsgBlock, layoutInflater))
+
+          MsgBlock.Type.DECRYPT_ERROR -> {
+            msgEncryptType = MessageEncryptionType.ENCRYPTED
+            layoutMsgParts!!.addView(genDecryptErrorPart(block as DecryptErrorMsgBlock, layoutInflater))
+          }
+
+          MsgBlock.Type.DECRYPTED_ATT -> {
+          }
+
+          else -> layoutMsgParts!!.addView(genDefPart(block, layoutInflater, R.layout.message_part_other,
+              layoutMsgParts))
         }
-        isFirstMsgPartText = false;
+        isFirstMsgPartText = false
       }
-      updateReplyButtons();
+      updateReplyButtons()
     } else {
-      layoutMsgParts.removeAllViews();
-      updateReplyButtons();
+      layoutMsgParts!!.removeAllViews()
+      updateReplyButtons()
     }
   }
 
-  private void addWebView(MsgBlock block) {
-    final EmailWebView emailWebView = new EmailWebView(getContext());
-    emailWebView.configure();
+  private fun addWebView(block: MsgBlock) {
+    val emailWebView = EmailWebView(context!!)
+    emailWebView.configure()
 
-    int margin = getResources().getDimensionPixelOffset(R.dimen.default_margin_content);
-    LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-    layoutParams.setMargins(margin, 0, margin, 0);
-    emailWebView.setLayoutParams(layoutParams);
+    val margin = resources.getDimensionPixelOffset(R.dimen.default_margin_content)
+    val layoutParams = LinearLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    layoutParams.setMargins(margin, 0, margin, 0)
+    emailWebView.layoutParams = layoutParams
 
-    String html = EmailUtil.genViewportHtml(block.getContent());
+    var html = EmailUtil.genViewportHtml(block.content!!)
 
-    if (block.getType() == MsgBlock.Type.DECRYPTED_HTML) {
-      html = html.replaceFirst("(<body.*)(bgcolor=\".*\")(>)", "$1$3");
-      emailWebView.setBackgroundColor(0);
-      emailWebView.setBackgroundResource(R.drawable.bg_message_part_pgp_message);
+    if (block.type === MsgBlock.Type.DECRYPTED_HTML) {
+      html = html.replaceFirst("(<body.*)(bgcolor=\".*\")(>)".toRegex(), "$1$3")
+      emailWebView.setBackgroundColor(0)
+      emailWebView.setBackgroundResource(R.drawable.bg_message_part_pgp_message)
     }
 
-    emailWebView.loadDataWithBaseURL(null, html, "text/html", StandardCharsets.UTF_8.displayName(), null);
+    emailWebView.loadDataWithBaseURL(null, html, "text/html", StandardCharsets.UTF_8.displayName(), null)
 
-    layoutMsgParts.addView(emailWebView);
-    emailWebView.setOnPageFinishedListener(new EmailWebView.OnPageFinishedListener() {
-      public void onPageFinished() {
-        updateReplyButtons();
+    layoutMsgParts!!.addView(emailWebView)
+    emailWebView.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
+      override fun onPageFinished() {
+        updateReplyButtons()
       }
-    });
+    })
   }
 
   /**
-   * Update the reply buttons layout depending on the {@link MessageEncryptionType}
+   * Update the reply buttons layout depending on the [MessageEncryptionType]
    */
-  private void updateReplyButtons() {
+  private fun updateReplyButtons() {
     if (layoutReplyBtns != null) {
-      ImageView imageViewReply = layoutReplyBtns.findViewById(R.id.imageViewReply);
-      ImageView imageViewReplyAll = layoutReplyBtns.findViewById(R.id.imageViewReplyAll);
-      ImageView imageViewFwd = layoutReplyBtns.findViewById(R.id.imageViewFwd);
+      val imageViewReply = layoutReplyBtns!!.findViewById<ImageView>(R.id.imageViewReply)
+      val imageViewReplyAll = layoutReplyBtns!!.findViewById<ImageView>(R.id.imageViewReplyAll)
+      val imageViewFwd = layoutReplyBtns!!.findViewById<ImageView>(R.id.imageViewFwd)
 
-      TextView textViewReply = layoutReplyBtns.findViewById(R.id.textViewReply);
-      TextView textViewReplyAll = layoutReplyBtns.findViewById(R.id.textViewReplyAll);
-      TextView textViewFwd = layoutReplyBtns.findViewById(R.id.textViewFwd);
+      val textViewReply = layoutReplyBtns!!.findViewById<TextView>(R.id.textViewReply)
+      val textViewReplyAll = layoutReplyBtns!!.findViewById<TextView>(R.id.textViewReplyAll)
+      val textViewFwd = layoutReplyBtns!!.findViewById<TextView>(R.id.textViewFwd)
 
-      if (msgEncryptType == MessageEncryptionType.ENCRYPTED) {
-        imageViewReply.setImageResource(R.mipmap.ic_reply_green);
-        imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_green);
-        imageViewFwd.setImageResource(R.mipmap.ic_forward_green);
+      if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
+        imageViewReply.setImageResource(R.mipmap.ic_reply_green)
+        imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_green)
+        imageViewFwd.setImageResource(R.mipmap.ic_forward_green)
 
-        textViewReply.setText(R.string.reply_encrypted);
-        textViewReplyAll.setText(R.string.reply_all_encrypted);
-        textViewFwd.setText(R.string.forward_encrypted);
+        textViewReply.setText(R.string.reply_encrypted)
+        textViewReplyAll.setText(R.string.reply_all_encrypted)
+        textViewFwd.setText(R.string.forward_encrypted)
       } else {
-        imageViewReply.setImageResource(R.mipmap.ic_reply_red);
-        imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_red);
-        imageViewFwd.setImageResource(R.mipmap.ic_forward_red);
+        imageViewReply.setImageResource(R.mipmap.ic_reply_red)
+        imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_red)
+        imageViewFwd.setImageResource(R.mipmap.ic_forward_red)
 
-        textViewReply.setText(R.string.reply);
-        textViewReplyAll.setText(R.string.reply_all);
-        textViewFwd.setText(R.string.forward);
+        textViewReply.setText(R.string.reply)
+        textViewReplyAll.setText(R.string.reply_all)
+        textViewFwd.setText(R.string.forward)
       }
 
-      layoutReplyBtns.findViewById(R.id.layoutReplyButton).setOnClickListener(this);
-      layoutReplyBtns.findViewById(R.id.layoutReplyAllButton).setOnClickListener(this);
-      layoutReplyBtns.findViewById(R.id.layoutFwdButton).setOnClickListener(this);
+      layoutReplyBtns!!.findViewById<View>(R.id.layoutReplyButton).setOnClickListener(this)
+      layoutReplyBtns!!.findViewById<View>(R.id.layoutReplyAllButton).setOnClickListener(this)
+      layoutReplyBtns!!.findViewById<View>(R.id.layoutFwdButton).setOnClickListener(this)
 
-      layoutReplyBtns.setVisibility(View.VISIBLE);
+      layoutReplyBtns!!.visibility = View.VISIBLE
     }
   }
 
@@ -749,261 +641,231 @@ public class MessageDetailsFragment extends BaseSyncFragment implements View.OnC
    * Generate the public key block. There we can see the public key details and save/update the
    * key owner information to the local database.
    *
-   * @param block    The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
-   * @param inflater The {@link LayoutInflater} instance.
+   * @param block    The [PublicKeyMsgBlock] object which contains information about a public key and his owner.
+   * @param inflater The [LayoutInflater] instance.
    * @return The generated view.
    */
-  @NonNull
-  private View genPublicKeyPart(final PublicKeyMsgBlock block, LayoutInflater inflater) {
+  private fun genPublicKeyPart(block: PublicKeyMsgBlock, inflater: LayoutInflater): View {
 
-    final ViewGroup pubKeyView = (ViewGroup) inflater.inflate(R.layout.message_part_public_key, layoutMsgParts, false);
-    final TextView textViewPgpPublicKey = pubKeyView.findViewById(R.id.textViewPgpPublicKey);
-    Switch switchShowPublicKey = pubKeyView.findViewById(R.id.switchShowPublicKey);
+    val pubKeyView = inflater.inflate(R.layout.message_part_public_key, layoutMsgParts, false) as ViewGroup
+    val textViewPgpPublicKey = pubKeyView.findViewById<TextView>(R.id.textViewPgpPublicKey)
+    val switchShowPublicKey = pubKeyView.findViewById<Switch>(R.id.switchShowPublicKey)
 
-    switchShowPublicKey.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-
-      @Override
-      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        TransitionManager.beginDelayedTransition(pubKeyView);
-        textViewPgpPublicKey.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-        buttonView.setText(isChecked ? R.string.hide_the_public_key : R.string.show_the_public_key);
-      }
-    });
-
-    NodeKeyDetails details = block.getKeyDetails();
-    PgpContact pgpContact = details.getPrimaryPgpContact();
-
-    if (!TextUtils.isEmpty(pgpContact.getEmail())) {
-      TextView keyOwner = pubKeyView.findViewById(R.id.textViewKeyOwnerTemplate);
-      keyOwner.setText(getString(R.string.template_message_part_public_key_owner, pgpContact.getEmail()));
+    switchShowPublicKey.setOnCheckedChangeListener { buttonView, isChecked ->
+      TransitionManager.beginDelayedTransition(pubKeyView)
+      textViewPgpPublicKey.visibility = if (isChecked) View.VISIBLE else View.GONE
+      buttonView.setText(if (isChecked) R.string.hide_the_public_key else R.string.show_the_public_key)
     }
 
-    TextView keyWords = pubKeyView.findViewById(R.id.textViewKeyWordsTemplate);
+    val details = block.keyDetails
+    val (email) = details!!.primaryPgpContact
+
+    if (!TextUtils.isEmpty(email)) {
+      val keyOwner = pubKeyView.findViewById<TextView>(R.id.textViewKeyOwnerTemplate)
+      keyOwner.text = getString(R.string.template_message_part_public_key_owner, email)
+    }
+
+    val keyWords = pubKeyView.findViewById<TextView>(R.id.textViewKeyWordsTemplate)
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_key_words,
-        details.getKeywords()), keyWords);
+        details.keywords), keyWords)
 
-    TextView fingerprint = pubKeyView.findViewById(R.id.textViewFingerprintTemplate);
+    val fingerprint = pubKeyView.findViewById<TextView>(R.id.textViewFingerprintTemplate)
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_fingerprint,
-        GeneralUtil.doSectionsInText(" ", details.getFingerprint(), 4)), fingerprint);
+        GeneralUtil.doSectionsInText(" ", details.fingerprint, 4)), fingerprint)
 
-    textViewPgpPublicKey.setText(block.getContent());
+    textViewPgpPublicKey.text = block.content
 
-    PgpContact existingPgpContact = new ContactsDaoSource().getPgpContact(getContext(), pgpContact.getEmail());
-    Button button = pubKeyView.findViewById(R.id.buttonKeyAction);
+    val existingPgpContact = ContactsDaoSource().getPgpContact(context!!, email)
+    val button = pubKeyView.findViewById<Button>(R.id.buttonKeyAction)
     if (button != null) {
       if (existingPgpContact == null) {
-        initSaveContactButton(block, button);
-      } else if (TextUtils.isEmpty(existingPgpContact.getLongid())
-          || details.getLongId().equalsIgnoreCase(existingPgpContact.getLongid())) {
-        initUpdateContactButton(block, button);
+        initSaveContactButton(block, button)
+      } else if (TextUtils.isEmpty(existingPgpContact.longid) || details.longId!!.equals(existingPgpContact.longid!!, ignoreCase = true)) {
+        initUpdateContactButton(block, button)
       } else {
-        initReplaceContactButton(block, button);
+        initReplaceContactButton(block, button)
       }
     }
 
-    return pubKeyView;
+    return pubKeyView
   }
 
   /**
    * Init the save contact button. When we press this button a new contact will be saved to the
    * local database.
    *
-   * @param block  The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
+   * @param block  The [PublicKeyMsgBlock] object which contains information about a public key and his owner.
    * @param button The key action button.
    */
-  private void initSaveContactButton(final PublicKeyMsgBlock block, Button button) {
-    button.setText(R.string.save_contact);
-    button.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        PgpContact pgpContact = block.getKeyDetails().getPrimaryPgpContact();
-        Uri uri = new ContactsDaoSource().addRow(getContext(), pgpContact);
-        if (uri != null) {
-          Toast.makeText(getContext(), R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show();
-          v.setVisibility(View.GONE);
-        } else {
-          Toast.makeText(getContext(), R.string.error_occurred_while_saving_contact, Toast.LENGTH_SHORT).show();
-        }
+  private fun initSaveContactButton(block: PublicKeyMsgBlock, button: Button) {
+    button.setText(R.string.save_contact)
+    button.setOnClickListener { v ->
+      val pgpContact = block.keyDetails!!.primaryPgpContact
+      val uri = ContactsDaoSource().addRow(context!!, pgpContact)
+      if (uri != null) {
+        Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show()
+        v.visibility = View.GONE
+      } else {
+        Toast.makeText(context, R.string.error_occurred_while_saving_contact, Toast.LENGTH_SHORT).show()
       }
-    });
+    }
   }
 
   /**
    * Init the update contact button. When we press this button the contact will be updated in the
    * local database.
    *
-   * @param block  The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
+   * @param block  The [PublicKeyMsgBlock] object which contains information about a public key and his owner.
    * @param button The key action button.
    */
-  private void initUpdateContactButton(final PublicKeyMsgBlock block, Button button) {
-    button.setText(R.string.update_contact);
-    button.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        PgpContact pgpContact = block.getKeyDetails().getPrimaryPgpContact();
-        boolean isUpdated = new ContactsDaoSource().updatePgpContact(getContext(), pgpContact) > 0;
-        if (isUpdated) {
-          Toast.makeText(getContext(), R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show();
-          v.setVisibility(View.GONE);
-        } else {
-          Toast.makeText(getContext(), R.string.error_occurred_while_updating_contact, Toast.LENGTH_SHORT).show();
-        }
+  private fun initUpdateContactButton(block: PublicKeyMsgBlock, button: Button) {
+    button.setText(R.string.update_contact)
+    button.setOnClickListener { v ->
+      val pgpContact = block.keyDetails!!.primaryPgpContact
+      val isUpdated = ContactsDaoSource().updatePgpContact(context!!, pgpContact) > 0
+      if (isUpdated) {
+        Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
+        v.visibility = View.GONE
+      } else {
+        Toast.makeText(context, R.string.error_occurred_while_updating_contact, Toast.LENGTH_SHORT).show()
       }
-    });
+    }
   }
 
   /**
    * Init the replace contact button. When we press this button the contact will be replaced in the
    * local database.
    *
-   * @param block  The {@link PublicKeyMsgBlock} object which contains information about a public key and his owner.
+   * @param block  The [PublicKeyMsgBlock] object which contains information about a public key and his owner.
    * @param button The key action button.
    */
-  private void initReplaceContactButton(final PublicKeyMsgBlock block, Button button) {
-    button.setText(R.string.replace_contact);
-    button.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        PgpContact pgpContact = block.getKeyDetails().getPrimaryPgpContact();
-        boolean isUpdated = new ContactsDaoSource().updatePgpContact(getContext(), pgpContact) > 0;
-        if (isUpdated) {
-          Toast.makeText(getContext(), R.string.contact_successfully_replaced, Toast.LENGTH_SHORT).show();
-          v.setVisibility(View.GONE);
-        } else {
-          Toast.makeText(getContext(), R.string.error_occurred_while_replacing_contact, Toast.LENGTH_SHORT).show();
-        }
+  private fun initReplaceContactButton(block: PublicKeyMsgBlock, button: Button) {
+    button.setText(R.string.replace_contact)
+    button.setOnClickListener { v ->
+      val pgpContact = block.keyDetails!!.primaryPgpContact
+      val isUpdated = ContactsDaoSource().updatePgpContact(context!!, pgpContact) > 0
+      if (isUpdated) {
+        Toast.makeText(context, R.string.contact_successfully_replaced, Toast.LENGTH_SHORT).show()
+        v.visibility = View.GONE
+      } else {
+        Toast.makeText(context, R.string.error_occurred_while_replacing_contact, Toast.LENGTH_SHORT).show()
       }
-    });
-  }
-
-  @NonNull
-  private TextView genDefPart(MsgBlock block, LayoutInflater inflater, int res, ViewGroup viewGroup) {
-    TextView textViewMsgPartOther = (TextView) inflater.inflate(res, viewGroup, false);
-    textViewMsgPartOther.setText(block.getContent());
-    return textViewMsgPartOther;
-  }
-
-  @NonNull
-  private TextView genTextPart(MsgBlock block, LayoutInflater layoutInflater) {
-    return genDefPart(block, layoutInflater, R.layout.message_part_text, layoutMsgParts);
-  }
-
-  @NonNull
-  private View genDecryptedTextPart(MsgBlock block, LayoutInflater layoutInflater) {
-    return genDefPart(block, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts);
-  }
-
-  @NonNull
-  private View genDecryptErrorPart(DecryptErrorMsgBlock block, LayoutInflater layoutInflater) {
-    DecryptError decryptError = block.getError();
-
-    if (decryptError == null) {
-      return new View(getContext());
     }
+  }
 
-    switch (decryptError.getDetails().getType()) {
-      case KEY_MISMATCH:
-        return generateMissingPrivateKeyLayout(block.getContent(), layoutInflater);
+  private fun genDefPart(block: MsgBlock, inflater: LayoutInflater, res: Int, viewGroup: ViewGroup?): TextView {
+    val textViewMsgPartOther = inflater.inflate(res, viewGroup, false) as TextView
+    textViewMsgPartOther.text = block.content
+    return textViewMsgPartOther
+  }
 
-      case FORMAT:
-        String formatErrorMsg = getString(R.string.decrypt_error_message_badly_formatted,
+  private fun genTextPart(block: MsgBlock, layoutInflater: LayoutInflater): TextView {
+    return genDefPart(block, layoutInflater, R.layout.message_part_text, layoutMsgParts)
+  }
+
+  private fun genDecryptedTextPart(block: MsgBlock, layoutInflater: LayoutInflater): View {
+    return genDefPart(block, layoutInflater, R.layout.message_part_pgp_message, layoutMsgParts)
+  }
+
+  private fun genDecryptErrorPart(block: DecryptErrorMsgBlock, layoutInflater: LayoutInflater): View {
+    val (_, details1) = block.error ?: return View(context)
+
+    when (details1!!.type) {
+      DecryptErrorDetails.Type.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(block.content, layoutInflater)
+
+      DecryptErrorDetails.Type.FORMAT -> {
+        val formatErrorMsg = (getString(R.string.decrypt_error_message_badly_formatted,
             getString(R.string.app_name)) + "\n\n"
-            + decryptError.getDetails().getType() + ":" + decryptError.getDetails().getMessage();
-        return getView(block.getContent(), formatErrorMsg, layoutInflater);
+            + details1.type + ":" + details1.message)
+        return getView(block.content, formatErrorMsg, layoutInflater)
+      }
 
-      case OTHER:
-        String otherErrorMsg = getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
+      DecryptErrorDetails.Type.OTHER -> {
+        val otherErrorMsg = getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
             "\n\n" + getString(R.string.decrypt_error_please_write_me, getString(R.string.support_email)) +
-            "\n\n" + decryptError.getDetails().getType() + ":" + decryptError.getDetails().getMessage();
-        return getView(block.getContent(), otherErrorMsg, layoutInflater);
+            "\n\n" + details1.type + ":" + details1.message
+        return getView(block.content, otherErrorMsg, layoutInflater)
+      }
 
-      default:
-        return getView(block.getContent(), getString(R.string.could_not_decrypt_message_due_to_error,
-            decryptError.getDetails().getType() + ":" + decryptError.getDetails().getMessage()),
-            layoutInflater);
+      else -> return getView(block.content, getString(R.string.could_not_decrypt_message_due_to_error,
+          details1.type.toString() + ":" + details1.message),
+          layoutInflater)
     }
   }
 
-  private View getView(String originalMsg, String errorMsg, LayoutInflater layoutInflater) {
-    ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(R.layout.message_part_pgp_message_error,
-        layoutMsgParts, false);
-    TextView textViewErrorMsg = viewGroup.findViewById(R.id.textViewErrorMessage);
-    ExceptionUtil.handleError(new ManualHandledException(errorMsg));
-    textViewErrorMsg.setText(errorMsg);
-    viewGroup.addView(genShowOrigMsgLayout(originalMsg, layoutInflater, viewGroup));
-    return viewGroup;
+  private fun getView(originalMsg: String?, errorMsg: String, layoutInflater: LayoutInflater): View {
+    val viewGroup = layoutInflater.inflate(R.layout.message_part_pgp_message_error,
+        layoutMsgParts, false) as ViewGroup
+    val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
+    ExceptionUtil.handleError(ManualHandledException(errorMsg))
+    textViewErrorMsg.text = errorMsg
+    viewGroup.addView(genShowOrigMsgLayout(originalMsg, layoutInflater, viewGroup))
+    return viewGroup
   }
 
   /**
    * Generate a layout which describes the missing private keys situation.
    *
    * @param pgpMsg   The pgp message.
-   * @param inflater The {@link LayoutInflater} instance.
+   * @param inflater The [LayoutInflater] instance.
    * @return Generated layout.
    */
-  @NonNull
-  private View generateMissingPrivateKeyLayout(String pgpMsg, LayoutInflater inflater) {
-    ViewGroup viewGroup = (ViewGroup) inflater.inflate(
-        R.layout.message_part_pgp_message_missing_private_key, layoutMsgParts, false);
-    TextView textViewErrorMsg = viewGroup.findViewById(R.id.textViewErrorMessage);
-    textViewErrorMsg.setText(getString(R.string.decrypt_error_current_key_cannot_open_message));
+  private fun generateMissingPrivateKeyLayout(pgpMsg: String?, inflater: LayoutInflater): View {
+    val viewGroup = inflater.inflate(
+        R.layout.message_part_pgp_message_missing_private_key, layoutMsgParts, false) as ViewGroup
+    val textViewErrorMsg = viewGroup.findViewById<TextView>(R.id.textViewErrorMessage)
+    textViewErrorMsg.text = getString(R.string.decrypt_error_current_key_cannot_open_message)
 
-    Button buttonImportPrivateKey = viewGroup.findViewById(R.id.buttonImportPrivateKey);
-    buttonImportPrivateKey.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        startActivityForResult(ImportPrivateKeyActivity.newIntent(
-            getContext(), getString(R.string.import_private_key), true, ImportPrivateKeyActivity.class),
-            REQUEST_CODE_START_IMPORT_KEY_ACTIVITY);
-      }
-    });
+    val buttonImportPrivateKey = viewGroup.findViewById<Button>(R.id.buttonImportPrivateKey)
+    buttonImportPrivateKey.setOnClickListener {
+      startActivityForResult(BaseImportKeyActivity.newIntent(
+          context!!, getString(R.string.import_private_key), true, ImportPrivateKeyActivity::class.java),
+          REQUEST_CODE_START_IMPORT_KEY_ACTIVITY)
+    }
 
-    Button buttonSendOwnPublicKey = viewGroup.findViewById(R.id.buttonSendOwnPublicKey);
-    buttonSendOwnPublicKey.setOnClickListener(new View.OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        showSendersPublicKeyDialog();
-      }
-    });
+    val buttonSendOwnPublicKey = viewGroup.findViewById<Button>(R.id.buttonSendOwnPublicKey)
+    buttonSendOwnPublicKey.setOnClickListener { showSendersPublicKeyDialog() }
 
-    viewGroup.addView(genShowOrigMsgLayout(pgpMsg, inflater, viewGroup));
-    return viewGroup;
+    viewGroup.addView(genShowOrigMsgLayout(pgpMsg, inflater, viewGroup))
+    return viewGroup
   }
 
   /**
    * Generate a layout with switch button which will be regulate visibility of original message info.
    *
    * @param msg            The original pgp message info.
-   * @param layoutInflater The {@link LayoutInflater} instance.
+   * @param layoutInflater The [LayoutInflater] instance.
    * @param rootView       The root view which will be used while we create a new layout using
-   *                       {@link LayoutInflater}.
+   * [LayoutInflater].
    * @return A generated layout.
    */
-  @NonNull
-  private ViewGroup genShowOrigMsgLayout(String msg, LayoutInflater layoutInflater,
-                                         final ViewGroup rootView) {
-    ViewGroup viewGroup = (ViewGroup) layoutInflater.inflate(R.layout.pgp_show_original_message, rootView, false);
-    final TextView textViewOrigPgpMsg = viewGroup.findViewById(R.id.textViewOrigPgpMsg);
-    textViewOrigPgpMsg.setText(msg);
+  private fun genShowOrigMsgLayout(msg: String?, layoutInflater: LayoutInflater,
+                                   rootView: ViewGroup): ViewGroup {
+    val viewGroup = layoutInflater.inflate(R.layout.pgp_show_original_message, rootView, false) as ViewGroup
+    val textViewOrigPgpMsg = viewGroup.findViewById<TextView>(R.id.textViewOrigPgpMsg)
+    textViewOrigPgpMsg.text = msg
 
-    Switch switchShowOrigMsg = viewGroup.findViewById(R.id.switchShowOrigMsg);
+    val switchShowOrigMsg = viewGroup.findViewById<Switch>(R.id.switchShowOrigMsg)
 
-    switchShowOrigMsg.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-      @Override
-      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        TransitionManager.beginDelayedTransition(rootView);
-        textViewOrigPgpMsg.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-        buttonView.setText(isChecked ? R.string.hide_original_message : R.string.show_original_message);
-      }
-    });
-    return viewGroup;
+    switchShowOrigMsg.setOnCheckedChangeListener { buttonView, isChecked ->
+      TransitionManager.beginDelayedTransition(rootView)
+      textViewOrigPgpMsg.visibility = if (isChecked) View.VISIBLE else View.GONE
+      buttonView.setText(if (isChecked) R.string.hide_original_message else R.string.show_original_message)
+    }
+    return viewGroup
   }
 
-  public interface OnActionListener {
-    void onArchiveMsgClicked();
+  interface OnActionListener {
+    fun onArchiveMsgClicked()
 
-    void onDeleteMsgClicked();
+    fun onDeleteMsgClicked()
 
-    void onMoveMsgToInboxClicked();
+    fun onMoveMsgToInboxClicked()
+  }
+
+  companion object {
+    private const val REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100
+    private const val REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 101
+    private const val REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102
   }
 }

@@ -88,7 +88,7 @@ import androidx.test.espresso.idling.CountingIdlingResource;
  */
 public class EmailManagerActivity extends BaseEmailListActivity
     implements NavigationView.OnNavigationItemSelectedListener, LoaderManager.LoaderCallbacks<Cursor>,
-    View.OnClickListener, EmailListFragment.OnManageEmailsListener, GoogleApiClient.OnConnectionFailedListener,
+    View.OnClickListener, GoogleApiClient.OnConnectionFailedListener,
     GoogleApiClient.ConnectionCallbacks, SearchView.OnQueryTextListener {
 
   private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 100;

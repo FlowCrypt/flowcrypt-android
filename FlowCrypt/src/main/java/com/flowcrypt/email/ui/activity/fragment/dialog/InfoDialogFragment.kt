@@ -104,7 +104,7 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
 
     @JvmOverloads
     @JvmStatic
-    fun newInstance(dialogTitle: String, dialogMsg: String,
+    fun newInstance(dialogTitle: String?, dialogMsg: String?,
                     buttonTitle: String? = null, isPopBackStack: Boolean = false,
                     isCancelable: Boolean = false, hasHtml: Boolean = false): InfoDialogFragment {
       val infoDialogFragment = InfoDialogFragment()
@@ -115,7 +115,7 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
       return infoDialogFragment
     }
 
-    private fun prepareArgs(dialogTitle: String, dialogMsg: String, buttonTitle: String?,
+    private fun prepareArgs(dialogTitle: String?, dialogMsg: String?, buttonTitle: String?,
                             isPopBackStack: Boolean, isCancelable: Boolean, hasHtml: Boolean): Bundle {
       val args = Bundle()
       args.putString(KEY_INFO_DIALOG_TITLE, dialogTitle)

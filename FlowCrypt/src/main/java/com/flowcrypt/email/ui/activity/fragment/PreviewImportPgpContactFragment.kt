@@ -3,48 +3,40 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment;
+package com.flowcrypt.email.ui.activity.fragment
 
-import android.app.Activity;
-import android.content.OperationApplicationException;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Parcelable;
-import android.os.RemoteException;
-import android.text.TextUtils;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.model.PublicKeyInfo;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment;
-import com.flowcrypt.email.ui.adapter.ImportPgpContactsRecyclerViewAdapter;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.google.android.gms.common.util.CollectionUtils;
-
-import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import android.app.Activity
+import android.content.OperationApplicationException
+import android.net.Uri
+import android.os.AsyncTask
+import android.os.Bundle
+import android.os.Parcelable
+import android.os.RemoteException
+import android.text.TextUtils
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.model.PublicKeyInfo
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.adapter.ImportPgpContactsRecyclerViewAdapter
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.google.android.gms.common.util.CollectionUtils
+import java.io.IOException
+import java.lang.ref.WeakReference
+import java.util.*
 
 /**
  * This fragment displays information about public keys owners and information about keys.
@@ -55,409 +47,382 @@ import androidx.recyclerview.widget.RecyclerView;
  * E-mail: DenBond7@gmail.com
  */
 //todo-DenBond7 it would be great to improve this fragment
-public class PreviewImportPgpContactFragment extends BaseFragment implements View.OnClickListener {
-  private static final String KEY_EXTRA_PUBLIC_KEY_STRING = GeneralUtil.generateUniqueExtraKey
-      ("KEY_EXTRA_PUBLIC_KEY_STRING", PreviewImportPgpContactFragment.class);
+class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
 
-  private static final String KEY_EXTRA_PUBLIC_KEYS_FILE_URI
-      = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEYS_FILE_URI", PreviewImportPgpContactFragment.class);
+  private var publicKeyInfoList: List<PublicKeyInfo>? = null
+  private var recyclerView: RecyclerView? = null
+  private var btnImportAll: TextView? = null
+  private var textViewProgressTitle: TextView? = null
+  private var progressBar: ProgressBar? = null
+  private var layoutContentView: View? = null
+  private var layoutProgress: View? = null
+  private var emptyView: View? = null
 
-  private List<PublicKeyInfo> publicKeyInfoList;
-  private RecyclerView recyclerView;
-  private TextView btnImportAll;
-  private TextView textViewProgressTitle;
-  private ProgressBar progressBar;
-  private View layoutContentView;
-  private View layoutProgress;
-  private View emptyView;
+  private var publicKeysString: String? = null
+  private var publicKeysFileUri: Uri? = null
 
-  private String publicKeysString;
-  private Uri publicKeysFileUri;
+  private var isParsingStarted: Boolean = false
 
-  private boolean isParsingStarted;
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    retainInstance = true
 
-  public static PreviewImportPgpContactFragment newInstance(String stringExtra, Parcelable parcelableExtra) {
-    Bundle args = new Bundle();
-    args.putString(KEY_EXTRA_PUBLIC_KEY_STRING, stringExtra);
-    args.putParcelable(KEY_EXTRA_PUBLIC_KEYS_FILE_URI, parcelableExtra);
-
-    PreviewImportPgpContactFragment previewImportPgpContactFragment = new PreviewImportPgpContactFragment();
-    previewImportPgpContactFragment.setArguments(args);
-    return previewImportPgpContactFragment;
-  }
-
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setRetainInstance(true);
-
-    Bundle bundle = getArguments();
+    val bundle = arguments
 
     if (bundle != null) {
-      publicKeysString = bundle.getString(KEY_EXTRA_PUBLIC_KEY_STRING);
-      publicKeysFileUri = bundle.getParcelable(KEY_EXTRA_PUBLIC_KEYS_FILE_URI);
+      publicKeysString = bundle.getString(KEY_EXTRA_PUBLIC_KEY_STRING)
+      publicKeysFileUri = bundle.getParcelable(KEY_EXTRA_PUBLIC_KEYS_FILE_URI)
     }
   }
 
-  @Nullable
-  @Override
-  public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                           @Nullable Bundle savedInstanceState) {
-    return inflater.inflate(R.layout.fragment_preview_import_pgp_contact, container, false);
+  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                            savedInstanceState: Bundle?): View? {
+    return inflater.inflate(R.layout.fragment_preview_import_pgp_contact, container, false)
   }
 
-  @Override
-  public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-    initViews(view);
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    initViews(view)
   }
 
-  @Override
-  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
+  override fun onActivityCreated(savedInstanceState: Bundle?) {
+    super.onActivityCreated(savedInstanceState)
     if (TextUtils.isEmpty(publicKeysString) && publicKeysFileUri == null) {
-      if (getActivity() != null) {
-        getActivity().setResult(Activity.RESULT_CANCELED);
-        getActivity().finish();
+      if (activity != null) {
+        activity!!.setResult(Activity.RESULT_CANCELED)
+        activity!!.finish()
       }
     } else if (!isParsingStarted) {
-      new PublicKeysParserAsyncTask(this, publicKeysString, publicKeysFileUri).execute();
-      isParsingStarted = true;
+      PublicKeysParserAsyncTask(this, publicKeysString ?: "", publicKeysFileUri).execute()
+      isParsingStarted = true
     }
   }
 
-  @Override
-  public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.buttonImportAll:
-        new SaveAllContactsAsyncTask(this, publicKeyInfoList).execute();
-        break;
+  override fun onClick(v: View) {
+    when (v.id) {
+      R.id.buttonImportAll -> publicKeyInfoList?.let { SaveAllContactsAsyncTask(this, it).execute() }
     }
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public void onSuccess(int loaderId, Object result) {
-    switch (loaderId) {
-      case R.id.loader_id_parse_public_keys:
-        publicKeyInfoList = (List<PublicKeyInfo>) result;
-        if (!publicKeyInfoList.isEmpty()) {
-          UIUtil.exchangeViewVisibility(getContext(), false, layoutProgress, layoutContentView);
-          recyclerView.setAdapter(new ImportPgpContactsRecyclerViewAdapter(publicKeyInfoList));
-          btnImportAll.setVisibility(publicKeyInfoList.size() > 1 ? View.VISIBLE : View.GONE);
+  override fun onSuccess(loaderId: Int, result: Any?) {
+    when (loaderId) {
+      R.id.loader_id_parse_public_keys -> {
+        publicKeyInfoList = result as List<PublicKeyInfo>?
+        if (publicKeyInfoList!!.isNotEmpty()) {
+          UIUtil.exchangeViewVisibility(context, false, layoutProgress!!, layoutContentView!!)
+          recyclerView!!.adapter = ImportPgpContactsRecyclerViewAdapter(publicKeyInfoList!!)
+          btnImportAll!!.visibility = if (publicKeyInfoList!!.size > 1) View.VISIBLE else View.GONE
         } else {
-          UIUtil.exchangeViewVisibility(getContext(), false, layoutProgress, emptyView);
+          UIUtil.exchangeViewVisibility(context, false, layoutProgress!!, emptyView!!)
         }
-        break;
+      }
 
-      default:
-        super.onSuccess(loaderId, result);
+      else -> super.onSuccess(loaderId, result)
     }
   }
 
-  @Override
-  public void onError(int loaderId, Exception e) {
-    switch (loaderId) {
-      case R.id.loader_id_parse_public_keys:
-        if (getActivity() != null) {
-          getActivity().setResult(Activity.RESULT_CANCELED);
-          Toast.makeText(getContext(), TextUtils.isEmpty(e.getMessage()) ? getString(R.string.unknown_error) :
-              e.getMessage(), Toast.LENGTH_SHORT).show();
-          getActivity().finish();
-        }
-        break;
+  override fun onError(loaderId: Int, e: Exception?) {
+    when (loaderId) {
+      R.id.loader_id_parse_public_keys -> if (activity != null) {
+        activity!!.setResult(Activity.RESULT_CANCELED)
+        Toast.makeText(context, if (TextUtils.isEmpty(e!!.message))
+          getString(R.string.unknown_error)
+        else
+          e.message, Toast.LENGTH_SHORT).show()
+        activity!!.finish()
+      }
 
-      default:
-        super.onError(loaderId, e);
+      else -> super.onError(loaderId, e)
     }
   }
 
-  private void initViews(View root) {
-    layoutContentView = root.findViewById(R.id.layoutContentView);
-    layoutProgress = root.findViewById(R.id.layoutProgress);
-    btnImportAll = root.findViewById(R.id.buttonImportAll);
-    textViewProgressTitle = root.findViewById(R.id.textViewProgressTitle);
-    progressBar = root.findViewById(R.id.progressBar);
-    btnImportAll.setOnClickListener(this);
-    recyclerView = root.findViewById(R.id.recyclerViewContacts);
-    recyclerView.setHasFixedSize(true);
-    recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-    emptyView = root.findViewById(R.id.emptyView);
+  private fun initViews(root: View) {
+    layoutContentView = root.findViewById(R.id.layoutContentView)
+    layoutProgress = root.findViewById(R.id.layoutProgress)
+    btnImportAll = root.findViewById(R.id.buttonImportAll)
+    textViewProgressTitle = root.findViewById(R.id.textViewProgressTitle)
+    progressBar = root.findViewById(R.id.progressBar)
+    btnImportAll!!.setOnClickListener(this)
+    recyclerView = root.findViewById(R.id.recyclerViewContacts)
+    recyclerView!!.setHasFixedSize(true)
+    recyclerView!!.layoutManager = LinearLayoutManager(context)
+    emptyView = root.findViewById(R.id.emptyView)
   }
 
-  private void handleImportAllResult(Boolean result) {
-    if (isAdded()) {
-      if (result) {
-        Toast.makeText(getContext(), R.string.success, Toast.LENGTH_SHORT).show();
-        if (getActivity() != null) {
-          getActivity().setResult(Activity.RESULT_OK);
-          getActivity().finish();
+  private fun handleImportAllResult(result: Boolean?) {
+    if (isAdded) {
+      if (result!!) {
+        Toast.makeText(context, R.string.success, Toast.LENGTH_SHORT).show()
+        if (activity != null) {
+          activity!!.setResult(Activity.RESULT_OK)
+          activity!!.finish()
         }
       } else {
-        UIUtil.exchangeViewVisibility(getContext(), false, layoutProgress, layoutContentView);
-        Toast.makeText(getContext(), R.string.unknown_error, Toast.LENGTH_SHORT).show();
+        UIUtil.exchangeViewVisibility(context, false, layoutProgress!!, layoutContentView!!)
+        Toast.makeText(context, R.string.unknown_error, Toast.LENGTH_SHORT).show()
       }
     }
   }
 
-  private static class PublicKeysParserAsyncTask extends BaseAsyncTask<Void, Integer, LoaderResult> {
-    private final String publicKeysString;
-    private final Uri publicKeysFileUri;
+  private class PublicKeysParserAsyncTask internal constructor(fragment: PreviewImportPgpContactFragment,
+                                                               private val publicKeysString: String,
+                                                               private val publicKeysFileUri: Uri?) : BaseAsyncTask<Void, Int, LoaderResult>(fragment) {
+    override val progressTitleResourcesId: Int
+      get() = R.string.parsing_public_keys
 
-    PublicKeysParserAsyncTask(PreviewImportPgpContactFragment fragment, String publicKeysString, Uri uri) {
-      super(fragment);
-      this.publicKeysString = publicKeysString;
-      this.publicKeysFileUri = uri;
-    }
-
-    @Override
-    protected LoaderResult doInBackground(Void... uris) {
-      String armoredKeys = publicKeysString;
+    override fun doInBackground(vararg uris: Void): LoaderResult {
+      var armoredKeys: String? = publicKeysString
 
       try {
         if (publicKeysFileUri != null && weakRef.get() != null) {
-          armoredKeys = GeneralUtil.readFileFromUriToString(weakRef.get().getContext(), publicKeysFileUri);
+          armoredKeys = GeneralUtil.readFileFromUriToString(weakRef.get()?.context!!, publicKeysFileUri)
         }
-      } catch (IOException e) {
-        e.printStackTrace();
-        return new LoaderResult(null, e);
+      } catch (e: IOException) {
+        e.printStackTrace()
+        return LoaderResult(null, e)
       }
 
-      if (!TextUtils.isEmpty(armoredKeys) && weakRef.get() != null) {
-        return parseKeys(armoredKeys);
+      return if (!TextUtils.isEmpty(armoredKeys) && weakRef.get() != null) {
+        parseKeys(armoredKeys)
       } else {
-        return new LoaderResult(null, new NullPointerException("An input string is null!"));
+        LoaderResult(null, NullPointerException("An input string is null!"))
       }
     }
 
-    @Override
-    protected void onPostExecute(LoaderResult loaderResult) {
-      super.onPostExecute(loaderResult);
+    override fun onPostExecute(loaderResult: LoaderResult) {
+      super.onPostExecute(loaderResult)
       if (weakRef.get() != null) {
-        weakRef.get().handleLoaderResult(R.id.loader_id_parse_public_keys, loaderResult);
+        weakRef.get()?.handleLoaderResult(R.id.loader_id_parse_public_keys, loaderResult)
       }
     }
 
-    @Override
-    public int getProgressTitleResourcesId() {
-      return R.string.parsing_public_keys;
-    }
-
-    @Override
-    public void updateProgress(Integer integer) {
+    override fun updateProgress(progress: Int) {
       if (weakRef.get() != null) {
-        weakRef.get().progressBar.setProgress(integer);
+        weakRef.get()?.progressBar!!.progress = progress
       }
     }
 
-    private LoaderResult parseKeys(String armoredKeys) {
+    private fun parseKeys(armoredKeys: String?): LoaderResult {
       try {
-        List<NodeKeyDetails> details = NodeCallsExecutor.parseKeys(armoredKeys);
+        val details = NodeCallsExecutor.parseKeys(armoredKeys!!)
 
-        if (!CollectionUtils.isEmpty(details)) {
-          return new LoaderResult(parsePublicKeysInfo(details), null);
+        return if (!CollectionUtils.isEmpty(details)) {
+          LoaderResult(parsePublicKeysInfo(details), null)
         } else {
           if (weakRef.get() != null) {
-            return new LoaderResult(null, new IllegalArgumentException(
-                weakRef.get().getContext().getString(R.string.clipboard_has_wrong_structure,
-                    weakRef.get().getContext().getString(R.string.public_))));
+            LoaderResult(null, IllegalArgumentException(
+                weakRef.get()?.context!!.getString(R.string.clipboard_has_wrong_structure,
+                    weakRef.get()?.context!!.getString(R.string.public_))))
           } else {
-            return new LoaderResult(null,
-                new IllegalArgumentException("The content of your clipboard doesn't look like a valid PGP pubkey."));
+            LoaderResult(null,
+                IllegalArgumentException("The content of your clipboard doesn't look like a valid PGP pubkey."))
           }
         }
 
-      } catch (Exception e) {
-        e.printStackTrace();
-        ExceptionUtil.handleError(e);
-        return new LoaderResult(null, e);
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        return LoaderResult(null, e)
       }
     }
 
-    private List<PublicKeyInfo> parsePublicKeysInfo(List<NodeKeyDetails> details) {
-      List<PublicKeyInfo> publicKeyInfoList = new ArrayList<>();
+    private fun parsePublicKeysInfo(details: List<NodeKeyDetails>): List<PublicKeyInfo> {
+      val publicKeyInfoList = ArrayList<PublicKeyInfo>()
 
-      Set<String> emails = new HashSet<>();
+      val emails = HashSet<String>()
 
-      int blocksCount = details.size();
-      float progress;
-      float lastProgress = 0;
+      val blocksCount = details.size
+      var progress: Float
+      var lastProgress = 0f
 
-      for (int i = 0; i < blocksCount; i++) {
-        NodeKeyDetails nodeKeyDetails = details.get(i);
-        PublicKeyInfo publicKeyInfo = getPublicKeyInfo(nodeKeyDetails, emails);
+      for (i in 0 until blocksCount) {
+        val nodeKeyDetails = details[i]
+        val publicKeyInfo = getPublicKeyInfo(nodeKeyDetails, emails)
 
         if (publicKeyInfo != null) {
-          publicKeyInfoList.add(publicKeyInfo);
+          publicKeyInfoList.add(publicKeyInfo)
         }
 
-        progress = i * 100f / blocksCount;
+        progress = i * 100f / blocksCount
         if (progress - lastProgress >= 1) {
-          publishProgress((int) progress);
-          lastProgress = progress;
+          publishProgress(progress.toInt())
+          lastProgress = progress
         }
       }
 
-      publishProgress(100);
+      publishProgress(100)
 
-      return publicKeyInfoList;
+      return publicKeyInfoList
     }
 
-    private PublicKeyInfo getPublicKeyInfo(NodeKeyDetails nodeKeyDetails, Set<String> emails) {
-      String fingerprint = nodeKeyDetails.getFingerprint();
-      String longId = nodeKeyDetails.getLongId();
-      String keyWords = nodeKeyDetails.getKeywords();
-      String keyOwner = nodeKeyDetails.getPrimaryPgpContact().getEmail();
+    private fun getPublicKeyInfo(nodeKeyDetails: NodeKeyDetails, emails: MutableSet<String>): PublicKeyInfo? {
+      val fingerprint = nodeKeyDetails.fingerprint
+      val longId = nodeKeyDetails.longId
+      val keyWords = nodeKeyDetails.keywords
+      var keyOwner: String? = nodeKeyDetails.primaryPgpContact.email
 
       if (keyOwner != null) {
-        keyOwner = keyOwner.toLowerCase();
+        keyOwner = keyOwner.toLowerCase()
 
         if (emails.contains(keyOwner)) {
-          return null;
+          return null
         }
 
-        emails.add(keyOwner);
+        emails.add(keyOwner)
 
         if (weakRef.get() != null) {
-          PgpContact contact = new ContactsDaoSource().getPgpContact(weakRef.get().getContext(), keyOwner);
-          return new PublicKeyInfo(keyWords, fingerprint, keyOwner, longId, contact, nodeKeyDetails.getPublicKey());
+          val contact = ContactsDaoSource().getPgpContact(weakRef.get()?.context!!, keyOwner)
+          return PublicKeyInfo(keyWords!!, fingerprint!!, keyOwner, longId!!, contact, nodeKeyDetails.publicKey!!)
         }
       }
-      return null;
+      return null
     }
   }
 
-  private static class SaveAllContactsAsyncTask extends BaseAsyncTask<Void, Integer, Boolean> {
-    private static final int STEP_AMOUNT = 50;
+  private class SaveAllContactsAsyncTask internal constructor(
+      fragment: PreviewImportPgpContactFragment,
+      private val publicKeyInfoList: List<PublicKeyInfo>) : BaseAsyncTask<Void, Int, Boolean>(fragment) {
 
-    private final List<PublicKeyInfo> publicKeyInfoList;
+    override val progressTitleResourcesId: Int
+      get() = R.string.importing_public_keys
 
-    SaveAllContactsAsyncTask(PreviewImportPgpContactFragment fragment, List<PublicKeyInfo> publicKeyInfoList) {
-      super(fragment);
-      this.publicKeyInfoList = publicKeyInfoList;
-    }
+    override fun doInBackground(vararg uris: Void): Boolean? {
+      val source = ContactsDaoSource()
+      val newCandidates = ArrayList<PgpContact>()
+      val updateCandidates = ArrayList<PgpContact>()
 
-    @Override
-    protected Boolean doInBackground(Void... uris) {
-      ContactsDaoSource source = new ContactsDaoSource();
-      List<PgpContact> newCandidates = new ArrayList<>();
-      List<PgpContact> updateCandidates = new ArrayList<>();
-
-      for (PublicKeyInfo publicKeyInfo : publicKeyInfoList) {
-        PgpContact pgpContact = new PgpContact(publicKeyInfo.getKeyOwner(), null, publicKeyInfo.getPublicKey(),
-            true, null, publicKeyInfo.getFingerprint(), publicKeyInfo.getLongId(), publicKeyInfo.getKeyWords(), 0);
+      for (publicKeyInfo in publicKeyInfoList) {
+        val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey,
+            true, null, publicKeyInfo.fingerprint, publicKeyInfo.longId, publicKeyInfo.keyWords, 0)
 
         if (publicKeyInfo.hasPgpContact()) {
-          if (publicKeyInfo.isUpdateEnabled()) {
-            updateCandidates.add(pgpContact);
+          if (publicKeyInfo.isUpdateEnabled) {
+            updateCandidates.add(pgpContact)
           }
         } else {
-          newCandidates.add(pgpContact);
+          newCandidates.add(pgpContact)
         }
       }
 
       try {
-        float progress;
-        float lastProgress = 0f;
-        int totalOperationsCount = newCandidates.size() + updateCandidates.size();
+        var progress: Float
+        var lastProgress = 0f
+        val totalOperationsCount = newCandidates.size + updateCandidates.size
 
-        for (int i = 0; i < newCandidates.size(); i++) {
-          int start = i;
-          int end = newCandidates.size() - i > STEP_AMOUNT ? i + STEP_AMOUNT : newCandidates.size();
+        run {
+          var i = 0
+          while (i < newCandidates.size) {
+            val start = i
+            val end = if (newCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else newCandidates.size
 
-          if (weakRef.get() != null) {
-            source.addRowsUsingApplyBatch(weakRef.get().getContext(), newCandidates.subList(start, end));
-          }
-          i = end;
+            if (weakRef.get() != null) {
+              source.addRowsUsingApplyBatch(weakRef.get()?.context, newCandidates.subList(start, end))
+            }
+            i = end
 
-          progress = i * 100f / totalOperationsCount;
-          if (progress - lastProgress >= 1) {
-            publishProgress((int) progress);
-            lastProgress = progress;
-          }
+            progress = i * 100f / totalOperationsCount
+            if (progress - lastProgress >= 1) {
+              publishProgress(progress.toInt())
+              lastProgress = progress
+            }
 
-          i--;
-        }
-
-        for (int i = 0; i < updateCandidates.size(); i++) {
-          int start = i;
-          int end = updateCandidates.size() - i > STEP_AMOUNT ? i + STEP_AMOUNT : updateCandidates.size() - 1;
-
-          if (weakRef.get() != null) {
-            source.updatePgpContacts(weakRef.get().getContext(), updateCandidates.subList(start, end + 1));
-          }
-          i = end + 1;
-
-          progress = i * 100f / totalOperationsCount;
-          if (progress - lastProgress >= 1) {
-            publishProgress((int) progress);
-            lastProgress = progress;
+            i--
+            i++
           }
         }
 
-      } catch (RemoteException | OperationApplicationException e) {
-        e.printStackTrace();
-        return false;
+        var i = 0
+        while (i < updateCandidates.size) {
+          val start = i
+          val end = if (updateCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else updateCandidates.size - 1
+
+          if (weakRef.get() != null) {
+            source.updatePgpContacts(weakRef.get()?.context!!, updateCandidates.subList(start, end + 1))
+          }
+          i = end + 1
+
+          progress = i * 100f / totalOperationsCount
+          if (progress - lastProgress >= 1) {
+            publishProgress(progress.toInt())
+            lastProgress = progress
+          }
+          i++
+        }
+
+      } catch (e: RemoteException) {
+        e.printStackTrace()
+        return false
+      } catch (e: OperationApplicationException) {
+        e.printStackTrace()
+        return false
       }
 
-      publishProgress(100);
-      return true;
+      publishProgress(100)
+      return true
     }
 
 
-    @Override
-    protected void onPostExecute(Boolean b) {
-      super.onPostExecute(b);
+    override fun onPostExecute(b: Boolean?) {
+      super.onPostExecute(b)
       if (b != null && weakRef.get() != null) {
-        weakRef.get().handleImportAllResult(b);
+        weakRef.get()?.handleImportAllResult(b)
       }
     }
 
-    @Override
-    public int getProgressTitleResourcesId() {
-      return R.string.importing_public_keys;
-    }
-
-    @Override
-    public void updateProgress(Integer integer) {
+    override fun updateProgress(progress: Int) {
       if (weakRef.get() != null) {
-        weakRef.get().progressBar.setProgress(integer);
+        weakRef.get()?.progressBar!!.progress = progress
       }
+    }
+
+    companion object {
+      private const val STEP_AMOUNT = 50
     }
   }
 
-  private abstract static class BaseAsyncTask<Params, Progress, Result> extends AsyncTask<Params, Progress, Result> {
-    final WeakReference<PreviewImportPgpContactFragment> weakRef;
+  private abstract class BaseAsyncTask<Params, Progress, Result> internal constructor(previewImportPgpContactFragment: PreviewImportPgpContactFragment) : AsyncTask<Params, Progress, Result>() {
+    internal val weakRef: WeakReference<PreviewImportPgpContactFragment> = WeakReference(previewImportPgpContactFragment)
 
-    BaseAsyncTask(PreviewImportPgpContactFragment previewImportPgpContactFragment) {
-      this.weakRef = new WeakReference<>(previewImportPgpContactFragment);
-    }
+    abstract val progressTitleResourcesId: Int
 
-    public abstract int getProgressTitleResourcesId();
+    abstract fun updateProgress(progress: Progress)
 
-    public abstract void updateProgress(Progress progress);
-
-    @Override
-    protected void onPreExecute() {
-      super.onPreExecute();
+    override fun onPreExecute() {
+      super.onPreExecute()
       if (weakRef.get() != null) {
-        weakRef.get().progressBar.setIndeterminate(true);
-        weakRef.get().textViewProgressTitle.setText(getProgressTitleResourcesId());
-        UIUtil.exchangeViewVisibility(weakRef.get().getContext(), true,
-            weakRef.get().layoutProgress, weakRef.get().layoutContentView);
+        weakRef.get()?.progressBar!!.isIndeterminate = true
+        weakRef.get()?.textViewProgressTitle!!.setText(progressTitleResourcesId)
+        UIUtil.exchangeViewVisibility(weakRef.get()?.context, true,
+            weakRef.get()?.layoutProgress!!, weakRef.get()?.layoutContentView!!)
       }
     }
 
     @SafeVarargs
-    @Override
-    protected final void onProgressUpdate(Progress... values) {
-      super.onProgressUpdate(values);
+    override fun onProgressUpdate(vararg values: Progress) {
+      super.onProgressUpdate(*values)
       if (weakRef.get() != null) {
-        if (weakRef.get().progressBar.isIndeterminate()) {
-          weakRef.get().progressBar.setIndeterminate(false);
+        if (weakRef.get()?.progressBar!!.isIndeterminate) {
+          weakRef.get()?.progressBar!!.isIndeterminate = false
         }
-        updateProgress(values[0]);
+        updateProgress(values[0])
       }
+    }
+  }
+
+  companion object {
+    private val KEY_EXTRA_PUBLIC_KEY_STRING = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEY_STRING", PreviewImportPgpContactFragment::class.java)
+
+    private val KEY_EXTRA_PUBLIC_KEYS_FILE_URI = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEYS_FILE_URI", PreviewImportPgpContactFragment::class.java)
+
+    @JvmStatic
+    fun newInstance(stringExtra: String, parcelableExtra: Parcelable): PreviewImportPgpContactFragment {
+      val args = Bundle()
+      args.putString(KEY_EXTRA_PUBLIC_KEY_STRING, stringExtra)
+      args.putParcelable(KEY_EXTRA_PUBLIC_KEYS_FILE_URI, parcelableExtra)
+
+      val previewImportPgpContactFragment = PreviewImportPgpContactFragment()
+      previewImportPgpContactFragment.arguments = args
+      return previewImportPgpContactFragment
     }
   }
 }

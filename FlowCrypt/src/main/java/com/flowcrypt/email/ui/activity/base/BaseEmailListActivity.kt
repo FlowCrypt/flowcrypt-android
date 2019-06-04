@@ -27,6 +27,7 @@ import com.flowcrypt.email.util.GeneralUtil
  */
 abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnManageEmailsListener {
   @JvmField
+  @VisibleForTesting
   val msgsIdlingResource: CountingIdlingResource =
       CountingIdlingResource(GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java), GeneralUtil.isDebugBuild())
   private var hasMoreMsgs = true
@@ -34,9 +35,8 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
   abstract fun refreshFoldersFromCache()
 
   @VisibleForTesting
-  override fun getMsgsCountingIdlingResource(): CountingIdlingResource {
-    return msgsIdlingResource
-  }
+  override val msgsCountingIdlingResource: CountingIdlingResource
+    get() = msgsIdlingResource
 
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
@@ -152,7 +152,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
     }
 
     if (currentFolder != null) {
-      val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder.fullName, ignoreCase = true)
+      val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder!!.fullName, ignoreCase = true)
       if (currentFolder != null && isOutbox) {
         ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
         MessagesSenderJobService.schedule(applicationContext)

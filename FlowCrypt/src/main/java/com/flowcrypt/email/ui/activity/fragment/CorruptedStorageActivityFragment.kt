@@ -3,67 +3,55 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment;
+package com.flowcrypt.email.ui.activity.fragment
 
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
-import android.provider.Settings;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.CorruptedStorageActivity;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.provider.Settings
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.fragment.app.Fragment
+import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.CorruptedStorageActivity
 
 /**
- * It's a root fragment of {@link CorruptedStorageActivity}
+ * It's a root fragment of [CorruptedStorageActivity]
  *
  * @author DenBond7
  * Date: 12/14/2018
  * Time: 12:20
  * E-mail: DenBond7@gmail.com
  */
-public class CorruptedStorageActivityFragment extends Fragment implements View.OnClickListener {
+class CorruptedStorageActivityFragment : Fragment(), View.OnClickListener {
 
-  public CorruptedStorageActivityFragment() {
+  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    return inflater.inflate(R.layout.fragment_corrupted_storage, container, false)
   }
 
-  @Override
-  public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    return inflater.inflate(R.layout.fragment_corrupted_storage, container, false);
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+
+    val textViewHeader = view.findViewById<TextView>(R.id.textViewHeader)
+    textViewHeader.text = getString(R.string.store_space_was_corrupted, getString(R.string.support_email))
+
+    val textViewFooter = view.findViewById<TextView>(R.id.textViewFooter)
+    textViewFooter.text = getString(R.string.wipe_app_settings, getString(R.string.app_name))
+
+    val btnResetAppSettings = view.findViewById<View>(R.id.btnResetAppSettings)
+    btnResetAppSettings?.setOnClickListener(this)
   }
 
-  @Override
-  public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-
-    TextView textViewHeader = view.findViewById(R.id.textViewHeader);
-    textViewHeader.setText(getString(R.string.store_space_was_corrupted, getString(R.string.support_email)));
-
-    TextView textViewFooter = view.findViewById(R.id.textViewFooter);
-    textViewFooter.setText(getString(R.string.wipe_app_settings, getString(R.string.app_name)));
-
-    View btnResetAppSettings = view.findViewById(R.id.btnResetAppSettings);
-    if (btnResetAppSettings != null) {
-      btnResetAppSettings.setOnClickListener(this);
-    }
-  }
-
-  @Override
-  public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.btnResetAppSettings:
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        Uri uri = Uri.fromParts("package", getActivity().getPackageName(), null);
-        intent.setData(uri);
-        startActivity(intent);
-        break;
+  override fun onClick(v: View) {
+    when (v.id) {
+      R.id.btnResetAppSettings -> {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        val uri = Uri.fromParts("package", activity!!.packageName, null)
+        intent.data = uri
+        startActivity(intent)
+      }
     }
   }
 }

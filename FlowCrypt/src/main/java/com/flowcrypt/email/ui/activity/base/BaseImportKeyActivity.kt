@@ -7,11 +7,7 @@ package com.flowcrypt.email.ui.activity.base
 
 import android.Manifest
 import android.app.Activity
-import android.content.ClipboardManager
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.*
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -393,9 +389,9 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
         BaseImportKeyActivity::class.java)
 
     val KEY_EXTRA_TITLE = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", BaseImportKeyActivity::class.java)
-    private val WRONG_STRUCTURE_ERROR = "Cannot parse key: could not determine pgpType"
-    private val REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 10
-    private val REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 11
+    private const val WRONG_STRUCTURE_ERROR = "Cannot parse key: could not determine pgpType"
+    private const val REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 10
+    private const val REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 11
 
     @JvmStatic
     fun newIntent(context: Context, title: String, cls: Class<*>): Intent {
