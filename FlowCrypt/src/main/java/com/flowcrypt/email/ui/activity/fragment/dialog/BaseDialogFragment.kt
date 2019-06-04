@@ -3,21 +3,18 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.dialog;
+package com.flowcrypt.email.ui.activity.fragment.dialog
 
-import android.os.Bundle;
-import android.widget.Toast;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.node.Node;
-import com.flowcrypt.email.util.idling.NodeIdlingResource;
-
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.Observer;
-import androidx.loader.content.Loader;
+import android.os.Bundle
+import android.widget.Toast
+import androidx.annotation.VisibleForTesting
+import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.Observer
+import androidx.loader.content.Loader
+import com.flowcrypt.email.R
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.node.Node
+import com.flowcrypt.email.util.idling.NodeIdlingResource
 
 /**
  * The base dialog fragment.
@@ -28,66 +25,50 @@ import androidx.loader.content.Loader;
  * E-mail: DenBond7@gmail.com
  */
 
-public class BaseDialogFragment extends DialogFragment {
-  protected NodeIdlingResource nodeIdlingResource;
+open class BaseDialogFragment : DialogFragment() {
+  @get:VisibleForTesting
+  val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    registerNodeIdlingResources();
+  protected val isNodeReady: Boolean
+    get() = Node.getInstance(activity!!.application).liveData.value ?: false
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    registerNodeIdlingResources()
   }
 
-  public void handleLoaderResult(Loader loader, LoaderResult loaderResult) {
+  fun handleLoaderResult(loader: Loader<*>, loaderResult: LoaderResult?) {
     if (loaderResult != null) {
-      if (loaderResult.getResult() != null) {
-        onSuccess(loader.getId(), loaderResult.getResult());
-      } else if (loaderResult.getException() != null) {
-        onError(loader.getId(), loaderResult.getException());
-      } else {
-        showToast(getString(R.string.unknown_error));
+      when {
+        loaderResult.result != null -> onSuccess(loader.id, loaderResult.result)
+        loaderResult.exception != null -> onError(loader.id, loaderResult.exception)
+        else -> showToast(getString(R.string.unknown_error))
       }
     } else {
-      showToast(getString(R.string.unknown_error));
+      showToast(getString(R.string.unknown_error))
     }
   }
 
-  public void onError(int loaderId, Exception e) {
+  fun onError(loaderId: Int, e: Exception?) {
 
   }
 
-  public void onSuccess(int loaderId, Object result) {
+  fun onSuccess(loaderId: Int, result: Any?) {
 
   }
 
-  public void showToast(String string) {
-    Toast.makeText(getContext(), string, Toast.LENGTH_SHORT).show();
+  fun showToast(string: String) {
+    Toast.makeText(context, string, Toast.LENGTH_SHORT).show()
   }
 
-  @VisibleForTesting
-  public NodeIdlingResource getNodeIdlingResource() {
-    return nodeIdlingResource;
-  }
-
-  protected boolean isNodeReady() {
-    if (Node.getInstance(getActivity().getApplication()).getLiveData().getValue() == null) {
-      return false;
-    }
-
-    return Node.getInstance(getActivity().getApplication()).getLiveData().getValue();
-  }
-
-  protected void onNodeStateChanged(Boolean newState) {
+  protected open fun onNodeStateChanged(newState: Boolean?) {
 
   }
 
-  private void registerNodeIdlingResources() {
-    nodeIdlingResource = new NodeIdlingResource();
-    Node.getInstance(getActivity().getApplication()).getLiveData().observe(this, new Observer<Boolean>() {
-      @Override
-      public void onChanged(Boolean aBoolean) {
-        nodeIdlingResource.setIdleState(aBoolean);
-        onNodeStateChanged(aBoolean);
-      }
-    });
+  private fun registerNodeIdlingResources() {
+    Node.getInstance(activity!!.application).liveData.observe(this, Observer { aBoolean ->
+      nodeIdlingResource.setIdleState(aBoolean!!)
+      onNodeStateChanged(aBoolean)
+    })
   }
 }

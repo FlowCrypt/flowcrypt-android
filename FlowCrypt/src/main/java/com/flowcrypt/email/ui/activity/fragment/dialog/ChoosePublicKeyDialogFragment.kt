@@ -3,41 +3,35 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.dialog;
+package com.flowcrypt.email.ui.activity.fragment.dialog
 
-import android.app.Activity;
-import android.app.Dialog;
-import android.content.Intent;
-import android.os.Bundle;
-import android.util.SparseBooleanArray;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.EmailUtil;
-import com.flowcrypt.email.api.email.model.AttachmentInfo;
-import com.flowcrypt.email.api.retrofit.node.NodeRepository;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper;
-import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult;
-import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
-import com.google.android.gms.common.util.CollectionUtils;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProviders;
+import android.app.Activity
+import android.app.Dialog
+import android.content.Intent
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.ListView
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.api.retrofit.Status
+import com.flowcrypt.email.api.retrofit.node.NodeRepository
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
+import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
+import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
+import com.google.android.gms.common.util.CollectionUtils
+import java.util.*
 
 /**
  * This dialog can be used for collecting information about user public keys.
@@ -48,217 +42,207 @@ import androidx.lifecycle.ViewModelProviders;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ChoosePublicKeyDialogFragment extends BaseDialogFragment implements View.OnClickListener,
-    Observer<NodeResponseWrapper> {
-  public static final String KEY_ATTACHMENT_INFO_LIST = GeneralUtil.generateUniqueExtraKey
-      ("KEY_ATTACHMENT_INFO_LIST", InfoDialogFragment.class);
+class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener, Observer<NodeResponseWrapper<*>> {
 
-  private static final String KEY_TO = GeneralUtil.generateUniqueExtraKey("KEY_TO", InfoDialogFragment.class);
+  private var atts: ArrayList<AttachmentInfo>? = null
+  private var listViewKeys: ListView? = null
+  private var textViewMsg: TextView? = null
+  private var progressBar: View? = null
+  private var content: View? = null
+  private var to: String? = null
 
-  private ArrayList<AttachmentInfo> atts;
-  private ListView listViewKeys;
-  private TextView textViewMsg;
-  private View progressBar;
-  private View content;
-  private String to;
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
 
-  public ChoosePublicKeyDialogFragment() {
-  }
-
-  public static ChoosePublicKeyDialogFragment newInstance(String to) {
-    Bundle args = new Bundle();
-    args.putString(KEY_TO, to);
-
-    ChoosePublicKeyDialogFragment fragment = new ChoosePublicKeyDialogFragment();
-    fragment.setArguments(args);
-    return fragment;
-  }
-
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-
-    if (getArguments() != null) {
-      this.to = getArguments().getString(KEY_TO);
+    if (arguments != null) {
+      this.to = arguments!!.getString(KEY_TO)
     }
 
-    this.atts = new ArrayList<>();
+    this.atts = ArrayList()
   }
 
-  @NonNull
-  @Override
-  public Dialog onCreateDialog(Bundle savedInstanceState) {
-    View view = LayoutInflater.from(getContext()).inflate(R.layout.fragment_send_user_public_key, getView() !=
-        null & getView() instanceof ViewGroup ? (ViewGroup) getView() : null, false);
+  override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+    val view = LayoutInflater.from(context).inflate(R.layout.fragment_send_user_public_key, if ((view != null) and (view is ViewGroup))
+      view as ViewGroup?
+    else
+      null, false)
 
-    textViewMsg = view.findViewById(R.id.textViewMessage);
-    progressBar = view.findViewById(R.id.progressBar);
-    listViewKeys = view.findViewById(R.id.listViewKeys);
-    content = view.findViewById(R.id.groupContent);
-    View buttonOk = view.findViewById(R.id.buttonOk);
-    buttonOk.setOnClickListener(this);
+    textViewMsg = view.findViewById(R.id.textViewMessage)
+    progressBar = view.findViewById(R.id.progressBar)
+    listViewKeys = view.findViewById(R.id.listViewKeys)
+    content = view.findViewById(R.id.groupContent)
+    val buttonOk = view.findViewById<View>(R.id.buttonOk)
+    buttonOk.setOnClickListener(this)
 
-    AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-    builder.setView(view);
+    val builder = AlertDialog.Builder(context!!)
+    builder.setView(view)
 
-    return builder.create();
+    return builder.create()
   }
 
-  @Override
-  public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.buttonOk:
-        if (atts != null) {
-          if (atts.size() == 1) {
-            sendResult(Activity.RESULT_OK, atts);
-            dismiss();
+  override fun onClick(v: View) {
+    when (v.id) {
+      R.id.buttonOk -> if (atts != null) {
+        if (atts!!.size == 1) {
+          sendResult(Activity.RESULT_OK, atts!!)
+          dismiss()
+        } else {
+          if (atts!!.isNotEmpty()) {
+            sendResult()
           } else {
-            if (!atts.isEmpty()) {
-              sendResult();
+            dismiss()
+          }
+        }
+      } else {
+        dismiss()
+      }
+    }
+  }
+
+  override fun onNodeStateChanged(newState: Boolean?) {
+    super.onNodeStateChanged(newState)
+    if (newState!!) {
+      fetchKeys()
+    }
+  }
+
+  override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {
+    when (nodeResponseWrapper.requestCode) {
+      R.id.live_data_id_fetch_keys -> when (nodeResponseWrapper.status) {
+        Status.LOADING -> UIUtil.exchangeViewVisibility(context, true, progressBar!!, content!!)
+
+        Status.SUCCESS -> {
+          val parseKeysResult = nodeResponseWrapper.result as ParseKeysResult?
+          val nodeKeyDetailsList = parseKeysResult!!.nodeKeyDetails
+          if (CollectionUtils.isEmpty(nodeKeyDetailsList)) {
+            textViewMsg!!.text = getString(R.string.no_pub_keys)
+          } else {
+            for (nodeKeyDetails in nodeKeyDetailsList) {
+              val att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails)
+              if (att != null) {
+                atts!!.add(att)
+              }
+            }
+
+            UIUtil.exchangeViewVisibility(context, false, progressBar!!, content!!)
+
+            val matchedKeys = getMatchedKeys(nodeKeyDetailsList)
+            if (!CollectionUtils.isEmpty(matchedKeys)) {
+              atts!!.clear()
+              for (nodeKeyDetails in matchedKeys) {
+                val att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails)
+                if (att != null) {
+                  atts!!.add(att)
+                }
+              }
+            }
+
+            if (atts!!.size > 1) {
+              textViewMsg!!.setText(R.string.tell_sender_to_update_their_settings)
+              textViewMsg!!.append("\n\n")
+              textViewMsg!!.append(getString(R.string.select_key))
+
+              val strings = arrayOfNulls<String>(atts!!.size)
+              for (i in atts!!.indices) {
+                val (_, email, _, _, _, _, name) = atts!![i]
+                strings[i] = email + "\n" + name
+              }
+
+              val adapter = ArrayAdapter<String>(context!!,
+                  android.R.layout.simple_list_item_single_choice, strings)
+
+              listViewKeys!!.choiceMode = ListView.CHOICE_MODE_SINGLE
+              listViewKeys!!.adapter = adapter
             } else {
-              dismiss();
+              textViewMsg!!.setText(R.string.tell_sender_to_update_their_settings)
+              listViewKeys!!.visibility = View.GONE
             }
           }
-        } else {
-          dismiss();
         }
-        break;
-    }
-  }
 
-  @Override
-  protected void onNodeStateChanged(Boolean newState) {
-    super.onNodeStateChanged(newState);
-    if (newState) {
-      fetchKeys();
-    }
-  }
-
-  @Override
-  public void onChanged(NodeResponseWrapper nodeResponseWrapper) {
-    switch (nodeResponseWrapper.getRequestCode()) {
-      case R.id.live_data_id_fetch_keys:
-        switch (nodeResponseWrapper.getStatus()) {
-          case LOADING:
-            UIUtil.exchangeViewVisibility(getContext(), true, progressBar, content);
-            break;
-
-          case SUCCESS:
-            ParseKeysResult parseKeysResult = (ParseKeysResult) nodeResponseWrapper.getResult();
-            List<NodeKeyDetails> nodeKeyDetailsList = parseKeysResult.getNodeKeyDetails();
-            if (CollectionUtils.isEmpty(nodeKeyDetailsList)) {
-              textViewMsg.setText(getString(R.string.no_pub_keys));
-            } else {
-              for (NodeKeyDetails nodeKeyDetails : nodeKeyDetailsList) {
-                AttachmentInfo att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails);
-                if (att != null) {
-                  atts.add(att);
-                }
-              }
-
-              UIUtil.exchangeViewVisibility(getContext(), false, progressBar, content);
-
-              List<NodeKeyDetails> matchedKeys = getMatchedKeys(nodeKeyDetailsList);
-              if (!CollectionUtils.isEmpty(matchedKeys)) {
-                atts.clear();
-                for (NodeKeyDetails nodeKeyDetails : matchedKeys) {
-                  AttachmentInfo att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails);
-                  if (att != null) {
-                    atts.add(att);
-                  }
-                }
-              }
-
-              if (atts.size() > 1) {
-                textViewMsg.setText(R.string.tell_sender_to_update_their_settings);
-                textViewMsg.append("\n\n");
-                textViewMsg.append(getString(R.string.select_key));
-
-                String[] strings = new String[atts.size()];
-                for (int i = 0; i < atts.size(); i++) {
-                  AttachmentInfo att = atts.get(i);
-                  strings[i] = att.getEmail() + "\n" + att.getName();
-                }
-
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
-                    android.R.layout.simple_list_item_single_choice, strings);
-
-                listViewKeys.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-                listViewKeys.setAdapter(adapter);
-              } else {
-                textViewMsg.setText(R.string.tell_sender_to_update_their_settings);
-                listViewKeys.setVisibility(View.GONE);
-              }
-            }
-            break;
-
-          case ERROR:
-            UIUtil.exchangeViewVisibility(getContext(), false, progressBar, textViewMsg);
-            textViewMsg.setText(nodeResponseWrapper.getResult().getError().toString());
-            break;
-
-          case EXCEPTION:
-            UIUtil.exchangeViewVisibility(getContext(), false, progressBar, textViewMsg);
-            textViewMsg.setText(nodeResponseWrapper.getException().getMessage());
-            break;
+        Status.ERROR -> {
+          UIUtil.exchangeViewVisibility(context, false, progressBar!!, textViewMsg!!)
+          textViewMsg!!.text = nodeResponseWrapper.result!!.error!!.toString()
         }
-        break;
+
+        Status.EXCEPTION -> {
+          UIUtil.exchangeViewVisibility(context, false, progressBar!!, textViewMsg!!)
+          textViewMsg!!.text = nodeResponseWrapper.exception!!.message
+        }
+      }
     }
   }
 
-  private void fetchKeys() {
-    PrivateKeysViewModel viewModel = ViewModelProviders.of(this).get(PrivateKeysViewModel.class);
-    viewModel.init(new NodeRepository());
-    viewModel.getResponsesLiveData().observe(this, this);
+  private fun fetchKeys() {
+    val viewModel = ViewModelProviders.of(this).get(PrivateKeysViewModel::class.java)
+    viewModel.init(NodeRepository())
+    viewModel.responsesLiveData.observe(this, this)
   }
 
-  private void sendResult() {
-    ArrayList<AttachmentInfo> selectedAtts = new ArrayList<>();
-    SparseBooleanArray checkedItemPositions = listViewKeys.getCheckedItemPositions();
+  private fun sendResult() {
+    val selectedAtts = ArrayList<AttachmentInfo>()
+    val checkedItemPositions = listViewKeys!!.checkedItemPositions
     if (checkedItemPositions != null) {
-      for (int i = 0; i < checkedItemPositions.size(); i++) {
-        int key = checkedItemPositions.keyAt(i);
+      for (i in 0 until checkedItemPositions.size()) {
+        val key = checkedItemPositions.keyAt(i)
         if (checkedItemPositions.get(key)) {
-          selectedAtts.add(atts.get(key));
+          selectedAtts.add(atts!![key])
         }
       }
     }
 
     if (selectedAtts.isEmpty()) {
-      showToast(getString(R.string.please_select_key));
+      showToast(getString(R.string.please_select_key))
     } else {
-      sendResult(Activity.RESULT_OK, selectedAtts);
-      dismiss();
+      sendResult(Activity.RESULT_OK, selectedAtts)
+      dismiss()
     }
   }
 
-  private void sendResult(int result, ArrayList<AttachmentInfo> atts) {
-    if (getTargetFragment() == null) {
-      return;
+  private fun sendResult(result: Int, atts: ArrayList<AttachmentInfo>) {
+    if (targetFragment == null) {
+      return
     }
 
-    Intent intent = new Intent();
-    intent.putParcelableArrayListExtra(KEY_ATTACHMENT_INFO_LIST, atts);
+    val intent = Intent()
+    intent.putParcelableArrayListExtra(KEY_ATTACHMENT_INFO_LIST, atts)
 
-    getTargetFragment().onActivityResult(getTargetRequestCode(), result, intent);
+    targetFragment!!.onActivityResult(targetRequestCode, result, intent)
   }
 
   /**
-   * Get a list with the matched {@link NodeKeyDetails}. If the sender email matched to the email from
-   * {@link PgpContact} which got from the private key than we return a list with the relevant public key.
+   * Get a list with the matched [NodeKeyDetails]. If the sender email matched to the email from
+   * [PgpContact] which got from the private key than we return a list with the relevant public key.
    *
-   * @return A matched {@link NodeKeyDetails} or null.
+   * @return A matched [NodeKeyDetails] or null.
    */
-  private List<NodeKeyDetails> getMatchedKeys(List<NodeKeyDetails> nodeKeyDetailsList) {
-    List<NodeKeyDetails> keyDetails = new ArrayList<>();
+  private fun getMatchedKeys(nodeKeyDetailsList: List<NodeKeyDetails>): List<NodeKeyDetails> {
+    val keyDetails = ArrayList<NodeKeyDetails>()
 
-    for (NodeKeyDetails nodeKeyDetails : nodeKeyDetailsList) {
-      PgpContact primaryUserId = nodeKeyDetails.getPrimaryPgpContact();
-      if (primaryUserId.getEmail().equalsIgnoreCase(to)) {
-        keyDetails.add(nodeKeyDetails);
+    for (nodeKeyDetails in nodeKeyDetailsList) {
+      val (email) = nodeKeyDetails.primaryPgpContact
+      if (email.equals(to!!, ignoreCase = true)) {
+        keyDetails.add(nodeKeyDetails)
       }
     }
 
-    return keyDetails;
+    return keyDetails
+  }
+
+  companion object {
+    @JvmField
+    val KEY_ATTACHMENT_INFO_LIST = GeneralUtil.generateUniqueExtraKey("KEY_ATTACHMENT_INFO_LIST", InfoDialogFragment::class.java)
+
+    private val KEY_TO = GeneralUtil.generateUniqueExtraKey("KEY_TO", InfoDialogFragment::class.java)
+
+    @JvmStatic
+    fun newInstance(to: String): ChoosePublicKeyDialogFragment {
+      val args = Bundle()
+      args.putString(KEY_TO, to)
+
+      val fragment = ChoosePublicKeyDialogFragment()
+      fragment.arguments = args
+      return fragment
+    }
   }
 }

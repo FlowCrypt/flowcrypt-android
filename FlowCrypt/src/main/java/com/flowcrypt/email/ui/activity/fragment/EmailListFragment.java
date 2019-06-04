@@ -785,7 +785,7 @@ public class EmailListFragment extends BaseSyncFragment implements AdapterView.O
         return;
     }
 
-    InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(null, message, true);
+    InfoDialogFragment infoDialogFragment = InfoDialogFragment.newInstance(null, message, null, false, true, false);
     infoDialogFragment.setOnInfoDialogButtonClickListener(new InfoDialogFragment.OnInfoDialogButtonClickListener() {
       @Override
       public void onInfoDialogButtonClick() {
