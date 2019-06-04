@@ -3,20 +3,18 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.preferences;
+package com.flowcrypt.email.ui.activity.fragment.preferences
 
-import android.os.Bundle;
-
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource;
-import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity;
-import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment;
-import com.flowcrypt.email.util.UIUtil;
-
-import androidx.preference.Preference;
+import android.os.Bundle
+import androidx.preference.Preference
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
+import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity
+import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
+import com.flowcrypt.email.util.UIUtil
 
 /**
  * This fragment contains actions which related to Security options.
@@ -26,35 +24,32 @@ import androidx.preference.Preference;
  * Time: 10:47.
  * E-mail: DenBond7@gmail.com
  */
-public class SecuritySettingsFragment extends BasePreferenceFragment implements Preference.OnPreferenceClickListener {
-  private AccountDao account;
+class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferenceClickListener {
+  private var account: AccountDao? = null
 
-  @Override
-  public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-    addPreferencesFromResource(R.xml.preferences_security_settings);
+  override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    addPreferencesFromResource(R.xml.preferences_security_settings)
 
-    account = new AccountDaoSource().getActiveAccountInformation(getContext());
+    account = AccountDaoSource().getActiveAccountInformation(context!!)
 
-    Preference preferenceChangePassPhrase = findPreference(Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE);
+    val preferenceChangePassPhrase = findPreference(Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE)
     if (preferenceChangePassPhrase != null) {
-      preferenceChangePassPhrase.setOnPreferenceClickListener(this);
+      preferenceChangePassPhrase.onPreferenceClickListener = this
     }
   }
 
-  @Override
-  public boolean onPreferenceClick(Preference preference) {
-    switch (preference.getKey()) {
-      case Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE:
-        if (new UserIdEmailsKeysDaoSource().getLongIdsByEmail(getContext(), account.getEmail()).isEmpty()) {
-          UIUtil.showInfoSnackbar(getView(), getString(R.string.account_has_no_associated_keys, getString
-              (R.string.support_email)));
+  override fun onPreferenceClick(preference: Preference): Boolean {
+    return when (preference.key) {
+      Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE -> {
+        if (UserIdEmailsKeysDaoSource().getLongIdsByEmail(context!!, account!!.email).isEmpty()) {
+          UIUtil.showInfoSnackbar(view!!, getString(R.string.account_has_no_associated_keys, getString(R.string.support_email)))
         } else {
-          startActivity(ChangePassPhraseActivity.newIntent(getContext(), account));
+          startActivity(ChangePassPhraseActivity.newIntent(context, account))
         }
-        return true;
+        true
+      }
 
-      default:
-        return false;
+      else -> false
     }
   }
 }

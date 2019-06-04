@@ -3,26 +3,21 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.preferences;
+package com.flowcrypt.email.ui.activity.fragment.preferences
 
-import android.Manifest;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.provider.Settings;
-import android.view.View;
-import android.widget.Toast;
-
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.R;
-
-import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.DialogFragment;
-import androidx.preference.Preference;
+import android.Manifest
+import android.content.Intent
+import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Bundle
+import android.preference.PreferenceManager
+import android.provider.Settings
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.preference.Preference
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
 
 /**
  * The main developer options fragment.
@@ -32,103 +27,85 @@ import androidx.preference.Preference;
  * Time: 11:19
  * E-mail: DenBond7@gmail.com
  */
-public class MainDevPreferencesFragment extends BaseDevPreferencesFragment implements
-    SharedPreferences.OnSharedPreferenceChangeListener {
-  private static final int REQUEST_CODE_REQUEST_WRITE_EXTERNAL_PERMISSION_FOR_LOGS = 100;
+class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
 
-  private SharedPreferences sharedPreferences;
+  private var sharedPreferences: SharedPreferences? = null
 
-  @Override
-  public void onCreate(final Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
   }
 
-  @Override
-  public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-    addPreferencesFromResource(R.xml.dev_preferences);
+  override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    addPreferencesFromResource(R.xml.dev_preferences)
   }
 
-  @Override
-  public void onDisplayPreferenceDialog(Preference preference) {
-    if (preference instanceof BuildConfInfoPreference) {
-      DialogFragment dialogFragment = BuildConfigInfoPreferencesFragment.newInstance(preference.getKey());
-      dialogFragment.setTargetFragment(this, 0);
-      dialogFragment.show(getFragmentManager(), null);
+  override fun onDisplayPreferenceDialog(preference: Preference?) {
+    if (preference is BuildConfInfoPreference) {
+      val dialogFragment = BuildConfigInfoPreferencesFragment.newInstance(preference.getKey())
+      dialogFragment.setTargetFragment(this, 0)
+      dialogFragment.show(fragmentManager!!, null)
     } else {
-      super.onDisplayPreferenceDialog(preference);
+      super.onDisplayPreferenceDialog(preference)
     }
   }
 
-  @Override
-  public void onViewCreated(View view, Bundle savedInstanceState) {
-    super.onViewCreated(view, savedInstanceState);
-  }
-
-  @Override
-  public void onResume() {
-    super.onResume();
+  override fun onResume() {
+    super.onResume()
     if (sharedPreferences != null) {
-      sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+      sharedPreferences!!.registerOnSharedPreferenceChangeListener(this)
     }
   }
 
-  @Override
-  public void onPause() {
-    super.onPause();
+  override fun onPause() {
+    super.onPause()
     if (sharedPreferences != null) {
-      sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+      sharedPreferences!!.unregisterOnSharedPreferenceChangeListener(this)
     }
   }
 
-  @Override
-  public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-    switch (key) {
-      case Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED:
-        if (sharedPreferences.getBoolean(key, false)) {
-          boolean isPermissionGranted = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission
-              .WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-          if (isPermissionGranted) {
-            showApplicationDetailsSettingsActivity();
-          } else {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                REQUEST_CODE_REQUEST_WRITE_EXTERNAL_PERMISSION_FOR_LOGS);
-          }
+  override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+    when (key) {
+      Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED -> if (sharedPreferences?.getBoolean(key, false) ==
+          true) {
+        val isPermissionGranted = ContextCompat.checkSelfPermission(activity!!, Manifest.permission
+            .WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        if (isPermissionGranted) {
+          showApplicationDetailsSettingsActivity()
         } else {
-          showApplicationDetailsSettingsActivity();
+          requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+              REQUEST_CODE_REQUEST_WRITE_EXTERNAL_PERMISSION_FOR_LOGS)
         }
-        break;
+      } else {
+        showApplicationDetailsSettingsActivity()
+      }
 
-      case Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLED:
-      case Constants.PREFERENCES_KEY_IS_ACRA_ENABLED:
-      case Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLED:
-        showApplicationDetailsSettingsActivity();
-        break;
+      Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLED, Constants.PREFERENCES_KEY_IS_ACRA_ENABLED, Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLED -> showApplicationDetailsSettingsActivity()
     }
   }
 
-  @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                         @NonNull int[] grantResults) {
-    switch (requestCode) {
-      case REQUEST_CODE_REQUEST_WRITE_EXTERNAL_PERMISSION_FOR_LOGS:
-        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          showApplicationDetailsSettingsActivity();
-        } else {
-          Toast.makeText(getActivity(), "Access not granted to write logs!!!", Toast.LENGTH_SHORT).show();
-        }
-        break;
+  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    when (requestCode) {
+      REQUEST_CODE_REQUEST_WRITE_EXTERNAL_PERMISSION_FOR_LOGS -> if (grantResults.size == 1 && grantResults[0] ==
+          PackageManager.PERMISSION_GRANTED) {
+        showApplicationDetailsSettingsActivity()
+      } else {
+        Toast.makeText(activity, "Access not granted to write logs!!!", Toast.LENGTH_SHORT).show()
+      }
 
-      default:
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+      else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
   }
 
-  private void showApplicationDetailsSettingsActivity() {
-    Toast.makeText(getActivity(), R.string.toast_message_press_force_stop_to_apply_changes, Toast.LENGTH_SHORT).show();
-    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-    Uri uri = Uri.fromParts("package", getActivity().getPackageName(), null);
-    intent.setData(uri);
-    startActivity(intent);
+  private fun showApplicationDetailsSettingsActivity() {
+    Toast.makeText(activity, R.string.toast_message_press_force_stop_to_apply_changes, Toast.LENGTH_SHORT).show()
+    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+    val uri = Uri.fromParts("package", activity!!.packageName, null)
+    intent.data = uri
+    startActivity(intent)
+  }
+
+  companion object {
+    private const val REQUEST_CODE_REQUEST_WRITE_EXTERNAL_PERMISSION_FOR_LOGS = 100
   }
 }

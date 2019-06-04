@@ -3,19 +3,14 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.preferences;
+package com.flowcrypt.email.ui.activity.fragment.preferences
 
-import android.os.Bundle;
-
-import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-
-import java.lang.reflect.Field;
-import java.util.Formatter;
-import java.util.Locale;
-
-import androidx.appcompat.app.AlertDialog;
-import androidx.preference.PreferenceDialogFragmentCompat;
+import android.os.Bundle
+import androidx.appcompat.app.AlertDialog
+import androidx.preference.PreferenceDialogFragmentCompat
+import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import java.util.*
 
 /**
  * This fragment shows a general information about the current build.
@@ -25,48 +20,50 @@ import androidx.preference.PreferenceDialogFragmentCompat;
  * Time: 12:11
  * E-mail: DenBond7@gmail.com
  */
-public class BuildConfigInfoPreferencesFragment extends PreferenceDialogFragmentCompat {
+class BuildConfigInfoPreferencesFragment : PreferenceDialogFragmentCompat() {
 
-  private String msg;
+  private var msg: String? = null
 
-  public static BuildConfigInfoPreferencesFragment newInstance(String key) {
-    BuildConfigInfoPreferencesFragment fragment = new BuildConfigInfoPreferencesFragment();
-    Bundle bundle = new Bundle(1);
-    bundle.putString(ARG_KEY, key);
-    fragment.setArguments(bundle);
-    return fragment;
-  }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
 
-  @Override
-  public void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+    val clazz = BuildConfig::class.java
+    val fields = clazz.declaredFields
 
-    Class clazz = BuildConfig.class;
-    Field[] fields = clazz.getDeclaredFields();
+    val formatter = Formatter(Locale.getDefault())
 
-    Formatter formatter = new Formatter(Locale.getDefault());
-
-    for (Field field : fields) {
+    for (field in fields) {
       try {
-        formatter.format("%s: %s\n\n", field.getName(), field.get(null));
-      } catch (IllegalAccessException e) {
-        e.printStackTrace();
-        ExceptionUtil.handleError(e);
+        formatter.format("%s: %s\n\n", field.name, field.get(null))
+      } catch (e: IllegalAccessException) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
       }
+
     }
 
-    msg = formatter.toString();
+    msg = formatter.toString()
   }
 
-  @Override
-  protected void onPrepareDialogBuilder(AlertDialog.Builder builder) {
-    super.onPrepareDialogBuilder(builder);
-    builder.setMessage(msg);
-    builder.setNegativeButton(null, null);
+  override fun onPrepareDialogBuilder(builder: AlertDialog.Builder?) {
+    super.onPrepareDialogBuilder(builder)
+    builder!!.setMessage(msg)
+    builder.setNegativeButton(null, null)
   }
 
-  @Override
-  public void onDialogClosed(boolean positiveResult) {
+  override fun onDialogClosed(positiveResult: Boolean) {
 
+  }
+
+  companion object {
+
+    @JvmStatic
+    fun newInstance(key: String): BuildConfigInfoPreferencesFragment {
+      val fragment = BuildConfigInfoPreferencesFragment()
+      val bundle = Bundle(1)
+      bundle.putString(ARG_KEY, key)
+      fragment.arguments = bundle
+      return fragment
+    }
   }
 }

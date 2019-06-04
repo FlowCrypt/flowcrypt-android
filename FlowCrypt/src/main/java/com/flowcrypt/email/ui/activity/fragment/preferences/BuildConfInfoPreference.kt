@@ -3,36 +3,29 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.preferences;
+package com.flowcrypt.email.ui.activity.fragment.preferences
 
-import android.content.Context;
-import android.util.AttributeSet;
+import android.content.Context
+import android.util.AttributeSet
 
-import androidx.preference.DialogPreference;
+import androidx.preference.DialogPreference
 
 
 /**
- * A custom {@link androidx.preference.Preference}
+ * A custom [androidx.preference.Preference]
  *
  * @author Denis Bondarenko
  * Date: 17.11.2018
  * Time: 13:00
  * E-mail: DenBond7@gmail.com
  */
-public class BuildConfInfoPreference extends DialogPreference {
-  public BuildConfInfoPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-    super(context, attrs, defStyleAttr, defStyleRes);
-  }
+class BuildConfInfoPreference : DialogPreference {
+  constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int, defStyleRes: Int) :
+      super(context, attrs, defStyleAttr, defStyleRes)
 
-  public BuildConfInfoPreference(Context context, AttributeSet attrs, int defStyleAttr) {
-    super(context, attrs, defStyleAttr);
-  }
+  constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
-  public BuildConfInfoPreference(Context context, AttributeSet attrs) {
-    super(context, attrs);
-  }
+  constructor(context: Context, attrs: AttributeSet) : super(context, attrs)
 
-  public BuildConfInfoPreference(Context context) {
-    super(context);
-  }
+  constructor(context: Context) : super(context)
 }

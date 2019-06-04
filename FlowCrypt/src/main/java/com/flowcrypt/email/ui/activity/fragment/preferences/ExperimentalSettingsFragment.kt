@@ -3,17 +3,15 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.preferences;
+package com.flowcrypt.email.ui.activity.fragment.preferences
 
-import android.content.Intent;
-import android.os.Bundle;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.DevSettingsActivity;
-import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment;
-import com.flowcrypt.email.util.GeneralUtil;
-
-import androidx.preference.Preference;
+import android.content.Intent
+import android.os.Bundle
+import androidx.preference.Preference
+import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.DevSettingsActivity
+import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * @author DenBond7
@@ -21,18 +19,17 @@ import androidx.preference.Preference;
  * Time: 22:46.
  * E-mail: DenBond7@gmail.com
  */
-public class ExperimentalSettingsFragment extends BasePreferenceFragment {
-  @Override
-  public void onCreatePreferences(Bundle bundle, String s) {
-    addPreferencesFromResource(R.xml.preferences_experimental_settings);
+class ExperimentalSettingsFragment : BasePreferenceFragment() {
+  override fun onCreatePreferences(bundle: Bundle?, s: String?) {
+    addPreferencesFromResource(R.xml.preferences_experimental_settings)
 
     if (GeneralUtil.isDebugBuild()) {
-      Preference preference = new Preference(getContext());
-      preference.setTitle(R.string.action_dev_settings);
-      preference.setIconSpaceReserved(false);
-      preference.setIntent(new Intent(getContext(), DevSettingsActivity.class));
+      val preference = Preference(context!!)
+      preference.setTitle(R.string.action_dev_settings)
+      preference.isIconSpaceReserved = false
+      preference.intent = Intent(context, DevSettingsActivity::class.java)
 
-      getPreferenceScreen().addPreference(preference);
+      preferenceScreen.addPreference(preference)
     }
   }
 }

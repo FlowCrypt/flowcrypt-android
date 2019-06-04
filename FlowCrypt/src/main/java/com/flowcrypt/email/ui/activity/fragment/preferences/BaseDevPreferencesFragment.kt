@@ -3,9 +3,9 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.preferences;
+package com.flowcrypt.email.ui.activity.fragment.preferences
 
-import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceFragmentCompat
 
 /**
  * The base debugging fragment.
@@ -15,5 +15,4 @@ import androidx.preference.PreferenceFragmentCompat;
  * Time: 11:07
  * E-mail: DenBond7@gmail.com
  */
-public abstract class BaseDevPreferencesFragment extends PreferenceFragmentCompat {
-}
+abstract class BaseDevPreferencesFragment : PreferenceFragmentCompat()

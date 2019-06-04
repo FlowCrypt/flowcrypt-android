@@ -3,25 +3,22 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment.preferences;
+package com.flowcrypt.email.ui.activity.fragment.preferences
 
-import android.content.Intent;
-import android.os.Build;
-import android.os.Bundle;
-import android.provider.Settings;
-
-import com.flowcrypt.email.BuildConfig;
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.ui.activity.SignInActivity;
-import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment;
-import com.flowcrypt.email.util.SharedPreferencesHelper;
-
-import androidx.preference.ListPreference;
-import androidx.preference.Preference;
-import androidx.preference.PreferenceManager;
+import android.content.Intent
+import android.os.Build
+import android.os.Bundle
+import android.provider.Settings
+import androidx.preference.ListPreference
+import androidx.preference.Preference
+import androidx.preference.PreferenceManager
+import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.ui.activity.SignInActivity
+import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
+import com.flowcrypt.email.util.SharedPreferencesHelper
 
 /**
  * This class describes notification settings.
@@ -31,100 +28,99 @@ import androidx.preference.PreferenceManager;
  * Time: 12:04
  * E-mail: DenBond7@gmail.com
  */
-public class NotificationsSettingsFragment extends BasePreferenceFragment
-    implements Preference.OnPreferenceClickListener, Preference.OnPreferenceChangeListener {
-  public static final String NOTIFICATION_LEVEL_ALL_MESSAGES = "all_messages";
-  public static final String NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY = "encrypted_messages_only";
-  public static final String NOTIFICATION_LEVEL_NEVER = "never";
+open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.OnPreferenceClickListener,
+    Preference.OnPreferenceChangeListener {
 
-  private CharSequence[] levels;
-  private CharSequence[] entries;
+  private var levels: Array<CharSequence>? = null
+  private var entries: Array<String>? = null
 
-  @Override
-  public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-    addPreferencesFromResource(R.xml.preferences_notifications_settings);
+  override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    addPreferencesFromResource(R.xml.preferences_notifications_settings)
 
-    AccountDaoSource accountDaoSource = new AccountDaoSource();
-    AccountDao account = accountDaoSource.getActiveAccountInformation(getContext());
+    val accountDaoSource = AccountDaoSource()
+    val account = accountDaoSource.getActiveAccountInformation(context!!)
 
     if (account != null) {
-      boolean isEncryptedModeEnabled = new AccountDaoSource().isEncryptedModeEnabled(getContext(), account.getEmail());
+      val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context!!, account.email)
 
       if (isEncryptedModeEnabled) {
-        levels = new CharSequence[]{NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
-            NOTIFICATION_LEVEL_NEVER
-        };
-        entries = getResources().getStringArray(R.array.notification_level_encrypted_entries);
-      } else {
-        levels = new CharSequence[]{NOTIFICATION_LEVEL_ALL_MESSAGES,
+        levels = arrayOf(
             NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
-            NOTIFICATION_LEVEL_NEVER
-        };
-
-        entries = getResources().getStringArray(R.array.notification_level_entries);
+            NOTIFICATION_LEVEL_NEVER)
+        entries = resources.getStringArray(R.array.notification_level_encrypted_entries)
+      } else {
+        levels = arrayOf(
+            NOTIFICATION_LEVEL_ALL_MESSAGES,
+            NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
+            NOTIFICATION_LEVEL_NEVER)
+        entries = resources.getStringArray(R.array.notification_level_entries)
       }
 
-      initPreferences(isEncryptedModeEnabled);
+      initPreferences(isEncryptedModeEnabled)
     } else {
-      Intent intent = new Intent(getContext(), SignInActivity.class);
-      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-      startActivity(intent);
-      getActivity().finish();
+      val intent = Intent(context, SignInActivity::class.java)
+      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+      startActivity(intent)
+      activity!!.finish()
     }
   }
 
-  @Override
-  public boolean onPreferenceClick(Preference preference) {
-    switch (preference.getKey()) {
-      case Constants.PREFERENCES_KEY_MANAGE_NOTIFICATIONS:
+  override fun onPreferenceClick(preference: Preference?): Boolean {
+    return when (preference?.key) {
+      Constants.PREFERENCES_KEY_MANAGE_NOTIFICATIONS -> {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-          Intent intent = new Intent();
-          intent.setAction(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
-          intent.putExtra(Settings.EXTRA_APP_PACKAGE, BuildConfig.APPLICATION_ID);
-          startActivity(intent);
+          val intent = Intent()
+          intent.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+          intent.putExtra(Settings.EXTRA_APP_PACKAGE, BuildConfig.APPLICATION_ID)
+          startActivity(intent)
         }
 
-        return true;
+        true
+      }
 
-      default:
-        return false;
+      else -> false
     }
   }
 
-  @Override
-  public boolean onPreferenceChange(Preference preference, Object newValue) {
-    switch (preference.getKey()) {
-      case Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER:
-        ListPreference pref = (ListPreference) preference;
-        preference.setSummary(generateSummary(newValue.toString(), pref.getEntryValues(), pref.getEntries()));
-        return true;
+  override fun onPreferenceChange(preference: Preference?, newValue: Any?): Boolean {
+    return when (preference?.key) {
+      Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER -> {
+        val pref = preference as ListPreference
+        preference.setSummary(generateSummary(newValue.toString(), pref.entryValues, pref.entries))
+        true
+      }
 
-      default:
-        return false;
+      else -> false
     }
   }
 
-  protected void initPreferences(boolean isEncryptedModeEnabled) {
-    Preference preferenceSettingsSecurity = findPreference(Constants.PREFERENCES_KEY_MANAGE_NOTIFICATIONS);
+  private fun initPreferences(isEncryptedModeEnabled: Boolean) {
+    val preferenceSettingsSecurity = findPreference(Constants.PREFERENCES_KEY_MANAGE_NOTIFICATIONS)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      preferenceSettingsSecurity.setOnPreferenceClickListener(this);
+      preferenceSettingsSecurity.onPreferenceClickListener = this
     } else {
-      preferenceSettingsSecurity.setVisible(false);
+      preferenceSettingsSecurity.isVisible = false
     }
 
-    ListPreference filter = (ListPreference) findPreference(Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER);
-    filter.setEntryValues(levels);
-    filter.setEntries(entries);
-    filter.setOnPreferenceChangeListener(this);
+    val filter = findPreference(Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER) as ListPreference
+    filter.entryValues = levels
+    filter.entries = entries
+    filter.onPreferenceChangeListener = this
 
-    String currentValue = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(
-        getContext()), Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "");
+    var currentValue = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(
+        context!!), Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
-    if (isEncryptedModeEnabled && NOTIFICATION_LEVEL_ALL_MESSAGES.equals(currentValue)) {
-      filter.setValue(NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY);
-      currentValue = NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY;
+    if (isEncryptedModeEnabled && NOTIFICATION_LEVEL_ALL_MESSAGES == currentValue) {
+      filter.value = NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
+      currentValue = NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY
     }
 
-    filter.setSummary(generateSummary(currentValue, filter.getEntryValues(), filter.getEntries()));
+    filter.summary = generateSummary(currentValue!!, filter.entryValues, filter.entries)
+  }
+
+  companion object {
+    const val NOTIFICATION_LEVEL_ALL_MESSAGES = "all_messages"
+    const val NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY = "encrypted_messages_only"
+    const val NOTIFICATION_LEVEL_NEVER = "never"
   }
 }
