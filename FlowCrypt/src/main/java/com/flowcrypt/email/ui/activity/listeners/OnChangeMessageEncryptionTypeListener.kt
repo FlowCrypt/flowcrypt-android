@@ -3,12 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.listeners;
+package com.flowcrypt.email.ui.activity.listeners
 
-import com.flowcrypt.email.model.MessageEncryptionType;
+import com.flowcrypt.email.model.MessageEncryptionType
 
 /**
- * This interface can be used when need to notify if {@link MessageEncryptionType} was changed.
+ * This interface can be used when need to notify if [MessageEncryptionType] was changed.
  *
  * @author Denis Bondarenko
  * Date: 28.07.2017
@@ -16,15 +16,15 @@ import com.flowcrypt.email.model.MessageEncryptionType;
  * E-mail: DenBond7@gmail.com
  */
 
-public interface OnChangeMessageEncryptionTypeListener {
+interface OnChangeMessageEncryptionTypeListener {
+
+  val msgEncryptionType: MessageEncryptionType
 
   /**
    * Handle a switch of the message encryption type.
    *
    * @param messageEncryptionType The new message encryption type.
    */
-  void onMsgEncryptionTypeChanged(MessageEncryptionType messageEncryptionType);
-
-  MessageEncryptionType getMsgEncryptionType();
+  fun onMsgEncryptionTypeChanged(messageEncryptionType: MessageEncryptionType)
 }
 
