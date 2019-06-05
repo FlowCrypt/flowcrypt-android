@@ -7,7 +7,11 @@ package com.flowcrypt.email.ui.activity.base
 
 import android.Manifest
 import android.app.Activity
-import android.content.*
+import android.content.ClipboardManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
@@ -394,24 +398,24 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     private const val REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 11
 
     @JvmStatic
-    fun newIntent(context: Context, title: String, cls: Class<*>): Intent {
+    fun newIntent(context: Context?, title: String, cls: Class<*>): Intent {
       return newIntent(context, title, false, cls)
     }
 
     @JvmStatic
-    fun newIntent(context: Context, title: String, isThrowErrorIfDuplicateFoundEnabled: Boolean,
+    fun newIntent(context: Context?, title: String, isThrowErrorIfDuplicateFoundEnabled: Boolean,
                   cls: Class<*>): Intent {
       return newIntent(context, title, null, isThrowErrorIfDuplicateFoundEnabled, cls)
     }
 
     @JvmStatic
-    fun newIntent(context: Context, title: String, model: KeyImportModel?,
+    fun newIntent(context: Context?, title: String, model: KeyImportModel?,
                   isThrowErrorIfDuplicateFoundEnabled: Boolean, cls: Class<*>): Intent {
       return newIntent(context, true, title, model, isThrowErrorIfDuplicateFoundEnabled, cls)
     }
 
     @JvmStatic
-    fun newIntent(context: Context, isSyncEnabled: Boolean, title: String, model: KeyImportModel?,
+    fun newIntent(context: Context?, isSyncEnabled: Boolean, title: String, model: KeyImportModel?,
                   isThrowErrorIfDuplicateFoundEnabled: Boolean, cls: Class<*>): Intent {
       val intent = Intent(context, cls)
       intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnabled)

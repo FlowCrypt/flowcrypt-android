@@ -3,14 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.content.Intent;
-import android.os.Bundle;
+import android.content.Intent
+import android.os.Bundle
 
-import com.flowcrypt.email.ui.activity.base.BaseActivity;
-
-import androidx.annotation.Nullable;
+import com.flowcrypt.email.ui.activity.base.BaseActivity
 
 /**
  * It's a base activity where we will use Node.js.
@@ -20,27 +18,26 @@ import androidx.annotation.Nullable;
  * Time: 10:34 AM
  * E-mail: DenBond7@gmail.com
  */
-public abstract class BaseNodeActivity extends BaseActivity {
-  protected static final int REQUEST_CODE_NODE_RUNNER = 10000;
+abstract class BaseNodeActivity : BaseActivity() {
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    if (!isNodeReady()) {
-      startActivityForResult(new Intent(this, NodeRunnerActivity.class), REQUEST_CODE_NODE_RUNNER);
+  override fun onCreate(savedInstanceState: Bundle?) {
+    if (!isNodeReady) {
+      startActivityForResult(Intent(this, NodeRunnerActivity::class.java), REQUEST_CODE_NODE_RUNNER)
     }
 
-    super.onCreate(savedInstanceState);
+    super.onCreate(savedInstanceState)
   }
 
-  @Override
-  protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-    switch (requestCode) {
-      case REQUEST_CODE_NODE_RUNNER:
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    when (requestCode) {
+      REQUEST_CODE_NODE_RUNNER -> {
+      }
 
-        break;
-
-      default:
-        super.onActivityResult(requestCode, resultCode, data);
+      else -> super.onActivityResult(requestCode, resultCode, data)
     }
+  }
+
+  companion object {
+    const val REQUEST_CODE_NODE_RUNNER = 10000
   }
 }

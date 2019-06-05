@@ -3,36 +3,31 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.Parcelable;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.model.IncomingMessageInfo;
-import com.flowcrypt.email.api.email.model.OutgoingMessageInfo;
-import com.flowcrypt.email.api.email.model.ServiceInfo;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.model.MessageEncryptionType;
-import com.flowcrypt.email.model.MessageType;
-import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity;
-import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment;
-import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener;
-import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
-
-import androidx.annotation.Nullable;
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.os.Parcelable
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.TextView
+import android.widget.Toast
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
+import com.flowcrypt.email.api.email.model.ServiceInfo
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.model.MessageEncryptionType
+import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
+import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
+import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment
+import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener
+import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
 
 /**
  * This activity describes a logic of send encrypted or standard message.
@@ -43,213 +38,177 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public class CreateMessageActivity extends BaseBackStackSyncActivity implements
-    CreateMessageFragment.OnMessageSendListener, OnChangeMessageEncryptionTypeListener {
+class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment.OnMessageSendListener, OnChangeMessageEncryptionTypeListener {
 
-  public static final String EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE =
-      GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE", CreateMessageActivity.class);
+  private var nonEncryptedHintView: View? = null
+  override lateinit var rootView: View
 
-  public static final String EXTRA_KEY_INCOMING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey
-      ("EXTRA_KEY_INCOMING_MESSAGE_INFO", CreateMessageActivity.class);
+  override var msgEncryptionType = MessageEncryptionType.ENCRYPTED
+    private set
+  private var serviceInfo: ServiceInfo? = null
 
-  public static final String EXTRA_KEY_SERVICE_INFO = GeneralUtil.generateUniqueExtraKey
-      ("EXTRA_KEY_SERVICE_INFO", CreateMessageActivity.class);
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_create_message
 
-  public static final String EXTRA_KEY_MESSAGE_TYPE =
-      GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_TYPE", CreateMessageActivity.class);
-
-  private View nonEncryptedHintView;
-  private View layoutContent;
-
-  private MessageEncryptionType msgEncryptionType = MessageEncryptionType.ENCRYPTED;
-  private ServiceInfo serviceInfo;
-
-  public static Intent generateIntent(Context context, IncomingMessageInfo msgInfo,
-                                      MessageEncryptionType msgEncryptionType) {
-    return generateIntent(context, msgInfo, MessageType.NEW, msgEncryptionType);
-  }
-
-  public static Intent generateIntent(Context context, IncomingMessageInfo msgInfo,
-                                      MessageType messageType, MessageEncryptionType msgEncryptionType) {
-    return generateIntent(context, msgInfo, messageType, msgEncryptionType, null);
-  }
-
-  public static Intent generateIntent(Context context, IncomingMessageInfo msgInfo, MessageType messageType,
-                                      MessageEncryptionType msgEncryptionType, ServiceInfo serviceInfo) {
-
-    Intent intent = new Intent(context, CreateMessageActivity.class);
-    intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, msgInfo);
-    intent.putExtra(EXTRA_KEY_MESSAGE_TYPE, (Parcelable) messageType);
-    intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, (Parcelable) msgEncryptionType);
-    intent.putExtra(EXTRA_KEY_SERVICE_INFO, serviceInfo);
-    return intent;
-  }
-
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    AccountDao account = new AccountDaoSource().getActiveAccountInformation(this);
+  override fun onCreate(savedInstanceState: Bundle?) {
+    val account = AccountDaoSource().getActiveAccountInformation(this)
     if (account == null) {
-      Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show();
-      finish();
+      Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show()
+      finish()
     }
 
-    if (getIntent() != null) {
-      serviceInfo = getIntent().getParcelableExtra(EXTRA_KEY_SERVICE_INFO);
-      if (getIntent().hasExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)) {
-        msgEncryptionType = getIntent().getParcelableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE);
+    if (intent != null) {
+      serviceInfo = intent.getParcelableExtra(EXTRA_KEY_SERVICE_INFO)
+      if (intent.hasExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)) {
+        msgEncryptionType = intent.getParcelableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)
       }
     }
 
-    super.onCreate(savedInstanceState);
+    super.onCreate(savedInstanceState)
 
-    layoutContent = findViewById(R.id.layoutContent);
-    initNonEncryptedHintView();
+    rootView = findViewById(R.id.layoutContent)
+    initNonEncryptedHintView()
 
-    if (getIntent() != null) {
-      onMsgEncryptionTypeChanged(msgEncryptionType);
-      prepareActionBarTitle();
+    if (intent != null) {
+      onMsgEncryptionTypeChanged(msgEncryptionType)
+      prepareActionBarTitle()
     }
   }
 
-  @Override
-  public View getRootView() {
-    return layoutContent;
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    val inflater = menuInflater
+    inflater.inflate(R.menu.activity_send_message, menu)
+    return true
   }
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_create_message;
-  }
-
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    MenuInflater inflater = getMenuInflater();
-    inflater.inflate(R.menu.activity_send_message, menu);
-    return true;
-  }
-
-  @Override
-  public boolean onPrepareOptionsMenu(Menu menu) {
-    super.onPrepareOptionsMenu(menu);
-    MenuItem menuActionSwitchType = menu.findItem(R.id.menuActionSwitchType);
-    int titleRes = msgEncryptionType == MessageEncryptionType.STANDARD ? R.string.switch_to_secure_email : R.string
-        .switch_to_standard_email;
-    menuActionSwitchType.setTitle(titleRes);
+  override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+    super.onPrepareOptionsMenu(menu)
+    val menuActionSwitchType = menu.findItem(R.id.menuActionSwitchType)
+    val titleRes = if (msgEncryptionType === MessageEncryptionType.STANDARD)
+      R.string.switch_to_secure_email
+    else
+      R.string
+          .switch_to_standard_email
+    menuActionSwitchType.setTitle(titleRes)
 
     if (serviceInfo != null) {
-      if (!serviceInfo.isMsgTypeSwitchable()) {
-        menu.removeItem(R.id.menuActionSwitchType);
+      if (!serviceInfo!!.isMsgTypeSwitchable) {
+        menu.removeItem(R.id.menuActionSwitchType)
       }
 
-      if (!serviceInfo.hasAbilityToAddNewAtt()) {
-        menu.removeItem(R.id.menuActionAttachFile);
+      if (!serviceInfo!!.hasAbilityToAddNewAtt()) {
+        menu.removeItem(R.id.menuActionAttachFile)
       }
     }
 
-    return true;
+    return true
   }
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.menuActionHelp:
-        startActivity(new Intent(this, FeedbackActivity.class));
-        return true;
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+      R.id.menuActionHelp -> {
+        startActivity(Intent(this, FeedbackActivity::class.java))
+        return true
+      }
 
-      case R.id.menuActionSwitchType:
-        switch (msgEncryptionType) {
-          case ENCRYPTED:
-            onMsgEncryptionTypeChanged(MessageEncryptionType.STANDARD);
-            break;
+      R.id.menuActionSwitchType -> {
+        when (msgEncryptionType) {
+          MessageEncryptionType.ENCRYPTED -> onMsgEncryptionTypeChanged(MessageEncryptionType.STANDARD)
 
-          case STANDARD:
-            onMsgEncryptionTypeChanged(MessageEncryptionType.ENCRYPTED);
-            break;
+          MessageEncryptionType.STANDARD -> onMsgEncryptionTypeChanged(MessageEncryptionType.ENCRYPTED)
         }
-        return true;
+        return true
+      }
 
-      default:
-        return super.onOptionsItemSelected(item);
+      else -> return super.onOptionsItemSelected(item)
     }
   }
 
-  @Override
-  public void sendMsg(OutgoingMessageInfo outgoingMsgInfo) {
-    PrepareOutgoingMessagesJobIntentService.enqueueWork(this, outgoingMsgInfo);
-    Toast.makeText(this, GeneralUtil.isConnected(this) ? R.string.sending :
-        R.string.no_connection_message_will_be_sent_later, Toast.LENGTH_SHORT).show();
-    finish();
+  override fun sendMsg(outgoingMsgInfo: OutgoingMessageInfo) {
+    PrepareOutgoingMessagesJobIntentService.enqueueWork(this, outgoingMsgInfo)
+    Toast.makeText(this, if (GeneralUtil.isConnected(this))
+      R.string.sending
+    else
+      R.string.no_connection_message_will_be_sent_later, Toast.LENGTH_SHORT).show()
+    finish()
   }
 
-  @Override
-  public void onMsgEncryptionTypeChanged(MessageEncryptionType messageEncryptionType) {
-    this.msgEncryptionType = messageEncryptionType;
-    switch (messageEncryptionType) {
-      case ENCRYPTED:
-        getAppBarLayout().setBackgroundColor(UIUtil.getColor(this, R.color.colorPrimary));
-        getAppBarLayout().removeView(nonEncryptedHintView);
-        break;
+  override fun onMsgEncryptionTypeChanged(messageEncryptionType: MessageEncryptionType) {
+    this.msgEncryptionType = messageEncryptionType
+    when (messageEncryptionType) {
+      MessageEncryptionType.ENCRYPTED -> {
+        appBarLayout!!.setBackgroundColor(UIUtil.getColor(this, R.color.colorPrimary))
+        appBarLayout!!.removeView(nonEncryptedHintView)
+      }
 
-      case STANDARD:
-        getAppBarLayout().setBackgroundColor(UIUtil.getColor(this, R.color.red));
-        getAppBarLayout().addView(nonEncryptedHintView);
-        break;
+      MessageEncryptionType.STANDARD -> {
+        appBarLayout!!.setBackgroundColor(UIUtil.getColor(this, R.color.red))
+        appBarLayout!!.addView(nonEncryptedHintView)
+      }
     }
 
-    invalidateOptionsMenu();
-    notifyFragmentAboutChangeMsgEncryptionType(messageEncryptionType);
+    invalidateOptionsMenu()
+    notifyFragmentAboutChangeMsgEncryptionType(messageEncryptionType)
   }
 
-  @Override
-  public MessageEncryptionType getMsgEncryptionType() {
-    return msgEncryptionType;
-  }
+  private fun prepareActionBarTitle() {
+    if (supportActionBar != null) {
+      if (intent.hasExtra(EXTRA_KEY_MESSAGE_TYPE)) {
+        val msgType = intent.getParcelableExtra<MessageType>(EXTRA_KEY_MESSAGE_TYPE)
 
-  private void prepareActionBarTitle() {
-    if (getSupportActionBar() != null) {
-      if (getIntent().hasExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE)) {
-        MessageType msgType = getIntent().getParcelableExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE);
-
-        switch (msgType) {
-          case NEW:
-            getSupportActionBar().setTitle(R.string.compose);
-            break;
-
-          case REPLY:
-            getSupportActionBar().setTitle(R.string.reply);
-            break;
-
-          case REPLY_ALL:
-            getSupportActionBar().setTitle(R.string.reply_all);
-            break;
-
-          case FORWARD:
-            getSupportActionBar().setTitle(R.string.forward);
-            break;
+        when (msgType) {
+          MessageType.NEW -> supportActionBar!!.setTitle(R.string.compose)
+          MessageType.REPLY -> supportActionBar!!.setTitle(R.string.reply)
+          MessageType.REPLY_ALL -> supportActionBar!!.setTitle(R.string.reply_all)
+          MessageType.FORWARD -> supportActionBar!!.setTitle(R.string.forward)
         }
       } else {
-        if (getIntent().getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO) != null) {
-          getSupportActionBar().setTitle(R.string.reply);
+        if (intent.getParcelableExtra<Parcelable>(EXTRA_KEY_INCOMING_MESSAGE_INFO) != null) {
+          supportActionBar!!.setTitle(R.string.reply)
         } else {
-          getSupportActionBar().setTitle(R.string.compose);
+          supportActionBar!!.setTitle(R.string.compose)
         }
       }
     }
   }
 
-  private void notifyFragmentAboutChangeMsgEncryptionType(MessageEncryptionType
-                                                              messageEncryptionType) {
-    CreateMessageFragment fragment = (CreateMessageFragment) getSupportFragmentManager().findFragmentById(R.id
-        .composeFragment);
+  private fun notifyFragmentAboutChangeMsgEncryptionType(messageEncryptionType: MessageEncryptionType) {
+    val fragment = supportFragmentManager.findFragmentById(R.id
+        .composeFragment) as CreateMessageFragment?
 
-    if (fragment != null) {
-      fragment.onMsgEncryptionTypeChange(messageEncryptionType);
-    }
+    fragment?.onMsgEncryptionTypeChange(messageEncryptionType)
   }
 
-  private void initNonEncryptedHintView() {
-    nonEncryptedHintView = getLayoutInflater().inflate(R.layout.under_toolbar_line_with_text, getAppBarLayout(), false);
-    TextView textView = nonEncryptedHintView.findViewById(R.id.underToolbarTextTextView);
-    textView.setText(R.string.this_message_will_not_be_encrypted);
+  private fun initNonEncryptedHintView() {
+    nonEncryptedHintView = layoutInflater.inflate(R.layout.under_toolbar_line_with_text, appBarLayout, false)
+    val textView = nonEncryptedHintView!!.findViewById<TextView>(R.id.underToolbarTextTextView)
+    textView.setText(R.string.this_message_will_not_be_encrypted)
+  }
+
+  companion object {
+
+    val EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE", CreateMessageActivity::class.java)
+
+    val EXTRA_KEY_INCOMING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_INCOMING_MESSAGE_INFO", CreateMessageActivity::class.java)
+
+    val EXTRA_KEY_SERVICE_INFO = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_SERVICE_INFO", CreateMessageActivity::class.java)
+
+    val EXTRA_KEY_MESSAGE_TYPE = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_TYPE", CreateMessageActivity::class.java)
+
+    fun generateIntent(context: Context, msgInfo: IncomingMessageInfo?, msgEncryptionType: MessageEncryptionType): Intent {
+      return generateIntent(context, msgInfo, MessageType.NEW, msgEncryptionType)
+    }
+
+    @JvmOverloads
+    fun generateIntent(context: Context?, msgInfo: IncomingMessageInfo?, messageType: MessageType?,
+                       msgEncryptionType: MessageEncryptionType?, serviceInfo: ServiceInfo? = null): Intent {
+
+      val intent = Intent(context, CreateMessageActivity::class.java)
+      intent.putExtra(EXTRA_KEY_INCOMING_MESSAGE_INFO, msgInfo)
+      intent.putExtra(EXTRA_KEY_MESSAGE_TYPE, messageType as Parcelable)
+      intent.putExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, msgEncryptionType as Parcelable)
+      intent.putExtra(EXTRA_KEY_SERVICE_INFO, serviceInfo)
+      return intent
+    }
   }
 }

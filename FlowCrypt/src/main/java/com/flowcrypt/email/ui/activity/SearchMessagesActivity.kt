@@ -3,214 +3,175 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.app.SearchManager;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Toast;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.model.LocalFolder;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.sun.mail.imap.protocol.SearchSequence;
-
-import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SearchView;
+import android.app.SearchManager
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.Toast
+import androidx.appcompat.widget.SearchView
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity
+import com.flowcrypt.email.util.GeneralUtil
+import com.sun.mail.imap.protocol.SearchSequence
 
 /**
- * This {@link android.app.Activity} searches and displays messages.
+ * This [android.app.Activity] searches and displays messages.
  *
  * @author Denis Bondarenko
  * Date: 26.04.2018
  * Time: 16:23
  * E-mail: DenBond7@gmail.com
  */
-public class SearchMessagesActivity extends BaseEmailListActivity implements SearchView.OnQueryTextListener,
-    MenuItem.OnActionExpandListener {
-  public static final String SEARCH_FOLDER_NAME = "";
-  public static final String EXTRA_KEY_QUERY = GeneralUtil.generateUniqueExtraKey(
-      "EXTRA_KEY_QUERY", SearchMessagesActivity.class);
-  public static final String EXTRA_KEY_FOLDER = GeneralUtil.generateUniqueExtraKey(
-      "EXTRA_KEY_FOLDER", SearchMessagesActivity.class);
+class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextListener, MenuItem.OnActionExpandListener {
 
-  private AccountDao account;
-  private String initQuery;
-  private LocalFolder localFolder;
+  override var currentAccountDao: AccountDao? = null
+  private var initQuery: String? = null
+  override var currentFolder: LocalFolder? = null
 
-  public static Intent newIntent(Context context, String query, LocalFolder localFolder) {
-    Intent intent = new Intent(context, SearchMessagesActivity.class);
-    intent.putExtra(EXTRA_KEY_QUERY, query);
-    intent.putExtra(EXTRA_KEY_FOLDER, localFolder);
-    return intent;
-  }
+  override val isSyncEnabled: Boolean
+    get() = true
 
-  @Override
-  public boolean isSyncEnabled() {
-    return true;
-  }
+  override val isDisplayHomeAsUpEnabled: Boolean
+    get() = true
 
-  @Override
-  public boolean isDisplayHomeAsUpEnabled() {
-    return true;
-  }
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_search_messages
 
-  @Override
-  public void refreshFoldersFromCache() {
+  override val rootView: View
+    get() = View(this)
+
+  override fun refreshFoldersFromCache() {
 
   }
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
 
     //// TODO-denbond7: 26.04.2018 Need to add saving the query and restoring it
-    this.account = new AccountDaoSource().getActiveAccountInformation(this);
-    if (getIntent() != null && getIntent().hasExtra(EXTRA_KEY_FOLDER)) {
-      this.initQuery = getIntent().getStringExtra(EXTRA_KEY_QUERY);
-      this.localFolder = getIntent().getParcelableExtra(EXTRA_KEY_FOLDER);
-      if (localFolder != null) {
-        localFolder.setFolderAlias(SEARCH_FOLDER_NAME);
-        localFolder.setSearchQuery(initQuery);
+    this.currentAccountDao = AccountDaoSource().getActiveAccountInformation(this)
+    if (intent != null && intent.hasExtra(EXTRA_KEY_FOLDER)) {
+      this.initQuery = intent.getStringExtra(EXTRA_KEY_QUERY)
+      this.currentFolder = intent.getParcelableExtra(EXTRA_KEY_FOLDER)
+      if (currentFolder != null) {
+        currentFolder!!.folderAlias = SEARCH_FOLDER_NAME
+        currentFolder!!.searchQuery = initQuery
       }
     } else {
-      finish();
+      finish()
     }
   }
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case android.R.id.home:
-        onBackPressed();
-        return true;
-
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+      android.R.id.home -> {
+        onBackPressed()
+        return true
+      }
     }
-    return super.onOptionsItemSelected(item);
+    return super.onOptionsItemSelected(item)
   }
 
-  @Override
-  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
-    switch (requestCode) {
-      case R.id.sync_request_code_search_messages:
-        super.onReplyReceived(R.id.syns_request_code_load_next_messages, resultCode, obj);
-        break;
+  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
+    when (requestCode) {
+      R.id.sync_request_code_search_messages -> super.onReplyReceived(R.id.syns_request_code_load_next_messages, resultCode, obj)
 
-      default:
-        super.onReplyReceived(requestCode, resultCode, obj);
-        break;
+      else -> super.onReplyReceived(requestCode, resultCode, obj)
     }
   }
 
-  @Override
-  public void onErrorHappened(int requestCode, int errorType, Exception e) {
-    switch (requestCode) {
-      case R.id.sync_request_code_search_messages:
-        if (!msgsIdlingResource.isIdleNow()) {
-          msgsIdlingResource.decrement();
+  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
+    when (requestCode) {
+      R.id.sync_request_code_search_messages -> {
+        if (!msgsIdlingResource.isIdleNow) {
+          msgsIdlingResource.decrement()
         }
-        onErrorOccurred(requestCode, errorType, e);
-        break;
+        onErrorOccurred(requestCode, errorType, e)
+      }
     }
   }
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_search_messages;
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    val inflater = menuInflater
+    inflater.inflate(R.menu.activity_search_messages, menu)
+
+    val menuItemSearch = menu.findItem(R.id.menuSearch)
+    menuItemSearch.expandActionView()
+
+    menuItemSearch.setOnActionExpandListener(this)
+
+    val searchView = menuItemSearch.actionView as SearchView
+    searchView.setQuery(initQuery, true)
+    searchView.queryHint = getString(R.string.search)
+    searchView.setOnQueryTextListener(this)
+
+    val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+    searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+    searchView.clearFocus()
+
+    return true
   }
 
-  @Override
-  public View getRootView() {
-    return null;
-  }
+  override fun onQueryTextSubmit(query: String): Boolean {
+    this.initQuery = query
 
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    MenuInflater inflater = getMenuInflater();
-    inflater.inflate(R.menu.activity_search_messages, menu);
-
-    MenuItem menuItemSearch = menu.findItem(R.id.menuSearch);
-    menuItemSearch.expandActionView();
-
-    menuItemSearch.setOnActionExpandListener(this);
-
-    SearchView searchView = (SearchView) menuItemSearch.getActionView();
-    searchView.setQuery(initQuery, true);
-    searchView.setQueryHint(getString(R.string.search));
-    searchView.setOnQueryTextListener(this);
-
-    SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-    if (searchManager != null) {
-      searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-    }
-    searchView.clearFocus();
-
-    return true;
-  }
-
-  @Override
-  public boolean onQueryTextSubmit(String query) {
-    this.initQuery = query;
-
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equalsIgnoreCase(account.getAccountType()) && !SearchSequence.isAscii(query)) {
-      Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show();
-      return true;
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!, ignoreCase = true) && !SearchSequence.isAscii(query)) {
+      Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show()
+      return true
     }
 
-    localFolder.setSearchQuery(initQuery);
-    onFolderChanged();
-    return false;
+    currentFolder!!.searchQuery = initQuery
+    onFolderChanged()
+    return false
   }
 
-  @Override
-  public boolean onQueryTextChange(String newText) {
-    this.initQuery = newText;
-    return false;
+  override fun onQueryTextChange(newText: String): Boolean {
+    this.initQuery = newText
+    return false
   }
 
-  @Override
-  public AccountDao getCurrentAccountDao() {
-    return account;
-  }
-
-  @Override
-  public LocalFolder getCurrentFolder() {
-    return localFolder;
-  }
-
-  @Override
-  public void onRetryGoogleAuth() {
+  override fun onRetryGoogleAuth() {
 
   }
 
-  @Override
-  public boolean onMenuItemActionExpand(MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.menuSearch:
-        return true;
+  override fun onMenuItemActionExpand(item: MenuItem): Boolean {
+    return when (item.itemId) {
+      R.id.menuSearch -> true
 
-      default:
-        return false;
+      else -> false
     }
   }
 
-  @Override
-  public boolean onMenuItemActionCollapse(MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.menuSearch:
-        finish();
-        return false;
+  override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
+    return when (item.itemId) {
+      R.id.menuSearch -> {
+        finish()
+        false
+      }
 
-      default:
-        return false;
+      else -> false
+    }
+  }
+
+  companion object {
+    const val SEARCH_FOLDER_NAME = ""
+    val EXTRA_KEY_QUERY = GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_QUERY", SearchMessagesActivity::class.java)
+    val EXTRA_KEY_FOLDER = GeneralUtil.generateUniqueExtraKey(
+        "EXTRA_KEY_FOLDER", SearchMessagesActivity::class.java)
+
+    fun newIntent(context: Context, query: String, localFolder: LocalFolder?): Intent {
+      val intent = Intent(context, SearchMessagesActivity::class.java)
+      intent.putExtra(EXTRA_KEY_QUERY, query)
+      intent.putExtra(EXTRA_KEY_FOLDER, localFolder)
+      return intent
     }
   }
 }

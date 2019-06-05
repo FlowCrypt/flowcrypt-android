@@ -3,32 +3,25 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.app.Activity;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.security.KeysStorageImpl;
-import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
-import com.google.android.gms.common.util.CollectionUtils;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-import androidx.test.espresso.idling.CountingIdlingResource;
+import android.app.Activity
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import androidx.annotation.VisibleForTesting
+import androidx.test.espresso.idling.CountingIdlingResource
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
+import com.google.android.gms.common.util.CollectionUtils
+import java.util.*
 
 /**
  * This activity describes a logic of import private keys.
@@ -39,208 +32,186 @@ import androidx.test.espresso.idling.CountingIdlingResource;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ImportPrivateKeyActivity extends BaseImportKeyActivity {
+class ImportPrivateKeyActivity : BaseImportKeyActivity() {
+  @get:VisibleForTesting
+  var countingIdlingResource: CountingIdlingResource? = null
+    private set
+  private var privateKeys: ArrayList<NodeKeyDetails>? = null
 
-  private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS = 100;
-  private CountingIdlingResource countingIdlingResource;
-  private ArrayList<NodeKeyDetails> privateKeys;
+  private var progressBar: View? = null
+  private var layoutContent: View? = null
+  private var layoutSyncStatus: View? = null
+  private var buttonImportBackup: Button? = null
 
-  private View progressBar;
-  private View layoutContent;
-  private View layoutSyncStatus;
-  private Button buttonImportBackup;
+  private var isLoadPrivateKeysRequestSent: Boolean = false
 
-  private boolean isLoadPrivateKeysRequestSent;
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_import_private_key
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    if (isSyncEnabled() && GeneralUtil.isConnected(this)) {
-      UIUtil.exchangeViewVisibility(this, true, progressBar, layoutContent);
-      countingIdlingResource = new CountingIdlingResource(GeneralUtil.genIdlingResourcesName
-          (ImportPrivateKeyActivity.class), GeneralUtil.isDebugBuild());
+  override val isPrivateKeyMode: Boolean
+    get() = true
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    if (isSyncEnabled && GeneralUtil.isConnected(this)) {
+      UIUtil.exchangeViewVisibility(this, true, progressBar!!, layoutContent!!)
+      countingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(ImportPrivateKeyActivity::class.java), GeneralUtil.isDebugBuild())
     } else {
-      hideImportButton();
-      UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
+      hideImportButton()
+      UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutContent!!)
     }
   }
 
-  @Override
-  protected void initViews() {
-    super.initViews();
+  override fun initViews() {
+    super.initViews()
 
-    this.progressBar = findViewById(R.id.progressBarLoadingBackups);
-    this.layoutContent = findViewById(R.id.layoutContent);
-    this.layoutSyncStatus = findViewById(R.id.layoutSyncStatus);
-    this.buttonImportBackup = findViewById(R.id.buttonImportBackup);
-    this.buttonImportBackup.setOnClickListener(this);
+    this.progressBar = findViewById(R.id.progressBarLoadingBackups)
+    this.layoutContent = findViewById(R.id.layoutContent)
+    this.layoutSyncStatus = findViewById(R.id.layoutSyncStatus)
+    this.buttonImportBackup = findViewById(R.id.buttonImportBackup)
+    this.buttonImportBackup!!.setOnClickListener(this)
   }
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_import_private_key;
-  }
-
-  @Override
-  public void onSyncServiceConnected() {
+  override fun onSyncServiceConnected() {
     if (!isLoadPrivateKeysRequestSent) {
-      isLoadPrivateKeysRequestSent = true;
-      loadPrivateKeys(R.id.syns_load_private_keys);
+      isLoadPrivateKeysRequestSent = true
+      loadPrivateKeys(R.id.syns_load_private_keys)
 
       if (countingIdlingResource != null) {
-        countingIdlingResource.increment();
+        countingIdlingResource!!.increment()
       }
     }
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public void onReplyReceived(int requestCode, int resultCode, Object obj) {
-    switch (requestCode) {
-      case R.id.syns_load_private_keys:
+  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
+    when (requestCode) {
+      R.id.syns_load_private_keys -> {
         if (privateKeys == null) {
-          ArrayList<NodeKeyDetails> keys = (ArrayList<NodeKeyDetails>) obj;
+          val keys = obj as ArrayList<NodeKeyDetails>?
           if (keys != null) {
-            if (!keys.isEmpty()) {
-              this.privateKeys = keys;
+            if (keys.isNotEmpty()) {
+              this.privateKeys = keys
 
-              Set<String> uniqueKeysLongIds = filterKeys();
+              val uniqueKeysLongIds = filterKeys()
 
-              if (this.privateKeys.isEmpty()) {
-                hideImportButton();
+              if (this.privateKeys!!.isEmpty()) {
+                hideImportButton()
               } else {
-                buttonImportBackup.setText(getResources().getQuantityString(
-                    R.plurals.import_keys, uniqueKeysLongIds.size()));
-                textViewTitle.setText(getResources().getQuantityString(
-                    R.plurals.you_have_backups_that_was_not_imported, uniqueKeysLongIds.size()));
+                buttonImportBackup!!.text = resources.getQuantityString(
+                    R.plurals.import_keys, uniqueKeysLongIds.size)
+                textViewTitle.text = resources.getQuantityString(
+                    R.plurals.you_have_backups_that_was_not_imported, uniqueKeysLongIds.size)
               }
             } else {
-              hideImportButton();
+              hideImportButton()
             }
           } else {
-            hideImportButton();
+            hideImportButton()
           }
-          UIUtil.exchangeViewVisibility(this, false, progressBar, layoutContent);
+          UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutContent!!)
         }
-        if (!countingIdlingResource.isIdleNow()) {
-          countingIdlingResource.decrement();
+        if (!countingIdlingResource!!.isIdleNow) {
+          countingIdlingResource!!.decrement()
         }
-        break;
-    }
-  }
-
-  @Override
-  public void onErrorHappened(int requestCode, int errorType, Exception e) {
-    switch (requestCode) {
-      case R.id.syns_load_private_keys:
-        hideImportButton();
-        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutSyncStatus);
-        UIUtil.showSnackbar(getRootView(), getString(R.string.error_occurred_while_receiving_private_keys),
-            getString(android.R.string.ok), new View.OnClickListener() {
-              @Override
-              public void onClick(View v) {
-                layoutSyncStatus.setVisibility(View.GONE);
-                UIUtil.exchangeViewVisibility(ImportPrivateKeyActivity.this,
-                    false, progressBar, layoutContent);
-              }
-            });
-        if (!countingIdlingResource.isIdleNow()) {
-          countingIdlingResource.decrement();
-        }
-        break;
-    }
-  }
-
-  @Override
-  public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.buttonImportBackup:
-        if (!CollectionUtils.isEmpty(privateKeys)) {
-          startActivityForResult(CheckKeysActivity.newIntent(this, privateKeys, KeyDetails.Type.EMAIL, null,
-              getString(R.string.continue_), getString(R.string.choose_another_key)), REQUEST_CODE_CHECK_PRIVATE_KEYS);
-        }
-        break;
-
-      default:
-        super.onClick(v);
-    }
-  }
-
-  @Override
-  public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    switch (requestCode) {
-      case REQUEST_CODE_CHECK_PRIVATE_KEYS:
-        isCheckingClipboardEnabled = false;
-
-        switch (resultCode) {
-          case Activity.RESULT_OK:
-            setResult(Activity.RESULT_OK);
-            finish();
-            break;
-        }
-        break;
-      default:
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-  }
-
-  @Override
-  public void onKeyFound(KeyDetails.Type type, ArrayList<NodeKeyDetails> keyDetailsList) {
-    switch (type) {
-      case FILE:
-        String fileName = GeneralUtil.getFileNameFromUri(this, keyImportModel.getFileUri());
-        String bottomTitle = getResources().getQuantityString(R.plurals.file_contains_some_amount_of_keys,
-            keyDetailsList.size(), fileName, keyDetailsList.size());
-        String posBtnTitle = getString(R.string.continue_);
-        Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.FILE,
-            bottomTitle, posBtnTitle, null, getString(R.string.choose_another_key), true);
-        startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS);
-        break;
-
-      case CLIPBOARD:
-        String title = getResources().getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
-            keyDetailsList.size(), keyDetailsList.size());
-        Intent clipboardIntent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.CLIPBOARD, title,
-            getString(R.string.continue_), null, getString(R.string.choose_another_key), true);
-        startActivityForResult(clipboardIntent,
-            REQUEST_CODE_CHECK_PRIVATE_KEYS);
-        break;
-    }
-  }
-
-  @Override
-  public boolean isPrivateKeyMode() {
-    return true;
-  }
-
-  @VisibleForTesting
-  public CountingIdlingResource getCountingIdlingResource() {
-    return countingIdlingResource;
-  }
-
-  public void hideImportButton() {
-    buttonImportBackup.setVisibility(View.GONE);
-    ViewGroup.MarginLayoutParams marginLayoutParams = (ViewGroup.MarginLayoutParams) buttonLoadFromFile
-        .getLayoutParams();
-    marginLayoutParams.topMargin = getResources().getDimensionPixelSize(R.dimen
-        .margin_top_first_button);
-    buttonLoadFromFile.requestLayout();
-  }
-
-  private Set<String> filterKeys() {
-    KeysStorageImpl connector = KeysStorageImpl.getInstance(this);
-
-    Iterator<NodeKeyDetails> iterator = privateKeys.iterator();
-    Set<String> uniqueKeysLongIds = new HashSet<>();
-
-    while (iterator.hasNext()) {
-      NodeKeyDetails privateKey = iterator.next();
-      uniqueKeysLongIds.add(privateKey.getLongId());
-      if (connector.getPgpPrivateKey(privateKey.getLongId()) != null) {
-        iterator.remove();
-        uniqueKeysLongIds.remove(privateKey.getLongId());
       }
     }
-    return uniqueKeysLongIds;
+  }
+
+  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
+    when (requestCode) {
+      R.id.syns_load_private_keys -> {
+        hideImportButton()
+        UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutSyncStatus!!)
+        UIUtil.showSnackbar(rootView, getString(R.string.error_occurred_while_receiving_private_keys),
+            getString(android.R.string.ok), View.OnClickListener {
+          layoutSyncStatus!!.visibility = View.GONE
+          UIUtil.exchangeViewVisibility(this@ImportPrivateKeyActivity,
+              false, progressBar!!, layoutContent!!)
+        })
+        if (!countingIdlingResource!!.isIdleNow) {
+          countingIdlingResource!!.decrement()
+        }
+      }
+    }
+  }
+
+  override fun onClick(v: View) {
+    when (v.id) {
+      R.id.buttonImportBackup -> if (!CollectionUtils.isEmpty(privateKeys)) {
+        startActivityForResult(CheckKeysActivity.newIntent(this, privateKeys!!, KeyDetails.Type.EMAIL, null,
+            getString(R.string.continue_), getString(R.string.choose_another_key)), REQUEST_CODE_CHECK_PRIVATE_KEYS)
+      }
+
+      else -> super.onClick(v)
+    }
+  }
+
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    when (requestCode) {
+      REQUEST_CODE_CHECK_PRIVATE_KEYS -> {
+        isCheckingClipboardEnabled = false
+
+        when (resultCode) {
+          Activity.RESULT_OK -> {
+            setResult(Activity.RESULT_OK)
+            finish()
+          }
+        }
+      }
+      else -> super.onActivityResult(requestCode, resultCode, data)
+    }
+  }
+
+  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>) {
+    when (type) {
+      KeyDetails.Type.FILE -> {
+        val fileName = GeneralUtil.getFileNameFromUri(this, keyImportModel!!.fileUri)
+        val bottomTitle = resources.getQuantityString(R.plurals.file_contains_some_amount_of_keys,
+            keyDetailsList.size, fileName, keyDetailsList.size)
+        val posBtnTitle = getString(R.string.continue_)
+        val intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.FILE,
+            bottomTitle, posBtnTitle, null, getString(R.string.choose_another_key), true)
+        startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS)
+      }
+
+      KeyDetails.Type.CLIPBOARD -> {
+        val title = resources.getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
+            keyDetailsList.size, keyDetailsList.size)
+        val clipboardIntent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.CLIPBOARD, title,
+            getString(R.string.continue_), null, getString(R.string.choose_another_key), true)
+        startActivityForResult(clipboardIntent,
+            REQUEST_CODE_CHECK_PRIVATE_KEYS)
+      }
+    }
+  }
+
+  private fun hideImportButton() {
+    buttonImportBackup!!.visibility = View.GONE
+    val marginLayoutParams = buttonLoadFromFile
+        .layoutParams as ViewGroup.MarginLayoutParams
+    marginLayoutParams.topMargin = resources.getDimensionPixelSize(R.dimen
+        .margin_top_first_button)
+    buttonLoadFromFile.requestLayout()
+  }
+
+  private fun filterKeys(): Set<String> {
+    val connector = KeysStorageImpl.getInstance(this)
+
+    val iterator = privateKeys!!.iterator()
+    val uniqueKeysLongIds = HashSet<String>()
+
+    while (iterator.hasNext()) {
+      val privateKey = iterator.next()
+      uniqueKeysLongIds.add(privateKey.longId!!)
+      if (connector.getPgpPrivateKey(privateKey.longId!!) != null) {
+        iterator.remove()
+        uniqueKeysLongIds.remove(privateKey.longId!!)
+      }
+    }
+    return uniqueKeysLongIds
+  }
+
+  companion object {
+    private const val REQUEST_CODE_CHECK_PRIVATE_KEYS = 100
   }
 }

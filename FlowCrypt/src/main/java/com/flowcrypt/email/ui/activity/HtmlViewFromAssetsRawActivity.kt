@@ -3,19 +3,17 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-import android.webkit.WebView;
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import android.webkit.WebView
 
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
-import com.flowcrypt.email.util.GeneralUtil;
-
-import androidx.annotation.Nullable;
+import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * This activity displays a html text from some source (from the assets folder).
@@ -26,41 +24,37 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public class HtmlViewFromAssetsRawActivity extends BaseBackStackActivity {
+class HtmlViewFromAssetsRawActivity : BaseBackStackActivity() {
 
-  public static final String EXTRA_KEY_ACTIVITY_TITLE = GeneralUtil.generateUniqueExtraKey
-      ("EXTRA_KEY_ACTIVITY_TITLE", HtmlViewFromAssetsRawActivity.class);
-  public static final String EXTRA_KEY_HTML_RESOURCES_ID = GeneralUtil.generateUniqueExtraKey
-      ("EXTRA_KEY_HTML_RESOURCES_ID", HtmlViewFromAssetsRawActivity.class);
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_htmlview_from_assets_raw
 
-  public static Intent newIntent(Context context, String title, String pathToHtmlInAssets) {
-    Intent intent = new Intent(context, HtmlViewFromAssetsRawActivity.class);
-    intent.putExtra(EXTRA_KEY_ACTIVITY_TITLE, title);
-    intent.putExtra(EXTRA_KEY_HTML_RESOURCES_ID, pathToHtmlInAssets);
-    return intent;
-  }
+  override val rootView: View
+    get() = View(this)
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_htmlview_from_assets_raw;
-  }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
 
-  @Override
-  public View getRootView() {
-    return null;
-  }
+    if (intent != null && intent.hasExtra(EXTRA_KEY_HTML_RESOURCES_ID)) {
+      val webView = findViewById<WebView>(R.id.webView)
+      webView.loadUrl("file:///android_asset/" + intent.getStringExtra(EXTRA_KEY_HTML_RESOURCES_ID))
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-
-    if (getIntent() != null && getIntent().hasExtra(EXTRA_KEY_HTML_RESOURCES_ID)) {
-      WebView webView = findViewById(R.id.webView);
-      webView.loadUrl("file:///android_asset/" + getIntent().getStringExtra(EXTRA_KEY_HTML_RESOURCES_ID));
-
-      if (getSupportActionBar() != null) {
-        getSupportActionBar().setTitle(getIntent().getStringExtra(EXTRA_KEY_ACTIVITY_TITLE));
+      if (supportActionBar != null) {
+        supportActionBar!!.title = intent.getStringExtra(EXTRA_KEY_ACTIVITY_TITLE)
       }
+    }
+  }
+
+  companion object {
+
+    val EXTRA_KEY_ACTIVITY_TITLE = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACTIVITY_TITLE", HtmlViewFromAssetsRawActivity::class.java)
+    val EXTRA_KEY_HTML_RESOURCES_ID = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_HTML_RESOURCES_ID", HtmlViewFromAssetsRawActivity::class.java)
+
+    fun newIntent(context: Context, title: String, pathToHtmlInAssets: String): Intent {
+      val intent = Intent(context, HtmlViewFromAssetsRawActivity::class.java)
+      intent.putExtra(EXTRA_KEY_ACTIVITY_TITLE, title)
+      intent.putExtra(EXTRA_KEY_HTML_RESOURCES_ID, pathToHtmlInAssets)
+      return intent
     }
   }
 }

@@ -105,8 +105,8 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener, Go
   }
 
   companion object {
-    protected const val REQUEST_CODE_SIGN_IN = 10
-    protected const val REQUEST_CODE_ADD_OTHER_ACCOUNT = 11
+    const val REQUEST_CODE_SIGN_IN = 10
+    const val REQUEST_CODE_ADD_OTHER_ACCOUNT = 11
 
     private val KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT = GeneralUtil.generateUniqueExtraKey("KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT", BaseSignInActivity::class.java)
   }

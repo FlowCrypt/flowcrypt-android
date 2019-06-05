@@ -3,17 +3,15 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.os.Bundle;
-
-import com.flowcrypt.email.R;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import com.flowcrypt.email.R
 
 /**
- * This {@link android.app.Activity} handles situations when the app storage space was corrupted. This can
+ * This [android.app.Activity] handles situations when the app storage space was corrupted. This can
  * happen on certain rooted or unofficial systems, due to user intervention, etc.
  *
  * @author DenBond7
@@ -21,16 +19,15 @@ import androidx.appcompat.widget.Toolbar;
  * Time: 12:20
  * E-mail: DenBond7@gmail.com
  */
-public class CorruptedStorageActivity extends AppCompatActivity {
+class CorruptedStorageActivity : AppCompatActivity() {
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_corrupted_storage);
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContentView(R.layout.activity_corrupted_storage)
 
-    Toolbar toolbar = findViewById(R.id.toolbar);
+    val toolbar = findViewById<Toolbar>(R.id.toolbar)
     if (toolbar != null) {
-      setSupportActionBar(toolbar);
+      setSupportActionBar(toolbar)
     }
   }
 }

@@ -3,22 +3,21 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
 
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.model.KeyImportModel;
-import com.flowcrypt.email.security.SecurityUtils;
-import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity;
-import com.flowcrypt.email.util.GeneralUtil;
-
-import androidx.annotation.Nullable;
+import com.flowcrypt.email.R
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.model.KeyImportModel
+import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity
+import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * This activity describes a logic for create ot import private keys.
@@ -28,132 +27,115 @@ import androidx.annotation.Nullable;
  * Time: 16:15.
  * E-mail: DenBond7@gmail.com
  */
-public class CreateOrImportKeyActivity extends BaseCheckClipboardBackStackActivity implements View.OnClickListener {
-  public static final int RESULT_CODE_USE_ANOTHER_ACCOUNT = 10;
-  public static final String EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey
-      ("EXTRA_KEY_ACCOUNT_DAO", CreateOrImportKeyActivity.class);
+class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.OnClickListener {
+  private var isShowAnotherAccountBtnEnabled = true
+  private var account: AccountDao? = null
 
-  private static final int REQUEST_CODE_IMPORT_ACTIVITY = 11;
-  private static final int REQUEST_CODE_CREATE_KEY_ACTIVITY = 12;
-  private static final String KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED =
-      GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED", CreateOrImportKeyActivity.class);
-  private boolean isShowAnotherAccountBtnEnabled = true;
-  private AccountDao account;
+  override val rootView: View
+    get() = findViewById(R.id.layoutContent)
 
-  public static Intent newIntent(Context context, AccountDao account, boolean isShowAnotherAccountBtnEnabled) {
-    Intent intent = new Intent(context, CreateOrImportKeyActivity.class);
-    intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, account);
-    intent.putExtra(KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, isShowAnotherAccountBtnEnabled);
-    return intent;
-  }
+  override val isDisplayHomeAsUpEnabled: Boolean
+    get() = false
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    if (getIntent() != null) {
-      this.isShowAnotherAccountBtnEnabled = getIntent().getBooleanExtra
-          (CreateOrImportKeyActivity.KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, true);
-      this.account = getIntent().getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO);
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_create_or_import_key
+
+  override val isPrivateKeyChecking: Boolean
+    get() = true
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    if (intent != null) {
+      this.isShowAnotherAccountBtnEnabled = intent.getBooleanExtra(CreateOrImportKeyActivity.KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, true)
+      this.account = intent.getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO)
     }
 
-    initViews();
+    initViews()
   }
 
-  @Override
-  public View getRootView() {
-    return findViewById(R.id.layoutContent);
-  }
+  override fun onClick(v: View) {
+    when (v.id) {
+      R.id.buttonCreateNewKey -> startActivityForResult(CreatePrivateKeyActivity.newIntent(this, account), REQUEST_CODE_CREATE_KEY_ACTIVITY)
 
-  @Override
-  public boolean isDisplayHomeAsUpEnabled() {
-    return false;
-  }
-
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_create_or_import_key;
-  }
-
-  @Override
-  public boolean isPrivateKeyChecking() {
-    return true;
-  }
-
-  @Override
-  public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.buttonCreateNewKey:
-        startActivityForResult(CreatePrivateKeyActivity.newIntent(this, account), REQUEST_CODE_CREATE_KEY_ACTIVITY);
-        break;
-
-      case R.id.buttonImportMyKey:
-        KeyImportModel keyImportModel = null;
+      R.id.buttonImportMyKey -> {
+        var keyImportModel: KeyImportModel? = null
         if (isBound) {
-          keyImportModel = service.getKeyImportModel();
+          keyImportModel = service.keyImportModel
         }
 
-        startActivityForResult(ImportPrivateKeyActivity.newIntent(this, false, getString(R.string.import_private_key),
-            keyImportModel, true, ImportPrivateKeyActivity.class), REQUEST_CODE_IMPORT_ACTIVITY);
-        break;
+        startActivityForResult(BaseImportKeyActivity.newIntent(this, false, getString(R.string.import_private_key),
+            keyImportModel, true, ImportPrivateKeyActivity::class.java), REQUEST_CODE_IMPORT_ACTIVITY)
+      }
 
-      case R.id.buttonSelectAnotherAccount:
-        Intent intent = new Intent();
-        intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, account);
-        setResult(RESULT_CODE_USE_ANOTHER_ACCOUNT, intent);
-        finish();
-        break;
+      R.id.buttonSelectAnotherAccount -> {
+        val intent = Intent()
+        intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, account)
+        setResult(RESULT_CODE_USE_ANOTHER_ACCOUNT, intent)
+        finish()
+      }
 
-      case R.id.buttonSkipSetup:
-        setResult(Activity.RESULT_OK);
-        finish();
-        break;
+      R.id.buttonSkipSetup -> {
+        setResult(Activity.RESULT_OK)
+        finish()
+      }
     }
   }
 
-  @Override
-  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    switch (requestCode) {
-      case REQUEST_CODE_IMPORT_ACTIVITY:
-      case REQUEST_CODE_CREATE_KEY_ACTIVITY:
-        switch (resultCode) {
-          case Activity.RESULT_OK:
-            setResult(Activity.RESULT_OK);
-            finish();
-            break;
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    when (requestCode) {
+      REQUEST_CODE_IMPORT_ACTIVITY, REQUEST_CODE_CREATE_KEY_ACTIVITY -> when (resultCode) {
+        Activity.RESULT_OK -> {
+          setResult(Activity.RESULT_OK)
+          finish()
         }
-        break;
+      }
 
-      default:
-        super.onActivityResult(requestCode, resultCode, data);
+      else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
 
-  private void initViews() {
-    if (findViewById(R.id.buttonCreateNewKey) != null) {
-      findViewById(R.id.buttonCreateNewKey).setOnClickListener(this);
+  private fun initViews() {
+    if (findViewById<View>(R.id.buttonCreateNewKey) != null) {
+      findViewById<View>(R.id.buttonCreateNewKey).setOnClickListener(this)
     }
 
-    if (findViewById(R.id.buttonImportMyKey) != null) {
-      findViewById(R.id.buttonImportMyKey).setOnClickListener(this);
+    if (findViewById<View>(R.id.buttonImportMyKey) != null) {
+      findViewById<View>(R.id.buttonImportMyKey).setOnClickListener(this)
     }
 
-    if (findViewById(R.id.buttonSelectAnotherAccount) != null) {
+    if (findViewById<View>(R.id.buttonSelectAnotherAccount) != null) {
       if (isShowAnotherAccountBtnEnabled) {
-        findViewById(R.id.buttonSelectAnotherAccount).setVisibility(View.VISIBLE);
-        findViewById(R.id.buttonSelectAnotherAccount).setOnClickListener(this);
+        findViewById<View>(R.id.buttonSelectAnotherAccount).visibility = View.VISIBLE
+        findViewById<View>(R.id.buttonSelectAnotherAccount).setOnClickListener(this)
       } else {
-        findViewById(R.id.buttonSelectAnotherAccount).setVisibility(View.GONE);
+        findViewById<View>(R.id.buttonSelectAnotherAccount).visibility = View.GONE
       }
     }
 
-    if (findViewById(R.id.buttonSkipSetup) != null) {
-      View buttonSkipSetup = findViewById(R.id.buttonSkipSetup);
+    if (findViewById<View>(R.id.buttonSkipSetup) != null) {
+      val buttonSkipSetup = findViewById<View>(R.id.buttonSkipSetup)
       if (SecurityUtils.hasBackup(this)) {
-        buttonSkipSetup.setVisibility(View.VISIBLE);
-        buttonSkipSetup.setOnClickListener(this);
+        buttonSkipSetup.visibility = View.VISIBLE
+        buttonSkipSetup.setOnClickListener(this)
       } else {
-        buttonSkipSetup.setVisibility(View.GONE);
+        buttonSkipSetup.visibility = View.GONE
       }
+    }
+  }
+
+  companion object {
+    const val RESULT_CODE_USE_ANOTHER_ACCOUNT = 10
+    val EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT_DAO", CreateOrImportKeyActivity::class.java)
+
+    private const val REQUEST_CODE_IMPORT_ACTIVITY = 11
+    private const val REQUEST_CODE_CREATE_KEY_ACTIVITY = 12
+    private val KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED = GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED", CreateOrImportKeyActivity::class.java)
+
+    fun newIntent(context: Context, account: AccountDao, isShowAnotherAccountBtnEnabled: Boolean): Intent {
+      val intent = Intent(context, CreateOrImportKeyActivity::class.java)
+      intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, account)
+      intent.putExtra(KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, isShowAnotherAccountBtnEnabled)
+      return intent
     }
   }
 }

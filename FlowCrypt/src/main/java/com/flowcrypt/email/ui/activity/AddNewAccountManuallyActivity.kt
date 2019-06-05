@@ -3,57 +3,50 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.app.Activity;
-import android.content.Intent;
-import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextUtils;
-import android.text.TextWatcher;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.Spinner;
-
-import com.flowcrypt.email.Constants;
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.email.JavaEmailConstants;
-import com.flowcrypt.email.api.email.gmail.GmailConstants;
-import com.flowcrypt.email.api.email.model.AuthCredentials;
-import com.flowcrypt.email.api.email.model.SecurityType;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.database.dao.source.AccountDao;
-import com.flowcrypt.email.database.dao.source.AccountDaoSource;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.security.SecurityUtils;
-import com.flowcrypt.email.ui.loader.CheckEmailSettingsAsyncTaskLoader;
-import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.SharedPreferencesHelper;
-import com.flowcrypt.email.util.UIUtil;
-import com.flowcrypt.email.util.exception.ExceptionUtil;
-import com.google.android.gms.common.util.CollectionUtils;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-import com.sun.mail.util.MailConnectException;
-
-import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.Objects;
-
-import javax.mail.AuthenticationFailedException;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.Loader;
-import androidx.preference.PreferenceManager;
+import android.app.Activity
+import android.content.Intent
+import android.os.Bundle
+import android.text.Editable
+import android.text.TextUtils
+import android.text.TextWatcher
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.CheckBox
+import android.widget.CompoundButton
+import android.widget.EditText
+import android.widget.Spinner
+import androidx.loader.app.LoaderManager
+import androidx.loader.content.Loader
+import androidx.preference.PreferenceManager
+import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.gmail.GmailConstants
+import com.flowcrypt.email.api.email.model.AuthCredentials
+import com.flowcrypt.email.api.email.model.SecurityType
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.ui.loader.CheckEmailSettingsAsyncTaskLoader
+import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.SharedPreferencesHelper
+import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.google.android.gms.common.util.CollectionUtils
+import com.google.android.material.snackbar.Snackbar
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+import com.sun.mail.util.MailConnectException
+import java.net.SocketTimeoutException
+import java.util.*
+import javax.mail.AuthenticationFailedException
 
 /**
  * This activity describes a logic of adding a new account of other email providers.
@@ -64,329 +57,369 @@ import androidx.preference.PreferenceManager;
  * E-mail: DenBond7@gmail.com
  */
 
-public class AddNewAccountManuallyActivity extends BaseNodeActivity implements CompoundButton.OnCheckedChangeListener,
-    AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher,
-    LoaderManager.LoaderCallbacks<LoaderResult> {
-  public static final int RESULT_CODE_CONTINUE_WITH_GMAIL = 101;
+class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheckedChangeListener,
+    AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher, LoaderManager.LoaderCallbacks<LoaderResult> {
 
-  public static final String KEY_EXTRA_AUTH_CREDENTIALS =
-      GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_AUTH_CREDENTIALS", AddNewAccountManuallyActivity.class);
+  private var editTextEmail: EditText? = null
+  private var editTextUserName: EditText? = null
+  private var editTextPassword: EditText? = null
+  private var editTextImapServer: EditText? = null
+  private var editTextImapPort: EditText? = null
+  private var editTextSmtpServer: EditText? = null
+  private var editTextSmtpPort: EditText? = null
+  private var editTextSmtpUsername: EditText? = null
+  private var editTextSmtpPassword: EditText? = null
+  private var spinnerImapSecurityType: Spinner? = null
+  private var spinnerSmtpSecurityType: Spinner? = null
+  private var layoutSmtpSignIn: View? = null
+  private var progressView: View? = null
+  override lateinit var rootView: View
+  private var checkBoxRequireSignInForSmtp: CheckBox? = null
+  private var authCreds: AuthCredentials? = null
 
-  private static final int REQUEST_CODE_ADD_NEW_ACCOUNT = 10;
-  private static final int REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL = 11;
+  private var isImapSpinnerRestored: Boolean = false
+  private var isSmtpSpinnerRestored: Boolean = false
 
-  private EditText editTextEmail;
-  private EditText editTextUserName;
-  private EditText editTextPassword;
-  private EditText editTextImapServer;
-  private EditText editTextImapPort;
-  private EditText editTextSmtpServer;
-  private EditText editTextSmtpPort;
-  private EditText editTextSmtpUsername;
-  private EditText editTextSmtpPassword;
-  private Spinner spinnerImapSecurityType;
-  private Spinner spinnerSmtpSecurityType;
-  private View layoutSmtpSignIn;
-  private View progressView;
-  private View contentView;
-  private CheckBox checkBoxRequireSignInForSmtp;
-  private AuthCredentials authCreds;
+  override val isDisplayHomeAsUpEnabled: Boolean
+    get() = true
 
-  private boolean isImapSpinnerRestored;
-  private boolean isSmtpSpinnerRestored;
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_add_new_account_manually
 
-  @Override
-  public boolean isDisplayHomeAsUpEnabled() {
-    return true;
-  }
+  /**
+   * Retrieve a temp [AuthCredentials] from the shared preferences.
+   */
+  private val tempAuthCreds: AuthCredentials?
+    get() {
+      val authCredsJson = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, "")
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_add_new_account_manually;
-  }
+      if (!TextUtils.isEmpty(authCredsJson)) {
+        try {
+          return Gson().fromJson(authCredsJson, AuthCredentials::class.java)
+        } catch (e: JsonSyntaxException) {
+          e.printStackTrace()
+          ExceptionUtil.handleError(e)
+        }
 
-  @Override
-  public View getRootView() {
-    return contentView;
-  }
+      }
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    this.authCreds = getTempAuthCreds();
+      return null
+    }
+
+  /**
+   * Do a lot of checks to validate an outgoing message info.
+   *
+   * @return <tt>Boolean</tt> true if all information is correct, false otherwise.
+   */
+  private val isDataCorrect: Boolean
+    get() {
+      if (TextUtils.isEmpty(editTextEmail!!.text)) {
+        showInfoSnackbar(editTextEmail!!, getString(R.string.text_must_not_be_empty, getString(R.string.e_mail)))
+        editTextEmail!!.requestFocus()
+      } else if (GeneralUtil.isEmailValid(editTextEmail!!.text)) {
+        when {
+          TextUtils.isEmpty(editTextUserName!!.text) -> {
+            showInfoSnackbar(editTextUserName!!, getString(R.string.text_must_not_be_empty,
+                getString(R.string.username)))
+            editTextUserName!!.requestFocus()
+          }
+
+          TextUtils.isEmpty(editTextPassword!!.text) -> {
+            showInfoSnackbar(editTextPassword!!, getString(R.string.text_must_not_be_empty,
+                getString(R.string.password)))
+            editTextPassword!!.requestFocus()
+          }
+
+          TextUtils.isEmpty(editTextImapServer!!.text) -> {
+            showInfoSnackbar(editTextImapServer!!, getString(R.string.text_must_not_be_empty,
+                getString(R.string.imap_server)))
+            editTextImapServer!!.requestFocus()
+          }
+
+          TextUtils.isEmpty(editTextImapPort!!.text) -> {
+            showInfoSnackbar(editTextImapPort!!, getString(R.string.text_must_not_be_empty,
+                getString(R.string.imap_port)))
+            editTextImapPort!!.requestFocus()
+          }
+
+          TextUtils.isEmpty(editTextSmtpServer!!.text) -> {
+            showInfoSnackbar(editTextSmtpServer!!, getString(R.string.text_must_not_be_empty,
+                getString(R.string.smtp_server)))
+            editTextSmtpServer!!.requestFocus()
+          }
+
+          TextUtils.isEmpty(editTextSmtpPort!!.text) -> {
+            showInfoSnackbar(editTextSmtpPort!!, getString(R.string.text_must_not_be_empty,
+                getString(R.string.smtp_port)))
+            editTextSmtpPort!!.requestFocus()
+          }
+
+          checkBoxRequireSignInForSmtp!!.isChecked -> when {
+            TextUtils.isEmpty(editTextSmtpUsername!!.text) -> {
+              showInfoSnackbar(editTextSmtpUsername!!, getString(R.string.text_must_not_be_empty,
+                  getString(R.string.smtp_username)))
+              editTextSmtpUsername!!.requestFocus()
+            }
+
+            TextUtils.isEmpty(editTextSmtpPassword!!.text) -> {
+              showInfoSnackbar(editTextSmtpPassword!!, getString(R.string.text_must_not_be_empty,
+                  getString(R.string.smtp_password)))
+              editTextSmtpPassword!!.requestFocus()
+            }
+            else -> return true
+          }
+
+          else -> return true
+        }
+      } else {
+        showInfoSnackbar(editTextEmail!!, getString(R.string.error_email_is_not_valid))
+        editTextEmail!!.requestFocus()
+      }
+
+      return false
+    }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    this.authCreds = tempAuthCreds
 
     if (authCreds == null) {
-      isImapSpinnerRestored = true;
-      isSmtpSpinnerRestored = true;
+      isImapSpinnerRestored = true
+      isSmtpSpinnerRestored = true
     }
 
-    initViews(savedInstanceState);
+    initViews(savedInstanceState)
   }
 
-  @Override
-  public void onPause() {
-    super.onPause();
-    saveTempCreds();
+  public override fun onPause() {
+    super.onPause()
+    saveTempCreds()
   }
 
-  @Override
-  public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    switch (requestCode) {
-      case REQUEST_CODE_ADD_NEW_ACCOUNT:
-        switch (resultCode) {
-          case Activity.RESULT_OK:
-            returnOkResult();
-            break;
+  public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    when (requestCode) {
+      REQUEST_CODE_ADD_NEW_ACCOUNT -> when (resultCode) {
+        Activity.RESULT_OK -> returnOkResult()
 
-          case CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT:
-            setResult(CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT, data);
-            finish();
-            break;
+        CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
+          setResult(CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT, data)
+          finish()
         }
-        break;
+      }
 
-      case REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL:
-        switch (resultCode) {
-          case Activity.RESULT_OK:
-          case CheckKeysActivity.RESULT_NEUTRAL:
-            returnOkResult();
-            break;
+      REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL -> when (resultCode) {
+        Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> returnOkResult()
 
-          case Activity.RESULT_CANCELED:
-            UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
-            break;
+        Activity.RESULT_CANCELED -> UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
 
-          case CheckKeysActivity.RESULT_NEGATIVE:
-            setResult(CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT, data);
-            finish();
-            break;
+        CheckKeysActivity.RESULT_NEGATIVE -> {
+          setResult(CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT, data)
+          finish()
         }
-        break;
+      }
 
-      default:
-        super.onActivityResult(requestCode, resultCode, data);
+      else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
 
-  @Override
-  public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-    switch (buttonView.getId()) {
-      case R.id.checkBoxRequireSignInForSmtp:
-        layoutSmtpSignIn.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-        break;
+  override fun onCheckedChanged(buttonView: CompoundButton, isChecked: Boolean) {
+    when (buttonView.id) {
+      R.id.checkBoxRequireSignInForSmtp -> layoutSmtpSignIn!!.visibility = if (isChecked) View.VISIBLE else View.GONE
     }
   }
 
-  @Override
-  public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-    switch (parent.getId()) {
-      case R.id.spinnerImapSecurityType:
-        SecurityType imapSecurityType = (SecurityType) parent.getAdapter().getItem(position);
+  override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+    when (parent.id) {
+      R.id.spinnerImapSecurityType -> {
+        val (_, _, defImapPort) = parent.adapter.getItem(position) as SecurityType
         if (isImapSpinnerRestored) {
-          editTextImapPort.setText(String.valueOf(imapSecurityType.getDefImapPort()));
+          editTextImapPort!!.setText(defImapPort.toString())
         } else {
-          isImapSpinnerRestored = true;
+          isImapSpinnerRestored = true
         }
-        break;
+      }
 
-      case R.id.spinnerSmtpSecyrityType:
-        SecurityType smtpSecurityType = (SecurityType) parent.getAdapter().getItem(position);
+      R.id.spinnerSmtpSecyrityType -> {
+        val (_, _, _, defSmtpPort) = parent.adapter.getItem(position) as SecurityType
         if (isSmtpSpinnerRestored) {
-          editTextSmtpPort.setText(String.valueOf(smtpSecurityType.getDefSmtpPort()));
+          editTextSmtpPort!!.setText(defSmtpPort.toString())
         } else {
-          isSmtpSpinnerRestored = true;
+          isSmtpSpinnerRestored = true
         }
-        break;
+      }
     }
   }
 
-  @Override
-  public void onNothingSelected(AdapterView<?> parent) {
+  override fun onNothingSelected(parent: AdapterView<*>) {
 
   }
 
-  @Override
-  public void onClick(View v) {
-    switch (v.getId()) {
-      case R.id.buttonTryToConnect:
-        if (isDataCorrect()) {
-          authCreds = generateAuthCreds();
-          UIUtil.hideSoftInput(this, getRootView());
-          if (checkDuplicate()) {
-            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_check_email_settings, null, this);
-          } else {
-            showInfoSnackbar(getRootView(), getString(R.string.template_email_alredy_added,
-                authCreds.getEmail()), Snackbar.LENGTH_LONG);
-          }
+  override fun onClick(v: View) {
+    when (v.id) {
+      R.id.buttonTryToConnect -> if (isDataCorrect) {
+        authCreds = generateAuthCreds()
+        UIUtil.hideSoftInput(this, rootView)
+        if (checkDuplicate()) {
+          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_check_email_settings, null, this)
+        } else {
+          showInfoSnackbar(rootView, getString(R.string.template_email_alredy_added,
+              authCreds!!.email), Snackbar.LENGTH_LONG)
         }
-        break;
+      }
     }
   }
 
-  @Override
-  public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+  override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
 
   }
 
-  @Override
-  public void onTextChanged(CharSequence s, int start, int before, int count) {
+  override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
 
   }
 
-  @Override
-  public void afterTextChanged(Editable editable) {
+  override fun afterTextChanged(editable: Editable) {
     if (GeneralUtil.isEmailValid(editable)) {
-      String email = editable.toString();
-      String mainDomain = email.substring(email.indexOf('@') + 1);
-      editTextImapServer.setText(getString(R.string.template_imap_server, mainDomain));
-      editTextSmtpServer.setText(getString(R.string.template_smtp_server, mainDomain));
-      editTextUserName.setText(email.substring(0, email.indexOf('@')));
-      editTextSmtpUsername.setText(email.substring(0, email.indexOf('@')));
+      val email = editable.toString()
+      val mainDomain = email.substring(email.indexOf('@') + 1)
+      editTextImapServer!!.setText(getString(R.string.template_imap_server, mainDomain))
+      editTextSmtpServer!!.setText(getString(R.string.template_smtp_server, mainDomain))
+      editTextUserName!!.setText(email.substring(0, email.indexOf('@')))
+      editTextSmtpUsername!!.setText(email.substring(0, email.indexOf('@')))
     }
   }
 
-  @NonNull
-  @Override
-  public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-    switch (id) {
-      case R.id.loader_id_check_email_settings:
-        UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
+  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
+    when (id) {
+      R.id.loader_id_check_email_settings -> {
+        UIUtil.exchangeViewVisibility(this, true, progressView!!, rootView)
 
-        authCreds = generateAuthCreds();
-        return new CheckEmailSettingsAsyncTaskLoader(this, authCreds);
+        authCreds = generateAuthCreds()
+        return CheckEmailSettingsAsyncTaskLoader(this, authCreds!!)
+      }
 
-      case R.id.loader_id_load_private_key_backups_from_email:
-        UIUtil.exchangeViewVisibility(this, true, progressView, contentView);
-        AccountDao account = new AccountDao(authCreds.getEmail(), null, authCreds.getUsername(), null, null, null,
-            false, authCreds);
-        return new LoadPrivateKeysFromMailAsyncTaskLoader(this, account);
+      R.id.loader_id_load_private_key_backups_from_email -> {
+        UIUtil.exchangeViewVisibility(this, true, progressView!!, rootView)
+        val account = AccountDao(authCreds!!.email, null, authCreds!!.username, null, null, null,
+            false, authCreds)
+        return LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
+      }
 
-      default:
-        return new Loader<>(this);
+      else -> return Loader(this)
     }
   }
 
-  @Override
-  public void onLoadFinished(@NonNull Loader<LoaderResult> loader, LoaderResult loaderResult) {
-    handleLoaderResult(loader, loaderResult);
+  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
+    handleLoaderResult(loader, loaderResult)
   }
 
-  @Override
-  public void onLoaderReset(@NonNull Loader<LoaderResult> loader) {
+  override fun onLoaderReset(loader: Loader<LoaderResult>) {
 
   }
 
-  @SuppressWarnings("unchecked")
-  @Override
-  public void onSuccess(int loaderId, Object result) {
-    switch (loaderId) {
-      case R.id.loader_id_check_email_settings:
-        boolean isCorrect = (boolean) result;
+  override fun onSuccess(loaderId: Int, result: Any?) {
+    when (loaderId) {
+      R.id.loader_id_check_email_settings -> {
+        val isCorrect = result as Boolean
         if (isCorrect) {
-          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this);
+          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
         } else {
-          UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
-          showInfoSnackbar(getRootView(), getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG);
+          UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
+          showInfoSnackbar(rootView, getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG)
         }
-        break;
+      }
 
-      case R.id.loader_id_load_private_key_backups_from_email:
-        ArrayList<NodeKeyDetails> keyDetailsList = (ArrayList<NodeKeyDetails>) result;
+      R.id.loader_id_load_private_key_backups_from_email -> {
+        val keyDetailsList = result as ArrayList<NodeKeyDetails>?
         if (CollectionUtils.isEmpty(keyDetailsList)) {
-          AccountDao account = new AccountDao(authCreds.getEmail(), null, authCreds.getUsername(), null, null, null,
-              false, authCreds);
+          val account = AccountDao(authCreds!!.email, null, authCreds!!.username, null, null, null,
+              false, authCreds)
           startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
-              REQUEST_CODE_ADD_NEW_ACCOUNT);
-          UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
+              REQUEST_CODE_ADD_NEW_ACCOUNT)
+          UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
         } else {
-          String bottomTitle = getResources().getQuantityString(R.plurals.found_backup_of_your_account_key,
-              keyDetailsList.size(), keyDetailsList.size());
-          String neutralBtnTitle = SecurityUtils.hasBackup(this) ? getString(R.string.use_existing_keys) : null;
-          Intent intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.EMAIL, bottomTitle,
-              getString(R.string.continue_), neutralBtnTitle, getString(R.string.use_another_account));
-          startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL);
+          val bottomTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
+              keyDetailsList!!.size, keyDetailsList.size)
+          val neutralBtnTitle = if (SecurityUtils.hasBackup(this)) getString(R.string.use_existing_keys) else null
+          val intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.EMAIL, bottomTitle,
+              getString(R.string.continue_), neutralBtnTitle, getString(R.string.use_another_account))
+          startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL)
         }
 
-        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email);
-        break;
+        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email)
+      }
 
-      default:
-        super.onSuccess(loaderId, result);
-        break;
+      else -> super.onSuccess(loaderId, result)
     }
   }
 
-  @Override
-  public void onError(int loaderId, Exception e) {
-    switch (loaderId) {
-      case R.id.loader_id_check_email_settings:
-        UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
-        Throwable original = e != null ? e.getCause() : null;
+  override fun onError(loaderId: Int, e: Exception?) {
+    when (loaderId) {
+      R.id.loader_id_check_email_settings -> {
+        UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
+        val original = e?.cause
         if (original != null) {
-          if (original instanceof AuthenticationFailedException) {
-            boolean isGmailImapServer = editTextImapServer.getText().toString().equalsIgnoreCase(GmailConstants
-                .GMAIL_IMAP_SERVER);
-            boolean isMsgEmpty = TextUtils.isEmpty(original.getMessage());
-            boolean hasAlert = original.getMessage().startsWith(GmailConstants
-                .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED);
-            if (isGmailImapServer && !isMsgEmpty && hasAlert) {
-              showLessSecurityWarning();
+          if (original is AuthenticationFailedException) {
+            val isGmailImapServer = editTextImapServer!!.text.toString().equals(GmailConstants
+                .GMAIL_IMAP_SERVER, ignoreCase = true)
+            val isMsgEmpty = TextUtils.isEmpty(original.message)
+            val hasAlert = original.message?.startsWith(GmailConstants
+                .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED)
+            if (isGmailImapServer && !isMsgEmpty && hasAlert == true) {
+              showLessSecurityWarning()
             } else {
-              showInfoSnackbar(getRootView(), !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
-                  : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
+              showInfoSnackbar(rootView, if (!TextUtils.isEmpty(e.message))
+                e.message
+              else
+                getString(R.string.unknown_error), Snackbar.LENGTH_LONG)
             }
-          } else if (original instanceof MailConnectException || original instanceof SocketTimeoutException) {
-            showNetworkErrorHint();
+          } else if (original is MailConnectException || original is SocketTimeoutException) {
+            showNetworkErrorHint()
           }
         } else {
-          showInfoSnackbar(getRootView(), e != null && !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
-              : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
+          showInfoSnackbar(rootView, if (e != null && !TextUtils.isEmpty(e.message))
+            e.message
+          else
+            getString(R.string.unknown_error), Snackbar.LENGTH_LONG)
         }
-        break;
+      }
 
-      case R.id.loader_id_load_private_key_backups_from_email:
-        UIUtil.exchangeViewVisibility(this, false, progressView, contentView);
-        showInfoSnackbar(getRootView(), e != null && !TextUtils.isEmpty(e.getMessage()) ? e.getMessage()
-            : getString(R.string.unknown_error), Snackbar.LENGTH_LONG);
-        break;
+      R.id.loader_id_load_private_key_backups_from_email -> {
+        UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
+        showInfoSnackbar(rootView, if (e != null && !TextUtils.isEmpty(e.message))
+          e.message
+        else
+          getString(R.string.unknown_error), Snackbar.LENGTH_LONG)
+      }
 
-      default:
-        super.onError(loaderId, e);
-        break;
+      else -> super.onError(loaderId, e)
     }
   }
 
-  private void showNetworkErrorHint() {
-    showSnackbar(getRootView(), getString(R.string.network_error_please_retry), getString(R.string.retry),
-        Snackbar.LENGTH_LONG, new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            LoaderManager.getInstance(AddNewAccountManuallyActivity.this)
-                .restartLoader(R.id.loader_id_check_email_settings, null, AddNewAccountManuallyActivity.this);
-          }
-        });
+  private fun showNetworkErrorHint() {
+    showSnackbar(rootView, getString(R.string.network_error_please_retry), getString(R.string.retry),
+        Snackbar.LENGTH_LONG, View.OnClickListener {
+      LoaderManager.getInstance(this@AddNewAccountManuallyActivity)
+          .restartLoader(R.id.loader_id_check_email_settings, null, this@AddNewAccountManuallyActivity)
+    })
   }
 
-  private void showLessSecurityWarning() {
-    showSnackbar(getRootView(), getString(R.string.less_secure_login_is_not_allowed),
-        getString(android.R.string.ok), Snackbar.LENGTH_LONG, new View.OnClickListener() {
-          @Override
-          public void onClick(View v) {
-            setResult(RESULT_CODE_CONTINUE_WITH_GMAIL);
-            finish();
-          }
-        });
+  private fun showLessSecurityWarning() {
+    showSnackbar(rootView, getString(R.string.less_secure_login_is_not_allowed),
+        getString(android.R.string.ok), Snackbar.LENGTH_LONG, View.OnClickListener {
+      setResult(RESULT_CODE_CONTINUE_WITH_GMAIL)
+      finish()
+    })
   }
 
   /**
-   * Return the {@link Activity#RESULT_OK} to the initiator-activity.
+   * Return the [Activity.RESULT_OK] to the initiator-activity.
    */
-  private void returnOkResult() {
-    authCreds = generateAuthCreds();
-    Intent intent = new Intent();
-    intent.putExtra(KEY_EXTRA_AUTH_CREDENTIALS, authCreds);
-    setResult(Activity.RESULT_OK, intent);
-    finish();
+  private fun returnOkResult() {
+    authCreds = generateAuthCreds()
+    val intent = Intent()
+    intent.putExtra(KEY_EXTRA_AUTH_CREDENTIALS, authCreds)
+    setResult(Activity.RESULT_OK, intent)
+    finish()
   }
 
   /**
@@ -394,188 +427,125 @@ public class AddNewAccountManuallyActivity extends BaseNodeActivity implements C
    *
    * @return true if email not added yet, otherwise false.
    */
-  private boolean checkDuplicate() {
-    return new AccountDaoSource().getAccountInformation(this, authCreds.getEmail()) == null;
+  private fun checkDuplicate(): Boolean {
+    return AccountDaoSource().getAccountInformation(this, authCreds!!.email) == null
   }
 
-  private void initViews(Bundle savedInstanceState) {
-    editTextEmail = findViewById(R.id.editTextEmail);
-    editTextUserName = findViewById(R.id.editTextUserName);
-    editTextPassword = findViewById(R.id.editTextPassword);
-    editTextImapServer = findViewById(R.id.editTextImapServer);
-    editTextImapPort = findViewById(R.id.editTextImapPort);
-    editTextSmtpServer = findViewById(R.id.editTextSmtpServer);
-    editTextSmtpPort = findViewById(R.id.editTextSmtpPort);
-    editTextSmtpUsername = findViewById(R.id.editTextSmtpUsername);
-    editTextSmtpPassword = findViewById(R.id.editTextSmtpPassword);
+  private fun initViews(savedInstanceState: Bundle?) {
+    editTextEmail = findViewById(R.id.editTextEmail)
+    editTextUserName = findViewById(R.id.editTextUserName)
+    editTextPassword = findViewById(R.id.editTextPassword)
+    editTextImapServer = findViewById(R.id.editTextImapServer)
+    editTextImapPort = findViewById(R.id.editTextImapPort)
+    editTextSmtpServer = findViewById(R.id.editTextSmtpServer)
+    editTextSmtpPort = findViewById(R.id.editTextSmtpPort)
+    editTextSmtpUsername = findViewById(R.id.editTextSmtpUsername)
+    editTextSmtpPassword = findViewById(R.id.editTextSmtpPassword)
 
-    editTextEmail.addTextChangedListener(this);
+    editTextEmail!!.addTextChangedListener(this)
 
-    layoutSmtpSignIn = findViewById(R.id.layoutSmtpSignIn);
-    progressView = findViewById(R.id.progressView);
-    contentView = findViewById(R.id.layoutContent);
-    checkBoxRequireSignInForSmtp = findViewById(R.id.checkBoxRequireSignInForSmtp);
-    checkBoxRequireSignInForSmtp.setOnCheckedChangeListener(this);
+    layoutSmtpSignIn = findViewById(R.id.layoutSmtpSignIn)
+    progressView = findViewById(R.id.progressView)
+    rootView = findViewById(R.id.layoutContent)
+    checkBoxRequireSignInForSmtp = findViewById(R.id.checkBoxRequireSignInForSmtp)
+    checkBoxRequireSignInForSmtp!!.setOnCheckedChangeListener(this)
 
-    spinnerImapSecurityType = findViewById(R.id.spinnerImapSecurityType);
-    spinnerSmtpSecurityType = findViewById(R.id.spinnerSmtpSecyrityType);
+    spinnerImapSecurityType = findViewById(R.id.spinnerImapSecurityType)
+    spinnerSmtpSecurityType = findViewById(R.id.spinnerSmtpSecyrityType)
 
-    ArrayAdapter<SecurityType> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item,
-        SecurityType.generateSecurityTypes(this));
+    val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item,
+        SecurityType.generateSecurityTypes(this))
 
-    spinnerImapSecurityType.setAdapter(adapter);
-    spinnerSmtpSecurityType.setAdapter(adapter);
+    spinnerImapSecurityType!!.adapter = adapter
+    spinnerSmtpSecurityType!!.adapter = adapter
 
-    spinnerImapSecurityType.setOnItemSelectedListener(this);
-    spinnerSmtpSecurityType.setOnItemSelectedListener(this);
+    spinnerImapSecurityType!!.onItemSelectedListener = this
+    spinnerSmtpSecurityType!!.onItemSelectedListener = this
 
-    if (findViewById(R.id.buttonTryToConnect) != null) {
-      findViewById(R.id.buttonTryToConnect).setOnClickListener(this);
+    if (findViewById<View>(R.id.buttonTryToConnect) != null) {
+      findViewById<View>(R.id.buttonTryToConnect).setOnClickListener(this)
     }
 
     if (savedInstanceState == null) {
-      updateView();
+      updateView()
     }
   }
 
   /**
-   * Update the current views if {@link AuthCredentials} not null.l
+   * Update the current views if [AuthCredentials] not null.l
    */
-  private void updateView() {
+  private fun updateView() {
     if (authCreds != null) {
 
-      editTextEmail.setText(authCreds.getEmail());
-      editTextUserName.setText(authCreds.getUsername());
-      editTextImapServer.setText(authCreds.getImapServer());
-      editTextImapPort.setText(String.valueOf(authCreds.getImapPort()));
-      editTextSmtpServer.setText(authCreds.getSmtpServer());
-      editTextSmtpPort.setText(String.valueOf(authCreds.getSmtpPort()));
-      checkBoxRequireSignInForSmtp.setChecked(authCreds.getHasCustomSignInForSmtp());
-      editTextSmtpUsername.setText(authCreds.getSmtpSigInUsername());
+      editTextEmail!!.setText(authCreds!!.email)
+      editTextUserName!!.setText(authCreds!!.username)
+      editTextImapServer!!.setText(authCreds!!.imapServer)
+      editTextImapPort!!.setText(authCreds!!.imapPort.toString())
+      editTextSmtpServer!!.setText(authCreds!!.smtpServer)
+      editTextSmtpPort!!.setText(authCreds!!.smtpPort.toString())
+      checkBoxRequireSignInForSmtp!!.isChecked = authCreds!!.hasCustomSignInForSmtp
+      editTextSmtpUsername!!.setText(authCreds!!.smtpSigInUsername)
 
-      int imapOptionsCount = spinnerImapSecurityType.getAdapter().getCount();
-      for (int i = 0; i < imapOptionsCount; i++) {
-        if (authCreds.getImapOpt() == ((SecurityType) spinnerImapSecurityType.getAdapter().getItem(i)).getOpt()) {
-          spinnerImapSecurityType.setSelection(i);
+      val imapOptionsCount = spinnerImapSecurityType!!.adapter.count
+      for (i in 0 until imapOptionsCount) {
+        if (authCreds!!.imapOpt === (spinnerImapSecurityType!!.adapter.getItem(i) as SecurityType).opt) {
+          spinnerImapSecurityType!!.setSelection(i)
         }
       }
 
-      int smtpOptionsCount = spinnerSmtpSecurityType.getAdapter().getCount();
-      for (int i = 0; i < smtpOptionsCount; i++) {
-        if (authCreds.getSmtpOpt() == ((SecurityType) spinnerSmtpSecurityType.getAdapter().getItem(i)).getOpt()) {
-          spinnerSmtpSecurityType.setSelection(i);
+      val smtpOptionsCount = spinnerSmtpSecurityType!!.adapter.count
+      for (i in 0 until smtpOptionsCount) {
+        if (authCreds!!.smtpOpt === (spinnerSmtpSecurityType!!.adapter.getItem(i) as SecurityType).opt) {
+          spinnerSmtpSecurityType!!.setSelection(i)
         }
       }
     }
   }
 
   /**
-   * Save the current {@link AuthCredentials} to the shared preferences.
+   * Save the current [AuthCredentials] to the shared preferences.
    */
-  private void saveTempCreds() {
-    authCreds = generateAuthCreds();
-    Gson gson = new Gson();
-    authCreds.setPassword("");
-    authCreds.setSmtpSignInPassword(null);
+  private fun saveTempCreds() {
+    authCreds = generateAuthCreds()
+    val gson = Gson()
+    authCreds!!.password = ""
+    authCreds!!.smtpSignInPassword = null
     SharedPreferencesHelper.setString(PreferenceManager.getDefaultSharedPreferences(this),
-        Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, gson.toJson(authCreds));
+        Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, gson.toJson(authCreds))
   }
 
   /**
-   * Retrieve a temp {@link AuthCredentials} from the shared preferences.
-   */
-  private AuthCredentials getTempAuthCreds() {
-    String authCredsJson = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences
-        (this), Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, "");
-
-    if (!TextUtils.isEmpty(authCredsJson)) {
-      try {
-        return new Gson().fromJson(authCredsJson, AuthCredentials.class);
-      } catch (JsonSyntaxException e) {
-        e.printStackTrace();
-        ExceptionUtil.handleError(e);
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Generate the {@link AuthCredentials} using user input.
+   * Generate the [AuthCredentials] using user input.
    *
-   * @return {@link AuthCredentials}.
+   * @return [AuthCredentials].
    */
-  private AuthCredentials generateAuthCreds() {
-    int imapPort = TextUtils.isEmpty(editTextImapPort.getText()) ? JavaEmailConstants.DEFAULT_IMAP_PORT
-        : Integer.parseInt(editTextImapPort.getText().toString());
+  private fun generateAuthCreds(): AuthCredentials {
+    val imapPort = if (TextUtils.isEmpty(editTextImapPort!!.text))
+      JavaEmailConstants.DEFAULT_IMAP_PORT
+    else
+      Integer.parseInt(editTextImapPort!!.text.toString())
 
-    int smtpPort = TextUtils.isEmpty(editTextSmtpPort.getText()) ? JavaEmailConstants.DEFAULT_SMTP_PORT
-        : Integer.parseInt(editTextSmtpPort.getText().toString());
+    val smtpPort = if (TextUtils.isEmpty(editTextSmtpPort!!.text))
+      JavaEmailConstants.DEFAULT_SMTP_PORT
+    else
+      Integer.parseInt(editTextSmtpPort!!.text.toString())
 
-    return new AuthCredentials(editTextEmail.getText().toString()
-        , editTextUserName.getText().toString()
-        , editTextPassword.getText().toString()
-        , editTextImapServer.getText().toString()
-        , imapPort
-        , Objects.requireNonNull(((SecurityType) spinnerImapSecurityType.getSelectedItem()).getOpt())
-        , editTextSmtpServer.getText().toString()
-        , smtpPort
-        , Objects.requireNonNull(((SecurityType) spinnerSmtpSecurityType.getSelectedItem()).getOpt())
-        , checkBoxRequireSignInForSmtp.isChecked()
-        , editTextSmtpUsername.getText().toString()
-        , editTextSmtpPassword.getText().toString());
+    return AuthCredentials(editTextEmail!!.text.toString(), editTextUserName!!.text.toString(),
+        editTextPassword!!.text.toString(), editTextImapServer!!.text.toString(), imapPort,
+        (spinnerImapSecurityType!!.selectedItem as SecurityType).opt,
+        editTextSmtpServer!!.text.toString(), smtpPort,
+        (spinnerSmtpSecurityType!!.selectedItem as SecurityType).opt,
+        checkBoxRequireSignInForSmtp!!.isChecked,
+        editTextSmtpUsername!!.text.toString(),
+        editTextSmtpPassword!!.text.toString())
   }
 
-  /**
-   * Do a lot of checks to validate an outgoing message info.
-   *
-   * @return <tt>Boolean</tt> true if all information is correct, false otherwise.
-   */
-  private boolean isDataCorrect() {
-    if (TextUtils.isEmpty(editTextEmail.getText())) {
-      showInfoSnackbar(editTextEmail, getString(R.string.text_must_not_be_empty, getString(R.string.e_mail)));
-      editTextEmail.requestFocus();
-    } else if (GeneralUtil.isEmailValid(editTextEmail.getText())) {
-      if (TextUtils.isEmpty(editTextUserName.getText())) {
-        showInfoSnackbar(editTextUserName, getString(R.string.text_must_not_be_empty,
-            getString(R.string.username)));
-        editTextUserName.requestFocus();
-      } else if (TextUtils.isEmpty(editTextPassword.getText())) {
-        showInfoSnackbar(editTextPassword, getString(R.string.text_must_not_be_empty,
-            getString(R.string.password)));
-        editTextPassword.requestFocus();
-      } else if (TextUtils.isEmpty(editTextImapServer.getText())) {
-        showInfoSnackbar(editTextImapServer, getString(R.string.text_must_not_be_empty,
-            getString(R.string.imap_server)));
-        editTextImapServer.requestFocus();
-      } else if (TextUtils.isEmpty(editTextImapPort.getText())) {
-        showInfoSnackbar(editTextImapPort, getString(R.string.text_must_not_be_empty,
-            getString(R.string.imap_port)));
-        editTextImapPort.requestFocus();
-      } else if (TextUtils.isEmpty(editTextSmtpServer.getText())) {
-        showInfoSnackbar(editTextSmtpServer, getString(R.string.text_must_not_be_empty,
-            getString(R.string.smtp_server)));
-        editTextSmtpServer.requestFocus();
-      } else if (TextUtils.isEmpty(editTextSmtpPort.getText())) {
-        showInfoSnackbar(editTextSmtpPort, getString(R.string.text_must_not_be_empty,
-            getString(R.string.smtp_port)));
-        editTextSmtpPort.requestFocus();
-      } else if (checkBoxRequireSignInForSmtp.isChecked()) {
-        if (TextUtils.isEmpty(editTextSmtpUsername.getText())) {
-          showInfoSnackbar(editTextSmtpUsername, getString(R.string.text_must_not_be_empty,
-              getString(R.string.smtp_username)));
-          editTextSmtpUsername.requestFocus();
-        } else if (TextUtils.isEmpty(editTextSmtpPassword.getText())) {
-          showInfoSnackbar(editTextSmtpPassword, getString(R.string.text_must_not_be_empty,
-              getString(R.string.smtp_password)));
-          editTextSmtpPassword.requestFocus();
-        } else return true;
-      } else return true;
-    } else {
-      showInfoSnackbar(editTextEmail, getString(R.string.error_email_is_not_valid));
-      editTextEmail.requestFocus();
-    }
+  companion object {
+    const val RESULT_CODE_CONTINUE_WITH_GMAIL = 101
 
-    return false;
+    val KEY_EXTRA_AUTH_CREDENTIALS = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_AUTH_CREDENTIALS", AddNewAccountManuallyActivity::class.java)
+
+    private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 10
+    private const val REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL = 11
   }
 }

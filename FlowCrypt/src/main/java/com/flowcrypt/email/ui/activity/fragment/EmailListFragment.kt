@@ -12,8 +12,18 @@ import android.database.Cursor
 import android.os.Bundle
 import android.text.TextUtils
 import android.util.SparseBooleanArray
-import android.view.*
-import android.widget.*
+import android.view.ActionMode
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.AbsListView
+import android.widget.AdapterView
+import android.widget.ListView
+import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
@@ -296,7 +306,7 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
         emptyView!!.visibility = View.GONE
 
         LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache)
-        DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao.email,
+        DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao?.email,
             listener!!.currentFolder!!.fullName)
 
         when (errorType) {
@@ -419,7 +429,7 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
             folder.fullName
           else
             SearchMessagesActivity.SEARCH_FOLDER_NAME
-          DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao.email, folderName)
+          DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao?.email, folderName)
         }
       }
 
@@ -489,8 +499,7 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
    */
   fun reloadMsgs() {
     LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache)
-    DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao.email,
-        listener!!.currentFolder!!.fullName)
+    DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao?.email, listener!!.currentFolder!!.fullName)
     UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
     loadNextMsgs(0)
   }
@@ -646,7 +655,7 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
     }
 
     return CursorLoader(context!!, MessageDaoSource().baseContentUri, null, selection,
-        arrayOf<String>(listener!!.currentAccountDao.email, listener!!.currentFolder!!.folderAlias!!),
+        arrayOf(listener!!.currentAccountDao?.email, listener!!.currentFolder!!.folderAlias!!),
         MessageDaoSource.COL_RECEIVED_DATE + " DESC")
   }
 
@@ -769,7 +778,7 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
 
   interface OnManageEmailsListener {
 
-    val currentAccountDao: AccountDao
+    val currentAccountDao: AccountDao?
 
     val currentFolder: LocalFolder?
 

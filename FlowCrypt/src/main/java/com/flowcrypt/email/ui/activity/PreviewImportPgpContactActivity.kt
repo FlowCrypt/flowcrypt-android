@@ -3,25 +3,21 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
-import com.flowcrypt.email.ui.activity.fragment.PreviewImportPgpContactFragment;
-import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
-import com.flowcrypt.email.util.GeneralUtil;
-
-import androidx.annotation.Nullable;
-import androidx.fragment.app.FragmentManager;
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
+import com.flowcrypt.email.ui.activity.fragment.PreviewImportPgpContactFragment
+import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
  * This activity displays information about public keys owners and information about keys.
@@ -31,73 +27,65 @@ import androidx.fragment.app.FragmentManager;
  * Time: 18:01
  * E-mail: DenBond7@gmail.com
  */
-public class PreviewImportPgpContactActivity extends BaseBackStackActivity {
-  public static final String KEY_EXTRA_PUBLIC_KEY_STRING
-      = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEY_STRING", PreviewImportPgpContactActivity.class);
+class PreviewImportPgpContactActivity : BaseBackStackActivity() {
 
-  public static final String KEY_EXTRA_PUBLIC_KEYS_FILE_URI
-      = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEYS_FILE_URI",
-      PreviewImportPgpContactActivity.class);
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_preview_import_pgp_contact
 
-  public static Intent newIntent(Context context, String publicKeysString) {
-    Intent intent = new Intent(context, PreviewImportPgpContactActivity.class);
-    intent.putExtra(KEY_EXTRA_PUBLIC_KEY_STRING, publicKeysString);
-    return intent;
-  }
+  override val rootView: View
+    get() = findViewById(R.id.layoutContent)
 
-  public static Intent newIntent(Context context, Uri publicKeysFileUri) {
-    Intent intent = new Intent(context, PreviewImportPgpContactActivity.class);
-    intent.putExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI, publicKeysFileUri);
-    return intent;
-  }
-
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_preview_import_pgp_contact;
-  }
-
-  @Override
-  public View getRootView() {
-    return findViewById(R.id.layoutContent);
-  }
-
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    if (getIntent() == null || (!getIntent().hasExtra(KEY_EXTRA_PUBLIC_KEY_STRING)
-        && !getIntent().hasExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI))) {
-      setResult(Activity.RESULT_CANCELED);
-      finish();
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    if (intent == null || !intent.hasExtra(KEY_EXTRA_PUBLIC_KEY_STRING) && !intent.hasExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI)) {
+      setResult(Activity.RESULT_CANCELED)
+      finish()
     }
 
-    String publicKeysString = getIntent().getStringExtra(KEY_EXTRA_PUBLIC_KEY_STRING);
-    Uri publicKeysFileUri = getIntent().getParcelableExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI);
+    val publicKeysString = intent.getStringExtra(KEY_EXTRA_PUBLIC_KEY_STRING)
+    val publicKeysFileUri = intent.getParcelableExtra<Uri>(KEY_EXTRA_PUBLIC_KEYS_FILE_URI)
 
-    FragmentManager fragmentManager = getSupportFragmentManager();
-    PreviewImportPgpContactFragment fragment = (PreviewImportPgpContactFragment)
-        fragmentManager.findFragmentById(R.id.layoutContent);
+    val fragmentManager = supportFragmentManager
+    var fragment = fragmentManager.findFragmentById(R.id.layoutContent) as PreviewImportPgpContactFragment?
 
     if (fragment == null) {
-      fragment = PreviewImportPgpContactFragment.newInstance(publicKeysString, publicKeysFileUri);
-      fragmentManager.beginTransaction().add(R.id.layoutContent, fragment).commit();
+      fragment = PreviewImportPgpContactFragment.newInstance(publicKeysString, publicKeysFileUri)
+      fragmentManager.beginTransaction().add(R.id.layoutContent, fragment).commit()
     }
   }
 
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    getMenuInflater().inflate(R.menu.activity_preview_import_pgp_contact, menu);
-    return true;
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    menuInflater.inflate(R.menu.activity_preview_import_pgp_contact, menu)
+    return true
   }
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.menuActionHelp:
-        startActivity(new Intent(this, FeedbackActivity.class));
-        return true;
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
+      R.id.menuActionHelp -> {
+        startActivity(Intent(this, FeedbackActivity::class.java))
+        true
+      }
 
-      default:
-        return super.onOptionsItemSelected(item);
+      else -> super.onOptionsItemSelected(item)
+    }
+  }
+
+  companion object {
+    val KEY_EXTRA_PUBLIC_KEY_STRING = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEY_STRING", PreviewImportPgpContactActivity::class.java)
+
+    val KEY_EXTRA_PUBLIC_KEYS_FILE_URI = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEYS_FILE_URI",
+        PreviewImportPgpContactActivity::class.java)
+
+    fun newIntent(context: Context, publicKeysString: String?): Intent {
+      val intent = Intent(context, PreviewImportPgpContactActivity::class.java)
+      intent.putExtra(KEY_EXTRA_PUBLIC_KEY_STRING, publicKeysString)
+      return intent
+    }
+
+    fun newIntent(context: Context, publicKeysFileUri: Uri): Intent {
+      val intent = Intent(context, PreviewImportPgpContactActivity::class.java)
+      intent.putExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI, publicKeysFileUri)
+      return intent
     }
   }
 }

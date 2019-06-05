@@ -3,12 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.view.View;
+import android.view.View
 
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
+import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
 
 /**
  * The developer setting activity. This activity will be used to setup the debug process.
@@ -18,14 +18,10 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity;
  * Time: 10:55
  * E-mail: DenBond7@gmail.com
  */
-public class DevSettingsActivity extends BaseBackStackActivity {
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_dev_settings;
-  }
+class DevSettingsActivity : BaseBackStackActivity() {
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_dev_settings
 
-  @Override
-  public View getRootView() {
-    return null;
-  }
+  override val rootView: View
+    get() = View(this)
 }

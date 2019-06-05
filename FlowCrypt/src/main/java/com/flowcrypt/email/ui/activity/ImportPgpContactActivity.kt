@@ -3,245 +3,218 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.BaseResponse;
-import com.flowcrypt.email.api.retrofit.request.attester.LookUpRequest;
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse;
-import com.flowcrypt.email.api.retrofit.response.model.LookUpPublicKeyInfo;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.results.LoaderResult;
-import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
-import com.flowcrypt.email.ui.activity.settings.FeedbackActivity;
-import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader;
-import com.flowcrypt.email.util.GeneralUtil;
-import com.flowcrypt.email.util.UIUtil;
-
-import java.util.ArrayList;
-
-import androidx.annotation.NonNull;
-import androidx.loader.app.LoaderManager;
-import androidx.loader.content.Loader;
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.text.TextUtils
+import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
+import androidx.loader.app.LoaderManager
+import androidx.loader.content.Loader
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.ApiName
+import com.flowcrypt.email.api.retrofit.BaseResponse
+import com.flowcrypt.email.api.retrofit.request.attester.LookUpRequest
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
+import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
+import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
+import java.util.*
 
 /**
- * This {@link Activity} retrieves a public keys string from the different sources and sends it to
- * {@link PreviewImportPgpContactActivity}
+ * This [Activity] retrieves a public keys string from the different sources and sends it to
+ * [PreviewImportPgpContactActivity]
  *
  * @author Denis Bondarenko
  * Date: 04.05.2018
  * Time: 17:07
  * E-mail: DenBond7@gmail.com
  */
-public class ImportPgpContactActivity extends BaseImportKeyActivity implements TextView.OnEditorActionListener {
-  private static final int REQUEST_CODE_RUN_PREVIEW_ACTIVITY = 100;
-  private EditText editTextEmailOrId;
+class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActionListener {
+  private var editTextEmailOrId: EditText? = null
 
-  private boolean isSearchingActiveNow;
+  private var isSearchingActiveNow: Boolean = false
 
-  public static Intent newIntent(Context context) {
-    return newIntent(context, context.getString(R.string.add_public_keys_of_your_contacts),
-        false, ImportPgpContactActivity.class);
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_import_public_keys
+
+  override val isPrivateKeyMode: Boolean
+    get() = false
+
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    menuInflater.inflate(R.menu.activity_import_public_keys, menu)
+    return true
   }
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_import_public_keys;
+  override fun onPause() {
+    super.onPause()
+    isCheckingClipboardEnabled = false
   }
 
-  @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    getMenuInflater().inflate(R.menu.activity_import_public_keys, menu);
-    return true;
-  }
-
-  @Override
-  public void onPause() {
-    super.onPause();
-    isCheckingClipboardEnabled = false;
-  }
-
-  @Override
-  public void onBackPressed() {
+  override fun onBackPressed() {
     if (isSearchingActiveNow) {
-      this.isSearchingActiveNow = false;
-      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_search_public_key);
-      UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
+      this.isSearchingActiveNow = false
+      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_search_public_key)
+      UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
     } else {
-      super.onBackPressed();
+      super.onBackPressed()
     }
   }
 
-  @Override
-  public void onActivityResult(int requestCode, int resultCode, Intent data) {
-    switch (requestCode) {
-      case REQUEST_CODE_RUN_PREVIEW_ACTIVITY:
-        UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-        break;
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    when (requestCode) {
+      REQUEST_CODE_RUN_PREVIEW_ACTIVITY -> UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
 
-      default:
-        super.onActivityResult(requestCode, resultCode, data);
+      else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
 
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case R.id.menuActionHelp:
-        startActivity(new Intent(this, FeedbackActivity.class));
-        return true;
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
+      R.id.menuActionHelp -> {
+        startActivity(Intent(this, FeedbackActivity::class.java))
+        true
+      }
 
-      default:
-        return super.onOptionsItemSelected(item);
+      else -> super.onOptionsItemSelected(item)
     }
   }
 
-  @Override
-  public void onKeyFound(KeyDetails.Type type, ArrayList<NodeKeyDetails> keyDetailsList) {
-    switch (type) {
-      case CLIPBOARD:
-        if (!keyDetailsList.isEmpty()) {
-          UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-          startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, keyImportModel
-              .getKeyString()), REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
-        } else {
-          UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-          Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show();
-        }
-        break;
+  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>) {
+    when (type) {
+      KeyDetails.Type.CLIPBOARD -> if (keyDetailsList.isNotEmpty()) {
+        UIUtil.exchangeViewVisibility(applicationContext, true, layoutProgress, layoutContentView)
+        startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, keyImportModel!!
+            .keyString), REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
+      } else {
+        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+        Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show()
+      }
     }
   }
 
-  @Override
-  protected void handleSelectedFile(@NonNull Uri uri) {
-    UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-    startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, uri), REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
+  override fun handleSelectedFile(uri: Uri) {
+    UIUtil.exchangeViewVisibility(applicationContext, true, layoutProgress, layoutContentView)
+    startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, uri), REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
   }
 
-  @Override
-  public boolean isPrivateKeyMode() {
-    return false;
-  }
-
-  @NonNull
-  @Override
-  public Loader<LoaderResult> onCreateLoader(int id, Bundle args) {
-    switch (id) {
-      case R.id.loader_id_search_public_key:
-        this.isSearchingActiveNow = true;
-        UIUtil.exchangeViewVisibility(getApplicationContext(), true, layoutProgress, layoutContentView);
-        LookUpRequest lookUpRequest = new LookUpRequest(editTextEmailOrId.getText().toString());
-        return new ApiServiceAsyncTaskLoader(getApplicationContext(), lookUpRequest);
-      default:
-        return super.onCreateLoader(id, args);
+  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
+    return when (id) {
+      R.id.loader_id_search_public_key -> {
+        this.isSearchingActiveNow = true
+        UIUtil.exchangeViewVisibility(applicationContext, true, layoutProgress, layoutContentView)
+        val lookUpRequest = LookUpRequest(ApiName.GET_LOOKUP, editTextEmailOrId!!.text.toString())
+        ApiServiceAsyncTaskLoader(applicationContext, lookUpRequest)
+      }
+      else -> super.onCreateLoader(id, args)
     }
   }
 
-  @Override
-  public void onSuccess(int loaderId, Object result) {
-    switch (loaderId) {
-      case R.id.loader_id_search_public_key:
-        this.isSearchingActiveNow = false;
-        BaseResponse baseResponse = (BaseResponse) result;
+  override fun onSuccess(loaderId: Int, result: Any?) {
+    when (loaderId) {
+      R.id.loader_id_search_public_key -> {
+        this.isSearchingActiveNow = false
+        val baseResponse = result as BaseResponse<*>?
         if (baseResponse != null) {
-          if (baseResponse.getResponseModel() != null) {
-            LookUpResponse lookUpResponse = (LookUpResponse) baseResponse.getResponseModel();
-            handleLookupResponse(lookUpResponse);
+          if (baseResponse.responseModel != null) {
+            val lookUpResponse = baseResponse.responseModel as LookUpResponse?
+            handleLookupResponse(lookUpResponse!!)
           } else {
-            UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-            UIUtil.showInfoSnackbar(getRootView(), getString(R.string.api_error));
+            UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+            UIUtil.showInfoSnackbar(rootView, getString(R.string.api_error))
           }
         } else {
-          UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-          UIUtil.showInfoSnackbar(getRootView(), getString(R.string.internal_error));
+          UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+          UIUtil.showInfoSnackbar(rootView, getString(R.string.internal_error))
         }
-        break;
+      }
 
-      default:
-        super.onSuccess(loaderId, result);
+      else -> super.onSuccess(loaderId, result)
     }
   }
 
-  @Override
-  public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-    switch (actionId) {
-      case EditorInfo.IME_ACTION_SEARCH:
-        UIUtil.hideSoftInput(ImportPgpContactActivity.this, v);
+  override fun onEditorAction(v: TextView, actionId: Int, event: KeyEvent): Boolean {
+    when (actionId) {
+      EditorInfo.IME_ACTION_SEARCH -> {
+        UIUtil.hideSoftInput(this@ImportPgpContactActivity, v)
 
         if (GeneralUtil.isConnected(this)) {
           LoaderManager.getInstance(this).restartLoader(R.id.loader_id_search_public_key, null,
-              ImportPgpContactActivity.this);
+              this@ImportPgpContactActivity)
         } else {
-          showInfoSnackbar(getRootView(), getString(R.string.internet_connection_is_not_available));
+          showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
         }
-        break;
+      }
     }
 
-    return false;
+    return false
   }
 
-  @Override
-  public void onError(int loaderId, Exception e) {
-    switch (loaderId) {
-      case R.id.loader_id_search_public_key:
-        UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-        Toast.makeText(this, TextUtils.isEmpty(e.getMessage()) ? getString(R.string.unknown_error) : e.getMessage(),
-            Toast.LENGTH_SHORT).show();
-        break;
+  override fun onError(loaderId: Int, e: Exception?) {
+    when (loaderId) {
+      R.id.loader_id_search_public_key -> {
+        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+        Toast.makeText(this, if (TextUtils.isEmpty(e!!.message)) getString(R.string.unknown_error) else e.message,
+            Toast.LENGTH_SHORT).show()
+      }
 
-      default:
-        super.onError(loaderId, e);
+      else -> super.onError(loaderId, e)
     }
   }
 
-  @Override
-  protected void initViews() {
-    super.initViews();
-    this.editTextEmailOrId = findViewById(R.id.editTextKeyIdOrEmail);
-    this.editTextEmailOrId.setOnEditorActionListener(this);
+  override fun initViews() {
+    super.initViews()
+    this.editTextEmailOrId = findViewById(R.id.editTextKeyIdOrEmail)
+    this.editTextEmailOrId!!.setOnEditorActionListener(this)
   }
 
-  private void handleLookupResponse(LookUpResponse lookUpResponse) {
-    if (lookUpResponse.getApiError() != null) {
-      UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-      UIUtil.showInfoSnackbar(getRootView(), lookUpResponse.getApiError().getMsg());
+  private fun handleLookupResponse(lookUpResponse: LookUpResponse) {
+    if (lookUpResponse.apiError != null) {
+      UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+      UIUtil.showInfoSnackbar(rootView, lookUpResponse.apiError.msg!!)
     } else {
-      ArrayList<LookUpPublicKeyInfo> lookUpPublicKeyInfoArrayList = lookUpResponse.getResults();
-      if (lookUpPublicKeyInfoArrayList != null && !lookUpPublicKeyInfoArrayList.isEmpty()) {
-        StringBuilder builder = new StringBuilder();
+      val lookUpPublicKeyInfoArrayList = lookUpResponse.results
+      if (lookUpPublicKeyInfoArrayList != null && lookUpPublicKeyInfoArrayList.isNotEmpty()) {
+        val builder = StringBuilder()
 
-        for (LookUpPublicKeyInfo lookUpPublicKeyInfo : lookUpPublicKeyInfoArrayList) {
-          if (lookUpPublicKeyInfo != null) {
-            builder.append(lookUpPublicKeyInfo.getPubKey());
-          }
+        for (lookUpPublicKeyInfo in lookUpPublicKeyInfoArrayList) {
+          builder.append(lookUpPublicKeyInfo.pubKey)
         }
 
-        if (builder.length() > 0) {
+        if (builder.isNotEmpty()) {
           startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, builder.toString()),
-              REQUEST_CODE_RUN_PREVIEW_ACTIVITY);
+              REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
         } else {
-          UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-          Toast.makeText(this, R.string.no_public_key_found, Toast.LENGTH_SHORT).show();
+          UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+          Toast.makeText(this, R.string.no_public_key_found, Toast.LENGTH_SHORT).show()
         }
       } else {
-        UIUtil.exchangeViewVisibility(getApplicationContext(), false, layoutProgress, layoutContentView);
-        UIUtil.showInfoSnackbar(getRootView(), getString(R.string.api_error));
+        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+        UIUtil.showInfoSnackbar(rootView, getString(R.string.api_error))
       }
+    }
+  }
+
+  companion object {
+    private const val REQUEST_CODE_RUN_PREVIEW_ACTIVITY = 100
+
+    fun newIntent(context: Context): Intent {
+      return newIntent(context, context.getString(R.string.add_public_keys_of_your_contacts),
+          false, ImportPgpContactActivity::class.java)
     }
   }
 }

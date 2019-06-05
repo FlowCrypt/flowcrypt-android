@@ -3,16 +3,14 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.os.Bundle;
-import android.view.View;
-import android.widget.Toast;
+import android.os.Bundle
+import android.view.View
+import android.widget.Toast
 
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.ui.activity.base.BaseActivity;
-
-import androidx.annotation.Nullable;
+import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.base.BaseActivity
 
 /**
  * This activity will be used by other activities to wait while Node.js is starting. If Node.js starts we will close
@@ -24,43 +22,35 @@ import androidx.annotation.Nullable;
  * Time: 8:48 AM
  * E-mail: DenBond7@gmail.com
  */
-public class NodeRunnerActivity extends BaseActivity {
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+class NodeRunnerActivity : BaseActivity() {
 
-    if (isNodeReady()) {
-      finish();
+  override val isDisplayHomeAsUpEnabled: Boolean
+    get() = false
+
+  override val contentViewResourceId: Int
+    get() = 0
+
+  override val rootView: View
+    get() = View(this)
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    if (isNodeReady) {
+      finish()
     }
   }
 
-  @Override
-  public boolean isDisplayHomeAsUpEnabled() {
-    return false;
-  }
-
-  @Override
-  public int getContentViewResourceId() {
-    return 0;
-  }
-
-  @Override
-  public View getRootView() {
-    return null;
-  }
-
-  @Override
-  public void onBackPressed() {
+  override fun onBackPressed() {
     //disabled
   }
 
-  @Override
-  protected void onNodeStateChanged(boolean isReady) {
-    super.onNodeStateChanged(isReady);
+  override fun onNodeStateChanged(isReady: Boolean) {
+    super.onNodeStateChanged(isReady)
     if (isReady) {
-      finish();
+      finish()
     } else {
-      Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_LONG).show();
+      Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_LONG).show()
     }
   }
 }

@@ -3,24 +3,20 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity;
+package com.flowcrypt.email.ui.activity
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-
-import com.flowcrypt.email.R;
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails;
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource;
-import com.flowcrypt.email.model.KeyDetails;
-import com.flowcrypt.email.model.PgpContact;
-import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity;
-import com.flowcrypt.email.util.GeneralUtil;
-
-import java.util.ArrayList;
-
-import androidx.annotation.Nullable;
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
+import com.flowcrypt.email.util.GeneralUtil
+import java.util.*
 
 /**
  * This activity describes a logic of import public keys.
@@ -31,63 +27,60 @@ import androidx.annotation.Nullable;
  * E-mail: DenBond7@gmail.com
  */
 
-public class ImportPublicKeyActivity extends BaseImportKeyActivity {
-  public static final String KEY_EXTRA_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT",
-      ImportPublicKeyActivity.class);
+class ImportPublicKeyActivity : BaseImportKeyActivity() {
 
-  private PgpContact pgpContact;
+  private var pgpContact: PgpContact? = null
 
-  public static Intent newIntent(Context context, String title, PgpContact pgpContact) {
-    Intent intent = newIntent(context, title, false, ImportPublicKeyActivity.class);
-    intent.putExtra(KEY_EXTRA_PGP_CONTACT, pgpContact);
-    return intent;
-  }
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_import_public_key_for_pgp_contact
 
-  @Override
-  public int getContentViewResourceId() {
-    return R.layout.activity_import_public_key_for_pgp_contact;
-  }
+  override val isPrivateKeyMode: Boolean
+    get() = false
 
-  @Override
-  public void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    if (getIntent() != null && getIntent().hasExtra(KEY_EXTRA_PGP_CONTACT)) {
-      this.pgpContact = getIntent().getParcelableExtra(KEY_EXTRA_PGP_CONTACT);
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    if (intent != null && intent.hasExtra(KEY_EXTRA_PGP_CONTACT)) {
+      this.pgpContact = intent.getParcelableExtra(KEY_EXTRA_PGP_CONTACT)
     } else {
-      finish();
+      finish()
     }
   }
 
-  @Override
-  public void onKeyFound(KeyDetails.Type type, ArrayList<NodeKeyDetails> keyDetailsList) {
-    if (!keyDetailsList.isEmpty()) {
-      if (keyDetailsList.size() == 1) {
-        updateInformationAboutPgpContact(keyDetailsList.get(0));
-        setResult(Activity.RESULT_OK);
-        finish();
+  override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>) {
+    if (keyDetailsList.isNotEmpty()) {
+      if (keyDetailsList.size == 1) {
+        updateInformationAboutPgpContact(keyDetailsList[0])
+        setResult(Activity.RESULT_OK)
+        finish()
       } else {
-        showInfoSnackbar(getRootView(), getString(R.string.select_only_one_key));
+        showInfoSnackbar(rootView, getString(R.string.select_only_one_key))
       }
     } else {
-      showInfoSnackbar(getRootView(), getString(R.string.unknown_error));
+      showInfoSnackbar(rootView, getString(R.string.unknown_error))
     }
   }
 
-  @Override
-  public boolean isPrivateKeyMode() {
-    return false;
+  private fun updateInformationAboutPgpContact(keyDetails: NodeKeyDetails) {
+    val contactsDaoSource = ContactsDaoSource()
+
+    val pgpContactFromKey = keyDetails.primaryPgpContact
+
+    pgpContact!!.pubkey = pgpContactFromKey.pubkey
+    contactsDaoSource.updatePgpContact(this, pgpContact)
+
+    if (!pgpContact!!.email.equals(pgpContactFromKey.email, ignoreCase = true)) {
+      contactsDaoSource.addRow(this, pgpContactFromKey)
+    }
   }
 
-  protected void updateInformationAboutPgpContact(NodeKeyDetails keyDetails) {
-    ContactsDaoSource contactsDaoSource = new ContactsDaoSource();
+  companion object {
+    val KEY_EXTRA_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT",
+        ImportPublicKeyActivity::class.java)
 
-    PgpContact pgpContactFromKey = keyDetails.getPrimaryPgpContact();
-
-    pgpContact.setPubkey(pgpContactFromKey.getPubkey());
-    contactsDaoSource.updatePgpContact(this, pgpContact);
-
-    if (!pgpContact.getEmail().equalsIgnoreCase(pgpContactFromKey.getEmail())) {
-      contactsDaoSource.addRow(this, pgpContactFromKey);
+    fun newIntent(context: Context?, title: String, pgpContact: PgpContact): Intent {
+      val intent = newIntent(context, title, false, ImportPublicKeyActivity::class.java)
+      intent.putExtra(KEY_EXTRA_PGP_CONTACT, pgpContact)
+      return intent
     }
   }
 }
