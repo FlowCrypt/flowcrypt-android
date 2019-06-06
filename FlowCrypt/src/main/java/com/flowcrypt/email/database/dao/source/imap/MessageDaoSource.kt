@@ -149,15 +149,18 @@ class MessageDaoSource : BaseDaoSource() {
             contentValues.put(COL_IS_NEW, false)
           }
 
-          val isMsgEncrypted = if (areAllMsgsEncrypted) {
-            java.lang.Boolean.valueOf(true)
+          val isMsgEncrypted: Boolean? = if (areAllMsgsEncrypted) {
+            true
           } else {
             msgsEncryptionStates.get(folder.getUID(msg))
           }
-          contentValues.put(COL_IS_ENCRYPTED, isMsgEncrypted)
 
-          if (onlyEncryptedMsgs && !isMsgEncrypted) {
-            contentValues.put(COL_IS_NEW, false)
+          isMsgEncrypted?.let {
+            contentValues.put(COL_IS_ENCRYPTED, isMsgEncrypted)
+
+            if (onlyEncryptedMsgs && !isMsgEncrypted) {
+              contentValues.put(COL_IS_NEW, false)
+            }
           }
 
           contentValuesList.add(contentValues)
