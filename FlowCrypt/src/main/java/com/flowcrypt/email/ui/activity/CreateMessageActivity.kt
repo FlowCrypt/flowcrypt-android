@@ -69,10 +69,8 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
     rootView = findViewById(R.id.layoutContent)
     initNonEncryptedHintView()
 
-    if (intent != null) {
-      onMsgEncryptionTypeChanged(msgEncryptionType)
-      prepareActionBarTitle()
-    }
+    prepareActionBarTitle()
+    onMsgEncryptionTypeChanged(msgEncryptionType)
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {

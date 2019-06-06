@@ -28,7 +28,7 @@ interface PgpApiRepository {
    * @param raw         The raw string which can take one key or many keys,
    * it can be private or public keys, it can be armored or binary.. doesn't matter.
    */
-  fun fetchKeyDetails(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>, raw: String)
+  fun fetchKeyDetails(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>, raw: String?)
 
   /**
    * Parse the given raw MIME message and decrypt some parts if needed.

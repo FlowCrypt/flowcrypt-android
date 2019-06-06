@@ -151,7 +151,7 @@ class KeysSettingsActivityTest : BaseTest() {
 
     onView(withId(R.id.textViewFingerprint))
         .check(matches(withText(getHtmlString(getResString(R.string.template_fingerprint,
-            GeneralUtil.doSectionsInText(" ", details.fingerprint, 4))))))
+            GeneralUtil.doSectionsInText(" ", details.fingerprint, 4)!!)))))
 
     onView(withId(R.id.textViewLongId)).check(
         matches(withText(getResString(R.string.template_longid, details.longId ?: ""))))

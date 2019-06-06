@@ -25,7 +25,7 @@ import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
  */
 class NodeRepository : PgpApiRepository {
 
-  override fun fetchKeyDetails(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>, raw: String) {
+  override fun fetchKeyDetails(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>, raw: String?) {
     load(requestCode, liveData, ParseKeysRequest(raw))
   }
 

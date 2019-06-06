@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.retrofit.node
 import android.content.Context
 import android.net.Uri
 import android.os.AsyncTask
-import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest
@@ -21,7 +20,6 @@ import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent
 import com.flowcrypt.email.model.PgpKeyInfo
-import com.flowcrypt.email.node.NodeSecret
 import com.flowcrypt.email.node.TestData
 import java.util.*
 
@@ -30,13 +28,6 @@ import java.util.*
  */
 object RequestsManager {
   private var data: SingleLiveEvent<NodeResponseWrapper<*>> = SingleLiveEvent()
-  private var retrofitHelper: NodeRetrofitHelper? = null
-
-  @WorkerThread
-  fun init(nodeSecret: NodeSecret) {
-    this.retrofitHelper = NodeRetrofitHelper
-    this.retrofitHelper!!.init(nodeSecret)
-  }
 
   fun getData(): LiveData<NodeResponseWrapper<*>>? {
     return data
@@ -81,15 +72,11 @@ object RequestsManager {
       var time = 0L
       try {
         val response = nodeRequestWrapper.request.getResponse(nodeService)
-        if (response != null) {
-          time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis()
-          if (response.body() != null) {
-            baseNodeResult = response.body() as BaseNodeResponse
-          } else {
-            throw NullPointerException("The response body is null!")
-          }
+        time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis()
+        if (response.body() != null) {
+          baseNodeResult = response.body() as BaseNodeResponse
         } else {
-          throw NullPointerException("The response is null!")
+          throw NullPointerException("The response body is null!")
         }
 
       } catch (e: Exception) {

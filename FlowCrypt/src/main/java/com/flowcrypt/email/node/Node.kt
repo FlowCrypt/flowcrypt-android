@@ -9,6 +9,7 @@ import android.app.Application
 import android.content.Context
 import android.content.res.AssetManager
 import androidx.lifecycle.MutableLiveData
+import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
 import com.flowcrypt.email.api.retrofit.node.RequestsManager
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.node.exception.NodeNotReady
@@ -49,10 +50,12 @@ class Node private constructor(app: Application) {
         } else {
           nodeSecret = NodeSecret(context.filesDir.absolutePath, certs)
         }
+
         requestsManager = RequestsManager
-        requestsManager!!.init(nodeSecret!!)
         start(context.assets, nodeSecret)
         waitUntilReady()
+        NodeRetrofitHelper.init(nodeSecret!!)
+
         liveData.postValue(true)
       } catch (e: Exception) {
         e.printStackTrace()

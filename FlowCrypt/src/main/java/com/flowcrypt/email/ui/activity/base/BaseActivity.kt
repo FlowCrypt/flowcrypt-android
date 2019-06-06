@@ -278,8 +278,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
 
   private fun registerNodeIdlingResources() {
     Node.getInstance(application).liveData.observe(this, Observer { aBoolean ->
-      nodeIdlingResource.setIdleState(aBoolean!!)
       onNodeStateChanged(aBoolean)
+      nodeIdlingResource.setIdleState(aBoolean!!)
     })
   }
 

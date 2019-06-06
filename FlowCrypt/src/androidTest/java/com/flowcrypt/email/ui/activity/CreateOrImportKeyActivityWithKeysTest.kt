@@ -26,6 +26,7 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
+import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.allOf
@@ -61,7 +62,7 @@ class CreateOrImportKeyActivityWithKeysTest : BaseTest() {
   @Test
   fun testClickOnButtonCreateNewKey() {
     intending(allOf(hasComponent(ComponentName(getTargetContext(), CreatePrivateKeyActivity::class.java)),
-        hasExtraWithKey(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT_DAO)))
+        hasExtraWithKey(BasePassPhraseManagerActivity.KEY_EXTRA_ACCOUNT_DAO)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     onView(withId(R.id.buttonCreateNewKey))
         .check(matches(isDisplayed()))

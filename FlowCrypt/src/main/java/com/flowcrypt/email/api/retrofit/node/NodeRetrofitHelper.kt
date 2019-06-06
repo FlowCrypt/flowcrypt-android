@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit.node
 
+import androidx.annotation.WorkerThread
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.node.NodeSecret
 import com.flowcrypt.email.util.GeneralUtil
@@ -29,12 +30,14 @@ import javax.net.ssl.HostnameVerifier
 object NodeRetrofitHelper {
   private const val TIMEOUT = 300
   private var okHttpClient: OkHttpClient? = null
+  @Volatile
   private var retrofit: Retrofit? = null
   var gson: Gson = NodeGson.gson
 
   private val httpLoggingInterceptor: Interceptor
     get() = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
 
+  @WorkerThread
   fun init(nodeSecret: NodeSecret) {
     okHttpClient = getOkHttpClientBuilder(nodeSecret).build()
 

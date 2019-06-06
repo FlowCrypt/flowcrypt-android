@@ -158,7 +158,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
 
   companion object {
 
-    private val KEY_CREATED_PRIVATE_KEY_LONG_ID = GeneralUtil.generateUniqueExtraKey("KEY_CREATED_PRIVATE_KEY_LONG_ID", CreatePrivateKeyActivity::class.java)
+    val KEY_CREATED_PRIVATE_KEY_LONG_ID = GeneralUtil.generateUniqueExtraKey("KEY_CREATED_PRIVATE_KEY_LONG_ID", CreatePrivateKeyActivity::class.java)
 
     fun newIntent(context: Context, account: AccountDao?): Intent {
       val intent = Intent(context, CreatePrivateKeyActivity::class.java)

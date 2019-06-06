@@ -40,7 +40,7 @@ class PrivateKeysManager {
           .targetContext)
 
       KeysDaoSource().addRow(context, KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase))
-      UserIdEmailsKeysDaoSource().addRow(context, nodeKeyDetails.longId, nodeKeyDetails.primaryPgpContact.email)
+      UserIdEmailsKeysDaoSource().addRow(context, nodeKeyDetails.longId!!, nodeKeyDetails.primaryPgpContact.email)
 
       UiThreadStatement.runOnUiThread { KeysStorageImpl.getInstance(context).refresh(context) }
       // Added timeout for a better sync between threads.
@@ -68,8 +68,8 @@ class PrivateKeysManager {
       val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
       val context = InstrumentationRegistry.getInstrumentation().targetContext
 
-      KeysDaoSource().removeKey(context, nodeKeyDetails.longId)
-      UserIdEmailsKeysDaoSource().removeKey(context, nodeKeyDetails.longId)
+      KeysDaoSource().removeKey(context, nodeKeyDetails.longId!!)
+      UserIdEmailsKeysDaoSource().removeKey(context, nodeKeyDetails.longId!!)
 
       UiThreadStatement.runOnUiThread { KeysStorageImpl.getInstance(context).refresh(context) }
       // Added timeout for a better sync between threads.

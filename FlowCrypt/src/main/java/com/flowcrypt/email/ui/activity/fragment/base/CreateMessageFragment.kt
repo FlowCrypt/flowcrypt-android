@@ -650,8 +650,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
   }
 
-  override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-    when (parent.id) {
+  override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+    when (parent?.id) {
       R.id.spinnerFrom -> {
         editTextFrom!!.setText(parent.adapter.getItem(position) as CharSequence)
         if (listener!!.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {

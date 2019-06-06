@@ -19,12 +19,12 @@ import java.io.IOException
  * Time: 11:59 AM
  * E-mail: DenBond7@gmail.com
  */
-class ParseKeysRequest(val rawKey: String) : BaseNodeRequest() {
+class ParseKeysRequest(val rawKey: String?) : BaseNodeRequest() {
 
   override val endpoint: String = "parseKeys"
 
   override val data: ByteArray
-    get() = if (TextUtils.isEmpty(rawKey)) byteArrayOf() else rawKey.toByteArray()
+    get() = if (TextUtils.isEmpty(rawKey)) byteArrayOf() else rawKey!!.toByteArray()
 
   @Throws(IOException::class)
   override fun getResponse(nodeService: NodeService): Response<*> {

@@ -415,10 +415,10 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
     private val KEY_EXTRA_PUBLIC_KEYS_FILE_URI = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEYS_FILE_URI", PreviewImportPgpContactFragment::class.java)
 
     @JvmStatic
-    fun newInstance(stringExtra: String, parcelableExtra: Parcelable): PreviewImportPgpContactFragment {
+    fun newInstance(stringExtra: String?, fileUri: Parcelable?): PreviewImportPgpContactFragment {
       val args = Bundle()
       args.putString(KEY_EXTRA_PUBLIC_KEY_STRING, stringExtra)
-      args.putParcelable(KEY_EXTRA_PUBLIC_KEYS_FILE_URI, parcelableExtra)
+      args.putParcelable(KEY_EXTRA_PUBLIC_KEYS_FILE_URI, fileUri)
 
       val previewImportPgpContactFragment = PreviewImportPgpContactFragment()
       previewImportPgpContactFragment.arguments = args

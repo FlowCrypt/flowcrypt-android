@@ -22,8 +22,8 @@ import com.google.android.gms.common.util.CollectionUtils
  */
 class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(application),
     KeysStorageImpl.OnRefreshListener {
-  private var keysStorage: KeysStorageImpl? = null
-  private var apiRepository: PgpApiRepository? = null
+  private lateinit var keysStorage: KeysStorageImpl
+  private lateinit var apiRepository: PgpApiRepository
 
   override fun onRefresh() {
     checkAndFetchKeys()
@@ -32,16 +32,16 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   fun init(apiRepository: PgpApiRepository) {
     this.apiRepository = apiRepository
     this.keysStorage = KeysStorageImpl.getInstance(getApplication())
-    this.keysStorage!!.attachOnRefreshListener(this)
+    this.keysStorage.attachOnRefreshListener(this)
     checkAndFetchKeys()
   }
 
   private fun fetchKeys(rawKey: String?) {
-    apiRepository!!.fetchKeyDetails(R.id.live_data_id_fetch_keys, responsesLiveData, rawKey!!)
+    apiRepository.fetchKeyDetails(R.id.live_data_id_fetch_keys, responsesLiveData, rawKey)
   }
 
   private fun checkAndFetchKeys() {
-    val pgpKeyInfoList = keysStorage!!.getAllPgpPrivateKeys()
+    val pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys()
     if (!CollectionUtils.isEmpty(pgpKeyInfoList)) {
       val builder = StringBuilder()
       for ((_, private) in pgpKeyInfoList) {

@@ -289,7 +289,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
     onView(withId(R.id.textViewFingerprintTemplate)).check(matches(withText(
         getHtmlString(getResString(R.string.template_message_part_public_key_fingerprint,
-            GeneralUtil.doSectionsInText(" ", nodeKeyDetails.fingerprint, 4))))))
+            GeneralUtil.doSectionsInText(" ", nodeKeyDetails.fingerprint, 4)!!)))))
 
     val block = incomingMsgInfo?.msgBlocks?.get(1) as PublicKeyMsgBlock
 

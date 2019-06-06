@@ -102,7 +102,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testEmptyRecipient() {
     activityTestRule?.launchActivity(intent)
-
+    registerNodeIdling()
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
     onView(withId(R.id.menuActionSend))
@@ -115,6 +115,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testEmptyEmailSubject() {
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed()))
@@ -133,6 +134,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testEmptyEmailMsg() {
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed()))
@@ -152,6 +154,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testUsingStandardMsgEncryptionType() {
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     if (defaultMsgEncryptionType != MessageEncryptionType.STANDARD) {
       openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -166,6 +169,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testUsingSecureMsgEncryptionType() {
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     if (defaultMsgEncryptionType != MessageEncryptionType.ENCRYPTED) {
       openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -179,6 +183,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testSwitchBetweenEncryptionTypes() {
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     val messageEncryptionType = defaultMsgEncryptionType
 
@@ -202,6 +207,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testShowHelpScreen() {
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.help))
@@ -218,6 +224,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testIsScreenOfComposeNewMsg() {
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     onView(withText(R.string.compose))
         .check(matches(isDisplayed()))
@@ -232,6 +239,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testWrongFormatOfRecipientEmailAddress() {
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     val invalidEmailAddresses = arrayOf("test", "test@", "test@@denbond7.com", "@denbond7.com")
 
@@ -252,6 +260,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testShowMsgAboutUpdateRecipientInformation() {
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     onView(withId(R.id.editTextEmailSubject))
         .check(matches(isDisplayed()))
@@ -277,6 +286,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testAddingAtts() {
     Intents.init()
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     for (att in atts) {
       addAtt(att)
@@ -288,6 +298,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testDeletingAtts() {
     Intents.init()
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     for (att in atts) {
       addAtt(att)
@@ -306,6 +317,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testSelectImportPublicKeyFromPopUp() {
     Intents.init()
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
     intending(hasComponent(ComponentName(getTargetContext(), ImportPublicKeyActivity::class.java)))
@@ -323,6 +335,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testSelectedStandardEncryptionTypeFromPopUp() {
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
     onView(withId(R.id.menuActionSend))
@@ -337,6 +350,7 @@ class CreateMessageActivityTest : BaseTest() {
   @Test
   fun testSelectedRemoveRecipientFromPopUp() {
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed()))
@@ -361,6 +375,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testSelectedCopyFromOtherContactFromPopUp() {
     Intents.init()
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
     val result = Intent()
