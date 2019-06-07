@@ -241,8 +241,8 @@ dependencies {
     implementation 'com.google.android.material:material:1.0.0'
 
     implementation 'com.google.code.gson:gson:2.8.5'
-    implementation 'com.google.api-client:google-api-client-android:1.28.0'
-    implementation 'com.google.apis:google-api-services-gmail:v1-rev98-1.25.0'
+    implementation 'com.google.api-client:google-api-client-android:1.29.2'
+    implementation 'com.google.apis:google-api-services-gmail:v1-rev104-1.25.0'
 
     implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofitVersion}"
     implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofitVersion}"
