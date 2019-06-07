@@ -8,7 +8,7 @@ ext {
     /*Global*/
     appVersionCode = 77
     appVersionName = '0.7.7'
-    buildToolsVersion = '28.0.3'
+    buildToolsVersion = '29.0.0'
     compileSdkVersion = 28
     targetSdkVersion = 28
     minSdkVersion = 23
