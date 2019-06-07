@@ -703,7 +703,7 @@ class EmailUtil {
      */
     @JvmStatic
     @Throws(IOException::class, NodeEncryptException::class)
-    fun genRawMsgWithoutAtts(info: OutgoingMessageInfo, pubKeys: List<String>): String {
+    fun genRawMsgWithoutAtts(info: OutgoingMessageInfo, pubKeys: List<String>?): String {
 
       val retrofit = NodeRetrofitHelper.getRetrofit() ?: return ""
 

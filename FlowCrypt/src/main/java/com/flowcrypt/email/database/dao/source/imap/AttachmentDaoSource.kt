@@ -281,6 +281,13 @@ class AttachmentDaoSource : BaseDaoSource() {
      */
     @JvmStatic
     fun getAttInfo(cursor: Cursor): AttachmentInfo {
+      val uriString = cursor.getString(cursor.getColumnIndex(COL_FILE_URI))
+      val uri = if (uriString == null) {
+        null
+      } else {
+        Uri.parse(uriString)
+      }
+
       return AttachmentInfo(null,
           cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
           cursor.getString(cursor.getColumnIndex(COL_FOLDER)),
@@ -290,7 +297,8 @@ class AttachmentDaoSource : BaseDaoSource() {
           cursor.getString(cursor.getColumnIndex(COL_NAME)),
           cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)),
           cursor.getString(cursor.getColumnIndex(COL_TYPE)),
-          cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)), null,
+          cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)),
+          uri,
           false,
           !cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER)) && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0, 0
       )

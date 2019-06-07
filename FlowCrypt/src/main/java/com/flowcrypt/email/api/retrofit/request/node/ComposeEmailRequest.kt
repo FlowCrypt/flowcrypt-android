@@ -18,7 +18,7 @@ import com.google.gson.annotations.Expose
  * E-mail: DenBond7@gmail.com
  */
 class ComposeEmailRequest(info: OutgoingMessageInfo?,
-                          @field:Expose val pubKeys: List<String>) : BaseNodeRequest() {
+                          @field:Expose val pubKeys: List<String>?) : BaseNodeRequest() {
 
   @Expose
   private var format: String? = null

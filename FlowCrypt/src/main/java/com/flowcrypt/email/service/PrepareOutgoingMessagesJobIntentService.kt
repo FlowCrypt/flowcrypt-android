@@ -113,7 +113,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
               outgoingMsgInfo.getAllRecipients().toMutableList(), account!!, senderEmail!!)
         }
 
-        val rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys!!)
+        val rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys)
         val mimeMsg = MimeMessage(sess, IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8))
 
         val msgAttsCacheDir = File(attsCacheDir, UUID.randomUUID().toString())
@@ -194,7 +194,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     return contentValues
   }
 
-  private fun addAttsToCache(msgInfo: OutgoingMessageInfo, uid: Long, pubKeys: List<String>, attsCacheDir: File) {
+  private fun addAttsToCache(msgInfo: OutgoingMessageInfo, uid: Long, pubKeys: List<String>?, attsCacheDir: File) {
     val attDaoSource = AttachmentDaoSource()
     val cachedAtts = ArrayList<AttachmentInfo>()
 
@@ -220,7 +220,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
           if (msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
             val encryptedTempFile = File(attsCacheDir, att.name!! + Constants.PGP_FILE_EXT)
-            val request = EncryptFileRequest(this, origFileUri!!, att.name!!, pubKeys)
+            val request = EncryptFileRequest(this, origFileUri!!, att.name!!, pubKeys!!)
 
             val response = nodeService.encryptFile(request).execute()
             val encryptedFileResult = response.body()
