@@ -147,7 +147,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
     }
   }
 
-  override fun onEditorAction(v: TextView, actionId: Int, event: KeyEvent): Boolean {
+  override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean {
     when (actionId) {
       EditorInfo.IME_ACTION_SEARCH -> {
         UIUtil.hideSoftInput(this@ImportPgpContactActivity, v)
