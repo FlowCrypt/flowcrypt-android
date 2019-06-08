@@ -82,7 +82,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
         if (!intent.getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
           removeAlreadyImportedKeys()
 
-          if (keyDetailsList!!.size != keyDetailsAndLongIdsMap!!.size) {
+          if (keyDetailsList!!.size != keyDetailsAndLongIdsMap!!.size && uniqueKeysCount > 1) {
             this.keyDetailsList = ArrayList(keyDetailsAndLongIdsMap!!.keys)
             if (keyDetailsList!!.isEmpty()) {
               setResult(Activity.RESULT_OK)
