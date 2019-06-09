@@ -8,6 +8,11 @@ package com.flowcrypt.email
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
+import com.squareup.leakcanary.LeakCanary
+import org.acra.ACRA
+import org.acra.ReportField
+import org.acra.annotation.ReportsCrashes
+import org.acra.sender.HttpSender
 
 /**
  * The application class for FlowCrypt. Base class for maintaining global application state. The production version.

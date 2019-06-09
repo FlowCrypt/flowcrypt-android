@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.util.exception
 
+import org.acra.ACRA
+
 /**
  * This class describes methods for a work with [Exception]
  *
@@ -23,7 +25,7 @@ class ExceptionUtil {
      */
     @JvmStatic
     fun handleError(e: Throwable) {
-      if (ExceptionResolver.INSTANCE.isHandlingNeeded(e)) {
+      if (ExceptionResolver.isHandlingNeeded(e)) {
         if (ACRA.isInitialised()) {
           ACRA.getErrorReporter().handleException(ManualHandledException(e))
         }
