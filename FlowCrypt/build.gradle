@@ -96,6 +96,11 @@ android {
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
         }
 
+        enterprise {
+            initWith release
+            applicationIdSuffix ".enterprise"
+        }
+
         debug {
             versionNameSuffix '_' + defaultConfig.versionCode + '__' + new SimpleDateFormat('yyyy_MM_dd').format(new Date())
             applicationIdSuffix '.debug'
@@ -170,7 +175,8 @@ android {
     tasks.register('renameReleaseBuilds') {
         doLast {
             applicationVariants.all { variant ->
-                if (variant.buildType.buildType == buildTypes.release) {
+                if (variant.buildType.buildType == buildTypes.release
+                        || variant.buildType.buildType == buildTypes.enterprise) {
                     variant.outputs.each { output ->
                         def file = output.outputFile
                         def newName = file.name.replace(".apk", "_" + defaultConfig.versionCode +
@@ -186,6 +192,7 @@ android {
     task copyReleaseApks(type: Copy) {
         from("$buildDir") {
             include '**/*release*.apk'
+            include '**/*enterprise*.apk'
         }
 
         includeEmptyDirs = false
@@ -196,9 +203,14 @@ android {
     }
 
     afterEvaluate {
-        Task task = tasks.findByName('packageProdRelease')
-        if (task != null) {
-            task.finalizedBy renameReleaseBuilds
+        Task taskPackageProdRelease = tasks.findByName('packageProdRelease')
+        if (taskPackageProdRelease != null) {
+            taskPackageProdRelease.finalizedBy renameReleaseBuilds
+        }
+
+        Task taskPackageProdEnterprise = tasks.findByName('packageProdEnterprise')
+        if (taskPackageProdEnterprise != null) {
+            taskPackageProdEnterprise.finalizedBy renameReleaseBuilds
         }
     }
 }
@@ -206,11 +218,13 @@ android {
 configurations {
     prodDebugImplementation {}
     prodReleaseImplementation {}
+    prodEnterpriseImplementation {}
 }
 
 dependencies {
     prodDebugImplementation "com.squareup.leakcanary:leakcanary-android:${rootProject.ext.leakcanaryVersion}"
     prodReleaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
+    prodEnterpriseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
 
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${rootProject.ext.espressoVersion}"
