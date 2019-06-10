@@ -296,7 +296,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       }
 
       R.id.syns_request_code_load_next_messages -> {
-        switchView!!.isEnabled = true
+        switchView?.isEnabled = true
         super.onReplyReceived(requestCode, resultCode, obj)
       }
 
