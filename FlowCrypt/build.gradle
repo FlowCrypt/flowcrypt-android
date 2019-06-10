@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 def keystoreProperties = new Properties()
 File propertiesFile = project.file("keystore.properties")
@@ -95,6 +96,11 @@ android {
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
         }
 
+        enterprise {
+            initWith release
+            applicationIdSuffix ".enterprise"
+        }
+
         debug {
             versionNameSuffix '_' + defaultConfig.versionCode + '__' + new SimpleDateFormat('yyyy_MM_dd').format(new Date())
             applicationIdSuffix '.debug'
@@ -169,7 +175,8 @@ android {
     tasks.register('renameReleaseBuilds') {
         doLast {
             applicationVariants.all { variant ->
-                if (variant.buildType.buildType == buildTypes.release) {
+                if (variant.buildType.buildType == buildTypes.release
+                        || variant.buildType.buildType == buildTypes.enterprise) {
                     variant.outputs.each { output ->
                         def file = output.outputFile
                         def newName = file.name.replace(".apk", "_" + defaultConfig.versionCode +
@@ -185,6 +192,7 @@ android {
     task copyReleaseApks(type: Copy) {
         from("$buildDir") {
             include '**/*release*.apk'
+            include '**/*enterprise*.apk'
         }
 
         includeEmptyDirs = false
@@ -195,9 +203,14 @@ android {
     }
 
     afterEvaluate {
-        Task task = tasks.findByName('packageProdRelease')
-        if (task != null) {
-            task.finalizedBy renameReleaseBuilds
+        Task taskPackageProdRelease = tasks.findByName('packageProdRelease')
+        if (taskPackageProdRelease != null) {
+            taskPackageProdRelease.finalizedBy renameReleaseBuilds
+        }
+
+        Task taskPackageProdEnterprise = tasks.findByName('packageProdEnterprise')
+        if (taskPackageProdEnterprise != null) {
+            taskPackageProdEnterprise.finalizedBy renameReleaseBuilds
         }
     }
 }
@@ -205,17 +218,19 @@ android {
 configurations {
     prodDebugImplementation {}
     prodReleaseImplementation {}
+    prodEnterpriseImplementation {}
 }
 
 dependencies {
     prodDebugImplementation "com.squareup.leakcanary:leakcanary-android:${rootProject.ext.leakcanaryVersion}"
     prodReleaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
+    prodEnterpriseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
 
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-intents:${rootProject.ext.espressoVersion}"
     //https://mvnrepository.com/artifact/androidx.test.ext/junit
-    androidTestImplementation "androidx.test.ext:junit:1.1.0"
+    androidTestImplementation "androidx.test.ext:junit:1.1.1"
 
     testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
@@ -229,7 +244,7 @@ dependencies {
     implementation "androidx.browser:browser:${rootProject.ext.androidxBaseVersion}"
     implementation "androidx.recyclerview:recyclerview:${rootProject.ext.androidxBaseVersion}"
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'androidx.test.espresso:espresso-idling-resource:3.1.1'
+    implementation "androidx.test.espresso:espresso-idling-resource:${rootProject.ext.espressoVersion}"
     implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
 
     //https://developers.google.com/android/guides/setup
@@ -240,8 +255,8 @@ dependencies {
     implementation 'com.google.android.material:material:1.0.0'
 
     implementation 'com.google.code.gson:gson:2.8.5'
-    implementation 'com.google.api-client:google-api-client-android:1.28.0'
-    implementation 'com.google.apis:google-api-services-gmail:v1-rev98-1.25.0'
+    implementation 'com.google.api-client:google-api-client-android:1.29.2'
+    implementation 'com.google.apis:google-api-services-gmail:v1-rev104-1.25.0'
 
     implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofitVersion}"
     implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofitVersion}"
@@ -254,8 +269,8 @@ dependencies {
     }
 
     implementation "com.github.bumptech.glide:glide:${rootProject.ext.glideVersion}"
-    annotationProcessor "com.github.bumptech.glide:compiler:${rootProject.ext.glideVersion}"
-    annotationProcessor "androidx.annotation:annotation:${rootProject.ext.androidxBaseVersion}"
+    kapt "com.github.bumptech.glide:compiler:${rootProject.ext.glideVersion}"
+    kapt "androidx.annotation:annotation:${rootProject.ext.androidxBaseVersion}"
 
     implementation 'commons-io:commons-io:2.6'
     prodImplementation 'ch.acra:acra:4.11'

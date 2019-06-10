@@ -88,7 +88,6 @@
                 android:background="@android:color/transparent"
                 android:ems="10"
                 android:inputType="textPassword"
-                android:maxLength="60"
                 android:maxLines="1"
                 android:paddingTop="@dimen/default_margin_medium" />
 
@@ -304,7 +303,6 @@
                     android:background="@android:color/transparent"
                     android:ems="10"
                     android:inputType="textPassword"
-                    android:maxLength="60"
                     android:maxLines="1"
                     android:paddingTop="@dimen/default_margin_medium" />
 

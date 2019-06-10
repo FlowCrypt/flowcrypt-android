@@ -1,0 +1,136 @@
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
+package com.flowcrypt.email.database.dao.source
+
+import android.content.ContentValues
+import android.content.Context
+import android.net.Uri
+import android.provider.BaseColumns
+import android.text.TextUtils
+import android.util.Pair
+import com.google.android.gms.common.util.CollectionUtils
+import java.util.*
+
+/**
+ * This class describe table [UserIdEmailsKeysDaoSource.TABLE_NAME_USER_ID_EMAILS_AND_KEYS] and operations with it
+ *
+ * @author Denis Bondarenko
+ * Date: 30.07.2018
+ * Time: 10:16
+ * E-mail: DenBond7@gmail.com
+ */
+class UserIdEmailsKeysDaoSource : BaseDaoSource() {
+
+  override val tableName: String = TABLE_NAME_USER_ID_EMAILS_AND_KEYS
+
+  /**
+   * Add information about a combination of `longId` and `email` to the database.
+   *
+   * @param context Interface to global information about an application environment.
+   * @param longId  A `longId` value of some private key.
+   * @param email   An email of some `uid` of some key.
+   * @return <tt>[Uri]</tt> which contain information about an inserted row or null if the
+   * row not inserted.
+   */
+  fun addRow(context: Context, longId: String, email: String): Uri? {
+    val contentResolver = context.contentResolver
+    return if (!TextUtils.isEmpty(longId) && !TextUtils.isEmpty(email) && contentResolver != null) {
+      val contentValues = ContentValues()
+      contentValues.put(COL_LONG_ID, longId)
+      contentValues.put(COL_USER_ID_EMAIL, email.toLowerCase())
+      contentResolver.insert(baseContentUri, contentValues)
+    } else {
+      null
+    }
+  }
+
+  /**
+   * This method add rows per single transaction. This method must be called in the non-UI thread.
+   *
+   * @param context Interface to global information about an application environment.
+   * @param pairs   A list of [Pair], which contains information about a combination of `longId` and
+   * `email`.
+   * @return the number of newly created rows.
+   */
+  fun addRows(context: Context, pairs: List<Pair<String, String>>): Int {
+    return if (!CollectionUtils.isEmpty(pairs)) {
+      val contentResolver = context.contentResolver
+      val contentValuesArray = arrayOfNulls<ContentValues>(pairs.size)
+
+      for (i in pairs.indices) {
+        val pair = pairs[i]
+        val contentValues = ContentValues()
+        contentValues.put(COL_LONG_ID, pair.first)
+        contentValues.put(COL_USER_ID_EMAIL, pair.second.toLowerCase())
+        contentValuesArray[i] = contentValues
+      }
+
+      contentResolver.bulkInsert(baseContentUri, contentValuesArray)
+    } else {
+      0
+    }
+  }
+
+  /**
+   * Delete information about a private by longid.
+   *
+   * @param context   Interface to global information about an application environment.
+   * @param keyLognId The key longid.
+   * @return The count of deleted rows. Will be 1 if information about the key was deleted or -1 otherwise.
+   */
+  fun removeKey(context: Context, keyLognId: String): Int {
+    return if (!TextUtils.isEmpty(keyLognId)) {
+
+      val contentResolver = context.contentResolver
+      contentResolver?.delete(baseContentUri, "$COL_LONG_ID = ?", arrayOf(keyLognId)) ?: -1
+    } else {
+      -1
+    }
+  }
+
+  /**
+   * Get a list of longId using a given email.
+   *
+   * @param context Interface to global information about an application environment.
+   * @param email   An email which will be used for searching.
+   * @return A list of found longId.
+   */
+  fun getLongIdsByEmail(context: Context, email: String): List<String> {
+    val longIdsList = ArrayList<String>()
+    if (!TextUtils.isEmpty(email)) {
+      val selection = "$COL_USER_ID_EMAIL = ?"
+      val selectionArgs = arrayOf(email.toLowerCase())
+      val cursor = context.contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
+
+      if (cursor != null) {
+        while (cursor.moveToNext()) {
+          longIdsList.add(cursor.getString(cursor.getColumnIndex(COL_LONG_ID)))
+        }
+      }
+
+      cursor?.close()
+    }
+
+    return longIdsList
+  }
+
+  companion object {
+    const val TABLE_NAME_USER_ID_EMAILS_AND_KEYS = "user_id_emails_and_keys"
+
+    const val COL_LONG_ID = "long_id"
+    const val COL_USER_ID_EMAIL = "user_id_email"
+
+    const val SQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS " +
+        TABLE_NAME_USER_ID_EMAILS_AND_KEYS + " (" +
+        BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        COL_LONG_ID + " VARCHAR(16) NOT NULL, " +
+        COL_USER_ID_EMAIL + " VARCHAR(20) NOT NULL " + ");"
+
+    const val INDEX_LONG_ID_USER_ID_EMAIL = (UNIQUE_INDEX_PREFIX + COL_LONG_ID + "_" +
+        COL_USER_ID_EMAIL + "_in_" + TABLE_NAME_USER_ID_EMAILS_AND_KEYS + " ON " + TABLE_NAME_USER_ID_EMAILS_AND_KEYS
+        + " (" + COL_LONG_ID + ", " + COL_USER_ID_EMAIL + ")")
+  }
+}

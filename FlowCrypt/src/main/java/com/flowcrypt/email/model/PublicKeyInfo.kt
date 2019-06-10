@@ -1,0 +1,59 @@
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
+package com.flowcrypt.email.model
+
+import android.os.Parcel
+import android.os.Parcelable
+
+/**
+ * This class describes information about some public key.
+ *
+ * @author Denis Bondarenko
+ * Date: 13.05.2018
+ * Time: 10:22
+ * E-mail: DenBond7@gmail.com
+ */
+data class PublicKeyInfo constructor(val keyWords: String,
+                                     val fingerprint: String,
+                                     val keyOwner: String,
+                                     val longId: String,
+                                     var pgpContact: PgpContact? = null,
+                                     val publicKey: String) : Parcelable {
+  val isUpdateEnabled: Boolean
+    get() = pgpContact != null && (pgpContact!!.longid == null || pgpContact!!.longid != longId)
+
+  fun hasPgpContact(): Boolean {
+    return pgpContact != null
+  }
+
+  constructor(source: Parcel) : this(
+      source.readString()!!,
+      source.readString()!!,
+      source.readString()!!,
+      source.readString()!!,
+      source.readParcelable<PgpContact>(PgpContact::class.java.classLoader),
+      source.readString()!!
+  )
+
+  override fun describeContents() = 0
+
+  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
+    writeString(keyWords)
+    writeString(fingerprint)
+    writeString(keyOwner)
+    writeString(longId)
+    writeParcelable(pgpContact, flags)
+    writeString(publicKey)
+  }
+
+  companion object {
+    @JvmField
+    val CREATOR: Parcelable.Creator<PublicKeyInfo> = object : Parcelable.Creator<PublicKeyInfo> {
+      override fun createFromParcel(source: Parcel): PublicKeyInfo = PublicKeyInfo(source)
+      override fun newArray(size: Int): Array<PublicKeyInfo?> = arrayOfNulls(size)
+    }
+  }
+}

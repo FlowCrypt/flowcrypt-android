@@ -13,7 +13,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.4.0'
+        classpath 'com.android.tools.build:gradle:3.4.1'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -25,32 +25,6 @@ allprojects {
     repositories {
         google()
         jcenter()
-    }
-
-    plugins.apply('checkstyle')
-
-    checkstyle {
-        configFile rootProject.file('checkstyle.xml')
-        toolVersion '8.14'
-        showViolations true
-        ignoreFailures false
-    }
-
-    task('checkstyle', type: Checkstyle) {
-        configProperties.checkStyleConfigDir = rootProject.rootDir
-        source 'src/androidTest/java'
-        source 'src/debug/java'
-        source 'src/main/java'
-        source 'src/test/java'
-        include '**/*.java'
-        classpath = files()
-    }
-
-    afterEvaluate {
-        Task task = tasks.findByName('check')
-        if (task != null) {
-            task.dependsOn('checkstyle')
-        }
     }
 }
 
