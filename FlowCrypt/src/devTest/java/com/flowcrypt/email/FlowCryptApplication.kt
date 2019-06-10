@@ -17,13 +17,11 @@ package com.flowcrypt.email
 
 class FlowCryptApplication : BaseApplication() {
 
-  @Override
-  fun initAcra() {
+  override fun initAcra() {
     //Don't modify it
   }
 
-  @Override
-  fun initLeakCanary() {
+  override fun initLeakCanary() {
     //Don't modify it
   }
 }
