@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
@@ -1361,6 +1362,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    *
    * @return <tt>[PgpContactAdapter]</tt>
    */
+  @SuppressLint("Recycle")
   private fun preparePgpContactAdapter(): PgpContactAdapter {
     val pgpContactAdapter = PgpContactAdapter(context!!, null, true)
     //setup a search contacts logic in the database

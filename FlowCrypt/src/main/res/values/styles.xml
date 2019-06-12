@@ -3,7 +3,7 @@
   ~ Contributors: DenBond7
   -->
 
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="AppWidget" />
 
@@ -61,14 +61,6 @@
         <item name="android:textColor">@color/dark</item>
     </style>
 
-    <style name="AppWidget.Button.Raised.White.ConnectAccount" parent="Widget.AppCompat.Button.Colored">
-        <item name="colorButtonNormal">@android:color/white</item>
-    </style>
-
-    <style name="AppWidget.Button.Raised.Green" parent="Widget.AppCompat.Button.Colored">
-        <item name="colorButtonNormal">@color/colorPrimary</item>
-    </style>
-
     <style name="AppWidget.RadioButton" parent="AppTheme">
         <item name="colorAccent">@color/colorPrimary</item>
     </style>
@@ -80,16 +72,6 @@
     <style name="AppTheme.NoActionBar.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.NoActionBar.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
-
-    <style name="PreferenceTheme" parent="PreferenceThemeOverlay.v14.Material">
-        <item name="preferenceStyle">@style/AppTheme.Preference</item>
-        <item name="android:textColor">@color/dark</item>
-        <item name="android:textSize">@dimen/default_text_size_big</item>
-    </style>
-
-    <style name="AppTheme.Preference" parent="Preference.Material">
-        <item name="android:layout">@layout/preference_item</item>
-    </style>
 
     <style name="AppTheme.TabLayout" parent="Widget.Design.TabLayout">
         <item name="tabIndicatorColor">@android:color/white</item>
@@ -119,18 +101,10 @@
     <style name="AppWidget.TextInputLayout" />
 
     <style name="AppWidget.TextInputLayout.GreyBottomLine">
-        <item name="android:paddingBottom">@dimen/default_margin_small</item>
-        <item name="android:paddingTop">@dimen/default_margin_small</item>
-        <item name="android:paddingEnd">@dimen/default_twice_dip</item>
-        <item name="android:paddingStart">@dimen/default_twice_dip</item>
         <item name="android:background">@drawable/bg_bottom_line_gray</item>
     </style>
 
     <style name="AppWidget.TextInputLayout.PgpBlock">
-        <item name="android:paddingBottom">@dimen/padding_pgp_message_error_small</item>
-        <item name="android:paddingTop">@dimen/padding_pgp_message_error_small</item>
-        <item name="android:paddingEnd">@dimen/padding_pgp_message_error_small</item>
-        <item name="android:paddingStart">@dimen/padding_pgp_message_error_big</item>
     </style>
 
     <style name="AppWidget.TextInputLayout.PgpBlock.Error">
@@ -145,9 +119,9 @@
         <item name="android:background">@drawable/bg_message_part_other</item>
     </style>
 
-    <style name="AppWidget.ProgressBar" />
+    <style name="AppWidget.ProgressBar" tools:ignore="UnusedResources" />
 
-    <style name="AppWidget.ProgressBar.Linear" />
+    <style name="AppWidget.ProgressBar.Linear" tools:ignore="UnusedResources" />
 
     <style name="AppWidget.ProgressBar.Linear.Green" parent="AppTheme">
         <item name="colorAccent">@color/colorPrimary</item>

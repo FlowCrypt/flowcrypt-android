@@ -5,18 +5,13 @@
   ~ Contributors: DenBond7
   -->
 
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <inset
-            android:insetBottom="0dp"
-            android:insetLeft="@dimen/default_twice_dip_inverse"
-            android:insetRight="@dimen/default_twice_dip_inverse"
-            android:insetTop="@dimen/default_twice_dip_inverse">
-            <shape>
-                <stroke
-                    android:width="@dimen/default_single_dip"
-                    android:color="@color/gray" />
-            </shape>
-        </inset>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:paddingTop="@dimen/default_margin_small"
+    android:paddingBottom="@dimen/default_margin_small">
+    <item android:gravity="bottom">
+        <shape>
+            <size android:height="@dimen/default_single_dip" />
+            <solid android:color="@color/gray" />
+        </shape>
     </item>
 </layer-list>

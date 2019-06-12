@@ -9,7 +9,7 @@
 
     <include layout="@layout/toolbar" />
 
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+    <fragment
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/experimentalSettingsFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.preferences.ExperimentalSettingsFragment"

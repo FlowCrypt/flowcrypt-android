@@ -61,7 +61,6 @@
                         android:focusableInTouchMode="false"
                         android:inputType="none"
                         android:longClickable="false"
-                        android:autofillHints="tru"
                         android:paddingTop="@dimen/default_margin_medium"
                         android:paddingEnd="@dimen/drop_down_size" />
 

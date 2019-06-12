@@ -49,7 +49,7 @@ class SmtpProtocolUtil {
       when (accountDao.accountType) {
         AccountDao.ACCOUNT_TYPE_GOOGLE -> {
           val userName = accountDao.email
-          val password = EmailUtil.getGmailAccountToken(context, accountDao.account)
+          val password = EmailUtil.getGmailAccountToken(context, account)
           transport.connect(GmailConstants.GMAIL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_PORT, userName, password)
         }
 

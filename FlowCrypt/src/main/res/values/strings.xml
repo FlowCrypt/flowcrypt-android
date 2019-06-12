@@ -95,8 +95,6 @@
     <string name="archive">Archive</string>
     <string name="delete">Delete</string>
     <string name="move_to_inbox">Move to Inbox</string>
-    <string name="error_occurred_while_deleting_message">Error occurred while deleting the message</string>
-    <string name="error_occurred_while_archiving_message">Error occurred while archiving the message</string>
     <string name="sending_message_must_not_be_empty">Message should not be empty</string>
     <string name="there_was_syncing_problem">There was a syncing problem</string>
     <string name="info_about_some_contacts_not_received">Could not get information about some %1$s contacts</string>
@@ -198,14 +196,10 @@
     <string name="attachments">Attachments</string>
     <string name="download_attachments_notification_channel">The download attachments notification channel</string>
     <string name="template_warning_max_attachments_size_for_decryption">The app cannot decrypt an attachment greater than %1$s</string>
-    <string name="decrypt_error_js_tool_error">There is a JS tool error.</string>
     <string name="decrypt_error_could_not_open_message">Could not open this message with %1$s.</string>
     <string name="decrypt_error_message_badly_formatted">Message is either badly formatted or not compatible with %1$s.</string>
     <string name="decrypt_error_please_write_me">Please write me at %1$s so that I can fix it. I
         respond very promptly.</string>
-    <string name="decrypt_error_single_sender">Normally, messages are encrypted for at least two people
-        (sender and the receiver). It seems the sender encrypted this message manually for themselves,
-        and forgot to add you as a receiver. Please ask them to send a new message.</string>
     <string name="decrypt_error_current_key_cannot_open_message">Your current key cannot open this message. If you
         have any other keys available, you should import them now.</string>
     <string name="email_does_not_available_in_this_folder">Message not found, it may have been moved to another folder.</string>
@@ -232,7 +226,7 @@
     <string name="select_key">Select a key</string>
     <string name="less_secure_login_is_not_allowed">Less secure login is not allowed on your Gmail account. Switching to secure login.</string>
     <string name="error_occurred_try_again_later">An error occurred. Please try again later.</string>
-    <string name="progress_message">%1$d\%% %2$s</string>
+    <string name="progress_message">%1$d%% %2$s</string>
     <plurals name="you_have_backups_that_was_not_imported">
         <item quantity="one">You have one key that was not imported.</item>
         <item quantity="other">There are key backups that were not imported.</item>
@@ -287,10 +281,8 @@
     <string name="cc">Cc</string>
     <string name="bcc">Bcc</string>
     <string name="failed_please_try_again_later">Failed. Please try again later</string>
-    <string name="google_auth_exception_service_disabled">Gmail server is not available.\n Please try again
-        later</string>
+    <string name="google_auth_exception_service_disabled">Gmail server is not available.\n Please try again later</string>
     <string name="failed_load_labels_from_email_server">Failed to load labels from the email server</string>
-    <string name="server_unavailable">Server unavailable</string>
     <string name="cyrillic_search_not_support_yet">Searching with foreign alphabets not supported yet</string>
     <string name="add_contact">Add Contact</string>
     <string name="add_public_keys_of_your_contacts">Add public keys of your contacts to send them encrypted messages.</string>

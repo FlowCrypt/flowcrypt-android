@@ -136,10 +136,8 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
       builder.setStyle(inboxStyle)
           .setSmallIcon(R.drawable.ic_email_multiply_encrypted)
           .setContentIntent(getInboxPendingIntent(context, account))
-          .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, account,
-              folder, details))
-          .setContentTitle(context.getString(R.string.incoming_message,
-              details.size))
+          .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, account, folder, details))
+          .setContentTitle(context.getString(R.string.incoming_message, details.size))
     } else {
       val msgDetails = details[0]
 

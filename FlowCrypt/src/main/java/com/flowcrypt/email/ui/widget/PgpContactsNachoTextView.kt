@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.widget
 
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -69,6 +70,7 @@ class PgpContactsNachoTextView(context: Context, attrs: AttributeSet) : NachoTex
     return text.toString()
   }
 
+  @SuppressLint("ClickableViewAccessibility")
   override fun onTouchEvent(event: MotionEvent): Boolean {
     gestureDetector.onTouchEvent(event)
     return super.onTouchEvent(event)
