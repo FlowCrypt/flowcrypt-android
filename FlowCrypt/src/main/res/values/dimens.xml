@@ -14,7 +14,6 @@
     <dimen name="default_single_dip">1dp</dimen>
     <dimen name="default_twice_dip">2dp</dimen>
     <dimen name="default_four_dip">4dp</dimen>
-    <dimen name="default_twice_dip_inverse">-2dp</dimen>
 
     <dimen name="default_button_height">64dp</dimen>
     <dimen name="default_button_width">320dp</dimen>
@@ -60,7 +59,6 @@
     <dimen name="padding_pgp_message_error_small">2dp</dimen>
     <dimen name="padding_pgp_message_error_big">20dp</dimen>
     <dimen name="width_pgp_message_type_line">8dp</dimen>
-    <dimen name="width_pgp_message_type_line_inverse">-9dp</dimen>
     <dimen name="height_webview_dialog">480dp</dimen>
     <dimen name="layout_height_message_item">72dp</dimen>
     <dimen name="gone_margin_right_attachment_icon">34dp</dimen>

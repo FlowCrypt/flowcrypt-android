@@ -11,7 +11,7 @@
 
     <item>
         <bitmap
-            android:src="@drawable/lock_seamless_bg"
+            android:src="@drawable/bg_lock_seamless"
             android:tileMode="repeat" />
     </item>
 

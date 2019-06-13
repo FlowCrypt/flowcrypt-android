@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?><!--
+  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<lint>
+    <!-- Disable the given check in this project -->
+    <issue id="InvalidPackage">
+        <!-- Those issues are not relevant to our project, we can skip them -->
+        <ignore path="**/httpclient-4.5.5.jar" />
+        <ignore path="**/pkix-1.54.0.0.jar" />
+    </issue>
+    <issue id="TrustAllX509TrustManager">
+        <!-- Those issues are not relevant to our project, we can skip them -->
+        <ignore path="**/SslUtils$1.class" />
+    </issue>
+</lint>

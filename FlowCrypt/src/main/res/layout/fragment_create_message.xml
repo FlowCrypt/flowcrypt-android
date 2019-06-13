@@ -62,7 +62,8 @@
                         android:inputType="none"
                         android:longClickable="false"
                         android:paddingTop="@dimen/default_margin_medium"
-                        android:paddingEnd="@dimen/drop_down_size" />
+                        android:paddingEnd="@dimen/drop_down_size"
+                        tools:ignore="RtlSymmetry,LabelFor,Autofill" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -72,6 +73,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="top|end"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/show_aliases"
                     android:padding="@dimen/default_margin_content_small"
                     android:visibility="invisible"
                     app:srcCompat="@mipmap/ic_arrow_drop_down_grey"
@@ -97,7 +99,8 @@
                         android:inputType="textEmailAddress"
                         android:paddingTop="@dimen/default_margin_small"
                         android:paddingEnd="@dimen/padding_recipients_to"
-                        android:shrinkColumns="0, true">
+                        android:shrinkColumns="0, true"
+                        tools:ignore="RtlSymmetry">
 
                         <requestFocus />
                     </com.flowcrypt.email.ui.widget.PgpContactsNachoTextView>
@@ -125,6 +128,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="?android:attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/show_cc_bcc"
                         android:padding="@dimen/default_margin_content_small"
                         app:srcCompat="@mipmap/ic_arrow_drop_down_grey" />
                 </LinearLayout>
@@ -152,7 +156,8 @@
                         android:inputType="textEmailAddress"
                         android:paddingTop="@dimen/default_margin_small"
                         android:paddingEnd="@dimen/size_of_small_progressbar"
-                        android:shrinkColumns="0, true" />
+                        android:shrinkColumns="0, true"
+                        tools:ignore="RtlSymmetry" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -187,7 +192,8 @@
                         android:inputType="textEmailAddress"
                         android:paddingTop="@dimen/default_margin_small"
                         android:paddingEnd="@dimen/size_of_small_progressbar"
-                        android:shrinkColumns="0, true" />
+                        android:shrinkColumns="0, true"
+                        tools:ignore="RtlSymmetry" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 

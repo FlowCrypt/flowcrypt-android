@@ -3,7 +3,7 @@
   ~ Contributors: DenBond7
   -->
 
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">FlowCrypt</string>
     <string name="support_email">human@flowcrypt.com</string>
 
@@ -301,7 +301,7 @@
     <string name="no_encrypted_messages">No encrypted messages</string>
     <string name="messages">Messages</string>
     <string name="messages_notification_channel">The messages notification channel</string>
-    <string name="incoming_message">%1$d incoming messages</string>
+    <string name="incoming_message" tools:ignore="PluralsCandidate">%1$d incoming messages</string>
     <string name="notifications">Notifications</string>
     <string name="manage_notifications">Manage notifications</string>
     <string name="notification_level">Notification level</string>
@@ -389,4 +389,6 @@
     <string name="no_pub_keys">There are no public keys</string>
     <string name="could_not_decrypt_message_due_to_error">Could not decrypt this message due to error:\n\n %1$s </string>
     <string name="logo">Logo</string>
+    <string name="show_aliases">Show aliases</string>
+    <string name="show_cc_bcc">Show CC/BCC</string>
 </resources>
