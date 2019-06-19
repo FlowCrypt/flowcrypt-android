@@ -83,6 +83,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
       R.id.syns_load_private_keys -> {
@@ -181,6 +182,9 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
             getString(R.string.continue_), null, getString(R.string.choose_another_key), true)
         startActivityForResult(clipboardIntent,
             REQUEST_CODE_CHECK_PRIVATE_KEYS)
+      }
+
+      else -> {
       }
     }
   }

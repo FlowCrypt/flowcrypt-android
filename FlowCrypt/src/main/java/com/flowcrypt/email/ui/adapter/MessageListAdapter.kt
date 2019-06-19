@@ -283,7 +283,13 @@ class MessageListAdapter(context: Context,
           MessageState.ERROR_SENDING_FAILED -> state = context.getString(R.string.cannot_send_message_unknown_error)
 
           MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> state = context.getString(R.string.could_not_create_no_key_available)
+
+          else -> {
+          }
         }
+      }
+
+      else -> {
       }
     }
 

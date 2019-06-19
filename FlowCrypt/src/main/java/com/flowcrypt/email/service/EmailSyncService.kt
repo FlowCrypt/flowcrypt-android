@@ -703,6 +703,7 @@ class EmailSyncService : BaseService(), SyncListener {
     private val gmailSynsManagerWeakRef = WeakReference(emailSyncManager)
     private val replyToMessengersWeakRef = WeakReference(replyToMessengersWeakRef)
 
+    @Suppress("UNCHECKED_CAST")
     override fun handleMessage(msg: Message) {
       if (gmailSynsManagerWeakRef.get() != null) {
         val emailSyncManager = gmailSynsManagerWeakRef.get()

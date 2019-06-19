@@ -65,6 +65,7 @@ class AttesterSettingsActivity : BaseBackStackActivity(), LoaderManager.LoaderCa
     UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutContent!!)
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onSuccess(loaderId: Int, result: Any?) {
     when (loaderId) {
       R.id.loader_id_load_keys_info_from_attester -> {

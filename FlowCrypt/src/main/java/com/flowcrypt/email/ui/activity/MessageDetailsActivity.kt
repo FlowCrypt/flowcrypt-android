@@ -351,6 +351,9 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
           }
           ExceptionUtil.handleError(nodeResponseWrapper.exception!!)
         }
+
+        else -> {
+        }
       }
     }
   }
@@ -422,6 +425,9 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             MessageState.SENT, MessageState.SENT_WITHOUT_LOCAL_COPY -> actionBarSubTitle = getString(R.string.sent)
 
             MessageState.ERROR_CACHE_PROBLEM, MessageState.ERROR_DURING_CREATION, MessageState.ERROR_ORIGINAL_MESSAGE_MISSING, MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND, MessageState.ERROR_SENDING_FAILED, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> actionBarSubTitle = getString(R.string.an_error_has_occurred)
+
+            else -> {
+            }
           }
         }
       }

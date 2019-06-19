@@ -30,7 +30,7 @@ data class KeyDetails constructor(val keyName: String? = null,
                                   val pgpContact: PgpContact? = null) : Parcelable {
 
   constructor(value: String, bornType: Type) : this(null, value, bornType, true)
-  constructor(keyName: String?, value: String, bornType: Type, isPrivateKey: Boolean) : this(null, value, bornType, isPrivateKey, null)
+  constructor(value: String, bornType: Type, isPrivateKey: Boolean) : this(null, value, bornType, isPrivateKey, null)
 
   /**
    * The key available types.

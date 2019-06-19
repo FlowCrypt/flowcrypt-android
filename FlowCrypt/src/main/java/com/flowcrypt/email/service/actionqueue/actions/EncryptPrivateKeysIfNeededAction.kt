@@ -88,7 +88,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
     if (keysDaoList.size > 0) {
       val contentProviderResults = KeysDaoSource().updateKeys(context, keysDaoList)
 
-      if (contentProviderResults == null || contentProviderResults.size == 0) {
+      if (contentProviderResults.isEmpty()) {
         throw IllegalArgumentException("An error occurred during saving changes")
       }
 

@@ -10,9 +10,6 @@ import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
-import androidx.loader.content.Loader
-import com.flowcrypt.email.R
-import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.util.idling.NodeIdlingResource
 
@@ -35,26 +32,6 @@ open class BaseDialogFragment : DialogFragment() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     registerNodeIdlingResources()
-  }
-
-  fun handleLoaderResult(loader: Loader<*>, loaderResult: LoaderResult?) {
-    if (loaderResult != null) {
-      when {
-        loaderResult.result != null -> onSuccess(loader.id, loaderResult.result)
-        loaderResult.exception != null -> onError(loader.id, loaderResult.exception)
-        else -> showToast(getString(R.string.unknown_error))
-      }
-    } else {
-      showToast(getString(R.string.unknown_error))
-    }
-  }
-
-  fun onError(loaderId: Int, e: Exception?) {
-
-  }
-
-  fun onSuccess(loaderId: Int, result: Any?) {
-
   }
 
   fun showToast(string: String) {

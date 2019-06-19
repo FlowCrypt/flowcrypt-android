@@ -135,7 +135,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
 
       builder.setStyle(inboxStyle)
           .setSmallIcon(R.drawable.ic_email_multiply_encrypted)
-          .setContentIntent(getInboxPendingIntent(context, account))
+          .setContentIntent(getInboxPendingIntent(context))
           .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, account, folder, details))
           .setContentTitle(context.getString(R.string.incoming_message, details.size))
     } else {
@@ -183,7 +183,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
           .setPriority(NotificationCompat.PRIORITY_DEFAULT)
           .setCategory(NotificationCompat.CATEGORY_EMAIL)
           .setSmallIcon(R.drawable.ic_email_encrypted)
-          .setLargeIcon(generateLargeIcon(context, generalMsgDetails))
+          .setLargeIcon(generateLargeIcon(context))
           .setColor(ContextCompat.getColor(context, if (generalMsgDetails.isEncrypted)
             R.color.colorPrimary
           else
@@ -244,7 +244,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
         .setSubText(account.email)
         .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
         .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
-        .setContentIntent(getInboxPendingIntent(context, account))
+        .setContentIntent(getInboxPendingIntent(context))
         .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES,
             account, localFolder, generalMsgDetailsList))
         .setDefaults(Notification.DEFAULT_ALL)
@@ -253,7 +253,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     notificationManager.notify(NOTIFICATIONS_GROUP_MESSAGES, groupBuilder.build())
   }
 
-  private fun getInboxPendingIntent(context: Context, account: AccountDao): PendingIntent {
+  private fun getInboxPendingIntent(context: Context): PendingIntent {
     val inboxIntent = Intent(context, EmailManagerActivity::class.java)
     inboxIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
     return PendingIntent.getActivity(context, 0, inboxIntent, PendingIntent.FLAG_UPDATE_CURRENT)
@@ -286,7 +286,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     return PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT)
   }
 
-  private fun generateLargeIcon(context: Context, generalMsgDetails: GeneralMessageDetails): Bitmap {
+  private fun generateLargeIcon(context: Context): Bitmap {
     return BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher)
   }
 

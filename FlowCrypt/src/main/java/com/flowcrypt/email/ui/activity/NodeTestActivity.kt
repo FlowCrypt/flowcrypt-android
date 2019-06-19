@@ -234,8 +234,6 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
   }
 
   private fun addResultLine(actionName: String, result: NodeResponseWrapper<*>) {
-    val baseNodeResult = result.result
-
     if (result.exception != null) {
       addResultLine(actionName, 0, result.exception)
     } else {

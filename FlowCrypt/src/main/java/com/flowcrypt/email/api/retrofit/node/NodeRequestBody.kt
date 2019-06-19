@@ -46,26 +46,25 @@ class NodeRequestBody constructor(private val nodeRequest: NodeRequest,
     sink.writeByte('\n'.toInt())
     sink.write(json)
     sink.writeByte('\n'.toInt())
-    if (nodeRequest.data != null) {
-      var source: Source? = null
-      try {
-        source = Okio.source(ByteArrayInputStream(nodeRequest.data))
-        sink.writeAll(source!!)
-      } finally {
-        Util.closeQuietly(source)
-      }
+    var dataSource: Source? = null
+
+    try {
+      dataSource = Okio.source(ByteArrayInputStream(nodeRequest.data))
+      sink.writeAll(dataSource!!)
+    } finally {
+      Util.closeQuietly(dataSource)
     }
 
-    if (nodeRequest.uri != null) {
-      var source: Source? = null
+    nodeRequest.uri?.let {
+      var uriSource: Source? = null
       try {
-        val inputStream = nodeRequest.context?.contentResolver?.openInputStream(nodeRequest.uri)
+        val inputStream = nodeRequest.context?.contentResolver?.openInputStream(it)
         if (inputStream != null) {
-          source = Okio.source(BufferedInputStream(inputStream))
-          sink.writeAll(source!!)
+          uriSource = Okio.source(BufferedInputStream(inputStream))
+          sink.writeAll(uriSource!!)
         }
       } finally {
-        Util.closeQuietly(source)
+        Util.closeQuietly(uriSource)
       }
     }
   }

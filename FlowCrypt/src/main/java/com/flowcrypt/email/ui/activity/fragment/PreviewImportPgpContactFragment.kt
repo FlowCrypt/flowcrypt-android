@@ -104,6 +104,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onSuccess(loaderId: Int, result: Any?) {
     when (loaderId) {
       R.id.loader_id_parse_public_keys -> {

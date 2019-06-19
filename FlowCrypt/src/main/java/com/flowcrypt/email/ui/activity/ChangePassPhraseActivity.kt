@@ -110,6 +110,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onSuccess(loaderId: Int, result: Any?) {
     when (loaderId) {
       R.id.loader_id_change_pass_phrase -> {

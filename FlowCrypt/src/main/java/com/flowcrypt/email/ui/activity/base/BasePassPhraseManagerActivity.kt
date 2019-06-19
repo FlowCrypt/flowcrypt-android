@@ -234,6 +234,9 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
               Toast.makeText(this, throwable.message, Toast.LENGTH_SHORT).show()
             }
           }
+
+          else -> {
+          }
         }
       }
     }

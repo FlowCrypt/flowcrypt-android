@@ -17,6 +17,7 @@ package com.flowcrypt.email.util.exception
 class ExceptionUtil {
   companion object {
     @JvmStatic
+    @Suppress("UNUSED_PARAMETER")
     fun handleError(e: Throwable) {
       //Don't modify it
     }

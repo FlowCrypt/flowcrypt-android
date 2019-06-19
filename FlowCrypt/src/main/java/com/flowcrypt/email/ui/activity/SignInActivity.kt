@@ -147,6 +147,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
     when (loader.id) {
       R.id.loader_id_load_private_key_backups_from_email -> if (loaderResult.result != null) {

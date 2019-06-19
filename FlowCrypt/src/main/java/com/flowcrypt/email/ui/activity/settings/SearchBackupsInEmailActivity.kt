@@ -79,6 +79,7 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
       R.id.syns_load_private_keys -> {

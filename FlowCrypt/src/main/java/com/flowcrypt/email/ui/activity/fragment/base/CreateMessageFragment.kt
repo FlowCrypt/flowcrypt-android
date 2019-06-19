@@ -523,6 +523,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onSuccess(loaderId: Int, result: Any?) {
     when (loaderId) {
       R.id.loader_id_load_info_about_pgp_contacts_to -> {
@@ -1170,6 +1171,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       MessageType.REPLY_ALL -> updateViewsIfReplyAllMode()
 
       MessageType.FORWARD -> updateViewsIfFwdMode()
+
+      else -> {
+      }
     }
   }
 
@@ -1205,6 +1209,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           }
 
           MsgBlock.Type.PUBLIC_KEY -> {
+          }
+
+          else -> {
           }
         }
       }
@@ -1316,6 +1323,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       MessageType.REPLY, MessageType.REPLY_ALL -> prefix = "Re"
 
       MessageType.FORWARD -> prefix = "Fwd"
+
+      else -> {
+      }
     }
 
     if (!TextUtils.isEmpty(prefix)) {

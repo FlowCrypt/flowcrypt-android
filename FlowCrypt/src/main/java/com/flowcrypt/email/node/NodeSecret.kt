@@ -60,7 +60,7 @@ class NodeSecret @Throws(Exception::class)
     private set
   var authPwd: String? = null
     private set
-  var authHeader: String? = null
+  lateinit var authHeader: String
     private set
   val unixSocketFilePath: String
 
@@ -69,9 +69,9 @@ class NodeSecret @Throws(Exception::class)
   private var caCrt: X509Certificate? = null
   private var srvCrt: X509Certificate? = null
   private var srvKey: PrivateKey? = null
-  var sslSocketFactory: SSLSocketFactory? = null
+  lateinit var sslSocketFactory: SSLSocketFactory
     private set
-  var sslTrustManager: X509TrustManager? = null
+  lateinit var sslTrustManager: X509TrustManager
     private set
   var sslCrtSerialNumber: BigInteger? = null
     private set
@@ -109,28 +109,25 @@ class NodeSecret @Throws(Exception::class)
   }
 
   private fun createSslAttributes() {
-    if (sslSocketFactory == null || sslTrustManager == null) {
-      try {
-        // create trust manager that trusts ca to verify server crt
-        val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
-        tmf.init(newKeyStore("ca", caCrt, null)) // trust our ca
-        // create key manager to supply client key and crt (client and server use the same keypair)
-        val clientKmFactory = KeyManagerFactory.getInstance("X509")
-        clientKmFactory.init(newKeyStore("crt", srvCrt, srvKey), null) // slow
-        // new sslContext for http client that trusts the ca and provides client cert
-        val sslContext = SSLContext.getInstance("TLS")
-        val tms = tmf.trustManagers
-        if (tms.size != 1 || tms[0] !is X509TrustManager) {
-          throw IllegalStateException("Unexpected default trust managers:" + Arrays.toString(tms))
-        }
-        sslContext.init(clientKmFactory.keyManagers, tms, secureRandom) // slow
-        sslSocketFactory = sslContext.socketFactory
-        sslTrustManager = tms[0] as X509TrustManager
-        sslCrtSerialNumber = srvCrt!!.serialNumber
-      } catch (e: Exception) {
-        throw RuntimeException("failed to create ssl attributes for node", e)
+    try {
+      // create trust manager that trusts ca to verify server crt
+      val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+      tmf.init(newKeyStore("ca", caCrt, null)) // trust our ca
+      // create key manager to supply client key and crt (client and server use the same keypair)
+      val clientKmFactory = KeyManagerFactory.getInstance("X509")
+      clientKmFactory.init(newKeyStore("crt", srvCrt, srvKey), null) // slow
+      // new sslContext for http client that trusts the ca and provides client cert
+      val sslContext = SSLContext.getInstance("TLS")
+      val tms = tmf.trustManagers
+      if (tms.size != 1 || tms[0] !is X509TrustManager) {
+        throw IllegalStateException("Unexpected default trust managers:" + Arrays.toString(tms))
       }
-
+      sslContext.init(clientKmFactory.keyManagers, tms, secureRandom) // slow
+      sslSocketFactory = sslContext.socketFactory
+      sslTrustManager = tms[0] as X509TrustManager
+      sslCrtSerialNumber = srvCrt!!.serialNumber
+    } catch (e: Exception) {
+      throw RuntimeException("failed to create ssl attributes for node", e)
     }
   }
 
@@ -187,8 +184,8 @@ class NodeSecret @Throws(Exception::class)
     val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
     keyStore.load(null, null)
     keyStore.setCertificateEntry(alias, crt) // todo - possible fail point
-    if (prv != null) { // todo - most likely current failpoint is here or line above for client certs
-      keyStore.setKeyEntry(alias, prv, null, arrayOf<Certificate>(crt!!))
+    if (prv != null) { // todo - most likely current fail point is here or line above for client certs
+      keyStore.setKeyEntry(alias, prv, null, arrayOf(crt!!))
     }
     return keyStore
   }
