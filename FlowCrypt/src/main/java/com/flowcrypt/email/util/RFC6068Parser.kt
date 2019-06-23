@@ -55,7 +55,7 @@ class RFC6068Parser {
         end = schemaSpecific.length
       }
 
-      val newUri = Uri.parse("foo://bar?" + uri.encodedQuery!!)
+      val newUri = Uri.parse("foo://bar?" + uri.encodedQuery)
       val params = CaseInsensitiveParamWrapper(newUri)
 
       // Extract the recipient's email address from the mailto URI if there's one.
