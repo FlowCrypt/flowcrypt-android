@@ -539,7 +539,6 @@ class EmailSyncService : BaseService(), SyncListener {
    * @param msg         The new messages.
    * @throws MessagingException This exception meybe happen when we try to call `{ IMAPFolder#getUID(javax.mail.Message)}`
    */
-  @Throws(MessagingException::class, IOException::class)
   private fun updateAttTable(account: AccountDao, localFolder: LocalFolder,
                              imapFolder: IMAPFolder, msg: javax.mail.Message?) {
     val email = account.email
@@ -570,7 +569,6 @@ class EmailSyncService : BaseService(), SyncListener {
    * @throws MessagingException
    * @throws IOException
    */
-  @Throws(MessagingException::class, IOException::class)
   private fun getAttsInfoFromPart(imapFolder: IMAPFolder, msgNumber: Int, part: Part): ArrayList<AttachmentInfo> {
     val atts = ArrayList<AttachmentInfo>()
 
@@ -628,7 +626,6 @@ class EmailSyncService : BaseService(), SyncListener {
    * @param obj         The object which will be send to the request [Messenger].
    * @throws RemoteException
    */
-  @Throws(RemoteException::class)
   private fun sendReply(key: String, requestCode: Int, resultCode: Int, obj: Any? = null) {
     if (replyToMessengers.containsKey(key)) {
       val messenger = replyToMessengers[key]
@@ -671,7 +668,6 @@ class EmailSyncService : BaseService(), SyncListener {
    * emails and names.
    * @throws MessagingException when retrieve information about recipients.
    */
-  @Throws(MessagingException::class)
   private fun getEmailAndNamePairs(msg: javax.mail.Message): List<EmailAndNamePair> {
     val pairs = ArrayList<EmailAndNamePair>()
 

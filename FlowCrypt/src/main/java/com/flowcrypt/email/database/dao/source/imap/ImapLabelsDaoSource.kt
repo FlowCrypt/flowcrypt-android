@@ -9,10 +9,8 @@ import android.content.ContentProviderOperation
 import android.content.ContentProviderResult
 import android.content.ContentValues
 import android.content.Context
-import android.content.OperationApplicationException
 import android.database.Cursor
 import android.net.Uri
-import android.os.RemoteException
 import android.provider.BaseColumns
 import android.text.TextUtils
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -183,7 +181,6 @@ class ImapLabelsDaoSource : BaseDaoSource() {
    * @param newLocalFolders The list of new [LocalFolder] object.
    * @return the [ContentProviderResult] array.
    */
-  @Throws(RemoteException::class, OperationApplicationException::class)
   fun updateLabels(context: Context, email: String?, oldLocalFolders: Collection<LocalFolder>,
                    newLocalFolders: Collection<LocalFolder>): Array<ContentProviderResult> {
     val contentResolver = context.contentResolver

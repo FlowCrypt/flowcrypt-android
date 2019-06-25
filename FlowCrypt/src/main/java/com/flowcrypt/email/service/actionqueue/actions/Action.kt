@@ -24,7 +24,6 @@ interface Action : Parcelable {
   val version: Int
   val type: Type
 
-  @Throws(Exception::class)
   fun run(context: Context)
 
   /**

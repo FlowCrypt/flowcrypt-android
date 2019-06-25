@@ -181,7 +181,6 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
   }
 
-  @Throws(Exception::class)
   private fun addNewAccount(authCreds: AuthCredentials) {
     val accountDaoSource = AccountDaoSource()
     accountDaoSource.addRow(this, authCreds)

@@ -10,10 +10,7 @@ import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.google.android.gms.auth.GoogleAuthException
 import com.sun.mail.util.MailConnectException
-import java.io.IOException
-import javax.mail.MessagingException
 import javax.mail.Session
 import javax.mail.Store
 import javax.mail.Transport
@@ -34,7 +31,6 @@ abstract class BaseSyncTask constructor(override var ownerKey: String, override 
   override val isSMTPRequired: Boolean
     get() = false
 
-  @Throws(Exception::class)
   override fun runSMTPAction(account: AccountDao, session: Session, store: Store, syncListener: SyncListener) {
   }
 
@@ -48,12 +44,10 @@ abstract class BaseSyncTask constructor(override var ownerKey: String, override 
     syncListener.onError(account, errorType, e, ownerKey, requestCode)
   }
 
-  @Throws(Exception::class)
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
 
   }
 
-  @Throws(MessagingException::class, IOException::class, GoogleAuthException::class)
   protected fun prepareSmtpTransport(context: Context, session: Session, account: AccountDao): Transport {
     return SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
   }

@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.retrofit.request.node
 
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import retrofit2.Response
-import java.io.IOException
 
 /**
  * This [request][NodeRequest] can be used to receive information about a version.
@@ -21,7 +20,6 @@ class VersionRequest : BaseNodeRequest() {
 
   override val endpoint: String = "version"
 
-  @Throws(IOException::class)
   override fun getResponse(nodeService: NodeService): Response<*> {
     return nodeService.getVersion(this).execute()
   }

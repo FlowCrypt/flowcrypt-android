@@ -15,7 +15,6 @@ import com.google.gson.Gson
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
-import com.google.gson.JsonParseException
 import java.lang.reflect.Type
 
 /**
@@ -29,7 +28,6 @@ import java.lang.reflect.Type
 
 class ActionJsonDeserializer : JsonDeserializer<Action> {
 
-  @Throws(JsonParseException::class)
   override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Action {
     val jsonObject = json.asJsonObject
     val type = Action.Type.valueOf(jsonObject.get(Action.TAG_NAME_ACTION_TYPE).asString)

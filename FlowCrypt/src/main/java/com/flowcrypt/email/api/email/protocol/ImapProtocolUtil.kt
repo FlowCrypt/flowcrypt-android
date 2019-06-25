@@ -40,7 +40,6 @@ class ImapProtocolUtil {
      * @throws MessagingException
      */
     @JvmStatic
-    @Throws(MessagingException::class)
     fun getHeaderStream(folder: IMAPFolder, msgNumber: Int, sectionId: Int): InputStream? {
       return folder.doCommand { imapProtocol ->
         imapProtocol.peekBody(msgNumber, "$sectionId.MIME")?.byteArrayInputStream
@@ -58,7 +57,6 @@ class ImapProtocolUtil {
      * @throws IOException
      */
     @JvmStatic
-    @Throws(MessagingException::class, IOException::class)
     fun getAttPartById(folder: IMAPFolder, msgNumber: Int, part: Part?, attId: String): BodyPart? {
       if (part != null && part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
         val multiPart = part.content as Multipart

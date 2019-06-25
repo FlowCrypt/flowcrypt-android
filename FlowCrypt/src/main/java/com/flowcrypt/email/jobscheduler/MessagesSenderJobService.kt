@@ -34,7 +34,6 @@ import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.services.gmail.Gmail
 import com.sun.mail.imap.IMAPFolder
@@ -165,7 +164,6 @@ class MessagesSenderJobService : JobService() {
       isFailed = values[0]!!
     }
 
-    @Throws(InterruptedException::class)
     private fun sendQueuedMsgs(context: Context, account: AccountDao, msgDaoSource: MessageDaoSource,
                                imapLabelsDaoSource: ImapLabelsDaoSource, attsCacheDir: File) {
       var list: List<GeneralMessageDetails>
@@ -315,7 +313,6 @@ class MessagesSenderJobService : JobService() {
       }
     }
 
-    @Throws(IOException::class)
     private fun deleteMsgAtts(context: Context, account: AccountDao, attsCacheDir: File,
                               details: GeneralMessageDetails, attDaoSource: AttachmentDaoSource) {
       attDaoSource.deleteAtts(context, account.email, JavaEmailConstants.FOLDER_OUTBOX, details.uid.toLong())
@@ -325,7 +322,6 @@ class MessagesSenderJobService : JobService() {
       }
     }
 
-    @Throws(IOException::class, MessagingException::class, GoogleAuthException::class)
     private fun sendMsg(context: Context, account: AccountDao, msgDaoSource: MessageDaoSource,
                         details: GeneralMessageDetails, atts: List<AttachmentInfo>): Boolean {
       val mimeMsg = createMimeMsg(context, sess, details, atts)
@@ -402,7 +398,6 @@ class MessagesSenderJobService : JobService() {
      * @throws IOException
      * @throws MessagingException
      */
-    @Throws(IOException::class, MessagingException::class)
     private fun createMimeMsg(context: Context, sess: Session?, details: GeneralMessageDetails,
                               atts: List<AttachmentInfo>): MimeMessage {
       val stream = IOUtils.toInputStream(details.rawMsgWithoutAtts!!, StandardCharsets.UTF_8)
@@ -432,7 +427,6 @@ class MessagesSenderJobService : JobService() {
      * @return Generated [MimeBodyPart] with the attachment.
      * @throws MessagingException
      */
-    @Throws(MessagingException::class)
     private fun genBodyPartWithAtt(context: Context, att: AttachmentInfo): BodyPart {
       val attBodyPart = MimeBodyPart()
       attBodyPart.dataHandler = DataHandler(AttachmentInfoDataSource(context, att))
@@ -450,7 +444,6 @@ class MessagesSenderJobService : JobService() {
      * @return The input message thread id.
      * @throws IOException
      */
-    @Throws(IOException::class)
     private fun getGmailMsgThreadID(service: Gmail, rfc822msgidValue: String): String? {
       val response = service
           .users()
@@ -512,7 +505,6 @@ class MessagesSenderJobService : JobService() {
    */
   private class AttachmentInfoDataSource internal constructor(private val context: Context, private val att: AttachmentInfo) : DataSource {
 
-    @Throws(IOException::class)
     override fun getInputStream(): InputStream? {
       val inputStream: InputStream?
       if (att.uri == null) {

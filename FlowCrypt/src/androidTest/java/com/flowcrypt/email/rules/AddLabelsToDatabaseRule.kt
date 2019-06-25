@@ -21,7 +21,6 @@ class AddLabelsToDatabaseRule(private val account: AccountDao, private val folde
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
-      @Throws(Throwable::class)
       override fun evaluate() {
         saveLabelsToDatabase()
         base.evaluate()

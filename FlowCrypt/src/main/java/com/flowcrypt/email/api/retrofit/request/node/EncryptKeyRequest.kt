@@ -9,7 +9,6 @@ import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import retrofit2.Response
-import java.io.IOException
 
 /**
  * Using this class we can create a request to encrypt a private key using the given passphrase. The private key
@@ -25,7 +24,6 @@ class EncryptKeyRequest(@Expose @SerializedName("armored") val armoredKey: Strin
 
   override val endpoint: String = "encryptKey"
 
-  @Throws(IOException::class)
   override fun getResponse(nodeService: NodeService): Response<*> {
     return nodeService.encryptKey(this).execute()
   }

@@ -113,7 +113,6 @@ class FoldersManager {
    * @param folderAlias The folder alias.
    * @throws MessagingException
    */
-  @Throws(MessagingException::class)
   fun addFolder(imapFolder: IMAPFolder?, folderAlias: String) {
     imapFolder?.let {
       if (!EmailUtil.containsNoSelectAttr(it) && !TextUtils.isEmpty(it.fullName) && !folders.containsKey(it.fullName)) {
@@ -160,7 +159,6 @@ class FoldersManager {
     return null
   }
 
-  @Throws(MessagingException::class)
   private fun prepareFolderKey(imapFolder: IMAPFolder): String {
     val folderType = getFolderType(generateFolder(imapFolder, null))
     return folderType?.value ?: imapFolder.fullName
@@ -227,7 +225,6 @@ class FoldersManager {
      * @throws MessagingException
      */
     @JvmStatic
-    @Throws(MessagingException::class)
     fun generateFolder(imapFolder: IMAPFolder, folderAlias: String?): LocalFolder {
       return LocalFolder(imapFolder.fullName, folderAlias, Arrays.asList(*imapFolder.attributes),
           isCustom(imapFolder), 0, "")
@@ -242,7 +239,6 @@ class FoldersManager {
      * @throws MessagingException
      */
     @JvmStatic
-    @Throws(MessagingException::class)
     fun isCustom(folder: IMAPFolder): Boolean {
       val attr = folder.attributes
       val folderTypes = FolderType.values()

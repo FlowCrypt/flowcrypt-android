@@ -13,13 +13,10 @@ import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.util.LogsUtil
-import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.google.api.services.gmail.GmailScopes
 import com.sun.mail.gimap.GmailSSLStore
-import java.io.IOException
 import javax.mail.AuthenticationFailedException
-import javax.mail.MessagingException
 import javax.mail.Session
 import javax.mail.Store
 
@@ -46,7 +43,6 @@ class OpenStoreHelper {
      * gimaps.
      */
     @JvmStatic
-    @Throws(MessagingException::class)
     fun openAndConnectToGimapsStore(context: Context, token: String, accountName: String): GmailSSLStore {
       val gmailSSLStore = getGmailSess(context).getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
       gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountName, token)
@@ -64,7 +60,6 @@ class OpenStoreHelper {
      * gimaps.
      */
     @JvmStatic
-    @Throws(MessagingException::class, IOException::class, GoogleAuthException::class)
     fun openAndConnectToGimapsStore(context: Context, session: Session, accountDao: AccountDao?,
                                     isResetTokenNeeded: Boolean): GmailSSLStore {
       val account: Account? = accountDao?.account ?: throw NullPointerException("Account can't be a null!")
@@ -165,7 +160,6 @@ class OpenStoreHelper {
     }
 
     @JvmStatic
-    @Throws(MessagingException::class, IOException::class, GoogleAuthException::class)
     fun openStore(context: Context, account: AccountDao?, session: Session): Store {
       return if (account != null) {
         when (account.accountType) {

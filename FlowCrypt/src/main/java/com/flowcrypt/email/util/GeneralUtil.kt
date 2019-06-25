@@ -97,7 +97,6 @@ class GeneralUtil {
      * @throws IOException will thrown for example if the file not found
      */
     @JvmStatic
-    @Throws(IOException::class)
     fun readFileFromUriToString(context: Context, uri: Uri): String? {
       val inputStream = context.contentResolver.openInputStream(uri)
       return if (inputStream != null) IOUtils.toString(inputStream, StandardCharsets.UTF_8) else null
@@ -190,7 +189,6 @@ class GeneralUtil {
      * @throws IOException if an I/O error occurs
      */
     @JvmStatic
-    @Throws(IOException::class)
     fun writeFileFromStringToUri(context: Context, uri: Uri, data: String): Int {
       val inputStream = IOUtils.toInputStream(data, StandardCharsets.UTF_8)
       val outputStream = context.contentResolver.openOutputStream(uri)

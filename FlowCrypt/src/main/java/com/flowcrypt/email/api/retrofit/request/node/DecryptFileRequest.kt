@@ -11,7 +11,6 @@ import com.flowcrypt.email.model.PgpKeyInfo
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import retrofit2.Response
-import java.io.IOException
 import java.util.*
 
 /**
@@ -41,7 +40,6 @@ class DecryptFileRequest(override val data: ByteArray,
     }
   }
 
-  @Throws(IOException::class)
   override fun getResponse(nodeService: NodeService): Response<*> {
     return nodeService.decryptFile(this).execute()
   }

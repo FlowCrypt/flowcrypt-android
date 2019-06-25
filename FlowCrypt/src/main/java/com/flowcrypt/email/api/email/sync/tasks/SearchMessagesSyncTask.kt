@@ -39,7 +39,6 @@ class SearchMessagesSyncTask(ownerKey: String,
                              private val localFolder: LocalFolder,
                              private val countOfAlreadyLoadedMsgs: Int) : BaseSyncTask(ownerKey, requestCode) {
 
-  @Throws(Exception::class)
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     super.runIMAPAction(account, session, store, listener)
 

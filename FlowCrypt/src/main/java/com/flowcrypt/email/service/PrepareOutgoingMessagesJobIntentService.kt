@@ -48,7 +48,6 @@ import java.io.File
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.util.*
-import javax.mail.MessagingException
 import javax.mail.Session
 import javax.mail.internet.MimeMessage
 
@@ -175,7 +174,6 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     }
   }
 
-  @Throws(MessagingException::class)
   private fun prepareContentValues(msgInfo: OutgoingMessageInfo, generatedUID: Long, mimeMsg: MimeMessage,
                                    rawMsg: String, attsCacheDir: File): ContentValues {
     val contentValues = MessageDaoSource.prepareContentValues(account!!.email,

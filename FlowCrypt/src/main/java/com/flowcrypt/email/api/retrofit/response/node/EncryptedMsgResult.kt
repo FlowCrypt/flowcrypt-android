@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets
  */
 data class EncryptedMsgResult constructor(@Expose override val error: Error?,
                                           var encryptedMsg: String? = null) : BaseNodeResponse {
-  @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     val bytes = IOUtils.toByteArray(bufferedInputStream) ?: return
 

@@ -41,13 +41,11 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import java.io.File
-import java.io.IOException
 import java.io.InputStream
 import java.lang.ref.WeakReference
 import java.util.*
 import javax.mail.Folder
 import javax.mail.Message
-import javax.mail.MessagingException
 import javax.mail.Session
 import javax.mail.Store
 
@@ -211,7 +209,6 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
       }
     }
 
-    @Throws(IOException::class, MessagingException::class)
     private fun getNewMsgState(context: Context, attDaoSource: AttachmentDaoSource,
                                details: GeneralMessageDetails, msgAttsDir: File, pubKeys: List<String>?,
                                atts: List<AttachmentInfo>): MessageState {
@@ -285,7 +282,6 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
       return msgState
     }
 
-    @Throws(IOException::class)
     private fun downloadFile(details: GeneralMessageDetails, pubKeys: List<String>?, att: AttachmentInfo,
                              tempFile: File, inputStream: InputStream) {
       if (details.isEncrypted) {

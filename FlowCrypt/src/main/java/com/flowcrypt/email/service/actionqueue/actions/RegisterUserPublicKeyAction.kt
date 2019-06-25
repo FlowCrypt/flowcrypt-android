@@ -13,7 +13,6 @@ import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.util.exception.ApiException
 import com.google.gson.annotations.SerializedName
-import java.io.IOException
 
 /**
  * This action describes a task which registers a user public key
@@ -32,7 +31,6 @@ data class RegisterUserPublicKeyAction @JvmOverloads constructor(override var id
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.REGISTER_USER_PUBLIC_KEY
 
-  @Throws(IOException::class)
   override fun run(context: Context) {
     val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
     val body = InitialLegacySubmitModel(email!!, publicKey)

@@ -29,7 +29,6 @@ class RepeatedRule : BaseRule() {
 
   private class RepeatStatement internal constructor(private val statement: Statement, private val repeat: Int) : Statement() {
 
-    @Throws(Throwable::class)
     override fun evaluate() {
       for (i in 0 until repeat) {
         statement.evaluate()

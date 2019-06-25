@@ -32,7 +32,6 @@ class LoadMessagesSyncTask(ownerKey: String,
                            private val start: Int,
                            private val end: Int) : BaseSyncTask(ownerKey, requestCode) {
 
-  @Throws(Exception::class)
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
     imapFolder.open(Folder.READ_ONLY)

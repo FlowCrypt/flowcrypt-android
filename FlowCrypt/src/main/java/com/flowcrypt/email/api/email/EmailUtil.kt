@@ -50,9 +50,7 @@ import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.UUID
+import java.util.*
 import java.util.regex.Pattern
 import javax.activation.DataHandler
 import javax.mail.BodyPart
@@ -105,7 +103,6 @@ class EmailUtil {
      * @throws MessagingException
      */
     @JvmStatic
-    @Throws(MessagingException::class)
     fun containsNoSelectAttr(folder: IMAPFolder): Boolean {
       return folder.attributes.contains(JavaEmailConstants.FOLDER_ATTRIBUTE_NO_SELECT)
     }
@@ -202,7 +199,6 @@ class EmailUtil {
      * @throws Exception will occur when generate this [BodyPart].
      */
     @JvmStatic
-    @Throws(Exception::class)
     fun genBodyPartWithPrivateKey(account: AccountDao, armoredPrKey: String): MimeBodyPart {
       val part = MimeBodyPart()
       val dataSource = ByteArrayDataSource(armoredPrKey, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)
@@ -221,7 +217,6 @@ class EmailUtil {
      * @throws Exception will occur when generate this message.
      */
     @JvmStatic
-    @Throws(Exception::class)
     fun genMsgWithAllPrivateKeys(context: Context, account: AccountDao, session: Session): Message {
       val keys = SecurityUtils.genPrivateKeysBackup(context, account)
 
@@ -247,7 +242,6 @@ class EmailUtil {
      * @throws Exception will occur when generate this message.
      */
     @JvmStatic
-    @Throws(Exception::class)
     fun genMsgWithPrivateKeys(context: Context, account: AccountDao, sess: Session, bodyPart: MimeBodyPart): Message {
       val multipart = MimeMultipart()
       multipart.addBodyPart(getBodyPartWithBackupText(context))
@@ -269,7 +263,6 @@ class EmailUtil {
      * result from client errors (e.g. providing an invalid scope).
      */
     @JvmStatic
-    @Throws(IOException::class, GoogleAuthException::class)
     fun getGmailAccountToken(context: Context, account: Account): String {
       return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
     }
@@ -299,7 +292,6 @@ class EmailUtil {
      * @throws IOException
      */
     @JvmStatic
-    @Throws(IOException::class, MessagingException::class, NodeException::class)
     fun getPrivateKeyBackupsViaGmailAPI(context: Context, account: AccountDao, sess: Session):
         Collection<NodeKeyDetails> {
       val list = mutableListOf<NodeKeyDetails>()
@@ -369,7 +361,6 @@ class EmailUtil {
      * @throws IOException
      */
     @JvmStatic
-    @Throws(MessagingException::class, IOException::class)
     fun getKeyFromMimeMsg(msg: Message): String {
       if (msg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
         val multipart = msg.content as Multipart
@@ -542,7 +533,6 @@ class EmailUtil {
      * @throws MessagingException for other failures.
      */
     @JvmStatic
-    @Throws(MessagingException::class)
     fun getUpdatedMsgs(folder: IMAPFolder, loadedMsgsCount: Int, newMsgsCount: Int): Array<Message> {
       val end = folder.messageCount - newMsgsCount
       var start = end - loadedMsgsCount + 1
@@ -576,7 +566,6 @@ class EmailUtil {
      * @throws MessagingException for other failures.
      */
     @JvmStatic
-    @Throws(MessagingException::class)
     fun getUpdatedMsgsByUID(folder: IMAPFolder, first: Long, end: Long): Array<Message> {
       return if (end <= first) {
         arrayOf()
@@ -602,7 +591,6 @@ class EmailUtil {
      * @throws MessagingException for other failures.
      */
     @JvmStatic
-    @Throws(MessagingException::class)
     fun fetchMsgs(folder: IMAPFolder, msgs: Array<Message>): Array<Message> {
       if (msgs.isNotEmpty()) {
         val fetchProfile = FetchProfile()
@@ -626,7 +614,6 @@ class EmailUtil {
      */
     @JvmStatic
     @Suppress("UNCHECKED_CAST")
-    @Throws(MessagingException::class)
     fun getMsgsEncryptionStates(folder: IMAPFolder, uidList: List<Long>): LongSparseArray<Boolean> {
       if (CollectionUtils.isEmpty(uidList)) {
         return LongSparseArray()
@@ -702,7 +689,6 @@ class EmailUtil {
      * @return The generated raw MIME message.
      */
     @JvmStatic
-    @Throws(IOException::class, NodeEncryptException::class)
     fun genRawMsgWithoutAtts(info: OutgoingMessageInfo, pubKeys: List<String>?): String {
 
       val retrofit = NodeRetrofitHelper.getRetrofit() ?: return ""
@@ -749,7 +735,6 @@ class EmailUtil {
      * @throws MessagingException
      */
     @JvmStatic
-    @Throws(MessagingException::class)
     fun getMsgsEncryptionInfo(onlyEncrypted: Boolean, folder: IMAPFolder, newMsgs: Array<Message>):
         LongSparseArray<Boolean> {
       var array = LongSparseArray<Boolean>()
@@ -770,7 +755,6 @@ class EmailUtil {
     }
 
     @JvmStatic
-    @Throws(MessagingException::class, IOException::class)
     private fun getBodyPartWithBackupText(context: Context): BodyPart {
       val messageBodyPart = MimeBodyPart()
       messageBodyPart.setContent(GeneralUtil.removeAllComments(IOUtils.toString(context.assets
@@ -779,7 +763,6 @@ class EmailUtil {
     }
 
     @JvmStatic
-    @Throws(MessagingException::class)
     private fun genMsgWithBackupTemplate(context: Context, account: AccountDao, session: Session): Message {
       val msg = MimeMessage(session)
 

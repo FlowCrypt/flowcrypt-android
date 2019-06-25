@@ -9,7 +9,6 @@ import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.model.PgpContact
 import com.google.gson.annotations.Expose
 import retrofit2.Response
-import java.io.IOException
 import java.util.*
 
 /**
@@ -39,7 +38,6 @@ class GenerateKeyRequest(@Expose val passphrase: String,
     }
   }
 
-  @Throws(IOException::class)
   override fun getResponse(nodeService: NodeService): Response<*> {
     return nodeService.generateKey(this).execute()
   }

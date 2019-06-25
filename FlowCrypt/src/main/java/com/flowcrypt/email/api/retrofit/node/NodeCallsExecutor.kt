@@ -43,7 +43,6 @@ class NodeCallsExecutor {
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
     @JvmStatic
-    @Throws(IOException::class, NodeException::class)
     fun parseKeys(key: String): List<NodeKeyDetails> {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = ParseKeysRequest(key)
@@ -67,7 +66,6 @@ class NodeCallsExecutor {
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
     @JvmStatic
-    @Throws(IOException::class, NodeException::class)
     fun getGmailBackupSearch(email: String): String? {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = GmailBackupSearchRequest(email)
@@ -90,7 +88,6 @@ class NodeCallsExecutor {
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
     @JvmStatic
-    @Throws(IOException::class, NodeException::class)
     fun decryptKey(key: String, passphrase: String): DecryptKeyResult {
       return decryptKey(key, listOf(passphrase))
     }
@@ -105,7 +102,6 @@ class NodeCallsExecutor {
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
     @JvmStatic
-    @Throws(IOException::class, NodeException::class)
     fun decryptKey(key: String, passphrases: List<String>): DecryptKeyResult {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = DecryptKeyRequest(key, passphrases)
@@ -128,7 +124,6 @@ class NodeCallsExecutor {
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
     @JvmStatic
-    @Throws(IOException::class, NodeException::class)
     fun encryptKey(key: String, passphrase: String): EncryptKeyResult {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = EncryptKeyRequest(key, passphrase)
@@ -151,7 +146,6 @@ class NodeCallsExecutor {
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
     @JvmStatic
-    @Throws(IOException::class, NodeException::class)
     fun genKey(passphrase: String, pgpContacts: List<PgpContact>): GenerateKeyResult {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = GenerateKeyRequest(passphrase, pgpContacts)
@@ -173,7 +167,6 @@ class NodeCallsExecutor {
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
     @JvmStatic
-    @Throws(IOException::class, NodeException::class)
     fun zxcvbnStrengthBar(guesses: Double): ZxcvbnStrengthBarResult {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = ZxcvbnStrengthBarRequest(guesses)
@@ -187,7 +180,6 @@ class NodeCallsExecutor {
     }
 
     @JvmStatic
-    @Throws(NodeException::class)
     private fun checkResult(result: BaseNodeResponse?) {
       if (result == null) {
         throw NullPointerException("Result is null")

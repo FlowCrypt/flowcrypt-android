@@ -58,7 +58,6 @@ class AddMessageToDatabaseRule(val account: AccountDao, val localFolder: LocalFo
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
-      @Throws(Throwable::class)
       override fun evaluate() {
         saveMsgToDatabase()
         base.evaluate()
@@ -66,7 +65,6 @@ class AddMessageToDatabaseRule(val account: AccountDao, val localFolder: LocalFo
     }
   }
 
-  @Throws(MessagingException::class)
   private fun saveMsgToDatabase() {
     MessageDaoSource().addRow(targetContext, account.email, localFolder.folderAlias, 0, message, false)
   }

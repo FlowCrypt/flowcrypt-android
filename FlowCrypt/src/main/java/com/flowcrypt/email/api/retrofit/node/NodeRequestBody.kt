@@ -15,7 +15,6 @@ import okio.Okio
 import okio.Source
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
-import java.io.IOException
 
 /**
  * This is a custom realization of [RequestBody] which will be used by [NodeRequestBodyConverter].
@@ -40,7 +39,6 @@ class NodeRequestBody constructor(private val nodeRequest: NodeRequest,
     return null
   }
 
-  @Throws(IOException::class)
   override fun writeTo(sink: BufferedSink) {
     sink.writeUtf8(nodeRequest.endpoint)
     sink.writeByte('\n'.toInt())

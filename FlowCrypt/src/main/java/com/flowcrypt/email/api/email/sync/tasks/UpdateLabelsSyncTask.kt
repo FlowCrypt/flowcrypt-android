@@ -22,7 +22,6 @@ import javax.mail.Store
 class UpdateLabelsSyncTask(ownerKey: String,
                            requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
 
-  @Throws(Exception::class)
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     super.runIMAPAction(account, session, store, listener)
     val folders = store.defaultFolder.list("*")
