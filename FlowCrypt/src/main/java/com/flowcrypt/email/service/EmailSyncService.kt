@@ -91,8 +91,12 @@ class EmailSyncService : BaseService(), SyncListener {
     LogsUtil.d(TAG, "onCreate")
 
     notificationManager = MessagesNotificationManager(this)
-    emailSyncManager = EmailSyncManager(AccountDaoSource().getActiveAccountInformation(this)!!, this)
-    messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
+
+    val account: AccountDao? = AccountDaoSource().getActiveAccountInformation(this)
+    account?.let {
+      emailSyncManager = EmailSyncManager(it, this)
+      messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
+    }
 
     connectionBroadcastReceiver = object : BroadcastReceiver() {
       override fun onReceive(context: Context, intent: Intent) {
@@ -109,11 +113,23 @@ class EmailSyncService : BaseService(), SyncListener {
 
     if (intent != null && intent.action != null) {
       when (intent.action) {
-        ACTION_SWITCH_ACCOUNT -> emailSyncManager.switchAccount(AccountDaoSource().getActiveAccountInformation(this)!!)
+        ACTION_SWITCH_ACCOUNT -> {
+          val account: AccountDao? = AccountDaoSource().getActiveAccountInformation(this)
+          account?.let {
+            if (::emailSyncManager.isInitialized) {
+              emailSyncManager.switchAccount(it)
+            } else {
+              emailSyncManager = EmailSyncManager(it, this)
+              messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
+            }
+          }
+        }
 
-        else -> emailSyncManager.beginSync(false)
+        else -> if (::emailSyncManager.isInitialized) {
+          emailSyncManager.beginSync(false)
+        }
       }
-    } else {
+    } else if (::emailSyncManager.isInitialized) {
       emailSyncManager.beginSync(false)
     }
 
@@ -124,7 +140,10 @@ class EmailSyncService : BaseService(), SyncListener {
     super.onDestroy()
     LogsUtil.d(TAG, "onDestroy")
 
-    emailSyncManager.stopSync()
+    if (::emailSyncManager.isInitialized) {
+      emailSyncManager.stopSync()
+    }
+
     unregisterReceiver(connectionBroadcastReceiver)
   }
 
