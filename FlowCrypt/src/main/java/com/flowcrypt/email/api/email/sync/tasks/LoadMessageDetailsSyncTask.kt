@@ -71,7 +71,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       imapProtocol.handleResult(serverStatusResponse)
 
       rawMsg
-    } as String
+    } as? String ?: throw IllegalStateException("An error occurred during receiving the message details")
 
     val message = imapFolder.getMessageByUID(uid)
     message?.setFlag(Flags.Flag.SEEN, true)
