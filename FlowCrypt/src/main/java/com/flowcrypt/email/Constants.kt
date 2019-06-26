@@ -28,6 +28,9 @@ class Constants {
      */
     const val FLOWCRYPT_API_URL = "https://flowcrypt.com/api"
 
+    const val FLOWCRYPT_PRIVACY_URL = "https://flowcrypt.com/privacy"
+    const val FLOWCRYPT_TERMS_URL = "https://flowcrypt.com/terms"
+
     /**
      * The authority of a [FileProvider] defined in a `<provider>` element in the app's
      * manifest.
