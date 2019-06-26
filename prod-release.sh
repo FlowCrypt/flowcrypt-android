@@ -7,4 +7,4 @@ echo ""
 read -s -p "Android Signing Key Password: " KEY_PWD
 echo ""
 
-./gradlew clean assembleProdRelease assembleProdEnterprise copyReleaseApks -PruntimeSign -PstorePassword="$STORE_PWD" -PkeyPassword="$KEY_PWD"
+./gradlew clean lintProdRelease assembleProdRelease assembleProdEnterprise copyReleaseApks -PruntimeSign -PstorePassword="$STORE_PWD" -PkeyPassword="$KEY_PWD"

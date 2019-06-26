@@ -11,7 +11,6 @@ import android.content.ContentProviderResult
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
-import android.content.OperationApplicationException
 import android.content.UriMatcher
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
@@ -226,7 +225,6 @@ class SecurityContentProvider : ContentProvider() {
     return cursor
   }
 
-  @Throws(OperationApplicationException::class)
   override fun applyBatch(operations: ArrayList<ContentProviderOperation>): Array<ContentProviderResult> {
     var contentProviderResults = emptyArray<ContentProviderResult>()
     val sqLiteDatabase = dbHelper.writableDatabase

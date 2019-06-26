@@ -23,7 +23,6 @@ class AddContactsToDatabaseRule(val pgpContacts: List<PgpContact>) : BaseRule() 
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
-      @Throws(Throwable::class)
       override fun evaluate() {
         ContactsDaoSource().addRows(targetContext, pgpContacts)
         base.evaluate()

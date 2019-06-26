@@ -36,7 +36,6 @@ class LoadMessagesToCacheSyncTask(ownerKey: String,
                                   private val localFolder: LocalFolder,
                                   private val countOfAlreadyLoadedMsgs: Int) : BaseSyncTask(ownerKey, requestCode) {
 
-  @Throws(Exception::class)
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
     listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_opening_store)

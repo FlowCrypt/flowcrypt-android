@@ -8,10 +8,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/layout_height_attachment_item"
-    android:layout_marginBottom="@dimen/default_margin_small"
     android:layout_marginLeft="@dimen/default_margin_content"
-    android:layout_marginRight="@dimen/default_margin_content"
     android:layout_marginTop="@dimen/default_margin_small"
+    android:layout_marginRight="@dimen/default_margin_content"
+    android:layout_marginBottom="@dimen/default_margin_small"
     android:background="@color/aluminum"
     android:maxWidth="@dimen/layout_width_attachment_item">
 
@@ -22,6 +22,7 @@
         android:layout_gravity="center"
         android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
+        android:focusable="true"
         android:orientation="horizontal"
         android:paddingLeft="@dimen/default_margin_content"
         android:paddingRight="@dimen/default_margin_content">

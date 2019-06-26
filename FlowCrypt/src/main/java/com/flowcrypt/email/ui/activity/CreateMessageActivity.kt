@@ -154,11 +154,13 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
       if (intent.hasExtra(EXTRA_KEY_MESSAGE_TYPE)) {
         val msgType = intent.getParcelableExtra<MessageType>(EXTRA_KEY_MESSAGE_TYPE)
 
-        when (msgType) {
-          MessageType.NEW -> supportActionBar!!.setTitle(R.string.compose)
-          MessageType.REPLY -> supportActionBar!!.setTitle(R.string.reply)
-          MessageType.REPLY_ALL -> supportActionBar!!.setTitle(R.string.reply_all)
-          MessageType.FORWARD -> supportActionBar!!.setTitle(R.string.forward)
+        msgType?.let {
+          when (it) {
+            MessageType.NEW -> supportActionBar!!.setTitle(R.string.compose)
+            MessageType.REPLY -> supportActionBar!!.setTitle(R.string.reply)
+            MessageType.REPLY_ALL -> supportActionBar!!.setTitle(R.string.reply_all)
+            MessageType.FORWARD -> supportActionBar!!.setTitle(R.string.forward)
+          }
         }
       } else {
         if (intent.getParcelableExtra<Parcelable>(EXTRA_KEY_INCOMING_MESSAGE_INFO) != null) {

@@ -7,14 +7,10 @@ package com.flowcrypt.email.api.retrofit.response.node
 
 import android.os.Parcel
 import android.os.Parcelable
-
 import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.google.gson.annotations.Expose
-
 import org.apache.commons.io.IOUtils
-
 import java.io.BufferedInputStream
-import java.io.IOException
 
 /**
  * It's a result for "encryptFile" requests.
@@ -27,7 +23,6 @@ import java.io.IOException
 data class EncryptedFileResult constructor(@Expose override val error: Error?,
                                            var encryptedBytes: ByteArray? = null) : BaseNodeResponse {
 
-  @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     encryptedBytes = IOUtils.toByteArray(bufferedInputStream)
   }

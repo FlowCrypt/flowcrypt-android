@@ -52,7 +52,6 @@ interface SyncTask {
    * @param listener The listener of synchronization.
    * @throws Exception Different exceptions can be throw when we work with [Store]
    */
-  @Throws(Exception::class)
   fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener)
 
   /**
@@ -64,7 +63,6 @@ interface SyncTask {
    * @param syncListener The listener of synchronization.
    * @throws Exception Different exceptions can be throw when we work with [Session] or [Store]
    */
-  @Throws(Exception::class)
   fun runSMTPAction(account: AccountDao, session: Session, store: Store, syncListener: SyncListener)
 
   /**

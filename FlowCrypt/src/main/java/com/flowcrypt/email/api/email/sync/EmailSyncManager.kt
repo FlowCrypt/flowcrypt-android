@@ -31,7 +31,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
-import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
@@ -449,7 +448,6 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
     internal val isConnected: Boolean
       get() = store != null && store!!.isConnected
 
-    @Throws(MessagingException::class, ManualHandledException::class)
     internal fun resetConnIfNeeded(task: SyncTask?) {
       val activeStore = store ?: return
 
@@ -481,7 +479,6 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
 
     }
 
-    @Throws(IOException::class, GoogleAuthException::class, MessagingException::class)
     internal fun openConnToStore() {
       patchingSecurityProvider(listener.context)
       sess = OpenStoreHelper.getAccountSess(listener.context, accountDao)

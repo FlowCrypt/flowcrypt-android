@@ -16,6 +16,7 @@
     android:textColor="@android:color/black"
     android:textIsSelectable="true"
     android:textSize="@dimen/default_text_size_medium"
+    tools:ignore="Overdraw"
     tools:text="At nihil sequi quo maiores molestiae consequatur. Id aut nam voluptate doloribus saepe consequatur molestias. Eos sunt est ipsam accusantium saepe doloribus veritatis.
 
 Recusandae velit sit veniam asperiores nisi. Eius tempore ab voluptatum dolorum nihil qui beatae. Et cum aut iusto deserunt. Doloremque laudantium laborum nobis enim est a. Totam at minima velit perspiciatis magnam libero ut voluptate. Rerum labore consectetur hic aliquid." />

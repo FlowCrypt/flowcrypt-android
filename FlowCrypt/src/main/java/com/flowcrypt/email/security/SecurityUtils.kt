@@ -18,11 +18,9 @@ import com.flowcrypt.email.security.model.PrivateKeyInfo
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
-import com.flowcrypt.email.util.exception.NodeException
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.nulabinc.zxcvbn.Zxcvbn
-import java.io.IOException
 import java.util.*
 
 /**
@@ -42,7 +40,6 @@ class SecurityUtils {
      * @param context Interface to global information about an application environment.
      * @return <tt>List<PrivateKeyInfo></PrivateKeyInfo></tt> Return a list of PrivateKeyInfo objects.
      */
-    @Throws(Exception::class)
     @JvmStatic
     fun getPrivateKeysInfo(context: Context): List<PrivateKeyInfo> {
       val privateKeysInfo = ArrayList<PrivateKeyInfo>()
@@ -112,7 +109,6 @@ class SecurityUtils {
      * @return A string which includes private keys
      */
     @JvmStatic
-    @Throws(PrivateKeyStrengthException::class, DifferentPassPhrasesException::class, NoPrivateKeysAvailableException::class, IOException::class, NodeException::class)
     fun genPrivateKeysBackup(context: Context, account: AccountDao): String {
       val builder = StringBuilder()
       val email = account.email
@@ -179,7 +175,6 @@ class SecurityUtils {
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    @Throws(NoKeyAvailableException::class, IOException::class, NodeException::class)
     fun getRecipientsPubKeys(context: Context, contacts: MutableList<String>,
                              account: AccountDao, senderEmail: String): List<String> {
       val publicKeys = ArrayList<String>()
@@ -206,7 +201,6 @@ class SecurityUtils {
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    @Throws(NoKeyAvailableException::class, IOException::class, NodeException::class)
     fun getSenderPublicKey(context: Context, account: AccountDao, senderEmail: String): String? {
       val userIdEmailsKeysDaoSource = UserIdEmailsKeysDaoSource()
       var longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(context, senderEmail)

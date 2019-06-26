@@ -7,13 +7,10 @@ package com.flowcrypt.email.api.retrofit.response.node
 
 import android.os.Parcel
 import android.os.Parcelable
-
 import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-
 import java.io.BufferedInputStream
-import java.io.IOException
 
 /**
  * It's a result for "version" requests.
@@ -34,7 +31,6 @@ data class VersionResult constructor(@SerializedName("http_parser") @Expose val 
                                      @Expose val nghttp2: String?,
                                      @Expose val openssl: String?,
                                      @Expose override val error: Error?) : BaseNodeResponse {
-  @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
 
   }

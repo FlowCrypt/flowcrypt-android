@@ -22,56 +22,46 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <FrameLayout
+        <LinearLayout
             android:id="@+id/layoutSubTitle"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_marginTop="@dimen/margin_top_found_backup"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/textViewTitle"
             app:layout_constraintWidth_default="wrap">
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/textViewSubTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-                app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toBottomOf="@+id/textViewTitle"
-                app:layout_constraintWidth_default="wrap">
+                android:layout_gravity="center_vertical"
+                android:gravity="center"
+                android:textColor="@android:color/black"
+                android:textSize="@dimen/default_text_size_medium"
+                tools:text="@string/no_backups_found" />
 
-                <TextView
-                    android:id="@+id/textViewSubTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:gravity="center"
-                    android:textColor="@android:color/black"
-                    android:textSize="@dimen/default_text_size_medium"
-                    tools:text="@string/no_backups_found" />
+            <ImageButton
+                android:id="@+id/imageButtonHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/see_choosing_secure_pass_phrases"
+                app:srcCompat="@mipmap/ic_help_grey" />
 
-                <ImageButton
-                    android:id="@+id/imageButtonHint"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="@string/see_choosing_secure_pass_phrases"
-                    app:srcCompat="@mipmap/ic_help_grey" />
-
-            </LinearLayout>
-
-        </FrameLayout>
+        </LinearLayout>
 
         <ProgressBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/default_margin_content"
             android:layout_marginTop="@dimen/default_margin_content"
+            android:layout_marginBottom="@dimen/default_margin_content"
             android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@+id/layoutPasswordHint"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
@@ -85,8 +75,8 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_top_key_password"
             android:orientation="horizontal"
-            android:paddingEnd="@dimen/default_four_dip"
             android:paddingStart="@dimen/default_four_dip"
+            android:paddingEnd="@dimen/default_four_dip"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/layoutSubTitle">
@@ -135,8 +125,8 @@
             android:layout_width="0dp"
             android:layout_marginTop="@dimen/margin_top_load_account"
             android:theme="@style/AppWidget.Button.Green"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/textInputLayoutKeyPassword"
             tools:text="@string/load_account" />
@@ -148,8 +138,8 @@
             android:layout_marginTop="@dimen/margin_top_load_account"
             android:theme="@style/AppWidget.Button.White"
             android:visibility="gone"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/buttonPositiveAction"
             tools:text="@string/use_existing_keys" />
@@ -158,11 +148,11 @@
             android:id="@+id/buttonNegativeAction"
             style="@style/AppWidget.Button"
             android:layout_width="0dp"
-            android:layout_marginBottom="@dimen/margin_top_button_select_another_account"
             android:layout_marginTop="@dimen/margin_top_button_select_another_account"
+            android:layout_marginBottom="@dimen/margin_top_button_select_another_account"
             android:theme="@style/AppWidget.Button.White"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/buttonNeutralAction"
             tools:text="@string/use_another_account" />

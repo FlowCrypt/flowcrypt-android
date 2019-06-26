@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.retrofit.request.node
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.google.gson.annotations.Expose
 import retrofit2.Response
-import java.io.IOException
 
 /**
  * Using this class we can create a request to receive a special search string for Gmail provider.
@@ -23,7 +22,6 @@ class GmailBackupSearchRequest(@Expose val acctEmail: String) : BaseNodeRequest(
   override val endpoint: String = "gmailBackupSearch"
 
 
-  @Throws(IOException::class)
   override fun getResponse(nodeService: NodeService): Response<*> {
     return nodeService.gmailBackupSearch(this).execute()
   }

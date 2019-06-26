@@ -111,6 +111,12 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
+  fun testEmptyMailToSchema() {
+    activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:"))
+    checkViewsOnScreen(0, null, null, 0)
+  }
+
+  @Test
   fun testSendEmptyExtras() {
     activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null, null, 0))
     checkViewsOnScreen(0, null, null, 0)

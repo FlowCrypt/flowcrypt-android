@@ -39,8 +39,8 @@
                 android:layout_marginBottom="@dimen/default_margin_content"
                 android:background="@color/aluminum"
                 app:layout_constraintBottom_toTopOf="@+id/textViewAuthorHint"
-                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent" />
 
             <TextView
@@ -67,7 +67,8 @@
                 app:layout_constraintBottom_toTopOf="@+id/viewDivider"
                 app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
                 app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-                app:layout_constraintTop_toTopOf="@+id/guidelineTop" />
+                app:layout_constraintTop_toTopOf="@+id/guidelineTop"
+                tools:ignore="Autofill" />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guidelineLeft"

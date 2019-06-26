@@ -91,8 +91,12 @@ class EmailSyncService : BaseService(), SyncListener {
     LogsUtil.d(TAG, "onCreate")
 
     notificationManager = MessagesNotificationManager(this)
-    emailSyncManager = EmailSyncManager(AccountDaoSource().getActiveAccountInformation(this)!!, this)
-    messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
+
+    val account: AccountDao? = AccountDaoSource().getActiveAccountInformation(this)
+    account?.let {
+      emailSyncManager = EmailSyncManager(it, this)
+      messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
+    }
 
     connectionBroadcastReceiver = object : BroadcastReceiver() {
       override fun onReceive(context: Context, intent: Intent) {
@@ -109,11 +113,23 @@ class EmailSyncService : BaseService(), SyncListener {
 
     if (intent != null && intent.action != null) {
       when (intent.action) {
-        ACTION_SWITCH_ACCOUNT -> emailSyncManager.switchAccount(AccountDaoSource().getActiveAccountInformation(this)!!)
+        ACTION_SWITCH_ACCOUNT -> {
+          val account: AccountDao? = AccountDaoSource().getActiveAccountInformation(this)
+          account?.let {
+            if (::emailSyncManager.isInitialized) {
+              emailSyncManager.switchAccount(it)
+            } else {
+              emailSyncManager = EmailSyncManager(it, this)
+              messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
+            }
+          }
+        }
 
-        else -> emailSyncManager.beginSync(false)
+        else -> if (::emailSyncManager.isInitialized) {
+          emailSyncManager.beginSync(false)
+        }
       }
-    } else {
+    } else if (::emailSyncManager.isInitialized) {
       emailSyncManager.beginSync(false)
     }
 
@@ -124,7 +140,10 @@ class EmailSyncService : BaseService(), SyncListener {
     super.onDestroy()
     LogsUtil.d(TAG, "onDestroy")
 
-    emailSyncManager.stopSync()
+    if (::emailSyncManager.isInitialized) {
+      emailSyncManager.stopSync()
+    }
+
     unregisterReceiver(connectionBroadcastReceiver)
   }
 
@@ -539,7 +558,6 @@ class EmailSyncService : BaseService(), SyncListener {
    * @param msg         The new messages.
    * @throws MessagingException This exception meybe happen when we try to call `{ IMAPFolder#getUID(javax.mail.Message)}`
    */
-  @Throws(MessagingException::class, IOException::class)
   private fun updateAttTable(account: AccountDao, localFolder: LocalFolder,
                              imapFolder: IMAPFolder, msg: javax.mail.Message?) {
     val email = account.email
@@ -570,7 +588,6 @@ class EmailSyncService : BaseService(), SyncListener {
    * @throws MessagingException
    * @throws IOException
    */
-  @Throws(MessagingException::class, IOException::class)
   private fun getAttsInfoFromPart(imapFolder: IMAPFolder, msgNumber: Int, part: Part): ArrayList<AttachmentInfo> {
     val atts = ArrayList<AttachmentInfo>()
 
@@ -628,7 +645,6 @@ class EmailSyncService : BaseService(), SyncListener {
    * @param obj         The object which will be send to the request [Messenger].
    * @throws RemoteException
    */
-  @Throws(RemoteException::class)
   private fun sendReply(key: String, requestCode: Int, resultCode: Int, obj: Any? = null) {
     if (replyToMessengers.containsKey(key)) {
       val messenger = replyToMessengers[key]
@@ -671,7 +687,6 @@ class EmailSyncService : BaseService(), SyncListener {
    * emails and names.
    * @throws MessagingException when retrieve information about recipients.
    */
-  @Throws(MessagingException::class)
   private fun getEmailAndNamePairs(msg: javax.mail.Message): List<EmailAndNamePair> {
     val pairs = ArrayList<EmailAndNamePair>()
 
@@ -703,6 +718,7 @@ class EmailSyncService : BaseService(), SyncListener {
     private val gmailSynsManagerWeakRef = WeakReference(emailSyncManager)
     private val replyToMessengersWeakRef = WeakReference(replyToMessengersWeakRef)
 
+    @Suppress("UNCHECKED_CAST")
     override fun handleMessage(msg: Message) {
       if (gmailSynsManagerWeakRef.get() != null) {
         val emailSyncManager = gmailSynsManagerWeakRef.get()

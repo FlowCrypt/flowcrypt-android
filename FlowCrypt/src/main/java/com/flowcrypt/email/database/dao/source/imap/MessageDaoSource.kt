@@ -69,7 +69,6 @@ class MessageDaoSource : BaseDaoSource() {
    * @param isNew   true if need to mark a given message as new.
    * @return A [Uri] of the created row.
    */
-  @Throws(MessagingException::class)
   fun addRow(context: Context, email: String, label: String?, uid: Long, message: Message?, isNew: Boolean): Uri? {
     val contentResolver = context.contentResolver
     return if (message != null && label != null && contentResolver != null) {
@@ -107,7 +106,6 @@ class MessageDaoSource : BaseDaoSource() {
    * @return the number of newly created rows.
    * @throws MessagingException This exception may be occured when we call `mapFolder.getUID(message)`
    */
-  @Throws(MessagingException::class)
   fun addRows(context: Context, email: String, label: String, folder: IMAPFolder, msgs: Array<Message>,
               isNew: Boolean, isEncrypted: Boolean): Int {
     return addRows(context, email, label, folder, msgs, LongSparseArray(), isNew, isEncrypted)
@@ -126,7 +124,6 @@ class MessageDaoSource : BaseDaoSource() {
    * @return the number of newly created rows.
    * @throws MessagingException This exception may be occured when we call `mapFolder.getUID(message)`
    */
-  @Throws(MessagingException::class)
   fun addRows(context: Context, email: String, label: String, folder: IMAPFolder, msgs: Array<Message>?,
               msgsEncryptionStates: LongSparseArray<Boolean>, isNew: Boolean, areAllMsgsEncrypted: Boolean): Int {
     if (msgs != null) {
@@ -183,7 +180,6 @@ class MessageDaoSource : BaseDaoSource() {
    * @param label   The folder label.
    * @param msgsUID The list of messages UID.
    */
-  @Throws(RemoteException::class, OperationApplicationException::class)
   fun deleteMsgsByUID(context: Context, email: String?, label: String?, msgsUID: Collection<Long>) {
     val contentResolver = context.contentResolver
     if (email != null && label != null && contentResolver != null) {
@@ -242,7 +238,6 @@ class MessageDaoSource : BaseDaoSource() {
    * @param msgs    The messages array.
    * @return the [ContentProviderResult] array.
    */
-  @Throws(RemoteException::class, OperationApplicationException::class, MessagingException::class)
   fun updateMsgsByUID(context: Context, email: String?, label: String?,
                       folder: IMAPFolder, msgs: Array<Message>?): Array<ContentProviderResult> {
     val contentResolver = context.contentResolver
@@ -891,7 +886,6 @@ class MessageDaoSource : BaseDaoSource() {
    * @throws RemoteException
    * @throws OperationApplicationException
    */
-  @Throws(RemoteException::class, OperationApplicationException::class)
   fun updateEncryptionStates(context: Context, email: String, label: String,
                              msgsEncryptionStates: LongSparseArray<Boolean>?): Array<ContentProviderResult> {
     val contentResolver = context.contentResolver
@@ -1059,7 +1053,6 @@ class MessageDaoSource : BaseDaoSource() {
      * @throws MessagingException This exception may be occured when we call methods of thr
      * [Message] object
      */
-    @Throws(MessagingException::class)
     fun prepareContentValues(email: String, label: String, msg: Message, uid: Long, isNew: Boolean): ContentValues {
       val contentValues = ContentValues()
       contentValues.put(COL_EMAIL, email)

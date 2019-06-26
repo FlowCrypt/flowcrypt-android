@@ -6,7 +6,6 @@
 package com.flowcrypt.email.api.email
 
 import javax.mail.Message
-import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 import javax.mail.search.AndTerm
 import javax.mail.search.FromTerm
@@ -33,7 +32,6 @@ class SearchBackupsUtil {
      * @return Generated [SearchTerm].
      */
     @JvmStatic
-    @Throws(AddressException::class)
     fun genSearchTerms(email: String): SearchTerm {
       val subjectTerms = OrTerm(arrayOf(
           SubjectTerm("Your CryptUp Backup"),

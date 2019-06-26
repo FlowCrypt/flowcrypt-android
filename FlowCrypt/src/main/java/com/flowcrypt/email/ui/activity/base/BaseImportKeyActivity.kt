@@ -251,6 +251,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onSuccess(loaderId: Int, result: Any?) {
     when (loaderId) {
       R.id.loader_id_validate_key_from_file -> {
@@ -270,7 +271,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
         isCheckingPrivateKeyNow = false
         UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
         val keysFromClipboard = result as ArrayList<NodeKeyDetails>?
-        if (!keysFromClipboard!!.isEmpty()) {
+        if (keysFromClipboard!!.isNotEmpty()) {
           onKeyFound(KeyDetails.Type.CLIPBOARD, keysFromClipboard)
         } else {
           showInfoSnackbar(rootView, getString(R.string.clipboard_has_wrong_structure,

@@ -11,7 +11,6 @@ import com.google.gson.TypeAdapter
 import okhttp3.RequestBody
 import okio.Buffer
 import retrofit2.Converter
-import java.io.IOException
 import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 
@@ -27,7 +26,6 @@ class NodeRequestBodyConverter<F> internal constructor(
     private val gson: Gson,
     private val adapter: TypeAdapter<F>) : Converter<F, RequestBody> {
 
-  @Throws(IOException::class)
   override fun convert(value: F): RequestBody {
     if (value !is NodeRequest) {
       throw IllegalArgumentException("Support only classes that extend " + NodeRequest::class.java.simpleName)

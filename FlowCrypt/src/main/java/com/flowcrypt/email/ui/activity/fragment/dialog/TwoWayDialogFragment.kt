@@ -52,17 +52,17 @@ class TwoWayDialogFragment : DialogFragment() {
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val dialog = AlertDialog.Builder(context!!)
+    val dialogBuilder = AlertDialog.Builder(context!!)
 
     if (dialogTitle != null) {
-      dialog.setTitle(dialogTitle)
+      dialogBuilder.setTitle(dialogTitle)
     } else {
-      dialog.setTitle(R.string.info)
+      dialogBuilder.setTitle(R.string.info)
     }
-    dialog.setMessage(dialogMsg)
+    dialogBuilder.setMessage(dialogMsg)
 
-    dialog.setPositiveButton(positiveBtnTitle
-    ) { dialog, whichButton ->
+    dialogBuilder.setPositiveButton(positiveBtnTitle
+    ) { _, _ ->
       sendResult(Activity.RESULT_OK)
 
       if (listener != null) {
@@ -70,8 +70,8 @@ class TwoWayDialogFragment : DialogFragment() {
       }
     }
 
-    dialog.setNegativeButton(negativeBtnTitle
-    ) { dialog, whichButton ->
+    dialogBuilder.setNegativeButton(negativeBtnTitle
+    ) { _, _ ->
       sendResult(Activity.RESULT_CANCELED)
 
       if (listener != null) {
@@ -79,7 +79,7 @@ class TwoWayDialogFragment : DialogFragment() {
       }
     }
 
-    return dialog.create()
+    return dialogBuilder.create()
   }
 
   private fun sendResult(result: Int) {

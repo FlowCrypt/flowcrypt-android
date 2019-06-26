@@ -72,7 +72,6 @@ class CheckEmailSettingsAsyncTaskLoader(context: Context,
    * @param session The [Session] which will be used for the connection.
    * @throws MessagingException This operation can throw some exception.
    */
-  @Throws(MessagingException::class)
   private fun testImapConn(session: Session) {
     val store = session.getStore(JavaEmailConstants.PROTOCOL_IMAP)
     store.connect(authCreds.imapServer, authCreds.imapPort, authCreds.username, authCreds.password)
@@ -88,7 +87,6 @@ class CheckEmailSettingsAsyncTaskLoader(context: Context,
    * @param session The [Session] which will be used for the connection.
    * @throws MessagingException This operation can throw some exception.
    */
-  @Throws(MessagingException::class)
   private fun testSmtpConn(session: Session) {
     val transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP)
     val username: String?

@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
@@ -522,6 +523,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onSuccess(loaderId: Int, result: Any?) {
     when (loaderId) {
       R.id.loader_id_load_info_about_pgp_contacts_to -> {
@@ -1169,6 +1171,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       MessageType.REPLY_ALL -> updateViewsIfReplyAllMode()
 
       MessageType.FORWARD -> updateViewsIfFwdMode()
+
+      else -> {
+      }
     }
   }
 
@@ -1204,6 +1209,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           }
 
           MsgBlock.Type.PUBLIC_KEY -> {
+          }
+
+          else -> {
           }
         }
       }
@@ -1315,6 +1323,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       MessageType.REPLY, MessageType.REPLY_ALL -> prefix = "Re"
 
       MessageType.FORWARD -> prefix = "Fwd"
+
+      else -> {
+      }
     }
 
     if (!TextUtils.isEmpty(prefix)) {
@@ -1361,6 +1372,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    *
    * @return <tt>[PgpContactAdapter]</tt>
    */
+  @SuppressLint("Recycle")
   private fun preparePgpContactAdapter(): PgpContactAdapter {
     val pgpContactAdapter = PgpContactAdapter(context!!, null, true)
     //setup a search contacts logic in the database

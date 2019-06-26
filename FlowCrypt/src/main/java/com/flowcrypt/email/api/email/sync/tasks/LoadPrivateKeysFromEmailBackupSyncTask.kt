@@ -37,7 +37,6 @@ import javax.mail.Store
 class LoadPrivateKeysFromEmailBackupSyncTask(ownerKey: String,
                                              requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
 
-  @Throws(Exception::class)
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     super.runIMAPAction(account, session, store, listener)
 
@@ -63,7 +62,6 @@ class LoadPrivateKeysFromEmailBackupSyncTask(ownerKey: String,
    * @throws IOException
    * @throws GoogleAuthException
    */
-  @Throws(MessagingException::class, IOException::class, GoogleAuthException::class)
   private fun getPrivateKeyBackupsUsingJavaMailAPI(context: Context, account: AccountDao,
                                                    session: Session): MutableList<NodeKeyDetails> {
     val keyDetailsList = mutableListOf<NodeKeyDetails>()

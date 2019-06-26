@@ -23,7 +23,6 @@ class AddAccountToDatabaseRule(val account: AccountDao) : BaseRule() {
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
-      @Throws(Throwable::class)
       override fun evaluate() {
         saveAccountToDatabase()
         base.evaluate()
@@ -31,7 +30,6 @@ class AddAccountToDatabaseRule(val account: AccountDao) : BaseRule() {
     }
   }
 
-  @Throws(Exception::class)
   private fun saveAccountToDatabase() {
     val accountDaoSource = AccountDaoSource()
     accountDaoSource.addRow(targetContext, account.authCreds)

@@ -247,7 +247,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
     }
   }
 
-  @Ignore//todo-denbond7 need to think about it
+  @Ignore("need to think about it")//todo-denbond7
   @Test
   fun testShowWarningIfAuthFail() {
     IdlingPolicies.setMasterPolicyTimeout(5, TimeUnit.MINUTES)

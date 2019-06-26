@@ -61,7 +61,6 @@ class AccountDaoSource : BaseDaoSource() {
    * @return The created [Uri] or null;
    * @throws Exception An exception maybe occurred when encrypt the user password.
    */
-  @Throws(Exception::class)
   fun addRow(context: Context, authCreds: AuthCredentials?): Uri? {
     val contentResolver = context.contentResolver
     if (authCreds != null && contentResolver != null) {
@@ -352,7 +351,6 @@ class AccountDaoSource : BaseDaoSource() {
    * @param authCreds The [AuthCredentials] object;
    * @return The generated [ContentValues].
    */
-  @Throws(Exception::class)
   private fun genContentValues(context: Context, authCreds: AuthCredentials): ContentValues? {
     val contentValues = ContentValues()
     val email = authCreds.email
@@ -483,7 +481,6 @@ class AccountDaoSource : BaseDaoSource() {
      * @return Generated [AuthCredentials] object.
      * @throws GeneralSecurityException
      */
-    @Throws(Exception::class)
     @JvmStatic
     fun getCurrentAuthCredsFromCursor(context: Context, manager: KeyStoreCryptoManager,
                                       cursor: Cursor): AuthCredentials {

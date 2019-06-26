@@ -15,7 +15,6 @@ import com.google.gson.annotations.Expose
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
-import java.io.IOException
 import java.io.StringReader
 
 /**
@@ -30,7 +29,6 @@ data class ParseDecryptedMsgResult constructor(@Expose override val error: Error
                                                var msgBlocks: MutableList<MsgBlock>?) :
     BaseNodeResponse {
 
-  @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     var isEnabled = true
     val gson = NodeGson.gson

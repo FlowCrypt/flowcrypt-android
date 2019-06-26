@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.settings
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +16,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
 import androidx.viewpager.widget.ViewPager
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.google.android.material.tabs.TabLayout
@@ -65,13 +67,13 @@ class LegalSettingsActivity : BaseSettingsActivity() {
    */
   class WebViewFragment : BaseFragment() {
     private var assetsPath: String? = null
-    private var webView: WebView? = null
+    private lateinit var webView: WebView
 
     override fun onCreate(savedInstanceState: Bundle?) {
       super.onCreate(savedInstanceState)
       val args = arguments
       if (args != null) {
-        this.assetsPath = args.getString(KEY_ASSETS_PATH)
+        this.assetsPath = args.getString(KEY_URL)
       }
     }
 
@@ -79,7 +81,7 @@ class LegalSettingsActivity : BaseSettingsActivity() {
                               savedInstanceState: Bundle?): View? {
 
       webView = WebView(context)
-      webView!!.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+      webView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
           ViewGroup.LayoutParams.MATCH_PARENT)
 
       return webView
@@ -88,13 +90,13 @@ class LegalSettingsActivity : BaseSettingsActivity() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
       super.onViewCreated(view, savedInstanceState)
 
-      if (webView != null) {
-        webView!!.loadUrl("file:///android_asset/" + assetsPath!!)
+      if (::webView.isInitialized) {
+        webView.loadUrl(assetsPath!!)
       }
     }
 
     companion object {
-      internal const val KEY_ASSETS_PATH = BuildConfig.APPLICATION_ID + "" + ".KEY_ASSETS_PATH"
+      internal const val KEY_URL = BuildConfig.APPLICATION_ID + ".KEY_URL"
 
       /**
        * Generate an instance of the [WebViewFragment].
@@ -105,7 +107,23 @@ class LegalSettingsActivity : BaseSettingsActivity() {
       @JvmStatic
       fun newInstance(assetsPath: String): WebViewFragment {
         val args = Bundle()
-        args.putString(KEY_ASSETS_PATH, assetsPath)
+        args.putString(KEY_URL, "file:///android_asset/$assetsPath")
+
+        val webViewFragment = WebViewFragment()
+        webViewFragment.arguments = args
+        return webViewFragment
+      }
+
+      /**
+       * Generate an instance of the [WebViewFragment].
+       *
+       * @param uri The [Uri] which contains info about a URL.
+       * @return <tt>[WebViewFragment]</tt>
+       */
+      @JvmStatic
+      fun newInstance(uri: Uri): WebViewFragment {
+        val args = Bundle()
+        args.putString(KEY_URL, uri.toString())
 
         val webViewFragment = WebViewFragment()
         webViewFragment.arguments = args
@@ -121,9 +139,9 @@ class LegalSettingsActivity : BaseSettingsActivity() {
 
     override fun getItem(i: Int): Fragment? {
       when (i) {
-        TAB_POSITION_PRIVACY -> return WebViewFragment.newInstance("html/privacy.htm")
+        TAB_POSITION_PRIVACY -> return WebViewFragment.newInstance(Uri.parse(Constants.FLOWCRYPT_PRIVACY_URL))
 
-        TAB_POSITION_TERMS -> return WebViewFragment.newInstance("html/terms.htm")
+        TAB_POSITION_TERMS -> return WebViewFragment.newInstance(Uri.parse(Constants.FLOWCRYPT_TERMS_URL))
 
         TAB_POSITION_LICENCE -> return WebViewFragment.newInstance("html/license.htm")
 

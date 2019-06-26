@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.widget
 
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -69,6 +70,7 @@ class PgpContactsNachoTextView(context: Context, attrs: AttributeSet) : NachoTex
     return text.toString()
   }
 
+  @SuppressLint("ClickableViewAccessibility")
   override fun onTouchEvent(event: MotionEvent): Boolean {
     gestureDetector.onTouchEvent(event)
     return super.onTouchEvent(event)
@@ -149,22 +151,22 @@ class PgpContactsNachoTextView(context: Context, attrs: AttributeSet) : NachoTex
   }
 
   private fun removeSuggestionSpans(text: CharSequence): CharSequence {
-    var text = text
-    if (text is Spanned) {
+    var tempText = text
+    if (tempText is Spanned) {
       val spannable: Spannable
-      if (text is Spannable) {
-        spannable = text
+      if (tempText is Spannable) {
+        spannable = tempText
       } else {
-        spannable = SpannableString(text)
-        text = spannable
+        spannable = SpannableString(tempText)
+        tempText = spannable
       }
 
-      val spans = spannable.getSpans(0, text.length, SuggestionSpan::class.java)
+      val spans = spannable.getSpans(0, tempText.length, SuggestionSpan::class.java)
       for (span in spans) {
         spannable.removeSpan(span)
       }
     }
-    return text
+    return tempText
   }
 
   interface OnChipLongClickListener {

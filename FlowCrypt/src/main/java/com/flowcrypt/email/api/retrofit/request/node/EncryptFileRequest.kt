@@ -10,7 +10,6 @@ import android.net.Uri
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.google.gson.annotations.Expose
 import retrofit2.Response
-import java.io.IOException
 
 /**
  * Using this class we can create a request to encrypt an input data using the given public keys.
@@ -44,7 +43,6 @@ class EncryptFileRequest : BaseNodeRequest {
     this.data = ByteArray(0)
   }
 
-  @Throws(IOException::class)
   override fun getResponse(nodeService: NodeService): Response<*> {
     return nodeService.encryptFile(this).execute()
   }

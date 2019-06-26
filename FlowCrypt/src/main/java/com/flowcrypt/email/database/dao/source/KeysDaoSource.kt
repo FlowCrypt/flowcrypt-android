@@ -123,7 +123,6 @@ class KeysDaoSource : BaseDaoSource() {
    * @param keys    The list of [KeysDao] which contains information about the private keys.
    * @return the [ContentProviderResult] array.
    */
-  @Throws(Exception::class)
   fun updateKeys(context: Context, keys: Collection<KeysDao>): Array<ContentProviderResult> {
     val contentResolver = context.contentResolver
     return if (!CollectionUtils.isEmpty(keys)) {

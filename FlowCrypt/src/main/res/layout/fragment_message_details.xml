@@ -56,7 +56,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_goneMarginRight="@dimen/default_margin_medium"
-                    app:srcCompat="@mipmap/ic_action_name"
+                    app:srcCompat="@mipmap/ic_reply_all_green"
                     tools:visibility="visible" />
 
                 <TextView

@@ -19,9 +19,7 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
-import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.common.util.CollectionUtils
-import java.io.IOException
 import java.util.*
 
 /**
@@ -94,7 +92,6 @@ class ChangePassPhraseAsyncTaskLoader(context: Context,
     super.deliverResult(data)
   }
 
-  @Throws(IOException::class, NodeException::class)
   private fun getModifiedNodeKeyDetails(passphrase: String?, originalPrivateKey: String?): NodeKeyDetails {
     val keyDetailsList = NodeCallsExecutor.parseKeys(originalPrivateKey!!)
     if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size != 1) {

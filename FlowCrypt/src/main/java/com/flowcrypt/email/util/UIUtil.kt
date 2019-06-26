@@ -124,6 +124,7 @@ class UIUtil {
      * @param textView The textView where we will set the HTML text.
      */
     @JvmStatic
+    @Suppress("DEPRECATION")
     fun setHtmlTextToTextView(text: String, textView: TextView?) {
       if (textView != null && !TextUtils.isEmpty(text)) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -140,6 +141,7 @@ class UIUtil {
      * @param text The text which contains HTML.
      */
     @JvmStatic
+    @Suppress("DEPRECATION")
     fun getHtmlSpannedFromText(text: String): CharSequence {
       return if (!TextUtils.isEmpty(text)) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

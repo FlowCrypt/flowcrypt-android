@@ -32,7 +32,6 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.BACKUP_PRIVATE_KEY_TO_INBOX
 
-  @Throws(Exception::class)
   override fun run(context: Context) {
     val account = AccountDaoSource().getAccountInformation(context, email)
     val keysStorage = KeysStorageImpl.getInstance(context)

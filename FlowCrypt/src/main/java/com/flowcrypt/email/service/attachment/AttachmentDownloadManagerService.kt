@@ -491,7 +491,6 @@ class AttachmentDownloadManagerService : Service() {
       this.listener = listener
     }
 
-    @Throws(IOException::class)
     private fun downloadFile(attFile: File, inputStream: InputStream) {
       try {
         FileUtils.openOutputStream(attFile).use { outputStream ->
@@ -548,7 +547,6 @@ class AttachmentDownloadManagerService : Service() {
      * [Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED] we throw an exception. This is only for files
      * with the "pgp" extension.
      */
-    @Throws(FlowCryptLimitException::class)
     private fun checkFileSize() {
       if ("pgp".equals(FilenameUtils.getExtension(att.name), ignoreCase = true)) {
         if (att.encodedSize > Constants.MAX_ATTACHMENT_SIZE_WHICH_CAN_BE_DECRYPTED) {
@@ -566,7 +564,6 @@ class AttachmentDownloadManagerService : Service() {
      * @param file    The downloaded file which can be encrypted.
      * @return The decrypted or the original file.
      */
-    @Throws(Exception::class)
     private fun decryptFileIfNeeded(context: Context, file: File): File {
       if (!file.exists()) {
         throw NullPointerException("Error. The file is missing")
@@ -605,7 +602,6 @@ class AttachmentDownloadManagerService : Service() {
       }
     }
 
-    @Throws(Exception::class)
     private fun getDecryptedFileResult(context: Context, inputStream: InputStream): DecryptedFileResult {
       val keysStorage = KeysStorageImpl.getInstance(context)
       val pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys()

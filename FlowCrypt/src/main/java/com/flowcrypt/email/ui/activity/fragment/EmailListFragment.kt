@@ -686,6 +686,9 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
         twoWayDialogFragment.show(fragmentManager!!, TwoWayDialogFragment::class.java.simpleName)
         return
       }
+
+      else -> {
+      }
     }
 
     val infoDialogFragment = InfoDialogFragment.newInstance(null, message!!, null, false, true, false)

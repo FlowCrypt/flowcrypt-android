@@ -144,6 +144,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener, Google
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onSuccess(loaderId: Int, result: Any?) {
     when (loaderId) {
       R.id.loader_id_load_private_key_backups_from_email -> {

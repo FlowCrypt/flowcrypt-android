@@ -20,7 +20,6 @@ class AddAttachmentToDatabaseRule(val attInfo: AttachmentInfo) : BaseRule() {
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
-      @Throws(Throwable::class)
       override fun evaluate() {
         saveAttToDatabase()
         base.evaluate()

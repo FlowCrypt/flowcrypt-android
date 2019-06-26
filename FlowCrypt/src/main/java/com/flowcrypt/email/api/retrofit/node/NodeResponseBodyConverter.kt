@@ -15,7 +15,6 @@ import retrofit2.Converter
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.ByteArrayOutputStream
-import java.io.IOException
 import java.io.StringReader
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -39,7 +38,6 @@ class NodeResponseBodyConverter<T> internal constructor(
     private val gson: Gson,
     private val adapter: TypeAdapter<T>) : Converter<ResponseBody, T> {
 
-  @Throws(IOException::class)
   override fun convert(value: ResponseBody): T? {
     BufferedInputStream(value.source().inputStream()).use { bufferedInputStream ->
       ByteArrayOutputStream().use { outputStream ->
@@ -79,7 +77,6 @@ class NodeResponseBodyConverter<T> internal constructor(
     }
   }
 
-  @Throws(IOException::class)
   private fun forceFirstData(bufferedInputStream: BufferedInputStream) {
     bufferedInputStream.mark(0)
     val b = bufferedInputStream.read()

@@ -9,10 +9,8 @@ import android.content.ContentProviderOperation
 import android.content.ContentProviderResult
 import android.content.ContentValues
 import android.content.Context
-import android.content.OperationApplicationException
 import android.database.Cursor
 import android.net.Uri
-import android.os.RemoteException
 import android.provider.BaseColumns
 import android.text.TextUtils
 import com.flowcrypt.email.model.EmailAndNamePair
@@ -99,7 +97,6 @@ class ContactsDaoSource : BaseDaoSource() {
    * @param contacts A list of [PgpContact] objects.
    * @return the [ContentProviderResult] array.
    */
-  @Throws(RemoteException::class, OperationApplicationException::class)
   fun addRowsUsingApplyBatch(context: Context?, contacts: List<PgpContact>): Array<ContentProviderResult>? {
     if (context == null) {
       return null
@@ -293,7 +290,6 @@ class ContactsDaoSource : BaseDaoSource() {
    * @param pairs   A list of [EmailAndNamePair] objects.
    * @return the [ContentProviderResult] array.
    */
-  @Throws(RemoteException::class, OperationApplicationException::class)
   fun updatePgpContacts(context: Context, pairs: Collection<EmailAndNamePair>): Array<ContentProviderResult> {
     val contentResolver = context.contentResolver
     return if (!CollectionUtils.isEmpty(pairs)) {
@@ -318,7 +314,6 @@ class ContactsDaoSource : BaseDaoSource() {
    * @param pgpContactList A list of [PgpContact] objects.
    * @return the [ContentProviderResult] array.
    */
-  @Throws(RemoteException::class, OperationApplicationException::class)
   fun updatePgpContacts(context: Context, pgpContactList: List<PgpContact>): Array<ContentProviderResult> {
     val contentResolver = context.contentResolver
     if (!CollectionUtils.isEmpty(pgpContactList)) {

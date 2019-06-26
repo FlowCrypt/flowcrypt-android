@@ -189,6 +189,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onSuccess(loaderId: Int, result: Any?) {
     when (loaderId) {
       R.id.loader_id_encrypt_and_save_private_keys_infos -> {

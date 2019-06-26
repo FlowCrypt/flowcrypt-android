@@ -31,7 +31,6 @@ data class FillUserIdEmailsKeysTableAction @JvmOverloads constructor(override va
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.FILL_USER_ID_EMAILS_KEYS_TABLE
 
-  @Throws(Exception::class)
   override fun run(context: Context) {
     val keysStorage = KeysStorageImpl.getInstance(context)
 

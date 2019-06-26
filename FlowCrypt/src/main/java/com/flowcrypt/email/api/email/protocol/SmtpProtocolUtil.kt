@@ -41,7 +41,6 @@ class SmtpProtocolUtil {
      * @throws GoogleAuthException
      */
     @JvmStatic
-    @Throws(MessagingException::class, IOException::class, GoogleAuthException::class)
     fun prepareSmtpTransport(context: Context, session: Session, accountDao: AccountDao?): Transport {
       val transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP)
       val account: Account = accountDao?.account ?: throw NullPointerException("An account can't be a null!")
@@ -49,7 +48,7 @@ class SmtpProtocolUtil {
       when (accountDao.accountType) {
         AccountDao.ACCOUNT_TYPE_GOOGLE -> {
           val userName = accountDao.email
-          val password = EmailUtil.getGmailAccountToken(context, accountDao.account)
+          val password = EmailUtil.getGmailAccountToken(context, account)
           transport.connect(GmailConstants.GMAIL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_PORT, userName, password)
         }
 

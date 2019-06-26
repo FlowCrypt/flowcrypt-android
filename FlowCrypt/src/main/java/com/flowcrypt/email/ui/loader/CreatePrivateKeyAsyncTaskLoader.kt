@@ -69,7 +69,7 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
 
       val keysDao = KeysDao.generateKeysDao(manager, KeyDetails.Type.NEW, nodeKeyDetails!!, passphrase)
 
-      val uri = KeysDaoSource().addRow(context, keysDao)
+      KeysDaoSource().addRow(context, keysDao)
           ?: return LoaderResult(null, NullPointerException("Cannot save the generated private key"))
 
       UserIdEmailsKeysDaoSource().addRow(context, nodeKeyDetails.longId!!,
@@ -126,7 +126,6 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
     return true
   }
 
-  @Throws(Exception::class)
   private fun genContacts(): List<PgpContact> {
     val pgpContactMain = PgpContact(account.email, account.displayName)
     val contacts = ArrayList<PgpContact>()

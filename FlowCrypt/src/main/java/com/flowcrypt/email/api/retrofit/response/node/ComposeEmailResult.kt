@@ -24,7 +24,6 @@ import java.nio.charset.StandardCharsets
  */
 data class ComposeEmailResult constructor(@Expose override val error: Error?,
                                           var mimeMsg: String = "") : BaseNodeResponse {
-  @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     val bytes = IOUtils.toByteArray(bufferedInputStream) ?: return
 

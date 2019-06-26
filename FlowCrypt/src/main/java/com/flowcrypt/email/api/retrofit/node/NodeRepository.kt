@@ -63,21 +63,16 @@ class NodeRepository : PgpApiRepository {
       val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       try {
         val response = nodeRequestWrapper.request.getResponse(nodeService)
-        if (response != null) {
-          val time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis()
-          if (response.body() != null) {
-            baseNodeResult = response.body() as BaseNodeResponse
+        val time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis()
+        if (response.body() != null) {
+          baseNodeResult = response.body() as BaseNodeResponse
 
-            if (baseNodeResult.error != null) {
-              return NodeResponseWrapper.error(nodeRequestWrapper.requestCode, baseNodeResult, time)
-            }
-          } else {
-            return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode,
-                NullPointerException("The response body is null!"), null, time)
+          if (baseNodeResult.error != null) {
+            return NodeResponseWrapper.error(nodeRequestWrapper.requestCode, baseNodeResult, time)
           }
         } else {
           return NodeResponseWrapper.exception(nodeRequestWrapper.requestCode,
-              NullPointerException("The response is null!"), null, 0)
+              NullPointerException("The response body is null!"), null, time)
         }
       } catch (e: Exception) {
         e.printStackTrace()

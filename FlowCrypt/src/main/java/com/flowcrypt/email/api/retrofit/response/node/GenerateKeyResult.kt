@@ -7,13 +7,10 @@ package com.flowcrypt.email.api.retrofit.response.node
 
 import android.os.Parcel
 import android.os.Parcelable
-
 import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.google.gson.annotations.Expose
-
 import java.io.BufferedInputStream
-import java.io.IOException
 
 /**
  * It's a result for "generateKey" requests.
@@ -25,7 +22,6 @@ import java.io.IOException
  */
 data class GenerateKeyResult constructor(@Expose val key: NodeKeyDetails?,
                                          @Expose override val error: Error?) : BaseNodeResponse {
-  @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
 
   }

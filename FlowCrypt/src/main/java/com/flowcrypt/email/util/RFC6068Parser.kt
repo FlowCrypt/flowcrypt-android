@@ -39,7 +39,6 @@ class RFC6068Parser {
     }
 
     @JvmStatic
-    @Throws(NullPointerException::class, IllegalArgumentException::class)
     fun parse(uri: Uri?): ExtraActionInfo {
       if (uri == null) {
         throw NullPointerException("Argument 'uri' must not be null")
@@ -55,7 +54,7 @@ class RFC6068Parser {
         end = schemaSpecific.length
       }
 
-      val newUri = Uri.parse("foo://bar?" + uri.encodedQuery!!)
+      val newUri = Uri.parse("foo://bar?" + uri.encodedQuery)
       val params = CaseInsensitiveParamWrapper(newUri)
 
       // Extract the recipient's email address from the mailto URI if there's one.

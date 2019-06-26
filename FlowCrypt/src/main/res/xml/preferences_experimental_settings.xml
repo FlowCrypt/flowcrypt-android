@@ -7,7 +7,6 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <androidx.preference.Preference
-        android:layout="@layout/preference_item"
         android:title="@string/simulate_app_crash"
         app:iconSpaceReserved="false">
         <intent
@@ -16,7 +15,6 @@
     </androidx.preference.Preference>
 
     <androidx.preference.Preference
-        android:layout="@layout/preference_item"
         android:title="Node backend test"
         app:iconSpaceReserved="false">
         <intent

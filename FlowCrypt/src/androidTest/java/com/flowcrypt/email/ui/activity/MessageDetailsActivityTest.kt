@@ -56,7 +56,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
-import java.io.IOException
 
 /**
  * @author Denis Bondarenko
@@ -152,7 +151,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @Throws(Throwable::class)
   fun testMissingKeyErrorImportKey() {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
         IncomingMessageInfo::class.java)
@@ -228,7 +226,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @Throws(Throwable::class)
   fun testMissingKeyErrorChooseFromFewPubKeys() {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
         IncomingMessageInfo::class.java)
@@ -270,7 +267,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @Throws(IOException::class)
   fun testEncryptedMsgPlaneTextWithPubKey() {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_pub_key.json",
         IncomingMessageInfo::class.java)

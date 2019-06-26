@@ -14,6 +14,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
@@ -27,6 +28,7 @@ import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.api.Auth
@@ -120,9 +122,9 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.buttonPrivacy -> startActivity(HtmlViewFromAssetsRawActivity.newIntent(this, getString(R.string.privacy), "html/privacy.htm"))
+      R.id.buttonPrivacy -> GeneralUtil.openCustomTab(this, Constants.FLOWCRYPT_PRIVACY_URL)
 
-      R.id.buttonTerms -> startActivity(HtmlViewFromAssetsRawActivity.newIntent(this, getString(R.string.terms), "html/terms.htm"))
+      R.id.buttonTerms -> GeneralUtil.openCustomTab(this, Constants.FLOWCRYPT_TERMS_URL)
 
       R.id.buttonSecurity -> startActivity(HtmlViewFromAssetsRawActivity.newIntent(this, getString(R.string.security), "html/security.htm"))
       else -> super.onClick(v)
@@ -147,6 +149,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
     }
   }
 
+  @Suppress("UNCHECKED_CAST")
   override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
     when (loader.id) {
       R.id.loader_id_load_private_key_backups_from_email -> if (loaderResult.result != null) {
@@ -180,7 +183,6 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
   }
 
-  @Throws(Exception::class)
   private fun addNewAccount(authCreds: AuthCredentials) {
     val accountDaoSource = AccountDaoSource()
     accountDaoSource.addRow(this, authCreds)
