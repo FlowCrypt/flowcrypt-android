@@ -32,12 +32,6 @@ class NodeJsonReader constructor(private val bufferedInputStream: BufferedInputS
   private var delegate: Reader? = null
   private var isStopped: Boolean = false
 
-  @Throws(IOException::class)
-  override fun read(): Int {
-    return super.read()
-  }
-
-  @Throws(IOException::class)
   override fun read(cbuf: CharArray, off: Int, len: Int): Int {
     if (closed) throw IOException("Stream closed")
 
@@ -91,7 +85,6 @@ class NodeJsonReader constructor(private val bufferedInputStream: BufferedInputS
       return count
   }
 
-  @Throws(IOException::class)
   override fun close() {
     closed = true
     if (delegate != null) {

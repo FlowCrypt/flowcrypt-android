@@ -25,7 +25,6 @@ class SendMessageWithBackupToKeyOwnerSynsTask(ownerKey: String,
   override val isSMTPRequired: Boolean
     get() = true
 
-  @Throws(Exception::class)
   override fun runSMTPAction(account: AccountDao, session: Session, store: Store, syncListener: SyncListener) {
     super.runSMTPAction(account, session, store, syncListener)
 

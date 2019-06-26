@@ -16,10 +16,7 @@ import com.flowcrypt.email.broadcastreceivers.CorruptedStorageBroadcastReceiver
 import com.flowcrypt.email.util.exception.ManualHandledException
 import java.nio.charset.StandardCharsets
 import java.security.GeneralSecurityException
-import java.security.InvalidAlgorithmParameterException
 import java.security.KeyStore
-import java.security.NoSuchAlgorithmException
-import java.security.NoSuchProviderException
 import java.security.PrivateKey
 import java.security.ProviderException
 import java.security.PublicKey
@@ -67,7 +64,6 @@ class KeyStoreCryptoManager
  *
  * @throws Exception Initialization can throw exceptions.
  */
-@Throws(Exception::class)
 private constructor(context: Context?) {
 
   private val keyStore: KeyStore
@@ -103,7 +99,6 @@ private constructor(context: Context?) {
    * @return <tt>String</tt> A base64 encoded encrypted result.
    * @throws Exception The encryption process can throw a lot of exceptions.
    */
-  @Throws(Exception::class)
   fun encrypt(plainData: String, algorithmParameterSpecString: String?): String {
     if (!TextUtils.isEmpty(plainData)) {
       if (isOldLogicUsed) {
@@ -143,7 +138,6 @@ private constructor(context: Context?) {
    * @return <tt>String</tt> Return decrypted data.
    * @throws Exception The decryption process can throw a lot of exceptions.
    */
-  @Throws(Exception::class)
   fun decrypt(encryptedData: String?, algorithmParameterSpecString: String?): String {
     if (!TextUtils.isEmpty(encryptedData)) {
       if (isOldLogicUsed) {
@@ -185,7 +179,6 @@ private constructor(context: Context?) {
    * @return <tt>String</tt> A base64 encoded encrypted result.
    * @throws Exception The encryption process can throw a lot of exceptions.
    */
-  @Throws(Exception::class)
   fun encryptWithRSAOrAES(plainData: String): String {
     if (!TextUtils.isEmpty(plainData)) {
       if (isOldLogicUsed) {
@@ -212,7 +205,6 @@ private constructor(context: Context?) {
    * @return <tt>String</tt> Return decrypt
    * @throws Exception The decryption process can throw a lot of exceptions.
    */
-  @Throws(Exception::class)
   fun decryptWithRSAOrAES(context: Context, encryptedData: String?): String? {
     return if (!TextUtils.isEmpty(encryptedData)) {
       if (isOldLogicUsed) {
@@ -264,7 +256,6 @@ private constructor(context: Context?) {
       encryptedData
   }
 
-  @Throws(Exception::class)
   private fun setup(context: Context) {
     if (isOldLogicUsed) {
       initRSAKeys()
@@ -279,7 +270,6 @@ private constructor(context: Context?) {
    *
    * @throws Exception The initialization can throw a lot of exceptions.
    */
-  @Throws(Exception::class)
   private fun initRSAKeys() {
     try {
       this.privateKey = keyStore.getKey(ANDROID_KEY_STORE_RSA_ALIAS, null) as PrivateKey
@@ -301,7 +291,6 @@ private constructor(context: Context?) {
    * @param context Interface to global information about an application environment;
    * @throws Exception The initialization can throw a lot of exceptions.
    */
-  @Throws(Exception::class)
   private fun initAESSecretKey(context: Context) {
     if (isOldLogicUsed) {
       initAESSecretKeyFromSharedPreferences(context)
@@ -326,7 +315,6 @@ private constructor(context: Context?) {
    * @param context Interface to global information about an application environment;
    * @throws Exception The initialization can throw a lot of exceptions.
    */
-  @Throws(Exception::class)
   private fun initAESSecretKeyFromSharedPreferences(context: Context) {
     val encryptedSecretKey = getSecretKeyFromSharedPreferences(context)
     val decryptedSecretKey = decryptWithRSAOrAES(context, encryptedSecretKey)
@@ -348,7 +336,6 @@ private constructor(context: Context?) {
   /**
    * Generate [SecretKey] using AndroidKeyStore for the AES symmetric algorithm.
    */
-  @Throws(NoSuchAlgorithmException::class, NoSuchProviderException::class, InvalidAlgorithmParameterException::class, ManualHandledException::class)
   private fun genAESSecretKey() {
 
     val keyPairGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES,

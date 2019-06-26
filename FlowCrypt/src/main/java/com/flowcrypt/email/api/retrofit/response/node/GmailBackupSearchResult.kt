@@ -7,12 +7,9 @@ package com.flowcrypt.email.api.retrofit.response.node
 
 import android.os.Parcel
 import android.os.Parcelable
-
 import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.google.gson.annotations.Expose
-
 import java.io.BufferedInputStream
-import java.io.IOException
 
 /**
  * It's a result for "gmailBackupSearch" requests.
@@ -24,7 +21,6 @@ import java.io.IOException
  */
 data class GmailBackupSearchResult constructor(@Expose val query: String?,
                                                @Expose override val error: Error?) : BaseNodeResponse {
-  @Throws(IOException::class)
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
 
   }

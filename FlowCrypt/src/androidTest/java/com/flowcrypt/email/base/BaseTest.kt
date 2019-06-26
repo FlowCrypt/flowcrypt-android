@@ -129,7 +129,6 @@ abstract class BaseTest {
    * @param text  The text which will be added to the clipboard.
    * @throws Throwable
    */
-  @Throws(Throwable::class)
   protected fun addTextToClipboard(label: String, text: String) {
     runOnUiThread {
       val clipboard = getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

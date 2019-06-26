@@ -38,7 +38,6 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.ENCRYPT_PRIVATE_KEYS
 
-  @Throws(Exception::class)
   override fun run(context: Context) {
     val keysStore = KeysStorageImpl.getInstance(context)
     val pgpKeyInfoList = keysStore.getAllPgpPrivateKeys()

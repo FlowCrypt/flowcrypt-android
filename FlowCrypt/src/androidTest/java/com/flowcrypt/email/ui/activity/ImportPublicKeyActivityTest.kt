@@ -107,7 +107,6 @@ class ImportPublicKeyActivityTest : BaseTest() {
   }
 
   @Test
-  @Throws(Throwable::class)
   fun testImportKeyFromClipboard() {
     addTextToClipboard("public key", publicKey)
     onView(withId(R.id.buttonLoadFromClipboard))
@@ -117,7 +116,6 @@ class ImportPublicKeyActivityTest : BaseTest() {
   }
 
   @Test
-  @Throws(Throwable::class)
   fun testShowErrorWhenImportKeyFromClipboard() {
     addTextToClipboard("not public key", SOME_TEXT)
     onView(withId(R.id.buttonLoadFromClipboard))

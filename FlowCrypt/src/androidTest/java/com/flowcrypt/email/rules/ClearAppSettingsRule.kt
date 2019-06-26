@@ -28,7 +28,6 @@ class ClearAppSettingsRule : BaseRule() {
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
-      @Throws(Throwable::class)
       override fun evaluate() {
         clearApp()
         base.evaluate()
@@ -41,7 +40,6 @@ class ClearAppSettingsRule : BaseRule() {
    *
    * @throws IOException Different errors can be occurred.
    */
-  @Throws(Throwable::class)
   private fun clearApp() {
     SharedPreferencesHelper.clear(targetContext)
     FileAndDirectoryUtils.cleanDir(targetContext.cacheDir)

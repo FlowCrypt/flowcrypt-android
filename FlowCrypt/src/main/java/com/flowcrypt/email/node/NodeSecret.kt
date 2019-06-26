@@ -33,7 +33,6 @@ import java.security.PublicKey
 import java.security.SecureRandom
 import java.security.Security
 import java.security.cert.Certificate
-import java.security.cert.CertificateException
 import java.security.cert.CertificateFactory
 import java.security.cert.X509CRL
 import java.security.cert.X509Certificate
@@ -48,8 +47,7 @@ import javax.net.ssl.X509TrustManager
  * This class describes a logic where we create some security things for communication between the Node.js server and
  * the app.
  */
-class NodeSecret @Throws(Exception::class)
-@JvmOverloads internal constructor(writablePath: String, nodeSecretCertsCache: NodeSecretCerts? = null) {
+class NodeSecret @JvmOverloads internal constructor(writablePath: String, nodeSecretCertsCache: NodeSecretCerts? = null) {
 
   val port: Int
   var ca: String? = null
@@ -91,7 +89,6 @@ class NodeSecret @Throws(Exception::class)
     createSslAttributes()
   }
 
-  @Throws(Exception::class)
   private fun initCerts(nodeSecretCertsCache: NodeSecretCerts?) {
     if (nodeSecretCertsCache != null) {
       ca = nodeSecretCertsCache.ca
@@ -131,12 +128,10 @@ class NodeSecret @Throws(Exception::class)
     }
   }
 
-  @Throws(IOException::class, CertificateException::class)
   private fun parseCert(certString: String?): X509Certificate {
     ByteArrayInputStream(certString!!.toByteArray()).use { inputStream -> return CertificateFactory.getInstance("X.509").generateCertificate(inputStream) as X509Certificate }
   }
 
-  @Throws(IOException::class)
   private fun parseKey(keyString: String?): PrivateKey {
     ByteArrayInputStream(keyString!!.toByteArray()).use { inputStream ->
       BufferedReader(InputStreamReader(inputStream)).use { reader ->
@@ -153,7 +148,6 @@ class NodeSecret @Throws(Exception::class)
     }
   }
 
-  @Throws(Exception::class)
   private fun genCerts() {
     issuer = X500Name("CN=CA Cert")
 
@@ -179,7 +173,6 @@ class NodeSecret @Throws(Exception::class)
     this.authHeader = "Basic " + String(Base64.encode(this.authPwd!!.toByteArray(), Base64.NO_WRAP))
   }
 
-  @Throws(Exception::class)
   private fun newKeyStore(alias: String, crt: Certificate?, prv: PrivateKey?): KeyStore {
     val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
     keyStore.load(null, null)
@@ -190,7 +183,6 @@ class NodeSecret @Throws(Exception::class)
     return keyStore
   }
 
-  @Throws(Exception::class)
   private fun newSignedCrt(issuerKeyPair: KeyPair, subjectKeyPair: KeyPair, subject: X500Name, keyUsage: Int): X509Certificate {
     val calendar = Calendar.getInstance()
     val from = calendar.time
@@ -222,7 +214,6 @@ class NodeSecret @Throws(Exception::class)
    * @return PEM formatted string
    * @throws IOException Such errors can occur during the creation of a string.
    */
-  @Throws(IOException::class)
   private fun toString(o: Any?): String {
     StringWriter().use { stringWriter ->
       PemWriter(stringWriter).use { pemWriter ->

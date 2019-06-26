@@ -31,7 +31,6 @@ data class SendWelcomeTestEmailAction @JvmOverloads constructor(override var id:
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
   override val type: Action.Type = Action.Type.SEND_WELCOME_TEST_EMAIL
 
-  @Throws(Exception::class)
   override fun run(context: Context) {
     val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
     val body = TestWelcomeModel(email!!, publicKey)

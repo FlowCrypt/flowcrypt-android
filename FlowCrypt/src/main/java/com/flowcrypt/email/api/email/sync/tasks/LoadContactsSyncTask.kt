@@ -6,8 +6,6 @@
 package com.flowcrypt.email.api.email.sync.tasks
 
 import android.content.ContentValues
-import android.content.OperationApplicationException
-import android.os.RemoteException
 import android.text.TextUtils
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.sync.SyncListener
@@ -34,7 +32,6 @@ import javax.mail.internet.InternetAddress
  */
 class LoadContactsSyncTask : BaseSyncTask("", 0) {
 
-  @Throws(Exception::class)
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val foldersManager = FoldersManager.fromDatabase(listener.context, account.email)
     val folderSent = foldersManager.folderSent ?: return
@@ -61,7 +58,6 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
     imapFolder.close(false)
   }
 
-  @Throws(RemoteException::class, OperationApplicationException::class)
   private fun updateContacts(listener: SyncListener, msgs: Array<Message>) {
     val emailAndNamePairs = mutableListOf<EmailAndNamePair>()
     for (msg in msgs) {
@@ -76,14 +72,14 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
     val contactsInDatabase = HashSet<String>()
     val contactsWhichWillBeUpdated = HashSet<String>()
     val contactsWhichWillBeCreated = HashSet<String>()
-    val emailNamePairsMap = HashMap<String, String>()
+    val emailNamePairsMap = HashMap<String, String?>()
 
     val newCandidates = mutableListOf<EmailAndNamePair>()
     val updateCandidates = mutableListOf<EmailAndNamePair>()
 
     for ((email, name) in availablePgpContacts) {
       contactsInDatabase.add(email.toLowerCase())
-      emailNamePairsMap[email.toLowerCase()] = name!!
+      emailNamePairsMap[email.toLowerCase()] = name
     }
 
     for (emailAndNamePair in emailAndNamePairs) {

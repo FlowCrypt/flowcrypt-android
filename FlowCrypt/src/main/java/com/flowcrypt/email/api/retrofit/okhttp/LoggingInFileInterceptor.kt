@@ -14,7 +14,6 @@ import okhttp3.Response
 import okhttp3.internal.http.HttpHeaders
 import okio.Buffer
 import java.io.EOFException
-import java.io.IOException
 import java.nio.charset.Charset
 import java.nio.charset.UnsupportedCharsetException
 import java.util.concurrent.TimeUnit
@@ -43,7 +42,6 @@ class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) 
   @Volatile
   private var level = Level.NONE
 
-  @Throws(IOException::class)
   override fun intercept(chain: Interceptor.Chain): Response {
     val level = this.level
 

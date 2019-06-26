@@ -9,7 +9,6 @@ import android.content.Context
 import android.net.Uri
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import retrofit2.Response
-import java.io.IOException
 
 /**
  * It's a base request for the Node backend.
@@ -33,7 +32,6 @@ open class BaseNodeRequest(final override var context: Context?, override val ur
 
   constructor() : this(null, null)
 
-  @Throws(IOException::class)
   override fun getResponse(nodeService: NodeService): Response<*> {
     throw UnsupportedOperationException("not defined")
   }

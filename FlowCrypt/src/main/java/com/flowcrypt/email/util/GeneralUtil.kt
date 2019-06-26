@@ -20,9 +20,12 @@ import android.provider.OpenableColumns
 import android.provider.Settings
 import android.text.TextUtils
 import android.webkit.MimeTypeMap
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
 import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.IOException
@@ -97,7 +100,6 @@ class GeneralUtil {
      * @throws IOException will thrown for example if the file not found
      */
     @JvmStatic
-    @Throws(IOException::class)
     fun readFileFromUriToString(context: Context, uri: Uri): String? {
       val inputStream = context.contentResolver.openInputStream(uri)
       return if (inputStream != null) IOUtils.toString(inputStream, StandardCharsets.UTF_8) else null
@@ -190,7 +192,6 @@ class GeneralUtil {
      * @throws IOException if an I/O error occurs
      */
     @JvmStatic
-    @Throws(IOException::class)
     fun writeFileFromStringToUri(context: Context, uri: Uri, data: String): Int {
       val inputStream = IOUtils.toInputStream(data, StandardCharsets.UTF_8)
       val outputStream = context.contentResolver.openOutputStream(uri)
@@ -302,6 +303,24 @@ class GeneralUtil {
           Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, lastId)
 
       return lastId
+    }
+
+    /**
+     * Open a Chrome Custom Tab with a predefined style.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param url The given url
+     */
+    fun openCustomTab(context: Context, url: String) {
+      val builder = CustomTabsIntent.Builder()
+      val customTabsIntent = builder.build()
+      builder.setToolbarColor(ContextCompat.getColor(context, R.color.colorPrimary))
+
+      val intent = Intent(Intent.ACTION_VIEW)
+      intent.data = Uri.parse(url)
+      if (intent.resolveActivity(context.packageManager) != null) {
+        customTabsIntent.launchUrl(context, intent.data)
+      }
     }
   }
 }

@@ -34,7 +34,6 @@ class RefreshMessagesSyncTask(ownerKey: String,
                               requestCode: Int,
                               val localFolder: LocalFolder) : BaseSyncTask(ownerKey, requestCode) {
 
-  @Throws(Exception::class)
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
     val folderName = localFolder.folderAlias!!

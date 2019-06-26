@@ -9,7 +9,6 @@ import android.content.Context
 import android.net.Uri
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import retrofit2.Response
-import java.io.IOException
 
 /**
  * This interface describes common things for all requests to Node.js
@@ -28,6 +27,5 @@ interface NodeRequest {
 
   val context: Context?
 
-  @Throws(IOException::class)
   fun getResponse(nodeService: NodeService): Response<*>
 }

@@ -16,7 +16,6 @@ import com.flowcrypt.email.node.exception.NodeNotReady
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import org.apache.commons.io.IOUtils
 import java.io.FileNotFoundException
-import java.io.IOException
 import java.nio.charset.StandardCharsets
 
 /**
@@ -64,7 +63,6 @@ class Node private constructor(app: Application) {
     }).start()
   }
 
-  @Throws(IOException::class)
   private fun start(am: AssetManager, nodeSecret: NodeSecret?) {
     if (nativeNode == null) {
       nativeNode = NativeNode.getInstance(nodeSecret!!) // takes about 100ms due to static native loads
@@ -72,7 +70,6 @@ class Node private constructor(app: Application) {
     nativeNode!!.start(IOUtils.toString(am.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8))
   }
 
-  @Throws(NodeNotReady::class)
   private fun waitUntilReady() {
     if (nativeNode == null) {
       throw NodeNotReady("NativeNode not started. Call Node.start first")

@@ -126,7 +126,6 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
     return true
   }
 
-  @Throws(Exception::class)
   private fun genContacts(): List<PgpContact> {
     val pgpContactMain = PgpContact(account.email, account.displayName)
     val contacts = ArrayList<PgpContact>()

@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.retrofit.response.node
 import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import java.io.BufferedInputStream
-import java.io.IOException
 
 /**
  * It's a base response from the Node.js server.
@@ -21,6 +20,5 @@ import java.io.IOException
 interface BaseNodeResponse : Parcelable {
   val error: Error?
 
-  @Throws(IOException::class)
   fun handleRawData(bufferedInputStream: BufferedInputStream)
 }

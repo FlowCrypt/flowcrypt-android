@@ -24,7 +24,6 @@ class UpdateAccountRule(private val account: AccountDao, private val contentValu
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
-      @Throws(Throwable::class)
       override fun evaluate() {
         updateAccount()
         base.evaluate()

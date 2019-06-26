@@ -89,7 +89,6 @@ class LoadPrivateKeysFromMailAsyncTaskLoader(context: Context,
    * @throws IOException
    * @throws GoogleAuthException
    */
-  @Throws(MessagingException::class, IOException::class, GoogleAuthException::class)
   private fun getPrivateKeyBackupsUsingJavaMailAPI(session: Session): Collection<NodeKeyDetails> {
     val details = ArrayList<NodeKeyDetails>()
     var store: Store? = null

@@ -33,7 +33,6 @@ class MoveMessagesSyncTask(ownerKey: String,
                            private val destinationLocalFolderName: LocalFolder,
                            private val uids: LongArray) : BaseSyncTask(ownerKey, requestCode) {
 
-  @Throws(Exception::class)
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val srcFolder = store.getFolder(sourceLocalFolderName.fullName) as IMAPFolder
     val destFolder = store.getFolder(destinationLocalFolderName.fullName) as IMAPFolder

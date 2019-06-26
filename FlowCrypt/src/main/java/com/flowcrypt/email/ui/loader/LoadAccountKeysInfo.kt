@@ -103,7 +103,6 @@ class LoadAccountKeysInfo(context: Context,
    * @return [LookUpEmailsResponse]
    * @throws IOException
    */
-  @Throws(IOException::class)
   private fun getLookUpEmailsResponse(emails: List<String>): List<LookUpEmailResponse>? {
     val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
     val response = apiService.postLookUpEmails(PostLookUpEmailsModel(emails)).execute()

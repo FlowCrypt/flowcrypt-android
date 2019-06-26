@@ -38,7 +38,6 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
                                  private val localFolder: LocalFolder,
                                  private val uid: Long) : BaseSyncTask(ownerKey, requestCode) {
 
-  @Throws(Exception::class)
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
     imapFolder.open(Folder.READ_WRITE)
@@ -72,7 +71,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       imapProtocol.handleResult(serverStatusResponse)
 
       rawMsg
-    } as String
+    } as? String ?: throw IllegalStateException("An error occurred during receiving the message details")
 
     val message = imapFolder.getMessageByUID(uid)
     message?.setFlag(Flags.Flag.SEEN, true)

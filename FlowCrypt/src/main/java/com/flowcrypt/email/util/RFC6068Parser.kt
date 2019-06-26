@@ -39,7 +39,6 @@ class RFC6068Parser {
     }
 
     @JvmStatic
-    @Throws(NullPointerException::class, IllegalArgumentException::class)
     fun parse(uri: Uri?): ExtraActionInfo {
       if (uri == null) {
         throw NullPointerException("Argument 'uri' must not be null")

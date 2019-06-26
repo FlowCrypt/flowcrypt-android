@@ -19,7 +19,6 @@ import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.common.util.CollectionUtils
 import java.io.IOException
 import java.util.*
@@ -117,7 +116,6 @@ class UpdateInfoAboutPgpContactsAsyncTaskLoader(context: Context,
    * @return [PgpContact]
    * @throws IOException
    */
-  @Throws(IOException::class, NodeException::class)
   private fun getPgpContactInfoFromServer(email: String): PgpContact? {
     val response = getLookUpEmailResponse(email)
 
@@ -148,7 +146,6 @@ class UpdateInfoAboutPgpContactsAsyncTaskLoader(context: Context,
    * @return [LookUpEmailResponse]
    * @throws IOException
    */
-  @Throws(IOException::class)
   private fun getLookUpEmailResponse(email: String): LookUpEmailResponse? {
     val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
     val response = apiService.postLookUpEmail(PostLookUpEmailModel(email)).execute()

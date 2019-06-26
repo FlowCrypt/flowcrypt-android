@@ -39,7 +39,6 @@ data class KeysDao constructor(var longId: String? = null,
      * @param nodeKeyDetails        Key details;
      * @param passphrase            A passphrase which user provided;
      */
-    @Throws(Exception::class)
     @JvmStatic
     fun generateKeysDao(keyStoreCryptoManager: KeyStoreCryptoManager, type: KeyDetails.Type,
                         nodeKeyDetails: NodeKeyDetails, passphrase: String): KeysDao {
@@ -66,7 +65,6 @@ data class KeysDao constructor(var longId: String? = null,
      * @param nodeKeyDetails        Key details;
      * @param passphrase            A passphrase which user provided;
      */
-    @Throws(Exception::class)
     @JvmStatic
     fun generateKeysDao(keyStoreCryptoManager: KeyStoreCryptoManager, nodeKeyDetails: NodeKeyDetails,
                         passphrase: String): KeysDao {
