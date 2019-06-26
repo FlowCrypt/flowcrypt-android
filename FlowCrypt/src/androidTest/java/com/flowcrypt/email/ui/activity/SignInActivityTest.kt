@@ -79,24 +79,6 @@ class SignInActivityTest : BaseTest() {
   }
 
   @Test
-  fun testShowPrivacyScreen() {
-    onView(withId(R.id.buttonPrivacy))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    onView(allOf<View>(withText(R.string.privacy), withParent(withId(R.id.toolbar))))
-        .check(matches(isDisplayed()))
-  }
-
-  @Test
-  fun testShowTermsScreen() {
-    onView(withId(R.id.buttonTerms))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    onView(allOf<View>(withText(R.string.terms), withParent(withId(R.id.toolbar))))
-        .check(matches(isDisplayed()))
-  }
-
-  @Test
   fun testShowSecurityScreen() {
     onView(withId(R.id.buttonSecurity))
         .check(matches(isDisplayed()))
