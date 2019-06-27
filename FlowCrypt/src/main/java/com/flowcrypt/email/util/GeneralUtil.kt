@@ -13,6 +13,10 @@ import android.content.ClipboardManager
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.Uri
@@ -321,6 +325,31 @@ class GeneralUtil {
       if (intent.resolveActivity(context.packageManager) != null) {
         customTabsIntent.launchUrl(context, intent.data)
       }
+    }
+
+
+    /**
+     * This function helps to get [Bitmap] from the given [Drawable]
+     *
+     * @param drawable The given drawable
+     */
+    fun drawableToBitmap(drawable: Drawable): Bitmap {
+      if (drawable is BitmapDrawable) {
+        if (drawable.bitmap != null) {
+          return drawable.bitmap
+        }
+      }
+
+      val bitmap: Bitmap = if (drawable.intrinsicWidth <= 0 || drawable.intrinsicHeight <= 0) {
+        Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+      } else {
+        Bitmap.createBitmap(drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+      }
+
+      val canvas = Canvas(bitmap)
+      drawable.setBounds(0, 0, canvas.width, canvas.height)
+      drawable.draw(canvas)
+      return bitmap
     }
   }
 }
