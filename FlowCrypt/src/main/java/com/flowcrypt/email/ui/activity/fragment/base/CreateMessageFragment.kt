@@ -1118,7 +1118,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         updateViewsFromIncomingMsgInfo()
         recipientsTo!!.chipifyAllUnterminatedTokens()
         recipientsCc!!.chipifyAllUnterminatedTokens()
-        editTextEmailSubject!!.setText(prepareReplySubject(msgInfo!!.getSubject()))
+        editTextEmailSubject!!.setText(prepareReplySubject(msgInfo!!.getSubject() ?: ""))
       }
 
       if (serviceInfo != null) {
@@ -1316,33 +1316,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       ""
   }
 
-  private fun prepareReplySubject(subject: String?): String {
-    var prefix: String? = null
-
-    when (messageType) {
-      MessageType.REPLY, MessageType.REPLY_ALL -> prefix = "Re"
-
-      MessageType.FORWARD -> prefix = "Fwd"
-
-      else -> {
-      }
+  private fun prepareReplySubject(subject: String): String {
+    val prefix = when (messageType) {
+      MessageType.REPLY, MessageType.REPLY_ALL -> "Re"
+      MessageType.FORWARD -> "Fwd"
+      else -> ""
     }
-
-    if (!TextUtils.isEmpty(prefix)) {
-      if (TextUtils.isEmpty(subject)) {
-        return getString(R.string.template_reply_subject, prefix, "")
-      }
-
-      val pattern = Pattern.compile("^($prefix: )", Pattern.CASE_INSENSITIVE)
-      val matcher = pattern.matcher(subject)
-
-      return if (matcher.find()) {
-        ""
-      } else getString(R.string.template_reply_subject, prefix, subject)
-
-    } else {
-      return ""
+    if (prefix.isEmpty()) {
+      return subject
     }
+    val prefixMatcher = Pattern.compile("^($prefix: )", Pattern.CASE_INSENSITIVE).matcher(subject)
+    return if (prefixMatcher.find()) subject else getString(R.string.template_reply_subject, prefix, subject)
   }
 
   private fun prepareRecipients(recipients: Array<String>?): String {
