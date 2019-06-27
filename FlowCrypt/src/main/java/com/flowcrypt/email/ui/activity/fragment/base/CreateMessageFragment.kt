@@ -1320,10 +1320,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     val prefix = when (messageType) {
       MessageType.REPLY, MessageType.REPLY_ALL -> "Re"
       MessageType.FORWARD -> "Fwd"
-      else -> ""
-    }
-    if (prefix.isEmpty()) {
-      return subject
+      else -> return subject
     }
     val prefixMatcher = Pattern.compile("^($prefix: )", Pattern.CASE_INSENSITIVE).matcher(subject)
     return if (prefixMatcher.find()) subject else getString(R.string.template_reply_subject, prefix, subject)
