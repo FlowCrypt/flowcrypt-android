@@ -1393,15 +1393,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    * @return true if the attachment can be added, otherwise false.
    */
   private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
-    var totalSizeOfAtts = 0
-
-    for ((_, _, _, _, _, _, _, encodedSize) in atts!!) {
-      totalSizeOfAtts += encodedSize.toInt()
-    }
-
-    totalSizeOfAtts += newAttInfo!!.encodedSize.toInt()
-
-    return totalSizeOfAtts < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+    return atts!!.map { it.encodedSize.toInt() }.sum() + (newAttInfo?.encodedSize?.toInt() ?: 0) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
   }
 
 
