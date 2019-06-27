@@ -32,6 +32,7 @@ import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.notifications.CustomNotificationManager
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
 import java.util.*
@@ -287,7 +288,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   }
 
   private fun generateLargeIcon(context: Context): Bitmap {
-    return BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher)
+    return GeneralUtil.drawableToBitmap(context.resources.getDrawable(R.mipmap.ic_launcher, context.theme))
   }
 
   private fun getMsgDetailsPendingIntent(context: Context, requestCode: Int, localFolder: LocalFolder,
