@@ -188,75 +188,57 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       recipientsTo!!.chipifyAllUnterminatedTokens()
       recipientsCc!!.chipifyAllUnterminatedTokens()
       recipientsBcc!!.chipifyAllUnterminatedTokens()
-
       if (!fromAddrs!!.isEnabled(spinnerFrom!!.selectedItemPosition)) {
         showInfoSnackbar(recipientsTo!!, getString(R.string.no_key_available))
         return false
       }
-
-      if (TextUtils.isEmpty(recipientsTo!!.text.toString())) {
+      if (recipientsTo!!.text.toString().isEmpty()) {
         showInfoSnackbar(recipientsTo!!, getString(R.string.text_must_not_be_empty,
-            getString(R.string.prompt_recipients_to)))
+                getString(R.string.prompt_recipients_to)))
         recipientsTo!!.requestFocus()
         return false
       }
-
-      val hasNotValidEmail = (hasNotValidEmail(recipientsTo!!) || hasNotValidEmail(recipientsCc!!)
-          || hasNotValidEmail(recipientsBcc!!))
-
-      if (!hasNotValidEmail) {
-        if (listener!!.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
-          if (!TextUtils.isEmpty(recipientsTo!!.text) && pgpContactsTo!!.isEmpty()) {
-            showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_to)
-            return false
-          }
-
-          if (!TextUtils.isEmpty(recipientsCc!!.text) && pgpContactsCc!!.isEmpty()) {
-            showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_cc)
-            return false
-          }
-
-          if (!TextUtils.isEmpty(recipientsBcc!!.text) && pgpContactsBcc!!.isEmpty()) {
-            showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_bcc)
-            return false
-          }
-
-          if (hasRecipientWithoutPgp(true, pgpContactsTo!!)
-              || hasRecipientWithoutPgp(true, pgpContactsCc!!)
-              || hasRecipientWithoutPgp(true, pgpContactsBcc!!)) {
-            return false
-          }
-        }
-      } else
+      if (hasInvalidEmail(recipientsTo!!, recipientsCc!!, recipientsBcc!!)) {
         return false
-
-      if (TextUtils.isEmpty(editTextEmailSubject!!.text.toString())) {
+      }
+      if (listener!!.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
+        if (recipientsTo!!.text.isNotEmpty() && pgpContactsTo!!.isEmpty()) {
+          showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_to)
+          return false
+        }
+        if (recipientsCc!!.text.isNotEmpty() && pgpContactsCc!!.isEmpty()) {
+          showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_cc)
+          return false
+        }
+        if (recipientsBcc!!.text.isNotEmpty() && pgpContactsBcc!!.isEmpty()) {
+          showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_bcc)
+          return false
+        }
+        if (hasRecipientWithoutPgp(true, pgpContactsTo!! + pgpContactsCc!! + pgpContactsBcc!!)) {
+          return false
+        }
+      }
+      if (editTextEmailSubject!!.text.toString().isEmpty()) {
         showInfoSnackbar(editTextEmailSubject!!, getString(R.string.text_must_not_be_empty,
-            getString(R.string.prompt_subject)))
+                getString(R.string.prompt_subject)))
         editTextEmailSubject!!.requestFocus()
         return false
       }
-
-      if (atts != null && atts.isEmpty() && TextUtils.isEmpty(editTextEmailMsg!!.text.toString())) {
+      if (atts != null && atts.isEmpty() && editTextEmailMsg!!.text.toString().isEmpty()) {
         showInfoSnackbar(editTextEmailMsg!!, getString(R.string.sending_message_must_not_be_empty))
         editTextEmailMsg!!.requestFocus()
         return false
       }
-
-      return if (atts != null && !atts.isEmpty() && hasExternalStorageUris(this.atts)) {
-        val isPermissionGranted = ContextCompat.checkSelfPermission(context!!,
-            Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-        if (isPermissionGranted) {
-          requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-              REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE)
-          false
-        } else {
-          true
-        }
-      } else {
-        true
+      if (atts == null || atts.isEmpty() || !hasExternalStorageUris(this.atts)) {
+        return true
       }
+      if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        return true
+      }
+      requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE)
+      return false
     }
+
 
   /**
    * Generate a forwarded attachments list.
@@ -1370,17 +1352,19 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   /**
-   * Check is the given [PgpContactsNachoTextView] has a not valid email.
+   * Check if the given [pgpContactsNachoTextViews] List has an invalid email.
    *
    * @return <tt>boolean</tt> true - if has, otherwise false..
    */
-  private fun hasNotValidEmail(pgpContactsNachoTextView: PgpContactsNachoTextView): Boolean {
-    val emails = pgpContactsNachoTextView.chipAndTokenValues
-    for (email in emails) {
-      if (!GeneralUtil.isEmailValid(email)) {
-        showInfoSnackbar(pgpContactsNachoTextView, getString(R.string.error_some_email_is_not_valid, email))
-        pgpContactsNachoTextView.requestFocus()
-        return true
+  private fun hasInvalidEmail(vararg pgpContactsNachoTextViews: PgpContactsNachoTextView): Boolean {
+    for (textView in pgpContactsNachoTextViews){
+      val emails = textView.chipAndTokenValues
+      for (email in emails) {
+        if (!GeneralUtil.isEmailValid(email)) {
+          showInfoSnackbar(textView, getString(R.string.error_some_email_is_not_valid, email))
+          textView.requestFocus()
+          return true
+        }
       }
     }
     return false

@@ -330,7 +330,7 @@
     <string name="yes">yes</string>
     <string name="no">no</string>
     <string name="can_not_delete_sent_message">Cannot delete sent message</string>
-    <string name="no_connection_message_will_be_sent_later">Offline. The message will be sent later</string>
+    <string name="no_conn_msg_sent_later">Offline. The message will be sent later</string>
     <string name="me">me</string>
     <string name="sending">Sending&#8230;</string>
     <string name="queued">Queued</string>
