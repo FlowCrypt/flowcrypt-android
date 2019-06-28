@@ -86,10 +86,10 @@ complexity:
   TooManyFunctions:
     active: true
     excludes: "**/test/**,**/androidTest/**,**/*.Test.kt,**/*.Spec.kt,**/*.Spek.kt"
-    thresholdInFiles: 11
-    thresholdInClasses: 11
-    thresholdInInterfaces: 11
-    thresholdInObjects: 11
+    thresholdInFiles: 60 # denbond7 - I changed this. Default was 11
+    thresholdInClasses: 60 # denbond7 - I changed this. Default was 11
+    thresholdInInterfaces: 20 # denbond7 - I changed this. Default was 11
+    thresholdInObjects: 30 # denbond7 - I changed this. Default was 11
     thresholdInEnums: 11
     ignoreDeprecated: false
     ignorePrivate: false
