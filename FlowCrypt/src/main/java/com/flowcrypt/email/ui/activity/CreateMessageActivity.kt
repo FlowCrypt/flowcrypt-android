@@ -127,7 +127,7 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
     Toast.makeText(this, if (GeneralUtil.isConnected(this))
       R.string.sending
     else
-      R.string.no_connection_message_will_be_sent_later, Toast.LENGTH_SHORT).show()
+      R.string.no_conn_msg_sent_later, Toast.LENGTH_SHORT).show()
     finish()
   }
 
