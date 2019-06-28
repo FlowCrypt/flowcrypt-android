@@ -546,7 +546,9 @@ class EmailSyncService : BaseService(), SyncListener {
       val networkInfo = connectivityManager.activeNetworkInfo
       if (GeneralUtil.isConnected(this)) {
         LogsUtil.d(TAG, "networkInfo = $networkInfo")
-        emailSyncManager.beginSync(false)
+        if (::emailSyncManager.isInitialized) {
+          emailSyncManager.beginSync(false)
+        }
       }
     }
   }
