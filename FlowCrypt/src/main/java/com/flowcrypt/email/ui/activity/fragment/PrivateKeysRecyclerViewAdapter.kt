@@ -26,7 +26,8 @@ import java.util.*
  */
 class PrivateKeysRecyclerViewAdapter(context: Context,
                                      private var list: List<NodeKeyDetails>?,
-                                     private val listener: OnKeySelectedListener?) : RecyclerView.Adapter<PrivateKeysRecyclerViewAdapter.ViewHolder>() {
+                                     private val listener: OnKeySelectedListener?)
+  : RecyclerView.Adapter<PrivateKeysRecyclerViewAdapter.ViewHolder>() {
   private val dateFormat: java.text.DateFormat = DateFormat.getMediumDateFormat(context)
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

@@ -175,7 +175,8 @@ class KeysSettingsActivityTest : BaseTest() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
 
-    val file = File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "0x" + details.longId + ".asc")
+    val file =
+        File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "0x" + details.longId + ".asc")
 
     if (file.exists()) {
       file.delete()

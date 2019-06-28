@@ -96,7 +96,8 @@ class MessagesSenderJobService : JobService() {
   /**
    * This is an implementation of [AsyncTask] which sends the outgoing messages.
    */
-  private class SendMessagesAsyncTask internal constructor(jobService: MessagesSenderJobService) : AsyncTask<JobParameters, Boolean, JobParameters>() {
+  private class SendMessagesAsyncTask internal constructor(jobService: MessagesSenderJobService)
+    : AsyncTask<JobParameters, Boolean, JobParameters>() {
     private val weakRef: WeakReference<MessagesSenderJobService> = WeakReference(jobService)
 
     private var sess: Session? = null
@@ -119,7 +120,8 @@ class MessagesSenderJobService : JobService() {
 
             val queuedMsgs = msgDaoSource.getOutboxMsgs(context, account.email, MessageState.QUEUED)
 
-            val sentButNotSavedMsgs = msgDaoSource.getOutboxMsgs(context, account.email, MessageState.SENT_WITHOUT_LOCAL_COPY)
+            val sentButNotSavedMsgs = msgDaoSource.getOutboxMsgs(context, account.email,
+                MessageState.SENT_WITHOUT_LOCAL_COPY)
 
             if (!CollectionUtils.isEmpty(queuedMsgs) || !CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
               sess = OpenStoreHelper.getAccountSess(context, account)
@@ -475,7 +477,7 @@ class MessagesSenderJobService : JobService() {
           val sentRemoteFolder = store!!.getFolder(sentLocalFolder.fullName) as IMAPFolder
 
           if (!sentRemoteFolder.exists()) {
-            throw IllegalArgumentException("The SENT folder doesn't exists. Can't create a " + "copy of the sent message!")
+            throw IllegalArgumentException("The SENT folder doesn't exists. Can't create a copy of the sent message!")
           }
 
           sentRemoteFolder.open(Folder.READ_WRITE)
@@ -503,7 +505,8 @@ class MessagesSenderJobService : JobService() {
   /**
    * The [DataSource] realization for a file which received from [Uri]
    */
-  private class AttachmentInfoDataSource internal constructor(private val context: Context, private val att: AttachmentInfo) : DataSource {
+  private class AttachmentInfoDataSource internal constructor(private val context: Context,
+                                                              private val att: AttachmentInfo) : DataSource {
 
     override fun getInputStream(): InputStream? {
       val inputStream: InputStream?

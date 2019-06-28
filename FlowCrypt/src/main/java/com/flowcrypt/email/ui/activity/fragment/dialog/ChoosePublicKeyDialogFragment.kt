@@ -62,10 +62,8 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val view = LayoutInflater.from(context).inflate(R.layout.fragment_send_user_public_key, if ((view != null) and (view is ViewGroup))
-      view as ViewGroup?
-    else
-      null, false)
+    val view = LayoutInflater.from(context).inflate(R.layout.fragment_send_user_public_key,
+        if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null, false)
 
     textViewMsg = view.findViewById(R.id.textViewMessage)
     progressBar = view.findViewById(R.id.progressBar)
@@ -231,7 +229,8 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
   companion object {
     @JvmField
-    val KEY_ATTACHMENT_INFO_LIST = GeneralUtil.generateUniqueExtraKey("KEY_ATTACHMENT_INFO_LIST", InfoDialogFragment::class.java)
+    val KEY_ATTACHMENT_INFO_LIST =
+        GeneralUtil.generateUniqueExtraKey("KEY_ATTACHMENT_INFO_LIST", InfoDialogFragment::class.java)
 
     private val KEY_TO = GeneralUtil.generateUniqueExtraKey("KEY_TO", InfoDialogFragment::class.java)
 

@@ -60,15 +60,17 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
    * @param uidListOfUnseenMsgs   A list of UID of unseen messages.
    * @param isSilent              true if we don't need sound and vibration for Android 7.0 and below.
    */
-  fun notify(context: Context, account: AccountDao?, localFolder: LocalFolder, generalMsgDetailsList: List<GeneralMessageDetails>?, uidListOfUnseenMsgs: List<Int>, isSilent: Boolean) {
+  fun notify(context: Context, account: AccountDao?, localFolder: LocalFolder,
+             generalMsgDetailsList: List<GeneralMessageDetails>?, uidListOfUnseenMsgs: List<Int>, isSilent: Boolean) {
 
     if (account == null || generalMsgDetailsList == null || generalMsgDetailsList.isEmpty()) {
       notificationManagerCompat.cancel(NOTIFICATIONS_GROUP_MESSAGES)
       return
     }
 
-    val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER == SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+    val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER ==
+        SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+            Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
     if (isNotificationDisabled) {
       return
@@ -96,8 +98,9 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   private fun notifyWithSingleNotification(context: Context, account: AccountDao,
                                            folder: LocalFolder, details: List<GeneralMessageDetails>,
                                            uidOfUnseenMsgs: List<Int>, isSilent: Boolean) {
-    val onlyEncrypted = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY == SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+    val onlyEncrypted = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
+        SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+            Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
     val builder = NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_MESSAGES)
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -167,8 +170,10 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   private fun notifyWithGroupSupport(context: Context, account: AccountDao,
                                      localFolder: LocalFolder, detailsList: List<GeneralMessageDetails>) {
 
-    val isEncryptedModeEnabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY == SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+    val isEncryptedModeEnabled =
+        NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
+            SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+                Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
     val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     prepareAndShowMsgGroup(context, account, localFolder, manager, detailsList)
@@ -208,7 +213,8 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   private fun prepareAndShowMsgGroup(context: Context, account: AccountDao, localFolder: LocalFolder,
                                      notificationManager: NotificationManager,
                                      generalMsgDetailsList: List<GeneralMessageDetails>) {
-    val isEncryptedModeEnabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY == SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
+    val isEncryptedModeEnabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
+        SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
         Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
     if (isEncryptedModeEnabled) {

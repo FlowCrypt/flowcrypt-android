@@ -47,7 +47,8 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
   override val activityTestRule: ActivityTestRule<*>? =
       object : ActivityTestRule<CheckKeysActivity>(CheckKeysActivity::class.java) {
         override fun getActivityIntent(): Intent {
-          val privateKeys = PrivateKeysManager.getKeysFromAssets(arrayOf("node/default@denbond7.com_fisrtKey_prv_default.json"))
+          val privateKeys =
+              PrivateKeysManager.getKeysFromAssets(arrayOf("node/default@denbond7.com_fisrtKey_prv_default.json"))
           return CheckKeysActivity.newIntent(getTargetContext(),
               privateKeys,
               KeyDetails.Type.EMAIL,

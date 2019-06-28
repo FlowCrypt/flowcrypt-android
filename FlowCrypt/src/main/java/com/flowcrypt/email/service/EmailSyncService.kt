@@ -254,7 +254,8 @@ class EmailSyncService : BaseService(), SyncListener {
   }
 
   override fun onMsgsReceived(account: AccountDao, localFolder: LocalFolder,
-                              remoteFolder: IMAPFolder, msgs: Array<javax.mail.Message>, ownerKey: String, requestCode: Int) {
+                              remoteFolder: IMAPFolder, msgs: Array<javax.mail.Message>, ownerKey: String,
+                              requestCode: Int) {
     LogsUtil.d(TAG, "onMessagesReceived: imapFolder = " + remoteFolder.fullName + " message " +
         "count: " + msgs.size)
     try {
@@ -556,7 +557,8 @@ class EmailSyncService : BaseService(), SyncListener {
    * @param localFolder The local reflection of the remote localFolder.
    * @param imapFolder  The localFolder where the new messages exist.
    * @param msg         The new messages.
-   * @throws MessagingException This exception meybe happen when we try to call `{ IMAPFolder#getUID(javax.mail.Message)}`
+   * @throws MessagingException This exception meybe happen when we try to call
+   * `{ IMAPFolder#getUID(javax.mail.Message)}`
    */
   private fun updateAttTable(account: AccountDao, localFolder: LocalFolder,
                              imapFolder: IMAPFolder, msg: javax.mail.Message?) {

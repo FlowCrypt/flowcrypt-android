@@ -39,8 +39,10 @@ data class UpdateInfoAboutPgpContactsResult constructor(val emails: List<String>
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<UpdateInfoAboutPgpContactsResult> = object : Parcelable.Creator<UpdateInfoAboutPgpContactsResult> {
-      override fun createFromParcel(source: Parcel): UpdateInfoAboutPgpContactsResult = UpdateInfoAboutPgpContactsResult(source)
+    val CREATOR: Parcelable.Creator<UpdateInfoAboutPgpContactsResult> =
+        object : Parcelable.Creator<UpdateInfoAboutPgpContactsResult> {
+          override fun createFromParcel(source: Parcel): UpdateInfoAboutPgpContactsResult =
+              UpdateInfoAboutPgpContactsResult(source)
       override fun newArray(size: Int): Array<UpdateInfoAboutPgpContactsResult?> = arrayOfNulls(size)
     }
   }

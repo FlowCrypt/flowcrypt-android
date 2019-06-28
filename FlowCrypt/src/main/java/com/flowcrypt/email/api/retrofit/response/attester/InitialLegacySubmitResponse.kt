@@ -48,7 +48,8 @@ data class InitialLegacySubmitResponse constructor(@SerializedName("error") @Exp
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<InitialLegacySubmitResponse> = object : Parcelable.Creator<InitialLegacySubmitResponse> {
+    val CREATOR: Parcelable.Creator<InitialLegacySubmitResponse> =
+        object : Parcelable.Creator<InitialLegacySubmitResponse> {
       override fun createFromParcel(source: Parcel): InitialLegacySubmitResponse = InitialLegacySubmitResponse(source)
       override fun newArray(size: Int): Array<InitialLegacySubmitResponse?> = arrayOfNulls(size)
     }

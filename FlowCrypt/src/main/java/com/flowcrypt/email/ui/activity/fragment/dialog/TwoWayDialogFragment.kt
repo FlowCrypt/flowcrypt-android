@@ -101,13 +101,16 @@ class TwoWayDialogFragment : DialogFragment() {
   }
 
   companion object {
-    private val KEY_DIALOG_TITLE = GeneralUtil.generateUniqueExtraKey("KEY_DIALOG_TITLE",
-        TwoWayDialogFragment::class.java)
-    private val KEY_DIALOG_MESSAGE = GeneralUtil.generateUniqueExtraKey("KEY_DIALOG_MESSAGE",
-        TwoWayDialogFragment::class.java)
-    private val KEY_POSITIVE_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey("KEY_POSITIVE_BUTTON_TITLE", TwoWayDialogFragment::class.java)
-    private val KEY_NEGATIVE_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey("KEY_NEGATIVE_BUTTON_TITLE", TwoWayDialogFragment::class.java)
-    private val KEY_IS_CANCELABLE = GeneralUtil.generateUniqueExtraKey("KEY_IS_CANCELABLE", TwoWayDialogFragment::class.java)
+    private val KEY_DIALOG_TITLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_DIALOG_TITLE", TwoWayDialogFragment::class.java)
+    private val KEY_DIALOG_MESSAGE =
+        GeneralUtil.generateUniqueExtraKey("KEY_DIALOG_MESSAGE", TwoWayDialogFragment::class.java)
+    private val KEY_POSITIVE_BUTTON_TITLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_POSITIVE_BUTTON_TITLE", TwoWayDialogFragment::class.java)
+    private val KEY_NEGATIVE_BUTTON_TITLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_NEGATIVE_BUTTON_TITLE", TwoWayDialogFragment::class.java)
+    private val KEY_IS_CANCELABLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_IS_CANCELABLE", TwoWayDialogFragment::class.java)
 
     @JvmOverloads
     @JvmStatic

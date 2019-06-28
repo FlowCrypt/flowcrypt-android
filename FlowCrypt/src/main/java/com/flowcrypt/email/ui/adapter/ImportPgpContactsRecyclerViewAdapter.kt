@@ -73,7 +73,8 @@ class ImportPgpContactsRecyclerViewAdapter(private val publicKeys: List<PublicKe
   }
 
   private fun saveContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
-    val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true, null, publicKeyInfo.fingerprint, publicKeyInfo.longId, publicKeyInfo.keyWords, 0)
+    val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
+        null, publicKeyInfo.fingerprint, publicKeyInfo.longId, publicKeyInfo.keyWords, 0)
 
     val uri = ContactsDaoSource().addRow(context, pgpContact)
     if (uri != null) {
@@ -87,7 +88,8 @@ class ImportPgpContactsRecyclerViewAdapter(private val publicKeys: List<PublicKe
   }
 
   private fun updateContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
-    val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true, null, publicKeyInfo.fingerprint, publicKeyInfo.longId, publicKeyInfo.keyWords, 0)
+    val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
+        null, publicKeyInfo.fingerprint, publicKeyInfo.longId, publicKeyInfo.keyWords, 0)
 
     val isUpdated = ContactsDaoSource().updatePgpContact(context, pgpContact) > 0
     if (isUpdated) {

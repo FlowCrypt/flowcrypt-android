@@ -26,7 +26,8 @@ abstract class BasePreferenceFragment : PreferenceFragmentCompat() {
    * @param entries The preferences entries;
    * @return A generated summary.
    */
-  protected fun generateSummary(value: String, values: Array<CharSequence>, entries: Array<CharSequence>): CharSequence {
+  protected fun generateSummary(value: String, values: Array<CharSequence>, entries: Array<CharSequence>)
+      : CharSequence {
     for (i in values.indices) {
       if (values[i] == value) {
         return entries[i]

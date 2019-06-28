@@ -63,7 +63,8 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
       Toast.makeText(this, R.string.internet_connection_is_not_available, Toast.LENGTH_SHORT).show()
       finish()
     }
-    countingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(SearchBackupsInEmailActivity::class.java), GeneralUtil.isDebugBuild())
+    countingIdlingResource = CountingIdlingResource(
+        GeneralUtil.genIdlingResourcesName(SearchBackupsInEmailActivity::class.java), GeneralUtil.isDebugBuild())
     countingIdlingResource.increment()
   }
 
@@ -127,7 +128,9 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.buttonSeeMoreBackupOptions, R.id.buttonBackupMyKey -> startActivityForResult(Intent(this, BackupKeysActivity::class.java), REQUEST_CODE_BACKUP_WITH_OPTION)
+      R.id.buttonSeeMoreBackupOptions,
+      R.id.buttonBackupMyKey ->
+        startActivityForResult(Intent(this, BackupKeysActivity::class.java), REQUEST_CODE_BACKUP_WITH_OPTION)
     }
   }
 

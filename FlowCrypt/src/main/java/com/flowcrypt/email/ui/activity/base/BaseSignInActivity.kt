@@ -26,7 +26,8 @@ import com.google.android.gms.common.api.GoogleApiClient
  * E-mail: DenBond7@gmail.com
  */
 
-abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
+abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener,
+    GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
   /**
    * The main entry point for Google Play services integration.
    */
@@ -64,7 +65,8 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener, Go
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.buttonSignInWithGmail -> GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, rootView, REQUEST_CODE_SIGN_IN)
+      R.id.buttonSignInWithGmail ->
+        GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, rootView, REQUEST_CODE_SIGN_IN)
 
       R.id.buttonOtherEmailProvider -> if (GeneralUtil.isConnected(this)) {
         startActivityForResult(Intent(this, AddNewAccountManuallyActivity::class.java), REQUEST_CODE_ADD_OTHER_ACCOUNT)
@@ -108,6 +110,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener, Go
     const val REQUEST_CODE_SIGN_IN = 10
     const val REQUEST_CODE_ADD_OTHER_ACCOUNT = 11
 
-    private val KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT = GeneralUtil.generateUniqueExtraKey("KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT", BaseSignInActivity::class.java)
+    private val KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT =
+        GeneralUtil.generateUniqueExtraKey("KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT", BaseSignInActivity::class.java)
   }
 }

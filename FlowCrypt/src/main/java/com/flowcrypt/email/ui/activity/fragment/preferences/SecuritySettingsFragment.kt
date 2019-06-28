@@ -42,7 +42,8 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
     return when (preference.key) {
       Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE -> {
         if (UserIdEmailsKeysDaoSource().getLongIdsByEmail(context!!, account!!.email).isEmpty()) {
-          UIUtil.showInfoSnackbar(view!!, getString(R.string.account_has_no_associated_keys, getString(R.string.support_email)))
+          UIUtil.showInfoSnackbar(view!!, getString(R.string.account_has_no_associated_keys,
+              getString(R.string.support_email)))
         } else {
           startActivity(ChangePassPhraseActivity.newIntent(context, account))
         }

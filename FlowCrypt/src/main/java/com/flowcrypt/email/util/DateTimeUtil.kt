@@ -44,7 +44,8 @@ class DateTimeUtil {
       val currentCalendar = Calendar.getInstance()
 
       if (calendarOfDate.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)) {
-        val isTheSameDay = calendarOfDate.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH) && calendarOfDate.get(Calendar.DAY_OF_MONTH) == currentCalendar.get(Calendar.DAY_OF_MONTH)
+        val isTheSameDay = calendarOfDate.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH)
+            && calendarOfDate.get(Calendar.DAY_OF_MONTH) == currentCalendar.get(Calendar.DAY_OF_MONTH)
         if (isTheSameDay) {
           return DateFormat.getTimeFormat(context).format(calendarOfDate.time)
         } else {

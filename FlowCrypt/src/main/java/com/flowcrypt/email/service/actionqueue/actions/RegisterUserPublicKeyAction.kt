@@ -67,7 +67,8 @@ data class RegisterUserPublicKeyAction @JvmOverloads constructor(override var id
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<RegisterUserPublicKeyAction> = object : Parcelable.Creator<RegisterUserPublicKeyAction> {
+    val CREATOR: Parcelable.Creator<RegisterUserPublicKeyAction> =
+        object : Parcelable.Creator<RegisterUserPublicKeyAction> {
       override fun createFromParcel(source: Parcel): RegisterUserPublicKeyAction = RegisterUserPublicKeyAction(source)
       override fun newArray(size: Int): Array<RegisterUserPublicKeyAction?> = arrayOfNulls(size)
     }

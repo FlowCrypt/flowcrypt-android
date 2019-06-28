@@ -27,7 +27,8 @@ class AccountDaoManager {
 
     @JvmStatic
     fun getUserWitMoreThan21Letters(): AccountDao {
-      return TestGeneralUtil.readObjectFromResources("user_with_more_than_21_letters_account.json", AccountDao::class.java)
+      return TestGeneralUtil.readObjectFromResources("user_with_more_than_21_letters_account.json",
+          AccountDao::class.java)
     }
   }
 }

@@ -131,8 +131,8 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     onView(withId(androidx.appcompat.R.id.search_close_btn))
         .perform(click())
     onView(isAssignableFrom(EditText::class.java))
-        .check(matches(withText(isEmptyString()))).check(matches(withHint(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string
-            .search))))
+        .check(matches(withText(isEmptyString())))
+        .check(matches(withHint(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.search))))
   }
 
   private fun generateContentValues(): ContentValues {

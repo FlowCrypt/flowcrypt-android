@@ -113,7 +113,8 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
           clearInfoAboutOldAccount(accountDao)
         }
 
-        AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL -> super.onActivityResult(requestCode, resultCode, data)
+        AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL ->
+          super.onActivityResult(requestCode, resultCode, data)
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
@@ -126,7 +127,8 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
       R.id.buttonTerms -> GeneralUtil.openCustomTab(this, Constants.FLOWCRYPT_TERMS_URL)
 
-      R.id.buttonSecurity -> startActivity(HtmlViewFromAssetsRawActivity.newIntent(this, getString(R.string.security), "html/security.htm"))
+      R.id.buttonSecurity ->
+        startActivity(HtmlViewFromAssetsRawActivity.newIntent(this, getString(R.string.security), "html/security.htm"))
       else -> super.onClick(v)
     }
 

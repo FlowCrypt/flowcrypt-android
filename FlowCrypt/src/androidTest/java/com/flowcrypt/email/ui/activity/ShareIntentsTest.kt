@@ -50,7 +50,8 @@ import java.util.*
 @RunWith(AndroidJUnit4::class)
 class ShareIntentsTest : BaseTest() {
 
-  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(CreateMessageActivity::class.java, false, false)
+  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(CreateMessageActivity::class.java,
+      false, false)
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

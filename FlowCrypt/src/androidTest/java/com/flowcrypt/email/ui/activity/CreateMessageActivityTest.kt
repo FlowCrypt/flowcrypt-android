@@ -80,7 +80,8 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 class CreateMessageActivityTest : BaseTest() {
 
-  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(CreateMessageActivity::class.java, false, false)
+  override val activityTestRule: ActivityTestRule<*>? =
+      ActivityTestRule(CreateMessageActivity::class.java, false, false)
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -95,7 +96,8 @@ class CreateMessageActivityTest : BaseTest() {
 
   private val pgpContact: PgpContact
     get() {
-      val details = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/not_attester_user@denbond7.com_prv_default.json")
+      val details =
+          PrivateKeysManager.getNodeKeyDetailsFromAssets("node/not_attester_user@denbond7.com_prv_default.json")
       return details.primaryPgpContact
     }
 

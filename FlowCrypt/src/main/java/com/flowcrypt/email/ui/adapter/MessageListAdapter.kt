@@ -268,7 +268,12 @@ class MessageListAdapter(context: Context,
         stateTextColor = ContextCompat.getColor(context, R.color.colorPrimary)
       }
 
-      MessageState.ERROR_CACHE_PROBLEM, MessageState.ERROR_DURING_CREATION, MessageState.ERROR_ORIGINAL_MESSAGE_MISSING, MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND, MessageState.ERROR_SENDING_FAILED, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> {
+      MessageState.ERROR_CACHE_PROBLEM,
+      MessageState.ERROR_DURING_CREATION,
+      MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+      MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
+      MessageState.ERROR_SENDING_FAILED,
+      MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> {
         stateTextColor = ContextCompat.getColor(context, R.color.red)
 
         when (messageState) {
@@ -278,11 +283,13 @@ class MessageListAdapter(context: Context,
 
           MessageState.ERROR_ORIGINAL_MESSAGE_MISSING -> state = context.getString(R.string.original_message_missing)
 
-          MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND -> state = context.getString(R.string.original_attachment_not_found)
+          MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND ->
+            state = context.getString(R.string.original_attachment_not_found)
 
           MessageState.ERROR_SENDING_FAILED -> state = context.getString(R.string.cannot_send_message_unknown_error)
 
-          MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> state = context.getString(R.string.could_not_create_no_key_available)
+          MessageState.ERROR_PRIVATE_KEY_NOT_FOUND ->
+            state = context.getString(R.string.could_not_create_no_key_available)
 
           else -> {
           }

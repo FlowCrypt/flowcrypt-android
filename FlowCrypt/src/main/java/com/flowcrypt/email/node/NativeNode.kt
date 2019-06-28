@@ -74,7 +74,8 @@ internal class NativeNode private constructor(private val nodeSecret: NodeSecret
     src += genConst("NODE_AUTH_HEADER", nodeSecret.authHeader)
     src += genConst("NODE_DEBUG", "false")
     src += genConst("APP_ENV", "prod")
-    src += genConst("APP_VERSION", BuildConfig.VERSION_NAME.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0])
+    src += genConst("APP_VERSION",
+        BuildConfig.VERSION_NAME.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0])
     src += genConst("APP_PROFILE", "false")
     src += jsCode
     return src

@@ -29,7 +29,8 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
   @JvmField
   @VisibleForTesting
   val msgsIdlingResource: CountingIdlingResource =
-      CountingIdlingResource(GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java), GeneralUtil.isDebugBuild())
+      CountingIdlingResource(GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java),
+          GeneralUtil.isDebugBuild())
   private var hasMoreMsgs = true
 
   abstract fun refreshFoldersFromCache()
