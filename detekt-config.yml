@@ -62,7 +62,7 @@ complexity:
     ignoredLabels: ""
   LargeClass:
     active: true
-    threshold: 600
+    threshold: 1500 # denbond7 - I changed this. Default was 600.
   LongMethod:
     active: true
     threshold: 150 # denbond7 - I changed this. Default was 60. Need to fix it in the future
