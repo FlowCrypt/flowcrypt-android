@@ -228,8 +228,8 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     }
   }
 
-  override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-    when (parent.id) {
+  override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+    when (parent?.id) {
       R.id.spinnerImapSecurityType -> {
         val (_, _, defImapPort) = parent.adapter.getItem(position) as SecurityType
         if (isImapSpinnerRestored) {
