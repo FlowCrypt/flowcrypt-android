@@ -68987,6 +68987,16 @@ const fmtMsgContentBlockAsHtml = (sanitizedHtmlContent, frame) => {
   return `<div style="${generalCss}${frameCss}">${sanitizedHtmlContent}</div>\n`;
 };
 
+exports.stripHtmlRootTags = html => {
+  html = html.replace(/<\/?html[^>]*>/g, ''); // remove opening and closing html tags
+
+  html = html.replace(/<head[^>]*>.*<\/head>/g, ''); // remove the whole head section
+
+  html = html.replace(/<\/?body[^>]*>/g, ''); // remove opening and closing body tags
+
+  return html.trim();
+};
+
 exports.fmtContentBlock = contentBlocks => {
   let msgContentAsHtml = '';
   let msgContentAsText = '';
@@ -68996,13 +69006,13 @@ exports.fmtContentBlock = contentBlocks => {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(common_1.Str.asEscapedHtml(block.content.toString()), 'green');
       msgContentAsText += block.content.toString();
     } else if (block.type === 'decryptedHtml') {
-      msgContentAsHtml += fmtMsgContentBlockAsHtml(block.content.toString(), 'green');
+      msgContentAsHtml += fmtMsgContentBlockAsHtml(exports.stripHtmlRootTags(block.content.toString()), 'green');
       msgContentAsText += block.content.toString(); // todo - convert html to text
     } else if (block.type === 'plainText') {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(common_1.Str.asEscapedHtml(block.content.toString()), 'plain');
       msgContentAsText += block.content.toString();
     } else if (block.type === 'plainHtml') {
-      msgContentAsHtml += fmtMsgContentBlockAsHtml(block.content.toString(), 'plain');
+      msgContentAsHtml += fmtMsgContentBlockAsHtml(exports.stripHtmlRootTags(block.content.toString()), 'plain');
       msgContentAsText += block.content.toString(); // todo - convert html to text
     } else if (block.type === 'signedMsg') {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(block.content.toString(), 'gray');
