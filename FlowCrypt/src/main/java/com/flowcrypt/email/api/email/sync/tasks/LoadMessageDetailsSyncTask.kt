@@ -48,7 +48,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       val args = Argument()
       val list = Argument()
       list.writeString("RFC822.SIZE")
-      list.writeString("BODY[]<0.204800>")
+      list.writeString("BODY[]")
       args.writeArgument(list)
 
       val responses = imapProtocol.command("UID FETCH $uid", args)
