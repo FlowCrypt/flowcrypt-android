@@ -135,7 +135,8 @@ class EmailUtil {
         attInfo.type = GeneralUtil.getFileMimeTypeFromUri(context, uri)
         attInfo.id = generateContentId()
 
-        val cursor = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null)
+        val cursor = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME,
+            OpenableColumns.SIZE), null, null, null)
         if (cursor != null) {
           if (cursor.moveToFirst()) {
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)

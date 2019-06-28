@@ -61,9 +61,12 @@ class WebViewInfoDialogFragment : DialogFragment(), View.OnClickListener {
   }
 
   companion object {
-    private val KEY_INFO_DIALOG_TITLE = GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_TITLE", WebViewInfoDialogFragment::class.java)
-    private val KEY_INFO_DIALOG_MESSAGE = GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_MESSAGE", WebViewInfoDialogFragment::class.java)
-    private val KEY_INFO_IS_CANCELABLE = GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_CANCELABLE", WebViewInfoDialogFragment::class.java)
+    private val KEY_INFO_DIALOG_TITLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_TITLE", WebViewInfoDialogFragment::class.java)
+    private val KEY_INFO_DIALOG_MESSAGE =
+        GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_MESSAGE", WebViewInfoDialogFragment::class.java)
+    private val KEY_INFO_IS_CANCELABLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_CANCELABLE", WebViewInfoDialogFragment::class.java)
 
     @JvmOverloads
     @JvmStatic

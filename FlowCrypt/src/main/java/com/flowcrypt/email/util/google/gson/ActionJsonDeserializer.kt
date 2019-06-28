@@ -39,7 +39,8 @@ class ActionJsonDeserializer : JsonDeserializer<Action> {
 
       Action.Type.SEND_WELCOME_TEST_EMAIL -> context.deserialize(json, SendWelcomeTestEmailAction::class.java)
 
-      Action.Type.FILL_USER_ID_EMAILS_KEYS_TABLE -> context.deserialize(json, FillUserIdEmailsKeysTableAction::class.java)
+      Action.Type.FILL_USER_ID_EMAILS_KEYS_TABLE ->
+        context.deserialize(json, FillUserIdEmailsKeysTableAction::class.java)
 
       Action.Type.ENCRYPT_PRIVATE_KEYS -> context.deserialize(json, EncryptPrivateKeysIfNeededAction::class.java)
     }

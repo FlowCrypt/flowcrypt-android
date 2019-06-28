@@ -115,7 +115,8 @@ class AttachmentDaoSource : BaseDaoSource() {
    * @param contentValues The [ContentValues] which contains new information.
    * @return The count of the updated row or -1 up.
    */
-  fun update(context: Context, email: String?, label: String?, uid: Long, attId: String, contentValues: ContentValues): Int {
+  fun update(context: Context, email: String?, label: String?, uid: Long, attId: String,
+             contentValues: ContentValues): Int {
     val contentResolver = context.contentResolver
     return if (email != null && label != null && contentResolver != null) {
       val where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " = ? AND " + COL_ATTACHMENT_ID +
@@ -300,7 +301,8 @@ class AttachmentDaoSource : BaseDaoSource() {
           cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)),
           uri,
           false,
-          !cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER)) && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0, 0
+          !cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))
+              && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0, 0
       )
     }
   }

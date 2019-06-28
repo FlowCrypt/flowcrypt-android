@@ -36,7 +36,8 @@ import org.junit.runner.RunWith
 @LargeTest
 @RunWith(AndroidJUnit4::class)
 class HtmlViewFromAssetsRawActivityTest : BaseTest() {
-  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(HtmlViewFromAssetsRawActivity::class.java, false, false)
+  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(HtmlViewFromAssetsRawActivity::class.java,
+      false, false)
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

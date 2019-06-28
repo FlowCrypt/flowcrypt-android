@@ -50,7 +50,8 @@ class PrivateKeysManager {
     @JvmStatic
     fun getNodeKeyDetailsFromAssets(assetsPath: String): NodeKeyDetails {
       val gson = NodeGson.gson
-      val json = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().context, assetsPath)
+      val json =
+          TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().context, assetsPath)
       return gson.fromJson(json, NodeKeyDetails::class.java)
     }
 

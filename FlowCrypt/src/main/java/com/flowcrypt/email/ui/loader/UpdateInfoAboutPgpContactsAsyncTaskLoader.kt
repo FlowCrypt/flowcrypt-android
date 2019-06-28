@@ -47,7 +47,8 @@ import java.util.*
  */
 
 class UpdateInfoAboutPgpContactsAsyncTaskLoader(context: Context,
-                                                private val emails: List<String>) : AsyncTaskLoader<LoaderResult>(context) {
+                                                private val emails: List<String>)
+  : AsyncTaskLoader<LoaderResult>(context) {
 
   init {
     onContentChanged()

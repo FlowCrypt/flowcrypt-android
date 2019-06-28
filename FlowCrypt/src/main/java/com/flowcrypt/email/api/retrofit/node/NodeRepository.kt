@@ -54,7 +54,8 @@ class NodeRepository : PgpApiRepository {
   /**
    * Here we describe a logic of making requests to Node.js using [retrofit2.Retrofit]
    */
-  private class Worker internal constructor(private val liveData: MutableLiveData<NodeResponseWrapper<*>>) : AsyncTask<NodeRequestWrapper<*>, Void, NodeResponseWrapper<*>>() {
+  private class Worker internal constructor(private val liveData: MutableLiveData<NodeResponseWrapper<*>>)
+    : AsyncTask<NodeRequestWrapper<*>, Void, NodeResponseWrapper<*>>() {
 
     override fun doInBackground(vararg nodeRequestWrappers: NodeRequestWrapper<*>): NodeResponseWrapper<*> {
       val nodeRequestWrapper = nodeRequestWrappers[0]

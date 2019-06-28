@@ -263,7 +263,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param requestCode            The unique request code for identify the current action.
    * @param sourcesLocalFolder     The message [LocalFolder] object.
    * @param destinationLocalFolder The new destionation [LocalFolder] object.
-   * @param uid                    The [com.sun.mail.imap.protocol.UID] of [                               .Message ).][javax.mail]
+   * @param uid                    The [com.sun.mail.imap.protocol.UID] of [javax.mail.Message]
    */
   fun moveMsg(requestCode: Int, sourcesLocalFolder: LocalFolder,
               destinationLocalFolder: LocalFolder, uid: Int) {

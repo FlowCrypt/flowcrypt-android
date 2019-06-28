@@ -32,7 +32,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
   private var tvResult: TextView? = null
   private var hasTestFailure: Boolean = false
   private var encryptedMsg: String? = null
-  private var encryptedBytes: ByteArray? = null
+  private var encryptBytes: ByteArray? = null
   private val payloads = arrayOf(TestData.payload(1), TestData.payload(3), TestData.payload(5))
   private var allTestsStartTime: Long = 0
   private var requestsManager: RequestsManager? = null
@@ -126,22 +126,22 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
         R.id.req_id_encrypt_file -> {
           val encryptFileResult = responseWrapper.result as EncryptedFileResult?
           addResultLine("encrypt-file", encryptFileResult, responseWrapper.executionTime)
-          encryptedBytes = encryptFileResult!!.encryptedBytes
-          requestsManager!!.decryptFile(R.id.req_id_decrypt_file_ecc, encryptedBytes!!, TestData.mixedPrvKeys)
+          encryptBytes = encryptFileResult!!.encryptBytes
+          requestsManager!!.decryptFile(R.id.req_id_decrypt_file_ecc, encryptBytes!!, TestData.mixedPrvKeys)
         }
 
         R.id.req_id_decrypt_file_ecc -> {
           val eccDecryptedFileResult = responseWrapper.result as DecryptedFileResult?
           printDecryptFileResult("decrypt-file-ecc", TEST_MSG.toByteArray(), eccDecryptedFileResult!!,
               responseWrapper.executionTime)
-          requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048, encryptedBytes!!, TestData.rsa2048PrvKeyInfo())
+          requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048, encryptBytes!!, TestData.rsa2048PrvKeyInfo())
         }
 
         R.id.req_id_decrypt_file_rsa_2048 -> {
           val rsa2048DecryptedFileResult = responseWrapper.result as DecryptedFileResult?
           printDecryptFileResult("decrypt-file-rsa2048", TEST_MSG.toByteArray(), rsa2048DecryptedFileResult!!,
               responseWrapper.executionTime)
-          requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_4096, encryptedBytes!!, TestData.rsa4096PrvKeyInfo())
+          requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_4096, encryptBytes!!, TestData.rsa4096PrvKeyInfo())
         }
 
         R.id.req_id_decrypt_file_rsa_4096 -> {
@@ -155,7 +155,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
           val encryptedFileResult1Mb = responseWrapper.result as EncryptedFileResult?
           addResultLine("encrypt-file-" + 1 + "m" + "-rsa2048", encryptedFileResult1Mb,
               responseWrapper.executionTime)
-          requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048_1mb, encryptedFileResult1Mb!!.encryptedBytes!!,
+          requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048_1mb, encryptedFileResult1Mb!!.encryptBytes!!,
               TestData.rsa2048PrvKeyInfo())
         }
 
@@ -171,7 +171,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
           addResultLine("encrypt-file-" + 3 + "m" + "-rsa2048", encryptedFileResult3Mb,
               responseWrapper.executionTime)
           requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048_3mb, encryptedFileResult3Mb!!
-              .encryptedBytes!!, TestData.eccPrvKeyInfo())
+              .encryptBytes!!, TestData.eccPrvKeyInfo())
         }
 
         R.id.req_id_decrypt_file_rsa_2048_3mb -> {
@@ -186,7 +186,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
           addResultLine("encrypt-file-" + 5 + "m" + "-rsa2048", encryptedFileResult5Mb,
               responseWrapper.executionTime)
           requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048_5mb, encryptedFileResult5Mb!!
-              .encryptedBytes!!, TestData.eccPrvKeyInfo())
+              .encryptBytes!!, TestData.eccPrvKeyInfo())
         }
 
         R.id.req_id_decrypt_file_rsa_2048_5mb -> {
@@ -205,7 +205,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
           val encryptFileFromUriResult = responseWrapper.result as EncryptedFileResult?
           addResultLine("encrypt-file", encryptFileFromUriResult, responseWrapper.executionTime)
           requestsManager!!.decryptFile(R.id.req_id_decrypt_file_rsa_2048_from_uri, encryptFileFromUriResult!!
-              .encryptedBytes!!, TestData.rsa2048PrvKeyInfo())
+              .encryptBytes!!, TestData.rsa2048PrvKeyInfo())
         }
 
         R.id.req_id_decrypt_file_rsa_2048_from_uri -> {
@@ -263,7 +263,8 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
     } else {
       val block = r.msgBlocks!![0]
       when {
-        block.type !== MsgBlock.Type.DECRYPTED_TEXT -> addResultLine(actionName, executionTime, "wrong block type: " + r.msgBlocks!!.size, false)
+        block.type !== MsgBlock.Type.DECRYPTED_TEXT ->
+          addResultLine(actionName, executionTime, "wrong block type: " + r.msgBlocks!!.size, false)
         block.content != TEST_MSG_HTML -> addResultLine(actionName, executionTime, "block content mismatch", false)
         r.msgBlocks!!.size > 1 -> addResultLine(actionName, executionTime, "unexpected second block", false)
         else -> addResultLine(actionName, r, executionTime)
@@ -311,6 +312,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
     private const val REQUEST_CODE_CHOOSE_FILE = 10
 
     private const val TEST_MSG = "this is ~\na test for\n\ndecrypting\nunicode:\u03A3\nthat's all"
-    private const val TEST_MSG_HTML = "this is ~<br>a test " + "for<br><br>decrypting<br>unicode:\u03A3<br>that&#39;s all"
+    private const val TEST_MSG_HTML =
+        "this is ~<br>a test " + "for<br><br>decrypting<br>unicode:\u03A3<br>that&#39;s all"
   }
 }

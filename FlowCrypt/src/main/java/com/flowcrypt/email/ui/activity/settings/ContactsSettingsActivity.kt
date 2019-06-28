@@ -32,7 +32,8 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 
-class ContactsSettingsActivity : BaseSettingsActivity(), LoaderManager.LoaderCallbacks<Cursor>, ContactsListCursorAdapter.OnDeleteContactListener, View.OnClickListener {
+class ContactsSettingsActivity : BaseSettingsActivity(), LoaderManager.LoaderCallbacks<Cursor>,
+    ContactsListCursorAdapter.OnDeleteContactListener, View.OnClickListener {
   private lateinit var progressBar: View
   private lateinit var listView: ListView
   private lateinit var emptyView: View

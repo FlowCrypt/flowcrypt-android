@@ -43,7 +43,8 @@ import javax.crypto.spec.SecretKeySpec
  * http://stackoverflow.com/questions/10007147/getting-a-illegalblocksizeexception-data-must-not-be-longer-than-256
  * -bytes-when), we use the following algorithm for option RSA + AES:
  *
- *  * Generate an RSA key pair via `KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, PROVIDER_ANDROID_KEY_STORE)`
+ *  * Generate an RSA key pair via `
+ *  KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, PROVIDER_ANDROID_KEY_STORE)`
  *  * Generate a 128 bits symmetric key with use [SecureRandom]
  *  * Encrypt and save the symmetric key with the RSA key from Android Keystore System to the shared preferences
  *  * Encrypt the data with the decrypted symmetric key
@@ -388,7 +389,8 @@ private constructor(context: Context?) {
     /**
      * Normalize an input String to return only 16 bytes for algorithm parameter spec.
      *
-     * @param rawString The input String which must be equals or longer then [KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC]
+     * @param rawString The input String which must be equals or longer then
+     * [KeyStoreCryptoManager.SIZE_OF_ALGORITHM_PARAMETER_SPEC]
      * @return <tt>String</tt> Return a normalized String.
      */
     @JvmStatic

@@ -45,7 +45,8 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:06
  * E-mail: DenBond7@gmail.com
  */
-class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener, RadioGroup.OnCheckedChangeListener, LoaderManager.LoaderCallbacks<LoaderResult> {
+class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener,
+    RadioGroup.OnCheckedChangeListener, LoaderManager.LoaderCallbacks<LoaderResult> {
 
   @get:VisibleForTesting
   var countingIdlingResource: CountingIdlingResource? = null
@@ -70,7 +71,8 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     super.onCreate(savedInstanceState)
     initViews()
     account = AccountDaoSource().getActiveAccountInformation(this)
-    countingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(BackupKeysActivity::class.java), GeneralUtil.isDebugBuild())
+    countingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(BackupKeysActivity::class.java),
+        GeneralUtil.isDebugBuild())
   }
 
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
@@ -185,7 +187,8 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
         UIUtil.exchangeViewVisibility(this, false, progressBar!!, rootView)
       }
 
-      isPrivateKeySendingNow -> Toast.makeText(this, R.string.please_wait_while_message_will_be_sent, Toast.LENGTH_SHORT).show()
+      isPrivateKeySendingNow -> Toast.makeText(this, R.string.please_wait_while_message_will_be_sent,
+          Toast.LENGTH_SHORT).show()
 
       else -> super.onBackPressed()
     }

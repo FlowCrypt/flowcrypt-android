@@ -37,7 +37,8 @@ interface PgpApiRepository {
    * @param liveData    An instance of [MutableLiveData] which will be used for the result delivering.
    * @param request     An instance of [ParseDecryptMsgRequest] which contains information about a message.
    */
-  fun parseDecryptMsg(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>, request: ParseDecryptMsgRequest)
+  fun parseDecryptMsg(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>,
+                      request: ParseDecryptMsgRequest)
 
   /**
    * Check the passphrase strength

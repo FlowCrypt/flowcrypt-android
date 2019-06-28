@@ -21,10 +21,10 @@ import java.io.BufferedInputStream
  * E-mail: DenBond7@gmail.com
  */
 data class EncryptedFileResult constructor(@Expose override val error: Error?,
-                                           var encryptedBytes: ByteArray? = null) : BaseNodeResponse {
+                                           var encryptBytes: ByteArray? = null) : BaseNodeResponse {
 
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
-    encryptedBytes = IOUtils.toByteArray(bufferedInputStream)
+    encryptBytes = IOUtils.toByteArray(bufferedInputStream)
   }
 
   constructor(source: Parcel) : this(
@@ -39,7 +39,7 @@ data class EncryptedFileResult constructor(@Expose override val error: Error?,
   override fun writeToParcel(dest: Parcel, flags: Int) =
       with(dest) {
         writeParcelable(error, 0)
-        writeByteArray(encryptedBytes)
+        writeByteArray(encryptBytes)
       }
 
   override fun equals(other: Any?): Boolean {
@@ -49,17 +49,17 @@ data class EncryptedFileResult constructor(@Expose override val error: Error?,
     other as EncryptedFileResult
 
     if (error != other.error) return false
-    if (encryptedBytes != null) {
-      if (other.encryptedBytes == null) return false
-      if (!encryptedBytes!!.contentEquals(other.encryptedBytes!!)) return false
-    } else if (other.encryptedBytes != null) return false
+    if (encryptBytes != null) {
+      if (other.encryptBytes == null) return false
+      if (!encryptBytes!!.contentEquals(other.encryptBytes!!)) return false
+    } else if (other.encryptBytes != null) return false
 
     return true
   }
 
   override fun hashCode(): Int {
     var result = error?.hashCode() ?: 0
-    result = 31 * result + (encryptedBytes?.contentHashCode() ?: 0)
+    result = 31 * result + (encryptBytes?.contentHashCode() ?: 0)
     return result
   }
 

@@ -164,7 +164,8 @@ class SyncJobService : JobService(), SyncListener {
 
   }
 
-  override fun onFoldersInfoReceived(account: AccountDao, folders: Array<javax.mail.Folder>, ownerKey: String, requestCode: Int) {
+  override fun onFoldersInfoReceived(account: AccountDao, folders: Array<javax.mail.Folder>, ownerKey: String,
+                                     requestCode: Int) {
 
   }
 
@@ -226,7 +227,8 @@ class SyncJobService : JobService(), SyncListener {
    * This is a worker. Here we will do sync in the background thread. If the sync will be failed we'll schedule it
    * again.
    */
-  private class CheckNewMessagesJobTask internal constructor(syncJobService: SyncJobService) : AsyncTask<JobParameters, Boolean, JobParameters>() {
+  private class CheckNewMessagesJobTask internal constructor(syncJobService: SyncJobService)
+    : AsyncTask<JobParameters, Boolean, JobParameters>() {
     private val weakRef: WeakReference<SyncJobService> = WeakReference(syncJobService)
 
     private var sess: Session? = null

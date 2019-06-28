@@ -101,7 +101,8 @@ import javax.mail.internet.InternetAddress
  * E-mail: DenBond7@gmail.com
  */
 
-class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, AdapterView.OnItemSelectedListener, View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
+class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, AdapterView.OnItemSelectedListener,
+    View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
 
   private var onMsgSendListener: OnMessageSendListener? = null
   private var listener: OnChangeMessageEncryptionTypeListener? = null
@@ -345,7 +346,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
       REQUEST_CODE_NO_PGP_FOUND_DIALOG -> when (resultCode) {
-        NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL -> listener!!.onMsgEncryptionTypeChanged(MessageEncryptionType.STANDARD)
+        NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL ->
+          listener!!.onMsgEncryptionTypeChanged(MessageEncryptionType.STANDARD)
 
         NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY -> if (data != null) {
           val pgpContact = data.getParcelableExtra<PgpContact>(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
@@ -457,20 +459,21 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
     when (requestCode) {
-      REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE -> if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-        sendMsg()
-      } else {
-        Toast.makeText(activity, R.string.cannot_send_attachment_without_read_permission,
-            Toast.LENGTH_LONG).show()
-      }
+      REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE ->
+        if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+          sendMsg()
+        } else {
+          Toast.makeText(activity, R.string.cannot_send_attachment_without_read_permission,
+              Toast.LENGTH_LONG).show()
+        }
 
-      REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO -> if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-        addAtts()
-        showAtts()
-      } else {
-        Toast.makeText(activity, R.string.cannot_send_attachment_without_read_permission,
-            Toast.LENGTH_LONG).show()
-      }
+      REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO ->
+        if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+          addAtts()
+          showAtts()
+        } else {
+          Toast.makeText(activity, R.string.cannot_send_attachment_without_read_permission, Toast.LENGTH_LONG).show()
+        }
 
       else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
@@ -510,7 +513,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     when (loaderId) {
       R.id.loader_id_load_info_about_pgp_contacts_to -> {
         isUpdateToCompleted = true
-        pgpContactsTo = getInfoAboutPgpContacts(result as UpdateInfoAboutPgpContactsResult?, progressBarTo!!, R.string.to)
+        pgpContactsTo = getInfoAboutPgpContacts(result as UpdateInfoAboutPgpContactsResult?,
+            progressBarTo!!, R.string.to)
 
         if (pgpContactsTo != null && pgpContactsTo!!.isNotEmpty()) {
           updateChips(recipientsTo!!, pgpContactsTo!!)
@@ -519,7 +523,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
       R.id.loader_id_load_info_about_pgp_contacts_cc -> {
         isUpdateCcCompleted = true
-        pgpContactsCc = getInfoAboutPgpContacts(result as UpdateInfoAboutPgpContactsResult?, progressBarCc!!, R.string.cc)
+        pgpContactsCc = getInfoAboutPgpContacts(result as UpdateInfoAboutPgpContactsResult?,
+            progressBarCc!!, R.string.cc)
 
         if (pgpContactsCc != null && pgpContactsCc!!.isNotEmpty()) {
           updateChips(recipientsCc!!, pgpContactsCc!!)
@@ -602,14 +607,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   override fun onFocusChange(v: View, hasFocus: Boolean) {
     when (v.id) {
-      R.id.editTextRecipientTo -> runUpdatePgpContactsAction(pgpContactsTo, progressBarTo, R.id.loader_id_load_info_about_pgp_contacts_to,
-          hasFocus)
+      R.id.editTextRecipientTo -> runUpdatePgpContactsAction(pgpContactsTo, progressBarTo,
+          R.id.loader_id_load_info_about_pgp_contacts_to, hasFocus)
 
-      R.id.editTextRecipientCc -> runUpdatePgpContactsAction(pgpContactsCc, progressBarCc, R.id.loader_id_load_info_about_pgp_contacts_cc,
-          hasFocus)
+      R.id.editTextRecipientCc -> runUpdatePgpContactsAction(pgpContactsCc, progressBarCc,
+          R.id.loader_id_load_info_about_pgp_contacts_cc, hasFocus)
 
-      R.id.editTextRecipientBcc -> runUpdatePgpContactsAction(pgpContactsBcc, progressBarBcc, R.id.loader_id_load_info_about_pgp_contacts_bcc,
-          hasFocus)
+      R.id.editTextRecipientBcc -> runUpdatePgpContactsAction(pgpContactsBcc, progressBarBcc,
+          R.id.loader_id_load_info_about_pgp_contacts_bcc, hasFocus)
 
       R.id.editTextEmailSubject, R.id.editTextEmailMessage -> if (hasFocus) {
         var isExpandButtonNeeded = false
@@ -1258,7 +1263,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private fun updateViewsIfReplyMode() {
     if (folderType != null) {
       when (folderType) {
-        FoldersManager.FolderType.SENT, FoldersManager.FolderType.OUTBOX -> recipientsTo!!.setText(prepareRecipients(msgInfo!!.getTo()))
+        FoldersManager.FolderType.SENT,
+        FoldersManager.FolderType.OUTBOX -> recipientsTo!!.setText(prepareRecipients(msgInfo!!.getTo()))
 
         else -> recipientsTo!!.setText(prepareRecipients(msgInfo!!.getFrom()))
       }

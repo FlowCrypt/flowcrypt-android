@@ -124,7 +124,8 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
           val msgsCount = msgDaoSource.getOutboxMsgs(this, email).size
           ImapLabelsDaoSource().updateLabelMsgsCount(this, email, label, msgsCount)
 
-          val hasAtts = !CollectionUtils.isEmpty(outgoingMsgInfo.atts) || !CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)
+          val hasAtts = !CollectionUtils.isEmpty(outgoingMsgInfo.atts)
+              || !CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)
 
           if (hasAtts) {
             if (!msgAttsCacheDir.exists()) {
@@ -233,7 +234,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
               continue
             }
 
-            val encryptedBytes = encryptedFileResult.encryptedBytes
+            val encryptedBytes = encryptedFileResult.encryptBytes
             FileUtils.writeByteArrayToFile(encryptedTempFile, encryptedBytes!!)
             val uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, encryptedTempFile)
             att.uri = uri
@@ -306,7 +307,9 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
   }
 
   companion object {
-    private val EXTRA_KEY_OUTGOING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_OUTGOING_MESSAGE_INFO", PrepareOutgoingMessagesJobIntentService::class.java)
+    private val EXTRA_KEY_OUTGOING_MESSAGE_INFO =
+        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_OUTGOING_MESSAGE_INFO",
+            PrepareOutgoingMessagesJobIntentService::class.java)
     private val TAG = PrepareOutgoingMessagesJobIntentService::class.java.simpleName
 
     /**

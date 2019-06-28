@@ -174,7 +174,8 @@ class AttachmentDownloadManagerService : Service() {
    * The incoming handler realization. This handler will be used to communicate with current
    * service and the worker thread.
    */
-  private class ReplyHandler internal constructor(attDownloadManagerService: AttachmentDownloadManagerService) : Handler() {
+  private class ReplyHandler internal constructor(attDownloadManagerService: AttachmentDownloadManagerService)
+    : Handler() {
 
     private val weakRef: WeakReference<AttachmentDownloadManagerService> = WeakReference(attDownloadManagerService)
 
@@ -183,7 +184,8 @@ class AttachmentDownloadManagerService : Service() {
         val attDownloadManagerService = weakRef.get()
         val notificationManager = attDownloadManagerService?.attsNotificationManager
 
-        val (attInfo, exception, uri, progressInPercentage, timeLeft, isLast) = message.obj as DownloadAttachmentTaskResult
+        val (attInfo, exception, uri, progressInPercentage, timeLeft, isLast)
+            = message.obj as DownloadAttachmentTaskResult
 
         when (message.what) {
           MESSAGE_EXCEPTION_HAPPENED -> notificationManager?.errorHappened(attDownloadManagerService, attInfo!!,
@@ -238,7 +240,8 @@ class AttachmentDownloadManagerService : Service() {
    * This handler will be used by the instance of [HandlerThread] to receive message from
    * the UI thread.
    */
-  private class ServiceWorkerHandler internal constructor(looper: Looper, private val messenger: Messenger) : Handler(looper), OnDownloadAttachmentListener {
+  private class ServiceWorkerHandler internal constructor(looper: Looper, private val messenger: Messenger)
+    : Handler(looper), OnDownloadAttachmentListener {
     private val executorService: ExecutorService = Executors.newFixedThreadPool(QUEUE_SIZE)
 
     @Volatile
@@ -335,7 +338,8 @@ class AttachmentDownloadManagerService : Service() {
 
     override fun onProgress(attInfo: AttachmentInfo, progressInPercentage: Int, timeLeft: Long) {
       try {
-        val result = DownloadAttachmentTaskResult(attInfo, progressInPercentage = progressInPercentage, timeLeft = timeLeft)
+        val result = DownloadAttachmentTaskResult(attInfo, progressInPercentage = progressInPercentage,
+            timeLeft = timeLeft)
         messenger.send(Message.obtain(null, ReplyHandler.MESSAGE_PROGRESS, result))
       } catch (remoteException: RemoteException) {
         remoteException.printStackTrace()
@@ -666,7 +670,8 @@ class AttachmentDownloadManagerService : Service() {
     const val ACTION_CANCEL_DOWNLOAD_ATTACHMENT = BuildConfig.APPLICATION_ID + ".ACTION_CANCEL_DOWNLOAD_ATTACHMENT"
     const val ACTION_RETRY_DOWNLOAD_ATTACHMENT = BuildConfig.APPLICATION_ID + ".ACTION_RETRY_DOWNLOAD_ATTACHMENT"
 
-    val EXTRA_KEY_ATTACHMENT_INFO = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ATTACHMENT_INFO", AttachmentDownloadManagerService::class.java)
+    val EXTRA_KEY_ATTACHMENT_INFO =
+        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ATTACHMENT_INFO", AttachmentDownloadManagerService::class.java)
 
     private val TAG = AttachmentDownloadManagerService::class.java.simpleName
 

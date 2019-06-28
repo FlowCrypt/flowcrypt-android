@@ -285,7 +285,8 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
     }
   }
 
-  private fun checkSecurityTypeOpt(portViewId: Int, spinnerViewId: Int, option: SecurityType.Option, portValue: String) {
+  private fun checkSecurityTypeOpt(portViewId: Int, spinnerViewId: Int, option: SecurityType.Option,
+                                   portValue: String) {
     val someValue = "111"
     onView(withId(portViewId))
         .perform(scrollTo(), clearText(), typeText(someValue), closeSoftKeyboard())

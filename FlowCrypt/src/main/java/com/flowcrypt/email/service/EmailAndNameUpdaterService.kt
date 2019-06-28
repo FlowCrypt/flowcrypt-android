@@ -59,7 +59,8 @@ class EmailAndNameUpdaterService : JobIntentService() {
   }
 
   companion object {
-    private const val EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME = BuildConfig.APPLICATION_ID + ".EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME"
+    private const val EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME =
+        BuildConfig.APPLICATION_ID + ".EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME"
 
     /**
      * Enqueue a new task for [EmailAndNameUpdaterService].
@@ -73,7 +74,8 @@ class EmailAndNameUpdaterService : JobIntentService() {
         val intent = Intent(context, EmailAndNameUpdaterService::class.java)
         intent.putExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME, emailAndNamePairs)
 
-        enqueueWork(context, EmailAndNameUpdaterService::class.java, JobIdManager.JOB_TYPE_EMAIL_AND_NAME_UPDATE, intent)
+        enqueueWork(context, EmailAndNameUpdaterService::class.java, JobIdManager.JOB_TYPE_EMAIL_AND_NAME_UPDATE,
+            intent)
       }
     }
   }

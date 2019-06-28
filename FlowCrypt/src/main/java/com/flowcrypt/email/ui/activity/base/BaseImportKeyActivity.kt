@@ -48,7 +48,8 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClickListener, LoaderManager.LoaderCallbacks<LoaderResult> {
+abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClickListener,
+    LoaderManager.LoaderCallbacks<LoaderResult> {
 
   protected lateinit var checkClipboardToFindKeyService: CheckClipboardToFindKeyService
   protected lateinit var layoutContentView: View
@@ -158,10 +159,12 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     when (requestCode) {
-      REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE -> if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-        selectFile()
-      } else {
-        showAccessDeniedWarning()
+      REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE -> {
+        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+          selectFile()
+        } else {
+          showAccessDeniedWarning()
+        }
       }
     }
   }
@@ -182,12 +185,14 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
       R.id.buttonLoadFromFile -> {
         dismissSnackBar()
 
-        val isPermissionGranted = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        val isPermissionGranted = ContextCompat.checkSelfPermission(this,
+            Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
 
         if (isPermissionGranted) {
           selectFile()
         } else {
-          if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+          if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                  Manifest.permission.READ_EXTERNAL_STORAGE)) {
             showReadSdCardExplanation()
           } else {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
@@ -301,8 +306,11 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
           if (WRONG_STRUCTURE_ERROR == nodeException!!.nodeError!!.msg) {
             val mode = if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)
             when (loaderId) {
-              R.id.loader_id_validate_key_from_file -> errorMsg = getString(R.string.file_has_wrong_pgp_structure, mode)
-              R.id.loader_id_validate_key_from_clipboard -> errorMsg = getString(R.string.clipboard_has_wrong_structure, mode)
+              R.id.loader_id_validate_key_from_file ->
+                errorMsg = getString(R.string.file_has_wrong_pgp_structure, mode)
+
+              R.id.loader_id_validate_key_from_clipboard ->
+                errorMsg = getString(R.string.clipboard_has_wrong_structure, mode)
             }
           }
         }
@@ -349,7 +357,8 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
 
   private fun showAccessDeniedWarning() {
     UIUtil.showSnackbar(rootView, getString(R.string.access_to_read_the_sdcard_id_denied),
-        getString(R.string.change), View.OnClickListener { GeneralUtil.showAppSettingScreen(this@BaseImportKeyActivity) })
+        getString(R.string.change),
+        View.OnClickListener { GeneralUtil.showAppSettingScreen(this@BaseImportKeyActivity) })
   }
 
   /**
@@ -385,15 +394,19 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
 
   companion object {
 
-    val KEY_EXTRA_IS_SYNC_ENABLE = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_SYNC_ENABLE", BaseImportKeyActivity::class.java)
+    val KEY_EXTRA_IS_SYNC_ENABLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_SYNC_ENABLE", BaseImportKeyActivity::class.java)
 
-    val KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND",
+    val KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND",
         BaseImportKeyActivity::class.java)
 
-    val KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD",
+    val KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD",
         BaseImportKeyActivity::class.java)
 
-    val KEY_EXTRA_TITLE = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", BaseImportKeyActivity::class.java)
+    val KEY_EXTRA_TITLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", BaseImportKeyActivity::class.java)
     private const val WRONG_STRUCTURE_ERROR = "Cannot parse key: could not determine pgpType"
     private const val REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 10
     private const val REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 11

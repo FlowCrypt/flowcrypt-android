@@ -84,7 +84,8 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   @Before
   fun registerIdlingResource() {
     IdlingRegistry.getInstance().register((activityTestRule?.activity as EmailManagerActivity).msgsIdlingResource)
-    IdlingRegistry.getInstance().register((activityTestRule.activity as EmailManagerActivity).countingIdlingResourceForLabel)
+    IdlingRegistry.getInstance().register((activityTestRule.activity as EmailManagerActivity)
+        .countingIdlingResourceForLabel)
   }
 
   @After

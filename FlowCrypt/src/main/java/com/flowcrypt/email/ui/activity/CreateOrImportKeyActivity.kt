@@ -46,8 +46,8 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     if (intent != null) {
-      this.isShowAnotherAccountBtnEnabled = intent.getBooleanExtra(CreateOrImportKeyActivity.KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, true)
-      this.account = intent.getParcelableExtra(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO)
+      this.isShowAnotherAccountBtnEnabled = intent.getBooleanExtra(KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, true)
+      this.account = intent.getParcelableExtra(EXTRA_KEY_ACCOUNT_DAO)
     }
 
     initViews()
@@ -55,7 +55,8 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.buttonCreateNewKey -> startActivityForResult(CreatePrivateKeyActivity.newIntent(this, account), REQUEST_CODE_CREATE_KEY_ACTIVITY)
+      R.id.buttonCreateNewKey -> startActivityForResult(CreatePrivateKeyActivity.newIntent(this, account),
+          REQUEST_CODE_CREATE_KEY_ACTIVITY)
 
       R.id.buttonImportMyKey -> {
         var keyImportModel: KeyImportModel? = null
@@ -125,11 +126,14 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
 
   companion object {
     const val RESULT_CODE_USE_ANOTHER_ACCOUNT = 10
-    val EXTRA_KEY_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT_DAO", CreateOrImportKeyActivity::class.java)
+    val EXTRA_KEY_ACCOUNT_DAO =
+        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT_DAO", CreateOrImportKeyActivity::class.java)
 
     private const val REQUEST_CODE_IMPORT_ACTIVITY = 11
     private const val REQUEST_CODE_CREATE_KEY_ACTIVITY = 12
-    private val KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED = GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED", CreateOrImportKeyActivity::class.java)
+    private val KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED =
+        GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED",
+            CreateOrImportKeyActivity::class.java)
 
     fun newIntent(context: Context, account: AccountDao, isShowAnotherAccountBtnEnabled: Boolean): Intent {
       val intent = Intent(context, CreateOrImportKeyActivity::class.java)

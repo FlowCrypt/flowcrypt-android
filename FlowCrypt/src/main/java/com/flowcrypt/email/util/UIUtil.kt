@@ -51,7 +51,7 @@ class UIUtil {
      * @param msgText         The text to show.  Can be formatted text..
      * @param buttonName      The text of the Snackbar button;
      * @param onClickListener The Snackbar button click listener.
-     * @param duration        How long to display the message.  Either [Snackbar.LENGTH_SHORT] or [                        ][Snackbar.LENGTH_LONG]
+     * @param duration        How long to display the message. Either [Snackbar.LENGTH_SHORT] or [Snackbar.LENGTH_LONG]
      */
     @JvmStatic
     @JvmOverloads
@@ -103,18 +103,20 @@ class UIUtil {
       val shortAnimTime = context.resources.getInteger(android.R.integer.config_shortAnimTime)
 
       second.visibility = if (show) View.GONE else View.VISIBLE
-      second.animate().setDuration(shortAnimTime.toLong()).alpha((if (show) 0 else 1).toFloat()).setListener(object : AnimatorListenerAdapter() {
-        override fun onAnimationEnd(animation: Animator) {
-          second.visibility = if (show) View.GONE else View.VISIBLE
-        }
-      })
+      second.animate().setDuration(shortAnimTime.toLong()).alpha((if (show) 0 else 1).toFloat())
+          .setListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+              second.visibility = if (show) View.GONE else View.VISIBLE
+            }
+          })
 
       first.visibility = if (show) View.VISIBLE else View.GONE
-      first.animate().setDuration(shortAnimTime.toLong()).alpha((if (show) 1 else 0).toFloat()).setListener(object : AnimatorListenerAdapter() {
-        override fun onAnimationEnd(animation: Animator) {
-          first.visibility = if (show) View.VISIBLE else View.GONE
-        }
-      })
+      first.animate().setDuration(shortAnimTime.toLong()).alpha((if (show) 1 else 0).toFloat())
+          .setListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+              first.visibility = if (show) View.VISIBLE else View.GONE
+            }
+          })
     }
 
     /**

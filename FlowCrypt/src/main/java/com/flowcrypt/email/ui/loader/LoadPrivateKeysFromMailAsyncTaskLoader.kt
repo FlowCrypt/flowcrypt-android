@@ -58,7 +58,8 @@ class LoadPrivateKeysFromMailAsyncTaskLoader(context: Context,
       val session = OpenStoreHelper.getAccountSess(context, account)
 
       when (account.accountType) {
-        AccountDao.ACCOUNT_TYPE_GOOGLE -> privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(context, account, session))
+        AccountDao.ACCOUNT_TYPE_GOOGLE ->
+          privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(context, account, session))
 
         else -> privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(session))
       }

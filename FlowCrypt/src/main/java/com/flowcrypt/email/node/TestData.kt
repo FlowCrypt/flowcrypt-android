@@ -348,6 +348,9 @@ class TestData internal constructor() {
 
     @JvmStatic
     val mixedPrvKeys: Array<PgpKeyInfo>
-      get() = arrayOf(PgpKeyInfo("063635B3E33EB14C", ECC_PRV_KEY, ECC_PUB_KEY), PgpKeyInfo("3A30F4CC0A9A8F10", RSA_2048_PRV_KEY, RSA_2048_PUB_KEY), PgpKeyInfo("7C307E6F2092962D", RSA_4096_PRV_KEY, RSA_4096_PUB_KEY))
+      get() = arrayOf(
+          PgpKeyInfo("063635B3E33EB14C", ECC_PRV_KEY, ECC_PUB_KEY),
+          PgpKeyInfo("3A30F4CC0A9A8F10", RSA_2048_PRV_KEY, RSA_2048_PUB_KEY),
+          PgpKeyInfo("7C307E6F2092962D", RSA_4096_PRV_KEY, RSA_4096_PUB_KEY))
   }
 }

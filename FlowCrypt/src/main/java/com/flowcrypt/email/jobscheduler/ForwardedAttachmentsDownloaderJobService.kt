@@ -83,7 +83,9 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
   /**
    * This is an implementation of [AsyncTask] which downloads the forwarded attachments.
    */
-  private class DownloadForwardedAttachmentsAsyncTask internal constructor(jobService: ForwardedAttachmentsDownloaderJobService) : AsyncTask<JobParameters, Boolean, JobParameters>() {
+  private class DownloadForwardedAttachmentsAsyncTask
+  internal constructor(jobService: ForwardedAttachmentsDownloaderJobService)
+    : AsyncTask<JobParameters, Boolean, JobParameters>() {
     private val weakRef: WeakReference<ForwardedAttachmentsDownloaderJobService> = WeakReference(jobService)
 
     private var sess: Session? = null
@@ -179,7 +181,8 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
           var pubKeys: List<String>? = null
           if (details.isEncrypted) {
             val senderEmail = EmailUtil.getFirstAddressString(details.from)
-            pubKeys = SecurityUtils.getRecipientsPubKeys(context, details.allRecipients.toMutableList(), account, senderEmail)
+            pubKeys = SecurityUtils.getRecipientsPubKeys(context, details.allRecipients.toMutableList(),
+                account, senderEmail)
           }
 
           val atts = attDaoSource.getAttInfoList(context, account.email,
@@ -305,7 +308,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
           return
         }
 
-        val encryptedBytes = encryptedFileResult.encryptedBytes
+        val encryptedBytes = encryptedFileResult.encryptBytes
         FileUtils.writeByteArrayToFile(tempFile, encryptedBytes!!)
       } else {
         FileUtils.copyInputStreamToFile(inputStream, tempFile)

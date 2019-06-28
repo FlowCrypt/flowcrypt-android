@@ -1,0 +1,18 @@
+/*
+ * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
+apply plugin: "io.gitlab.arturbosch.detekt"
+
+detekt {
+    toolVersion = "1.0.0-RC15"
+
+    // Builds the AST in parallel. Rules are always executed in parallel. Can lead to speedups in larger projects.
+    // `false` by default.
+    parallel = true
+    // Regular expression of paths that should be excluded separated by `;` or `,`.
+    filters = ".*build.*,.*/resources/.*,.*/tmp/.*"
+    // Define the detekt configuration(s) you want to use. Defaults to the default detekt configuration.
+    config = files("$rootDir/detekt-config.yml")
+}

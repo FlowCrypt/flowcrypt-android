@@ -135,7 +135,8 @@ class LegalSettingsActivity : BaseSettingsActivity() {
   /**
    * The adapter which contains information about tabs.
    */
-  private inner class TabPagerAdapter internal constructor(fragmentManager: FragmentManager) : FragmentStatePagerAdapter(fragmentManager) {
+  private inner class TabPagerAdapter internal constructor(fragmentManager: FragmentManager)
+    : FragmentStatePagerAdapter(fragmentManager) {
 
     override fun getItem(i: Int): Fragment? {
       when (i) {

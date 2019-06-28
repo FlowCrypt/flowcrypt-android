@@ -95,12 +95,18 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
   }
 
   companion object {
-    private val KEY_INFO_DIALOG_TITLE = GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_TITLE", InfoDialogFragment::class.java)
-    private val KEY_INFO_DIALOG_MESSAGE = GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_MESSAGE", InfoDialogFragment::class.java)
-    private val KEY_INFO_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey("KEY_INFO_BUTTON_TITLE", InfoDialogFragment::class.java)
-    private val KEY_INFO_IS_POP_BACK_STACK = GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_POP_BACK_STACK", InfoDialogFragment::class.java)
-    private val KEY_INFO_IS_CANCELABLE = GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_CANCELABLE", InfoDialogFragment::class.java)
-    private val KEY_INFO_HAS_HTML = GeneralUtil.generateUniqueExtraKey("KEY_INFO_HAS_HTML", InfoDialogFragment::class.java)
+    private val KEY_INFO_DIALOG_TITLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_TITLE", InfoDialogFragment::class.java)
+    private val KEY_INFO_DIALOG_MESSAGE =
+        GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_MESSAGE", InfoDialogFragment::class.java)
+    private val KEY_INFO_BUTTON_TITLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_INFO_BUTTON_TITLE", InfoDialogFragment::class.java)
+    private val KEY_INFO_IS_POP_BACK_STACK =
+        GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_POP_BACK_STACK", InfoDialogFragment::class.java)
+    private val KEY_INFO_IS_CANCELABLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_CANCELABLE", InfoDialogFragment::class.java)
+    private val KEY_INFO_HAS_HTML =
+        GeneralUtil.generateUniqueExtraKey("KEY_INFO_HAS_HTML", InfoDialogFragment::class.java)
 
     @JvmOverloads
     @JvmStatic

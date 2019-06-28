@@ -14,7 +14,8 @@ import org.hamcrest.TypeSafeMatcher
 /**
  * An implementation of [TypeSafeMatcher] to test [Toast] using Espresso.
  *
- * See [http://www.qaautomated.com/2016/01/how-to-test-toast-message-using-espresso.html](http://www.qaautomated.com/2016/01/how-to-test-toast-message-using-espresso.html)
+ * See [http://www.qaautomated.com/2016/01/how-to-test-toast-message-using-espresso.html]
+ * (http://www.qaautomated.com/2016/01/how-to-test-toast-message-using-espresso.html)
  *
  * 1. Test if the Toast Message is Displayed :
  *

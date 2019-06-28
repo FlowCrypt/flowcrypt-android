@@ -100,7 +100,8 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener, Google
           Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show()
         }
 
-        AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL -> super.onActivityResult(requestCode, resultCode, data)
+        AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL ->
+          super.onActivityResult(requestCode, resultCode, data)
       }
 
       REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL -> when (resultCode) {
@@ -115,7 +116,9 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener, Google
       REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL -> when (resultCode) {
         Activity.RESULT_OK -> returnResultOk()
 
-        Activity.RESULT_CANCELED, CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email)
+        Activity.RESULT_CANCELED,
+        CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT ->
+          LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email)
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
@@ -201,7 +204,8 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener, Google
 
   companion object {
 
-    val KEY_EXTRA_NEW_ACCOUNT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEW_ACCOUNT", AddNewAccountActivity::class.java)
+    val KEY_EXTRA_NEW_ACCOUNT =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEW_ACCOUNT", AddNewAccountActivity::class.java)
 
     private const val REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL = 100
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL = 101

@@ -112,7 +112,8 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
    * The incoming handler realization. This handler will be used to communicate with current
    * service and the worker thread.
    */
-  private class ReplyHandler internal constructor(checkClipboardToFindKeyService: CheckClipboardToFindKeyService) : Handler() {
+  private class ReplyHandler internal constructor(checkClipboardToFindKeyService: CheckClipboardToFindKeyService)
+    : Handler() {
     private val weakRef: WeakReference<CheckClipboardToFindKeyService>
 
     init {

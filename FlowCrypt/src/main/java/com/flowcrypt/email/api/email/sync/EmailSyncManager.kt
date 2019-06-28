@@ -629,7 +629,8 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
    *
    * P.S. Currently we support only "INBOX" folder.
    */
-  private inner class IdleSyncRunnable internal constructor() : BaseSyncRunnable(), MessageCountListener, MessageChangedListener {
+  private inner class IdleSyncRunnable internal constructor() : BaseSyncRunnable(), MessageCountListener,
+      MessageChangedListener {
     private var localFolder: LocalFolder? = null
     private var remoteFolder: IMAPFolder? = null
     private val msgDaoSource: MessageDaoSource = MessageDaoSource()

@@ -56,7 +56,8 @@ object ExceptionResolver {
 
     if (e is IOException) {
       //Google network errors.
-      if ("NetworkError".equals(e.message, ignoreCase = true) || "Error on service connection.".equals(e.message, ignoreCase = true)) {
+      if ("NetworkError".equals(e.message, ignoreCase = true)
+          || "Error on service connection.".equals(e.message, ignoreCase = true)) {
         return false
       }
 

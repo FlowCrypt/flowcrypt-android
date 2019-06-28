@@ -64,7 +64,8 @@ import org.junit.rules.TestRule
  * E-mail: DenBond7@gmail.com
  */
 class MessageDetailsActivityTest : BaseTest() {
-  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(MessageDetailsActivity::class.java, false, false)
+  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(MessageDetailsActivity::class.java,
+      false, false)
   private val simpleAttachmentRule =
       AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/simple_att.json",
           AttachmentInfo::class.java)!!)
@@ -138,7 +139,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testStandardMsgPlaneTextWithOneAttachment() {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text_with_one_att.json",
+    val incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text_with_one_att.json",
         IncomingMessageInfo::class.java)
     baseCheckWithAtt(incomingMsgInfo, simpleAttachmentRule)
   }
@@ -152,7 +154,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingKeyErrorImportKey() {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+    val incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
         IncomingMessageInfo::class.java)
 
     testMissingKey(incomingMsgInfo)
@@ -167,7 +170,8 @@ class MessageDetailsActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(scrollTo(), click())
 
-    val incomingMsgInfoFixed = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key_fixed.json",
+    val incomingMsgInfoFixed =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key_fixed.json",
         IncomingMessageInfo::class.java)
     onView(withText(incomingMsgInfoFixed?.msgBlocks?.get(0)?.content))
         .check(matches(isDisplayed()))
@@ -177,7 +181,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingPubKey() {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_one_pub_key.json",
+    val incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_one_pub_key.json",
         IncomingMessageInfo::class.java)
 
     testMissingKey(incomingMsgInfo)
@@ -185,7 +190,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testBadlyFormattedMsg() {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_badly_formatted.json",
+    val incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_badly_formatted.json",
         IncomingMessageInfo::class.java)
 
     assertThat(incomingMsgInfo, notNullValue())
@@ -209,7 +215,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingKeyErrorChooseSinglePubKey() {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+    val incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
         IncomingMessageInfo::class.java)
 
     testMissingKey(incomingMsgInfo)
@@ -227,7 +234,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingKeyErrorChooseFromFewPubKeys() {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+    val incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
         IncomingMessageInfo::class.java)
 
     testMissingKey(incomingMsgInfo)
@@ -260,7 +268,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testEncryptedMsgPlaneTextWithOneAttachment() {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_one_att.json",
+    val incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_one_att.json",
         IncomingMessageInfo::class.java)
 
     baseCheckWithAtt(incomingMsgInfo, encryptedAttachmentRule)
@@ -268,7 +277,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testEncryptedMsgPlaneTextWithPubKey() {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_pub_key.json",
+    val incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_pub_key.json",
         IncomingMessageInfo::class.java)
 
     baseCheckWithAtt(incomingMsgInfo, pubKeyAttachmentRule)

@@ -141,7 +141,11 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   companion object {
-    private val EMAILS = arrayOf("contact_0@denbond7.com", "contact_1@denbond7.com", "contact_2@denbond7.com", "contact_3@denbond7.com")
+    private val EMAILS = arrayOf(
+        "contact_0@denbond7.com",
+        "contact_1@denbond7.com",
+        "contact_2@denbond7.com",
+        "contact_3@denbond7.com")
     private val CONTACTS = ArrayList<PgpContact>()
 
     init {
