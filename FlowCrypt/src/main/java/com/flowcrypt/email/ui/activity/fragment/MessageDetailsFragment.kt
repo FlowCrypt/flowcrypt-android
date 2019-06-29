@@ -550,47 +550,48 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
   private fun updateMsgView() {
     layoutMsgParts!!.removeAllViews()
-    if (msgInfo!!.hasHtmlText()) {
-      val block = msgInfo!!.getHtmlMsgBlock()
-      addWebView(block!!)
-    } else if (msgInfo!!.msgBlocks != null && msgInfo!!.msgBlocks!!.isNotEmpty()) {
-      var isFirstMsgPartText = true
-      for (block in msgInfo!!.msgBlocks!!) {
-        val layoutInflater = LayoutInflater.from(context)
-        when (block.type) {
-          MsgBlock.Type.DECRYPTED_TEXT -> {
-            msgEncryptType = MessageEncryptionType.ENCRYPTED
-            layoutMsgParts!!.addView(genDecryptedTextPart(block, layoutInflater))
+
+    var isFirstMsgPartText = true
+    var isHtmlDisplayed = false
+
+    for (block in msgInfo!!.msgBlocks!!) {
+      val layoutInflater = LayoutInflater.from(context)
+      when (block.type) {
+        MsgBlock.Type.DECRYPTED_HTML, MsgBlock.Type.PLAIN_HTML -> {
+          if (!isHtmlDisplayed) {
+            addWebView(block)
+            isHtmlDisplayed = true
           }
-
-          MsgBlock.Type.PLAIN_TEXT -> {
-            layoutMsgParts!!.addView(genTextPart(block, layoutInflater))
-            if (isFirstMsgPartText) {
-              viewFooterOfHeader!!.visibility = View.VISIBLE
-            }
-          }
-
-          MsgBlock.Type.PUBLIC_KEY ->
-            layoutMsgParts!!.addView(genPublicKeyPart(block as PublicKeyMsgBlock, layoutInflater))
-
-          MsgBlock.Type.DECRYPT_ERROR -> {
-            msgEncryptType = MessageEncryptionType.ENCRYPTED
-            layoutMsgParts!!.addView(genDecryptErrorPart(block as DecryptErrorMsgBlock, layoutInflater))
-          }
-
-          MsgBlock.Type.DECRYPTED_ATT -> {
-          }
-
-          else -> layoutMsgParts!!.addView(genDefPart(block, layoutInflater, R.layout.message_part_other,
-              layoutMsgParts))
         }
-        isFirstMsgPartText = false
+
+        MsgBlock.Type.DECRYPTED_TEXT -> {
+          msgEncryptType = MessageEncryptionType.ENCRYPTED
+          layoutMsgParts!!.addView(genDecryptedTextPart(block, layoutInflater))
+        }
+
+        MsgBlock.Type.PLAIN_TEXT -> {
+          layoutMsgParts!!.addView(genTextPart(block, layoutInflater))
+          if (isFirstMsgPartText) {
+            viewFooterOfHeader!!.visibility = View.VISIBLE
+          }
+        }
+
+        MsgBlock.Type.PUBLIC_KEY ->
+          layoutMsgParts!!.addView(genPublicKeyPart(block as PublicKeyMsgBlock, layoutInflater))
+
+        MsgBlock.Type.DECRYPT_ERROR -> {
+          msgEncryptType = MessageEncryptionType.ENCRYPTED
+          layoutMsgParts!!.addView(genDecryptErrorPart(block as DecryptErrorMsgBlock, layoutInflater))
+        }
+
+        MsgBlock.Type.DECRYPTED_ATT -> {
+        }
+
+        else -> layoutMsgParts!!.addView(genDefPart(block, layoutInflater, R.layout.message_part_other, layoutMsgParts))
       }
-      updateReplyButtons()
-    } else {
-      layoutMsgParts!!.removeAllViews()
-      updateReplyButtons()
+      isFirstMsgPartText = false
     }
+    updateReplyButtons()
   }
 
   private fun addWebView(block: MsgBlock) {
