@@ -69029,7 +69029,7 @@ exports.fmtContentBlock = contentBlocks => {
       <meta name="viewport" content="width=device-width" />
       <style>
         img { display: inline !important; height: auto !important; max-width: 100% !important; }
-        body { word-wrap: break-word; word-break: break-word; hyphens: auto; }
+        body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }
       </style>
     </head>
     <body>${msgContentAsHtml}</body>
