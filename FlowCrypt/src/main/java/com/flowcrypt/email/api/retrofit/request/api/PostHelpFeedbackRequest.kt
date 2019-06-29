@@ -28,4 +28,5 @@ import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
  */
 
 class PostHelpFeedbackRequest @JvmOverloads constructor(override val apiName: ApiName = ApiName.POST_HELP_FEEDBACK,
-                                                        override val requestModel: PostHelpFeedbackModel) : BaseRequest<PostHelpFeedbackModel>
+                                                        override val requestModel: PostHelpFeedbackModel)
+  : BaseRequest<PostHelpFeedbackModel>

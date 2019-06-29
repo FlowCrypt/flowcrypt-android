@@ -26,4 +26,5 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
  */
 
 class InitialLegacySubmitRequest(override val apiName: ApiName = ApiName.POST_INITIAL_LEGACY_SUBMIT,
-                                 override val requestModel: InitialLegacySubmitModel) : BaseRequest<InitialLegacySubmitModel>
+                                 override val requestModel: InitialLegacySubmitModel)
+  : BaseRequest<InitialLegacySubmitModel>

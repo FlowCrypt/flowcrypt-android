@@ -74,8 +74,10 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<BackupPrivateKeyToInboxAction> = object : Parcelable.Creator<BackupPrivateKeyToInboxAction> {
-      override fun createFromParcel(source: Parcel): BackupPrivateKeyToInboxAction = BackupPrivateKeyToInboxAction(source)
+    val CREATOR: Parcelable.Creator<BackupPrivateKeyToInboxAction> =
+        object : Parcelable.Creator<BackupPrivateKeyToInboxAction> {
+          override fun createFromParcel(source: Parcel): BackupPrivateKeyToInboxAction =
+              BackupPrivateKeyToInboxAction(source)
       override fun newArray(size: Int): Array<BackupPrivateKeyToInboxAction?> = arrayOfNulls(size)
     }
   }

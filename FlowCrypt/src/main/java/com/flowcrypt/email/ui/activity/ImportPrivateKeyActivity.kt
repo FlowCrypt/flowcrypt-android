@@ -55,7 +55,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
     super.onCreate(savedInstanceState)
     if (isSyncEnabled && GeneralUtil.isConnected(this)) {
       UIUtil.exchangeViewVisibility(this, true, progressBar!!, layoutContent!!)
-      countingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(ImportPrivateKeyActivity::class.java), GeneralUtil.isDebugBuild())
+      countingIdlingResource = CountingIdlingResource(
+          GeneralUtil.genIdlingResourcesName(ImportPrivateKeyActivity::class.java), GeneralUtil.isDebugBuild())
     } else {
       hideImportButton()
       UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutContent!!)

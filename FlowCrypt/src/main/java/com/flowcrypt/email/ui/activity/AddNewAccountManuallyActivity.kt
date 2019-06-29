@@ -91,7 +91,9 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
    */
   private val tempAuthCreds: AuthCredentials?
     get() {
-      val authCredsJson = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, "")
+      val authCredsJson =
+          SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(this),
+              Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, "")
 
       if (!TextUtils.isEmpty(authCredsJson)) {
         try {
@@ -228,8 +230,8 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     }
   }
 
-  override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-    when (parent.id) {
+  override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+    when (parent?.id) {
       R.id.spinnerImapSecurityType -> {
         val (_, _, defImapPort) = parent.adapter.getItem(position) as SecurityType
         if (isImapSpinnerRestored) {
@@ -544,7 +546,8 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   companion object {
     const val RESULT_CODE_CONTINUE_WITH_GMAIL = 101
 
-    val KEY_EXTRA_AUTH_CREDENTIALS = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_AUTH_CREDENTIALS", AddNewAccountManuallyActivity::class.java)
+    val KEY_EXTRA_AUTH_CREDENTIALS =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_AUTH_CREDENTIALS", AddNewAccountManuallyActivity::class.java)
 
     private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 10
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL = 11

@@ -384,7 +384,8 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
     try {
       //delete attachments from non-INBOX folders. OUTBOX is excluded too. We can easy delete such attachments
       // because it's just a cache.
-      sqLiteDatabase.delete(AttachmentDaoSource.TABLE_NAME_ATTACHMENT, AttachmentDaoSource.COL_FOLDER + " NOT IN (?, ?)", arrayOf(JavaEmailConstants.FOLDER_INBOX, JavaEmailConstants.FOLDER_OUTBOX))
+      sqLiteDatabase.delete(AttachmentDaoSource.TABLE_NAME_ATTACHMENT, AttachmentDaoSource.COL_FOLDER
+          + " NOT IN (?, ?)", arrayOf(JavaEmailConstants.FOLDER_INBOX, JavaEmailConstants.FOLDER_OUTBOX))
 
       val tempTableName = "att"
 

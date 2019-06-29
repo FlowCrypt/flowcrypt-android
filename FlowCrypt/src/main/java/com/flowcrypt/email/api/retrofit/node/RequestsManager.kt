@@ -62,7 +62,8 @@ object RequestsManager {
   }
 
   private class Worker internal constructor(
-      private val data: SingleLiveEvent<NodeResponseWrapper<*>>) : AsyncTask<NodeRequestWrapper<*>, Void, NodeResponseWrapper<*>>() {
+      private val data: SingleLiveEvent<NodeResponseWrapper<*>>) : AsyncTask<NodeRequestWrapper<*>, Void,
+      NodeResponseWrapper<*>>() {
 
     override fun doInBackground(vararg nodeRequestWrappers: NodeRequestWrapper<*>): NodeResponseWrapper<*> {
       val nodeRequestWrapper = nodeRequestWrappers[0]

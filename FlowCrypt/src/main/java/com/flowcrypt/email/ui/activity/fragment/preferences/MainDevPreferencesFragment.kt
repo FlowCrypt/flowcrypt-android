@@ -80,7 +80,9 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferenc
         showApplicationDetailsSettingsActivity()
       }
 
-      Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLED, Constants.PREFERENCES_KEY_IS_ACRA_ENABLED, Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLED -> showApplicationDetailsSettingsActivity()
+      Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLED,
+      Constants.PREFERENCES_KEY_IS_ACRA_ENABLED,
+      Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLED -> showApplicationDetailsSettingsActivity()
     }
   }
 

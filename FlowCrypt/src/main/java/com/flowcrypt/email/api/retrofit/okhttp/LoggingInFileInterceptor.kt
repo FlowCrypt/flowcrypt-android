@@ -130,7 +130,8 @@ class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) 
     val responseBody = response.body()
     val contentLength = responseBody?.contentLength() ?: 0
     val bodySize = if (contentLength != (-1).toLong()) "$contentLength-byte" else "unknown-length"
-    logger.log("<-- " + response.code() + ' '.toString() + response.message() + ' '.toString() + response.request().url() + " (" + tookMs +
+    logger.log("<-- " + response.code() + ' '.toString() + response.message()
+        + ' '.toString() + response.request().url() + " (" + tookMs +
         "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString())
 
     if (logHeaders) {

@@ -77,7 +77,8 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
-      REQUEST_CODE_RUN_PREVIEW_ACTIVITY -> UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+      REQUEST_CODE_RUN_PREVIEW_ACTIVITY -> UIUtil.exchangeViewVisibility(applicationContext, false,
+          layoutProgress, layoutContentView)
 
       else -> super.onActivityResult(requestCode, resultCode, data)
     }

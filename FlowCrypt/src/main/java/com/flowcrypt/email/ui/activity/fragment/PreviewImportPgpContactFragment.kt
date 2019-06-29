@@ -167,7 +167,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
 
   private class PublicKeysParserAsyncTask internal constructor(fragment: PreviewImportPgpContactFragment,
                                                                private val publicKeysString: String,
-                                                               private val publicKeysFileUri: Uri?) : BaseAsyncTask<Void, Int, LoaderResult>(fragment) {
+                                                               private val publicKeysFileUri: Uri?)
+    : BaseAsyncTask<Void, Int, LoaderResult>(fragment) {
     override val progressTitleResourcesId: Int
       get() = R.string.parsing_public_keys
 
@@ -381,8 +382,11 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
     }
   }
 
-  private abstract class BaseAsyncTask<Params, Progress, Result> internal constructor(previewImportPgpContactFragment: PreviewImportPgpContactFragment) : AsyncTask<Params, Progress, Result>() {
-    internal val weakRef: WeakReference<PreviewImportPgpContactFragment> = WeakReference(previewImportPgpContactFragment)
+  private abstract class BaseAsyncTask<Params, Progress, Result>
+  internal constructor(previewImportPgpContactFragment: PreviewImportPgpContactFragment)
+    : AsyncTask<Params, Progress, Result>() {
+    internal val weakRef: WeakReference<PreviewImportPgpContactFragment> =
+        WeakReference(previewImportPgpContactFragment)
 
     abstract val progressTitleResourcesId: Int
 
@@ -411,9 +415,13 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
   }
 
   companion object {
-    private val KEY_EXTRA_PUBLIC_KEY_STRING = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEY_STRING", PreviewImportPgpContactFragment::class.java)
+    private val KEY_EXTRA_PUBLIC_KEY_STRING =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEY_STRING",
+            PreviewImportPgpContactFragment::class.java)
 
-    private val KEY_EXTRA_PUBLIC_KEYS_FILE_URI = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEYS_FILE_URI", PreviewImportPgpContactFragment::class.java)
+    private val KEY_EXTRA_PUBLIC_KEYS_FILE_URI =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEYS_FILE_URI",
+            PreviewImportPgpContactFragment::class.java)
 
     @JvmStatic
     fun newInstance(stringExtra: String?, fileUri: Parcelable?): PreviewImportPgpContactFragment {

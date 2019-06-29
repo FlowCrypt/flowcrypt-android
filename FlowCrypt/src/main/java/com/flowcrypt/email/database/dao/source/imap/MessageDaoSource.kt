@@ -205,7 +205,12 @@ class MessageDaoSource : BaseDaoSource() {
 
         var i = 0
         while (i < list.size) {
-          val stepUIDs = if (list.size - i > step) list.subList(i, i + step) else list.subList(i, list.size)
+          val stepUIDs = if (list.size - i > step) {
+            list.subList(i, i + step)
+          } else {
+            list.subList(i, list.size)
+          }
+
           val selectionArgsForStep = LinkedList(selectionArgs)
 
           for (uid in stepUIDs) {
@@ -437,7 +442,7 @@ class MessageDaoSource : BaseDaoSource() {
 
     try {
       val fromAddresses = cursor.getString(cursor.getColumnIndex(COL_FROM_ADDRESSES))
-      details.from = if (TextUtils.isEmpty(fromAddresses)) null else Arrays.asList(*InternetAddress.parse(fromAddresses))
+      details.from = if (TextUtils.isEmpty(fromAddresses)) null else listOf(*InternetAddress.parse(fromAddresses))
     } catch (e: AddressException) {
       e.printStackTrace()
     }
@@ -1093,7 +1098,8 @@ class MessageDaoSource : BaseDaoSource() {
       contentValues.put(COL_SENT_DATE, System.currentTimeMillis())
       contentValues.put(COL_SUBJECT, info.subject)
       contentValues.put(COL_FLAGS, MessageFlag.SEEN.value)
-      contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, !CollectionUtils.isEmpty(info.atts) || !CollectionUtils.isEmpty(info.forwardedAtts))
+      contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, !CollectionUtils.isEmpty(info.atts)
+          || !CollectionUtils.isEmpty(info.forwardedAtts))
       return contentValues
     }
 

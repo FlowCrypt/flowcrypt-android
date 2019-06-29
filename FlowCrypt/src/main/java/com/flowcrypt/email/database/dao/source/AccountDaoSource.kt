@@ -374,7 +374,8 @@ class AccountDaoSource : BaseDaoSource() {
     contentValues.put(COL_SMTP_IS_USE_STARTTLS, authCreds.smtpOpt === SecurityType.Option.STARTLS)
     contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCreds.hasCustomSignInForSmtp)
     contentValues.put(COL_SMTP_USERNAME, authCreds.smtpSigInUsername)
-    contentValues.put(COL_SMTP_PASSWORD, authCreds.smtpSignInPassword?.let { keyStoreCryptoManager.encryptWithRSAOrAES(it) })
+    contentValues.put(COL_SMTP_PASSWORD,
+        authCreds.smtpSignInPassword?.let { keyStoreCryptoManager.encryptWithRSAOrAES(it) })
 
     contentValues.put(COL_IS_ACTIVE, true)
 

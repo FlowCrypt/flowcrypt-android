@@ -38,7 +38,8 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 
-class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment.OnMessageSendListener, OnChangeMessageEncryptionTypeListener {
+class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment.OnMessageSendListener,
+    OnChangeMessageEncryptionTypeListener {
 
   private var nonEncryptedHintView: View? = null
   override lateinit var rootView: View
@@ -127,7 +128,7 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
     Toast.makeText(this, if (GeneralUtil.isConnected(this))
       R.string.sending
     else
-      R.string.no_connection_message_will_be_sent_later, Toast.LENGTH_SHORT).show()
+      R.string.no_conn_msg_sent_later, Toast.LENGTH_SHORT).show()
     finish()
   }
 
@@ -187,15 +188,20 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
 
   companion object {
 
-    val EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE", CreateMessageActivity::class.java)
+    val EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE =
+        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE", CreateMessageActivity::class.java)
 
-    val EXTRA_KEY_INCOMING_MESSAGE_INFO = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_INCOMING_MESSAGE_INFO", CreateMessageActivity::class.java)
+    val EXTRA_KEY_INCOMING_MESSAGE_INFO =
+        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_INCOMING_MESSAGE_INFO", CreateMessageActivity::class.java)
 
-    val EXTRA_KEY_SERVICE_INFO = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_SERVICE_INFO", CreateMessageActivity::class.java)
+    val EXTRA_KEY_SERVICE_INFO =
+        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_SERVICE_INFO", CreateMessageActivity::class.java)
 
-    val EXTRA_KEY_MESSAGE_TYPE = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_TYPE", CreateMessageActivity::class.java)
+    val EXTRA_KEY_MESSAGE_TYPE =
+        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MESSAGE_TYPE", CreateMessageActivity::class.java)
 
-    fun generateIntent(context: Context, msgInfo: IncomingMessageInfo?, msgEncryptionType: MessageEncryptionType): Intent {
+    fun generateIntent(context: Context, msgInfo: IncomingMessageInfo?,
+                       msgEncryptionType: MessageEncryptionType): Intent {
       return generateIntent(context, msgInfo, MessageType.NEW, msgEncryptionType)
     }
 

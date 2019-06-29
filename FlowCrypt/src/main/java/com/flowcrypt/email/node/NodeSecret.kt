@@ -47,7 +47,8 @@ import javax.net.ssl.X509TrustManager
  * This class describes a logic where we create some security things for communication between the Node.js server and
  * the app.
  */
-class NodeSecret @JvmOverloads internal constructor(writablePath: String, nodeSecretCertsCache: NodeSecretCerts? = null) {
+class NodeSecret @JvmOverloads internal constructor(writablePath: String,
+                                                    nodeSecretCertsCache: NodeSecretCerts? = null) {
 
   val port: Int
   var ca: String? = null
@@ -129,7 +130,9 @@ class NodeSecret @JvmOverloads internal constructor(writablePath: String, nodeSe
   }
 
   private fun parseCert(certString: String?): X509Certificate {
-    ByteArrayInputStream(certString!!.toByteArray()).use { inputStream -> return CertificateFactory.getInstance("X.509").generateCertificate(inputStream) as X509Certificate }
+    ByteArrayInputStream(certString!!.toByteArray()).use { inputStream ->
+      return CertificateFactory.getInstance("X.509").generateCertificate(inputStream) as X509Certificate
+    }
   }
 
   private fun parseKey(keyString: String?): PrivateKey {
@@ -183,7 +186,8 @@ class NodeSecret @JvmOverloads internal constructor(writablePath: String, nodeSe
     return keyStore
   }
 
-  private fun newSignedCrt(issuerKeyPair: KeyPair, subjectKeyPair: KeyPair, subject: X500Name, keyUsage: Int): X509Certificate {
+  private fun newSignedCrt(issuerKeyPair: KeyPair, subjectKeyPair: KeyPair, subject: X500Name, keyUsage: Int)
+      : X509Certificate {
     val calendar = Calendar.getInstance()
     val from = calendar.time
     calendar.add(Calendar.YEAR, 25)

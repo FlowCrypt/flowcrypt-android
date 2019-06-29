@@ -160,9 +160,12 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
   }
 
   companion object {
-    val KEY_EXTRA_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT", SelectContactsActivity::class.java)
-    private val KEY_EXTRA_TITLE = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", SelectContactsActivity::class.java)
-    private val KEY_EXTRA_IS_MULTIPLY = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_MULTIPLY", SelectContactsActivity::class.java)
+    val KEY_EXTRA_PGP_CONTACT =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT", SelectContactsActivity::class.java)
+    private val KEY_EXTRA_TITLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", SelectContactsActivity::class.java)
+    private val KEY_EXTRA_IS_MULTIPLY =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_MULTIPLY", SelectContactsActivity::class.java)
 
     fun newIntent(context: Context?, title: String, isMultiply: Boolean): Intent {
       val intent = Intent(context, SelectContactsActivity::class.java)

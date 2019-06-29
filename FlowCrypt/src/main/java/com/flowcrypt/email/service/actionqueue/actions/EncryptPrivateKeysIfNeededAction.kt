@@ -58,7 +58,9 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
 
       val keyDetailsList = NodeCallsExecutor.parseKeys(private!!)
       if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size != 1) {
-        ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key parsing| 1: " + if (CollectionUtils.isEmpty(keyDetailsList)) "Empty results" else "Size = " + keyDetailsList.size))
+        ExceptionUtil.handleError(
+            IllegalArgumentException("An error occurred during the key parsing| 1: "
+                + if (CollectionUtils.isEmpty(keyDetailsList)) "Empty results" else "Size = " + keyDetailsList.size))
         continue
       }
 
@@ -123,9 +125,12 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<EncryptPrivateKeysIfNeededAction> = object : Parcelable.Creator<EncryptPrivateKeysIfNeededAction> {
-      override fun createFromParcel(source: Parcel): EncryptPrivateKeysIfNeededAction = EncryptPrivateKeysIfNeededAction(source)
-      override fun newArray(size: Int): Array<EncryptPrivateKeysIfNeededAction?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<EncryptPrivateKeysIfNeededAction> =
+        object : Parcelable.Creator<EncryptPrivateKeysIfNeededAction> {
+          override fun createFromParcel(source: Parcel): EncryptPrivateKeysIfNeededAction =
+              EncryptPrivateKeysIfNeededAction(source)
+
+          override fun newArray(size: Int): Array<EncryptPrivateKeysIfNeededAction?> = arrayOfNulls(size)
+        }
   }
 }

@@ -74,7 +74,8 @@ class ActionQueueIntentService : JobIntentService() {
     private val TAG = ActionQueueIntentService::class.java.simpleName
     private val EXTRA_KEY_ACTIONS = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACTIONS",
         ActionQueueIntentService::class.java)
-    private val EXTRA_KEY_RESULTS_RECEIVER = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_RESULTS_RECEIVER", ActionQueueIntentService::class.java)
+    private val EXTRA_KEY_RESULTS_RECEIVER =
+        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_RESULTS_RECEIVER", ActionQueueIntentService::class.java)
 
     /**
      * Starts this service to perform action [.ACTION_RUN_ACTIONS]. If the service is already performing a task

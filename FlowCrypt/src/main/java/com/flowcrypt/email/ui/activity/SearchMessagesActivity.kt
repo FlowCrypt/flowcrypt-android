@@ -30,7 +30,8 @@ import com.sun.mail.imap.protocol.SearchSequence
  * Time: 16:23
  * E-mail: DenBond7@gmail.com
  */
-class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextListener, MenuItem.OnActionExpandListener {
+class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextListener,
+    MenuItem.OnActionExpandListener {
 
   override var currentAccountDao: AccountDao? = null
   private var initQuery: String? = null
@@ -81,7 +82,8 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
 
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
-      R.id.sync_request_code_search_messages -> super.onReplyReceived(R.id.syns_request_code_load_next_messages, resultCode, obj)
+      R.id.sync_request_code_search_messages ->
+        super.onReplyReceived(R.id.syns_request_code_load_next_messages, resultCode, obj)
 
       else -> super.onReplyReceived(requestCode, resultCode, obj)
     }
@@ -122,7 +124,8 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
   override fun onQueryTextSubmit(query: String): Boolean {
     this.initQuery = query
 
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!, ignoreCase = true) && !SearchSequence.isAscii(query)) {
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!, ignoreCase = true)
+        && !SearchSequence.isAscii(query)) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show()
       return true
     }

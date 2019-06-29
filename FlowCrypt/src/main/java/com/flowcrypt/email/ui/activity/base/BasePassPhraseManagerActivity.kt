@@ -52,7 +52,8 @@ import java.util.*
  * Time: 14:53
  * E-mail: DenBond7@gmail.com
  */
-abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnClickListener, TextWatcher, Observer<NodeResponseWrapper<*>> {
+abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnClickListener, TextWatcher,
+    Observer<NodeResponseWrapper<*>> {
 
   protected lateinit var layoutProgress: View
   protected lateinit var layoutContentView: View
@@ -275,8 +276,9 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     val word = strengthBarResult!!.word
 
     when (word!!.word) {
-      Constants.PASSWORD_QUALITY_WEAK, Constants.PASSWORD_QUALITY_POOR -> btnSetPassPhrase.background.setColorFilter(ContextCompat.getColor(this, R.color.silver),
-          PorterDuff.Mode.MULTIPLY)
+      Constants.PASSWORD_QUALITY_WEAK,
+      Constants.PASSWORD_QUALITY_POOR -> btnSetPassPhrase.background.setColorFilter(
+          ContextCompat.getColor(this, R.color.silver), PorterDuff.Mode.MULTIPLY)
 
       else -> btnSetPassPhrase.background.setColorFilter(ContextCompat.getColor(this, R.color.colorPrimary),
           PorterDuff.Mode.MULTIPLY)

@@ -67,7 +67,8 @@ import javax.mail.AuthenticationFailedException
  * E-mail: DenBond7@gmail.com
  */
 
-class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, AbsListView.OnScrollListener, SwipeRefreshLayout.OnRefreshListener, AbsListView.MultiChoiceModeListener {
+class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, AbsListView.OnScrollListener,
+    SwipeRefreshLayout.OnRefreshListener, AbsListView.MultiChoiceModeListener {
 
   private var listView: ListView? = null
   private var emptyView: TextView? = null
@@ -204,7 +205,12 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
       val isRawMsgAvailable = !TextUtils.isEmpty(activeMsgDetails!!.rawMsgWithoutAtts)
       if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context!!)) {
         when (activeMsgDetails!!.msgState) {
-          MessageState.ERROR_ORIGINAL_MESSAGE_MISSING, MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND, MessageState.ERROR_CACHE_PROBLEM, MessageState.ERROR_DURING_CREATION, MessageState.ERROR_SENDING_FAILED, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> handleOutgoingMsgWhichHasSomeError(activeMsgDetails!!)
+          MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+          MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
+          MessageState.ERROR_CACHE_PROBLEM,
+          MessageState.ERROR_DURING_CREATION,
+          MessageState.ERROR_SENDING_FAILED,
+          MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> handleOutgoingMsgWhichHasSomeError(activeMsgDetails!!)
 
           else -> startActivityForResult(MessageDetailsActivity.getIntent(context,
               listener!!.currentFolder, activeMsgDetails), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
@@ -318,24 +324,26 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
         areNewMsgsLoadingNow = false
         swipeRefreshLayout!!.isRefreshing = false
         when (errorType) {
-          SyncErrorTypes.ACTION_FAILED_SHOW_TOAST -> Toast.makeText(context, R.string.failed_please_try_again_later, Toast.LENGTH_SHORT).show()
+          SyncErrorTypes.ACTION_FAILED_SHOW_TOAST -> Toast.makeText(context,
+              R.string.failed_please_try_again_later, Toast.LENGTH_SHORT).show()
 
           SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> showConnProblemHint()
         }
       }
 
-      R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> if (listener!!.currentFolder == null) {
-        var errorMsg = getString(R.string.failed_load_labels_from_email_server)
+      R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active ->
+        if (listener!!.currentFolder == null) {
+          var errorMsg = getString(R.string.failed_load_labels_from_email_server)
 
-        if (e is AuthenticationFailedException) {
-          if (getString(R.string.gmail_imap_disabled_error).equals(e.message, ignoreCase = true)) {
-            errorMsg = getString(R.string.it_seems_imap_access_is_disabled)
+          if (e is AuthenticationFailedException) {
+            if (getString(R.string.gmail_imap_disabled_error).equals(e.message, ignoreCase = true)) {
+              errorMsg = getString(R.string.it_seems_imap_access_is_disabled)
+            }
           }
-        }
 
-        super.onErrorOccurred(requestCode, errorType, Exception(errorMsg))
-        setSupportActionBarTitle("")
-      }
+          super.onErrorOccurred(requestCode, errorType, Exception(errorMsg))
+          setSupportActionBarTitle("")
+        }
 
       R.id.sync_request_code_search_messages -> {
         areNewMsgsLoadingNow = false
@@ -663,11 +671,13 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
     var message: String? = null
 
     when (details.msgState) {
-      MessageState.ERROR_ORIGINAL_MESSAGE_MISSING, MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND -> message = getString(R.string.message_failed_to_forward)
+      MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+      MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND -> message = getString(R.string.message_failed_to_forward)
 
       MessageState.ERROR_CACHE_PROBLEM -> message = getString(R.string.there_is_problem_with_cache)
 
-      MessageState.ERROR_DURING_CREATION -> message = getString(R.string.error_happened_during_creation, getString(R.string.support_email))
+      MessageState.ERROR_DURING_CREATION ->
+        message = getString(R.string.error_happened_during_creation, getString(R.string.support_email))
 
       MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> {
         val errorMsg = details.errorMsg
@@ -708,7 +718,8 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
   }
 
   private fun isItSyncOrOutboxFolder(localFolder: LocalFolder): Boolean {
-    return localFolder.fullName.equals(JavaEmailConstants.FOLDER_INBOX, ignoreCase = true) || localFolder.fullName.equals(JavaEmailConstants.FOLDER_OUTBOX, ignoreCase = true)
+    return localFolder.fullName.equals(JavaEmailConstants.FOLDER_INBOX, ignoreCase = true)
+        || localFolder.fullName.equals(JavaEmailConstants.FOLDER_OUTBOX, ignoreCase = true)
   }
 
   /**

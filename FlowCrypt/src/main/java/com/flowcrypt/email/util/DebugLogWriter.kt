@@ -27,8 +27,8 @@ import java.util.*
 class DebugLogWriter(private val fileLog: File) {
   private val dateFormat: DateFormat
 
-  constructor(fileName: String) : this(File(Environment.getExternalStorageDirectory().toString() + "/" + BuildConfig.APPLICATION_ID
-      + "_" + fileName + ".log"))
+  constructor(fileName: String) : this(File(Environment.getExternalStorageDirectory().toString()
+      + "/" + BuildConfig.APPLICATION_ID + "_" + fileName + ".log"))
 
   init {
     if (fileLog.length() >= MAX_FILE_SIZE) {

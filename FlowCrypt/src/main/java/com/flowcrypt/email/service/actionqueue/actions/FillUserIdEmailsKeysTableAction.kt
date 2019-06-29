@@ -76,9 +76,12 @@ data class FillUserIdEmailsKeysTableAction @JvmOverloads constructor(override va
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<FillUserIdEmailsKeysTableAction> = object : Parcelable.Creator<FillUserIdEmailsKeysTableAction> {
-      override fun createFromParcel(source: Parcel): FillUserIdEmailsKeysTableAction = FillUserIdEmailsKeysTableAction(source)
-      override fun newArray(size: Int): Array<FillUserIdEmailsKeysTableAction?> = arrayOfNulls(size)
-    }
+    val CREATOR: Parcelable.Creator<FillUserIdEmailsKeysTableAction> =
+        object : Parcelable.Creator<FillUserIdEmailsKeysTableAction> {
+          override fun createFromParcel(source: Parcel): FillUserIdEmailsKeysTableAction =
+              FillUserIdEmailsKeysTableAction(source)
+
+          override fun newArray(size: Int): Array<FillUserIdEmailsKeysTableAction?> = arrayOfNulls(size)
+        }
   }
 }

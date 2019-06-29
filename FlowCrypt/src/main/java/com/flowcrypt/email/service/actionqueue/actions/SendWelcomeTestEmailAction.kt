@@ -64,7 +64,8 @@ data class SendWelcomeTestEmailAction @JvmOverloads constructor(override var id:
 
   companion object {
     @JvmField
-    val CREATOR: Parcelable.Creator<SendWelcomeTestEmailAction> = object : Parcelable.Creator<SendWelcomeTestEmailAction> {
+    val CREATOR: Parcelable.Creator<SendWelcomeTestEmailAction> =
+        object : Parcelable.Creator<SendWelcomeTestEmailAction> {
       override fun createFromParcel(source: Parcel): SendWelcomeTestEmailAction = SendWelcomeTestEmailAction(source)
       override fun newArray(size: Int): Array<SendWelcomeTestEmailAction?> = arrayOfNulls(size)
     }

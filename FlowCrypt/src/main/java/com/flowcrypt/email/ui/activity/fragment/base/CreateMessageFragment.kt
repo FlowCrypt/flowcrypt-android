@@ -101,7 +101,8 @@ import javax.mail.internet.InternetAddress
  * E-mail: DenBond7@gmail.com
  */
 
-class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, AdapterView.OnItemSelectedListener, View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
+class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, AdapterView.OnItemSelectedListener,
+    View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
 
   private var onMsgSendListener: OnMessageSendListener? = null
   private var listener: OnChangeMessageEncryptionTypeListener? = null
@@ -188,75 +189,57 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       recipientsTo!!.chipifyAllUnterminatedTokens()
       recipientsCc!!.chipifyAllUnterminatedTokens()
       recipientsBcc!!.chipifyAllUnterminatedTokens()
-
       if (!fromAddrs!!.isEnabled(spinnerFrom!!.selectedItemPosition)) {
         showInfoSnackbar(recipientsTo!!, getString(R.string.no_key_available))
         return false
       }
-
-      if (TextUtils.isEmpty(recipientsTo!!.text.toString())) {
+      if (recipientsTo!!.text.toString().isEmpty()) {
         showInfoSnackbar(recipientsTo!!, getString(R.string.text_must_not_be_empty,
-            getString(R.string.prompt_recipients_to)))
+                getString(R.string.prompt_recipients_to)))
         recipientsTo!!.requestFocus()
         return false
       }
-
-      val hasNotValidEmail = (hasNotValidEmail(recipientsTo!!) || hasNotValidEmail(recipientsCc!!)
-          || hasNotValidEmail(recipientsBcc!!))
-
-      if (!hasNotValidEmail) {
-        if (listener!!.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
-          if (!TextUtils.isEmpty(recipientsTo!!.text) && pgpContactsTo!!.isEmpty()) {
-            showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_to)
-            return false
-          }
-
-          if (!TextUtils.isEmpty(recipientsCc!!.text) && pgpContactsCc!!.isEmpty()) {
-            showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_cc)
-            return false
-          }
-
-          if (!TextUtils.isEmpty(recipientsBcc!!.text) && pgpContactsBcc!!.isEmpty()) {
-            showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_bcc)
-            return false
-          }
-
-          if (hasRecipientWithoutPgp(true, pgpContactsTo!!)
-              || hasRecipientWithoutPgp(true, pgpContactsCc!!)
-              || hasRecipientWithoutPgp(true, pgpContactsBcc!!)) {
-            return false
-          }
-        }
-      } else
+      if (hasInvalidEmail(recipientsTo!!, recipientsCc!!, recipientsBcc!!)) {
         return false
-
-      if (TextUtils.isEmpty(editTextEmailSubject!!.text.toString())) {
+      }
+      if (listener!!.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
+        if (recipientsTo!!.text.isNotEmpty() && pgpContactsTo!!.isEmpty()) {
+          showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_to)
+          return false
+        }
+        if (recipientsCc!!.text.isNotEmpty() && pgpContactsCc!!.isEmpty()) {
+          showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_cc)
+          return false
+        }
+        if (recipientsBcc!!.text.isNotEmpty() && pgpContactsBcc!!.isEmpty()) {
+          showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_bcc)
+          return false
+        }
+        if (hasRecipientWithoutPgp(true, pgpContactsTo!! + pgpContactsCc!! + pgpContactsBcc!!)) {
+          return false
+        }
+      }
+      if (editTextEmailSubject!!.text.toString().isEmpty()) {
         showInfoSnackbar(editTextEmailSubject!!, getString(R.string.text_must_not_be_empty,
-            getString(R.string.prompt_subject)))
+                getString(R.string.prompt_subject)))
         editTextEmailSubject!!.requestFocus()
         return false
       }
-
-      if (atts != null && atts.isEmpty() && TextUtils.isEmpty(editTextEmailMsg!!.text.toString())) {
+      if (atts != null && atts.isEmpty() && editTextEmailMsg!!.text.toString().isEmpty()) {
         showInfoSnackbar(editTextEmailMsg!!, getString(R.string.sending_message_must_not_be_empty))
         editTextEmailMsg!!.requestFocus()
         return false
       }
-
-      return if (atts != null && !atts.isEmpty() && hasExternalStorageUris(this.atts)) {
-        val isPermissionGranted = ContextCompat.checkSelfPermission(context!!,
-            Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-        if (isPermissionGranted) {
-          requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-              REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE)
-          false
-        } else {
-          true
-        }
-      } else {
-        true
+      if (atts == null || atts.isEmpty() || !hasExternalStorageUris(this.atts)) {
+        return true
       }
+      if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        return true
+      }
+      requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE)
+      return false
     }
+
 
   /**
    * Generate a forwarded attachments list.
@@ -363,7 +346,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
       REQUEST_CODE_NO_PGP_FOUND_DIALOG -> when (resultCode) {
-        NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL -> listener!!.onMsgEncryptionTypeChanged(MessageEncryptionType.STANDARD)
+        NoPgpFoundDialogFragment.RESULT_CODE_SWITCH_TO_STANDARD_EMAIL ->
+          listener!!.onMsgEncryptionTypeChanged(MessageEncryptionType.STANDARD)
 
         NoPgpFoundDialogFragment.RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY -> if (data != null) {
           val pgpContact = data.getParcelableExtra<PgpContact>(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
@@ -475,20 +459,21 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
     when (requestCode) {
-      REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE -> if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-        sendMsg()
-      } else {
-        Toast.makeText(activity, R.string.cannot_send_attachment_without_read_permission,
-            Toast.LENGTH_LONG).show()
-      }
+      REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE ->
+        if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+          sendMsg()
+        } else {
+          Toast.makeText(activity, R.string.cannot_send_attachment_without_read_permission,
+              Toast.LENGTH_LONG).show()
+        }
 
-      REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO -> if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-        addAtts()
-        showAtts()
-      } else {
-        Toast.makeText(activity, R.string.cannot_send_attachment_without_read_permission,
-            Toast.LENGTH_LONG).show()
-      }
+      REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO ->
+        if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+          addAtts()
+          showAtts()
+        } else {
+          Toast.makeText(activity, R.string.cannot_send_attachment_without_read_permission, Toast.LENGTH_LONG).show()
+        }
 
       else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
@@ -528,7 +513,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     when (loaderId) {
       R.id.loader_id_load_info_about_pgp_contacts_to -> {
         isUpdateToCompleted = true
-        pgpContactsTo = getInfoAboutPgpContacts(result as UpdateInfoAboutPgpContactsResult?, progressBarTo!!, R.string.to)
+        pgpContactsTo = getInfoAboutPgpContacts(result as UpdateInfoAboutPgpContactsResult?,
+            progressBarTo!!, R.string.to)
 
         if (pgpContactsTo != null && pgpContactsTo!!.isNotEmpty()) {
           updateChips(recipientsTo!!, pgpContactsTo!!)
@@ -537,7 +523,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
       R.id.loader_id_load_info_about_pgp_contacts_cc -> {
         isUpdateCcCompleted = true
-        pgpContactsCc = getInfoAboutPgpContacts(result as UpdateInfoAboutPgpContactsResult?, progressBarCc!!, R.string.cc)
+        pgpContactsCc = getInfoAboutPgpContacts(result as UpdateInfoAboutPgpContactsResult?,
+            progressBarCc!!, R.string.cc)
 
         if (pgpContactsCc != null && pgpContactsCc!!.isNotEmpty()) {
           updateChips(recipientsCc!!, pgpContactsCc!!)
@@ -620,14 +607,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   override fun onFocusChange(v: View, hasFocus: Boolean) {
     when (v.id) {
-      R.id.editTextRecipientTo -> runUpdatePgpContactsAction(pgpContactsTo, progressBarTo, R.id.loader_id_load_info_about_pgp_contacts_to,
-          hasFocus)
+      R.id.editTextRecipientTo -> runUpdatePgpContactsAction(pgpContactsTo, progressBarTo,
+          R.id.loader_id_load_info_about_pgp_contacts_to, hasFocus)
 
-      R.id.editTextRecipientCc -> runUpdatePgpContactsAction(pgpContactsCc, progressBarCc, R.id.loader_id_load_info_about_pgp_contacts_cc,
-          hasFocus)
+      R.id.editTextRecipientCc -> runUpdatePgpContactsAction(pgpContactsCc, progressBarCc,
+          R.id.loader_id_load_info_about_pgp_contacts_cc, hasFocus)
 
-      R.id.editTextRecipientBcc -> runUpdatePgpContactsAction(pgpContactsBcc, progressBarBcc, R.id.loader_id_load_info_about_pgp_contacts_bcc,
-          hasFocus)
+      R.id.editTextRecipientBcc -> runUpdatePgpContactsAction(pgpContactsBcc, progressBarBcc,
+          R.id.loader_id_load_info_about_pgp_contacts_bcc, hasFocus)
 
       R.id.editTextEmailSubject, R.id.editTextEmailMessage -> if (hasFocus) {
         var isExpandButtonNeeded = false
@@ -1118,7 +1105,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         updateViewsFromIncomingMsgInfo()
         recipientsTo!!.chipifyAllUnterminatedTokens()
         recipientsCc!!.chipifyAllUnterminatedTokens()
-        editTextEmailSubject!!.setText(prepareReplySubject(msgInfo!!.getSubject()))
+        editTextEmailSubject!!.setText(prepareReplySubject(msgInfo!!.getSubject() ?: ""))
       }
 
       if (serviceInfo != null) {
@@ -1276,7 +1263,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private fun updateViewsIfReplyMode() {
     if (folderType != null) {
       when (folderType) {
-        FoldersManager.FolderType.SENT, FoldersManager.FolderType.OUTBOX -> recipientsTo!!.setText(prepareRecipients(msgInfo!!.getTo()))
+        FoldersManager.FolderType.SENT,
+        FoldersManager.FolderType.OUTBOX -> recipientsTo!!.setText(prepareRecipients(msgInfo!!.getTo()))
 
         else -> recipientsTo!!.setText(prepareRecipients(msgInfo!!.getFrom()))
       }
@@ -1316,33 +1304,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       ""
   }
 
-  private fun prepareReplySubject(subject: String?): String {
-    var prefix: String? = null
-
-    when (messageType) {
-      MessageType.REPLY, MessageType.REPLY_ALL -> prefix = "Re"
-
-      MessageType.FORWARD -> prefix = "Fwd"
-
-      else -> {
-      }
+  private fun prepareReplySubject(subject: String): String {
+    val prefix = when (messageType) {
+      MessageType.REPLY, MessageType.REPLY_ALL -> "Re"
+      MessageType.FORWARD -> "Fwd"
+      else -> return subject
     }
-
-    if (!TextUtils.isEmpty(prefix)) {
-      if (TextUtils.isEmpty(subject)) {
-        return getString(R.string.template_reply_subject, prefix, "")
-      }
-
-      val pattern = Pattern.compile("^($prefix: )", Pattern.CASE_INSENSITIVE)
-      val matcher = pattern.matcher(subject)
-
-      return if (matcher.find()) {
-        ""
-      } else getString(R.string.template_reply_subject, prefix, subject)
-
-    } else {
-      return ""
-    }
+    val prefixMatcher = Pattern.compile("^($prefix: )", Pattern.CASE_INSENSITIVE).matcher(subject)
+    return if (prefixMatcher.find()) subject else getString(R.string.template_reply_subject, prefix, subject)
   }
 
   private fun prepareRecipients(recipients: Array<String>?): String {
@@ -1389,17 +1358,19 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   /**
-   * Check is the given [PgpContactsNachoTextView] has a not valid email.
+   * Check if the given [pgpContactsNachoTextViews] List has an invalid email.
    *
    * @return <tt>boolean</tt> true - if has, otherwise false..
    */
-  private fun hasNotValidEmail(pgpContactsNachoTextView: PgpContactsNachoTextView): Boolean {
-    val emails = pgpContactsNachoTextView.chipAndTokenValues
-    for (email in emails) {
-      if (!GeneralUtil.isEmailValid(email)) {
-        showInfoSnackbar(pgpContactsNachoTextView, getString(R.string.error_some_email_is_not_valid, email))
-        pgpContactsNachoTextView.requestFocus()
-        return true
+  private fun hasInvalidEmail(vararg pgpContactsNachoTextViews: PgpContactsNachoTextView): Boolean {
+    for (textView in pgpContactsNachoTextViews){
+      val emails = textView.chipAndTokenValues
+      for (email in emails) {
+        if (!GeneralUtil.isEmailValid(email)) {
+          showInfoSnackbar(textView, getString(R.string.error_some_email_is_not_valid, email))
+          textView.requestFocus()
+          return true
+        }
       }
     }
     return false
@@ -1412,15 +1383,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    * @return true if the attachment can be added, otherwise false.
    */
   private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
-    var totalSizeOfAtts = 0
-
-    for ((_, _, _, _, _, _, _, encodedSize) in atts!!) {
-      totalSizeOfAtts += encodedSize.toInt()
-    }
-
-    totalSizeOfAtts += newAttInfo!!.encodedSize.toInt()
-
-    return totalSizeOfAtts < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+    return atts!!.map { it.encodedSize.toInt() }.sum() + (newAttInfo?.encodedSize?.toInt() ?: 0) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
   }
 
 

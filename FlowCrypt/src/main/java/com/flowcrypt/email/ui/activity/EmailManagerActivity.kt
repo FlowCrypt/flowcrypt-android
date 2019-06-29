@@ -234,7 +234,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     if (currentFolder != null) {
       if (JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder!!.fullName, ignoreCase = true)) {
         itemSwitch.isVisible = false
-        itemSearch.isVisible = AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!, ignoreCase = true)
+        itemSearch.isVisible = AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!,
+            ignoreCase = true)
       } else {
         itemSwitch.isVisible = true
         itemSearch.isVisible = true
@@ -442,9 +443,11 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.floatActionButtonCompose -> startActivity(CreateMessageActivity.generateIntent(this, null, MessageEncryptionType.ENCRYPTED))
+      R.id.floatActionButtonCompose -> startActivity(CreateMessageActivity.generateIntent(this, null,
+          MessageEncryptionType.ENCRYPTED))
 
-      R.id.viewIdAddNewAccount -> startActivityForResult(Intent(this, AddNewAccountActivity::class.java), REQUEST_CODE_ADD_NEW_ACCOUNT)
+      R.id.viewIdAddNewAccount -> startActivityForResult(Intent(this, AddNewAccountActivity::class.java),
+          REQUEST_CODE_ADD_NEW_ACCOUNT)
     }
   }
 
@@ -461,11 +464,12 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   override fun onConnectionFailed(connResult: ConnectionResult) {
-    UIUtil.showInfoSnackbar(rootView, connResult.errorMessage!!)
+    connResult.errorMessage?.let { UIUtil.showInfoSnackbar(rootView, it) }
   }
 
   override fun onQueryTextSubmit(query: String): Boolean {
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!, ignoreCase = true) && !SearchSequence.isAscii(query)) {
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!, ignoreCase = true)
+        && !SearchSequence.isAscii(query)) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show()
       return true
     }
@@ -751,7 +755,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         updateLabels(R.id.syns_request_code_update_label_passive, true)
       }
 
-      LoaderManager.getInstance(this@EmailManagerActivity).restartLoader(R.id.loader_id_load_gmail_labels, null, this@EmailManagerActivity)
+      LoaderManager.getInstance(this@EmailManagerActivity).restartLoader(R.id.loader_id_load_gmail_labels,
+          null, this@EmailManagerActivity)
     }
 
     override fun onDrawerClosed(drawerView: View) {

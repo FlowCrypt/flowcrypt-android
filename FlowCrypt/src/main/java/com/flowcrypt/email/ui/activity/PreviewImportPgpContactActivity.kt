@@ -37,7 +37,8 @@ class PreviewImportPgpContactActivity : BaseBackStackActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    if (intent == null || !intent.hasExtra(KEY_EXTRA_PUBLIC_KEY_STRING) && !intent.hasExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI)) {
+    if (intent == null || !intent.hasExtra(KEY_EXTRA_PUBLIC_KEY_STRING)
+        && !intent.hasExtra(KEY_EXTRA_PUBLIC_KEYS_FILE_URI)) {
       setResult(Activity.RESULT_CANCELED)
       finish()
     }
@@ -71,7 +72,8 @@ class PreviewImportPgpContactActivity : BaseBackStackActivity() {
   }
 
   companion object {
-    val KEY_EXTRA_PUBLIC_KEY_STRING = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEY_STRING", PreviewImportPgpContactActivity::class.java)
+    val KEY_EXTRA_PUBLIC_KEY_STRING =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEY_STRING", PreviewImportPgpContactActivity::class.java)
 
     val KEY_EXTRA_PUBLIC_KEYS_FILE_URI = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEYS_FILE_URI",
         PreviewImportPgpContactActivity::class.java)

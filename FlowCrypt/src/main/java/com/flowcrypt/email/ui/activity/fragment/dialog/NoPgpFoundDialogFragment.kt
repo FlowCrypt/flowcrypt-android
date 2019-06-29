@@ -84,9 +84,11 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
     const val RESULT_CODE_COPY_FROM_OTHER_CONTACT = 12
     const val RESULT_CODE_REMOVE_CONTACT = 13
 
-    val EXTRA_KEY_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_PGP_CONTACT", NoPgpFoundDialogFragment::class.java)
+    val EXTRA_KEY_PGP_CONTACT =
+        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_PGP_CONTACT", NoPgpFoundDialogFragment::class.java)
 
-    private val EXTRA_KEY_IS_REMOVE_ACTION_ENABLED = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_IS_REMOVE_ACTION_ENABLED", NoPgpFoundDialogFragment::class.java)
+    private val EXTRA_KEY_IS_REMOVE_ACTION_ENABLED =
+        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_IS_REMOVE_ACTION_ENABLED", NoPgpFoundDialogFragment::class.java)
 
     fun newInstance(pgpContact: PgpContact, isRemoveActionEnabled: Boolean): NoPgpFoundDialogFragment {
       val args = Bundle()

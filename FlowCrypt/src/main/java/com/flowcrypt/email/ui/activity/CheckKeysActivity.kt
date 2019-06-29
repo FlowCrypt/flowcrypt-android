@@ -325,7 +325,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
    * @param privateKeyDetailsList An incoming list of [NodeKeyDetails] objects.
    * @return A generated map.
    */
-  private fun prepareMapFromKeyDetailsList(privateKeyDetailsList: ArrayList<NodeKeyDetails>): MutableMap<NodeKeyDetails, String> {
+  private fun prepareMapFromKeyDetailsList(privateKeyDetailsList:
+                                           ArrayList<NodeKeyDetails>): MutableMap<NodeKeyDetails, String> {
     val keyDetailsStringMap = HashMap<NodeKeyDetails, String>()
 
     for (keyDetails in privateKeyDetailsList) {
@@ -340,7 +341,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
    * @param mapOfSavedKeyDetailsAndLongIds An incoming map of [NodeKeyDetails] objects.
    * @return A matched list.
    */
-  private fun generateMatchedKeyDetailsList(mapOfSavedKeyDetailsAndLongIds: Map<NodeKeyDetails, String>): ArrayList<NodeKeyDetails> {
+  private fun generateMatchedKeyDetailsList(mapOfSavedKeyDetailsAndLongIds: Map<NodeKeyDetails, String>):
+      ArrayList<NodeKeyDetails> {
     val matchedKeyDetails = ArrayList<NodeKeyDetails>()
     for ((_, value) in mapOfSavedKeyDetailsAndLongIds) {
       for ((key, value1) in keyDetailsAndLongIdsMap!!) {
@@ -368,9 +370,10 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
         "KEY_EXTRA_POSITIVE_BUTTON_TITLE", CheckKeysActivity::class.java)
     val KEY_EXTRA_NEUTRAL_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_NEUTRAL_BUTTON_TITLE", CheckKeysActivity::class.java)
-    val KEY_EXTRA_NEGATIVE_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEGATIVE_BUTTON_TITLE", CheckKeysActivity::class.java)
-    val KEY_EXTRA_IS_EXTRA_IMPORT_OPTION = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_IS_EXTRA_IMPORT_OPTION", CheckKeysActivity::class.java)
+    val KEY_EXTRA_NEGATIVE_BUTTON_TITLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEGATIVE_BUTTON_TITLE", CheckKeysActivity::class.java)
+    val KEY_EXTRA_IS_EXTRA_IMPORT_OPTION =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_EXTRA_IMPORT_OPTION", CheckKeysActivity::class.java)
 
     fun newIntent(context: Context, privateKeys: ArrayList<NodeKeyDetails>, type: KeyDetails.Type?,
                   bottomTitle: String?, positiveBtnTitle: String?, negativeBtnTitle: String?): Intent {

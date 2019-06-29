@@ -143,7 +143,8 @@ class SecurityUtils {
         val passwordStrength = NodeCallsExecutor.zxcvbnStrengthBar(measure)
 
         when (passwordStrength.word!!.word) {
-          Constants.PASSWORD_QUALITY_WEAK, Constants.PASSWORD_QUALITY_POOR -> throw PrivateKeyStrengthException("Pass phrase too weak")
+          Constants.PASSWORD_QUALITY_WEAK,
+          Constants.PASSWORD_QUALITY_POOR -> throw PrivateKeyStrengthException("Pass phrase too weak")
         }
 
         val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(private!!)

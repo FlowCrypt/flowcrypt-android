@@ -15,17 +15,35 @@ import android.text.TextUtils
 import android.text.format.DateFormat
 import android.text.format.Formatter
 import android.transition.TransitionManager
-import android.view.*
-import android.widget.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.Switch
+import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.model.*
+import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.api.email.model.GeneralMessageDetails
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
-import com.flowcrypt.email.api.retrofit.response.model.node.*
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -186,10 +204,11 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.layoutReplyButton -> startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY, msgEncryptType))
+      R.id.layoutReplyButton ->
+        startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY, msgEncryptType))
 
-      R.id.imageButtonReplyAll, R.id.layoutReplyAllButton -> startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY_ALL,
-          msgEncryptType))
+      R.id.imageButtonReplyAll, R.id.layoutReplyAllButton ->
+        startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY_ALL, msgEncryptType))
 
       R.id.layoutFwdButton -> {
         if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
@@ -234,11 +253,13 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
     when (requestCode) {
-      REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE -> if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-        val intent = AttachmentDownloadManagerService.newIntent(context!!, lastClickedAtt!!)
-        context!!.startService(intent)
-      } else {
-        Toast.makeText(activity, R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG).show()
+      REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE -> {
+        if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+          val intent = AttachmentDownloadManagerService.newIntent(context!!, lastClickedAtt!!)
+          context!!.startService(intent)
+        } else {
+          Toast.makeText(activity, R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG).show()
+        }
       }
 
       else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -252,6 +273,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
    */
   fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
     this.msgInfo = msgInfo
+    this.msgEncryptType = msgInfo.encryptionType
     imageBtnReplyAll!!.visibility = View.VISIBLE
     isAdditionalActionEnabled = true
     if (activity != null) {
@@ -528,67 +550,59 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
   private fun updateMsgView() {
     layoutMsgParts!!.removeAllViews()
-    if (msgInfo!!.hasHtmlText()) {
-      val block = msgInfo!!.getHtmlMsgBlock()
-      addWebView(block!!)
-    } else if (msgInfo!!.msgBlocks != null && msgInfo!!.msgBlocks!!.isNotEmpty()) {
-      var isFirstMsgPartText = true
-      for (block in msgInfo!!.msgBlocks!!) {
-        val layoutInflater = LayoutInflater.from(context)
-        when (block.type) {
-          MsgBlock.Type.DECRYPTED_TEXT -> {
-            msgEncryptType = MessageEncryptionType.ENCRYPTED
-            layoutMsgParts!!.addView(genDecryptedTextPart(block, layoutInflater))
+
+    var isFirstMsgPartText = true
+    var isHtmlDisplayed = false
+
+    for (block in msgInfo!!.msgBlocks!!) {
+      val layoutInflater = LayoutInflater.from(context)
+      when (block.type) {
+        MsgBlock.Type.DECRYPTED_HTML, MsgBlock.Type.PLAIN_HTML -> {
+          if (!isHtmlDisplayed) {
+            addWebView(block)
+            isHtmlDisplayed = true
           }
-
-          MsgBlock.Type.PLAIN_TEXT -> {
-            layoutMsgParts!!.addView(genTextPart(block, layoutInflater))
-            if (isFirstMsgPartText) {
-              viewFooterOfHeader!!.visibility = View.VISIBLE
-            }
-          }
-
-          MsgBlock.Type.PUBLIC_KEY -> layoutMsgParts!!.addView(genPublicKeyPart(block as PublicKeyMsgBlock, layoutInflater))
-
-          MsgBlock.Type.DECRYPT_ERROR -> {
-            msgEncryptType = MessageEncryptionType.ENCRYPTED
-            layoutMsgParts!!.addView(genDecryptErrorPart(block as DecryptErrorMsgBlock, layoutInflater))
-          }
-
-          MsgBlock.Type.DECRYPTED_ATT -> {
-          }
-
-          else -> layoutMsgParts!!.addView(genDefPart(block, layoutInflater, R.layout.message_part_other,
-              layoutMsgParts))
         }
-        isFirstMsgPartText = false
+
+        MsgBlock.Type.DECRYPTED_TEXT -> {
+          msgEncryptType = MessageEncryptionType.ENCRYPTED
+          layoutMsgParts!!.addView(genDecryptedTextPart(block, layoutInflater))
+        }
+
+        MsgBlock.Type.PLAIN_TEXT -> {
+          layoutMsgParts!!.addView(genTextPart(block, layoutInflater))
+          if (isFirstMsgPartText) {
+            viewFooterOfHeader!!.visibility = View.VISIBLE
+          }
+        }
+
+        MsgBlock.Type.PUBLIC_KEY ->
+          layoutMsgParts!!.addView(genPublicKeyPart(block as PublicKeyMsgBlock, layoutInflater))
+
+        MsgBlock.Type.DECRYPT_ERROR -> {
+          msgEncryptType = MessageEncryptionType.ENCRYPTED
+          layoutMsgParts!!.addView(genDecryptErrorPart(block as DecryptErrorMsgBlock, layoutInflater))
+        }
+
+        MsgBlock.Type.DECRYPTED_ATT -> {
+        }
+
+        else -> layoutMsgParts!!.addView(genDefPart(block, layoutInflater, R.layout.message_part_other, layoutMsgParts))
       }
-      updateReplyButtons()
-    } else {
-      layoutMsgParts!!.removeAllViews()
-      updateReplyButtons()
+      isFirstMsgPartText = false
     }
+    updateReplyButtons()
   }
 
   private fun addWebView(block: MsgBlock) {
     val emailWebView = EmailWebView(context!!)
     emailWebView.configure()
 
-    val margin = resources.getDimensionPixelOffset(R.dimen.default_margin_content)
     val layoutParams = LinearLayout.LayoutParams(
         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-    layoutParams.setMargins(margin, 0, margin, 0)
     emailWebView.layoutParams = layoutParams
 
-    var html = EmailUtil.genViewportHtml(block.content!!)
-
-    if (block.type === MsgBlock.Type.DECRYPTED_HTML) {
-      html = html.replaceFirst("(<body.*)(bgcolor=\".*\")(>)".toRegex(), "$1$3")
-      emailWebView.setBackgroundColor(0)
-      emailWebView.setBackgroundResource(R.drawable.bg_message_part_pgp_message)
-    }
-
-    emailWebView.loadDataWithBaseURL(null, html, "text/html", StandardCharsets.UTF_8.displayName(), null)
+    emailWebView.loadDataWithBaseURL(null, block.content!!, "text/html", StandardCharsets.UTF_8.displayName(), null)
 
     layoutMsgParts!!.addView(emailWebView)
     emailWebView.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
@@ -680,7 +694,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     if (button != null) {
       if (existingPgpContact == null) {
         initSaveContactButton(block, button)
-      } else if (TextUtils.isEmpty(existingPgpContact.longid) || details.longId!!.equals(existingPgpContact.longid!!, ignoreCase = true)) {
+      } else if (TextUtils.isEmpty(existingPgpContact.longid)
+          || details.longId!!.equals(existingPgpContact.longid!!, ignoreCase = true)) {
         initUpdateContactButton(block, button)
       } else {
         initReplaceContactButton(block, button)
