@@ -464,7 +464,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   override fun onConnectionFailed(connResult: ConnectionResult) {
-    UIUtil.showInfoSnackbar(rootView, connResult.errorMessage!!)
+    connResult.errorMessage?.let { UIUtil.showInfoSnackbar(rootView, it) }
   }
 
   override fun onQueryTextSubmit(query: String): Boolean {
