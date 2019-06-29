@@ -68970,7 +68970,7 @@ exports.isContentBlock = t => t === 'plainText' || t === 'decryptedText' || t ==
 const seamlessLockBg = 'iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAh1BMVEXw8PD////w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PD7MuHIAAAALXRSTlMAAAECBAcICw4QEhUZIyYqMTtGTV5kdn2Ii5mfoKOqrbG0uL6/xcnM0NTX2t1l7cN4AAAB0UlEQVR4Ae3Y3Y4SQRCG4bdHweFHRBTBH1FRFLXv//qsA8kmvbMdXhh2Q0KfknpSCQc130c67s22+e9+v/+d84fxkSPH0m/+5P9vN7vRV0vPfx7or1NB23e99KAHuoXOOc6moQsBwNN1Q9g4Wdh1uq3MA7Qn0+2ylAt7WbWpyT+Wo8roKH6v2QhZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2gjZ2AUNOLmwgQdogEJ2dnF3UJdU3WjqO/u96aYtVd/7jqvIyu76G5se6GaY7tNNcy5d7se7eWVnDz87fMkuVuS8epF6f9NPObPY5re9y4N1/vya9Gr3se2bfvl9M0mkyZdv077p+a/3z4Meby5Br4NWiV51BaiUqfLro9I3WiR61RVcffwfXI7u5zZ20EOA82Uu8x3SlrSwXQuBSvSqK0AletUVoBK96gpIwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWckIletUVIJJxITN6wtZd2EI+0NquyIJOnUpFVvRpcwmV6FVXgEr0qitAJXrVFaASveoKUIledQWoRK+6AlSiV13BP+/VVbky7Xq1AAAAAElFTkSuQmCC';
 
 const fmtMsgContentBlockAsHtml = (sanitizedHtmlContent, frame) => {
-  const generalCss = `background: white;padding-left: 10px;min-height: 38px;padding-top: 6px;padding-bottom: 6px;`;
+  const generalCss = `background: white;padding-left: 10px;min-height: 38px;padding-top: 6px;padding-bottom: 6px;width: 100%;`;
   let frameCss;
 
   if (frame === 'green') {
@@ -70547,7 +70547,9 @@ PgpMsg.fmtDecrypted = async (decryptedContent, textBlockType = 'decryptedHtml') 
       } else {
         blocks.push(Pgp.internal.msgBlockAttObj('decryptedAtt', '', {
           name: att.name,
-          data: att.getData()
+          data: att.getData(),
+          length: att.length,
+          type: att.type
         }));
       }
     }
@@ -71601,17 +71603,26 @@ class Endpoints {
 
       const msgContentBlocks = [];
       const blocks = [];
-      const replyType = 'plain'; // todo - detect 'encrypted'
+      let replyType = 'plain';
 
       for (const block of sequentialProcessedBlocks) {
         if (block.content instanceof buf_1.Buf) {
           // cannot JSON-serialize Buf
           block.content = fmt_1.isContentBlock(block.type) ? block.content.toUtfStr() : block.content.toRawBytesStr();
+        } else if (block.attMeta && block.attMeta.data instanceof Uint8Array) {
+          // converting to base64-encoded string instead of uint8 for JSON serilization
+          // value actually replaced to a string, but type remains Uint8Array type set to satisfy TS
+          // no longer used below, only gets passed to be serialized so be safe
+          block.attMeta.data = buf_1.Buf.fromUint8(block.attMeta.data).toBase64Str();
         }
 
         if (block.type === 'publicKey' && !block.keyDetails) {
           // this could eventually be moved into detectBlocks, which would make it async
           block.keyDetails = await pgp_1.Pgp.key.details((await pgp_1.Pgp.key.read(block.content.toString())));
+        }
+
+        if (block.type === 'decryptedHtml' || block.type === 'decryptedText' || block.type === 'decryptedAtt' || block.type === 'decryptErr') {
+          replyType = 'encrypted';
         }
 
         if (fmt_1.isContentBlock(block.type)) {
