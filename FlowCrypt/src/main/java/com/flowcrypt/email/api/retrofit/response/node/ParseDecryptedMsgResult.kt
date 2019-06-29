@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.model.MessageEncryptionType
 import com.google.gson.annotations.Expose
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -25,8 +26,11 @@ import java.io.StringReader
  * Time: 3:48 PM
  * E-mail: DenBond7@gmail.com
  */
-data class ParseDecryptedMsgResult constructor(@Expose override val error: Error?,
-                                               var msgBlocks: MutableList<MsgBlock>?) :
+data class ParseDecryptedMsgResult constructor(
+    @Expose val text: String?,
+    @Expose val replyType: String,
+    @Expose override val error: Error?,
+    var msgBlocks: MutableList<MsgBlock>?) :
     BaseNodeResponse {
 
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
@@ -68,9 +72,15 @@ data class ParseDecryptedMsgResult constructor(@Expose override val error: Error
   }
 
   constructor(source: Parcel) : this(
+      source.readString(),
+      source.readString()!!,
       source.readParcelable<Error>(Error::class.java.classLoader),
       mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) }
   )
+
+  fun getMsgEncryptionType(): MessageEncryptionType {
+    return if (replyType == "encrypted") MessageEncryptionType.ENCRYPTED else MessageEncryptionType.STANDARD
+  }
 
   override fun describeContents(): Int {
     return 0
@@ -78,6 +88,8 @@ data class ParseDecryptedMsgResult constructor(@Expose override val error: Error
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
       with(dest) {
+        writeString(text)
+        writeString(replyType)
         writeParcelable(error, 0)
         writeTypedList(msgBlocks)
       }

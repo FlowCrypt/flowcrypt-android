@@ -273,6 +273,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
    */
   fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
     this.msgInfo = msgInfo
+    this.msgEncryptType = msgInfo.encryptionType
     imageBtnReplyAll!!.visibility = View.VISIBLE
     isAdditionalActionEnabled = true
     if (activity != null) {

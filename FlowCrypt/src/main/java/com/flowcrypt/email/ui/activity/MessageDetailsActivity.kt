@@ -322,8 +322,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             }
             return
           } else {
-            val msgInfo = IncomingMessageInfo(details!!, result.msgBlocks!!)
-
+            val msgInfo = IncomingMessageInfo(details!!, result.msgBlocks!!, result.getMsgEncryptionType())
             val fragment = supportFragmentManager
                 .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
 
@@ -342,7 +341,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
           if (!idlingForDecryption!!.isIdleNow) {
             idlingForDecryption!!.decrement()
           }
-          ExceptionUtil.handleError(ManualHandledException("" + nodeResponseWrapper.result.error!!))
+          ExceptionUtil.handleError(ManualHandledException("" + nodeResponseWrapper.result?.error!!))
         }
 
         Status.EXCEPTION -> {

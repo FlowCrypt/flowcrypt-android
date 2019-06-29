@@ -9,6 +9,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.model.MessageEncryptionType
 import java.util.*
 import javax.mail.internet.InternetAddress
 
@@ -24,7 +25,8 @@ import javax.mail.internet.InternetAddress
 data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessageDetails,
                                            var atts: List<AttachmentInfo>? = null,
                                            var localFolder: LocalFolder? = null,
-                                           val msgBlocks: List<MsgBlock>? = null) : Parcelable {
+                                           val msgBlocks: List<MsgBlock>? = null,
+                                           val encryptionType: MessageEncryptionType) : Parcelable {
   fun getSubject(): String? = generalMsgDetails.subject
 
   fun getFrom(): List<InternetAddress>? = generalMsgDetails.from
@@ -49,11 +51,13 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
 
   fun getUid(): Int = generalMsgDetails.uid
 
-  constructor(generalMsgDetails: GeneralMessageDetails, msgBlocks: List<MsgBlock>) : this(
+  constructor(generalMsgDetails: GeneralMessageDetails, msgBlocks: List<MsgBlock>,
+              encryptionType: MessageEncryptionType) : this(
       generalMsgDetails,
       null,
       null,
-      msgBlocks)
+      msgBlocks,
+      encryptionType)
 
   fun hasHtmlText(): Boolean {
     return hasSomePart(MsgBlock.Type.PLAIN_HTML) || hasSomePart(MsgBlock.Type.DECRYPTED_HTML)
@@ -77,7 +81,8 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
       source.readParcelable<GeneralMessageDetails>(GeneralMessageDetails::class.java.classLoader)!!,
       source.createTypedArrayList(AttachmentInfo.CREATOR),
       source.readParcelable<LocalFolder>(LocalFolder::class.java.classLoader),
-      mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) }
+      mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) },
+      source.readParcelable(MessageEncryptionType::class.java.classLoader)
   )
 
   override fun describeContents() = 0
@@ -87,6 +92,7 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
     writeTypedList(atts)
     writeParcelable(localFolder, flags)
     writeTypedList(msgBlocks)
+    writeParcelable(encryptionType, flags)
   }
 
   companion object {
