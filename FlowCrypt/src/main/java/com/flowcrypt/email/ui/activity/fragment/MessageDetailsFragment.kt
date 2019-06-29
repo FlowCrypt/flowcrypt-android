@@ -596,10 +596,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     val emailWebView = EmailWebView(context!!)
     emailWebView.configure()
 
-    val margin = resources.getDimensionPixelOffset(R.dimen.default_margin_content)
     val layoutParams = LinearLayout.LayoutParams(
         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-    layoutParams.setMargins(margin, 0, margin, 0)
     emailWebView.layoutParams = layoutParams
 
     var html = EmailUtil.genViewportHtml(block.content!!)
