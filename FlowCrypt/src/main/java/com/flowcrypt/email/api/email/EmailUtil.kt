@@ -380,30 +380,6 @@ class EmailUtil {
     }
 
     /**
-     * Prepare the input HTML to show the user a viewport option.
-     *
-     * @return A generated HTML page which will be more comfortable for user.
-     */
-    @JvmStatic
-    fun genViewportHtml(incomingHtml: String): String {
-      val body = if (Pattern.compile("<html.*?>", Pattern.DOTALL).matcher(incomingHtml).find()) {
-        val patternBody = Pattern.compile("<body.*?>(.*?)</body>", Pattern.DOTALL)
-        val matcherBody = patternBody.matcher(incomingHtml)
-        if (matcherBody.find()) {
-          matcherBody.group()
-        } else {
-          "<body>$incomingHtml</body>"
-        }
-      } else {
-        "<body>$incomingHtml</body>"
-      }
-
-      return "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width" +
-          "\" /><style>img{display: inline !important ;height: auto !important; max-width:" +
-          " 100% !important;}</style></head>" + body + "</html>"
-    }
-
-    /**
      * Prepare a formatted date string for a forwarded message. For example `Tue, Apr 3, 2018 at 3:07 PM.`
      *
      * @return A generated formatted date string.

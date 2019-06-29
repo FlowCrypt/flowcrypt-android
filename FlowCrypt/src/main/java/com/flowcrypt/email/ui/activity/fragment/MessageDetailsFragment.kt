@@ -600,15 +600,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
     emailWebView.layoutParams = layoutParams
 
-    var html = EmailUtil.genViewportHtml(block.content!!)
-
-    if (block.type === MsgBlock.Type.DECRYPTED_HTML) {
-      html = html.replaceFirst("(<body.*)(bgcolor=\".*\")(>)".toRegex(), "$1$3")
-      emailWebView.setBackgroundColor(0)
-      emailWebView.setBackgroundResource(R.drawable.bg_message_part_pgp_message)
-    }
-
-    emailWebView.loadDataWithBaseURL(null, html, "text/html", StandardCharsets.UTF_8.displayName(), null)
+    emailWebView.loadDataWithBaseURL(null, block.content!!, "text/html", StandardCharsets.UTF_8.displayName(), null)
 
     layoutMsgParts!!.addView(emailWebView)
     emailWebView.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {

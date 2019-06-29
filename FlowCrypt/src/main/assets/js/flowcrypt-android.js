@@ -68974,14 +68974,14 @@ const fmtMsgContentBlockAsHtml = (sanitizedHtmlContent, frame) => {
   let frameCss;
 
   if (frame === 'green') {
-    frameCss = `border: 1px solid #f0f0f0;border-left: 4px solid #31A217;background-image: url(data:image/png;base64,${seamlessLockBg});`;
+    frameCss = `border: 1px solid #f0f0f0;border-left: 4px solid #31A217;border-right: none;background-image: url(data:image/png;base64,${seamlessLockBg});`;
   } else if (frame === 'red') {
-    frameCss = `border: 1px solid #f0f0f0;border-left: 4px solid #d14836;`;
+    frameCss = `border: 1px solid #f0f0f0;border-left: 4px solid #d14836;border-right: none;`;
   } else if (frame === 'plain') {
-    frameCss = `border: 1px solid #f0f0f0;`;
+    frameCss = `border: none;`;
   } else {
     // gray
-    frameCss = `border: 1px solid #f0f0f0;border-left: 4px solid #989898;`;
+    frameCss = `border: 1px solid #f0f0f0;border-left: 4px solid #989898;border-right: none;`;
   }
 
   return `<div style="${generalCss}${frameCss}">${sanitizedHtmlContent}</div>\n`;
@@ -69023,6 +69023,14 @@ exports.fmtContentBlock = contentBlocks => {
     }
   }
 
+  msgContentAsHtml = `
+  <!DOCTYPE html><html>
+    <head>
+      <meta name="viewport" content="width=device-width" />
+      <style>img {display: inline !important; height: auto !important; max-width: 100% !important; font-size: 14px; }</style>
+    </head>
+    <body>${msgContentAsHtml}</body>
+  </html>`;
   return {
     contentBlock: pgp_1.Pgp.internal.msgBlockObj('plainHtml', msgContentAsHtml),
     text: msgContentAsText
