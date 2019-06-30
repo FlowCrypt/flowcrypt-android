@@ -70018,6 +70018,10 @@ Pgp.internal = {
       }
     }
   },
+  cryptoKeyDecryptForMessage: async ki => {
+    // todo - only decrypt subkeys that match, no need to decrypt the primary key or other subkeys
+    return (await Pgp.key.decrypt(ki.parsed, [ki.passphrase])) === true;
+  },
   cryptoMsgGetSortedKeys: async (kiWithPp, msg) => {
     const keys = {
       verificationContacts: [],
@@ -70032,18 +70036,19 @@ Pgp.internal = {
     keys.encryptedFor = await Pgp.internal.longids(msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : []);
     await Pgp.internal.cryptoMsgGetSignedBy(msg, keys);
 
-    for (const ki of kiWithPp.keys) {
+    for (const ki of kiWithPp) {
+      ki.parsed = await Pgp.key.read(ki.private);
+      ki.details = await Pgp.key.details(ki.parsed);
+    }
+
+    for (const ki of kiWithPp) {
       // this is inefficient because we are doing unnecessary parsing of all keys here
       // better would be to compare to already stored KeyInfo, however KeyInfo currently only holds primary longid, not longids of subkeys
       // while messages are typically encrypted for subkeys, thus we have to parse the key to get the info
       // we are filtering here to avoid a significant performance issue of having to attempt decrypting with all keys simultaneously
-      const {
-        ids
-      } = await Pgp.key.details((await Pgp.key.read(ki.private)));
-
       for (const {
         longid
-      } of ids) {
+      } of ki.details.ids) {
         if (keys.encryptedFor.includes(longid)) {
           keys.prvMatching.push(ki);
           break;
@@ -70051,16 +70056,14 @@ Pgp.internal = {
       }
     }
 
-    keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp.keys;
+    keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp;
 
-    for (const prvForDecrypt of keys.prvForDecrypt) {
-      const prv = await Pgp.key.read(prvForDecrypt.private);
-
-      if (prv.isDecrypted() || kiWithPp.passphrases.length && (await Pgp.key.decrypt(prv, kiWithPp.passphrases)) === true) {
-        prvForDecrypt.decrypted = prv;
-        keys.prvForDecryptDecrypted.push(prvForDecrypt);
+    for (const ki of keys.prvForDecrypt) {
+      if (ki.parsed.isDecrypted() || (await Pgp.internal.cryptoKeyDecryptForMessage(ki)) === true) {
+        ki.decrypted = ki.parsed;
+        keys.prvForDecryptDecrypted.push(ki);
       } else {
-        keys.prvForDecryptWithoutPassphrases.push(prvForDecrypt);
+        keys.prvForDecryptWithoutPassphrases.push(ki);
       }
     }
 
@@ -70255,10 +70258,7 @@ PgpMsg.verifyDetached = async ({
 }) => {
   const message = openpgp.message.fromText(buf_js_1.Buf.fromUint8(plaintext).toUtfStr());
   await message.appendSignature(buf_js_1.Buf.fromUint8(sigText).toUtfStr());
-  const keys = await Pgp.internal.cryptoMsgGetSortedKeys({
-    keys: [],
-    passphrases: []
-  }, message);
+  const keys = await Pgp.internal.cryptoMsgGetSortedKeys([], message);
   return await PgpMsg.verify(message, keys.forVerification, keys.verificationContacts[0]);
 };
 /**
@@ -71573,15 +71573,10 @@ class Endpoints {
 
     this.parseDecryptMsg = async (uncheckedReq, data) => {
       const {
-        keys,
-        passphrases,
+        keys: kisWithPp,
         msgPwd,
         isEmail
       } = validate_1.Validate.parseDecryptMsg(uncheckedReq);
-      const kisWithPp = {
-        keys,
-        passphrases
-      };
       const rawBlocks = []; // contains parsed, unprocessed / possibly encrypted data
 
       if (isEmail) {
@@ -71659,15 +71654,11 @@ class Endpoints {
 
     this.decryptFile = async (uncheckedReq, data) => {
       const {
-        keys,
-        passphrases,
+        keys: kisWithPp,
         msgPwd
       } = validate_1.Validate.decryptFile(uncheckedReq);
       const decryptedMeta = await pgp_1.PgpMsg.decrypt({
-        kisWithPp: {
-          keys,
-          passphrases
-        },
+        kisWithPp,
         encryptedData: Buffer.concat(data),
         msgPwd
       });
@@ -71924,7 +71915,7 @@ Validate.composeEmail = v => {
 };
 
 Validate.parseDecryptMsg = v => {
-  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'isEmail', 'boolean?')) {
+  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'msgPwd', 'string?') && hasProp(v, 'isEmail', 'boolean?')) {
     return v;
   }
 
@@ -71940,7 +71931,7 @@ Validate.encryptFile = v => {
 };
 
 Validate.decryptFile = v => {
-  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'passphrases', 'string[]') && hasProp(v, 'msgPwd', 'string?')) {
+  if (isObj(v) && hasProp(v, 'keys', 'PrvKeyInfo[]') && hasProp(v, 'msgPwd', 'string?')) {
     return v;
   }
 
@@ -72025,7 +72016,7 @@ const hasProp = (v, name, type) => {
   }
 
   if (type === 'PrvKeyInfo[]') {
-    return Array.isArray(value) && value.filter(ki => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string')).length === value.length;
+    return Array.isArray(value) && value.filter(ki => hasProp(ki, 'private', 'string') && hasProp(ki, 'longid', 'string') && hasProp(ki, 'passphrase', 'string?')).length === value.length;
   }
 
   if (type === 'Userid[]') {

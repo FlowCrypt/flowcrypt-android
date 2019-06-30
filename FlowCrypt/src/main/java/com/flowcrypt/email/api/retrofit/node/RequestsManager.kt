@@ -42,7 +42,7 @@ object RequestsManager {
   }
 
   fun decryptMsg(requestCode: Int, msg: String, prvKeys: Array<PgpKeyInfo>) {
-    load(requestCode, ParseDecryptMsgRequest(msg, Arrays.asList(*prvKeys), TestData.passphrases()))
+    load(requestCode, ParseDecryptMsgRequest(msg, Arrays.asList(*prvKeys)))
   }
 
   fun encryptFile(requestCode: Int, data: ByteArray) {
@@ -54,7 +54,7 @@ object RequestsManager {
   }
 
   fun decryptFile(requestCode: Int, encryptedData: ByteArray, prvKeys: Array<PgpKeyInfo>) {
-    load(requestCode, DecryptFileRequest(encryptedData, Arrays.asList(*prvKeys), TestData.passphrases()))
+    load(requestCode, DecryptFileRequest(encryptedData, Arrays.asList(*prvKeys)))
   }
 
   private fun load(requestCode: Int, nodeRequest: NodeRequest) {

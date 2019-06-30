@@ -12,4 +12,5 @@ import com.google.gson.annotations.SerializedName
  * @author DenBond7
  */
 data class PrivateKeyInfo(@SerializedName("private") @Expose val privateKey: String,
-                          @Expose val longid: String)
+                          @Expose val longid: String,
+                          @Expose val passphrase: String?)

@@ -321,25 +321,18 @@ class TestData internal constructor() {
     }
 
     @JvmStatic
-    fun passphrases(): List<String> {
-      val list = ArrayList<String>()
-      list.add("some long pp")
-      return list
-    }
-
-    @JvmStatic
     fun eccPrvKeyInfo(): Array<PgpKeyInfo> {
-      return arrayOf(PgpKeyInfo("063635B3E33EB14C", ECC_PRV_KEY, ECC_PUB_KEY))
+      return arrayOf(PgpKeyInfo("063635B3E33EB14C", ECC_PRV_KEY, ECC_PUB_KEY, "some long pp"))
     }
 
     @JvmStatic
     fun rsa2048PrvKeyInfo(): Array<PgpKeyInfo> {
-      return arrayOf(PgpKeyInfo("3A30F4CC0A9A8F10", RSA_2048_PRV_KEY, RSA_2048_PUB_KEY))
+      return arrayOf(PgpKeyInfo("3A30F4CC0A9A8F10", RSA_2048_PRV_KEY, RSA_2048_PUB_KEY, "some long pp"))
     }
 
     @JvmStatic
     fun rsa4096PrvKeyInfo(): Array<PgpKeyInfo> {
-      return arrayOf(PgpKeyInfo("7C307E6F2092962D", RSA_4096_PRV_KEY, RSA_4096_PUB_KEY))
+      return arrayOf(PgpKeyInfo("7C307E6F2092962D", RSA_4096_PRV_KEY, RSA_4096_PUB_KEY, "some long pp"))
     }
 
     @JvmStatic
@@ -349,8 +342,8 @@ class TestData internal constructor() {
     @JvmStatic
     val mixedPrvKeys: Array<PgpKeyInfo>
       get() = arrayOf(
-          PgpKeyInfo("063635B3E33EB14C", ECC_PRV_KEY, ECC_PUB_KEY),
-          PgpKeyInfo("3A30F4CC0A9A8F10", RSA_2048_PRV_KEY, RSA_2048_PUB_KEY),
-          PgpKeyInfo("7C307E6F2092962D", RSA_4096_PRV_KEY, RSA_4096_PUB_KEY))
+          PgpKeyInfo("063635B3E33EB14C", ECC_PRV_KEY, ECC_PUB_KEY, "some long pp"),
+          PgpKeyInfo("3A30F4CC0A9A8F10", RSA_2048_PRV_KEY, RSA_2048_PUB_KEY, "some long pp"),
+          PgpKeyInfo("7C307E6F2092962D", RSA_4096_PRV_KEY, RSA_4096_PUB_KEY, "some long pp"))
   }
 }

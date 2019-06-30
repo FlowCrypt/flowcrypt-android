@@ -14,7 +14,6 @@ import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
 import com.flowcrypt.email.model.PgpKeyInfo
-import com.flowcrypt.email.security.model.PrivateKeyInfo
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
@@ -41,8 +40,8 @@ class SecurityUtils {
      * @return <tt>List<PrivateKeyInfo></PrivateKeyInfo></tt> Return a list of PrivateKeyInfo objects.
      */
     @JvmStatic
-    fun getPrivateKeysInfo(context: Context): List<PrivateKeyInfo> {
-      val privateKeysInfo = ArrayList<PrivateKeyInfo>()
+    fun getPgpKeyInfoList(context: Context): List<PgpKeyInfo> {
+      val pgpKeyInfos = ArrayList<PgpKeyInfo>()
       val cursor = context.contentResolver.query(KeysDaoSource().baseContentUri, null, null, null, null)
 
       val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
@@ -59,15 +58,12 @@ class SecurityUtils {
           val passphrase = keyStoreCryptoManager.decrypt(cursor.getString(
               cursor.getColumnIndex(KeysDaoSource.COL_PASSPHRASE)), randomVector)
 
-          val pgpKeyInfo = PgpKeyInfo(longId, prvKey, pubKey)
-          val privateKeyInfo = PrivateKeyInfo(pgpKeyInfo, passphrase)
-
-          privateKeysInfo.add(privateKeyInfo)
+          pgpKeyInfos.add(PgpKeyInfo(longId, prvKey, pubKey, passphrase))
         } while (cursor.moveToNext())
       }
 
       cursor?.close()
-      return privateKeysInfo
+      return pgpKeyInfos
     }
 
     /**

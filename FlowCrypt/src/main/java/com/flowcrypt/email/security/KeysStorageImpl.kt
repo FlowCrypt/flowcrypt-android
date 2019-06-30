@@ -105,13 +105,14 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
 
     val appContext = context.applicationContext
 
-    this.pgpKeyInfoList.clear()
-    this.passphrases.clear()
+    pgpKeyInfoList.clear()
+    passphrases.clear()
     try {
-      val privateKeysInfo = SecurityUtils.getPrivateKeysInfo(appContext)
-      for ((pgpKeyInfo, passphrase) in privateKeysInfo) {
+      for (pgpKeyInfo in SecurityUtils.getPgpKeyInfoList(appContext)) {
         pgpKeyInfoList.add(pgpKeyInfo)
-        passphrases.add(passphrase)
+        if(pgpKeyInfo.passphrase != null) { // pass phrases may be optionally kept out of storage in the future https://github.com/FlowCrypt/flowcrypt-android/issues/372
+          passphrases.add(pgpKeyInfo.passphrase)
+        }
       }
     } catch (e: Exception) {
       e.printStackTrace()
