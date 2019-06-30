@@ -69303,15 +69303,15 @@ const store_js_1 = __webpack_require__(10);
 
 const common_js_1 = __webpack_require__(4);
 
-const mime_js_1 = __webpack_require__(11);
+const mime_js_1 = __webpack_require__(13);
 
 const mnemonic_js_1 = __webpack_require__(16);
 
-const require_js_1 = __webpack_require__(14);
+const require_js_1 = __webpack_require__(11);
 
 const util_js_1 = __webpack_require__(5);
 
-const buf_js_1 = __webpack_require__(13);
+const buf_js_1 = __webpack_require__(15);
 
 const openpgp = require_js_1.requireOpenpgp();
 
@@ -69556,9 +69556,20 @@ Pgp.key = {
    * used only for keys that we ourselves parsed / formatted before, eg from local storage, because no err handling
    */
   read: async armoredKey => {
+    const fromCache = store_js_1.Store.armoredKeyCacheGet(armoredKey);
+
+    if (fromCache) {
+      return fromCache;
+    }
+
     const {
       keys: [key]
     } = await openpgp.key.readArmored(armoredKey);
+
+    if (key && key.isPrivate()) {
+      store_js_1.Store.armoredKeyCacheSet(armoredKey, key);
+    }
+
     return key;
   },
 
@@ -69600,12 +69611,9 @@ Pgp.key = {
       errs: allErrs
     };
   },
-  decrypt: async (key, passphrases, forMsgKeyids) => {
-    const msgKeyidBytesArr = (forMsgKeyids || []).map(kid => kid.bytes);
-    const optionalMatchingKeyid = key.getKeyIds().find(kid => msgKeyidBytesArr.includes(kid.bytes));
-
+  decrypt: async (key, passphrases, optionalKeyid) => {
     try {
-      return await key.decrypt(passphrases, optionalMatchingKeyid); // when no keyid intersection found, it will decrypt all
+      return await key.decrypt(passphrases, optionalKeyid); // when no keyid intersection found, it will decrypt all
     } catch (e) {
       if (e instanceof Error && e.message.toLowerCase().includes('passphrase')) {
         return false;
@@ -70021,6 +70029,10 @@ Pgp.internal = {
       }
     }
   },
+  cryptoKeyOptionalMatchingKeyid: (key, forMsgKeyids) => {
+    const msgKeyidBytesArr = (forMsgKeyids || []).map(kid => kid.bytes);
+    return key.getKeyIds().find(kid => msgKeyidBytesArr.includes(kid.bytes));
+  },
   cryptoMsgGetSortedKeys: async (kiWithPp, msg) => {
     const keys = {
       verificationContacts: [],
@@ -70037,18 +70049,14 @@ Pgp.internal = {
     await Pgp.internal.cryptoMsgGetSignedBy(msg, keys);
 
     for (const ki of kiWithPp) {
-      ki.parsed = await Pgp.key.read(ki.private);
-      ki.details = await Pgp.key.details(ki.parsed);
-    }
-
-    for (const ki of kiWithPp) {
-      // this is inefficient because we are doing unnecessary parsing of all keys here
+      ki.parsed = await Pgp.key.read(ki.private); // this is inefficient because we are doing unnecessary parsing of all keys here
       // better would be to compare to already stored KeyInfo, however KeyInfo currently only holds primary longid, not longids of subkeys
       // while messages are typically encrypted for subkeys, thus we have to parse the key to get the info
       // we are filtering here to avoid a significant performance issue of having to attempt decrypting with all keys simultaneously
-      for (const {
-        longid
-      } of ki.details.ids) {
+
+      for (const longid of await Promise.all(ki.parsed.getKeyIds().map(({
+        bytes
+      }) => Pgp.key.longid(bytes)))) {
         if (keys.encryptedFor.includes(longid)) {
           keys.prvMatching.push(ki);
           break;
@@ -70059,7 +70067,14 @@ Pgp.internal = {
     keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp;
 
     for (const ki of keys.prvForDecrypt) {
-      if (ki.parsed.isDecrypted() || (await Pgp.key.decrypt(ki.parsed, [ki.passphrase], encryptedForKeyids)) === true) {
+      const optionalMatchingKeyid = Pgp.internal.cryptoKeyOptionalMatchingKeyid(ki.parsed, encryptedForKeyids);
+      const cachedDecryptedKey = store_js_1.Store.decryptedKeyCacheGet(ki.longid);
+
+      if (cachedDecryptedKey && (cachedDecryptedKey.isDecrypted() || optionalMatchingKeyid && cachedDecryptedKey.getKeys(optionalMatchingKeyid).every(k => k.isDecrypted() === true))) {
+        ki.decrypted = cachedDecryptedKey;
+        keys.prvForDecryptDecrypted.push(ki);
+      } else if (ki.parsed.isDecrypted() || (await Pgp.key.decrypt(ki.parsed, [ki.passphrase], optionalMatchingKeyid)) === true) {
+        store_js_1.Store.decryptedKeyCacheSet(ki.parsed);
         ki.decrypted = ki.parsed;
         keys.prvForDecryptDecrypted.push(ki);
       } else {
@@ -70717,10 +70732,50 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+const require_js_1 = __webpack_require__(11);
+
+const openpgp = require_js_1.requireOpenpgp();
+let KEY_CACHE = {};
+let KEY_CACHE_WIPE_TIMEOUT;
+
+const keyLongid = k => openpgp.util.str_to_hex(k.getKeyId().bytes).toUpperCase();
+
 class Store {}
 
 Store.dbContactGet = async (db, emailOrLongid) => {
   return [];
+};
+
+Store.decryptedKeyCacheSet = k => {
+  Store.keyCacheRenewExpiry();
+  KEY_CACHE[keyLongid(k)] = k;
+};
+
+Store.decryptedKeyCacheGet = longid => {
+  Store.keyCacheRenewExpiry();
+  return KEY_CACHE[longid];
+};
+
+Store.armoredKeyCacheSet = (armored, k) => {
+  Store.keyCacheRenewExpiry();
+  KEY_CACHE[armored] = k;
+};
+
+Store.armoredKeyCacheGet = armored => {
+  Store.keyCacheRenewExpiry();
+  return KEY_CACHE[armored];
+};
+
+Store.keyCacheWipe = () => {
+  KEY_CACHE = {};
+};
+
+Store.keyCacheRenewExpiry = () => {
+  if (KEY_CACHE_WIPE_TIMEOUT) {
+    clearTimeout(KEY_CACHE_WIPE_TIMEOUT);
+  }
+
+  KEY_CACHE_WIPE_TIMEOUT = setTimeout(Store.keyCacheWipe, 5 * 60 * 1000);
 };
 
 exports.Store = Store;
@@ -70735,19 +70790,64 @@ exports.Store = Store;
 
 Object.defineProperty(exports, "__esModule", {
   value: true
+}); /// <reference path="../../../types/openpgp.d.ts" />
+
+exports.requireOpenpgp = () => {
+  // @ts-ignore;
+  if (typeof openpgp !== 'undefined') {
+    // @ts-ignore;
+    return openpgp; // self-contained node-mobile
+  }
+
+  return __webpack_require__(12); // normal desktop node, eg when running tests
+};
+
+exports.requireMimeParser = () => {
+  // @ts-ignore;
+  return global['emailjs-mime-parser'];
+};
+
+exports.requireMimeBuilder = () => {
+  // global['emailjs-mime-builder'] ?
+  // dereq_emailjs_mime_builder ?
+  // @ts-ignore
+  return global['emailjs-mime-builder'];
+};
+
+exports.requireIso88592 = () => {
+  // @ts-ignore
+  return global['iso88592'];
+};
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports) {
+
+module.exports = require("openpgp");
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
 });
 
 const common_js_1 = __webpack_require__(4);
 
 const pgp_js_1 = __webpack_require__(7);
 
-const att_js_1 = __webpack_require__(12);
+const att_js_1 = __webpack_require__(14);
 
 const catch_js_1 = __webpack_require__(9);
 
-const require_js_1 = __webpack_require__(14);
+const require_js_1 = __webpack_require__(11);
 
-const buf_js_1 = __webpack_require__(13);
+const buf_js_1 = __webpack_require__(15);
 
 const MimeParser = require_js_1.requireMimeParser(); // tslint:disable-line:variable-name
 
@@ -71062,7 +71162,7 @@ Mime.newContentNode = (MimeBuilder, type, content) => {
 exports.Mime = Mime;
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -71073,7 +71173,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const buf_js_1 = __webpack_require__(13);
+const buf_js_1 = __webpack_require__(15);
 
 class Att {
   constructor({
@@ -71184,7 +71284,7 @@ Att.keyinfoAsPubkeyAtt = ki => new Att({
 exports.Att = Att;
 
 /***/ }),
-/* 13 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -71380,51 +71480,6 @@ Buf.fromBase64UrlStr = b64UrlStr => {
 exports.Buf = Buf;
 
 /***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-}); /// <reference path="../../../types/openpgp.d.ts" />
-
-exports.requireOpenpgp = () => {
-  // @ts-ignore;
-  if (typeof openpgp !== 'undefined') {
-    // @ts-ignore;
-    return openpgp; // self-contained node-mobile
-  }
-
-  return __webpack_require__(15); // normal desktop node, eg when running tests
-};
-
-exports.requireMimeParser = () => {
-  // @ts-ignore;
-  return global['emailjs-mime-parser'];
-};
-
-exports.requireMimeBuilder = () => {
-  // global['emailjs-mime-builder'] ?
-  // dereq_emailjs_mime_builder ?
-  // @ts-ignore
-  return global['emailjs-mime-builder'];
-};
-
-exports.requireIso88592 = () => {
-  // @ts-ignore
-  return global['iso88592'];
-};
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports) {
-
-module.exports = require("openpgp");
-
-/***/ }),
 /* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -71486,13 +71541,15 @@ const fmt_1 = __webpack_require__(3);
 
 const const_1 = __webpack_require__(8);
 
-const require_1 = __webpack_require__(14);
+const require_1 = __webpack_require__(11);
 
 const common_1 = __webpack_require__(4);
 
-const mime_1 = __webpack_require__(11);
+const mime_1 = __webpack_require__(13);
 
-const buf_1 = __webpack_require__(13);
+const buf_1 = __webpack_require__(15);
+
+const store_1 = __webpack_require__(10);
 
 const openpgp = require_1.requireOpenpgp();
 
@@ -71513,6 +71570,8 @@ class Endpoints {
     };
 
     this.generateKey = async uncheckedReq => {
+      store_1.Store.keyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
+
       const {
         passphrase,
         userIds,
@@ -71766,6 +71825,8 @@ class Endpoints {
     };
 
     this.decryptKey = async uncheckedReq => {
+      store_1.Store.keyCacheWipe(); // decryptKey may be used when changing major settings, wipe cache to prevent dated results
+
       const {
         armored,
         passphrases
@@ -71784,6 +71845,8 @@ class Endpoints {
     };
 
     this.encryptKey = async uncheckedReq => {
+      store_1.Store.keyCacheWipe(); // encryptKey may be used when changing major settings, wipe cache to prevent dated results
+
       const {
         armored,
         passphrase
