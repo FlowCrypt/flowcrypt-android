@@ -71892,7 +71892,7 @@ var NodeRequest;
 class Validate {}
 
 Validate.generateKey = v => {
-  if (isObj(v) && hasProp(v, 'userIds', 'Userid[]') && v.userIds.length && ['rsa2048', 'rsa4096', 'curve25519'].includes(v.variant) && hasProp(v, 'passphrase', 'string')) {
+  if (isObj(v) && hasProp(v, 'userIds', 'Userid[]') && v.userIds.length && hasProp(v, 'passphrase', 'string') && ['rsa2048', 'rsa4096', 'curve25519'].includes(v.variant)) {
     return v;
   }
 
