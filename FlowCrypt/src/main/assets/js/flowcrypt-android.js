@@ -69600,9 +69600,12 @@ Pgp.key = {
       errs: allErrs
     };
   },
-  decrypt: async (key, passphrases) => {
+  decrypt: async (key, passphrases, forMsgKeyids) => {
+    const msgKeyidBytesArr = (forMsgKeyids || []).map(kid => kid.bytes);
+    const optionalMatchingKeyid = key.getKeyIds().find(kid => msgKeyidBytesArr.includes(kid.bytes));
+
     try {
-      return await key.decrypt(passphrases);
+      return await key.decrypt(passphrases, optionalMatchingKeyid); // when no keyid intersection found, it will decrypt all
     } catch (e) {
       if (e instanceof Error && e.message.toLowerCase().includes('passphrase')) {
         return false;
@@ -70018,10 +70021,6 @@ Pgp.internal = {
       }
     }
   },
-  cryptoKeyDecryptForMessage: async ki => {
-    // todo - only decrypt subkeys that match, no need to decrypt the primary key or other subkeys
-    return (await Pgp.key.decrypt(ki.parsed, [ki.passphrase])) === true;
-  },
   cryptoMsgGetSortedKeys: async (kiWithPp, msg) => {
     const keys = {
       verificationContacts: [],
@@ -70033,7 +70032,8 @@ Pgp.internal = {
       prvForDecryptDecrypted: [],
       prvForDecryptWithoutPassphrases: []
     };
-    keys.encryptedFor = await Pgp.internal.longids(msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : []);
+    const encryptedForKeyids = msg instanceof openpgp.message.Message ? msg.getEncryptionKeyIds() : [];
+    keys.encryptedFor = await Pgp.internal.longids(encryptedForKeyids);
     await Pgp.internal.cryptoMsgGetSignedBy(msg, keys);
 
     for (const ki of kiWithPp) {
@@ -70059,7 +70059,7 @@ Pgp.internal = {
     keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp;
 
     for (const ki of keys.prvForDecrypt) {
-      if (ki.parsed.isDecrypted() || (await Pgp.internal.cryptoKeyDecryptForMessage(ki)) === true) {
+      if (ki.parsed.isDecrypted() || (await Pgp.key.decrypt(ki.parsed, [ki.passphrase], encryptedForKeyids)) === true) {
         ki.decrypted = ki.parsed;
         keys.prvForDecryptDecrypted.push(ki);
       } else {
