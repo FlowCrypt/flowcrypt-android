@@ -31,7 +31,7 @@ class GenerateKeyRequest(@Expose val passphrase: String,
   override val endpoint: String = "generateKey"
 
   init {
-    this.variant = DEFAULT_KEY_VARIANT
+    this.variant = KEY_VARIANT_CURVE25519 // default, not yet configurable
     this.userIds = ArrayList()
     for ((email, name) in pgpContacts) {
       userIds.add(UserId(email, name))
@@ -46,6 +46,8 @@ class GenerateKeyRequest(@Expose val passphrase: String,
                                             @Expose val name: String?)
 
   companion object {
-    private const val DEFAULT_KEY_VARIANT = "rsa2048"
+    private const val KEY_VARIANT_CURVE25519 = "curve25519"
+    private const val KEY_VARIANT_RSA2048 = "rsa2048"
+    private const val KEY_VARIANT_RSA4096 = "rsa4096"
   }
 }
