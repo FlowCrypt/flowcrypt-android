@@ -69531,12 +69531,21 @@ Pgp.hash = {
   }
 };
 Pgp.key = {
-  create: async (userIds, numBits, passphrase) => {
-    const k = await openpgp.generateKey({
-      numBits,
+  create: async (userIds, variant, passphrase) => {
+    const opt = {
       userIds,
       passphrase
-    });
+    };
+
+    if (variant === 'curve25519') {
+      opt.curve = 'curve25519';
+    } else if (variant === 'rsa2048') {
+      opt.numBits = 2048;
+    } else {
+      opt.numBits = 4096;
+    }
+
+    let k = await openpgp.generateKey(opt);
     return {
       public: k.publicKeyArmored,
       private: k.privateKeyArmored
@@ -71514,14 +71523,7 @@ class Endpoints {
         throw new Error('Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.');
       }
 
-      let k;
-
-      if (variant === 'rsa2048') {
-        k = await pgp_1.Pgp.key.create(userIds, 2048, passphrase);
-      } else {
-        throw new Error(`Unknown generateKey variant: ${variant}`);
-      }
-
+      let k = await pgp_1.Pgp.key.create(userIds, variant, passphrase);
       return fmt_1.fmtRes({
         key: await pgp_1.Pgp.key.details((await pgp_1.Pgp.key.read(k.private)))
       });
@@ -71890,7 +71892,7 @@ var NodeRequest;
 class Validate {}
 
 Validate.generateKey = v => {
-  if (isObj(v) && hasProp(v, 'userIds', 'Userid[]') && v.userIds.length && v.variant === 'rsa2048' && hasProp(v, 'passphrase', 'string')) {
+  if (isObj(v) && hasProp(v, 'userIds', 'Userid[]') && v.userIds.length && ['rsa2048', 'rsa4096', 'curve25519'].includes(v.variant) && hasProp(v, 'passphrase', 'string')) {
     return v;
   }
 
