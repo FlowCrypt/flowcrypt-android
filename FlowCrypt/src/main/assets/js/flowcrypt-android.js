@@ -71713,36 +71713,46 @@ class Endpoints {
           block.attMeta.data = buf_1.Buf.fromUint8(block.attMeta.data).toBase64Str();
         }
 
-        if (block.type === 'publicKey' && !block.keyDetails) {
-          // this could eventually be moved into detectBlocks, which would make it async
-          const pub = await pgp_1.Pgp.key.read(block.content.toString());
-
-          if (pub) {
-            block.keyDetails = await pgp_1.Pgp.key.details(pub);
-          } else {
-            block.type = 'decryptErr';
-            const emptyLongids = {
-              message: [],
-              matching: [],
-              chosen: [],
-              needPassphrase: []
-            };
-            block.decryptErr = {
-              success: false,
-              error: {
-                type: 'format',
-                message: 'Badly formatted public key'
-              },
-              longids: emptyLongids
-            };
-          }
-        }
-
-        if (block.type === 'decryptedHtml' || block.type === 'decryptedText' || block.type === 'decryptedAtt' || block.type === 'decryptErr') {
+        if (block.type === 'decryptedHtml' || block.type === 'decryptedText' || block.type === 'decryptedAtt') {
           replyType = 'encrypted';
         }
 
-        if (fmt_1.isContentBlock(block.type)) {
+        if (block.type === 'publicKey' && !block.keyDetails) {
+          // this could eventually be moved into detectBlocks, which would make it async
+          const {
+            keys
+          } = await pgp_1.Pgp.key.normalize(block.content);
+
+          if (keys.length) {
+            for (const pub of keys) {
+              blocks.push({
+                type: 'publicKey',
+                content: pub.armor(),
+                complete: true,
+                keyDetails: await pgp_1.Pgp.key.details(pub)
+              });
+            }
+          } else {
+            blocks.push({
+              type: 'decryptErr',
+              content: block.content,
+              complete: true,
+              decryptErr: {
+                success: false,
+                error: {
+                  type: 'format',
+                  message: 'Badly formatted public key'
+                },
+                longids: {
+                  message: [],
+                  matching: [],
+                  chosen: [],
+                  needPassphrase: []
+                }
+              }
+            });
+          }
+        } else if (fmt_1.isContentBlock(block.type)) {
           msgContentBlocks.push(block);
         } else {
           blocks.push(block);
