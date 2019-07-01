@@ -20,9 +20,9 @@ import javax.mail.Store
 
 /**
  * This task load a detail information of some message. At now this task creates and executes
- * command like this "UID FETCH xxxxxxxxxxxxx (RFC822.SIZE BODY[]<0.450000>)". We request first
- * 450kb of a message, and if the message is small, we'll get the whole MIME message. If
- * larger than 450kb, we'll get only the first part of it.
+ * command like this "UID FETCH xxxxxxxxxxxxx (RFC822.SIZE BODY[]<0.1024000>)". We request first
+ * 1000kb of a message, and if the message is small, we'll get the whole MIME message. If
+ * larger than 1000kb, we'll get only the first part of it.
  *
  * @param localFolder      The local localFolder implementation.
  * @param uid         The [com.sun.mail.imap.protocol.UID] of [).][Message]
@@ -48,7 +48,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       val args = Argument()
       val list = Argument()
       list.writeString("RFC822.SIZE")
-      list.writeString("BODY[]<0.450000>")
+      list.writeString("BODY[]<0.1024000>")
       args.writeArgument(list)
 
       val responses = imapProtocol.command("UID FETCH $uid", args)
