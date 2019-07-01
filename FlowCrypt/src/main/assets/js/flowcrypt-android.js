@@ -68969,22 +68969,22 @@ exports.isContentBlock = t => t === 'plainText' || t === 'decryptedText' || t ==
 
 const seamlessLockBg = 'iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAh1BMVEXw8PD////w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PD7MuHIAAAALXRSTlMAAAECBAcICw4QEhUZIyYqMTtGTV5kdn2Ii5mfoKOqrbG0uL6/xcnM0NTX2t1l7cN4AAAB0UlEQVR4Ae3Y3Y4SQRCG4bdHweFHRBTBH1FRFLXv//qsA8kmvbMdXhh2Q0KfknpSCQc130c67s22+e9+v/+d84fxkSPH0m/+5P9vN7vRV0vPfx7or1NB23e99KAHuoXOOc6moQsBwNN1Q9g4Wdh1uq3MA7Qn0+2ylAt7WbWpyT+Wo8roKH6v2QhZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2gjZ2AUNOLmwgQdogEJ2dnF3UJdU3WjqO/u96aYtVd/7jqvIyu76G5se6GaY7tNNcy5d7se7eWVnDz87fMkuVuS8epF6f9NPObPY5re9y4N1/vya9Gr3se2bfvl9M0mkyZdv077p+a/3z4Meby5Br4NWiV51BaiUqfLro9I3WiR61RVcffwfXI7u5zZ20EOA82Uu8x3SlrSwXQuBSvSqK0AletUVoBK96gpIwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWckIletUVIJJxITN6wtZd2EI+0NquyIJOnUpFVvRpcwmV6FVXgEr0qitAJXrVFaASveoKUIledQWoRK+6AlSiV13BP+/VVbky7Xq1AAAAAElFTkSuQmCC';
 
-const fmtMsgContentBlockAsHtml = (sanitizedHtmlContent, frame) => {
+const fmtMsgContentBlockAsHtml = (sanitizedHtmlContent, frameColor) => {
   const generalCss = `background: white;padding-left: 8px;min-height: 50px;padding-top: 4px;padding-bottom: 4px;width: 100%;`;
   let frameCss;
 
-  if (frame === 'green') {
+  if (frameColor === 'green') {
     frameCss = `border: 1px solid #f0f0f0;border-left: 8px solid #31A217;border-right: none;background-image: url(data:image/png;base64,${seamlessLockBg});`;
-  } else if (frame === 'red') {
+  } else if (frameColor === 'red') {
     frameCss = `border: 1px solid #f0f0f0;border-left: 8px solid #d14836;border-right: none;`;
-  } else if (frame === 'plain') {
+  } else if (frameColor === 'plain') {
     frameCss = `border: none;`;
   } else {
     // gray
     frameCss = `border: 1px solid #f0f0f0;border-left: 8px solid #989898;border-right: none;`;
   }
 
-  return `<div style="${generalCss}${frameCss}">${sanitizedHtmlContent}</div>\n`;
+  return `<div class="MsgBlock ${frameColor}" style="${generalCss}${frameCss}">${sanitizedHtmlContent}</div><!-- next MsgBlock -->\n`;
 };
 
 exports.stripHtmlRootTags = html => {
