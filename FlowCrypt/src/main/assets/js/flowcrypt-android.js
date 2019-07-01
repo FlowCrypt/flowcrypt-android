@@ -71715,7 +71715,27 @@ class Endpoints {
 
         if (block.type === 'publicKey' && !block.keyDetails) {
           // this could eventually be moved into detectBlocks, which would make it async
-          block.keyDetails = await pgp_1.Pgp.key.details((await pgp_1.Pgp.key.read(block.content.toString())));
+          const pub = await pgp_1.Pgp.key.read(block.content.toString());
+
+          if (pub) {
+            block.keyDetails = await pgp_1.Pgp.key.details(pub);
+          } else {
+            block.type = 'decryptErr';
+            const emptyLongids = {
+              message: [],
+              matching: [],
+              chosen: [],
+              needPassphrase: []
+            };
+            block.decryptErr = {
+              success: false,
+              error: {
+                type: 'format',
+                message: 'Badly formatted public key'
+              },
+              longids: emptyLongids
+            };
+          }
         }
 
         if (block.type === 'decryptedHtml' || block.type === 'decryptedText' || block.type === 'decryptedAtt' || block.type === 'decryptErr') {
