@@ -71395,6 +71395,16 @@ class Buf extends Uint8Array {
 
 }
 
+Buf.with = input => {
+  if (input instanceof Buf) {
+    return input;
+  } else if (input instanceof Uint8Array) {
+    return Buf.fromUint8(input);
+  } else {
+    return Buf.fromUtfStr(input);
+  }
+};
+
 Buf.fromUint8 = u8a => {
   return new Buf(u8a);
 };
@@ -71650,7 +71660,18 @@ class Endpoints {
       const sequentialProcessedBlocks = []; // contains decrypted or otherwise formatted data
 
       for (const rawBlock of rawBlocks) {
-        if (rawBlock.type === 'encryptedMsg' || rawBlock.type === 'signedMsg') {
+        if (rawBlock.type === 'signedMsg' && rawBlock.signature) {
+          const verify = await pgp_1.PgpMsg.verifyDetached({
+            sigText: buf_1.Buf.fromUtfStr(rawBlock.signature),
+            plaintext: buf_1.Buf.with(rawBlock.content)
+          });
+          sequentialProcessedBlocks.push({
+            type: 'verifiedMsg',
+            content: rawBlock.content,
+            verifyRes: verify,
+            complete: true
+          });
+        } else if (rawBlock.type === 'encryptedMsg' || rawBlock.type === 'signedMsg') {
           const decryptRes = await pgp_1.PgpMsg.decrypt({
             kisWithPp,
             msgPwd,
@@ -71664,7 +71685,8 @@ class Endpoints {
               sequentialProcessedBlocks.push({
                 type: 'verifiedMsg',
                 content: decryptRes.content,
-                complete: true
+                complete: true,
+                verifyRes: decryptRes.signature
               });
             }
           } else {
