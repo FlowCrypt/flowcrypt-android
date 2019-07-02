@@ -69029,8 +69029,9 @@ exports.fmtContentBlock = contentBlocks => {
       <meta name="viewport" content="width=device-width" />
       <style>
         body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }
-        body img { display: inline !important; height: auto !important; max-width: 100% !important; }
+        body img { display: inline !important; height: auto !important; max-width: 90% !important; }
         body pre { white-space: pre-wrap !important; }
+        body > div.MsgBlock > table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */
       </style>
     </head>
     <body>${msgContentAsHtml}</body>
