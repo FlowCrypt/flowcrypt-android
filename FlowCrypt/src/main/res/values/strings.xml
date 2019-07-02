@@ -280,6 +280,7 @@
     <string name="cc">Cc</string>
     <string name="bcc">Bcc</string>
     <string name="failed_please_try_again_later">Failed. Please try again later</string>
+    <string name="failed_msg_too_large">Failed because message is too large. We are aware of this issue and will be fixing it soon!</string>
     <string name="google_auth_exception_service_disabled">Gmail server is not available.\n Please try again later</string>
     <string name="failed_load_labels_from_email_server">Failed to load labels from the email server</string>
     <string name="cyrillic_search_not_support_yet">Searching with foreign alphabets not supported yet</string>
