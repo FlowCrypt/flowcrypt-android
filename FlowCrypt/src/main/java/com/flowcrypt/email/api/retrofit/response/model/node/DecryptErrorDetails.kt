@@ -56,6 +56,9 @@ data class DecryptErrorDetails(@Expose val type: Type?,
     @SerializedName("no_mdc")
     NO_MDC,
 
+    @SerializedName("bad_mdc")
+    BAD_MDC,
+
     @SerializedName("need_passphrase")
     NEED_PASSPHRASE,
 

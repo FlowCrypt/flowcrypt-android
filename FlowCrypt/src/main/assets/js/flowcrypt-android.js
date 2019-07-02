@@ -69330,6 +69330,7 @@ var DecryptErrTypes;
   DecryptErrTypes["usePassword"] = "use_password";
   DecryptErrTypes["wrongPwd"] = "wrong_password";
   DecryptErrTypes["noMdc"] = "no_mdc";
+  DecryptErrTypes["badMdc"] = "bad_mdc";
   DecryptErrTypes["needPassphrase"] = "need_passphrase";
   DecryptErrTypes["format"] = "format";
   DecryptErrTypes["other"] = "other";
@@ -70126,6 +70127,11 @@ Pgp.internal = {
       return {
         type: DecryptErrTypes.format,
         message: e
+      };
+    } else if (e === 'Modification detected.') {
+      return {
+        type: DecryptErrTypes.badMdc,
+        message: `Security threat - opening this message is dangerous because it was modified in transit.`
       };
     } else {
       return {
