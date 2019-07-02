@@ -214,12 +214,14 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
 
           else -> {
             try {
-              startActivityForResult(MessageDetailsActivity.getIntent(context,
-                      listener!!.currentFolder, activeMsgDetails), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
+              val size = activeMsgDetails?.rawMsgWithoutAtts?.length;
+              if(size == null || size < 200000) {
+                startActivityForResult(MessageDetailsActivity.getIntent(context, listener!!.currentFolder, activeMsgDetails), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
+              } else {
+                Toast.makeText(context, R.string.failed_msg_too_large, Toast.LENGTH_LONG).show()
+              }
             } catch(e: java.lang.RuntimeException) {
               e.printStackTrace()
-              // todo - https://github.com/FlowCrypt/flowcrypt-android/issues/610 - work around Binder 1MB limit for larger messages
-              ExceptionUtil.handleError(ManualHandledException("App fails to open large messages"))
               Toast.makeText(context, R.string.failed_msg_too_large, Toast.LENGTH_LONG).show()
             }
           }
