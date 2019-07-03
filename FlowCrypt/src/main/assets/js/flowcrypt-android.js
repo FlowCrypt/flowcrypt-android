@@ -74819,7 +74819,7 @@ exports.fmtContentBlock = contentBlocks => {
   </html>`;
   return {
     contentBlock: pgp_1.Pgp.internal.msgBlockObj('plainHtml', msgContentAsHtml),
-    text: msgContentAsText
+    text: msgContentAsText.trim()
   };
 };
 
