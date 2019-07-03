@@ -10,11 +10,13 @@ import android.os.Parcelable
 
 data class PgpKeyInfo constructor(val longid: String,
                                   val private: String?,
-                                  val pubKey: String) : Parcelable {
+                                  val pubKey: String,
+                                  val passphrase: String?) : Parcelable {
   constructor(source: Parcel) : this(
       source.readString()!!,
       source.readString(),
-      source.readString()!!
+      source.readString()!!,
+      source.readString()
   )
 
   override fun describeContents(): Int {
@@ -26,6 +28,7 @@ data class PgpKeyInfo constructor(val longid: String,
         writeString(longid)
         writeString(private)
         writeString(pubKey)
+        writeString(passphrase)
       }
 
   companion object {

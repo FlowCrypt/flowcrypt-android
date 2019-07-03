@@ -198,15 +198,14 @@
     <string name="template_warning_max_attachments_size_for_decryption">The app cannot decrypt an attachment greater than %1$s</string>
     <string name="decrypt_error_could_not_open_message">Could not open this message with %1$s.</string>
     <string name="decrypt_error_message_badly_formatted">Message is either badly formatted or not compatible with %1$s.</string>
-    <string name="decrypt_error_please_write_me">Please write me at %1$s so that I can fix it. I
-        respond very promptly.</string>
+    <string name="decrypt_error_please_write_me">Please write us at %1$s so that we can fix it for you.</string>
     <string name="decrypt_error_current_key_cannot_open_message">Your current key cannot open this message. If you
         have any other keys available, you should import them now.</string>
     <string name="email_does_not_available_in_this_folder">Message not found, it may have been moved to another folder.</string>
     <string name="from">From</string>
     <string name="google_api_is_not_available">Error: Google API is not available</string>
-    <string name="show_original_message">Show original message</string>
-    <string name="hide_original_message">Hide original message</string>
+    <string name="show_original_message">Show original content</string>
+    <string name="hide_original_message">Hide original content</string>
     <string name="import_missing_key">Import missing key</string>
     <string name="loading_backups">Loading backups</string>
     <string name="submitted_can_receive_encrypted_email">Submitted, can receive encrypted email.</string>

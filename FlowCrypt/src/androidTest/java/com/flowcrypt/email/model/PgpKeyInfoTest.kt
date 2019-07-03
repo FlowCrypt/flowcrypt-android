@@ -24,10 +24,7 @@ class PgpKeyInfoTest {
 
   @Test
   fun testParcelable() {
-    val original = PgpKeyInfo("email",
-        "name",
-        "pubkey"
-    )
+    val original = PgpKeyInfo("email", "name", "pubkey", "passphrase")
 
     val parcel = Parcel.obtain()
     original.writeToParcel(parcel, original.describeContents())

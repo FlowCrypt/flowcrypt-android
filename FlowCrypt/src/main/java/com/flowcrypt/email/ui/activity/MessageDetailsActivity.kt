@@ -90,7 +90,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
     updateViews()
 
-    LoaderManager.getInstance(this).initLoader(R.id.loader_id_subscribe_to_message_changes, null, this)
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_message_info_from_database, null, this)
   }
 
   override fun onBackPressed() {

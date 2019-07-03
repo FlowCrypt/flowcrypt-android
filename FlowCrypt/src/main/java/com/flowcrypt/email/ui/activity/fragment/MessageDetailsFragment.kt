@@ -204,25 +204,28 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.layoutReplyButton ->
+      R.id.layoutReplyButton -> {
+        msgInfo?.stripRawMsgContent()
         startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY, msgEncryptType))
+      }
 
-      R.id.imageButtonReplyAll, R.id.layoutReplyAllButton ->
+      R.id.imageButtonReplyAll, R.id.layoutReplyAllButton -> {
+        msgInfo?.stripRawMsgContent()
         startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY_ALL, msgEncryptType))
+      }
 
       R.id.layoutFwdButton -> {
         if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-          Toast.makeText(context, R.string.cannot_forward_encrypted_attachments,
-              Toast.LENGTH_LONG).show()
+          Toast.makeText(context, R.string.cannot_forward_encrypted_attachments, Toast.LENGTH_LONG).show()
         } else {
           if (!CollectionUtils.isEmpty(atts)) {
             for (att in atts!!) {
               att.isForwarded = true
             }
           }
-
           msgInfo!!.atts = atts
         }
+        // todo - msgInfo?.stripRawMsgContent() // would probably affect forwarding, leaving for DenBond
         startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.FORWARD, msgEncryptType))
       }
     }
@@ -791,19 +794,19 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       DecryptErrorDetails.Type.FORMAT -> {
         val formatErrorMsg = (getString(R.string.decrypt_error_message_badly_formatted,
             getString(R.string.app_name)) + "\n\n"
-            + details1.type + ":" + details1.message)
+            + details1.type + ": " + details1.message)
         return getView(block.content, formatErrorMsg, layoutInflater)
       }
 
       DecryptErrorDetails.Type.OTHER -> {
         val otherErrorMsg = getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
             "\n\n" + getString(R.string.decrypt_error_please_write_me, getString(R.string.support_email)) +
-            "\n\n" + details1.type + ":" + details1.message
+            "\n\n" + details1.type + ": " + details1.message
         return getView(block.content, otherErrorMsg, layoutInflater)
       }
 
       else -> return getView(block.content, getString(R.string.could_not_decrypt_message_due_to_error,
-          details1.type.toString() + ":" + details1.message),
+          details1.type.toString() + ": " + details1.message),
           layoutInflater)
     }
   }
