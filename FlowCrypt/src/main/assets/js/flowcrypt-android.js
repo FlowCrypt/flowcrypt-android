@@ -76668,11 +76668,20 @@ Mime.process = async mimeMsg => {
   const decoded = await Mime.decode(mimeMsg);
   const blocks = [];
 
-  if (decoded.html) {
+  if (decoded.text) {
+    const blocksFromTextPart = pgp_js_1.Pgp.armor.detectBlocks(common_js_1.Str.normalize(decoded.text)).blocks; // if there are some encryption-related blocks found in the text section, which we can use, and not look at the html section
+
+    if (blocksFromTextPart.find(b => b.type === 'encryptedMsg' || b.type === 'signedMsg' || b.type === 'publicKey' || b.type === 'privateKey' || b.type === 'cryptupVerification')) {
+      blocks.push(...blocksFromTextPart); // because the html most likely containt the same thing, just harder to parse pgp sections cause it's html
+    } else if (decoded.html) {
+      // if no pgp blocks found in text part and there is html part, prefer html
+      blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('plainHtml', decoded.html));
+    } else {
+      // else if no html and just a plain text message, use that
+      blocks.push(...blocksFromTextPart);
+    }
+  } else if (decoded.html) {
     blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('plainHtml', decoded.html));
-  } else if (decoded.text) {
-    // may be undefined or empty
-    blocks.push(...pgp_js_1.Pgp.armor.detectBlocks(decoded.text).blocks);
   }
 
   for (const file of decoded.atts) {
