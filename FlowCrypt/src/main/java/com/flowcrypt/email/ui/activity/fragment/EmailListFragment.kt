@@ -200,35 +200,27 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
 
   override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
     activeMsgDetails = parent.adapter.getItem(position) as GeneralMessageDetails
-    if (activeMsgDetails != null) {
-      val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)
-      val isRawMsgAvailable = !TextUtils.isEmpty(activeMsgDetails!!.rawMsgWithoutAtts)
-      if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context!!)) {
-        when (activeMsgDetails!!.msgState) {
-          MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
-          MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
-          MessageState.ERROR_CACHE_PROBLEM,
-          MessageState.ERROR_DURING_CREATION,
-          MessageState.ERROR_SENDING_FAILED,
-          MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> handleOutgoingMsgWhichHasSomeError(activeMsgDetails!!)
-
-          else -> {
-            try {
-              val size = activeMsgDetails?.rawMsgWithoutAtts?.length;
-              if(size == null || size < 200000) {
-                startActivityForResult(MessageDetailsActivity.getIntent(context, listener!!.currentFolder, activeMsgDetails), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
-              } else {
-                Toast.makeText(context, R.string.failed_msg_too_large, Toast.LENGTH_LONG).show()
-              }
-            } catch(e: java.lang.RuntimeException) {
-              e.printStackTrace()
-              Toast.makeText(context, R.string.failed_msg_too_large, Toast.LENGTH_LONG).show()
-            }
-          }
+    if (activeMsgDetails == null) {
+      return
+    }
+    val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)
+    val isRawMsgAvailable = !TextUtils.isEmpty(activeMsgDetails!!.rawMsgWithoutAtts)
+    if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context!!)) {
+      when (activeMsgDetails!!.msgState) {
+        MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+        MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
+        MessageState.ERROR_CACHE_PROBLEM,
+        MessageState.ERROR_DURING_CREATION,
+        MessageState.ERROR_SENDING_FAILED,
+        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> handleOutgoingMsgWhichHasSomeError(activeMsgDetails!!)
+        else -> {
+          activeMsgDetails?.rawMsgWithoutAtts = null; // large msgs cause RuntimeError
+          startActivityForResult(MessageDetailsActivity.getIntent(context, listener!!.currentFolder, activeMsgDetails),
+                  REQUEST_CODE_SHOW_MESSAGE_DETAILS)
         }
-      } else {
-        showInfoSnackbar(getView()!!, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
       }
+    } else {
+      showInfoSnackbar(getView()!!, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
     }
   }
 
