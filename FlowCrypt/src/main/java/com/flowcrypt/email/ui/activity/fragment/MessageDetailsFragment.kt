@@ -204,25 +204,28 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.layoutReplyButton ->
+      R.id.layoutReplyButton -> {
+        msgInfo?.stripRawMsgContent()
         startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY, msgEncryptType))
+      }
 
-      R.id.imageButtonReplyAll, R.id.layoutReplyAllButton ->
+      R.id.imageButtonReplyAll, R.id.layoutReplyAllButton -> {
+        msgInfo?.stripRawMsgContent()
         startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY_ALL, msgEncryptType))
+      }
 
       R.id.layoutFwdButton -> {
         if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-          Toast.makeText(context, R.string.cannot_forward_encrypted_attachments,
-              Toast.LENGTH_LONG).show()
+          Toast.makeText(context, R.string.cannot_forward_encrypted_attachments, Toast.LENGTH_LONG).show()
         } else {
           if (!CollectionUtils.isEmpty(atts)) {
             for (att in atts!!) {
               att.isForwarded = true
             }
           }
-
           msgInfo!!.atts = atts
         }
+        // todo - msgInfo?.stripRawMsgContent() // would probably affect forwarding, leaving for DenBond
         startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.FORWARD, msgEncryptType))
       }
     }

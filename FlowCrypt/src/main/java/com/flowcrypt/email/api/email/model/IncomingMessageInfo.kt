@@ -59,6 +59,23 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
       msgBlocks,
       encryptionType)
 
+  /**
+   * Remove all content below initial headers so that the message is small enough to pass around Binder
+   */
+  fun stripRawMsgContent() {
+    // we don't know if the message is \n or \r\n delimited
+   val headersByDoubleNl = generalMsgDetails.rawMsgWithoutAtts?.trim()?.substringBefore("\n\n");
+    val headersByDoubleCrNl = generalMsgDetails.rawMsgWithoutAtts?.trim()?.substringBefore("\r\n\r\n");
+    if(headersByDoubleNl == null || headersByDoubleCrNl == null) {
+      return;
+    }
+    if(headersByDoubleCrNl.length < headersByDoubleNl.length) { // therefore we choose smaller result
+      generalMsgDetails.rawMsgWithoutAtts = headersByDoubleCrNl;
+    } else {
+      generalMsgDetails.rawMsgWithoutAtts = headersByDoubleNl;
+    }
+  }
+
   fun hasHtmlText(): Boolean {
     return hasSomePart(MsgBlock.Type.PLAIN_HTML) || hasSomePart(MsgBlock.Type.DECRYPTED_HTML)
   }
