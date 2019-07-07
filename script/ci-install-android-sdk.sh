@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-ANDROID_SDK_CACHE_KEY=android-sdk-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
+export ANDROID_SDK_CACHE_KEY=android-sdk-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
 cache restore $ANDROID_SDK_CACHE_KEY
 
 mkdir ~/.android
