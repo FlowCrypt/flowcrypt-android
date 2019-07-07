@@ -22,18 +22,15 @@ blocks:
           value: /usr/lib/android-sdk/tools/bin
         - name: SDK_ARCHIVE
           value: sdk-tools-linux-4333796.zip
-        - name: CACHED_SDK_PATH
-          value: $SEMAPHORE_CACHE_DIR/$SDK_ARCHIVE
         - name: ANDROID_HOME
           value: /home/semaphore/Android/Sdk
       jobs:
         - name: Build
           commands:
-            - sudo rm -rf ~/.rbenv ~/.phpbrew
+            - sudo rm -rf ~/.rbenv ~/.phpbrew && mkdir ~/cached
             - sudo apt-get update && sudo apt-get install -y libc6-i386 lib32stdc++6 lib32gcc1 lib32ncurses5 lib32z1
-            - bash -c '! [ -e $CACHED_SDK_PATH ] && wget https://dl.google.com/android/repository/$SDK_ARCHIVE -P $SEMAPHORE_CACHE_DIR'
-            - mkdir -p $ANDROID_HOME
-            - yes 'y' | unzip $CACHED_SDK_PATH -d $ANDROID_HOME
+            - bash -c '! [ -e "~/cached/$SDK_ARCHIVE" ] && wget https://dl.google.com/android/repository/$SDK_ARCHIVE -P ~/cached/'
+            - mkdir -p $ANDROID_HOME && unzip ~/cached/$SDK_ARCHIVE -d $ANDROID_HOME
             - export PATH="$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
             - echo "yes" | sdkmanager --licenses
             - list-sdk-components
