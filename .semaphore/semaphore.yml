@@ -29,9 +29,9 @@ blocks:
       jobs:
         - name: Build
           commands:
-            - sudo rm -rf ~/.rbenv ~/.phpbrew # make more room in the environment
+            - sudo rm -rf ~/.rbenv ~/.phpbrew
             - sudo apt install -y libc6-i386 lib32stdc++6 lib32gcc1 lib32ncurses5 lib32z1
-            - ! [ -e $CACHED_SDK_PATH ] && wget "https://dl.google.com/android/repository/$SDK_ARCHIVE" -P $SEMAPHORE_CACHE_DIR
+            - bash -c '! [ -e $CACHED_SDK_PATH ] && wget https://dl.google.com/android/repository/$SDK_ARCHIVE -P $SEMAPHORE_CACHE_DIR'
             - mkdir -p $ANDROID_HOME
             - yes 'y' | unzip $CACHED_SDK_PATH -d $ANDROID_HOME
             - export PATH="$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
@@ -40,6 +40,8 @@ blocks:
             - sdkmanager --list
             - (while sleep 3; do echo "y"; done) | sdkmanager "build-tools;26.0.1" "platforms;android-24" "extras;google;m2repository" "extras;android;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;armeabi-v7a"
             - echo -ne '\n' | avdmanager -v create avd -n semaphore-android-dev -k "system-images;android-24;google_apis;armeabi-v7a" --tag "google_apis" --abi "armeabi-v7a"
+
+
 #            - sudo apt update && sudo apt-get -y install android-sdk
 #            - wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip && unzip *.zip && rm *.zip
 #            - sudo mv tools/bin/* /usr/lib/android-sdk/tools/bin
