@@ -3,7 +3,7 @@
 set -euxo pipefail
 
 
-if [ -e "~/Android" ]; then
+if [ -d "~/Android" ]; then
     echo "~/Android already exists, skipping installation"
     export PATH="$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/tools/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
 else
