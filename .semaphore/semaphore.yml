@@ -19,7 +19,7 @@ blocks:
       jobs:
         - name: Build
           commands:
-            - wget https://raw.githubusercontent.com/renderedtext/semaphore-scripts/master/android-setup.sh && source android-setup.sh
+            - sudo apt update && sudo apt-get -y install android-sdk
             - checkout
             - cd ~/git/flowcrypt-android
             - ./gradlew assembleProdDebug
