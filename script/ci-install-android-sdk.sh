@@ -23,7 +23,10 @@ else
 
     # install sdkmanager deps
     echo "yes" | sdkmanager --licenses > /dev/null
-    # ( sleep 5; echo "y" ) | sdkmanager "build-tools;26.0.1" "platforms;android-24" "extras;google;m2repository" "extras;android;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;armeabi-v7a"
+    ( sleep 5; echo "y" ) | sdkmanager "build-tools;29.0.0" "platforms;android-28"
+
+    # runtime / unused deps
+    # ( sleep 5; echo "y" ) | sdkmanager "extras;google;m2repository" "extras;android;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;armeabi-v7a"
     # echo -ne '\n' | avdmanager -v create avd -n semaphore-android-dev -k "system-images;android-24;google_apis;armeabi-v7a" --tag "google_apis" --abi "armeabi-v7a"
 fi
 
