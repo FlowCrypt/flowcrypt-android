@@ -7,11 +7,10 @@ agent:
     os_image: ubuntu1804
 
 blocks:
-  - name: Build
 
+  - name: Build
     execution_time_limit:
       minutes: 7
-
     task:
       env_vars:
         - name: SEMAPHORE_GIT_DIR
@@ -31,7 +30,7 @@ blocks:
             - export PATH="$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/tools/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
             - echo "yes" | sdkmanager --licenses > /dev/null
             - sdkmanager --list
-            - (while sleep 3; do echo "y"; done) | sdkmanager "build-tools;26.0.1" "platforms;android-28" "extras;google;m2repository" "extras;android;m2repository" "platform-tools" "emulator" "system-images;android-28;google_apis;armeabi-v7a" > /dev/null
+            - (while sleep 3; do echo "y"; done) | sdkmanager "build-tools;26.0.1" "platforms;android-24" "extras;google;m2repository" "extras;android;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;armeabi-v7a" > /dev/null
             - echo -ne '\n' | avdmanager -v create avd -n semaphore-android-dev -k "system-images;android-24;google_apis;armeabi-v7a" --tag "google_apis" --abi "armeabi-v7a"
             - checkout && cd ~/git/flowcrypt-android
             - ./gradlew assembleProdDebug
@@ -40,3 +39,14 @@ blocks:
             - ls ./build/*
             - ls ./FlowCrypt/build
             - ls ./FlowCrypt/build/*
+            - mkdir ~/testable && echo "x" > ~/testable/nothing
+            - cache store android-testable-$SEMAPHORE_GIT_SHA ~/testable
+
+  - name: Test
+    task:
+      jobs:
+        - name: Find testable folder
+          commands:
+            - cache has_key android-testable-$SEMAPHORE_GIT_SHA
+            - cache restore android-testable-$SEMAPHORE_GIT_SHA
+            - ls ~/testable
