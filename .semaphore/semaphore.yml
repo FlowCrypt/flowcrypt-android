@@ -16,6 +16,8 @@ blocks:
       env_vars:
         - name: SEMAPHORE_GIT_DIR
           value: /home/semaphore/git/flowcrypt-android
+        - name: ANDROID_SDK_ROOT
+          value: /usr/lib/android-sdk
       jobs:
         - name: Build
           commands:
