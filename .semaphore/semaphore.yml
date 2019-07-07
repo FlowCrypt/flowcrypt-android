@@ -27,13 +27,12 @@ blocks:
             - sudo apt-get -q update && sudo apt-get -q install -y libc6-i386 lib32stdc++6 lib32gcc1 lib32ncurses5 lib32z1
             - checkout && cd ~
 
-            - cache restore android-sdk-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
-            - cache store android-sdk-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh) Android
 
-            - cache restore gradle-cache-$(checksum $SEMAPHORE_GIT_DIR/ext.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/ext.gradle)
+            - export GRADLE_CACHE_KEY=gradle-cache-$(checksum $SEMAPHORE_GIT_DIR/ext.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/ext.gradle)
+            - cache restore $GRADLE_CACHE_KEY
             - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug )
-            - cache store gradle-cache-$(checksum $SEMAPHORE_GIT_DIR/ext.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/ext.gradle) .gradle
+            - cache has_key $GRADLE_CACHE_KEY || cache store $GRADLE_CACHE_KEY .gradle
 
             - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
             - cache store android-testable-$SEMAPHORE_GIT_SHA testable

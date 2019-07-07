@@ -2,6 +2,9 @@
 
 set -euxo pipefail
 
+ANDROID_SDK_CACHE_KEY=android-sdk-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
+cache restore $ANDROID_SDK_CACHE_KEY
+
 if [ -d ~/Android ]; then
     echo "~/Android already exists, skipping installation"
     export PATH="$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/tools/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
@@ -22,6 +25,8 @@ else
     echo "yes" | sdkmanager --licenses > /dev/null
     ( sleep 5; echo "y" ) | sdkmanager "build-tools;26.0.1" "platforms;android-24" "extras;google;m2repository" "extras;android;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;armeabi-v7a"
     echo -ne '\n' | avdmanager -v create avd -n semaphore-android-dev -k "system-images;android-24;google_apis;armeabi-v7a" --tag "google_apis" --abi "armeabi-v7a"
+
+    cache store $ANDROID_SDK_CACHE_KEY Android
 fi
 
 sdkmanager --list
