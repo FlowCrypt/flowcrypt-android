@@ -22,11 +22,9 @@ blocks:
       jobs:
         - name: Build
           commands:
-
             - sudo rm -rf ~/.rbenv ~/.phpbrew
             - sudo apt-get -q update && sudo apt-get -q install -y libc6-i386 lib32stdc++6 lib32gcc1 lib32ncurses5 lib32z1
             - checkout && cd ~
-
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
 
             - export GRADLE_CACHE_KEY=gradle-cache-$SEMAPHORE_GIT_BRANCH-$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)
