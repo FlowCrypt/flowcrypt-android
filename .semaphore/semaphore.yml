@@ -18,11 +18,13 @@ blocks:
           value: /home/semaphore/git/flowcrypt-android
         - name: ANDROID_SDK_ROOT
           value: /usr/lib/android-sdk
+        - name: ANDROID_BIN
+          value: /usr/lib/android-sdk/tools/bin
       jobs:
         - name: Build
           commands:
             - sudo apt update && sudo apt-get -y install android-sdk
-            - yes | sdkmanager --licenses
+            - yes | $ANDROID_BIN/sdkmanager --licenses
             - checkout
             - cd ~/git/flowcrypt-android
             - ./gradlew assembleProdDebug
