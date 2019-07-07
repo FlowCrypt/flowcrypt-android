@@ -1,0 +1,25 @@
+version: v1.0
+name: FlowCrypt Android App
+
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+
+blocks:
+  - name: Build
+
+    execution_time_limit:
+      minutes: 2
+
+    task:
+      env_vars:
+        - name: SEMAPHORE_GIT_DIR
+          value: /home/semaphore/git/flowcrypt-android
+      jobs:
+        - name: Build
+          commands:
+            - sudo add-apt-repository ppa:ubuntu-sdk-team/ppa && sudo apt update && sudo apt -y install ubuntu-sdk
+            - checkout
+            - cd ~/git/flowcrypt-android
+            - ./gradlew assembleProdDebug
