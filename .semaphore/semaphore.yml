@@ -10,7 +10,7 @@ blocks:
   - name: Build
 
     execution_time_limit:
-      minutes: 2
+      minutes: 5
 
     task:
       env_vars:
@@ -24,10 +24,12 @@ blocks:
         - name: Build
           commands:
             - sudo apt update && sudo apt-get -y install android-sdk
-            - ls /usr/lib/android-sdk/
-            - ls /usr/lib/android-sdk/tools/
-            - ls /usr/lib/android-sdk/tools/bin/
-            - yes | $ANDROID_BIN/sdkmanager --licenses
-            - checkout
-            - cd ~/git/flowcrypt-android
-            - ./gradlew assembleProdDebug
+            - wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
+            - unzip sdk-tools-linux-4333796.zip
+            - sudo mv tools/bin/* /usr/lib/android-sdk/tools/bin
+            - export PATH=$PATH:$ANDROID_BIN
+            - ls $ANDROID_BIN
+            - yes | sdkmanager --licenses
+#            - checkout
+#            - cd ~/git/flowcrypt-android
+#            - ./gradlew assembleProdDebug
