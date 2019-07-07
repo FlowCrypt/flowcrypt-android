@@ -5,6 +5,8 @@ set -euxo pipefail
 mkdir ~/.android
 touch ~/.android/repositories.cfg
 
+SDK_ARCHIVE=sdk-tools-linux-4333796.zip
+
 if [ -d ~/Android ]; then
     echo "~/Android already exists, skipping installation"
     export PATH="$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/tools/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
@@ -21,8 +23,8 @@ else
 
     # install sdkmanager deps
     echo "yes" | sdkmanager --licenses > /dev/null
-    ( sleep 5; echo "y" ) | sdkmanager "build-tools;26.0.1" "platforms;android-24" "extras;google;m2repository" "extras;android;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;armeabi-v7a"
-    echo -ne '\n' | avdmanager -v create avd -n semaphore-android-dev -k "system-images;android-24;google_apis;armeabi-v7a" --tag "google_apis" --abi "armeabi-v7a"
+    # ( sleep 5; echo "y" ) | sdkmanager "build-tools;26.0.1" "platforms;android-24" "extras;google;m2repository" "extras;android;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;armeabi-v7a"
+    # echo -ne '\n' | avdmanager -v create avd -n semaphore-android-dev -k "system-images;android-24;google_apis;armeabi-v7a" --tag "google_apis" --abi "armeabi-v7a"
 fi
 
 sdkmanager --list
