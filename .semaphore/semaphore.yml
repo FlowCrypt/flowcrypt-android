@@ -10,7 +10,7 @@ blocks:
   - name: Build
 
     execution_time_limit:
-      minutes: 5
+      minutes: 7
 
     task:
       env_vars:
@@ -33,18 +33,8 @@ blocks:
             - mkdir -p $ANDROID_HOME && unzip ~/cached/$SDK_ARCHIVE -d $ANDROID_HOME
             - export PATH="$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools:$PATH"
             - echo "yes" | sdkmanager --licenses
-            - list-sdk-components
             - sdkmanager --list
             - (while sleep 3; do echo "y"; done) | sdkmanager "build-tools;26.0.1" "platforms;android-24" "extras;google;m2repository" "extras;android;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;armeabi-v7a"
             - echo -ne '\n' | avdmanager -v create avd -n semaphore-android-dev -k "system-images;android-24;google_apis;armeabi-v7a" --tag "google_apis" --abi "armeabi-v7a"
-
-
-#            - sudo apt update && sudo apt-get -y install android-sdk
-#            - wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip && unzip *.zip && rm *.zip
-#            - sudo mv tools/bin/* /usr/lib/android-sdk/tools/bin
-#            - export PATH=$PATH:$ANDROID_BIN
-#            - ls $ANDROID_BIN
-#            - yes | sdkmanager --licenses
-##            - checkout
-##            - cd ~/git/flowcrypt-android
-##            - ./gradlew assembleProdDebug
+            - checkout
+            - cd ~/git/flowcrypt-android && ./gradlew assembleProdDebug
