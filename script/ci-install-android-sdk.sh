@@ -5,13 +5,14 @@ set -euxo pipefail
 ANDROID_SDK_CACHE_KEY=android-sdk-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
 cache restore $ANDROID_SDK_CACHE_KEY
 
+mkdir ~/.android
+touch ~/.android/repositories.cfg
+
 if [ -d ~/Android ]; then
     echo "~/Android already exists, skipping installation"
     export PATH="$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/tools/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
 else
     echo "~/Android does not exist, installing"
-    mkdir ~/.android
-    touch ~/.android/repositories.cfg
     mkdir -p $ANDROID_SDK_ROOT
 
     # download, unpack and remove sdk archive
