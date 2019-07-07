@@ -29,7 +29,7 @@ blocks:
 
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
 
-            - export GRADLE_CACHE_KEY=gradle-cache-$(checksum $SEMAPHORE_GIT_DIR/ext.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/ext.gradle)
+            - export GRADLE_CACHE_KEY=gradle-cache-$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)
             - cache restore $GRADLE_CACHE_KEY
             - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug )
             - cache has_key $GRADLE_CACHE_KEY || cache store $GRADLE_CACHE_KEY .gradle
