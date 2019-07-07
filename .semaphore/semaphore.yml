@@ -39,4 +39,5 @@ blocks:
           commands:
             - cache has_key android-testable-$SEMAPHORE_GIT_SHA
             - cache restore android-testable-$SEMAPHORE_GIT_SHA
-            - ls ~/testable
+            - ls ~/testable/
+            - du -sh ~/testable/*
