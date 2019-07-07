@@ -23,21 +23,27 @@ blocks:
         - name: Build
           commands:
             - sudo rm -rf ~/.rbenv ~/.phpbrew
-#            - sudo apt-get -q update && sudo apt-get -q install -y libc6-i386 lib32stdc++6 lib32gcc1 lib32ncurses5 lib32z1
             - checkout && cd ~
+
+            # restore caches
+            - export SUM=$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
+            - export GRADLE_CACHE=gradle-cache-$SUM
+            - export ANDROID_SDK_CACHE=android-sdk-$SUM
+            - cache restore $ANDROID_SDK_CACHE
+            - cache restore $GRADLE_CACHE
+
+            # build
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
-
-            - export GRADLE_CACHE_KEY=gradle-cache-$SEMAPHORE_GIT_BRANCH-$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)
-            - export GRADLE_CACHE_KEY_MASTER=gradle-cache-master-$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)
-            - cache restore $GRADLE_CACHE_KEY,$GRADLE_CACHE_KEY_MASTER
             - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug )
-            - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
-            # cache refreshed on build file conf change below. Also && refreshed android sdk cache, because gradle may install deps there
-            - cache has_key $GRADLE_CACHE_KEY || ( cache store $GRADLE_CACHE_KEY .gradle && cache store $ANDROID_SDK_CACHE_KEY Android )
 
+            # store caches
+            - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
+            - cache has_key $GRADLE_CACHE || cache store $GRADLE_CACHE .gradle
+            - cache has_key $ANDROID_SDK_CACHE || cache store $ANDROID_SDK_CACHE Android
+
+            # transfer testable result to next block
             - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
             - cache store android-testable-$SEMAPHORE_GIT_SHA testable
-
 
   - name: Test
     task:
