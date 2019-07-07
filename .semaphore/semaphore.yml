@@ -24,13 +24,13 @@ blocks:
           commands:
             - sudo rm -rf ~/.rbenv ~/.phpbrew
             - sudo apt-get -q update && sudo apt-get -q install -y libc6-i386 lib32stdc++6 lib32gcc1 lib32ncurses5 lib32z1
+            - checkout
             - cache restore android-sdk-$SEMAPHORE_GIT_BRANCH
-            - ./script/ci-install-android-sdk.sh
+            - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
             - cache store android-sdk-$SEMAPHORE_GIT_BRANCH Android
-            - checkout && cd ~/git/flowcrypt-android
-            - ./gradlew assembleProdDebug
-            - mkdir ~/testable && mv ./FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
-            - cd ~ && cache store android-testable-$SEMAPHORE_GIT_SHA testable
+            - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug )
+            - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
+            - cache store android-testable-$SEMAPHORE_GIT_SHA testable
 
   - name: Test
     task:
