@@ -19,7 +19,7 @@ blocks:
       jobs:
         - name: Build
           commands:
-            - sudo add-apt-repository ppa:ubuntu-sdk-team/ppa && sudo apt update && sudo apt -y install ubuntu-sdk
+            - sudo add-apt-repository ppa:ubuntu-sdk-team/ppa && sudo apt update && sudo apt -y install ubuntu-sdk-ide
             - checkout
             - cd ~/git/flowcrypt-android
             - ./gradlew assembleProdDebug
