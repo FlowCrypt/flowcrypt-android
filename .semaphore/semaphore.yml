@@ -22,6 +22,7 @@ blocks:
         - name: Build
           commands:
             - sudo apt update && sudo apt-get -y install android-sdk
+            - yes | sdkmanager --licenses
             - checkout
             - cd ~/git/flowcrypt-android
             - ./gradlew assembleProdDebug
