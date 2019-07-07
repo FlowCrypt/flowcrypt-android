@@ -36,7 +36,7 @@ blocks:
 
             # build
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
-            - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug )
+            - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug --parallel )
 
             # store caches
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
