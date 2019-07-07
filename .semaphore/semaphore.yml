@@ -31,7 +31,7 @@ blocks:
             - export GRADLE_CACHE_KEY_MASTER=gradle-cache-master-$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)
             - cache restore $GRADLE_CACHE_KEY,$GRADLE_CACHE_KEY_MASTER
             - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug )
-            - rm -rf ~/.gradle/caches/$GRADLE_VERSION/ && find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
+            - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
             # cache refreshed on build file conf change below. Also && refreshed android sdk cache, because gradle may install deps there
             - cache has_key $GRADLE_CACHE_KEY || ( cache store $GRADLE_CACHE_KEY .gradle && cache store $ANDROID_SDK_CACHE_KEY Android )
 
