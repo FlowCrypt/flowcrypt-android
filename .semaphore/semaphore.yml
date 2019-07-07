@@ -24,6 +24,9 @@ blocks:
         - name: Build
           commands:
             - sudo apt update && sudo apt-get -y install android-sdk
+            - ls /usr/lib/android-sdk/
+            - ls /usr/lib/android-sdk/tools/
+            - ls /usr/lib/android-sdk/tools/bin/
             - yes | $ANDROID_BIN/sdkmanager --licenses
             - checkout
             - cd ~/git/flowcrypt-android
