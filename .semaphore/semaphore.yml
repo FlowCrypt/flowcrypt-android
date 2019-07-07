@@ -27,6 +27,8 @@ blocks:
             - checkout
             - cache restore android-sdk-$SEMAPHORE_GIT_BRANCH
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
+            - echo $PWD
+            - ls
             - cache store android-sdk-$SEMAPHORE_GIT_BRANCH ./Android
             - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug )
             - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
