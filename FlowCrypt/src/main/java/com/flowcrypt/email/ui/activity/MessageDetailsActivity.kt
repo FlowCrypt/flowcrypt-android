@@ -66,7 +66,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   private var isBackEnabled = true
   private var isRequestMsgDetailsStarted: Boolean = false
   private var isRetrieveIncomingMsgNeeded = true
-  private var viewModel: DecryptMessageViewModel? = null
+  private lateinit var viewModel: DecryptMessageViewModel
+  private var rawMimeMsg: String? = null
 
   override val rootView: View
     get() = View(this)
@@ -77,8 +78,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     viewModel = ViewModelProviders.of(this).get(DecryptMessageViewModel::class.java)
-    viewModel!!.init(NodeRepository())
-    viewModel!!.responsesLiveData.observe(this, this)
+    viewModel.init(NodeRepository())
+    viewModel.responsesLiveData.observe(this, this)
 
     if (intent != null) {
       this.localFolder = intent.getParcelableExtra(EXTRA_KEY_FOLDER)
@@ -90,7 +91,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
     updateViews()
 
-    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_message_info_from_database, null, this)
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_subscribe_to_message_changes, null, this)
   }
 
   override fun onBackPressed() {
@@ -103,7 +104,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
     when (id) {
-      R.id.loader_id_load_message_info_from_database, R.id.loader_id_subscribe_to_message_changes -> {
+      R.id.loader_id_load_raw_mime_msg_from_db, R.id.loader_id_subscribe_to_message_changes -> {
         val uri = MessageDaoSource().baseContentUri
         val selection = (MessageDaoSource.COL_EMAIL + "= ? AND " + MessageDaoSource.COL_FOLDER + " = ? AND "
             + MessageDaoSource.COL_UID + " = ? ")
@@ -127,14 +128,16 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     val messageDaoSource = MessageDaoSource()
 
     when (loader.id) {
-      R.id.loader_id_load_message_info_from_database -> if (cursor != null && cursor.moveToFirst()) {
-        this.details = messageDaoSource.getMsgInfo(cursor)
+      R.id.loader_id_load_raw_mime_msg_from_db -> if (cursor != null && cursor.moveToFirst()) {
+        this.rawMimeMsg = cursor.getString(cursor.getColumnIndex(MessageDaoSource
+            .COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS))
+
         updateMsgDetails(details!!)
 
-        if (TextUtils.isEmpty(details!!.rawMsgWithoutAtts)) {
+        if (TextUtils.isEmpty(rawMimeMsg)) {
           if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
             this.isRequestMsgDetailsStarted = true
-            loadMsgDetails(R.id.syns_request_code_load_message_details, localFolder!!, details!!.uid)
+            loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, localFolder!!, details!!.uid)
           } else {
             isReceiveMsgBodyNeeded = true
           }
@@ -165,7 +168,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
   override fun onLoaderReset(loader: Loader<Cursor>) {
     when (loader.id) {
-      R.id.loader_id_load_message_info_from_database -> {
+      R.id.loader_id_load_raw_mime_msg_from_db -> {
       }
 
       R.id.loader_id_subscribe_to_message_changes -> {
@@ -180,8 +183,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   override fun onNodeStateChanged(isReady: Boolean) {
     super.onNodeStateChanged(isReady)
     if (isReady) {
-      if (TextUtils.isEmpty(details!!.rawMsgWithoutAtts)) {
-        LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_message_info_from_database, null, this)
+      if (TextUtils.isEmpty(rawMimeMsg)) {
+        LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_raw_mime_msg_from_db, null, this)
       } else {
         decryptMsg()
       }
@@ -191,20 +194,20 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   override fun onSyncServiceConnected() {
     super.onSyncServiceConnected()
     if (isReceiveMsgBodyNeeded) {
-      loadMsgDetails(R.id.syns_request_code_load_message_details, localFolder!!, details!!.uid)
+      loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, localFolder!!, details!!.uid)
     }
   }
 
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
-      R.id.syns_request_code_load_message_details -> {
+      R.id.syns_request_code_load_raw_mime_msg -> {
         isRequestMsgDetailsStarted = false
         when (resultCode) {
           EmailSyncService.REPLY_RESULT_CODE_ACTION_OK -> {
             val folderAlias = localFolder!!.folderAlias
             MessageDaoSource().setSeenStatus(this, details!!.email, folderAlias, details!!.uid.toLong())
             setResult(RESULT_CODE_UPDATE_LIST, null)
-            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_message_info_from_database, null, this)
+            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_raw_mime_msg_from_db, null, this)
           }
 
           EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND -> messageNotAvailableInFolder()
@@ -241,7 +244,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
-      R.id.syns_request_code_load_message_details -> {
+      R.id.syns_request_code_load_raw_mime_msg -> {
         isRequestMsgDetailsStarted = false
         onErrorOccurred(requestCode, errorType, e)
       }
@@ -322,7 +325,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             }
             return
           } else {
-            val msgInfo = IncomingMessageInfo(details!!, result.msgBlocks!!, result.getMsgEncryptionType())
+            val msgInfo = IncomingMessageInfo(details!!, result.msgBlocks!!,
+                EmailUtil.getHeadersFromRawMIME(rawMimeMsg), result.getMsgEncryptionType())
             val fragment = supportFragmentManager
                 .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
 
@@ -359,8 +363,10 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   fun decryptMsg() {
-    idlingForDecryption!!.increment()
-    viewModel!!.decryptMessage(details!!.rawMsgWithoutAtts!!)
+    if (!TextUtils.isEmpty(rawMimeMsg)) {
+      idlingForDecryption!!.increment()
+      viewModel.decryptMessage(rawMimeMsg!!)
+    }
   }
 
   private fun showErrorInfo(error: Error?, e: Throwable?) {

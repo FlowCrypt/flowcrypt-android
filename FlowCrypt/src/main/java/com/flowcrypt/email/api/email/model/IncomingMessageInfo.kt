@@ -26,14 +26,13 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
                                            var atts: List<AttachmentInfo>? = null,
                                            var localFolder: LocalFolder? = null,
                                            val msgBlocks: List<MsgBlock>? = null,
+                                           val origMsgHeaders: String? = null,
                                            val encryptionType: MessageEncryptionType) : Parcelable {
   fun getSubject(): String? = generalMsgDetails.subject
 
   fun getFrom(): List<InternetAddress>? = generalMsgDetails.from
 
   fun getReceiveDate(): Date = Date(generalMsgDetails.receivedDate)
-
-  fun getOrigRawMsgWithoutAtts(): String? = generalMsgDetails.rawMsgWithoutAtts
 
   fun getTo(): List<InternetAddress>? = generalMsgDetails.to
 
@@ -51,30 +50,14 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
 
   fun getUid(): Int = generalMsgDetails.uid
 
-  constructor(generalMsgDetails: GeneralMessageDetails, msgBlocks: List<MsgBlock>,
+  constructor(generalMsgDetails: GeneralMessageDetails, msgBlocks: List<MsgBlock>, origMsgHeaders: String?,
               encryptionType: MessageEncryptionType) : this(
       generalMsgDetails,
       null,
       null,
       msgBlocks,
+      origMsgHeaders,
       encryptionType)
-
-  /**
-   * Remove all content below initial headers so that the message is small enough to pass around Binder
-   */
-  fun stripRawMsgContent() {
-    // we don't know if the message is \n or \r\n delimited
-   val headersByDoubleNl = generalMsgDetails.rawMsgWithoutAtts?.trim()?.substringBefore("\n\n");
-    val headersByDoubleCrNl = generalMsgDetails.rawMsgWithoutAtts?.trim()?.substringBefore("\r\n\r\n");
-    if(headersByDoubleNl == null || headersByDoubleCrNl == null) {
-      return;
-    }
-    if(headersByDoubleCrNl.length < headersByDoubleNl.length) { // therefore we choose smaller result
-      generalMsgDetails.rawMsgWithoutAtts = headersByDoubleCrNl;
-    } else {
-      generalMsgDetails.rawMsgWithoutAtts = headersByDoubleNl;
-    }
-  }
 
   fun hasHtmlText(): Boolean {
     return hasSomePart(MsgBlock.Type.PLAIN_HTML) || hasSomePart(MsgBlock.Type.DECRYPTED_HTML)
@@ -99,6 +82,7 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
       source.createTypedArrayList(AttachmentInfo.CREATOR),
       source.readParcelable<LocalFolder>(LocalFolder::class.java.classLoader),
       mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) },
+      source.readString(),
       source.readParcelable(MessageEncryptionType::class.java.classLoader)
   )
 
@@ -109,6 +93,7 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
     writeTypedList(atts)
     writeParcelable(localFolder, flags)
     writeTypedList(msgBlocks)
+    writeString(origMsgHeaders)
     writeParcelable(encryptionType, flags)
   }
 

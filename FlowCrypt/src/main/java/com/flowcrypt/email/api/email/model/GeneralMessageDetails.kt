@@ -30,7 +30,7 @@ data class GeneralMessageDetails constructor(val email: String,
                                              var cc: List<InternetAddress>? = null,
                                              var subject: String? = null,
                                              var msgFlags: List<String> = arrayListOf(),
-                                             var rawMsgWithoutAtts: String? = null,
+                                             var isRawMsgAvailable: Boolean = false,
                                              var hasAtts: Boolean = false,
                                              var isEncrypted: Boolean = false,
                                              var msgState: MessageState = MessageState.NONE,
@@ -76,7 +76,7 @@ data class GeneralMessageDetails constructor(val email: String,
       mutableListOf<InternetAddress>().apply { source.readList(this, InternetAddress::class.java.classLoader) },
       source.readString(),
       source.createStringArrayList()!!,
-      source.readString(),
+      1 == source.readInt(),
       1 == source.readInt(),
       1 == source.readInt(),
       source.readParcelable(MessageState::class.java.classLoader)!!,
@@ -98,7 +98,7 @@ data class GeneralMessageDetails constructor(val email: String,
       writeList(cc)
       writeString(subject)
       writeStringList(msgFlags)
-      writeString(rawMsgWithoutAtts)
+      writeInt((if (isRawMsgAvailable) 1 else 0))
       writeInt((if (hasAtts) 1 else 0))
       writeInt((if (isEncrypted) 1 else 0))
       writeParcelable(msgState, flags)

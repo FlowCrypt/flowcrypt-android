@@ -51,7 +51,6 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.regex.Pattern
 import javax.activation.DataHandler
 import javax.mail.BodyPart
 import javax.mail.FetchProfile
@@ -747,6 +746,25 @@ class EmailUtil {
       msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(account.email))
       msg.subject = context.getString(R.string.your_key_backup)
       return msg
+    }
+
+    /**
+     * Get only headers from the raw MIME
+     */
+    fun getHeadersFromRawMIME(rawMime: String?): String {
+      // we don't know if the message is \n or \r\n delimited
+      if (rawMime == null) {
+        return ""
+      }
+
+      val headersByDoubleNl = rawMime.trim().substringBefore("\n\n")
+      val headersByDoubleCrNl = rawMime.trim().substringBefore("\r\n\r\n")
+
+      return if (headersByDoubleCrNl.length < headersByDoubleNl.length) { // therefore we choose smaller result
+        headersByDoubleCrNl
+      } else {
+        headersByDoubleNl
+      }
     }
   }
 }

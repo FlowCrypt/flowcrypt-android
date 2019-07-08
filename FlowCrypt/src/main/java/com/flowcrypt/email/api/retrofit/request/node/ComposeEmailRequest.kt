@@ -43,6 +43,7 @@ class ComposeEmailRequest(info: OutgoingMessageInfo?,
 
   @Expose
   private var replyToMimeMsg: String? = null
+  //todo-tomholub Maybe we have to rename this field for better understanding. It contains only headers (not whole MIME)
 
   override val endpoint: String = "composeEmail"
 
@@ -58,7 +59,7 @@ class ComposeEmailRequest(info: OutgoingMessageInfo?,
       bcc = info.bccRecipients
       from = info.from
       subject = info.subject
-      replyToMimeMsg = info.rawReplyMsg
+      replyToMimeMsg = info.origMsgHeaders
     }
   }
 

@@ -18,18 +18,18 @@ import com.flowcrypt.email.model.MessageEncryptionType
  * E-mail: DenBond7@gmail.com
  */
 
-data class OutgoingMessageInfo constructor(var subject: String? = null,
-                                           var msg: String? = null,
-                                           var toRecipients: List<String>? = null,
-                                           var ccRecipients: List<String>? = null,
-                                           var bccRecipients: List<String>? = null,
-                                           var from: String? = null,
-                                           var rawReplyMsg: String? = null,
-                                           var atts: List<AttachmentInfo>? = null,
-                                           var forwardedAtts: List<AttachmentInfo>? = null,
-                                           var encryptionType: MessageEncryptionType? = null,
-                                           var isForwarded: Boolean = false,
-                                           var uid: Long = 0) : Parcelable {
+data class OutgoingMessageInfo constructor(val subject: String,
+                                           val msg: String? = null,
+                                           val toRecipients: List<String>? = null,
+                                           val ccRecipients: List<String>? = null,
+                                           val bccRecipients: List<String>? = null,
+                                           val from: String,
+                                           val origMsgHeaders: String? = null,
+                                           val atts: List<AttachmentInfo>? = null,
+                                           val forwardedAtts: List<AttachmentInfo>? = null,
+                                           val encryptionType: MessageEncryptionType,
+                                           val isForwarded: Boolean = false,
+                                           val uid: Long = 0) : Parcelable {
 
   /**
    * Generate a list of the all recipients.
@@ -45,12 +45,12 @@ data class OutgoingMessageInfo constructor(var subject: String? = null,
   }
 
   constructor(parcel: Parcel) : this(
-      parcel.readString(),
+      parcel.readString()!!,
       parcel.readString(),
       parcel.createStringArrayList(),
       parcel.createStringArrayList(),
       parcel.createStringArrayList(),
-      parcel.readString(),
+      parcel.readString()!!,
       parcel.readString(),
       mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
       mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
@@ -70,7 +70,7 @@ data class OutgoingMessageInfo constructor(var subject: String? = null,
       writeStringList(ccRecipients)
       writeStringList(bccRecipients)
       writeString(from)
-      writeString(rawReplyMsg)
+      writeString(origMsgHeaders)
       writeTypedList(atts)
       writeTypedList(forwardedAtts)
       writeParcelable(encryptionType, flags)
