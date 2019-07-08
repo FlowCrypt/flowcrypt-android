@@ -109,7 +109,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private var pgpContactsTo: MutableList<PgpContact>? = null
   private var pgpContactsCc: MutableList<PgpContact>? = null
   private var pgpContactsBcc: MutableList<PgpContact>? = null
-  private val atts: ArrayList<AttachmentInfo>?
+  private val atts: MutableList<AttachmentInfo>?
   private var folderType: FoldersManager.FolderType? = null
   private var msgInfo: IncomingMessageInfo? = null
   private var serviceInfo: ServiceInfo? = null
@@ -157,26 +157,20 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    * contains information about an outgoing message.
    */
   private fun getOutgoingMsgInfo(): OutgoingMessageInfo {
-    val messageInfo = OutgoingMessageInfo()
-
-    /*if (msgInfo != null && !TextUtils.isEmpty(msgInfo.getHtmlMsgBlock())) {
-      //todo-denbond7 Need to think how forward HTML
-    }*/
-    messageInfo.msg = editTextEmailMsg!!.text.toString()
-    messageInfo.subject = editTextEmailSubject!!.text.toString()
-
-    if (msgInfo != null && !TextUtils.isEmpty(msgInfo!!.getOrigRawMsgWithoutAtts())) {
-      messageInfo.rawReplyMsg = TextUtils.substring(msgInfo!!.getOrigRawMsgWithoutAtts(), 0, Math.min(10000,
-          msgInfo!!.getOrigRawMsgWithoutAtts()!!.length))
-    }
-
-    messageInfo.toRecipients = recipientsTo!!.chipValues
-    messageInfo.ccRecipients = recipientsCc!!.chipValues
-    messageInfo.bccRecipients = recipientsBcc!!.chipValues
-    messageInfo.from = editTextFrom!!.text.toString()
-    messageInfo.uid = EmailUtil.genOutboxUID(context!!)
-
-    return messageInfo
+    return OutgoingMessageInfo(
+        editTextEmailSubject?.text.toString(),
+        editTextEmailMsg?.text.toString(),
+        recipientsTo?.chipValues,
+        recipientsCc?.chipValues,
+        recipientsBcc?.chipValues,
+        editTextFrom?.text.toString(),
+        msgInfo?.origMsgHeaders,
+        atts?.minus(forwardedAtts),
+        forwardedAtts,
+        listener!!.msgEncryptionType,
+        messageType === MessageType.FORWARD,
+        EmailUtil.genOutboxUID(context!!)
+    )
   }
 
   /**
@@ -195,7 +189,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       }
       if (recipientsTo!!.text.toString().isEmpty()) {
         showInfoSnackbar(recipientsTo!!, getString(R.string.text_must_not_be_empty,
-                getString(R.string.prompt_recipients_to)))
+            getString(R.string.prompt_recipients_to)))
         recipientsTo!!.requestFocus()
         return false
       }
@@ -221,7 +215,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       }
       if (editTextEmailSubject!!.text.toString().isEmpty()) {
         showInfoSnackbar(editTextEmailSubject!!, getString(R.string.text_must_not_be_empty,
-                getString(R.string.prompt_subject)))
+            getString(R.string.prompt_subject)))
         editTextEmailSubject!!.requestFocus()
         return false
       }
@@ -246,9 +240,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    *
    * @return The generated list.
    */
-  private val forwardedAtts: ArrayList<AttachmentInfo>
+  private val forwardedAtts: MutableList<AttachmentInfo>
     get() {
-      val atts = ArrayList<AttachmentInfo>()
+      val atts = mutableListOf<AttachmentInfo>()
 
       for (att in this.atts!!) {
         if (att.id != null && att.isForwarded) {
@@ -260,9 +254,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
 
   init {
-    pgpContactsTo = ArrayList()
-    pgpContactsCc = ArrayList()
-    pgpContactsBcc = ArrayList()
+    pgpContactsTo = mutableListOf()
+    pgpContactsCc = mutableListOf()
+    pgpContactsBcc = mutableListOf()
     atts = ArrayList()
   }
 
@@ -1363,7 +1357,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    * @return <tt>boolean</tt> true - if has, otherwise false..
    */
   private fun hasInvalidEmail(vararg pgpContactsNachoTextViews: PgpContactsNachoTextView): Boolean {
-    for (textView in pgpContactsNachoTextViews){
+    for (textView in pgpContactsNachoTextViews) {
       val emails = textView.chipAndTokenValues
       for (email in emails) {
         if (!GeneralUtil.isEmailValid(email)) {
@@ -1383,7 +1377,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    * @return true if the attachment can be added, otherwise false.
    */
   private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
-    return atts!!.map { it.encodedSize.toInt() }.sum() + (newAttInfo?.encodedSize?.toInt() ?: 0) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
+    return atts!!.map { it.encodedSize.toInt() }.sum() + (newAttInfo?.encodedSize?.toInt()
+        ?: 0) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
   }
 
 
@@ -1406,20 +1401,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     dismissCurrentSnackBar()
 
     isContactsUpdateEnabled = false
-    val msgInfo = getOutgoingMsgInfo()
-
-    val forwardedAttInfoList = forwardedAtts
-    val attachmentInfoList = ArrayList(this.atts!!)
-    attachmentInfoList.removeAll(forwardedAttInfoList)
-
-    msgInfo.atts = attachmentInfoList
-    msgInfo.forwardedAtts = forwardedAttInfoList
-    msgInfo.encryptionType = listener!!.msgEncryptionType
-    msgInfo.isForwarded = messageType === MessageType.FORWARD
-
-    if (onMsgSendListener != null) {
-      onMsgSendListener!!.sendMsg(msgInfo)
-    }
+    onMsgSendListener?.sendMsg(getOutgoingMsgInfo())
   }
 
   /**

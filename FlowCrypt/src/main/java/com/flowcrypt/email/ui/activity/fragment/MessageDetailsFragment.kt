@@ -205,12 +205,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   override fun onClick(v: View) {
     when (v.id) {
       R.id.layoutReplyButton -> {
-        msgInfo?.stripRawMsgContent()
         startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY, msgEncryptType))
       }
 
       R.id.imageButtonReplyAll, R.id.layoutReplyAllButton -> {
-        msgInfo?.stripRawMsgContent()
         startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY_ALL, msgEncryptType))
       }
 
@@ -225,7 +223,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           }
           msgInfo!!.atts = atts
         }
-        // todo - msgInfo?.stripRawMsgContent() // would probably affect forwarding, leaving for DenBond
+
         startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.FORWARD, msgEncryptType))
       }
     }
@@ -240,7 +238,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     }
 
     when (requestCode) {
-      R.id.syns_request_code_load_message_details -> when (errorType) {
+      R.id.syns_request_code_load_raw_mime_msg -> when (errorType) {
         SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> {
           showConnLostHint()
           return
@@ -338,9 +336,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     showSnackbar(view!!, getString(R.string.failed_load_message_from_email_server),
         getString(R.string.retry), View.OnClickListener {
       UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
-      (baseActivity as BaseSyncActivity).loadMsgDetails(
-          R.id.syns_request_code_load_message_details, localFolder!!,
-          details!!.uid)
+      (baseActivity as BaseSyncActivity).loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg,
+          localFolder!!, details!!.uid)
     })
   }
 

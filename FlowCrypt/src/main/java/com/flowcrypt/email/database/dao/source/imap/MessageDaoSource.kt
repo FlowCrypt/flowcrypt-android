@@ -431,8 +431,8 @@ class MessageDaoSource : BaseDaoSource() {
         cursor.getLong(cursor.getColumnIndex(COL_RECEIVED_DATE)),
         cursor.getLong(cursor.getColumnIndex(COL_SENT_DATE)), null, null, null,
         cursor.getString(cursor.getColumnIndex(COL_SUBJECT)),
-        Arrays.asList(*parseFlags(cursor.getString(cursor.getColumnIndex(COL_FLAGS)))),
-        cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)),
+        listOf(*parseFlags(cursor.getString(cursor.getColumnIndex(COL_FLAGS)))),
+        !TextUtils.isEmpty(cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS))),
         cursor.getInt(cursor.getColumnIndex(COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1,
         cursor.getInt(cursor.getColumnIndex(COL_IS_ENCRYPTED)) == 1,
         MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))),
@@ -449,14 +449,14 @@ class MessageDaoSource : BaseDaoSource() {
 
     try {
       val toAddresses = cursor.getString(cursor.getColumnIndex(COL_TO_ADDRESSES))
-      details.to = if (TextUtils.isEmpty(toAddresses)) null else Arrays.asList(*InternetAddress.parse(toAddresses))
+      details.to = if (TextUtils.isEmpty(toAddresses)) null else listOf(*InternetAddress.parse(toAddresses))
     } catch (e: AddressException) {
       e.printStackTrace()
     }
 
     try {
       val ccAddresses = cursor.getString(cursor.getColumnIndex(COL_CC_ADDRESSES))
-      details.cc = if (TextUtils.isEmpty(ccAddresses)) null else Arrays.asList(*InternetAddress.parse(ccAddresses))
+      details.cc = if (TextUtils.isEmpty(ccAddresses)) null else listOf(*InternetAddress.parse(ccAddresses))
     } catch (e: AddressException) {
       e.printStackTrace()
     }
@@ -601,6 +601,34 @@ class MessageDaoSource : BaseDaoSource() {
     }
 
     return details
+  }
+
+  /**
+   * Get the raw MIME content of some message.
+   *
+   * @param context Interface to global information about an application environment.
+   * @param email   The user email.
+   * @param label   The label name.
+   * @param uid     The uid of the message.
+   * @return the raw MIME message
+   */
+  fun getRawMIME(context: Context, email: String, label: String, uid: Int): String? {
+    val contentResolver = context.contentResolver
+    val selection = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
+    val selectionArgs = arrayOf(email, label, uid.toString())
+    val cursor = contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
+
+    var rawMimeMsg: String? = null
+
+    if (cursor != null) {
+      if (cursor.moveToFirst()) {
+        rawMimeMsg = cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS))
+
+      }
+      cursor.close()
+    }
+
+    return rawMimeMsg
   }
 
   /**

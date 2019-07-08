@@ -278,7 +278,7 @@ class MessagesSenderJobService : JobService() {
           val atts = attDaoSource.getAttInfoList(context, email,
               JavaEmailConstants.FOLDER_OUTBOX, details.uid.toLong())
 
-          val mimeMsg = createMimeMsg(context, sess, details, atts)
+          val mimeMsg = createMimeMsg(context, sess, msgDaoSource, details, atts)
           val isMsgSaved = saveCopyOfSentMsg(account, store, context, mimeMsg)
 
           if (!isMsgSaved) {
@@ -326,7 +326,7 @@ class MessagesSenderJobService : JobService() {
 
     private fun sendMsg(context: Context, account: AccountDao, msgDaoSource: MessageDaoSource,
                         details: GeneralMessageDetails, atts: List<AttachmentInfo>): Boolean {
-      val mimeMsg = createMimeMsg(context, sess, details, atts)
+      val mimeMsg = createMimeMsg(context, sess, msgDaoSource, details, atts)
       val detEmail = details.email
       val detLabel = details.label
 
@@ -400,9 +400,10 @@ class MessagesSenderJobService : JobService() {
      * @throws IOException
      * @throws MessagingException
      */
-    private fun createMimeMsg(context: Context, sess: Session?, details: GeneralMessageDetails,
-                              atts: List<AttachmentInfo>): MimeMessage {
-      val stream = IOUtils.toInputStream(details.rawMsgWithoutAtts!!, StandardCharsets.UTF_8)
+    private fun createMimeMsg(context: Context, sess: Session?, msgDaoSource: MessageDaoSource,
+                              details: GeneralMessageDetails, atts: List<AttachmentInfo>): MimeMessage {
+      val rawMime = msgDaoSource.getRawMIME(context, details.email, details.label, details.uid)
+      val stream = IOUtils.toInputStream(rawMime, StandardCharsets.UTF_8)
       val mimeMsg = MimeMessage(sess, stream)
 
       if (mimeMsg.content is MimeMultipart && !CollectionUtils.isEmpty(atts)) {

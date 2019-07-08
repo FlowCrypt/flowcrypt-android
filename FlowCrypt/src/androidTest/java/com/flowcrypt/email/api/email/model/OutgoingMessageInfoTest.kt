@@ -64,7 +64,7 @@ class OutgoingMessageInfoTest {
         listOf("hello1@example.com", "test1@example.com"),
         listOf("hello2@example.com", "test2@example.com"),
         "from",
-        "rawReplyMsg",
+        "origMsgHeaders",
         listOf(att1, att2),
         listOf(att2, att1),
         MessageEncryptionType.ENCRYPTED,

@@ -204,8 +204,7 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
       return
     }
     val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)
-    val isRawMsgAvailable = !TextUtils.isEmpty(activeMsgDetails!!.rawMsgWithoutAtts)
-    if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context!!)) {
+    if (isOutbox || activeMsgDetails!!.isRawMsgAvailable || GeneralUtil.isConnected(context!!)) {
       when (activeMsgDetails!!.msgState) {
         MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
         MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
@@ -213,11 +212,8 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
         MessageState.ERROR_DURING_CREATION,
         MessageState.ERROR_SENDING_FAILED,
         MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> handleOutgoingMsgWhichHasSomeError(activeMsgDetails!!)
-        else -> {
-          activeMsgDetails?.rawMsgWithoutAtts = null; // large msgs cause RuntimeError
-          startActivityForResult(MessageDetailsActivity.getIntent(context, listener!!.currentFolder, activeMsgDetails),
-                  REQUEST_CODE_SHOW_MESSAGE_DETAILS)
-        }
+        else -> startActivityForResult(MessageDetailsActivity.getIntent(context,
+            listener!!.currentFolder, activeMsgDetails), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
       }
     } else {
       showInfoSnackbar(getView()!!, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
