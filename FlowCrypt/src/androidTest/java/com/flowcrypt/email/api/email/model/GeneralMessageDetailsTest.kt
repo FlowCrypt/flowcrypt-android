@@ -37,12 +37,12 @@ class GeneralMessageDetailsTest {
         listOf(InternetAddress("hello2@example.com"), InternetAddress("test2@example.com")),
         "subject",
         listOf("\\NoFlag", "\\SomeFlag"),
-        "rawMsgWithoutAtts",
-        false,
-        true,
-        MessageState.ERROR_CACHE_PROBLEM,
-        "attsDir",
-        "errorMsg")
+        isRawMsgAvailable = false,
+        hasAtts = false,
+        isEncrypted = true,
+        msgState = MessageState.ERROR_CACHE_PROBLEM,
+        attsDir = "attsDir",
+        errorMsg = "errorMsg")
 
     val parcel = Parcel.obtain()
     original.writeToParcel(parcel, original.describeContents())

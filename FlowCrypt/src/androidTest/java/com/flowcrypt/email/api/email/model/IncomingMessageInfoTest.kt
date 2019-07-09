@@ -21,6 +21,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.model.MessageEncryptionType
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -49,9 +50,9 @@ class IncomingMessageInfoTest {
         Constants.MIME_TYPE_BINARY_DATA,
         "1245fsdfs4597sdf4564",
         Uri.EMPTY,
-        true,
-        false,
-        12)
+        isProtected = true,
+        isForwarded = false,
+        orderNumber = 12)
 
     val att2 = AttachmentInfo("rawData",
         "email",
@@ -64,9 +65,9 @@ class IncomingMessageInfoTest {
         Constants.MIME_TYPE_BINARY_DATA,
         "1245fsdfs4597sdf4564",
         Uri.EMPTY,
-        true,
-        false,
-        12)
+        isProtected = true,
+        isForwarded = false,
+        orderNumber = 12)
 
     val details = GeneralMessageDetails(
         "email",
@@ -79,12 +80,12 @@ class IncomingMessageInfoTest {
         listOf(InternetAddress("hello2@example.com"), InternetAddress("test2@example.com")),
         "subject",
         listOf("\\NoFlag", "\\SomeFlag"),
-        "rawMsgWithoutAtts",
-        false,
-        true,
-        MessageState.ERROR_CACHE_PROBLEM,
-        "attsDir",
-        "errorMsg")
+        isRawMsgAvailable = true,
+        hasAtts = false,
+        isEncrypted = true,
+        msgState = MessageState.ERROR_CACHE_PROBLEM,
+        attsDir = "attsDir",
+        errorMsg = "errorMsg")
 
     val publicKeyMsgBlock = PublicKeyMsgBlock(
         "content",
@@ -134,7 +135,9 @@ class IncomingMessageInfoTest {
             BaseMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false),
             BaseMsgBlock(MsgBlock.Type.UNKNOWN, "content", false),
             publicKeyMsgBlock,
-            decryptErrorMsgBlock))
+            decryptErrorMsgBlock),
+        null,
+        MessageEncryptionType.STANDARD)
 
     val parcel = Parcel.obtain()
     original.writeToParcel(parcel, original.describeContents())
