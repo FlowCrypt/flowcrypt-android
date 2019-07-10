@@ -25,6 +25,7 @@ import javax.mail.internet.InternetAddress
 data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessageDetails,
                                            var atts: List<AttachmentInfo>? = null,
                                            var localFolder: LocalFolder? = null,
+                                           var text: String? = null,
                                            val msgBlocks: List<MsgBlock>? = null,
                                            val origMsgHeaders: String? = null,
                                            val encryptionType: MessageEncryptionType) : Parcelable {
@@ -50,11 +51,12 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
 
   fun getUid(): Int = generalMsgDetails.uid
 
-  constructor(generalMsgDetails: GeneralMessageDetails, msgBlocks: List<MsgBlock>, origMsgHeaders: String?,
-              encryptionType: MessageEncryptionType) : this(
+  constructor(generalMsgDetails: GeneralMessageDetails, text: String?, msgBlocks: List<MsgBlock>,
+              origMsgHeaders: String?, encryptionType: MessageEncryptionType) : this(
       generalMsgDetails,
       null,
       null,
+      text,
       msgBlocks,
       origMsgHeaders,
       encryptionType)
@@ -81,6 +83,7 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
       source.readParcelable<GeneralMessageDetails>(GeneralMessageDetails::class.java.classLoader)!!,
       source.createTypedArrayList(AttachmentInfo.CREATOR),
       source.readParcelable<LocalFolder>(LocalFolder::class.java.classLoader),
+      source.readString(),
       mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) },
       source.readString(),
       source.readParcelable(MessageEncryptionType::class.java.classLoader)
@@ -92,6 +95,7 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
     writeParcelable(generalMsgDetails, flags)
     writeTypedList(atts)
     writeParcelable(localFolder, flags)
+    writeString(text)
     writeTypedList(msgBlocks)
     writeString(origMsgHeaders)
     writeParcelable(encryptionType, flags)

@@ -50,7 +50,6 @@ import com.flowcrypt.email.api.email.model.ExtraActionInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
-import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.database.dao.source.AccountAliasesDao
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
 import com.flowcrypt.email.database.dao.source.AccountDao
@@ -1159,8 +1158,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   private fun updateViewsIfFwdMode() {
-    if (!CollectionUtils.isEmpty(msgInfo!!.atts)) {
-      for (att in msgInfo!!.atts!!) {
+    val originalMsgInfo = msgInfo ?: return
+
+    if (!CollectionUtils.isEmpty(originalMsgInfo.atts)) {
+      for (att in originalMsgInfo.atts!!) {
         if (hasAbilityToAddAtt(att)) {
           atts!!.add(att)
         } else {
@@ -1171,34 +1172,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       }
     }
 
-    editTextEmailMsg!!.setText(getString(R.string.forward_template, msgInfo!!.getFrom()!![0].address,
-        EmailUtil.genForwardedMsgDate(msgInfo!!.getReceiveDate()), msgInfo!!.getSubject(),
-        prepareRecipientsLineForForwarding(msgInfo!!.getTo())))
+    editTextEmailMsg?.setText(getString(R.string.forward_template, originalMsgInfo.getFrom()!!.first().address,
+        EmailUtil.genForwardedMsgDate(originalMsgInfo.getReceiveDate()), originalMsgInfo.getSubject(),
+        prepareRecipientsLineForForwarding(originalMsgInfo.getTo())))
 
-    if (!CollectionUtils.isEmpty(msgInfo!!.getCc())) {
-      editTextEmailMsg!!.append("Cc: ")
-      editTextEmailMsg!!.append(prepareRecipientsLineForForwarding(msgInfo!!.getCc()))
-      editTextEmailMsg!!.append("\n\n")
+    if (!CollectionUtils.isEmpty(originalMsgInfo.getCc())) {
+      editTextEmailMsg?.append("Cc: ")
+      editTextEmailMsg?.append(prepareRecipientsLineForForwarding(originalMsgInfo.getCc()))
+      editTextEmailMsg?.append("\n\n")
     }
 
-    if (!CollectionUtils.isEmpty(msgInfo!!.msgBlocks)) {
-      for (block in msgInfo!!.msgBlocks!!) {
-        when (block.type) {
-          MsgBlock.Type.DECRYPTED_TEXT, MsgBlock.Type.PLAIN_TEXT -> {
-            editTextEmailMsg!!.append("\n\n")
-            editTextEmailMsg!!.append(block.content)
-          }
-
-          MsgBlock.Type.PUBLIC_KEY -> {
-          }
-
-          else -> {
-          }
-        }
-      }
-    } else if (!msgInfo!!.hasPlainText() && msgInfo!!.getHtmlMsgBlock() != null) {
-      Toast.makeText(context, R.string.cannot_forward_html_emails, Toast.LENGTH_LONG).show()
-    }
+    editTextEmailMsg?.append("\n\n" + originalMsgInfo.text)
   }
 
   private fun updateViewsIfReplyAllMode() {
