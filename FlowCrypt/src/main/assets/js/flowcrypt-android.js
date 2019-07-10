@@ -74485,9 +74485,9 @@ module.exports =
 "use strict";
 /* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
 /// <reference path="../../../flowcrypt-node-modules/node_modules/@types/node/index.d.ts" />
-/// <reference path="../node_modules/@types/chrome/index.d.ts" />
-/// <reference path="./types/jquery.d.ts" />
-/// <reference path="./types/openpgp.d.ts" />
+/// - <reference path="../node_modules/@types/chrome/index.d.ts" />
+/// - <reference path="./core/types/jquery.d.ts" />
+/// <reference path="./core/types/openpgp.d.ts" />
 
 
 Object.defineProperty(exports, "__esModule", {
@@ -74867,7 +74867,7 @@ const util_js_1 = __webpack_require__(5);
 
 class Str {}
 
-Str.parseEmail = full => {
+Str.parseEmail = (full, flag = 'VALIDATE') => {
   let email;
   let name;
 
@@ -74878,7 +74878,7 @@ Str.parseEmail = full => {
     email = full.replace(/["']/g, '').trim().toLowerCase();
   }
 
-  if (!Str.isEmailValid(email)) {
+  if (flag === 'VALIDATE' && !Str.isEmailValid(email)) {
     email = undefined;
   }
 
@@ -74953,6 +74953,8 @@ Str.capitalize = string => string.trim().split(' ').map(s => s.charAt(0).toUpper
 Str.toUtcTimestamp = (datetimeStr, asStr = false) => asStr ? String(Date.parse(datetimeStr)) : Date.parse(datetimeStr);
 
 Str.datetimeToDate = date => date.substr(0, 10).replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;');
+
+Str.fromDate = date => date.toISOString().replace(/T/, ' ').replace(/:[^:]+$/, '');
 
 Str.base64urlUtfEncode = str => {
   // https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings
@@ -75331,7 +75333,7 @@ Pgp.key = {
       opt.numBits = 4096;
     }
 
-    let k = await openpgp.generateKey(opt);
+    const k = await openpgp.generateKey(opt);
     return {
       public: k.publicKeyArmored,
       private: k.privateKeyArmored
@@ -76819,6 +76821,7 @@ Mime.decode = mimeMsg => {
     const mimeContent = {
       atts: [],
       headers: {},
+      subject: undefined,
       text: undefined,
       html: undefined,
       signature: undefined,
@@ -76854,7 +76857,10 @@ Mime.decode = mimeMsg => {
             mimeContent.html = (mimeContent.html || '') + Mime.getNodeContentAsUtfStr(node);
           } else if (Mime.getNodeType(node) === 'text/plain' && !Mime.getNodeFilename(node)) {
             mimeContent.text = Mime.getNodeContentAsUtfStr(node);
-          } else if (Mime.getNodeType(node) === 'text/rfc822-headers') {// todo - surface and render encrypted headers
+          } else if (Mime.getNodeType(node) === 'text/rfc822-headers') {
+            if (node._parentNode && node._parentNode.headers.subject) {
+              mimeContent.subject = node._parentNode.headers.subject[0].value;
+            }
           } else {
             mimeContent.atts.push(Mime.getNodeAsAtt(node));
           }
@@ -77543,7 +77549,7 @@ exports.Xss = Xss;
 
 "use strict";
 /* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
-/// <reference path="../types/openpgp.d.ts" />
+/// <reference path="../core/types/openpgp.d.ts" />
 
 
 Object.defineProperty(exports, "__esModule", {
@@ -77880,10 +77886,7 @@ class Endpoints {
       if (!pgpType) {
         return fmt_1.fmtRes({
           format: 'unknown',
-          keyDetails,
-          error: {
-            message: `Cannot parse key: could not determine pgpType`
-          }
+          keyDetails
         });
       }
 
