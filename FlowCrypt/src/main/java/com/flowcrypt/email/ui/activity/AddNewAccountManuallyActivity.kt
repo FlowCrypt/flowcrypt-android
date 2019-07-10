@@ -46,6 +46,7 @@ import com.google.gson.JsonSyntaxException
 import com.sun.mail.util.MailConnectException
 import java.net.SocketTimeoutException
 import java.util.*
+import java.util.regex.Pattern
 import javax.mail.AuthenticationFailedException
 
 /**
@@ -85,6 +86,21 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_add_new_account_manually
+
+  private val digitsTextWatcher: TextWatcher = object : TextWatcher {
+    override fun afterTextChanged(s: Editable?) {
+      if (!Pattern.compile("\\d+").matcher(s).matches()) {
+        s?.clear()
+      }
+    }
+
+    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+    }
+
+    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+
+    }
+  }
 
   /**
    * Retrieve a temp [AuthCredentials] from the shared preferences.
@@ -440,8 +456,10 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     editTextPassword = findViewById(R.id.editTextPassword)
     editTextImapServer = findViewById(R.id.editTextImapServer)
     editTextImapPort = findViewById(R.id.editTextImapPort)
+    editTextImapPort?.addTextChangedListener(digitsTextWatcher)
     editTextSmtpServer = findViewById(R.id.editTextSmtpServer)
     editTextSmtpPort = findViewById(R.id.editTextSmtpPort)
+    editTextSmtpPort?.addTextChangedListener(digitsTextWatcher)
     editTextSmtpUsername = findViewById(R.id.editTextSmtpUsername)
     editTextSmtpPassword = findViewById(R.id.editTextSmtpPassword)
 
