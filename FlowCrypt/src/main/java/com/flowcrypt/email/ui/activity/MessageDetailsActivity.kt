@@ -264,9 +264,14 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     val foldersManager = FoldersManager.fromDatabase(this, details!!.email)
     val archive = foldersManager.folderArchive
     if (archive == null) {
-      ExceptionUtil.handleError(IllegalArgumentException("Folder 'All Mail' not found"))
+      ExceptionUtil.handleError(IllegalArgumentException("Folder 'All Mail' not found for account = "
+          + EmailUtil.getDomain(details!!.email)))
+      isBackEnabled = false
+
+      Toast.makeText(this, R.string.failed_please_try_again_later, Toast.LENGTH_LONG).show()
+    } else {
+      moveMsg(R.id.syns_request_archive_message, localFolder!!, archive, details!!.uid)
     }
-    moveMsg(R.id.syns_request_archive_message, localFolder!!, archive!!, details!!.uid)
   }
 
   override fun onDeleteMsgClicked() {
