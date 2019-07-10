@@ -10,6 +10,7 @@ import android.os.Parcelable
 import android.text.TextUtils
 import android.util.Patterns
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import java.util.*
@@ -89,6 +90,10 @@ data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
           email = matcher.group()
           name = email
         }
+      }
+
+      if (email == null) {
+        ExceptionUtil.handleError(IllegalArgumentException("Couldn't determinate a primary contact for $it"))
       }
 
       return PgpContact(email!!, name, publicKey, !TextUtils.isEmpty(publicKey), null,
