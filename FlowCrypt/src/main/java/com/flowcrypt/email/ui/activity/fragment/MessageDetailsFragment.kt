@@ -214,7 +214,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
       R.id.layoutFwdButton -> {
         if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-          Toast.makeText(context, R.string.cannot_forward_encrypted_attachments, Toast.LENGTH_LONG).show()
+          if (atts?.isNotEmpty() == true) {
+            Toast.makeText(context, R.string.cannot_forward_encrypted_attachments, Toast.LENGTH_LONG).show()
+          }
         } else {
           if (!CollectionUtils.isEmpty(atts)) {
             for (att in atts!!) {

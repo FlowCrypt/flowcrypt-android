@@ -156,12 +156,13 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
       }
 
       R.id.loader_id_load_attachments -> if (cursor != null) {
-        val attInfolist = ArrayList<AttachmentInfo>()
+        val atts = ArrayList<AttachmentInfo>()
         while (cursor.moveToNext()) {
-          attInfolist.add(AttachmentDaoSource.getAttInfo(cursor))
+          atts.add(AttachmentDaoSource.getAttInfo(cursor))
         }
 
-        updateAtts(attInfolist)
+        updateAtts(atts)
+        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_attachments)
       }
     }
   }
@@ -325,7 +326,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             }
             return
           } else {
-            val msgInfo = IncomingMessageInfo(details!!, result.msgBlocks!!,
+            val msgInfo = IncomingMessageInfo(details!!, result.text, result.msgBlocks!!,
                 EmailUtil.getHeadersFromRawMIME(rawMimeMsg), result.getMsgEncryptionType())
             val fragment = supportFragmentManager
                 .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
