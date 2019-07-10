@@ -191,17 +191,20 @@ class PgpContactsNachoTextView(context: Context, attrs: AttributeSet) : NachoTex
 
     override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
       var isMenuModified = false
-      for (i in 0 until menu.size()) {
-        val menuItem = menu.getItem(i)
-        if (menuItem != null) {
-          when (menuItem.itemId) {
-            android.R.id.cut, android.R.id.copy -> {
-            }
 
-            else -> {
-              menu.removeItem(menuItem.itemId)
-              isMenuModified = true
-            }
+      val items = mutableListOf<MenuItem>()
+      for (i in 0 until menu.size()) {
+        items.add(menu.getItem(i))
+      }
+
+      for (item in items) {
+        when (item.itemId) {
+          android.R.id.cut, android.R.id.copy -> {
+          }
+
+          else -> {
+            menu.removeItem(item.itemId)
+            isMenuModified = true
           }
         }
       }
