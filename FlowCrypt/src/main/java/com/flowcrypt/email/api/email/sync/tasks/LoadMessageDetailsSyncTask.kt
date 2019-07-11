@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.sync.tasks
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.iap.Argument
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.protocol.BODY
@@ -65,6 +66,9 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
             rawMsg = ASCIIUtility.toString(body.byteArrayInputStream)
           }
         }
+      } else {
+        ExceptionUtil.handleError(IllegalStateException(
+            "LoadMessageDetailsSyncTask:Server response = $serverStatusResponse"))
       }
 
       imapProtocol.notifyResponseHandlers(responses)
