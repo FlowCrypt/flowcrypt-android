@@ -17,7 +17,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
-import com.flowcrypt.email.DoNotNeedMailServer
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -37,7 +37,7 @@ import org.junit.runner.RunWith
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@DoNotNeedMailServer
+@DoesNotNeedMailserver
 @Ignore("fix me") //todo-denbond7 fix me
 class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(HtmlViewFromAssetsRawActivity::class.java,

@@ -9,7 +9,7 @@ import android.net.Uri
 import android.os.Parcel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
-import com.flowcrypt.email.DoNotNeedMailServer
+import com.flowcrypt.email.DoesNotNeedMailserver
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -22,7 +22,7 @@ import org.junit.runner.RunWith
  */
 @SmallTest
 @RunWith(AndroidJUnit4::class)
-@DoNotNeedMailServer
+@DoesNotNeedMailserver
 class KeyImportModelTest {
 
   @Test

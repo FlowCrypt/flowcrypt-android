@@ -22,7 +22,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
-import com.flowcrypt.email.DoNotNeedMailServer
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -41,7 +41,7 @@ import org.junit.runner.RunWith
  * Time: 10:30
  * E-mail: DenBond7@gmail.com
  */
-@DoNotNeedMailServer
+@DoesNotNeedMailserver
 @LargeTest
 @RunWith(AndroidJUnit4::class)
 class AddNewAccountActivityTest : BaseTest() {
