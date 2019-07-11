@@ -131,6 +131,7 @@ class IncomingMessageInfoTest {
             true,
             12,
             "searchQuery"),
+        "text",
         listOf(
             BaseMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false),
             BaseMsgBlock(MsgBlock.Type.UNKNOWN, "content", false),
