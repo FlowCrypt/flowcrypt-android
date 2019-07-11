@@ -18,6 +18,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
 import androidx.test.rule.GrantPermissionRule
+import com.flowcrypt.email.DoNotNeedMailServer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
@@ -48,6 +49,7 @@ import java.util.*
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
+@DoNotNeedMailServer
 class ShareIntentsTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(CreateMessageActivity::class.java,

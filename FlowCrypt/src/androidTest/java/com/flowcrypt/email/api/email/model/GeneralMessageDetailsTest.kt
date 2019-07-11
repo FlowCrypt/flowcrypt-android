@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.model
 import android.os.Parcel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import com.flowcrypt.email.DoNotNeedMailServer
 import com.flowcrypt.email.database.MessageState
 import org.junit.Assert
 import org.junit.Test
@@ -22,6 +23,7 @@ import javax.mail.internet.InternetAddress
  */
 @SmallTest
 @RunWith(AndroidJUnit4::class)
+@DoNotNeedMailServer
 class GeneralMessageDetailsTest {
 
   @Test

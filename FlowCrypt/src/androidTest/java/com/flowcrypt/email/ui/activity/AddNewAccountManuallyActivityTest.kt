@@ -21,6 +21,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.DoNotNeedMailServer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -81,7 +82,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
   }
 
-  @Test
+  @DoNotNeedMailServer
   fun testShowSnackBarIfFieldEmpty() {
     checkIsFieldEmptyWork(R.id.editTextEmail, R.string.e_mail)
     checkIsFieldEmptyWork(R.id.editTextUserName, R.string.username)
@@ -103,7 +104,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
     checkIsFieldEmptyWork(R.id.editTextSmtpPassword, R.string.smtp_password)
   }
 
-  @Test
+  @DoNotNeedMailServer
   fun testIsPasswordFieldsAlwaysEmptyAtStart() {
     onView(withId(R.id.editTextPassword))
         .check(matches(withText(isEmptyString())))
@@ -114,6 +115,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   }
 
   @Test
+  @DoNotNeedMailServer
   fun testChangingImapPortWhenSelectSpinnerItem() {
     checkSecurityTypeOpt(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
         SecurityType.Option.STARTLS, JavaEmailConstants.DEFAULT_IMAP_PORT.toString())
@@ -124,6 +126,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   }
 
   @Test
+  @DoNotNeedMailServer
   fun testChangingSmtpPortWhenSelectSpinnerItem() {
     checkSecurityTypeOpt(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
         SecurityType.Option.STARTLS, JavaEmailConstants.STARTTLS_SMTP_PORT.toString())
@@ -134,6 +137,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   }
 
   @Test
+  @DoNotNeedMailServer
   fun testChangeFieldValuesWhenEmailChanged() {
     onView(withId(R.id.editTextEmail))
         .perform(clearText(), typeText(authCreds.email), closeSoftKeyboard())
@@ -173,6 +177,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   }
 
   @Test
+  @DoNotNeedMailServer
   fun testVisibilityOfSmtpAuthField() {
     onView(withId(R.id.checkBoxRequireSignInForSmtp))
         .perform(scrollTo(), click())
@@ -192,6 +197,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   }
 
   @Test
+  @DoNotNeedMailServer
   fun testFieldsAutoFilling() {
 
     val userName = authCreds.email.substring(0, authCreds.email.indexOf(TestConstants.COMMERCIAL_AT_SYMBOL))
@@ -229,6 +235,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   }
 
   @Test
+  @DoNotNeedMailServer
   fun testWrongFormatOfEmailAddress() {
     fillAllFields()
 
@@ -249,6 +256,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
 
   @Ignore("need to think about it")//todo-denbond7
   @Test
+  @DoNotNeedMailServer
   fun testShowWarningIfAuthFail() {
     IdlingPolicies.setMasterPolicyTimeout(5, TimeUnit.MINUTES)
     fillAllFields()

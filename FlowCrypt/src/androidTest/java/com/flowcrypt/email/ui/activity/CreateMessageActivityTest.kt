@@ -36,6 +36,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.DoNotNeedMailServer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
@@ -78,6 +79,7 @@ import java.io.File
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
+@DoNotNeedMailServer
 class CreateMessageActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? =

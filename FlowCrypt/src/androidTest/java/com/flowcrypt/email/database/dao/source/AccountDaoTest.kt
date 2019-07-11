@@ -8,6 +8,7 @@ package com.flowcrypt.email.database.dao.source
 import android.os.Parcel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import com.flowcrypt.email.DoNotNeedMailServer
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import org.junit.Assert
@@ -22,6 +23,7 @@ import org.junit.runner.RunWith
  */
 @SmallTest
 @RunWith(AndroidJUnit4::class)
+@DoNotNeedMailServer
 class AccountDaoTest {
 
   @Test
