@@ -10,7 +10,7 @@ import android.os.Parcel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.DoNotNeedMailServer
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.api.retrofit.response.model.node.Algo
 import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptError
@@ -36,7 +36,7 @@ import javax.mail.internet.InternetAddress
  */
 @SmallTest
 @RunWith(AndroidJUnit4::class)
-@DoNotNeedMailServer
+@DoesNotNeedMailserver
 class IncomingMessageInfoTest {
 
   @Test

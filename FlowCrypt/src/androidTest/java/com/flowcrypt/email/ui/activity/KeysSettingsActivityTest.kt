@@ -33,7 +33,7 @@ import androidx.test.filters.LargeTest
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.DoNotNeedMailServer
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
@@ -68,7 +68,7 @@ import java.util.*
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@DoNotNeedMailServer
+@DoesNotNeedMailserver
 class KeysSettingsActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(KeysSettingsActivity::class.java)

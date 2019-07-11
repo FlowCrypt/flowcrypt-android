@@ -15,4 +15,4 @@ package com.flowcrypt.email
  *         E-mail: DenBond7@gmail.com
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-annotation class DoNotNeedMailServer
+annotation class DoesNotNeedMailserver

@@ -26,7 +26,7 @@ import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.rule.GrantPermissionRule
-import com.flowcrypt.email.DoNotNeedMailServer
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
@@ -57,7 +57,7 @@ import java.io.File
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@DoNotNeedMailServer
+@DoesNotNeedMailserver
 class ImportPublicKeyActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? =

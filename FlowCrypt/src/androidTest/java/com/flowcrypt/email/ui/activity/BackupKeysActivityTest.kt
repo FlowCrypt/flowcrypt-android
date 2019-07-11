@@ -27,7 +27,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.DoNotNeedMailServer
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
@@ -79,7 +79,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoNotNeedMailServer
+  @DoesNotNeedMailserver
   fun testEmailOptionHint() {
     onView(withId(R.id.radioButtonEmail))
         .check(matches(isDisplayed()))
@@ -89,7 +89,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoNotNeedMailServer
+  @DoesNotNeedMailserver
   fun testDownloadOptionHint() {
     onView(withId(R.id.radioButtonDownload))
         .check(matches(isDisplayed()))
@@ -99,7 +99,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoNotNeedMailServer
+  @DoesNotNeedMailserver
   fun testNoKeysEmailOption() {
     onView(withId(R.id.radioButtonEmail))
         .check(matches(isDisplayed()))
@@ -112,7 +112,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoNotNeedMailServer
+  @DoesNotNeedMailserver
   fun testNoKeysDownloadOption() {
     onView(withId(R.id.radioButtonDownload))
         .check(matches(isDisplayed()))
@@ -140,7 +140,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoNotNeedMailServer
+  @DoesNotNeedMailserver
   fun testSuccessDownloadOption() {
     addFirstKeyWithStrongPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -158,14 +158,14 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoNotNeedMailServer
+  @DoesNotNeedMailserver
   fun testSuccessWithTwoKeysDownloadOption() {
     addSecondKeyWithStrongPassword()
     testSuccessDownloadOption()
   }
 
   @Test
-  @DoNotNeedMailServer
+  @DoesNotNeedMailserver
   fun testShowWeakPasswordHintForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -190,7 +190,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoNotNeedMailServer
+  @DoesNotNeedMailserver
   fun testFixWeakPasswordForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -232,7 +232,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoNotNeedMailServer
+  @DoesNotNeedMailserver
   fun testDiffPassphrasesForDownloadOption() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()
