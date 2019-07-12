@@ -12,6 +12,7 @@ import androidx.fragment.app.FragmentManager
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.jobscheduler.SyncJobService
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
+import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
@@ -30,6 +31,7 @@ abstract class BaseApplication : Application() {
 
   override fun onCreate() {
     super.onCreate()
+    CacheManager.init(this)
     NotificationChannelManager.registerNotificationChannels(this)
 
     initLeakCanary()
