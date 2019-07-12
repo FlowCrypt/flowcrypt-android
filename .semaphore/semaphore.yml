@@ -53,6 +53,7 @@ blocks:
             - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
             - cache store android-testable-$SEMAPHORE_PIPELINE_ID testable
 
+
 #  - name: Test
 #    task:
 #      jobs:
