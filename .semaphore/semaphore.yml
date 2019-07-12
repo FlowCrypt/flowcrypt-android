@@ -8,7 +8,7 @@ agent:
 
 blocks:
 
-  - name: Build
+  - name: Build and Test
     execution_time_limit:
       minutes: 12
     task:
@@ -34,7 +34,7 @@ blocks:
             - cache restore $BUILD_NATIVE_CACHE
             - cache restore $BUILD_CACHE
 
-            # build
+            # build + test
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
             - ~/Android/Sdk/emulator/emulator -list-avds # for debugging
             - ~/Android/Sdk/emulator/emulator -avd ci-test-nexus4-x86-64-api24 & # start emulator in the background
@@ -52,12 +52,12 @@ blocks:
             - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
             - cache store android-testable-$SEMAPHORE_PIPELINE_ID testable
 
-  - name: Test
-    task:
-      jobs:
-        - name: Find testable folder
-          commands:
-            - cache has_key android-testable-$SEMAPHORE_PIPELINE_ID
-            - cache restore android-testable-$SEMAPHORE_PIPELINE_ID
-            - ls ~/testable/
-            - du -sh ~/testable/*
+#  - name: Test
+#    task:
+#      jobs:
+#        - name: Find testable folder
+#          commands:
+#            - cache has_key android-testable-$SEMAPHORE_PIPELINE_ID
+#            - cache restore android-testable-$SEMAPHORE_PIPELINE_ID
+#            - ls ~/testable/
+#            - du -sh ~/testable/*
