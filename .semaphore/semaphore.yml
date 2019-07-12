@@ -8,7 +8,7 @@ agent:
 
 blocks:
 
-  - name: Build and Test
+  - name: Test
     execution_time_limit:
       minutes: 20
     task:
@@ -18,7 +18,7 @@ blocks:
         - name: ANDROID_SDK_ROOT
           value: /home/semaphore/Android/Sdk
       jobs:
-        - name: Build
+        - name: Test without mailserver
           commands:
             - sudo rm -rf ~/.rbenv ~/.phpbrew
             - checkout && cd ~
