@@ -7,7 +7,9 @@ touch ~/.android/repositories.cfg
 
 SDK_ARCHIVE=sdk-tools-linux-4333796.zip
 
-sudo apt-get -yq install adb qemu-kvm
+sudo apt-get -yq install adb qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
+
+kvm-ok
 
 if [ -d ~/Android ]; then
     echo "~/Android already exists, skipping installation"
