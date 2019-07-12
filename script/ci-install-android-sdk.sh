@@ -7,6 +7,8 @@ touch ~/.android/repositories.cfg
 
 SDK_ARCHIVE=sdk-tools-linux-4333796.zip
 
+sudo apt-get -yq install adb qemu-kvm
+
 if [ -d ~/Android ]; then
     echo "~/Android already exists, skipping installation"
     export PATH="$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/tools/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
@@ -29,7 +31,5 @@ else
     ( sleep 5; echo "y" ) | sdkmanager "extras;google;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;x86_64"
     echo -ne '\n' | avdmanager -v create avd --name ci-test-nexus4-x86-64-api24 --package "system-images;android-24;google_apis;x86_64" --device 'Nexus 4' --abi 'google_apis/x86_64'
 fi
-
-sudo apt-get -yq install adb qemu-kvm
 
 sdkmanager --list
