@@ -23,7 +23,7 @@ else
 
     # install sdkmanager deps
     echo "yes" | sdkmanager --licenses > /dev/null
-    ( sleep 5; echo "y" ) | sdkmanager "build-tools;29.0.0" "platforms;android-28"
+    ( sleep 5; echo "y" ) | sdkmanager "build-tools;29.0.0" "platforms;android-24"
 
     # runtime / unused deps
     ( sleep 5; echo "y" ) | sdkmanager "extras;google;m2repository" "extras;android;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;x86_64"

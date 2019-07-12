@@ -36,11 +36,10 @@ blocks:
 
             # build
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
-            - ls ~/Android/Sdk/
-            - ls ~/Android/Sdk/emulator
-            - ~/Android/Sdk/emulator/emulator -list-avds
-#            - ~/Android/Sdk/emulator/emulator -avd Nexus_5X_API_24 &
-#            - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug --parallel )
+            - ~/Android/Sdk/emulator/emulator -list-avds # for debugging
+            - ~/Android/Sdk/emulator/emulator -avd ci-test-nexus4-x86-64-api24 & # start emulator in the background
+            - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
+            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
 
             # store caches
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
