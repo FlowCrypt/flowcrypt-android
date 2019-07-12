@@ -28,9 +28,10 @@ else
     # install sdkmanager deps
     echo "yes" | sdkmanager --licenses > /dev/null
     ( sleep 5; echo "y" ) | sdkmanager "build-tools;29.0.0" "platforms;android-24"
-
-    # runtime / unused deps
-    ( sleep 5; echo "y" ) | sdkmanager "extras;google;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;x86_64"
+    sdkmanager "extras;google;m2repository"
+    sdkmanager "platform-tools"
+    sdkmanager "emulator"
+    sdkmanager "system-images;android-24;google_apis;x86_64"
     echo -ne '\n' | avdmanager -v create avd --name ci-test-nexus4-x86-64-api24 --package "system-images;android-24;google_apis;x86_64" --device 'Nexus 4' --abi 'google_apis/x86_64'
 fi
 
