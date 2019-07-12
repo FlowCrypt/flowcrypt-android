@@ -10,7 +10,7 @@ blocks:
 
   - name: Build and Test
     execution_time_limit:
-      minutes: 12
+      minutes: 15
     task:
       env_vars:
         - name: SEMAPHORE_GIT_DIR
