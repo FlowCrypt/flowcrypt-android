@@ -36,7 +36,9 @@ blocks:
 
             # build
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
-            - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug --parallel )
+            - ~/Android/Sdk/emulator/emulator -list-avds
+#            - ~/Android/Sdk/emulator/emulator -avd Nexus_5X_API_24 &
+#            - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug --parallel )
 
             # store caches
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
@@ -47,14 +49,14 @@ blocks:
 
             # transfer testable result to next block
             - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
-            - cache store android-testable-$SEMAPHORE_GIT_SHA testable
+            - cache store android-testable-$SEMAPHORE_PIPELINE_ID testable
 
   - name: Test
     task:
       jobs:
         - name: Find testable folder
           commands:
-            - cache has_key android-testable-$SEMAPHORE_GIT_SHA
-            - cache restore android-testable-$SEMAPHORE_GIT_SHA
+            - cache has_key android-testable-$SEMAPHORE_PIPELINE_ID
+            - cache restore android-testable-$SEMAPHORE_PIPELINE_ID
             - ls ~/testable/
             - du -sh ~/testable/*

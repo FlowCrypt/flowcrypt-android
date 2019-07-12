@@ -40,10 +40,7 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.Rule
-import org.junit.Test
+import org.junit.*
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
@@ -109,6 +106,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
   }
 
   @Test
+  @Ignore("java.lang.IllegalStateException: #init was called twice in a row. Make sure to call #release after every #init")
   fun testImportKeyFromClipboard() {
     addTextToClipboard("public key", publicKey)
     onView(withId(R.id.buttonLoadFromClipboard))
