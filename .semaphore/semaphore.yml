@@ -51,9 +51,12 @@ blocks:
             - cache has_key $BUILD_NATIVE_CACHE || cache store $BUILD_NATIVE_CACHE git/flowcrypt-android/FlowCrypt/.externalNativeBuild
             - cache has_key $BUILD_CACHE || cache store $BUILD_CACHE git/flowcrypt-android/FlowCrypt/build
 
-            # transfer testable result to next block
-            - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
-            - cache store android-testable-$SEMAPHORE_PIPELINE_ID testable
+
+
+
+#            # transfer testable result to next block
+#            - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
+#            - cache store android-testable-$SEMAPHORE_PIPELINE_ID testable
 
 #  - name: Test
 #    task:
