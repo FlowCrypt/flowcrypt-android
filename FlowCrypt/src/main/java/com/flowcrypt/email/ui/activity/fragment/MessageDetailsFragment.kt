@@ -28,6 +28,7 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -41,6 +42,7 @@ import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
@@ -62,6 +64,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.*
 
@@ -100,7 +103,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var onActionListener: OnActionListener? = null
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
-  private var atts: ArrayList<AttachmentInfo>? = null
+  private var atts = mutableListOf<AttachmentInfo>()
 
   override fun onAttach(context: Context?) {
     super.onAttach(context)
@@ -214,14 +217,12 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
       R.id.layoutFwdButton -> {
         if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-          if (atts?.isNotEmpty() == true) {
+          if (atts.isNotEmpty()) {
             Toast.makeText(context, R.string.cannot_forward_encrypted_attachments, Toast.LENGTH_LONG).show()
           }
         } else {
-          if (!CollectionUtils.isEmpty(atts)) {
-            for (att in atts!!) {
-              att.isForwarded = true
-            }
+          for (att in atts) {
+            att.isForwarded = true
           }
           msgInfo!!.atts = atts
         }
@@ -495,26 +496,24 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     if (details != null && details!!.hasAtts) {
       val layoutInflater = LayoutInflater.from(context)
 
-      if (!CollectionUtils.isEmpty(atts)) {
-        for (att in atts!!) {
-          val rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMsgParts, false)
+      for (att in atts) {
+        val rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMsgParts, false)
 
-          val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttchmentName)
-          textViewAttName.text = att.name
+        val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttchmentName)
+        textViewAttName.text = att.name
 
-          val textViewAttSize = rootView.findViewById<TextView>(R.id.textViewAttSize)
-          textViewAttSize.text = Formatter.formatFileSize(context, att.encodedSize)
+        val textViewAttSize = rootView.findViewById<TextView>(R.id.textViewAttSize)
+        textViewAttSize.text = Formatter.formatFileSize(context, att.encodedSize)
 
-          val button = rootView.findViewById<View>(R.id.imageButtonDownloadAtt)
-          button.setOnClickListener(getDownloadAttClickListener(att))
+        val button = rootView.findViewById<View>(R.id.imageButtonDownloadAtt)
+        button.setOnClickListener(getDownloadAttClickListener(att))
 
-          if (att.uri != null) {
-            val layoutAtt = rootView.findViewById<View>(R.id.layoutAtt)
-            layoutAtt.setOnClickListener(getOpenFileClickListener(att, button))
-          }
-
-          layoutMsgParts!!.addView(rootView)
+        if (att.uri != null) {
+          val layoutAtt = rootView.findViewById<View>(R.id.layoutAtt)
+          layoutAtt.setOnClickListener(getOpenFileClickListener(att, button))
         }
+
+        layoutMsgParts!!.addView(rootView)
       }
     }
   }
@@ -587,6 +586,12 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         }
 
         MsgBlock.Type.DECRYPTED_ATT -> {
+          val decryptAtt: DecryptedAttMsgBlock = block as DecryptedAttMsgBlock
+          val att = EmailUtil.getAttInfoFromUri(activity, decryptAtt.fileUri)
+          if (att != null) {
+            att.uri = FileProvider.getUriForFile(context!!, Constants.FILE_PROVIDER_AUTHORITY, File(att.uri?.path))
+            atts.add(att)
+          }
         }
 
         else -> layoutMsgParts!!.addView(genDefPart(block, layoutInflater, R.layout.message_part_other, layoutMsgParts))
@@ -594,6 +599,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       isFirstMsgPartText = false
     }
     updateReplyButtons()
+
+    if (atts.size > 0) {
+      details?.hasAtts = true
+    }
   }
 
   private fun addWebView(block: MsgBlock) {
