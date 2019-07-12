@@ -26,8 +26,8 @@ else
     ( sleep 5; echo "y" ) | sdkmanager "build-tools;29.0.0" "platforms;android-28"
 
     # runtime / unused deps
-    # ( sleep 5; echo "y" ) | sdkmanager "extras;google;m2repository" "extras;android;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;armeabi-v7a"
-    # echo -ne '\n' | avdmanager -v create avd -n semaphore-android-dev -k "system-images;android-24;google_apis;armeabi-v7a" --tag "google_apis" --abi "armeabi-v7a"
+    # ( sleep 5; echo "y" ) | sdkmanager "extras;google;m2repository" "extras;android;m2repository" "platform-tools" "emulator" "system-images;android-24;google_apis;x86_64"
+    # echo -ne '\n' | avdmanager -v create avd --name ci-test-nexus4-x86-64-api24 --package "system-images;android-24;google_apis;x86_64" --device 'Nexus 4' --abi 'google_apis/x86_64'
 fi
 
 sdkmanager --list

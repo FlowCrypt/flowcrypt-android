@@ -36,6 +36,8 @@ blocks:
 
             # build
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
+            - ls ~/Android/Sdk/
+            - ls ~/Android/Sdk/emulator
             - ~/Android/Sdk/emulator/emulator -list-avds
 #            - ~/Android/Sdk/emulator/emulator -avd Nexus_5X_API_24 &
 #            - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug --parallel )
