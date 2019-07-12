@@ -23,6 +23,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import org.hamcrest.Matchers.allOf
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -68,6 +69,7 @@ class SettingsActivityTest : BaseTest() {
     checkIsScreenDisplaying(getResString(R.string.contacts))
   }
 
+  @Ignore("hangs forever when running tests on tom's device")
   @Test
   fun testShowKeysScreen() {
     checkIsScreenDisplaying(getResString(R.string.keys))

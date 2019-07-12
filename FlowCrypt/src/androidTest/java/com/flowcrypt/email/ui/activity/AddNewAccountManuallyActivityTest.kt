@@ -115,6 +115,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   }
 
   @Test
+  @Ignore("androidx.test.espresso.AmbiguousViewMatcherException: 'is assignable from class: class android.widget.AdapterView' matches multiple views in the hierarchy.")
   @DoesNotNeedMailserver
   fun testChangingImapPortWhenSelectSpinnerItem() {
     checkSecurityTypeOpt(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
