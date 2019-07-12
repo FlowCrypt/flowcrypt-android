@@ -37,6 +37,7 @@ blocks:
             # build + test
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
             - ~/Android/Sdk/emulator/emulator -accel-check # debug
+            - echo -ne '\n' | avdmanager -v create avd --name ci-test-nexus4-x86-64-api24 --package "system-images;android-24;google_apis;x86_64" --device 'Nexus 4' --abi 'google_apis/x86_64'
             - ~/Android/Sdk/emulator/emulator -list-avds # debug
             - ~/Android/Sdk/emulator/emulator -avd ci-test-nexus4-x86-64-api24 -no-audio & # start emulator in the background
             - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
