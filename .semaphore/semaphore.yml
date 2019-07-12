@@ -36,7 +36,8 @@ blocks:
 
             # build + test
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
-            - ~/Android/Sdk/emulator/emulator -list-avds # for debugging
+            - ~/Android/Sdk/emulator/emulator -accel-check # debug
+            - ~/Android/Sdk/emulator/emulator -list-avds # debug
             - ~/Android/Sdk/emulator/emulator -avd ci-test-nexus4-x86-64-api24 -no-audio & # start emulator in the background
             - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
             - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
