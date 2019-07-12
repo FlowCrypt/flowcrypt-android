@@ -12,7 +12,6 @@ sudo kvm-ok
 
 if [ -d ~/Android ]; then
     echo "~/Android already exists, skipping installation"
-    export PATH="$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/tools/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
 else
     echo "~/Android does not exist, installing"
     mkdir -p $ANDROID_SDK_ROOT
@@ -22,15 +21,12 @@ else
     unzip -qq $SDK_ARCHIVE -d $ANDROID_SDK_ROOT
     rm $SDK_ARCHIVE
 
-    export PATH="$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/tools/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
-
-    # install sdkmanager deps
-    echo "yes" | sdkmanager --licenses > /dev/null
-    ( sleep 5; echo "y" ) | sdkmanager "build-tools;29.0.0" "platforms;android-24"
-    sdkmanager "extras;google;m2repository"
-    sdkmanager "platform-tools"
-    sdkmanager "emulator"
-    sdkmanager "system-images;android-24;google_apis;x86_64"
+    echo "yes" | ~/Android/Sdk/tools/bin/sdkmanager --licenses > /dev/null
+    ( sleep 5; echo "y" ) | ~/Android/Sdk/tools/bin/sdkmanager "build-tools;29.0.0" "platforms;android-24"
+    ~/Android/Sdk/tools/bin/sdkmanager "extras;google;m2repository"
+    ~/Android/Sdk/tools/bin/sdkmanager "platform-tools"
+    ~/Android/Sdk/tools/bin/sdkmanager "emulator"
+    ~/Android/Sdk/tools/bin/sdkmanager "system-images;android-24;google_apis;x86_64"
 fi
 
-sdkmanager --list
+~/Android/Sdk/tools/bin/sdkmanager --list
