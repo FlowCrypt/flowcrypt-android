@@ -31,3 +31,4 @@ else
 fi
 
 sdkmanager --list
+sudo apt-get install adb
