@@ -3,14 +3,14 @@ name: FlowCrypt Android App
 
 agent:
   machine:
-    type: e1-standard-2
+    type: e1-standard-4
     os_image: ubuntu1804
 
 blocks:
 
-  - name: Build
+  - name: Test
     execution_time_limit:
-      minutes: 12
+      minutes: 20
     task:
       env_vars:
         - name: SEMAPHORE_GIT_DIR
@@ -18,10 +18,11 @@ blocks:
         - name: ANDROID_SDK_ROOT
           value: /home/semaphore/Android/Sdk
       jobs:
-        - name: Build
+        - name: Test without mailserver
           commands:
             - sudo rm -rf ~/.rbenv ~/.phpbrew
             - checkout && cd ~
+            - cat /proc/cpuinfo
 
             # restore caches
             - export SUM=$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
@@ -34,9 +35,14 @@ blocks:
             - cache restore $BUILD_NATIVE_CACHE
             - cache restore $BUILD_CACHE
 
-            # build
+            # build + test
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
-            - ( cd $SEMAPHORE_GIT_DIR && ./gradlew assembleProdDebug --parallel )
+            - ~/Android/Sdk/emulator/emulator -accel-check # debug
+            - echo -ne '\n' | ~/Android/Sdk/tools/bin/avdmanager -v create avd --name ci-test-nexus4-x86-64-api24 --package "system-images;android-24;google_apis;x86_64" --device 'Nexus 4' --abi 'google_apis/x86_64'
+            - ~/Android/Sdk/emulator/emulator -list-avds # debug
+            - ~/Android/Sdk/emulator/emulator -avd ci-test-nexus4-x86-64-api24 -no-audio & # start emulator in the background
+            - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
+            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
 
             # store caches
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
@@ -45,16 +51,19 @@ blocks:
             - cache has_key $BUILD_NATIVE_CACHE || cache store $BUILD_NATIVE_CACHE git/flowcrypt-android/FlowCrypt/.externalNativeBuild
             - cache has_key $BUILD_CACHE || cache store $BUILD_CACHE git/flowcrypt-android/FlowCrypt/build
 
-            # transfer testable result to next block
-            - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
-            - cache store android-testable-$SEMAPHORE_GIT_SHA testable
 
-  - name: Test
-    task:
-      jobs:
-        - name: Find testable folder
-          commands:
-            - cache has_key android-testable-$SEMAPHORE_GIT_SHA
-            - cache restore android-testable-$SEMAPHORE_GIT_SHA
-            - ls ~/testable/
-            - du -sh ~/testable/*
+
+
+#            # transfer testable result to next block
+#            - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
+#            - cache store android-testable-$SEMAPHORE_PIPELINE_ID testable
+
+#  - name: Test
+#    task:
+#      jobs:
+#        - name: Find testable folder
+#          commands:
+#            - cache has_key android-testable-$SEMAPHORE_PIPELINE_ID
+#            - cache restore android-testable-$SEMAPHORE_PIPELINE_ID
+#            - ls ~/testable/
+#            - du -sh ~/testable/*
