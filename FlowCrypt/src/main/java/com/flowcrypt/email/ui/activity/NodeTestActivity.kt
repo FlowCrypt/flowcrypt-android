@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.text.Html
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -76,7 +77,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
   override fun onChanged(responseWrapper: NodeResponseWrapper<*>?) {
     if (responseWrapper != null) {
       if (responseWrapper.exception != null) {
-        addResultLine("FAIL", 0, "exception: " + responseWrapper.exception.message, true)
+        addResultLine("FAIL", 0, "exception: " + responseWrapper.exception?.message, true)
         return
       }
 
@@ -85,9 +86,9 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
         return
       }
 
-      if (responseWrapper.result.error != null) {
+      if (responseWrapper.result?.error != null) {
         addResultLine("ERROR", responseWrapper.executionTime,
-            "error: " + responseWrapper.result.error!!, true)
+            "error: " + responseWrapper.result?.error!!, true)
         return
       }
 
@@ -235,7 +236,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
   private fun addResultLine(actionName: String, result: NodeResponseWrapper<*>) {
     if (result.exception != null) {
-      addResultLine(actionName, 0, result.exception)
+      addResultLine(actionName, 0, result.exception!!)
     } else {
       addResultLine(actionName, result.executionTime, "ok", false)
     }
@@ -254,18 +255,19 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
   private fun printDecryptMsgResult(actionName: String, r: ParseDecryptedMsgResult, executionTime: Long) {
     if (r.error != null) {
       addResultLine(actionName, r, executionTime)
-    } else if (r.msgBlocks!![0].content!!.length != TEST_MSG_HTML.length) {
+    } else if (Html.fromHtml(r.text).length != TEST_MSG_HTML.length) {
       addResultLine(actionName, executionTime,
           "wrong meta block len " + r.msgBlocks!!.size + "!=" + TEST_MSG_HTML.length, false)
-    } else if (r.msgBlocks!![0].type !== MsgBlock.Type.DECRYPTED_TEXT) {
+    } else if (r.msgBlocks!![0].type !== MsgBlock.Type.PLAIN_HTML) {
       addResultLine(actionName, executionTime, "wrong meta block type: " + r.msgBlocks!![0].type,
           false)
     } else {
       val block = r.msgBlocks!![0]
       when {
-        block.type !== MsgBlock.Type.DECRYPTED_TEXT ->
+        block.type !== MsgBlock.Type.PLAIN_HTML ->
           addResultLine(actionName, executionTime, "wrong block type: " + r.msgBlocks!!.size, false)
-        block.content != TEST_MSG_HTML -> addResultLine(actionName, executionTime, "block content mismatch", false)
+        Html.fromHtml(r.text).toString() != TEST_MSG_HTML -> addResultLine(actionName, executionTime, "block content mismatch",
+            false)
         r.msgBlocks!!.size > 1 -> addResultLine(actionName, executionTime, "unexpected second block", false)
         else -> addResultLine(actionName, r, executionTime)
       }
