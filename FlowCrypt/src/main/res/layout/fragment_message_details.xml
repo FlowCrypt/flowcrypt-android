@@ -28,8 +28,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/default_margin_medium"
-                android:layout_marginRight="@dimen/default_margin_medium"
-                android:layout_marginTop="@dimen/margin_top_bottom_message">
+                android:layout_marginTop="@dimen/margin_top_bottom_message"
+                android:layout_marginRight="@dimen/default_margin_medium">
 
                 <TextView
                     android:id="@+id/textViewSenderAddress"
@@ -39,9 +39,9 @@
                     android:maxLines="1"
                     android:textColor="@color/gray"
                     android:textSize="@dimen/default_text_size_big"
+                    app:layout_constraintEnd_toStartOf="@+id/textViewDate"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/textViewDate"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_goneMarginLeft="@dimen/default_margin_medium"
                     tools:text="sender@flowcrypt.com" />
@@ -63,15 +63,15 @@
                     android:id="@+id/textViewSubject"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/default_margin_medium"
                     android:layout_marginTop="@dimen/margin_top_message_subject"
+                    android:layout_marginEnd="@dimen/default_margin_medium"
                     android:ellipsize="end"
                     android:maxLines="2"
                     android:textColor="@color/gray"
                     android:textSize="@dimen/default_text_size_medium"
+                    app:layout_constraintEnd_toStartOf="@+id/textViewDate"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/textViewDate"
                     app:layout_constraintTop_toBottomOf="@+id/textViewSenderAddress"
                     app:layout_goneMarginLeft="@dimen/default_margin_medium"
                     tools:text="Lorem ipsum subject subject subject subject subject" />
@@ -125,8 +125,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:paddingBottom="@dimen/default_margin_small"
                     android:paddingTop="@dimen/default_margin_small"
+                    android:paddingBottom="@dimen/default_margin_small"
                     android:visibility="gone">
 
                     <LinearLayout
@@ -135,8 +135,14 @@
                         android:layout_height="0dp"
                         android:layout_weight="1"
                         android:orientation="vertical"
-                        android:paddingBottom="@dimen/default_margin_small"
-                        android:paddingTop="@dimen/default_margin_small" />
+                        android:paddingTop="@dimen/default_margin_small"
+                        android:paddingBottom="@dimen/default_margin_small">
+
+                        <com.flowcrypt.email.ui.widget.EmailWebView
+                            android:id="@+id/emailWebView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
 
                     <include
                         android:id="@+id/layoutReplyButtons"

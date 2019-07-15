@@ -81,6 +81,36 @@ class MessageDaoSource : BaseDaoSource() {
   /**
    * Add a new message details to the database.
    *
+   * @param context Interface to global information about an application environment.
+   * @param details The message details
+   * @return A [Uri] of the created row.
+   */
+  fun addRow(context: Context, details: GeneralMessageDetails): Uri? {
+    val contentResolver = context.contentResolver
+    return if (contentResolver != null) {
+      val contentValues = ContentValues()
+      with(details) {
+        contentValues.put(COL_EMAIL, email)
+        contentValues.put(COL_FOLDER, label)
+        contentValues.put(COL_UID, uid)
+        contentValues.put(COL_RECEIVED_DATE, receivedDate)
+        contentValues.put(COL_SENT_DATE, sentDate)
+        contentValues.put(COL_FROM_ADDRESSES, InternetAddress.toString(from?.toTypedArray()))
+        contentValues.put(COL_TO_ADDRESSES, InternetAddress.toString(to?.toTypedArray()))
+        contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(cc?.toTypedArray()))
+        contentValues.put(COL_SUBJECT, subject)
+        contentValues.put(COL_FLAGS, msgFlags.toString().toUpperCase())
+        contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, hasAtts)
+      }
+
+      contentResolver.insert(baseContentUri, contentValues)
+    } else
+      null
+  }
+
+  /**
+   * Add a new message details to the database.
+   *
    * @param context       Interface to global information about an application environment.
    * @param contentValues [ContentValues] which contains information about a new message.
    * @return A [Uri] of the created row.
