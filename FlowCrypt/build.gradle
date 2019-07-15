@@ -233,6 +233,7 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-intents:${rootProject.ext.espressoVersion}"
+    androidTestImplementation "androidx.test.espresso:espresso-web:${rootProject.ext.espressoVersion}"
     //https://mvnrepository.com/artifact/androidx.test.ext/junit
     androidTestImplementation "androidx.test.ext:junit:1.1.1"
 

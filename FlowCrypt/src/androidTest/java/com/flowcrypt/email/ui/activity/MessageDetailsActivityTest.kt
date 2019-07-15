@@ -26,6 +26,11 @@ import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.web.assertion.WebViewAssertions.webMatches
+import androidx.test.espresso.web.sugar.Web.onWebView
+import androidx.test.espresso.web.webdriver.DriverAtoms.findElement
+import androidx.test.espresso.web.webdriver.DriverAtoms.getText
+import androidx.test.espresso.web.webdriver.Locator
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -37,6 +42,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.base.BaseTest
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.isToastDisplayed
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.model.KeyDetails
@@ -49,6 +55,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.anything
+import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.After
@@ -77,6 +84,8 @@ class MessageDetailsActivityTest : BaseTest() {
   private val pubKeyAttachmentRule =
       AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/pub_key.json",
           AttachmentInfo::class.java)!!)
+
+  private val msgDaoSource = MessageDaoSource()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -132,8 +141,10 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testStandardMsgPlaneText() {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text.json",
-        IncomingMessageInfo::class.java)
+    val incomingMsgInfo =
+        TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text.json", IncomingMessageInfo::class.java)
+    incomingMsgInfo?.generalMsgDetails?.let { msgDaoSource.addRow(getTargetContext(), it) }
+
     baseCheck(incomingMsgInfo)
   }
 
@@ -141,7 +152,7 @@ class MessageDetailsActivityTest : BaseTest() {
   fun testStandardMsgPlaneTextWithOneAttachment() {
     val incomingMsgInfo =
         TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text_with_one_att.json",
-        IncomingMessageInfo::class.java)
+            IncomingMessageInfo::class.java)
     baseCheckWithAtt(incomingMsgInfo, simpleAttachmentRule)
   }
 
@@ -156,7 +167,7 @@ class MessageDetailsActivityTest : BaseTest() {
   fun testMissingKeyErrorImportKey() {
     val incomingMsgInfo =
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
-        IncomingMessageInfo::class.java)
+            IncomingMessageInfo::class.java)
 
     testMissingKey(incomingMsgInfo)
 
@@ -172,7 +183,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
     val incomingMsgInfoFixed =
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key_fixed.json",
-        IncomingMessageInfo::class.java)
+            IncomingMessageInfo::class.java)
     onView(withText(incomingMsgInfoFixed?.msgBlocks?.get(0)?.content))
         .check(matches(isDisplayed()))
 
@@ -183,7 +194,7 @@ class MessageDetailsActivityTest : BaseTest() {
   fun testMissingPubKey() {
     val incomingMsgInfo =
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_one_pub_key.json",
-        IncomingMessageInfo::class.java)
+            IncomingMessageInfo::class.java)
 
     testMissingKey(incomingMsgInfo)
   }
@@ -192,7 +203,7 @@ class MessageDetailsActivityTest : BaseTest() {
   fun testBadlyFormattedMsg() {
     val incomingMsgInfo =
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_badly_formatted.json",
-        IncomingMessageInfo::class.java)
+            IncomingMessageInfo::class.java)
 
     assertThat(incomingMsgInfo, notNullValue())
 
@@ -217,7 +228,7 @@ class MessageDetailsActivityTest : BaseTest() {
   fun testMissingKeyErrorChooseSinglePubKey() {
     val incomingMsgInfo =
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
-        IncomingMessageInfo::class.java)
+            IncomingMessageInfo::class.java)
 
     testMissingKey(incomingMsgInfo)
 
@@ -236,7 +247,7 @@ class MessageDetailsActivityTest : BaseTest() {
   fun testMissingKeyErrorChooseFromFewPubKeys() {
     val incomingMsgInfo =
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
-        IncomingMessageInfo::class.java)
+            IncomingMessageInfo::class.java)
 
     testMissingKey(incomingMsgInfo)
 
@@ -270,7 +281,7 @@ class MessageDetailsActivityTest : BaseTest() {
   fun testEncryptedMsgPlaneTextWithOneAttachment() {
     val incomingMsgInfo =
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_one_att.json",
-        IncomingMessageInfo::class.java)
+            IncomingMessageInfo::class.java)
 
     baseCheckWithAtt(incomingMsgInfo, encryptedAttachmentRule)
   }
@@ -279,7 +290,7 @@ class MessageDetailsActivityTest : BaseTest() {
   fun testEncryptedMsgPlaneTextWithPubKey() {
     val incomingMsgInfo =
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_pub_key.json",
-        IncomingMessageInfo::class.java)
+            IncomingMessageInfo::class.java)
 
     baseCheckWithAtt(incomingMsgInfo, pubKeyAttachmentRule)
 
@@ -362,8 +373,11 @@ class MessageDetailsActivityTest : BaseTest() {
     val details = incomingMsgInfo!!.generalMsgDetails
     launchActivity(details)
     matchHeader(details)
-    onView(withText(incomingMsgInfo.msgBlocks?.get(0)?.content))
-        .check(matches(isDisplayed()))
+
+    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
+    onWebView(withId(R.id.emailWebView))
+        .withElement(findElement(Locator.XPATH, "/html/body"))
+        .check(webMatches(getText(), equalTo(incomingMsgInfo.text)))
     matchReplyButtons(details)
   }
 

@@ -23,7 +23,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
@@ -89,6 +88,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   override var contentView: View? = null
     private set
   private var layoutReplyBtns: View? = null
+  private var emailWebView: EmailWebView? = null
 
   private var dateFormat: java.text.DateFormat? = null
   private var msgInfo: IncomingMessageInfo? = null
@@ -466,6 +466,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     contentView = view.findViewById(R.id.layoutMessageContainer)
     layoutReplyBtns = view.findViewById(R.id.layoutReplyButtons)
     progressBarActionRunning = view.findViewById(R.id.progressBarActionRunning)
+    emailWebView = view.findViewById(R.id.emailWebView)
 
     layoutContent = view.findViewById(R.id.layoutContent)
     imageBtnReplyAll = view.findViewById(R.id.imageButtonReplyAll)
@@ -550,7 +551,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   }
 
   private fun updateMsgView() {
-    layoutMsgParts!!.removeAllViews()
+    emailWebView?.loadUrl("about:blank")
+    if (layoutMsgParts!!.childCount > 1) {
+      layoutMsgParts!!.removeViews(1, layoutMsgParts!!.childCount - 1)
+    }
 
     var isFirstMsgPartText = true
     var isHtmlDisplayed = false
@@ -560,7 +564,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       when (block.type) {
         MsgBlock.Type.DECRYPTED_HTML, MsgBlock.Type.PLAIN_HTML -> {
           if (!isHtmlDisplayed) {
-            addWebView(block)
+            setupWebView(block)
             isHtmlDisplayed = true
           }
         }
@@ -605,18 +609,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     }
   }
 
-  private fun addWebView(block: MsgBlock) {
-    val emailWebView = EmailWebView(context!!)
-    emailWebView.configure()
-
-    val layoutParams = LinearLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-    emailWebView.layoutParams = layoutParams
-
-    emailWebView.loadDataWithBaseURL(null, block.content!!, "text/html", StandardCharsets.UTF_8.displayName(), null)
-
-    layoutMsgParts!!.addView(emailWebView)
-    emailWebView.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
+  private fun setupWebView(block: MsgBlock) {
+    emailWebView?.configure()
+    emailWebView?.loadDataWithBaseURL(null, block.content!!, "text/html", StandardCharsets.UTF_8.displayName(), null)
+    emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
       override fun onPageFinished() {
         updateReplyButtons()
       }
