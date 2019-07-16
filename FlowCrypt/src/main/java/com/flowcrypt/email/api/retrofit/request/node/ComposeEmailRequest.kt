@@ -10,7 +10,7 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.google.gson.annotations.Expose
 
 /**
- * Using this class we can create a request to create a raw MIME message(encrypted or plane).
+ * Using this class we can create a request to create a raw MIME message(encrypted or plain).
  *
  * @author Denis Bondarenko
  * Date: 3/27/19

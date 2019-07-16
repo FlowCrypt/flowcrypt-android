@@ -141,26 +141,26 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testStandardMsgPlaneText() {
-    baseCheck(getMsgInfo("messages/info/standard_msg_info_plane_text.json",
-        "messages/mime/standard_msg_info_plane_text.txt"))
+    baseCheck(getMsgInfo("messages/info/standard_msg_info_plain_text.json",
+        "messages/mime/standard_msg_info_plain_text.txt"))
   }
 
   @Test
   fun testStandardMsgPlaneTextWithOneAttachment() {
-    baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plane_text_with_one_att.json",
-        "messages/mime/standard_msg_info_plane_text_with_one_att.txt"), simpleAttachmentRule)
+    baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plain_text_with_one_att.json",
+        "messages/mime/standard_msg_info_plain_text_with_one_att.txt"), simpleAttachmentRule)
   }
 
   @Test
   fun testEncryptedMsgPlaneText() {
-    baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plane_text.json",
-        "messages/mime/encrypted_msg_info_plane_text.txt"))
+    baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plain_text.json",
+        "messages/mime/encrypted_msg_info_plain_text.txt"))
   }
 
   @Test
   fun testMissingKeyErrorImportKey() {
-    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
-        "messages/mime/encrypted_msg_info_plane_text_with_missing_key.txt"))
+    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
+        "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt"))
 
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
@@ -173,7 +173,7 @@ class MessageDetailsActivityTest : BaseTest() {
         .perform(scrollTo(), click())
 
     val incomingMsgInfoFixed =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key_fixed.json",
+        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plain_text_with_missing_key_fixed.json",
             IncomingMessageInfo::class.java)
 
     onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
@@ -186,14 +186,14 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingPubKey() {
-    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plane_text_error_one_pub_key.json",
-        "messages/mime/encrypted_msg_info_plane_text_error_one_pub_key.txt"))
+    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plain_text_error_one_pub_key.json",
+        "messages/mime/encrypted_msg_info_plain_text_error_one_pub_key.txt"))
   }
 
   @Test
   fun testBadlyFormattedMsg() {
-    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_error_badly_formatted.json",
-        "messages/mime/encrypted_msg_info_plane_text_error_badly_formatted.txt")
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_error_badly_formatted.json",
+        "messages/mime/encrypted_msg_info_plain_text_error_badly_formatted.txt")
 
     assertThat(msgInfo, notNullValue())
 
@@ -216,8 +216,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingKeyErrorChooseSinglePubKey() {
-    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
-        "messages/mime/encrypted_msg_info_plane_text_with_missing_key.txt")
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
+        "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt")
 
     testMissingKey(msgInfo)
 
@@ -234,8 +234,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingKeyErrorChooseFromFewPubKeys() {
-    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
-        "messages/mime/encrypted_msg_info_plane_text_with_missing_key.txt")
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
+        "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt")
 
     testMissingKey(msgInfo)
 
@@ -267,15 +267,15 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testEncryptedMsgPlaneTextWithOneAttachment() {
-    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_one_att.json",
-        "messages/mime/encrypted_msg_info_plane_text_with_one_att.txt")
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_one_att.json",
+        "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt")
     baseCheckWithAtt(msgInfo, encryptedAttachmentRule)
   }
 
   @Test
   fun testEncryptedMsgPlaneTextWithPubKey() {
-    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_pub_key.json",
-        "messages/mime/encrypted_msg_info_plane_text_with_pub_key.txt")
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_pub_key.json",
+        "messages/mime/encrypted_msg_info_plain_text_with_pub_key.txt")
     baseCheckWithAtt(msgInfo, pubKeyAttachmentRule)
 
     val nodeKeyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/denbond7@denbond7.com_pub.json")
