@@ -1,0 +1,30 @@
+Return-Path: <denbond7@denbond7.com>
+Delivered-To: default@denbond7.com
+Received: from mail.denbond7.com (localhost [127.0.0.1])
+	by mail.denbond7.com (Postfix) with ESMTP id 5A0E3202BB
+	for <default@denbond7.com>; Wed, 13 Mar 2019 14:37:44 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.denbond7.com
+Received: from mail.denbond7.com ([127.0.0.1])
+	by mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 8yFaVy5EzMOY for <default@denbond7.com>;
+	Wed, 13 Mar 2019 14:37:34 +0000 (UTC)
+Received: from localhost (MiA1 [192.168.3.6])
+	by mail.denbond7.com (Postfix) with ESMTP id 0311020237
+	for <default@denbond7.com>; Wed, 13 Mar 2019 14:37:33 +0000 (UTC)
+Content-Type: multipart/mixed;
+ boundary="----sinikael-?=_1-15524878518580.4200041649447792"
+In-Reply-To: <>
+References: <>
+To: default@denbond7.com
+From: denbond7@denbond7.com
+Subject: Standard message - plane text
+Date: Wed, 13 Mar 2019 14:37:31 +0000
+Message-Id: <1552487851904-2a7c154c-44a30fa2-1bb06c08@denbond7.com>
+MIME-Version: 1.0
+
+------sinikael-?=_1-15524878518580.4200041649447792
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+It's a standard message with plane text=20
+------sinikael-?=_1-15524878518580.4200041649447792--
