@@ -59,7 +59,10 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
-import org.junit.*
+import org.junit.AfterClass
+import org.junit.BeforeClass
+import org.junit.Rule
+import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
@@ -284,7 +287,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("java.lang.IllegalStateException: #init was called twice in a row. Make sure to call #release after every #init")
   fun testAddingAtts() {
     Intents.init()
     activityTestRule?.launchActivity(intent)
@@ -297,7 +299,6 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("java.lang.IllegalStateException: #init was called twice in a row. Make sure to call #release after every #init")
   fun testDeletingAtts() {
     Intents.init()
     activityTestRule?.launchActivity(intent)
