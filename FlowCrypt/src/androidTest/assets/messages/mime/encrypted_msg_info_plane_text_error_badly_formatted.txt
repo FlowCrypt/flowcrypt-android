@@ -1,0 +1,64 @@
+Return-Path: <denbond7@denbond7.com>
+Delivered-To: default@denbond7.com
+Received: from mail.denbond7.com (localhost [127.0.0.1])
+by mail.denbond7.com (Postfix) with ESMTP id 604DE20371
+for <default@denbond7.com>; Tue, 19 Mar 2019 11:21:55 +0000 (UTC)
+Authentication-Results: mail.denbond7.com (amavisd-new); dkim=pass
+reason="pass (just generated, assumed good)" header.d=denbond7.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=denbond7.com; h=
+user-agent:message-id:subject:subject:to:from:from:date:date
+:content-transfer-encoding:content-type:content-type
+:mime-version; s=dkim; t=1552994510; x=1553858511; bh=mrIx9Zb7wH
+nZp0BmoJs3br/RCzLVIyrGuQuxyHHjyec=; b=ZbXFp3itt3MlUHgWiaJuVEvCF/
+v06prcJplvEM8cJ/5vNr+U/cVEDlyP7pu+OCb3QPhKxykXMCDiEjPzgNBQTqWFPT
+c/m/gubwgq6GtBU6gnGFpzrSuvwsbEDBW+YEntCqz/ojEPMM4D8f2RplG0rEJGKp
+GV1wCEpOZsVJ4IS9E=
+X-Virus-Scanned: Debian amavisd-new at mail.denbond7.com
+Received: from mail.denbond7.com ([127.0.0.1])
+by mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10026)
+with ESMTP id DOyRlrvIG3f2 for <default@denbond7.com>;
+Tue, 19 Mar 2019 11:21:50 +0000 (UTC)
+Received: from denbond7.com (localhost [127.0.0.1])
+by mail.denbond7.com (Postfix) with ESMTPSA id 15528202E1
+for <default@denbond7.com>; Tue, 19 Mar 2019 11:21:49 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+format=flowed
+Content-Transfer-Encoding: 7bit
+Date: Tue, 19 Mar 2019 13:21:49 +0200
+From: denbond7@denbond7.com
+To: Default <default@denbond7.com>
+Subject: Message is either badly formatted or not compatible
+Message-ID: <fedfd1158772389b574b4b3b8a628df2@denbond7.com>
+X-Sender: denbond7@denbond7.com
+User-Agent: Roundcube Webmail
+
+-----BEGIN PGP MESSAGE-----
+Version: OpenPGP.js v2.5.3
+Comment: http://openpgpjs.org
+
+wcFMA+ADv/5v4RgKAQ//UwAu4dKYH8LfaNEvMH7E6RpVcxRQ16sTc0eWbV9w
+O+h+okaos1JqITQCj1z0MmTAjK4TxMCNdIhY/Hh0tZVrVWBiKPKdFXTNlygx
+/ZOEaT9U+jKCi5YU8+g2p4W7v+YNNSW1x/CWoxvxPkBFuvAE8KBH16ubWzWE
+745cslhxeXzniQ7FF2Q3TttOXL+QHcb8Ia1f2VRhpOTNUzCG8+LWn4RwA4xW
+13Esv2MNJgdr3haCUUy/WUDprpiOWFaPF6njbXkZbpizURzJIQstq+Uu7qM2
+XgWxlhYkZIVbGA3i1FXJZSoYS9+ILV7CchQuM4hdxQgk3QyTbRLT+T4DJPaE
+fAq3PNDE5CW8RdkuCaxQxC0qSJsJWvntCsrvuDDAWJWa1S/FvLYKaU4Xj3cs
+bRuQQmNZ5gcx8ztOK6yp+N1vs7bL2S5WBm6ecSDIomDMgHai0hBIbtCI8fYV
+HaP6gsWgl2PA1Kk26RIaoADuEkjGaSHJWeBhh1OXoZ7SOEL5SpIdRA7eUhvs
+8TvOqqVDfT1e03YvTAuLS6hJBk8SgrMy26dEnTGlSlzAO+Y42A0PVfWKzhs/
+HblfL09kiSYuCxIqOk1Ih4lx3KJ/ISiMwn8tw8C1b0vSwVMBTphUuklj0iEB
+/YycDVUl4jK44jopHuvpJfvJTVKwoNG86ypbcYSlzQ7ElUp1EJ2Z9dMA4oM7
+9PioAZG33LjriutXYHfS/JMdEIIlVTxbhkrlgdgYzyf9ptgj2VKWsMuaSaUN
+oiBViJFsUaHZmcjifqhoDXLfVZUvT8r+BSiSseNx5pRvyPnjj7A34aZ9HIh+
+bkgOgSUVGmPH0eL5T0a88mEu0iN4ahLfxN+8LID18+mSv7d9RuJ7cor46gc4
+zL9mESewqdnWuveeTViTCCWr7DWEMSfHL8xRhdJU3metZJCo4DTHkP5QSZo9
+ZzFUUxgW0Q0QQKwRhVdwC5m3Ddehu8mAAHpRlNmrChyGw60lgSbzkdXePdhW
+7MlZpLaVfFRekXaVUbf+Kp7Q62+NoxnbndrP7AnLPxKfOWHl6az+j3leJ1w9
+TvoQufCvFAXlOoJsDAc0rAKewGg3mvwbVwP8pVMK0rsqp2stUYFH1ZkGZJ5C
+QF10bfVwST7/DJKhJLfzbA8AhxYr8y0y0CHFzWBbofWBd/IFh57fBfHPIcpo
++PPFpqA8RD//tROLgcboCHhijFamssa2yZx//V9tFsH8jo45agW8ScfxjoO2
+vT56K5RcJnyZkFMaxqqKa6qBJ7XXL3nn2ePquNwj3zO59yVoF2AeoipJCTLE
+C/jf1vpjTJlbneWAjUWjm8+SlfCY1V/oERo=
+=UCCQ
+-----END PGP MESSAGE-----

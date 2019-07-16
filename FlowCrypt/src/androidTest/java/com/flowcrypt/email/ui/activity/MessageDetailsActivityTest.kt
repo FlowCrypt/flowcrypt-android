@@ -141,22 +141,26 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testStandardMsgPlaneText() {
-    baseCheck(getMsgInfo("messages/info/standard_msg_info_plane_text.json"))
+    baseCheck(getMsgInfo("messages/info/standard_msg_info_plane_text.json",
+        "messages/mime/standard_msg_info_plane_text.txt"))
   }
 
   @Test
   fun testStandardMsgPlaneTextWithOneAttachment() {
-    baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plane_text_with_one_att.json"), simpleAttachmentRule)
+    baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plane_text_with_one_att.json",
+        "messages/mime/standard_msg_info_plane_text_with_one_att.txt"), simpleAttachmentRule)
   }
 
   @Test
   fun testEncryptedMsgPlaneText() {
-    baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plane_text.json"))
+    baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plane_text.json",
+        "messages/mime/encrypted_msg_info_plane_text.txt"))
   }
 
   @Test
   fun testMissingKeyErrorImportKey() {
-    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_missing_key.json"))
+    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+        "messages/mime/encrypted_msg_info_plane_text_with_missing_key.txt"))
 
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
@@ -182,23 +186,25 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingPubKey() {
-    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plane_text_error_one_pub_key.json"))
+    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plane_text_error_one_pub_key.json",
+        "messages/mime/encrypted_msg_info_plane_text_error_one_pub_key.txt"))
   }
 
   @Test
   fun testBadlyFormattedMsg() {
-    val incomingMsgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_error_badly_formatted.json")
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_error_badly_formatted.json",
+        "messages/mime/encrypted_msg_info_plane_text_error_badly_formatted.txt")
 
-    assertThat(incomingMsgInfo, notNullValue())
+    assertThat(msgInfo, notNullValue())
 
-    val details = incomingMsgInfo!!.generalMsgDetails
+    val details = msgInfo!!.generalMsgDetails
 
     launchActivity(details)
     matchHeader(details)
 
     Thread.sleep(1000)
 
-    val block = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
+    val block = msgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val decryptError = block.error
     val formatErrorMsg = (getResString(R.string.decrypt_error_message_badly_formatted,
         getResString(R.string.app_name)) + "\n\n" + decryptError?.details?.type + ": " + decryptError?.details?.message)
@@ -212,9 +218,10 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingKeyErrorChooseSinglePubKey() {
-    val incomingMsgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_missing_key.json")
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+        "messages/mime/encrypted_msg_info_plane_text_with_missing_key.txt")
 
-    testMissingKey(incomingMsgInfo)
+    testMissingKey(msgInfo)
 
     onView(withId(R.id.buttonSendOwnPublicKey))
         .check(matches(isDisplayed()))
@@ -229,9 +236,10 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingKeyErrorChooseFromFewPubKeys() {
-    val incomingMsgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_missing_key.json")
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
+        "messages/mime/encrypted_msg_info_plane_text_with_missing_key.txt")
 
-    testMissingKey(incomingMsgInfo)
+    testMissingKey(msgInfo)
 
     PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
         TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
@@ -261,14 +269,16 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testEncryptedMsgPlaneTextWithOneAttachment() {
-    val incomingMsgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_one_att.json")
-    baseCheckWithAtt(incomingMsgInfo, encryptedAttachmentRule)
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_one_att.json",
+        "messages/mime/encrypted_msg_info_plane_text_with_one_att.txt")
+    baseCheckWithAtt(msgInfo, encryptedAttachmentRule)
   }
 
   @Test
   fun testEncryptedMsgPlaneTextWithPubKey() {
-    val incomingMsgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_pub_key.json")
-    baseCheckWithAtt(incomingMsgInfo, pubKeyAttachmentRule)
+    val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_pub_key.json",
+        "messages/mime/encrypted_msg_info_plane_text_with_pub_key.txt")
+    baseCheckWithAtt(msgInfo, pubKeyAttachmentRule)
 
     val nodeKeyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/denbond7@denbond7.com_pub.json")
     val pgpContact = nodeKeyDetails.primaryPgpContact
@@ -284,7 +294,7 @@ class MessageDetailsActivityTest : BaseTest() {
         getHtmlString(getResString(R.string.template_message_part_public_key_fingerprint,
             GeneralUtil.doSectionsInText(" ", nodeKeyDetails.fingerprint, 4)!!)))))
 
-    val block = incomingMsgInfo?.msgBlocks?.get(1) as PublicKeyMsgBlock
+    val block = msgInfo?.msgBlocks?.get(1) as PublicKeyMsgBlock
 
     onView(withId(R.id.textViewPgpPublicKey))
         .check(matches(not<View>(isDisplayed())))
@@ -441,9 +451,13 @@ class MessageDetailsActivityTest : BaseTest() {
     IdlingRegistry.getInstance().register((activityTestRule.activity as MessageDetailsActivity).idlingForDecryption)
   }
 
-  private fun getMsgInfo(path: String): IncomingMessageInfo? {
+  private fun getMsgInfo(path: String, mimeMsgPath: String): IncomingMessageInfo? {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
-    incomingMsgInfo?.generalMsgDetails?.let { msgDaoSource.addRow(getTargetContext(), it) }
+    incomingMsgInfo?.generalMsgDetails?.let {
+      msgDaoSource.addRow(getTargetContext(), it)
+      msgDaoSource.updateMsgRawText(getTargetContext(), it.email, localFolder.folderAlias, it.uid.toLong(),
+          TestGeneralUtil.readFileFromAssetsAsString(getContext(), mimeMsgPath))
+    }
     return incomingMsgInfo
   }
 }
