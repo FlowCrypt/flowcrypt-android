@@ -31,7 +31,10 @@ import androidx.test.espresso.web.sugar.Web.onWebView
 import androidx.test.espresso.web.webdriver.DriverAtoms.findElement
 import androidx.test.espresso.web.webdriver.DriverAtoms.getText
 import androidx.test.espresso.web.webdriver.Locator
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
@@ -63,6 +66,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
+import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
@@ -70,6 +74,9 @@ import org.junit.rules.TestRule
  * Time: 4:32 PM
  * E-mail: DenBond7@gmail.com
  */
+@LargeTest
+@RunWith(AndroidJUnit4::class)
+@DoesNotNeedMailserver
 class MessageDetailsActivityTest : BaseTest() {
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(MessageDetailsActivity::class.java,
       false, false)
