@@ -74485,8 +74485,6 @@ module.exports =
 "use strict";
 /* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
 /// <reference path="../../../flowcrypt-node-modules/node_modules/@types/node/index.d.ts" />
-/// - <reference path="../node_modules/@types/chrome/index.d.ts" />
-/// - <reference path="./core/types/jquery.d.ts" />
 /// <reference path="./core/types/openpgp.d.ts" />
 
 
@@ -74509,6 +74507,7 @@ const util_1 = __webpack_require__(5);
 util_1.setGlobals();
 const doPrintDebug = Boolean(NODE_DEBUG === 'true');
 const doProfile = Boolean(APP_PROFILE === 'true');
+const doPrintReplay = Boolean(NODE_PRINT_REPLAY === 'true');
 const endpoints = new endpoints_1.Endpoints();
 
 const delegateReqToEndpoint = async (endpointName, uncheckedReq, data) => {
@@ -74553,6 +74552,10 @@ const handleReq = async (req, res, receivedAt) => {
     if (doPrintDebug) {
       console.debug(`parsed endpoint:`, endpoint);
       console.debug(`parsed request:`, request);
+    }
+
+    if (doPrintReplay) {
+      fmt_1.printReplayTestDefinition(endpoint, request, Buffer.concat(data));
     }
 
     const endpointResponse = await delegateReqToEndpoint(endpoint, request, data);
@@ -74737,6 +74740,8 @@ const pgp_1 = __webpack_require__(7);
 
 const xss_1 = __webpack_require__(17);
 
+const buf_1 = __webpack_require__(15);
+
 class HttpAuthErr extends Error {}
 
 exports.HttpAuthErr = HttpAuthErr;
@@ -74850,6 +74855,18 @@ exports.indexHtml = Buffer.from(`
   <input name="data" type="file"> <button type="submit">submit post request</button>
 </form>
 </body></html>`);
+
+exports.printReplayTestDefinition = (endpoint, request, data) => {
+  console.log(`
+ava.test.only('replaying', async t => {
+  const reqData = Buf.fromBase64Str('${buf_1.Buf.fromUint8(data).toBase64Str()}');
+  console.log('replay ${endpoint}: ', ${JSON.stringify(request)}, '-------- begin req data ---------', reqData.toString(), '--------- end req data ---------');
+  const { data, json } = await request('${endpoint}', ${JSON.stringify(request)}, Buffer.from(reqData));
+  console.log('response: ', json, '\n\n\n-------- begin res data ---------', Buf.fromUint8(data).toString(), '--------- end res data ---------\n\n\n');
+  t.pass();
+});
+  `);
+};
 
 /***/ }),
 /* 4 */
