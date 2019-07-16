@@ -202,8 +202,6 @@ class MessageDetailsActivityTest : BaseTest() {
     launchActivity(details)
     matchHeader(details)
 
-    Thread.sleep(1000)
-
     val block = msgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val decryptError = block.error
     val formatErrorMsg = (getResString(R.string.decrypt_error_message_badly_formatted,
@@ -326,8 +324,6 @@ class MessageDetailsActivityTest : BaseTest() {
     launchActivity(details)
     matchHeader(details)
 
-    Thread.sleep(1000)
-
     val block = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val errorMsg = getResString(R.string.decrypt_error_current_key_cannot_open_message)
 
@@ -361,7 +357,7 @@ class MessageDetailsActivityTest : BaseTest() {
     val details = incomingMsgInfo!!.generalMsgDetails
     launchActivity(details)
     matchHeader(details)
-    Thread.sleep(1000)
+
     onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
     onWebView(withId(R.id.emailWebView))
         .withElement(findElement(Locator.XPATH, "/html/body"))
@@ -375,8 +371,6 @@ class MessageDetailsActivityTest : BaseTest() {
     val details = incomingMsgInfo!!.generalMsgDetails
     launchActivity(details)
     matchHeader(details)
-
-    Thread.sleep(1000)
 
     onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
     onWebView(withId(R.id.emailWebView))
