@@ -141,35 +141,22 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testStandardMsgPlaneText() {
-    val incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text.json", IncomingMessageInfo::class.java)
-    incomingMsgInfo?.generalMsgDetails?.let { msgDaoSource.addRow(getTargetContext(), it) }
-
-    baseCheck(incomingMsgInfo)
+    baseCheck(getMsgInfo("messages/info/standard_msg_info_plane_text.json"))
   }
 
   @Test
   fun testStandardMsgPlaneTextWithOneAttachment() {
-    val incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/standard_msg_info_plane_text_with_one_att.json",
-            IncomingMessageInfo::class.java)
-    baseCheckWithAtt(incomingMsgInfo, simpleAttachmentRule)
+    baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plane_text_with_one_att.json"), simpleAttachmentRule)
   }
 
   @Test
   fun testEncryptedMsgPlaneText() {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text.json",
-        IncomingMessageInfo::class.java)
-    baseCheck(incomingMsgInfo)
+    baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plane_text.json"))
   }
 
   @Test
   fun testMissingKeyErrorImportKey() {
-    val incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
-            IncomingMessageInfo::class.java)
-
-    testMissingKey(incomingMsgInfo)
+    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_missing_key.json"))
 
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
@@ -184,26 +171,23 @@ class MessageDetailsActivityTest : BaseTest() {
     val incomingMsgInfoFixed =
         TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key_fixed.json",
             IncomingMessageInfo::class.java)
-    onView(withText(incomingMsgInfoFixed?.msgBlocks?.get(0)?.content))
-        .check(matches(isDisplayed()))
+
+    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
+    onWebView(withId(R.id.emailWebView))
+        .withElement(findElement(Locator.XPATH, "/html/body"))
+        .check(webMatches(getText(), equalTo(incomingMsgInfoFixed?.text)))
 
     PrivateKeysManager.deleteKey("node/default@denbond7.com_secondKey_prv_strong.json")
   }
 
   @Test
   fun testMissingPubKey() {
-    val incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_one_pub_key.json",
-            IncomingMessageInfo::class.java)
-
-    testMissingKey(incomingMsgInfo)
+    testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plane_text_error_one_pub_key.json"))
   }
 
   @Test
   fun testBadlyFormattedMsg() {
-    val incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_error_badly_formatted.json",
-            IncomingMessageInfo::class.java)
+    val incomingMsgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_error_badly_formatted.json")
 
     assertThat(incomingMsgInfo, notNullValue())
 
@@ -212,10 +196,12 @@ class MessageDetailsActivityTest : BaseTest() {
     launchActivity(details)
     matchHeader(details)
 
-    val block = incomingMsgInfo.msgBlocks?.get(0) as DecryptErrorMsgBlock
+    Thread.sleep(1000)
+
+    val block = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val decryptError = block.error
     val formatErrorMsg = (getResString(R.string.decrypt_error_message_badly_formatted,
-        getResString(R.string.app_name)) + "\n\n" + decryptError?.details?.type + ":" + decryptError?.details?.message)
+        getResString(R.string.app_name)) + "\n\n" + decryptError?.details?.type + ": " + decryptError?.details?.message)
 
     onView(withId(R.id.textViewErrorMessage))
         .check(matches(withText(formatErrorMsg)))
@@ -226,9 +212,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingKeyErrorChooseSinglePubKey() {
-    val incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
-            IncomingMessageInfo::class.java)
+    val incomingMsgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_missing_key.json")
 
     testMissingKey(incomingMsgInfo)
 
@@ -245,9 +229,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testMissingKeyErrorChooseFromFewPubKeys() {
-    val incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_missing_key.json",
-            IncomingMessageInfo::class.java)
+    val incomingMsgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_missing_key.json")
 
     testMissingKey(incomingMsgInfo)
 
@@ -279,19 +261,13 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @Test
   fun testEncryptedMsgPlaneTextWithOneAttachment() {
-    val incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_one_att.json",
-            IncomingMessageInfo::class.java)
-
+    val incomingMsgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_one_att.json")
     baseCheckWithAtt(incomingMsgInfo, encryptedAttachmentRule)
   }
 
   @Test
   fun testEncryptedMsgPlaneTextWithPubKey() {
-    val incomingMsgInfo =
-        TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plane_text_with_pub_key.json",
-            IncomingMessageInfo::class.java)
-
+    val incomingMsgInfo = getMsgInfo("messages/info/encrypted_msg_info_plane_text_with_pub_key.json")
     baseCheckWithAtt(incomingMsgInfo, pubKeyAttachmentRule)
 
     val nodeKeyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/denbond7@denbond7.com_pub.json")
@@ -340,7 +316,9 @@ class MessageDetailsActivityTest : BaseTest() {
     launchActivity(details)
     matchHeader(details)
 
-    val block = incomingMsgInfo.msgBlocks?.get(0) as DecryptErrorMsgBlock
+    Thread.sleep(1000)
+
+    val block = incomingMsgInfo.msgBlocks?.get(1) as DecryptErrorMsgBlock
     val errorMsg = getResString(R.string.decrypt_error_current_key_cannot_open_message)
 
     onView(withId(R.id.textViewErrorMessage))
@@ -373,7 +351,7 @@ class MessageDetailsActivityTest : BaseTest() {
     val details = incomingMsgInfo!!.generalMsgDetails
     launchActivity(details)
     matchHeader(details)
-
+    Thread.sleep(1000)
     onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
     onWebView(withId(R.id.emailWebView))
         .withElement(findElement(Locator.XPATH, "/html/body"))
@@ -387,8 +365,13 @@ class MessageDetailsActivityTest : BaseTest() {
     val details = incomingMsgInfo!!.generalMsgDetails
     launchActivity(details)
     matchHeader(details)
-    onView(withText(incomingMsgInfo.msgBlocks?.get(0)?.content))
-        .check(matches(isDisplayed()))
+
+    Thread.sleep(1000)
+
+    onWebView(withId(R.id.emailWebView)).forceJavascriptEnabled()
+    onWebView(withId(R.id.emailWebView))
+        .withElement(findElement(Locator.XPATH, "/html/body"))
+        .check(webMatches(getText(), equalTo(incomingMsgInfo.text)))
     onView(withId(R.id.layoutAtt))
         .check(matches(isDisplayed()))
     matchAtt(rule.attInfo)
@@ -456,5 +439,11 @@ class MessageDetailsActivityTest : BaseTest() {
     activityTestRule?.launchActivity(MessageDetailsActivity.getIntent(getTargetContext(), localFolder, details))
     IdlingRegistry.getInstance().register((activityTestRule?.activity as BaseActivity).nodeIdlingResource)
     IdlingRegistry.getInstance().register((activityTestRule.activity as MessageDetailsActivity).idlingForDecryption)
+  }
+
+  private fun getMsgInfo(path: String): IncomingMessageInfo? {
+    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
+    incomingMsgInfo?.generalMsgDetails?.let { msgDaoSource.addRow(getTargetContext(), it) }
+    return incomingMsgInfo
   }
 }
