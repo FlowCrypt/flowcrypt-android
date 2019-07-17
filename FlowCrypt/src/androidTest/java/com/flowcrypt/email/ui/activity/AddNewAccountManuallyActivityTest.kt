@@ -300,7 +300,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
         .perform(scrollTo(), clearText(), typeText(someValue), closeSoftKeyboard())
     onView(withId(spinnerViewId))
         .perform(scrollTo(), click())
-    onData(allOf(`is`(instanceOf<Any>(SecurityType::class.java)), withSecurityTypeOption(option)))
+    onData(allOf(`is`(instanceOf(SecurityType::class.java)), withSecurityTypeOption(option)))
         .perform(click())
     onView(withId(portViewId))
         .check(matches(withText(portValue)))

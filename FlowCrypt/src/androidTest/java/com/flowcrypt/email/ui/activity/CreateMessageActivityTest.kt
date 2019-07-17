@@ -11,7 +11,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.view.View
-import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.clearText
@@ -28,6 +27,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.intent.rule.IntentsTestRule
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withChild
@@ -291,6 +291,10 @@ class CreateMessageActivityTest : BaseTest() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
 
+    onView(withId(R.id.editTextRecipientTo))
+        .check(matches(isDisplayed()))
+        .perform(closeSoftKeyboard())
+
     for (att in atts) {
       addAtt(att)
     }
@@ -301,9 +305,16 @@ class CreateMessageActivityTest : BaseTest() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
 
+    onView(withId(R.id.editTextRecipientTo))
+        .check(matches(isDisplayed()))
+        .perform(closeSoftKeyboard())
+
     for (att in atts) {
       addAtt(att)
     }
+
+    //Need to wait while the layout will be updated. Some emulators work fast and fail this place
+    Thread.sleep(500)
 
     for (att in atts) {
       deleteAtt(att)
@@ -416,12 +427,11 @@ class CreateMessageActivityTest : BaseTest() {
         allOf(hasAction(Intent.ACTION_OPEN_DOCUMENT), hasType("*/*"),
             hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE)))))))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
-    Espresso.closeSoftKeyboard()
     onView(withId(R.id.menuActionAttachFile))
         .check(matches(isDisplayed()))
         .perform(click())
     onView(withText(att.name))
-        .check(matches(isDisplayed()))
+        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
   }
 
   private fun checkIsDisplayedStandardAttributes() {
