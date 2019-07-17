@@ -5,15 +5,10 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.app.Activity
-import android.app.Instrumentation
-import android.content.Intent
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intended
-import androidx.test.espresso.intent.Intents.intending
-import androidx.test.espresso.intent.matcher.IntentMatchers.isInternal
 import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -27,8 +22,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import org.hamcrest.Matchers.not
-import org.junit.Before
+import com.flowcrypt.email.rules.StubAllExternalIntentsRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -52,12 +46,7 @@ class AddNewAccountActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
       .around(activityTestRule)
-
-  @Before
-  fun stubAllExternalIntents() {
-    // All external Intents will be blocked.
-    intending(not<Intent>(isInternal())).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
-  }
+      .around(StubAllExternalIntentsRule())
 
   @Test
   fun testUseOtherEmailProviders() {

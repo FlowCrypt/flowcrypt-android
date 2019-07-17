@@ -10,7 +10,6 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -43,7 +42,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SearchBackupsInEmailActivityTest : BaseTest() {
 
-  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(SearchBackupsInEmailActivity::class.java)
+  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(SearchBackupsInEmailActivity::class.java)
 
   @get:Rule
   var ruleChain: TestRule = RuleChain

@@ -24,7 +24,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.ActivityTestRule
 import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
@@ -60,7 +59,7 @@ import java.io.File
 @DoesNotNeedMailserver
 class ImportPublicKeyActivityTest : BaseTest() {
 
-  override val activityTestRule: ActivityTestRule<*>? =
+  override val activityTestRule: IntentsTestRule<*>? =
       object : IntentsTestRule<ImportPublicKeyActivity>(ImportPublicKeyActivity::class.java) {
         override fun getActivityIntent(): Intent {
           val pgpContact = PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER, null, null,
