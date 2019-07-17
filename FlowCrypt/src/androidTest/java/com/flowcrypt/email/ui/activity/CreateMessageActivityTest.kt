@@ -21,13 +21,13 @@ import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
+import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withChild
@@ -83,7 +83,7 @@ import java.io.File
 class CreateMessageActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? =
-      ActivityTestRule(CreateMessageActivity::class.java, false, false)
+      IntentsTestRule(CreateMessageActivity::class.java, false, false)
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -288,19 +288,16 @@ class CreateMessageActivityTest : BaseTest() {
 
   @Test
   fun testAddingAtts() {
-    Intents.init()
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
 
     for (att in atts) {
       addAtt(att)
     }
-    Intents.release()
   }
 
   @Test
   fun testDeletingAtts() {
-    Intents.init()
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
 
@@ -314,12 +311,10 @@ class CreateMessageActivityTest : BaseTest() {
 
     onView(withId(R.id.textViewAttchmentName))
         .check(doesNotExist())
-    Intents.release()
   }
 
   @Test
   fun testSelectImportPublicKeyFromPopUp() {
-    Intents.init()
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
 
@@ -333,7 +328,6 @@ class CreateMessageActivityTest : BaseTest() {
     onView(withText(R.string.import_their_public_key))
         .check(matches(isDisplayed()))
         .perform(click())
-    Intents.release()
   }
 
   @Test
@@ -377,7 +371,6 @@ class CreateMessageActivityTest : BaseTest() {
 
   @Test
   fun testSelectedCopyFromOtherContactFromPopUp() {
-    Intents.init()
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
 
@@ -393,7 +386,6 @@ class CreateMessageActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
     checkIsToastDisplayed(activityTestRule?.activity, getResString(R.string.key_successfully_copied))
-    Intents.release()
   }
 
   private fun checkIsDisplayedEncryptedAttributes() {
