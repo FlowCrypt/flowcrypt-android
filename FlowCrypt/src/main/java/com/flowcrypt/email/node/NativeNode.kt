@@ -68,20 +68,20 @@ internal class NativeNode private constructor(private val nodeSecret: NodeSecret
     var src = ""
     src += genConst("NODE_UNIX_SOCKET", nodeSecret.unixSocketFilePath) // not used yet
     src += genConst("NODE_PORT", nodeSecret.port.toString())
-    src += genConst("NODE_SSL_CA", nodeSecret.ca)
-    src += genConst("NODE_SSL_CRT", nodeSecret.crt)
-    src += genConst("NODE_SSL_KEY", nodeSecret.key)
+    src += genConst("NODE_SSL_CA", nodeSecret.ca!!)
+    src += genConst("NODE_SSL_CRT", nodeSecret.crt!!)
+    src += genConst("NODE_SSL_KEY", nodeSecret.key!!)
     src += genConst("NODE_AUTH_HEADER", nodeSecret.authHeader)
     src += genConst("NODE_DEBUG", "false")
     src += genConst("APP_ENV", "prod")
-    src += genConst("APP_VERSION",
-        BuildConfig.VERSION_NAME.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0])
+    src += genConst("APP_VERSION", BuildConfig.VERSION_NAME.split("_")[0])
     src += genConst("APP_PROFILE", "false")
+    src += genConst("NODE_PRINT_REPLAY", "false")
     src += jsCode
     return src
   }
 
-  private fun genConst(name: String, value: String?): String {
+  private fun genConst(name: String, value: String): String {
     return "const $name = `$value`;\n"
   }
 
