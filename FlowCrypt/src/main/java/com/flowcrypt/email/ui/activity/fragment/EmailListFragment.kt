@@ -199,7 +199,7 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
   }
 
   override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-    activeMsgDetails = parent.adapter.getItem(position) as GeneralMessageDetails
+    activeMsgDetails = parent.adapter.getItem(position) as? GeneralMessageDetails
     if (activeMsgDetails == null) {
       return
     }
