@@ -264,7 +264,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     val foldersManager = FoldersManager.fromDatabase(this, details!!.email)
     val archive = foldersManager.folderArchive
     if (archive == null) {
-      ExceptionUtil.handleError(IllegalArgumentException("Folder 'All Mail' not found for domain = "
+      ExceptionUtil.handleError(IllegalArgumentException("Folder 'All Mail' not found for provider = "
           + EmailUtil.getDomain(details!!.email) + "\n"
           + foldersManager.serverFolders.joinToString { it.fullName + ":" + it.attributes }))
       isBackEnabled = true
@@ -302,8 +302,12 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
       val foldersManager = FoldersManager.fromDatabase(this, details!!.email)
       val trash = foldersManager.folderTrash
       if (trash == null) {
-        ExceptionUtil.handleError(IllegalArgumentException("Folder 'Trash' not found, provider: "
-            + EmailUtil.getDomain(details!!.email)))
+        ExceptionUtil.handleError(IllegalArgumentException("Folder 'Trash' not found for provider = "
+            + EmailUtil.getDomain(details!!.email) + "\n"
+            + foldersManager.serverFolders.joinToString { it.fullName + ":" + it.attributes }))
+        isBackEnabled = true
+        onErrorOccurred(R.id.syns_request_delete_message, SyncErrorTypes.UNKNOWN_ERROR,
+            IllegalStateException(getString(R.string.unknown_error)))
       } else {
         moveMsg(R.id.syns_request_delete_message, localFolder!!, trash, details!!.uid)
       }
