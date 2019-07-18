@@ -12,10 +12,12 @@ import androidx.test.filters.SmallTest
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.api.retrofit.response.model.node.Algo
+import com.flowcrypt.email.api.retrofit.response.model.node.AttMeta
 import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptError
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.KeyId
 import com.flowcrypt.email.api.retrofit.response.model.node.Longids
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
@@ -124,6 +126,22 @@ class IncomingMessageInfoTest {
             ),
             true))
 
+    val decryptedAttMsgBlock = DecryptedAttMsgBlock(
+        "content",
+        true,
+        AttMeta("name", "data", 100L, "type"),
+        DecryptError(true,
+            DecryptErrorDetails(
+                DecryptErrorDetails.Type.FORMAT,
+                "message"),
+            Longids(
+                listOf("message"),
+                listOf("matching"),
+                listOf("chosen"),
+                listOf("needPassphrase")
+            ),
+            true))
+
     val original = IncomingMessageInfo(
         details,
         listOf(att1, att2),
@@ -138,7 +156,8 @@ class IncomingMessageInfoTest {
             BaseMsgBlock(MsgBlock.Type.UNKNOWN, "someContent", false),
             BaseMsgBlock(MsgBlock.Type.UNKNOWN, "content", false),
             publicKeyMsgBlock,
-            decryptErrorMsgBlock),
+            decryptErrorMsgBlock,
+            decryptedAttMsgBlock),
         null,
         MessageEncryptionType.STANDARD)
 

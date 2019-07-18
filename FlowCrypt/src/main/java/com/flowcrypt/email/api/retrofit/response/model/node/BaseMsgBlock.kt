@@ -53,6 +53,8 @@ data class BaseMsgBlock(@Expose override val type: MsgBlock.Type,
 
         MsgBlock.Type.DECRYPT_ERROR -> DecryptErrorMsgBlock(source)
 
+        MsgBlock.Type.DECRYPTED_ATT -> DecryptedAttMsgBlock(source)
+
         else -> BaseMsgBlock(source, type)
       }
     }
