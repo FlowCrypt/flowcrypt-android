@@ -17,7 +17,7 @@ import com.google.gson.annotations.Expose
  * Time: 9:46 AM
  * E-mail: DenBond7@gmail.com
  */
-data class BaseMsgBlock(@Expose override val type: MsgBlock.Type,
+data class BaseMsgBlock(@Expose override val type: MsgBlock.Type = MsgBlock.Type.UNKNOWN,
                         @Expose override val content: String?,
                         @Expose override val complete: Boolean) : MsgBlock {
 
