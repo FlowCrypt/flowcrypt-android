@@ -66,6 +66,14 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
             rawMsg = ASCIIUtility.toString(body.byteArrayInputStream)
           }
         }
+
+        if (rawMsg == null) {
+          ExceptionUtil.handleError(IllegalStateException(
+              "LoadMessageDetailsSyncTask:Server response = $serverStatusResponse" +
+                  "\n There is no FetchResponse with right BODY" +
+                  "\n responses count = ${responses.size}"))
+        }
+
       } else {
         ExceptionUtil.handleError(IllegalStateException(
             "LoadMessageDetailsSyncTask:Server response = $serverStatusResponse"))
