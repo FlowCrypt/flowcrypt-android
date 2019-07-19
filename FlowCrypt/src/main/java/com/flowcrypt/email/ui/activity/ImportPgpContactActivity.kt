@@ -188,8 +188,8 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
       UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
       UIUtil.showInfoSnackbar(rootView, lookUpResponse.apiError.msg!!)
     } else {
-      val lookUpPublicKeyInfoArrayList = lookUpResponse.results
-      if (lookUpPublicKeyInfoArrayList != null && lookUpPublicKeyInfoArrayList.isNotEmpty()) {
+      val lookUpPublicKeyInfoArrayList = lookUpResponse.results?.filterNotNull()
+      if (lookUpPublicKeyInfoArrayList != null) {
         val builder = StringBuilder()
 
         for (lookUpPublicKeyInfo in lookUpPublicKeyInfoArrayList) {
