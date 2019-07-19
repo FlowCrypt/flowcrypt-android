@@ -389,4 +389,6 @@
     <string name="logo">Logo</string>
     <string name="show_aliases">Show aliases</string>
     <string name="show_cc_bcc">Show CC/BCC</string>
+    <string name="opening_password_encrypted_msg_not_implemented_yet">Opening password encrypted messages not
+        implemented yet</string>
 </resources>
