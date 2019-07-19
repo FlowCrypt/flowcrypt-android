@@ -614,8 +614,13 @@ class AttachmentDownloadManagerService : Service() {
       val response = nodeService.decryptFile(request).execute()
       val result = response.body() ?: throw NullPointerException("Node.js returned an empty result")
       if (result.error != null) {
-        throw Exception(result.error.msg)
+        var exceptionMsg = result.error.msg
+        if ("use_password" == result.error.type) {
+          exceptionMsg = context.getString(R.string.opening_password_encrypted_msg_not_implemented_yet)
+        }
+        throw Exception(exceptionMsg)
       }
+
       return result
     }
 
