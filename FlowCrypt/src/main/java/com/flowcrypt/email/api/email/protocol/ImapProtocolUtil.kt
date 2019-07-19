@@ -43,7 +43,7 @@ class ImapProtocolUtil {
     fun getHeaderStream(folder: IMAPFolder, msgNumber: Int, sectionId: Int): InputStream? {
       return folder.doCommand { imapProtocol ->
         imapProtocol.peekBody(msgNumber, "$sectionId.MIME")?.byteArrayInputStream
-      } as InputStream
+      } as? InputStream
     }
 
     /**
