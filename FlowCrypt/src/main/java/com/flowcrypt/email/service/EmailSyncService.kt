@@ -163,7 +163,7 @@ class EmailSyncService : BaseService(), SyncListener {
     if (!isServiceStarted) {
       startEmailSyncService(context)
     }
-    return messenger!!.binder
+    return messenger?.binder
   }
 
   override fun onMsgWithBackupToKeyOwnerSent(account: AccountDao, ownerKey: String, requestCode: Int, isSent: Boolean) {
