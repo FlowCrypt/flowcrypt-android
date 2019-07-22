@@ -463,20 +463,22 @@ class AttachmentDownloadManagerService : Service() {
           val inputStream = att.inputStream
           downloadFile(attFile, inputStream)
 
-          attFile = decryptFileIfNeeded(context, attFile)
-          this.att.name = attFile.name
+          if (Thread.currentThread().isInterrupted) {
+            removeNotCompletedAtt(attFile)
+            listener?.onCanceled(this.att)
+          } else {
+            attFile = decryptFileIfNeeded(context, attFile)
+            this.att.name = attFile.name
 
-          if (listener != null) {
             if (Thread.currentThread().isInterrupted) {
               removeNotCompletedAtt(attFile)
-              listener!!.onCanceled(this.att)
+              listener?.onCanceled(this.att)
             } else {
               val uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile)
-              listener!!.onAttDownloaded(this.att, uri)
+              listener?.onAttDownloaded(this.att, uri)
             }
           }
-        } else
-          throw ManualHandledException(context.getString(R.string.attachment_not_found))
+        } else throw ManualHandledException(context.getString(R.string.attachment_not_found))
 
         remoteFolder.close(false)
         store.close()
@@ -536,12 +538,6 @@ class AttachmentDownloadManagerService : Service() {
           updateProgress(100, 0)
         }
       } finally {
-        if (Thread.currentThread().isInterrupted) {
-          removeNotCompletedAtt(attFile)
-          if (listener != null) {
-            listener!!.onCanceled(this.att)
-          }
-        }
       }
     }
 
@@ -640,8 +636,8 @@ class AttachmentDownloadManagerService : Service() {
     }
 
     private fun updateProgress(currentPercentage: Int, timeLeft: Long) {
-      if (listener != null && !Thread.currentThread().isInterrupted) {
-        listener!!.onProgress(att, currentPercentage, timeLeft)
+      if (!Thread.currentThread().isInterrupted) {
+        listener?.onProgress(att, currentPercentage, timeLeft)
       }
     }
 
