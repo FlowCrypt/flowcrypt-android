@@ -37,6 +37,7 @@ class AttachmentInfoTest {
         123456,
         Constants.MIME_TYPE_BINARY_DATA,
         "1245fsdfs4597sdf4564",
+        "0",
         Uri.EMPTY,
         true,
         false,

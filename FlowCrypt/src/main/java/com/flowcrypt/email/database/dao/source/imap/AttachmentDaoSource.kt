@@ -276,6 +276,7 @@ class AttachmentDaoSource : BaseDaoSource() {
       }
       contentValues.put(COL_FORWARDED_FOLDER, attInfo.fwdFolder)
       contentValues.put(COL_FORWARDED_UID, attInfo.fwdUid)
+      contentValues.put(COL_PATH, attInfo.path)
 
       return contentValues
     }
@@ -306,6 +307,7 @@ class AttachmentDaoSource : BaseDaoSource() {
           cursor.getLong(cursor.getColumnIndex(COL_ENCODED_SIZE_IN_BYTES)),
           cursor.getString(cursor.getColumnIndex(COL_TYPE)),
           cursor.getString(cursor.getColumnIndex(COL_ATTACHMENT_ID)),
+          cursor.getString(cursor.getColumnIndex(COL_PATH)),
           uri,
           false,
           !cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))

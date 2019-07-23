@@ -6,7 +6,6 @@
 package com.flowcrypt.email.service
 
 import android.content.BroadcastReceiver
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -25,16 +24,13 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.email.protocol.ImapProtocolUtil
 import com.flowcrypt.email.api.email.sync.EmailSyncManager
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.model.EmailAndNamePair
@@ -42,7 +38,6 @@ import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
 import java.io.IOException
 import java.lang.ref.WeakReference
@@ -51,12 +46,8 @@ import javax.mail.Flags
 import javax.mail.Folder
 import javax.mail.FolderClosedException
 import javax.mail.MessagingException
-import javax.mail.Multipart
-import javax.mail.Part
 import javax.mail.StoreClosedException
-import javax.mail.internet.ContentType
 import javax.mail.internet.InternetAddress
-import javax.mail.internet.InternetHeaders
 
 /**
  * This the email synchronization service. This class is responsible for the logic of
@@ -235,7 +226,6 @@ class EmailSyncService : BaseService(), SyncListener {
       if (TextUtils.isEmpty(rawMsgWithoutAtts)) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND)
       } else {
-        updateAttTable(account, localFolder, remoteFolder, msg)
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
       }
     } catch (e: RemoteException) {
@@ -552,87 +542,6 @@ class EmailSyncService : BaseService(), SyncListener {
         }
       }
     }
-  }
-
-  /**
-   * @param account     The object which contains information about an email account.
-   * @param localFolder The local reflection of the remote localFolder.
-   * @param imapFolder  The localFolder where the new messages exist.
-   * @param msg         The new messages.
-   * @throws MessagingException This exception meybe happen when we try to call
-   * `{ IMAPFolder#getUID(javax.mail.Message)}`
-   */
-  private fun updateAttTable(account: AccountDao, localFolder: LocalFolder,
-                             imapFolder: IMAPFolder, msg: javax.mail.Message?) {
-    val email = account.email
-    val folder = localFolder.fullName
-
-    val attachmentDaoSource = AttachmentDaoSource()
-    val contentValuesList = ArrayList<ContentValues>()
-
-    val attachmentInfoList = getAttsInfoFromPart(imapFolder, msg!!.messageNumber, msg)
-
-    if (attachmentInfoList.isNotEmpty()) {
-      for (att in attachmentInfoList) {
-        val values = AttachmentDaoSource.prepareContentValues(email, folder, imapFolder.getUID(msg), att)
-        contentValuesList.add(values)
-      }
-    }
-
-    attachmentDaoSource.addRows(this, contentValuesList.toTypedArray())
-  }
-
-  /**
-   * Find attachments in the [Part].
-   *
-   * @param imapFolder The [IMAPFolder] which contains the parent message;
-   * @param msgNumber  This number will be used for fetching [Part] details;
-   * @param part       The parent part.
-   * @return The list of created [AttachmentInfo]
-   * @throws MessagingException
-   * @throws IOException
-   */
-  private fun getAttsInfoFromPart(imapFolder: IMAPFolder, msgNumber: Int, part: Part): ArrayList<AttachmentInfo> {
-    val atts = ArrayList<AttachmentInfo>()
-
-    if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-      val multiPart = part.content as Multipart
-      val numberOfParts = multiPart.count
-      var headers: Array<String>?
-      for (partCount in 0 until numberOfParts) {
-        val bodyPart = multiPart.getBodyPart(partCount)
-        if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-          val partAtts = getAttsInfoFromPart(imapFolder, msgNumber, bodyPart)
-          if (!CollectionUtils.isEmpty(partAtts)) {
-            atts.addAll(partAtts)
-          }
-        } else if (Part.ATTACHMENT.equals(bodyPart.disposition, ignoreCase = true)) {
-          val inputStream = ImapProtocolUtil.getHeaderStream(imapFolder, msgNumber, partCount + 1)
-
-          if (inputStream != null) {
-            val internetHeaders = InternetHeaders(inputStream)
-            headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_CONTENT_ID)
-
-            if (headers == null) {
-              //try to receive custom Gmail attachments header X-Attachment-Id
-              headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID)
-            }
-
-            if (headers != null && headers.isNotEmpty() && !TextUtils.isEmpty(bodyPart.fileName)) {
-              val attachmentInfo = AttachmentInfo(null, null, null, 0, null, 0, null, 0, null, null, null, false,
-                  false, 0)
-              attachmentInfo.name = bodyPart.fileName
-              attachmentInfo.encodedSize = bodyPart.size.toLong()
-              attachmentInfo.type = ContentType(bodyPart.contentType).baseType
-              attachmentInfo.id = headers[0]
-              atts.add(attachmentInfo)
-            }
-          }
-        }
-      }
-    }
-
-    return atts
   }
 
   /**

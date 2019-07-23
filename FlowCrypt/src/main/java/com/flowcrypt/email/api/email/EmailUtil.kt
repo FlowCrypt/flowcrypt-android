@@ -41,6 +41,7 @@ import com.sun.mail.gimap.GmailRawSearchTerm
 import com.sun.mail.iap.Argument
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.protocol.BODY
+import com.sun.mail.imap.protocol.BODYSTRUCTURE
 import com.sun.mail.imap.protocol.FetchResponse
 import com.sun.mail.imap.protocol.UID
 import com.sun.mail.imap.protocol.UIDSet
@@ -88,8 +89,8 @@ class EmailUtil {
      * @return A generated unique content id.
      */
     @JvmStatic
-    fun generateContentId(): String {
-      return "<" + UUID.randomUUID().toString() + "@flowcrypt" + ">"
+    fun generateContentId(prefix: String = ""): String {
+      return "<$prefix" + UUID.randomUUID().toString() + "@flowcrypt" + ">"
     }
 
     /**
@@ -129,7 +130,7 @@ class EmailUtil {
     @JvmStatic
     fun getAttInfoFromUri(context: Context?, uri: Uri?): AttachmentInfo? {
       if (context != null && uri != null) {
-        val attInfo = AttachmentInfo(null, null, null, 0, null, 0, null, 0, null, null, null, false, false, 0)
+        val attInfo = AttachmentInfo()
         attInfo.uri = uri
         attInfo.type = GeneralUtil.getFileMimeTypeFromUri(context, uri)
         attInfo.id = generateContentId()
@@ -171,8 +172,7 @@ class EmailUtil {
         val fileName = "0x" + nodeKeyDetails.longId!!.toUpperCase() + ".asc"
 
         if (!TextUtils.isEmpty(nodeKeyDetails.publicKey)) {
-          val attachmentInfo = AttachmentInfo(null, null, null,
-              0, null, 0, null, 0, null, null, null, false, false, 0)
+          val attachmentInfo = AttachmentInfo()
 
           attachmentInfo.name = fileName
           attachmentInfo.encodedSize = nodeKeyDetails.publicKey!!.length.toLong()
@@ -765,6 +765,39 @@ class EmailUtil {
       } else {
         headersByDoubleNl
       }
+    }
+
+    /**
+     * Get information about attachments from the given [BODYSTRUCTURE]
+     *
+     * @param depth          The depth of the given [BODYSTRUCTURE]
+     * @param bodystructure  The given [BODYSTRUCTURE]
+     * @return a list of found attachments
+     */
+    fun getAttsInfoFromBodystructure(bodystructure: BODYSTRUCTURE, depth: String = "0"): MutableList<AttachmentInfo> {
+      val attachmentInfoList = mutableListOf<AttachmentInfo>()
+
+      if (bodystructure.bodies == null) {
+        if (Part.ATTACHMENT.equals(bodystructure.disposition, ignoreCase = true)) {
+          val attachmentInfo = AttachmentInfo()
+          attachmentInfo.name = bodystructure.dParams?.get("filename") ?: bodystructure.cParams?.get("name") ?: depth
+          attachmentInfo.encodedSize = bodystructure.size.toLong()
+          attachmentInfo.type = if (bodystructure.type != null && bodystructure.subtype != null) {
+            bodystructure.type + "/" + bodystructure.subtype
+          } else {
+            ""
+          }
+          attachmentInfo.id = bodystructure.id ?: generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
+          attachmentInfo.path = depth
+          attachmentInfoList.add(attachmentInfo)
+        }
+      } else {
+        for ((index, body) in bodystructure.bodies.withIndex()) {
+          attachmentInfoList.addAll(getAttsInfoFromBodystructure(body, "$depth${AttachmentInfo.DEPTH_SEPARATOR}$index"))
+        }
+      }
+
+      return attachmentInfoList
     }
   }
 }
