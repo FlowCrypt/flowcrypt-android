@@ -326,7 +326,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   override fun onDestroy() {
     super.onDestroy()
     if (!isMsgSentToQueue) {
-      for ((_, _, _, _, _, _, _, _, _, _, uri) in atts!!) {
+      for ((_, _, _, _, _, _, _, _, _, _, _, uri) in atts!!) {
         if (uri != null) {
           if (Constants.FILE_PROVIDER_AUTHORITY.equals(uri.authority!!, ignoreCase = true)) {
             context!!.contentResolver.delete(uri, null, null)
@@ -1002,7 +1002,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   private fun hasExternalStorageUris(attachmentInfoList: List<AttachmentInfo>): Boolean {
-    for ((_, _, _, _, _, _, _, _, _, _, uri) in attachmentInfoList) {
+    for ((_, _, _, _, _, _, _, _, _, _, _, uri) in attachmentInfoList) {
       if (uri != null && ContentResolver.SCHEME_FILE.equals(uri.scheme!!, ignoreCase = true)) {
         return true
       }

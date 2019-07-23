@@ -19,15 +19,16 @@ import com.flowcrypt.email.Constants
  * E-mail: DenBond7@gmail.com
  */
 data class AttachmentInfo constructor(var rawData: String? = null,
-                                      var email: String?,
-                                      var folder: String?,
+                                      var email: String? = null,
+                                      var folder: String? = null,
                                       var uid: Int = 0,
                                       var fwdFolder: String? = null,
                                       var fwdUid: Int = 0,
-                                      var name: String?,
+                                      var name: String? = null,
                                       var encodedSize: Long = 0,
                                       var type: String? = Constants.MIME_TYPE_BINARY_DATA,
-                                      var id: String?,
+                                      var id: String? = null,
+                                      var path: String = "0",
                                       var uri: Uri? = null,
                                       var isProtected: Boolean = false,
                                       var isForwarded: Boolean = false,
@@ -51,6 +52,7 @@ data class AttachmentInfo constructor(var rawData: String? = null,
       source.readLong(),
       source.readString(),
       source.readString(),
+      source.readString()!!,
       source.readParcelable(Uri::class.java.classLoader),
       source.readByte() != 0.toByte(),
       source.readByte() != 0.toByte(),
@@ -73,6 +75,7 @@ data class AttachmentInfo constructor(var rawData: String? = null,
       writeLong(encodedSize)
       writeString(type)
       writeString(id)
+      writeString(path)
       writeParcelable(uri, flags)
       writeByte(if (isProtected) 1.toByte() else 0.toByte())
       writeByte(if (isForwarded) 1.toByte() else 0.toByte())
@@ -81,6 +84,9 @@ data class AttachmentInfo constructor(var rawData: String? = null,
   }
 
   companion object {
+    const val DEPTH_SEPARATOR = "/"
+    const val INNER_ATTACHMENT_PREFIX = "inner_"
+
     @JvmField
     @Suppress("unused")
     val CREATOR: Parcelable.Creator<AttachmentInfo> = object : Parcelable.Creator<AttachmentInfo> {

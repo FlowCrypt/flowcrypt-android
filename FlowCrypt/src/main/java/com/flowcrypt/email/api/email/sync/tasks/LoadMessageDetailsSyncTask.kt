@@ -5,13 +5,18 @@
 
 package com.flowcrypt.email.api.email.sync.tasks
 
+import android.content.ContentValues
+import android.content.Context
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.iap.Argument
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.protocol.BODY
+import com.sun.mail.imap.protocol.BODYSTRUCTURE
 import com.sun.mail.imap.protocol.FetchResponse
 import com.sun.mail.util.ASCIIUtility
 import javax.mail.Flags
@@ -26,7 +31,7 @@ import javax.mail.Store
  * larger than 1000kb, we'll get only the first part of it.
  *
  * @param localFolder      The local localFolder implementation.
- * @param uid         The [com.sun.mail.imap.protocol.UID] of [).][Message]
+ * @param uid         The [com.sun.mail.imap.protocol.UID] of [javax.mail.Message]
  *
  * @author DenBond7
  * Date: 26.06.2017
@@ -50,6 +55,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       val list = Argument()
       list.writeString("RFC822.SIZE")
       list.writeString("BODY[]<0.1024000>")
+      list.writeString("BODYSTRUCTURE")
       args.writeArgument(list)
 
       val responses = imapProtocol.command("UID FETCH $uid", args)
@@ -62,9 +68,10 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
           }
 
           val body = response.getItem(BODY::class.java)
-          if (body != null && body.byteArrayInputStream != null) {
-            rawMsg = ASCIIUtility.toString(body.byteArrayInputStream)
-          }
+          body?.byteArrayInputStream?.let { rawMsg = ASCIIUtility.toString(it) }
+
+          val bodystructure = response.getItem(BODYSTRUCTURE::class.java)
+          bodystructure?.let { updateAttsTable(listener.context, account, it) }
         }
 
         if (rawMsg == null) {
@@ -91,5 +98,17 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, message, rawMsg, ownerKey, requestCode)
 
     imapFolder.close(false)
+  }
+
+  private fun updateAttsTable(context: Context, account: AccountDao, bodystructure: BODYSTRUCTURE) {
+    val attachmentInfoList = EmailUtil.getAttsInfoFromBodystructure(bodystructure)
+    val contentValuesList = mutableListOf<ContentValues>()
+
+    for (att in attachmentInfoList) {
+      val values = AttachmentDaoSource.prepareContentValues(account.email, localFolder.fullName, uid, att)
+      contentValuesList.add(values)
+    }
+
+    AttachmentDaoSource().addRows(context, contentValuesList.toTypedArray())
   }
 }
