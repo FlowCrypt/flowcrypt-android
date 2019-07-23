@@ -54,7 +54,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
     sqLiteDatabase.execSQL(AccountDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS)
 
     sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE)
-    sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT)
+    sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_PATH_IN_ATTACHMENT)
 
     sqLiteDatabase.execSQL(AccountAliasesDaoSource.ACCOUNTS_ALIASES_TABLE_SQL_CREATE)
     sqLiteDatabase.execSQL(AccountAliasesDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES)
@@ -81,6 +81,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom11To12Version(sqLiteDatabase)
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
       }
 
       2 -> {
@@ -96,6 +97,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom11To12Version(sqLiteDatabase)
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
       }
 
       3 -> {
@@ -110,6 +112,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom11To12Version(sqLiteDatabase)
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
       }
 
       4 -> {
@@ -123,6 +126,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom11To12Version(sqLiteDatabase)
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
       }
 
       5 -> {
@@ -135,6 +139,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom11To12Version(sqLiteDatabase)
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
       }
 
       6 -> {
@@ -146,6 +151,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom11To12Version(sqLiteDatabase)
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
       }
 
       7 -> {
@@ -156,6 +162,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom11To12Version(sqLiteDatabase)
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
       }
 
       8 -> {
@@ -165,6 +172,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom11To12Version(sqLiteDatabase)
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
       }
 
       9 -> {
@@ -173,6 +181,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom11To12Version(sqLiteDatabase)
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
       }
 
       10 -> {
@@ -180,20 +189,28 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom11To12Version(sqLiteDatabase)
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
       }
 
       11 -> {
         upgradeDatabaseFrom11To12Version(sqLiteDatabase)
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
       }
 
       12 -> {
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
       }
 
-      13 -> upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+      13 -> {
+        upgradeDatabaseFrom13To14Version(sqLiteDatabase)
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+      }
+
+      14 -> upgradeDatabaseFrom14To15Version(sqLiteDatabase)
     }
 
     LogsUtil.d(TAG, "Database updated from OLD_VERSION = " + oldVersion
@@ -421,10 +438,23 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
     }
   }
 
+
+  private fun upgradeDatabaseFrom14To15Version(sqLiteDatabase: SQLiteDatabase) {
+    sqLiteDatabase.beginTransaction()
+    try {
+      sqLiteDatabase.execSQL(DROP_TABLE + AttachmentDaoSource.TABLE_NAME_ATTACHMENT)
+      sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE)
+      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_PATH_IN_ATTACHMENT)
+      sqLiteDatabase.setTransactionSuccessful()
+    } finally {
+      sqLiteDatabase.endTransaction()
+    }
+  }
+
   companion object {
     const val COLUMN_NAME_COUNT = "COUNT(*)"
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 14
+    const val DB_VERSION = 15
 
     private val TAG = FlowCryptSQLiteOpenHelper::class.java.simpleName
     private const val DROP_TABLE = "DROP TABLE IF EXISTS "
