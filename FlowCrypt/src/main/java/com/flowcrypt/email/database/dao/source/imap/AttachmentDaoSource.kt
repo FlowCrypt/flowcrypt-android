@@ -201,6 +201,7 @@ class AttachmentDaoSource : BaseDaoSource() {
     const val COL_FILE_URI = "file_uri"
     const val COL_FORWARDED_FOLDER = "forwarded_folder"
     const val COL_FORWARDED_UID = "forwarded_uid"
+    const val COL_PATH = "path"
 
     const val ATTACHMENT_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
         TABLE_NAME_ATTACHMENT + " (" +
@@ -211,15 +212,21 @@ class AttachmentDaoSource : BaseDaoSource() {
         COL_NAME + " TEXT NOT NULL, " +
         COL_ENCODED_SIZE_IN_BYTES + " INTEGER DEFAULT 0, " +
         COL_TYPE + " VARCHAR(100) NOT NULL, " +
-        COL_ATTACHMENT_ID + " TEXT NOT NULL, " +
+        COL_ATTACHMENT_ID + " TEXT, " +
         COL_FILE_URI + " TEXT, " +
         COL_FORWARDED_FOLDER + " TEXT, " +
-        COL_FORWARDED_UID + " INTEGER DEFAULT -1 " + ");"
+        COL_FORWARDED_UID + " INTEGER DEFAULT -1, " +
+        COL_PATH + " TEXT NOT NULL " + ");"
 
     const val CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT = (
         UNIQUE_INDEX_PREFIX + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER + "_" + COL_ATTACHMENT_ID + "_in_"
             + TABLE_NAME_ATTACHMENT + " ON " + TABLE_NAME_ATTACHMENT + " (" + COL_EMAIL + ", " + COL_UID
             + ", " + COL_FOLDER + ", " + COL_ATTACHMENT_ID + ")")
+
+    const val CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_PATH_IN_ATTACHMENT = (
+        UNIQUE_INDEX_PREFIX + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER + "_" + COL_PATH + "_in_"
+            + TABLE_NAME_ATTACHMENT + " ON " + TABLE_NAME_ATTACHMENT + " (" + COL_EMAIL + ", " + COL_UID
+            + ", " + COL_FOLDER + ", " + COL_PATH + ")")
 
     /**
      * Prepare content values for insert to the database.
