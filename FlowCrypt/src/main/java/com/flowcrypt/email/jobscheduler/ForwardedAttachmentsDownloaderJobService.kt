@@ -247,9 +247,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
             break
           }
 
-          val msgNumber = fwdMsg.messageNumber
-          val part = ImapProtocolUtil.getAttPartById(folder, msgNumber, fwdMsg, att.id!!)
-
+          val part = ImapProtocolUtil.getAttPartByPath(fwdMsg, neededPath = att.path)
           val tempFile = File(fwdAttsCacheDir, UUID.randomUUID().toString())
 
           if (part != null) {
