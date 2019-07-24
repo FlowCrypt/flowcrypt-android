@@ -6,14 +6,13 @@
 package com.flowcrypt.email.api.email.protocol
 
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.sun.mail.imap.IMAPFolder
-import java.io.IOException
 import java.io.InputStream
 import javax.mail.BodyPart
 import javax.mail.MessagingException
 import javax.mail.Multipart
 import javax.mail.Part
-import javax.mail.internet.InternetHeaders
 import javax.mail.internet.MimePart
 
 /**
@@ -49,42 +48,31 @@ class ImapProtocolUtil {
     /**
      * Get [Part] which has an attachment with such attachment id.
      *
-     * @param folder    The [IMAPFolder] which contains the parent message;
-     * @param msgNumber This number will be used for fetching [Part] details;
-     * @param part      The parent part.
+     * @param part         The parent part.
+     * @param currentPath  The current path of MIME hierarchy.
+     * @param neededPath   The path where the needed attachment exists.
      * @return [Part] which has attachment or null if message doesn't have such attachment.
-     * @throws MessagingException
-     * @throws IOException
      */
-    @JvmStatic
-    fun getAttPartById(folder: IMAPFolder, msgNumber: Int, part: Part?, attId: String): BodyPart? {
+    fun getAttPartByPath(part: Part?, currentPath: String = "0/", neededPath: String): BodyPart? {
       if (part != null && part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+        val neededParentPath = neededPath.substringBeforeLast(AttachmentInfo.DEPTH_SEPARATOR) + AttachmentInfo.DEPTH_SEPARATOR
         val multiPart = part.content as Multipart
-        val numberOfParts = multiPart.count
-        var headers: Array<String>?
-        for (partCount in 0 until numberOfParts) {
-          val bodyPart = multiPart.getBodyPart(partCount)
-          if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-            val innerPart = getAttPartById(folder, msgNumber, bodyPart, attId)
-            if (innerPart != null) {
-              return innerPart
-            }
-          } else if (Part.ATTACHMENT.equals(bodyPart.disposition, ignoreCase = true)) {
-            val inputStream = getHeaderStream(folder, msgNumber, partCount + 1)
-                ?: throw MessagingException("Failed to fetch headers")
+        val partsCount = multiPart.count
 
-            val internetHeaders = InternetHeaders(inputStream)
-            headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_CONTENT_ID)
+        if (currentPath == neededParentPath) {
+          val position = neededPath.substringAfterLast(AttachmentInfo.DEPTH_SEPARATOR).toInt()
 
-            if (headers == null) {
-              //try to receive custom Gmail attachments header X-Attachment-Id
-              headers = internetHeaders.getHeader(JavaEmailConstants.HEADER_X_ATTACHMENT_ID)
-            }
-
-            if (headers != null && attId == headers[0]) {
+          if (partsCount > position) {
+            val bodyPart = multiPart.getBodyPart(position)
+            if (Part.ATTACHMENT.equals(bodyPart.disposition, ignoreCase = true)) {
               return bodyPart
             }
           }
+        } else {
+          val nextDepth = neededParentPath.replaceFirst(currentPath, "")
+              .split(AttachmentInfo.DEPTH_SEPARATOR).first().toInt()
+          val bodyPart = multiPart.getBodyPart(nextDepth)
+          return getAttPartByPath(bodyPart, currentPath + nextDepth + AttachmentInfo.DEPTH_SEPARATOR, neededPath)
         }
         return null
       } else {

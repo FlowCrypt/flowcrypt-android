@@ -457,7 +457,7 @@ class AttachmentDownloadManagerService : Service() {
         val msg = remoteFolder.getMessageByUID(att.uid.toLong())
             ?: throw ManualHandledException(context.getString(R.string.no_message_with_this_attachment))
 
-        val att = ImapProtocolUtil.getAttPartById(remoteFolder, msg.messageNumber, msg, this.att.id!!)
+        val att = ImapProtocolUtil.getAttPartByPath(msg, neededPath = this.att.path)
 
         if (att != null) {
           val inputStream = att.inputStream
