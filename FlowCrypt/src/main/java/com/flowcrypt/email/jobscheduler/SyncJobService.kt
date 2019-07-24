@@ -223,6 +223,10 @@ class SyncJobService : JobService(), SyncListener {
 
   }
 
+  override fun onAttsInfoReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder, uid: Long,
+                                  ownerKey: String, requestCode: Int) {
+  }
+
   /**
    * This is a worker. Here we will do sync in the background thread. If the sync will be failed we'll schedule it
    * again.

@@ -529,6 +529,17 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
+  override fun onAttsInfoReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder, uid: Long,
+                                  ownerKey: String, requestCode: Int) {
+    try {
+      sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
+    }
+  }
+
   fun handleConnectivityAction(context: Context, intent: Intent) {
     if (ConnectivityManager.CONNECTIVITY_ACTION.equals(intent.action!!, ignoreCase = true)) {
       val connectivityManager = context.getSystemService(Context
@@ -723,6 +734,11 @@ class EmailSyncService : BaseService(), SyncListener {
             emailSyncManager.cancelAllSyncTasks()
           }
 
+          MESSAGE_LOAD_ATTS_INFO -> if (emailSyncManager != null && action != null) {
+            val localFolder = action.`object` as LocalFolder
+            emailSyncManager.loadAttsInfo(ownerKey!!, requestCode, localFolder, msg.arg1)
+          }
+
           else -> super.handleMessage(msg)
         }
       }
@@ -752,6 +768,7 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_SEND_MESSAGE_WITH_BACKUP = 10
     const val MESSAGE_SEARCH_MESSAGES = 11
     const val MESSAGE_CANCEL_ALL_TASKS = 12
+    const val MESSAGE_LOAD_ATTS_INFO = 13
 
     private val TAG = EmailSyncService::class.java.simpleName
 

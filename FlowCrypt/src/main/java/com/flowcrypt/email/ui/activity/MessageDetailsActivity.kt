@@ -161,8 +161,12 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
           atts.add(AttachmentDaoSource.getAttInfo(cursor))
         }
 
-        updateAtts(atts)
-        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_attachments)
+        if (atts.isNotEmpty()) {
+          updateAtts(atts)
+          LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_attachments)
+        } else if (details?.hasAtts == true) {
+          loadAttsInfo(R.id.syns_request_code_load_atts_info, localFolder!!, details!!.uid)
+        }
       }
     }
   }

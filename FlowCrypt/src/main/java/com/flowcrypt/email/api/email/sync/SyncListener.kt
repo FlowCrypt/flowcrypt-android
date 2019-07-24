@@ -149,6 +149,27 @@ interface SyncListener {
   /**
    * This method called when a new messages received from the some folder.
    *
+   * @param account           The [AccountDao] object which contains information about an email
+   * account;
+   * @param localFolder       The local implementation of the remote folder;
+   * @param remoteFolder      The folder where the new messages exist;
+   * @param uid               The UID of the message;
+   * @param ownerKey          The name of the reply to [android.os.Messenger];
+   * @param requestCode       The unique request code for the reply to
+   * [android.os.Messenger].
+   */
+  fun onAttsInfoReceived(
+      account: AccountDao,
+      localFolder: LocalFolder,
+      remoteFolder: IMAPFolder,
+      uid: Long,
+      ownerKey: String,
+      requestCode: Int
+  )
+
+  /**
+   * This method called when a new messages received from the some folder.
+   *
    * @param account      The [AccountDao] object which contains information about an
    * email account.
    * @param localFolder  The local implementation of the remote folder

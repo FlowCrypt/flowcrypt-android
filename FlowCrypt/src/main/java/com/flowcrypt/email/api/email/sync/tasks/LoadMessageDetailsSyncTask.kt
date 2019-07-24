@@ -5,9 +5,6 @@
 
 package com.flowcrypt.email.api.email.sync.tasks
 
-import android.content.ContentValues
-import android.content.Context
-import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.dao.source.AccountDao
@@ -71,7 +68,9 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
           body?.byteArrayInputStream?.let { rawMsg = ASCIIUtility.toString(it) }
 
           val bodystructure = response.getItem(BODYSTRUCTURE::class.java)
-          bodystructure?.let { updateAttsTable(listener.context, account, it) }
+          bodystructure?.let {
+            AttachmentDaoSource().updateAttsTable(listener.context, account.email, localFolder.fullName, uid, it)
+          }
         }
 
         if (rawMsg == null) {
@@ -98,17 +97,5 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, message, rawMsg, ownerKey, requestCode)
 
     imapFolder.close(false)
-  }
-
-  private fun updateAttsTable(context: Context, account: AccountDao, bodystructure: BODYSTRUCTURE) {
-    val attachmentInfoList = EmailUtil.getAttsInfoFromBodystructure(bodystructure)
-    val contentValuesList = mutableListOf<ContentValues>()
-
-    for (att in attachmentInfoList) {
-      val values = AttachmentDaoSource.prepareContentValues(account.email, localFolder.fullName, uid, att)
-      contentValuesList.add(values)
-    }
-
-    AttachmentDaoSource().addRows(context, contentValuesList.toTypedArray())
   }
 }

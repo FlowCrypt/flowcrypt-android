@@ -20,6 +20,7 @@ import android.provider.BaseColumns
 import android.text.TextUtils
 import android.util.LongSparseArray
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -40,8 +41,6 @@ import javax.mail.Flags
 import javax.mail.Message
 import javax.mail.MessageRemovedException
 import javax.mail.MessagingException
-import javax.mail.Multipart
-import javax.mail.Part
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 
@@ -1132,7 +1131,7 @@ class MessageDaoSource : BaseDaoSource() {
       contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)))
       contentValues.put(COL_SUBJECT, msg.subject)
       contentValues.put(COL_FLAGS, msg.flags.toString().toUpperCase())
-      contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, hasAtt(msg))
+      contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, EmailUtil.hasAtt(msg))
       if (!msg.flags.contains(Flags.Flag.SEEN)) {
         contentValues.put(COL_IS_NEW, isNew)
       }
@@ -1166,45 +1165,6 @@ class MessageDaoSource : BaseDaoSource() {
         attributesAsString.split(regex.toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
       } else {
         arrayOf()
-      }
-    }
-
-    /**
-     * Check is [Part] has attachment.
-     *
-     *
-     * If the part contains a wrong MIME structure we will receive the exception "Unable to load BODYSTRUCTURE" when
-     * calling [Part.isMimeType]
-     *
-     * @param part The parent part.
-     * @return <tt>boolean</tt> true if [Part] has attachment, false otherwise or if an error has occurred.
-     */
-    private fun hasAtt(part: Part): Boolean {
-      try {
-        if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-          val multiPart = part.content as Multipart
-          val partsNumber = multiPart.count
-          for (partCount in 0 until partsNumber) {
-            val bodyPart = multiPart.getBodyPart(partCount)
-            if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-              val hasAtt = hasAtt(bodyPart)
-              if (hasAtt) {
-                return true
-              }
-            } else if (Part.ATTACHMENT.equals(bodyPart.disposition, ignoreCase = true)) {
-              return true
-            }
-          }
-          return false
-        } else {
-          return false
-        }
-      } catch (e: MessagingException) {
-        e.printStackTrace()
-        return false
-      } catch (e: IOException) {
-        e.printStackTrace()
-        return false
       }
     }
   }

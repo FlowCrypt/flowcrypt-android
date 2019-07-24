@@ -11,9 +11,11 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.BaseColumns
 import android.text.TextUtils
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.database.dao.source.BaseDaoSource
 import com.google.android.gms.common.util.CollectionUtils
+import com.sun.mail.imap.protocol.BODYSTRUCTURE
 import java.util.*
 
 /**
@@ -186,6 +188,28 @@ class AttachmentDaoSource : BaseDaoSource() {
       contentResolver.delete(baseContentUri, where, arrayOf(email, label, uid.toString()))
     } else
       -1
+  }
+
+  /**
+   * Parse attachments info from the given [BODYSTRUCTURE] and update [TABLE_NAME_ATTACHMENT] table
+   *
+   * @param context Interface to global information about an application environment.
+   * @param email   The email that the message linked.
+   * @param label   The folder label.
+   * @param uid     The message UID.
+   * @param bodystructure     The given [BODYSTRUCTURE]
+   * @return The number of rows deleted.
+   */
+  fun updateAttsTable(context: Context, email: String, label: String, uid: Long, bodystructure: BODYSTRUCTURE) {
+    val attachmentInfoList = EmailUtil.getAttsInfoFromBodystructure(bodystructure)
+    val contentValuesList = mutableListOf<ContentValues>()
+
+    for (att in attachmentInfoList) {
+      val values = prepareContentValues(email, label, uid, att)
+      contentValuesList.add(values)
+    }
+
+    AttachmentDaoSource().addRows(context, contentValuesList.toTypedArray())
   }
 
   companion object {
