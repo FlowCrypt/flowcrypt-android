@@ -799,5 +799,44 @@ class EmailUtil {
 
       return attachmentInfoList
     }
+
+    /**
+     * Check is [Part] has attachment.
+     *
+     *
+     * If the part contains a wrong MIME structure we will receive the exception "Unable to load BODYSTRUCTURE" when
+     * calling [Part.isMimeType]
+     *
+     * @param part The parent part.
+     * @return <tt>boolean</tt> true if [Part] has attachment, false otherwise or if an error has occurred.
+     */
+    fun hasAtt(part: Part): Boolean {
+      try {
+        if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+          val multiPart = part.content as Multipart
+          val partsNumber = multiPart.count
+          for (partCount in 0 until partsNumber) {
+            val bodyPart = multiPart.getBodyPart(partCount)
+            if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+              val hasAtt = hasAtt(bodyPart)
+              if (hasAtt) {
+                return true
+              }
+            } else if (Part.ATTACHMENT.equals(bodyPart.disposition, ignoreCase = true)) {
+              return true
+            }
+          }
+          return false
+        } else {
+          return false
+        }
+      } catch (e: MessagingException) {
+        e.printStackTrace()
+        return false
+      } catch (e: IOException) {
+        e.printStackTrace()
+        return false
+      }
+    }
   }
 }

@@ -12,6 +12,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.LoadAttsInfoSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask
@@ -223,6 +224,23 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
     try {
       removeOldTasks(LoadMessageDetailsSyncTask::class.java, activeQueue)
       activeQueue.put(LoadMessageDetailsSyncTask(ownerKey, requestCode, localFolder, uid.toLong()))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
+    }
+  }
+
+  /**
+   * This method create a new [LoadAttsInfoSyncTask] object and added it to the current synchronization [BlockingQueue].
+   *
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
+   * @param localFolder The local implementation of the remote localFolder.
+   * @param uid         The [com.sun.mail.imap.protocol.UID] of [).][Message]
+   */
+  fun loadAttsInfo(ownerKey: String, requestCode: Int, localFolder: LocalFolder, uid: Int) {
+    try {
+      removeOldTasks(LoadAttsInfoSyncTask::class.java, passiveQueue)
+      passiveQueue.put(LoadAttsInfoSyncTask(ownerKey, requestCode, localFolder, uid.toLong()))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }
