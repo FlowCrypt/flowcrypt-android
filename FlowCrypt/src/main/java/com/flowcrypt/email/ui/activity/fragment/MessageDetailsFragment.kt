@@ -57,6 +57,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.widget.EmailWebView
+import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -483,10 +484,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         textViewSenderAddress!!.text = EmailUtil.getFirstAddressString(details!!.from)
       }
       textViewSubject!!.text = subject
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
-        textViewDate!!.text = dateFormat!!.format(details!!.sentDate)
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)) {
+        textViewDate?.text = DateTimeUtil.formatSameDayTime(context!!, details?.sentDate ?: 0)
       } else {
-        textViewDate!!.text = dateFormat!!.format(details!!.receivedDate)
+        textViewDate?.text = DateTimeUtil.formatSameDayTime(context!!, details?.receivedDate ?: 0)
       }
     }
 

@@ -43,18 +43,18 @@ class DateTimeUtil {
 
       val currentCalendar = Calendar.getInstance()
 
-      if (calendarOfDate.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)) {
+      return if (calendarOfDate.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)) {
         val isTheSameDay = calendarOfDate.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH)
             && calendarOfDate.get(Calendar.DAY_OF_MONTH) == currentCalendar.get(Calendar.DAY_OF_MONTH)
         if (isTheSameDay) {
-          return DateFormat.getTimeFormat(context).format(calendarOfDate.time)
+          DateFormat.getTimeFormat(context).format(calendarOfDate.time)
         } else {
           val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_NO_YEAR or DateUtils.FORMAT_ABBREV_MONTH
-          return DateUtils.formatDateTime(context, calendarOfDate.time.time, flags)
+          DateUtils.formatDateTime(context, calendarOfDate.time.time, flags)
         }
       } else {
         val flags = DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH
-        return DateUtils.formatDateTime(context, calendarOfDate.time.time, flags)
+        DateUtils.formatDateTime(context, calendarOfDate.time.time, flags)
       }
     }
   }
