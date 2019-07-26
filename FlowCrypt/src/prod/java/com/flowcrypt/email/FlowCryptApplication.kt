@@ -8,6 +8,7 @@ package com.flowcrypt.email
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
+import com.flowcrypt.email.util.acra.CustomReportSenderFactory
 import com.squareup.leakcanary.LeakCanary
 import org.acra.ACRA
 import org.acra.ReportField
@@ -22,7 +23,8 @@ import org.acra.sender.HttpSender
  * Time: 16:43
  * E-mail: DenBond7@gmail.com
  */
-@ReportsCrashes(formUri = "https://flowcrypt.com/api/help/acra", customReportContent = [
+@ReportsCrashes(reportSenderFactoryClasses = [CustomReportSenderFactory::class],
+    formUri = "https://flowcrypt.com/api/help/acra", customReportContent = [
   ReportField.ANDROID_VERSION,
   ReportField.APP_VERSION_CODE,
   ReportField.APP_VERSION_NAME,
