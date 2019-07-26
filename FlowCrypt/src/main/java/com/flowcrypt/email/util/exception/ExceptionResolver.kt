@@ -41,6 +41,12 @@ object ExceptionResolver {
    * @return true if need to handle such exception with ACRA and send logs to the backend, false - otherwise.
    */
   fun isHandlingNeeded(e: Throwable): Boolean {
+    if (e is UserRecoverableAuthException) {
+      if ("BadAuthentication" == e.message) {
+        ExceptionUtil.handleError(e)
+      }
+    }
+
     if (e is MailConnectException
         || e is SMTPSendFailedException
         || e is UnknownHostException
