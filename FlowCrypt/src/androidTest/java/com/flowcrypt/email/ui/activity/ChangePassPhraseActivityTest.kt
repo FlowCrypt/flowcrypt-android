@@ -14,6 +14,8 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -25,6 +27,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
+import org.junit.runner.RunWith
 
 /**
  * @author Denis Bondarenko
@@ -32,6 +35,8 @@ import org.junit.rules.TestRule
  * Time: 12:15 PM
  * E-mail: DenBond7@gmail.com
  */
+@LargeTest
+@RunWith(AndroidJUnit4::class)
 class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
