@@ -42,7 +42,6 @@ import org.acra.sender.HttpSender
   ReportField.INITIAL_CONFIGURATION,
   ReportField.INSTALLATION_ID,
   ReportField.IS_SILENT,
-  ReportField.LOGCAT,
   ReportField.PACKAGE_NAME,
   ReportField.PHONE_MODEL,
   ReportField.PRODUCT,

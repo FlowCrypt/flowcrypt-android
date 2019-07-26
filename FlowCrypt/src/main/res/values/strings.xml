@@ -24,6 +24,7 @@
     <string name="privacy">Privacy</string>
     <string name="terms">Terms</string>
     <string name="security">Security</string>
+    <string name="security_and_privacy">Security and Privacy</string>
     <string name="connect_your_email_account_to_start_sending_encrypted_messages">Connect your email account\n to send encrypted messages</string>
     <string name="continue_with_gmail">Continue with Gmail</string>
     <string name="loading">loading</string>

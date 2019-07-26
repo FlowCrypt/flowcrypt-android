@@ -6,7 +6,13 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <androidx.preference.Preference
-        app:iconSpaceReserved="false"
         android:key="@string/preferences_key_security_change_pass_phrase"
-        android:title="@string/change_pass_phrase" />
+        android:title="@string/change_pass_phrase"
+        app:iconSpaceReserved="false" />
+
+    <androidx.preference.CheckBoxPreference
+        android:defaultValue="true"
+        android:key="acra.enable"
+        android:title="@string/pref_title_allow_anonymous_crash_reports"
+        app:iconSpaceReserved="false" />
 </androidx.preference.PreferenceScreen>
