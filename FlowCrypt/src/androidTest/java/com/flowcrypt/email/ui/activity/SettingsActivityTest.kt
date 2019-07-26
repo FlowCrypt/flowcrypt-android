@@ -61,7 +61,7 @@ class SettingsActivityTest : BaseTest() {
 
   @Test
   fun testShowSecurityScreen() {
-    checkIsScreenDisplaying(getResString(R.string.security))
+    checkIsScreenDisplaying(getResString(R.string.security_and_privacy))
   }
 
   @Test

@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
-import android.text.format.DateFormat
 import android.text.format.Formatter
 import android.view.View
 import androidx.test.espresso.Espresso.onData
@@ -54,6 +53,7 @@ import com.flowcrypt.email.rules.AddAttachmentToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -104,7 +104,6 @@ class MessageDetailsActivityTest : BaseTest() {
       .around(pubKeyAttachmentRule)
       .around(activityTestRule)
 
-  private val dateFormat: java.text.DateFormat = DateFormat.getTimeFormat(getTargetContext())
   private val localFolder: LocalFolder = LocalFolder(
       fullName = "INBOX",
       folderAlias = "INBOX",
@@ -393,7 +392,7 @@ class MessageDetailsActivityTest : BaseTest() {
     onView(withId(R.id.textViewSenderAddress))
         .check(matches(withText(EmailUtil.getFirstAddressString(details.from))))
     onView(withId(R.id.textViewDate))
-        .check(matches(withText(dateFormat.format(details.receivedDate))))
+        .check(matches(withText(DateTimeUtil.formatSameDayTime(getTargetContext(), details.receivedDate))))
     onView(withId(R.id.textViewSubject))
         .check(matches(withText(details.subject)))
   }
