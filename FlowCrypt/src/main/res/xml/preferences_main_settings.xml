@@ -15,10 +15,10 @@
 
     <androidx.preference.Preference
         android:key="@string/preferences_key_settings_security"
-        android:title="@string/security"
+        android:title="@string/security_and_privacy"
         app:iconSpaceReserved="false">
         <intent
-            android:targetClass="com.flowcrypt.email.ui.activity.settings.SecuritySettingsActivity"
+            android:targetClass="com.flowcrypt.email.ui.activity.settings.SecurityAndPrivacySettingsActivity"
             android:targetPackage="@string/application_id" />
     </androidx.preference.Preference>
 
