@@ -42,7 +42,7 @@ blocks:
             - ~/Android/Sdk/emulator/emulator -list-avds # debug
             - ~/Android/Sdk/emulator/emulator-headless -avd ci-test-pixel-x86-64-api28 -no-boot-anim -no-audio & # start emulator in the background
             - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
-            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-disable-emulator-animations.sh )
+            # - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-disable-emulator-animations.sh )
             - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
 
             # store caches
