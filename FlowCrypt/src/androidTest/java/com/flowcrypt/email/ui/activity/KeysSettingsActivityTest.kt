@@ -69,7 +69,6 @@ import java.util.*
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class KeysSettingsActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(KeysSettingsActivity::class.java)
@@ -83,6 +82,7 @@ class KeysSettingsActivityTest : BaseTest() {
       .around(activityTestRule)
 
   @Test
+  @DoesNotNeedMailserver
   fun testAddNewKeys() {
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
@@ -99,6 +99,7 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testKeyExists() {
     onView(withId(R.id.recyclerViewKeys))
         .check(matches(not<View>(withEmptyRecyclerView()))).check(matches(isDisplayed()))
@@ -107,11 +108,13 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowKeyDetailsScreen() {
     selectFirstKey()
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testKeyDetailsShowPubKey() {
     selectFirstKey()
     val keyDetails = addPrivateKeyToDatabaseRule.nodeKeyDetails
@@ -122,6 +125,7 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testKeyDetailsCopyToClipBoard() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
@@ -147,6 +151,7 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testKeyDetailsCheckDetails() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
@@ -175,6 +180,7 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
