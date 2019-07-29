@@ -1,8 +1,8 @@
 
 try {
-/* final flowcrypt-android bundle starts here */
-const dereq_inherits = require("util").inherits; // standard node util, not to interfere with webpack require, which cannot resolve it
-const dereq_html_sanitize =
+  /* final flowcrypt-android bundle starts here */
+  const dereq_inherits = require("util").inherits; // standard node util, not to interfere with webpack require, which cannot resolve it
+  const dereq_html_sanitize =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -86,12 +86,12 @@ const dereq_html_sanitize =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 44);
+/******/ 	return __webpack_require__(__webpack_require__.s = 46);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 44:
+/***/ 46:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26157,10 +26157,10 @@ if(!util.isNull(result.pathname)||!util.isNull(result.search)){result.path=(resu
 
 // end emailjs
 })();
-(function(){
-console.debug = console.log;
 
-const dereq_minimalistic_assert =
+  (function(){
+    console.debug = console.log;
+    const dereq_minimalistic_assert =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -26244,12 +26244,12 @@ const dereq_minimalistic_assert =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 43);
+/******/ 	return __webpack_require__(__webpack_require__.s = 45);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 43:
+/***/ 45:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26352,19 +26352,19 @@ const dereq_bn =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 41);
+/******/ 	return __webpack_require__(__webpack_require__.s = 43);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 30:
+/***/ 32:
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
 
-/***/ 41:
+/***/ 43:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -26422,7 +26422,7 @@ module.exports = require("buffer");
   var Buffer;
 
   try {
-    Buffer = __webpack_require__(30).Buffer;
+    Buffer = __webpack_require__(32).Buffer;
   } catch (e) {}
 
   BN.isBN = function isBN(num) {
@@ -29818,11 +29818,11 @@ module.exports = require("buffer");
     return res._forceRed(this);
   };
 })( false || module, undefined);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(42)(module)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(44)(module)))
 
 /***/ }),
 
-/***/ 42:
+/***/ 44:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -29940,40 +29940,40 @@ const dereq_asn1 =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 22);
+/******/ 	return __webpack_require__(__webpack_require__.s = 24);
 /******/ })
 /************************************************************************/
-/******/ (Array(22).concat([
-/* 22 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var asn1 = exports;
-asn1.bignum = __webpack_require__(23);
-asn1.define = __webpack_require__(24).define;
-asn1.base = __webpack_require__(27);
-asn1.constants = __webpack_require__(33);
-asn1.decoders = __webpack_require__(35);
-asn1.encoders = __webpack_require__(38);
-
-/***/ }),
-/* 23 */
-/***/ (function(module, exports) {
-
-module.exports = dereq_bn;
-
-/***/ }),
+/******/ (Array(24).concat([
 /* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var asn1 = __webpack_require__(22);
+var asn1 = exports;
+asn1.bignum = __webpack_require__(25);
+asn1.define = __webpack_require__(26).define;
+asn1.base = __webpack_require__(29);
+asn1.constants = __webpack_require__(35);
+asn1.decoders = __webpack_require__(37);
+asn1.encoders = __webpack_require__(40);
 
-var inherits = __webpack_require__(25);
+/***/ }),
+/* 25 */
+/***/ (function(module, exports) {
+
+module.exports = dereq_bn;
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var asn1 = __webpack_require__(24);
+
+var inherits = __webpack_require__(27);
 
 var api = exports;
 
@@ -29994,7 +29994,7 @@ Entity.prototype._createNamed = function createNamed(base) {
   var named;
 
   try {
-    named = __webpack_require__(26).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
+    named = __webpack_require__(28).runInThisContext('(function ' + this.name + '(entity) {\n' + '  this._initNamed(entity);\n' + '})');
   } catch (e) {
     named = function (entity) {
       this._initNamed(entity);
@@ -30035,38 +30035,38 @@ reporter) {
 };
 
 /***/ }),
-/* 25 */
+/* 27 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_inherits;
 
 /***/ }),
-/* 26 */
+/* 28 */
 /***/ (function(module, exports) {
 
 module.exports = require("vm");
 
 /***/ }),
-/* 27 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var base = exports;
-base.Reporter = __webpack_require__(28).Reporter;
-base.DecoderBuffer = __webpack_require__(29).DecoderBuffer;
-base.EncoderBuffer = __webpack_require__(29).EncoderBuffer;
-base.Node = __webpack_require__(31);
+base.Reporter = __webpack_require__(30).Reporter;
+base.DecoderBuffer = __webpack_require__(31).DecoderBuffer;
+base.EncoderBuffer = __webpack_require__(31).EncoderBuffer;
+base.Node = __webpack_require__(33);
 
 /***/ }),
-/* 28 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(25);
+var inherits = __webpack_require__(27);
 
 function Reporter(options) {
   this._reporterState = {
@@ -30182,17 +30182,17 @@ ReporterError.prototype.rethrow = function rethrow(msg) {
 };
 
 /***/ }),
-/* 29 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(25);
+var inherits = __webpack_require__(27);
 
-var Reporter = __webpack_require__(27).Reporter;
+var Reporter = __webpack_require__(29).Reporter;
 
-var Buffer = __webpack_require__(30).Buffer;
+var Buffer = __webpack_require__(32).Buffer;
 
 function DecoderBuffer(base, options) {
   Reporter.call(this, options);
@@ -30294,25 +30294,25 @@ EncoderBuffer.prototype.join = function join(out, offset) {
 };
 
 /***/ }),
-/* 30 */
+/* 32 */
 /***/ (function(module, exports) {
 
 module.exports = require("buffer");
 
 /***/ }),
-/* 31 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var Reporter = __webpack_require__(27).Reporter;
+var Reporter = __webpack_require__(29).Reporter;
 
-var EncoderBuffer = __webpack_require__(27).EncoderBuffer;
+var EncoderBuffer = __webpack_require__(29).EncoderBuffer;
 
-var DecoderBuffer = __webpack_require__(27).DecoderBuffer;
+var DecoderBuffer = __webpack_require__(29).DecoderBuffer;
 
-var assert = __webpack_require__(32); // Supported tags
+var assert = __webpack_require__(34); // Supported tags
 
 
 var tags = ['seq', 'seqof', 'set', 'setof', 'objid', 'bool', 'gentime', 'utctime', 'null_', 'enum', 'int', 'objDesc', 'bitstr', 'bmpstr', 'charstr', 'genstr', 'graphstr', 'ia5str', 'iso646str', 'numstr', 'octstr', 'printstr', 't61str', 'unistr', 'utf8str', 'videostr']; // Public methods list
@@ -30783,13 +30783,13 @@ Node.prototype._isPrintstr = function isPrintstr(str) {
 };
 
 /***/ }),
-/* 32 */
+/* 34 */
 /***/ (function(module, exports) {
 
 module.exports = dereq_minimalistic_assert;
 
 /***/ }),
-/* 33 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -30808,16 +30808,16 @@ constants._reverse = function reverse(map) {
   return res;
 };
 
-constants.der = __webpack_require__(34);
+constants.der = __webpack_require__(36);
 
 /***/ }),
-/* 34 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var constants = __webpack_require__(33);
+var constants = __webpack_require__(35);
 
 exports.tagClass = {
   0: 'universal',
@@ -30860,26 +30860,26 @@ exports.tag = {
 exports.tagByName = constants._reverse(exports.tag);
 
 /***/ }),
-/* 35 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var decoders = exports;
-decoders.der = __webpack_require__(36);
-decoders.pem = __webpack_require__(37);
+decoders.der = __webpack_require__(38);
+decoders.pem = __webpack_require__(39);
 
 /***/ }),
-/* 36 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(25);
+var inherits = __webpack_require__(27);
 
-var asn1 = __webpack_require__(22);
+var asn1 = __webpack_require__(24);
 
 var base = asn1.base;
 var bignum = asn1.bignum; // Import DER constants
@@ -31151,17 +31151,17 @@ function derDecodeLen(buf, primitive, fail) {
 }
 
 /***/ }),
-/* 37 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(25);
+var inherits = __webpack_require__(27);
 
-var Buffer = __webpack_require__(30).Buffer;
+var Buffer = __webpack_require__(32).Buffer;
 
-var DERDecoder = __webpack_require__(36);
+var DERDecoder = __webpack_require__(38);
 
 function PEMDecoder(entity) {
   DERDecoder.call(this, entity);
@@ -31203,28 +31203,28 @@ PEMDecoder.prototype.decode = function decode(data, options) {
 };
 
 /***/ }),
-/* 38 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var encoders = exports;
-encoders.der = __webpack_require__(39);
-encoders.pem = __webpack_require__(40);
+encoders.der = __webpack_require__(41);
+encoders.pem = __webpack_require__(42);
 
 /***/ }),
-/* 39 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(25);
+var inherits = __webpack_require__(27);
 
-var Buffer = __webpack_require__(30).Buffer;
+var Buffer = __webpack_require__(32).Buffer;
 
-var asn1 = __webpack_require__(22);
+var asn1 = __webpack_require__(24);
 
 var base = asn1.base; // Import DER constants
 
@@ -31463,15 +31463,15 @@ function encodeTag(tag, primitive, cls, reporter) {
 }
 
 /***/ }),
-/* 40 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var inherits = __webpack_require__(25);
+var inherits = __webpack_require__(27);
 
-var DEREncoder = __webpack_require__(39);
+var DEREncoder = __webpack_require__(41);
 
 function PEMEncoder(entity) {
   DEREncoder.call(this, entity);
@@ -31495,7 +31495,7 @@ PEMEncoder.prototype.encode = function encode(data, options) {
 
 /***/ })
 /******/ ]));
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.openpgp = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+    (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.openpgp = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -74384,14 +74384,12 @@ exports.default = AsyncProxy;
 },{"../config":80,"../crypto":95,"../packet":126,"../util.js":153}]},{},[116])(116)
 });
 
+    const openpgp = module.exports;
+    module.exports = {};
+    global['openpgp'] = openpgp;
+  })();
 
-	const openpgp = module.exports;
-	module.exports = {};
-
-	global['openpgp'] = openpgp;
-
-})();
-module.exports =
+  module.exports =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -74494,20 +74492,25 @@ Object.defineProperty(exports, "__esModule", {
 
 const https = __webpack_require__(1);
 
-const parse_1 = __webpack_require__(2);
+const http_1 = __webpack_require__(2);
 
-const fmt_1 = __webpack_require__(3);
+const parse_1 = __webpack_require__(3);
 
-const endpoints_1 = __webpack_require__(18);
+const fmt_1 = __webpack_require__(4);
 
-const native_1 = __webpack_require__(20);
+const endpoints_1 = __webpack_require__(19);
 
-const util_1 = __webpack_require__(5);
+const native_1 = __webpack_require__(21);
+
+const util_1 = __webpack_require__(6);
+
+const buf_1 = __webpack_require__(16);
 
 util_1.setGlobals();
 const doPrintDebug = Boolean(NODE_DEBUG === 'true');
 const doProfile = Boolean(APP_PROFILE === 'true');
 const doPrintReplay = Boolean(NODE_PRINT_REPLAY === 'true');
+const doRunInsecure = process.argv.includes('--insecure');
 const endpoints = new endpoints_1.Endpoints();
 
 const delegateReqToEndpoint = async (endpointName, uncheckedReq, data) => {
@@ -74525,17 +74528,20 @@ const handleReq = async (req, res, receivedAt) => {
     console.debug(`PROFILE[${Date.now() - receivedAt}ms] new request ${req.url}`);
   }
 
-  if (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT || !NODE_SSL_CA) {
-    throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_CA, NODE_SSL_KEY or NODE_SSL_CRT');
+  if (!doRunInsecure && (!NODE_AUTH_HEADER || !NODE_SSL_KEY || !NODE_SSL_CRT || !NODE_SSL_CA)) {
+    throw new Error('Missing NODE_AUTH_HEADER, NODE_SSL_CA, NODE_SSL_KEY or NODE_SSL_CRT when doRunInsecure = false');
   }
 
-  if (req.headers['authorization'] !== NODE_AUTH_HEADER) {
+  if (doRunInsecure && APP_ENV !== 'dev') {
+    throw new Error('ERROR: --insecure can only be used with APP_ENV=dev');
+  }
+
+  if (req.headers['authorization'] !== NODE_AUTH_HEADER && !doRunInsecure) {
     throw new fmt_1.HttpAuthErr('Wrong Authorization');
   }
 
   if (req.url === '/' && req.method === 'GET') {
-    res.setHeader('content-type', 'text/html');
-    return [fmt_1.indexHtml];
+    return [Buffer.from(`app: mobile-core\nenv: ${APP_ENV}\ndebug: ${NODE_DEBUG}\ninsecure: ${doRunInsecure}\nprofile: ${doProfile}\n`)];
   }
 
   if (req.url === '/' && req.method === 'POST') {
@@ -74555,7 +74561,7 @@ const handleReq = async (req, res, receivedAt) => {
     }
 
     if (doPrintReplay) {
-      fmt_1.printReplayTestDefinition(endpoint, request, Buffer.concat(data));
+      fmt_1.printReplayTestDefinition(endpoint, request, buf_1.Buf.concat(data));
     }
 
     const endpointResponse = await delegateReqToEndpoint(endpoint, request, data);
@@ -74570,7 +74576,7 @@ const handleReq = async (req, res, receivedAt) => {
   throw new fmt_1.HttpClientErr(`unknown path ${req.url}`);
 };
 
-const serverOptins = {
+const sslOpts = {
   key: NODE_SSL_KEY,
   cert: NODE_SSL_CRT,
   ca: NODE_SSL_CA,
@@ -74583,18 +74589,14 @@ if (isNaN(LISTEN_PORT) || LISTEN_PORT < 1024) {
   throw new Error('Wrong or no NODE_PORT supplied');
 }
 
-const sendRes = (res, buffers) => {
-  res.end(Buffer.concat(buffers));
-};
-
-const server = https.createServer(serverOptins, (request, res) => {
+const reqListener = (req, res) => {
   const receivedAt = Date.now();
-  handleReq(request, res, receivedAt).then(buffers => {
+  handleReq(req, res, receivedAt).then(buffers => {
     if (doProfile) {
       console.debug(`PROFILE[${Date.now() - receivedAt}ms] begin sending response`);
     }
 
-    sendRes(res, buffers);
+    res.end(Buffer.concat(buffers));
 
     if (doProfile) {
       console.debug(`PROFILE[${Date.now() - receivedAt}ms] response sent, DONE`);
@@ -74603,20 +74605,26 @@ const server = https.createServer(serverOptins, (request, res) => {
     res.statusCode = 200;
 
     if (e instanceof fmt_1.HttpAuthErr) {
-      res.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-android-node"');
+      res.setHeader('WWW-Authenticate', 'Basic realm="flowcrypt-mobile-core"');
     } else if (!(e instanceof fmt_1.HttpClientErr)) {
       console.error(e);
     }
 
-    res.end(fmt_1.fmtErr(e));
+    res.end(Buffer.concat([fmt_1.fmtErr(e)]));
   });
-});
+};
+
+const server = doRunInsecure ? http_1.createServer(reqListener) : https.createServer(sslOpts, reqListener);
 server.listen(LISTEN_PORT, 'localhost');
 server.on('listening', () => {
   const address = server.address();
-  const msg = `listening on ${typeof address === 'object' ? address.port : address} APP_ENV:${APP_ENV}`;
+  const msg = `listening on ${address && typeof address === 'object' ? address.port : address} APP_ENV:${APP_ENV}`;
   console.info(msg);
   native_1.sendNativeMessageToJava(msg);
+
+  if (doRunInsecure) {
+    console.error('SECURITY WARNING - MOBILE CORE USES INSECURE HTTP');
+  }
 });
 
 /***/ }),
@@ -74627,6 +74635,12 @@ module.exports = require("https");
 
 /***/ }),
 /* 2 */
+/***/ (function(module, exports) {
+
+module.exports = require("http");
+
+/***/ }),
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -74637,9 +74651,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const fmt_1 = __webpack_require__(3);
+const fmt_1 = __webpack_require__(4);
 
-const endpoints_1 = __webpack_require__(18);
+const endpoints_1 = __webpack_require__(19);
 
 const NEWLINE = Buffer.from('\n');
 
@@ -74723,7 +74737,7 @@ exports.parseReq = (r, debug) => new Promise((resolve, reject) => {
 });
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -74734,13 +74748,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const common_1 = __webpack_require__(4);
+const common_1 = __webpack_require__(5);
 
-const pgp_1 = __webpack_require__(7);
+const pgp_1 = __webpack_require__(8);
 
-const xss_1 = __webpack_require__(17);
+const xss_1 = __webpack_require__(18);
 
-const buf_1 = __webpack_require__(15);
+const buf_1 = __webpack_require__(16);
 
 class HttpAuthErr extends Error {}
 
@@ -74830,8 +74844,8 @@ exports.fmtContentBlock = contentBlocks => {
 
 exports.fmtRes = (response, data) => {
   const buffers = [];
-  buffers.push(Buffer.from(JSON.stringify(response)));
-  buffers.push(Buffer.from('\n'));
+  buffers.push(buf_1.Buf.fromUtfStr(JSON.stringify(response)));
+  buffers.push(buf_1.Buf.fromUtfStr('\n'));
 
   if (data) {
     buffers.push(data);
@@ -74840,21 +74854,12 @@ exports.fmtRes = (response, data) => {
   return buffers;
 };
 
-exports.fmtErr = e => Buffer.concat(exports.fmtRes({
+exports.fmtErr = e => buf_1.Buf.concat(exports.fmtRes({
   error: {
     message: String(e),
     stack: e && typeof e === 'object' ? e.stack || '' : ''
   }
 }));
-
-exports.indexHtml = Buffer.from(`
-<html><head></head><body>
-<form method="POST" target="_blank" enctype="multipart/form-data">
-  <input type="text" placeholder="endpoint" name="endpoint"><br>
-  <textarea name="request" cols="160" rows="4" placeholder="json"></textarea><br>
-  <input name="data" type="file"> <button type="submit">submit post request</button>
-</form>
-</body></html>`);
 
 exports.printReplayTestDefinition = (endpoint, request, data) => {
   console.log(`
@@ -74869,7 +74874,7 @@ ava.test.only('replaying', async t => {
 };
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -74880,7 +74885,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const util_js_1 = __webpack_require__(5);
+const util_js_1 = __webpack_require__(6);
 
 class Str {}
 
@@ -75049,7 +75054,7 @@ Value.noop = () => undefined;
 exports.Value = Value;
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -75060,7 +75065,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const crypto_1 = __webpack_require__(6);
+const crypto_1 = __webpack_require__(7);
 
 exports.secureRandomBytes = length => {
   return crypto_1.randomBytes(length);
@@ -75080,13 +75085,13 @@ exports.setGlobals = () => {
 };
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports) {
 
 module.exports = require("crypto");
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -75097,25 +75102,25 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const const_js_1 = __webpack_require__(8);
+const const_js_1 = __webpack_require__(9);
 
-const catch_js_1 = __webpack_require__(9);
+const catch_js_1 = __webpack_require__(10);
 
-const store_js_1 = __webpack_require__(10);
+const store_js_1 = __webpack_require__(11);
 
-const common_js_1 = __webpack_require__(4);
+const common_js_1 = __webpack_require__(5);
 
-const mime_js_1 = __webpack_require__(13);
+const mime_js_1 = __webpack_require__(14);
 
-const mnemonic_js_1 = __webpack_require__(16);
+const mnemonic_js_1 = __webpack_require__(17);
 
-const require_js_1 = __webpack_require__(11);
+const require_js_1 = __webpack_require__(12);
 
-const util_js_1 = __webpack_require__(5);
+const util_js_1 = __webpack_require__(6);
 
-const buf_js_1 = __webpack_require__(15);
+const buf_js_1 = __webpack_require__(16);
 
-const xss_js_1 = __webpack_require__(17);
+const xss_js_1 = __webpack_require__(18);
 
 const openpgp = require_js_1.requireOpenpgp();
 
@@ -76494,7 +76499,7 @@ PgpMsg.pushArmoredPubkeysToBlocks = async (armoredPubkeys, blocks) => {
 exports.PgpMsg = PgpMsg;
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -76523,7 +76528,7 @@ exports.gmailBackupSearchQuery = acctEmail => {
 };
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -76547,7 +76552,7 @@ Catch.report = (name, details) => {
 exports.Catch = Catch;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -76558,7 +76563,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const require_js_1 = __webpack_require__(11);
+const require_js_1 = __webpack_require__(12);
 
 const openpgp = require_js_1.requireOpenpgp();
 let KEY_CACHE = {};
@@ -76607,7 +76612,7 @@ Store.keyCacheRenewExpiry = () => {
 exports.Store = Store;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -76625,7 +76630,7 @@ exports.requireOpenpgp = () => {
     return openpgp; // self-contained node-mobile
   }
 
-  return __webpack_require__(12); // normal desktop node, eg when running tests
+  return __webpack_require__(13); // normal desktop node, eg when running tests
 };
 
 exports.requireMimeParser = () => {
@@ -76646,13 +76651,13 @@ exports.requireIso88592 = () => {
 };
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports) {
 
 module.exports = require("openpgp");
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -76663,17 +76668,17 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const common_js_1 = __webpack_require__(4);
+const common_js_1 = __webpack_require__(5);
 
-const pgp_js_1 = __webpack_require__(7);
+const pgp_js_1 = __webpack_require__(8);
 
-const att_js_1 = __webpack_require__(14);
+const att_js_1 = __webpack_require__(15);
 
-const catch_js_1 = __webpack_require__(9);
+const catch_js_1 = __webpack_require__(10);
 
-const require_js_1 = __webpack_require__(11);
+const require_js_1 = __webpack_require__(12);
 
-const buf_js_1 = __webpack_require__(15);
+const buf_js_1 = __webpack_require__(16);
 
 const MimeParser = require_js_1.requireMimeParser(); // tslint:disable-line:variable-name
 
@@ -77029,7 +77034,7 @@ Mime.newContentNode = (MimeBuilder, type, content) => {
 exports.Mime = Mime;
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -77040,7 +77045,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const buf_js_1 = __webpack_require__(15);
+const buf_js_1 = __webpack_require__(16);
 
 class Att {
   constructor({
@@ -77153,7 +77158,7 @@ Att.keyinfoAsPubkeyAtt = ki => new Att({
 exports.Att = Att;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -77164,7 +77169,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const util_js_1 = __webpack_require__(5);
+const util_js_1 = __webpack_require__(6);
 
 class Buf extends Uint8Array {
   constructor() {
@@ -77264,6 +77269,18 @@ class Buf extends Uint8Array {
 
 }
 
+Buf.concat = arrays => {
+  const result = new Uint8Array(arrays.reduce((totalLen, arr) => totalLen + arr.length, 0));
+  let offset = 0;
+
+  for (const array of arrays) {
+    result.set(array, offset);
+    offset += array.length;
+  }
+
+  return Buf.fromUint8(result);
+};
+
 Buf.with = input => {
   if (input instanceof Buf) {
     return input;
@@ -77359,7 +77376,7 @@ Buf.fromBase64UrlStr = b64UrlStr => {
 exports.Buf = Buf;
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -77400,7 +77417,7 @@ exports.mnemonic = hex => {
 };
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -77410,7 +77427,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const common_1 = __webpack_require__(4);
+const common_1 = __webpack_require__(5);
 /**
  * This file needs to be in platform/ folder because its implementation is platform-dependant
  *  - on browser, it uses DOMPurify
@@ -77561,7 +77578,7 @@ Xss.htmlUnescape = str => {
 exports.Xss = Xss;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -77573,42 +77590,47 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const pgp_1 = __webpack_require__(7);
+const pgp_1 = __webpack_require__(8);
 
-const validate_1 = __webpack_require__(19);
+const validate_1 = __webpack_require__(20);
 
-const fmt_1 = __webpack_require__(3);
+const fmt_1 = __webpack_require__(4);
 
-const const_1 = __webpack_require__(8);
+const const_1 = __webpack_require__(9);
 
-const require_1 = __webpack_require__(11);
+const require_1 = __webpack_require__(12);
 
-const common_1 = __webpack_require__(4);
+const common_1 = __webpack_require__(5);
 
-const mime_1 = __webpack_require__(13);
+const mime_1 = __webpack_require__(14);
 
-const buf_1 = __webpack_require__(15);
+const buf_1 = __webpack_require__(16);
 
-const store_1 = __webpack_require__(10);
+const store_1 = __webpack_require__(11);
 
-const xss_1 = __webpack_require__(17);
+const xss_1 = __webpack_require__(18);
+
+const const_2 = __webpack_require__(9);
 
 const openpgp = require_1.requireOpenpgp();
 
 class Endpoints {
   constructor() {
     this.version = async () => {
-      return fmt_1.fmtRes(process.versions);
+      const hasNodeVersions = typeof process === 'object' && process && typeof process.versions === 'object' && process.versions && process.versions.openssl;
+      return fmt_1.fmtRes(hasNodeVersions ? process.versions : {
+        app_version: const_2.VERSION
+      });
     };
 
     this.encryptMsg = async (uncheckedReq, data) => {
       const req = validate_1.Validate.encryptMsg(uncheckedReq);
       const encrypted = await pgp_1.PgpMsg.encrypt({
         pubkeys: req.pubKeys,
-        data: Buffer.concat(data),
+        data: buf_1.Buf.concat(data),
         armor: true
       });
-      return fmt_1.fmtRes({}, Buffer.from(encrypted.data));
+      return fmt_1.fmtRes({}, buf_1.Buf.fromUtfStr(encrypted.data));
     };
 
     this.generateKey = async uncheckedReq => {
@@ -77665,7 +77687,7 @@ class Endpoints {
       const req = validate_1.Validate.encryptFile(uncheckedReq);
       const encrypted = await pgp_1.PgpMsg.encrypt({
         pubkeys: req.pubKeys,
-        data: Buffer.concat(data),
+        data: buf_1.Buf.concat(data),
         filename: req.name,
         armor: false
       });
@@ -77686,11 +77708,11 @@ class Endpoints {
         const {
           blocks,
           rawSignedContent
-        } = await mime_1.Mime.process(Buffer.concat(data));
+        } = await mime_1.Mime.process(buf_1.Buf.concat(data));
         rawSigned = rawSignedContent;
         rawBlocks.push(...blocks);
       } else {
-        rawBlocks.push(pgp_1.Pgp.internal.msgBlockObj('encryptedMsg', new buf_1.Buf(Buffer.concat(data))));
+        rawBlocks.push(pgp_1.Pgp.internal.msgBlockObj('encryptedMsg', new buf_1.Buf(buf_1.Buf.concat(data))));
       }
 
       const sequentialProcessedBlocks = []; // contains decrypted or otherwise formatted data
@@ -77837,7 +77859,7 @@ class Endpoints {
       return fmt_1.fmtRes({
         text,
         replyType
-      }, Buffer.from(blocks.map(b => JSON.stringify(b)).join('\n')));
+      }, buf_1.Buf.fromUtfStr(blocks.map(b => JSON.stringify(b)).join('\n')));
     };
 
     this.decryptFile = async (uncheckedReq, data) => {
@@ -77847,7 +77869,7 @@ class Endpoints {
       } = validate_1.Validate.decryptFile(uncheckedReq);
       const decryptedMeta = await pgp_1.PgpMsg.decrypt({
         kisWithPp,
-        encryptedData: Buffer.concat(data),
+        encryptedData: buf_1.Buf.concat(data),
         msgPwd
       });
 
@@ -77895,7 +77917,7 @@ class Endpoints {
 
     this.parseKeys = async (_uncheckedReq, data) => {
       const keyDetails = [];
-      const allData = Buffer.concat(data);
+      const allData = buf_1.Buf.concat(data);
       const pgpType = await pgp_1.PgpMsg.type({
         data: allData
       });
@@ -78051,7 +78073,7 @@ Debug.pad = char => {
 exports.Debug = Debug;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -78197,6 +78219,11 @@ const hasProp = (v, name, type) => {
   }
 
   if (type === 'string?') {
+    if (value === null) {
+      v[name] = undefined;
+      return true;
+    }
+
     return typeof value === 'string' || typeof value === 'undefined';
   }
 
@@ -78220,7 +78247,7 @@ const hasProp = (v, name, type) => {
 };
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -78231,7 +78258,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const EventEmitter = __webpack_require__(21);
+const EventEmitter = __webpack_require__(22);
 
 let send = msg => {
   if (APP_ENV === 'prod') {
@@ -78271,14 +78298,14 @@ try {
 exports.sendNativeMessageToJava = send;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports) {
 
 module.exports = require("events");
 
 /***/ })
 /******/ ]);
-/* final flowcrypt-android bundle ends here */
+  /* final flowcrypt-android bundle ends here */
 } catch(e) {
   console.error(e);
 }
