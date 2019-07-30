@@ -35,7 +35,7 @@ object NodeRetrofitHelper {
   var gson: Gson = NodeGson.gson
 
   private val httpLoggingInterceptor: Interceptor
-    get() = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY)
+    get() = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC)
 
   @WorkerThread
   fun init(nodeSecret: NodeSecret) {
