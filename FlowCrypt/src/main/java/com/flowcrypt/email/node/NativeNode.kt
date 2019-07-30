@@ -87,6 +87,12 @@ internal class NativeNode private constructor(private val nodeSecret: NodeSecret
 
   companion object {
 
+    private val ASYNC_REQUEST_HEADER = "ASYNC_REQUEST|";
+    private val ASYNC_RESPONSE_SUCCESS_HEADER = "ASYNC_RESPONSE|SUCCESS|";
+    private val ASYNC_RESPONSE_ERROR_HEADER = "ASYNC_RESPONSE|ERROR|";
+    private val ASYNC_REQUEST_ID_LEN = 10;
+    private val nodeHost = NodeHost()
+
     @Volatile
     private var INSTANCE: NativeNode? = null
 
@@ -114,8 +120,27 @@ internal class NativeNode private constructor(private val nodeSecret: NodeSecret
       if (msg.startsWith("listening on ")) {
         isReady = true
       }
-
-      if (GeneralUtil.isDebugBuild()) {
+      if(msg.startsWith(ASYNC_REQUEST_HEADER)) {
+        if (GeneralUtil.isDebugBuild()) {
+//          println(msg)
+        }
+        val idLen = 10;
+        val id = msg.substring(ASYNC_REQUEST_HEADER.length, ASYNC_REQUEST_HEADER.length + idLen)
+        val nameEndSeparator = msg.indexOf('|', ASYNC_REQUEST_HEADER.length + ASYNC_REQUEST_ID_LEN + 2)
+        val name = msg.substring(ASYNC_REQUEST_HEADER.length + ASYNC_REQUEST_ID_LEN + 1, nameEndSeparator);
+        val reqBody = msg.subSequence(nameEndSeparator + 1, msg.length)
+        val responseData = nodeHost.nodeReqHandler(name, reqBody)
+        var response: String;
+        try {
+          response = "$ASYNC_RESPONSE_SUCCESS_HEADER$id|$responseData"
+        } catch(e: Exception) {
+          response = "$ASYNC_RESPONSE_ERROR_HEADER$id|${e.stackTrace}"
+        }
+        if (GeneralUtil.isDebugBuild()) {
+//          println(response)
+        }
+        INSTANCE!!.sendNativeMessageToNode(response)
+      } else if (GeneralUtil.isDebugBuild()) {
         println("NODEJS-NATIVE-MSG[$msg]")
       }
     }
