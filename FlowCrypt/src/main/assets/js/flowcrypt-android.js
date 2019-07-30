@@ -10,7 +10,8 @@ if (typeof coreHost === 'undefined') {
   // on JavaScriptCore, coreHost code is injected during startup
   // on NodeJS-mobile, this is defined below manually
   global.coreHost = { // returns promises, althrough on JavaScriptCore returns direct value. We await it either way
-    decryptRsaNoPadding: (derRsaPrvBase64, encryptedBase64) => hostAsyncRequest("decryptRsaNoPadding", `${derRsaPrvBase64},${encryptedBase64}`),
+    decryptRsaNoPadding: (derRsaPrvBase64, encryptedBase64) => hostAsyncRequest('decryptRsaNoPadding', `${derRsaPrvBase64},${encryptedBase64}`),
+    verifyRsaModPow: (base, exponent, modulo) => hostAsyncRequest('verifyRsaModPow', `${base},${exponent},${modulo}`),
   };
 }
 
@@ -62569,7 +62570,9 @@ exports.default = {
           const m = msg_MPIs[0].toBN();
           const n = pub_MPIs[0].toBN();
           const e = pub_MPIs[1].toBN();
-          const EM = await _public_key2.default.rsa.verify(m, n, e);
+          
+  const computed = await coreHost.verifyRsaModPow(m.toString(10), e.toString(10), n.toString(10)); // returns empty str if not supported: js fallback below
+  const EM = computed ? new _bn2.default(computed, 10).toArrayLike(Uint8Array, 'be', n.byteLength()) : await _public_key2.default.rsa.verify(m, n, e);
           const EM2 = await _pkcs2.default.emsa.encode(hash_algo, hashed, n.byteLength());
           return _util2.default.Uint8Array_to_hex(EM) === EM2;
         }
