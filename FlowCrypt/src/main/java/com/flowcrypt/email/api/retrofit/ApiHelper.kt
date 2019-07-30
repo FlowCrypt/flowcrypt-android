@@ -53,7 +53,7 @@ class ApiHelper private constructor(context: Context) {
       }
 
       val loggingInterceptor = HttpLoggingInterceptor()
-      loggingInterceptor.level = HttpLoggingInterceptor.Level.BODY
+      loggingInterceptor.level = HttpLoggingInterceptor.Level.BASIC
       okHttpClientBuilder.addInterceptor(loggingInterceptor)
     }
 
