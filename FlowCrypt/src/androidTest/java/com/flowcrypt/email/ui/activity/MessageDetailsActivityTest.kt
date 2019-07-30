@@ -319,7 +319,7 @@ class MessageDetailsActivityTest : BaseTest() {
     onView(withId(R.id.textViewPgpPublicKey))
         .check(matches(isDisplayed()))
     onView(withId(R.id.textViewPgpPublicKey))
-        .check(matches(withText(block.content)))
+        .check(matches(withText(TestGeneralUtil.replaceVersionInKey(block.content))))
     onView(withId(R.id.switchShowPublicKey))
         .check(matches(isChecked()))
         .perform(scrollTo(), click())

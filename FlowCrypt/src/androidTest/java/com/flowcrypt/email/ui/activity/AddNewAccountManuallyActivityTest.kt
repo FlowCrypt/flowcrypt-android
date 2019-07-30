@@ -137,7 +137,6 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testChangeFieldValuesWhenEmailChanged() {
     onView(withId(R.id.editTextEmail))
         .perform(clearText(), typeText(authCreds.email), closeSoftKeyboard())
