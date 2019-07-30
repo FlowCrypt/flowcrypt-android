@@ -2,6 +2,57 @@
 try {
   /* final flowcrypt-android bundle starts here */
   const dereq_inherits = require("util").inherits; // standard node util, not to interfere with webpack require, which cannot resolve it
+  /*
+ *  cryptographic functions relayed to host app for performance
+ */
+
+if (typeof coreHost === 'undefined') {
+  // on JavaScriptCore, coreHost code is injected during startup
+  // on NodeJS-mobile, this is defined below manually
+  global.coreHost = { // returns promises, althrough on JavaScriptCore returns direct value. We await it either way
+    decryptRsaNoPadding: (derRsaPrvBase64, encryptedBase64) => hostAsyncRequest("decryptRsaNoPadding", `${derRsaPrvBase64},${encryptedBase64}`),
+  };
+}
+
+const get_DER_RSAPrivateKey_definition = (ASN1) => {
+  return ASN1.define('RSAPrivateKey', function () {
+    this.seq().obj(
+      this.key('version').int(),
+      this.key('modulus').int(),
+      this.key('publicExponent').int(),
+      this.key('privateExponent').int(),
+      this.key('prime1').int(),
+      this.key('prime2').int(),
+      this.key('exponent1').int(),
+      this.key('exponent2').int(),
+      this.key('coefficient').int(),
+    );
+  });
+};
+
+const hostRsaDecryption = async (ASN1, BN, c_encrypted, n, e, d, p, q) => {
+  const dp = d.mod(p.subn(1)); // d mod (p-1)
+  const dq = d.mod(q.subn(1)); // d mod (q-1)
+  const u = q.invm(p); // (inverse of q) mod p (as per DER spec. PGP spec has it in the opposite way - that's why we compute our own).
+  var derRsaPrvBase64 = get_DER_RSAPrivateKey_definition(ASN1).encode({
+    version: 0,
+    modulus: n,
+    publicExponent: e,
+    privateExponent: d,
+    prime1: p,
+    prime2: q,
+    exponent1: dp, //         INTEGER,  -- d mod (p-1)
+    exponent2: dq, //        INTEGER,  -- d mod (q-1)
+    coefficient: u, //       INTEGER,  -- (inverse of q) mod p
+  }, 'der').toString("base64");
+  let encryptedBase64 = btoa(openpgp.util.Uint8Array_to_str(c_encrypted.toUint8Array()));
+  let decryptedBase64 = await coreHost.decryptRsaNoPadding(derRsaPrvBase64, encryptedBase64);
+  if (!decryptedBase64) { // possibly msg-key mismatch
+    throw new Error("Session key decryption failed (host)");
+  }
+  return new BN.default(openpgp.util.b64_to_Uint8Array(decryptedBase64)).toArrayLike(Uint8Array, 'be', n.byteLength());
+};
+
   const dereq_html_sanitize =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -58976,7 +59027,7 @@ exports.default = {
           const p = key_params[3].toBN();
           const q = key_params[4].toBN();
           const u = key_params[5].toBN(); // q^-1 mod p
-          return _public_key2.default.rsa.decrypt(c, n, e, d, p, q, u);
+          return await hostRsaDecryption(dereq_asn1, _bn2, data_params[0], n, e, d, p, q);
         }
       case _enums2.default.publicKey.elgamal:
         {
@@ -78260,6 +78311,15 @@ Object.defineProperty(exports, "__esModule", {
 
 const EventEmitter = __webpack_require__(22);
 
+const common_1 = __webpack_require__(5);
+
+const ASYNC_REQUEST_HEADER = "ASYNC_REQUEST|";
+const ASYNC_RESPONSE_HEADER = "ASYNC_RESPONSE|";
+const ASYNC_RESPONSE_SUCCESS_HEADER = `${ASYNC_RESPONSE_HEADER}SUCCESS|`;
+const ASYNC_RESPONSE_ERROR_HEADER = `${ASYNC_RESPONSE_HEADER}ERROR|`;
+const ID_LENGTH = 10;
+const ASYNC_RESPONSE_TIMEOUT = 60000;
+
 let send = msg => {
   if (APP_ENV === 'prod') {
     console.error(`-------------------- native bridge not present for message --------------------\n${msg}\n--------------------`);
@@ -78267,6 +78327,8 @@ let send = msg => {
     console.log(`dev:rn-bridge:${msg}`);
   }
 };
+
+const listeners = {};
 
 try {
   const mybridgeaddon = process.binding('rn_bridge');
@@ -78283,10 +78345,27 @@ try {
   }
 
   const channel = new MyEmitter();
-  /* var myListener =*/
-
   mybridgeaddon.registerListener(function (msg) {
-    channel.emit('message', msg);
+    if (msg.startsWith(ASYNC_RESPONSE_HEADER)) {
+      let isSuccess = false;
+      let headerLen = ASYNC_RESPONSE_ERROR_HEADER.length;
+
+      if (msg.startsWith(ASYNC_RESPONSE_SUCCESS_HEADER)) {
+        isSuccess = true;
+        headerLen = ASYNC_RESPONSE_SUCCESS_HEADER.length;
+      }
+
+      let id = msg.substr(headerLen, ID_LENGTH);
+      let response = msg.substr(headerLen + ID_LENGTH + 1);
+
+      if (listeners[id]) {
+        listeners[id](isSuccess, response);
+      } else {
+        console.log(`Message from host with id ${id} has no listener available (possibly result of timeout)`);
+      }
+    } else {
+      console.log(`Message from Host: ${msg}`);
+    }
   });
   send = channel.send;
 } catch (e) {
@@ -78296,6 +78375,36 @@ try {
 }
 
 exports.sendNativeMessageToJava = send;
+
+exports.hostAsyncRequest = (name, req) => new Promise((resolve, reject) => {
+  let id = common_1.Str.sloppyRandom(10);
+  let timeout = setTimeout(() => {
+    delete listeners[id];
+    reject(Error(`Host response timeout for request ${name} ${id}`));
+  }, ASYNC_RESPONSE_TIMEOUT);
+
+  listeners[id] = (isSuccess, responseOrStack) => {
+    delete listeners[id];
+    clearTimeout(timeout);
+    setTimeout(() => {
+      try {
+        if (isSuccess) {
+          resolve(responseOrStack);
+        } else {
+          let e = Error(`Error response from NodeHost for request ${name} ${id}`);
+          e.stack += `\n${responseOrStack}`;
+          reject(e);
+        }
+      } catch (e) {
+        reject(e);
+      }
+    }, 0); // next eventloop cycle
+  };
+
+  setTimeout(() => exports.sendNativeMessageToJava(`${ASYNC_REQUEST_HEADER}${id}|${name}|${req}`), 0); // next eventloop cycle
+});
+
+global.hostAsyncRequest = exports.hostAsyncRequest;
 
 /***/ }),
 /* 22 */
