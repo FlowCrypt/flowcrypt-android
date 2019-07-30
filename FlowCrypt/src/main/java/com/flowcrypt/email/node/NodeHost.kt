@@ -1,14 +1,11 @@
 package com.flowcrypt.email.node
 
 import java.lang.Exception
-import java.security.spec.X509EncodedKeySpec
 import android.util.Base64
-import org.spongycastle.asn1.x500.style.RFC4519Style.name
+import java.math.BigInteger
 import java.security.KeyFactory
 import java.security.spec.PKCS8EncodedKeySpec
 import javax.crypto.Cipher
-
-
 
 
 class NodeHost {
@@ -20,6 +17,7 @@ class NodeHost {
         val parts = request.split(',')
         return when (name) {
             "decryptRsaNoPadding" -> decryptRsaNoPadding(parts[0], parts[1])
+            "verifyRsaModPow" -> verifyRsaModPow(parts[0], parts[1], parts[2])
             else -> throw Exception("Unknown NodeHost request name: $name")
         }
     }
@@ -34,6 +32,14 @@ class NodeHost {
         cipher.init(Cipher.DECRYPT_MODE, prv)
         val decrypted = String(Base64.encode(cipher.doFinal(encryptedBytes), Base64.DEFAULT))
         return decrypted
+    }
+
+    private fun verifyRsaModPow(baseStr: String, exponentStr: String, moduloStr: String): String {
+        val base = BigInteger(baseStr, 10)
+        val exponent = BigInteger(exponentStr, 10)
+        val modulo = BigInteger(moduloStr, 10)
+        val result = base.modPow(exponent, modulo)
+        return result.toString(10)
     }
 
 }
