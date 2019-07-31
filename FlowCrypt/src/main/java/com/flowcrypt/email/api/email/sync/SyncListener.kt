@@ -130,7 +130,7 @@ interface SyncListener {
    * @param remoteFolder      The folder where the new messages exist;
    * @param uid               The UID of the message;
    * @param msg               The received message;
-   * @param rawMsgWithoutAtts The raw message without attachments;
+   * @param rawMimeBytes      The raw mime bytes of a message without attachments;
    * @param ownerKey          The name of the reply to [android.os.Messenger];
    * @param requestCode       The unique request code for the reply to
    * [android.os.Messenger].
@@ -141,7 +141,7 @@ interface SyncListener {
       remoteFolder: IMAPFolder,
       uid: Long,
       msg: Message?,
-      rawMsgWithoutAtts: String,
+      rawMimeBytes: ByteArray,
       ownerKey: String,
       requestCode: Int
   )

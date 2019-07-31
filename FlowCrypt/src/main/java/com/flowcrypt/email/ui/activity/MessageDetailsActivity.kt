@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
@@ -43,6 +42,7 @@ import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
+import com.sun.mail.util.ASCIIUtility
 import java.util.*
 
 /**
@@ -67,7 +67,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   private var isRequestMsgDetailsStarted: Boolean = false
   private var isRetrieveIncomingMsgNeeded = true
   private lateinit var viewModel: DecryptMessageViewModel
-  private var rawMimeMsg: String? = null
+  private var rawMimeBytes: ByteArray? = null
 
   override val rootView: View
     get() = View(this)
@@ -129,24 +129,26 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
     when (loader.id) {
       R.id.loader_id_load_raw_mime_msg_from_db -> if (cursor != null && cursor.moveToFirst()) {
-        this.rawMimeMsg = cursor.getString(cursor.getColumnIndex(MessageDaoSource
+        this.rawMimeBytes = cursor.getBlob(cursor.getColumnIndex(MessageDaoSource
             .COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS))
 
         updateMsgDetails(details!!)
 
-        if (TextUtils.isEmpty(rawMimeMsg)) {
+        if (rawMimeBytes?.isNotEmpty() == true) {
+          if (isRetrieveIncomingMsgNeeded) {
+            isRetrieveIncomingMsgNeeded = false
+            isReceiveMsgBodyNeeded = false
+            messageDaoSource.setSeenStatus(this, details!!.email, localFolder!!.folderAlias, details!!.uid.toLong())
+            setResult(RESULT_CODE_UPDATE_LIST, null)
+            decryptMsg()
+          }
+        } else {
           if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
             this.isRequestMsgDetailsStarted = true
             loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, localFolder!!, details!!.uid)
           } else {
             isReceiveMsgBodyNeeded = true
           }
-        } else if (isRetrieveIncomingMsgNeeded) {
-          isRetrieveIncomingMsgNeeded = false
-          isReceiveMsgBodyNeeded = false
-          messageDaoSource.setSeenStatus(this, details!!.email, localFolder!!.folderAlias, details!!.uid.toLong())
-          setResult(RESULT_CODE_UPDATE_LIST, null)
-          decryptMsg()
         }
       }
 
@@ -188,10 +190,10 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   override fun onNodeStateChanged(isReady: Boolean) {
     super.onNodeStateChanged(isReady)
     if (isReady) {
-      if (TextUtils.isEmpty(rawMimeMsg)) {
-        LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_raw_mime_msg_from_db, null, this)
-      } else {
+      if (rawMimeBytes?.isNotEmpty() == true) {
         decryptMsg()
+      } else {
+        LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_raw_mime_msg_from_db, null, this)
       }
     }
   }
@@ -341,7 +343,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             return
           } else {
             val msgInfo = IncomingMessageInfo(details!!, result.text, result.msgBlocks!!,
-                EmailUtil.getHeadersFromRawMIME(rawMimeMsg), result.getMsgEncryptionType())
+                EmailUtil.getHeadersFromRawMIME(ASCIIUtility.toString(rawMimeBytes)), result.getMsgEncryptionType())
             val fragment = supportFragmentManager
                 .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
 
@@ -378,9 +380,9 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   fun decryptMsg() {
-    if (!TextUtils.isEmpty(rawMimeMsg)) {
+    if (rawMimeBytes?.isNotEmpty() == true) {
       idlingForDecryption!!.increment()
-      viewModel.decryptMessage(rawMimeMsg!!)
+      viewModel.decryptMessage(rawMimeBytes!!)
     }
   }
 

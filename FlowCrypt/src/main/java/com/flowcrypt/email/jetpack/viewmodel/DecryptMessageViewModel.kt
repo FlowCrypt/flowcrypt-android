@@ -11,7 +11,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.security.KeysStorageImpl
-import java.util.*
 
 /**
  * This [ViewModel] implementation can be used to parse and decrypt (if needed) an incoming message.
@@ -25,7 +24,7 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
     KeysStorageImpl.OnRefreshListener {
   private var keysStorage: KeysStorageImpl? = null
   private var apiRepository: PgpApiRepository? = null
-  private var rawMessage: String? = null
+  private var rawMimeBytes: ByteArray? = null
 
   override fun onRefresh() {}
 
@@ -35,12 +34,12 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
     this.keysStorage!!.attachOnRefreshListener(this)
   }
 
-  fun decryptMessage(rawMessage: String) {
-    this.rawMessage = rawMessage
+  fun decryptMessage(rawMimeBytes: ByteArray) {
+    this.rawMimeBytes = rawMimeBytes
 
     val pgpKeyInfoList = keysStorage!!.getAllPgpPrivateKeys()
 
     apiRepository!!.parseDecryptMsg(R.id.live_data_id_parse_and_decrypt_msg, responsesLiveData,
-        ParseDecryptMsgRequest(rawMessage, pgpKeyInfoList, true))
+        ParseDecryptMsgRequest(rawMimeBytes, pgpKeyInfoList, true))
   }
 }
