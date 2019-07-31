@@ -41,7 +41,7 @@ object RequestsManager {
     load(requestCode, EncryptMsgRequest(msg, Arrays.asList(*TestData.mixedPubKeys)))
   }
 
-  fun decryptMsg(requestCode: Int, msg: String, prvKeys: Array<PgpKeyInfo>) {
+  fun decryptMsg(requestCode: Int, msg: ByteArray, prvKeys: Array<PgpKeyInfo>) {
     load(requestCode, ParseDecryptMsgRequest(msg, Arrays.asList(*prvKeys)))
   }
 

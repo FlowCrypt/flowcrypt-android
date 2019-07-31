@@ -100,7 +100,7 @@ class SyncJobService : JobService(), SyncListener {
   }
 
   override fun onMsgDetailsReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder, uid: Long,
-                                    msg: Message?, rawMsgWithoutAtts: String, ownerKey: String, requestCode: Int) {
+                                    msg: Message?, rawMimeBytes: ByteArray, ownerKey: String, requestCode: Int) {
 
   }
 

@@ -300,19 +300,19 @@ class MessageDaoSource : BaseDaoSource() {
   /**
    * Add a new message details to the database. This method must be called in the non-UI thread.
    *
-   * @param context Interface to global information about an application environment.
-   * @param email   The email that the message linked.
-   * @param label   The folder label.
-   * @param uid     The message UID.
-   * @param raw     The raw message text which will be added to the database.
+   * @param context     Interface to global information about an application environment.
+   * @param email       The email that the message linked.
+   * @param label       The folder label.
+   * @param uid         The message UID.
+   * @param mimeBytes   The raw mime bytes of the message which will be added to the database.
    * @return The count of the updated row or -1 up.
    */
-  fun updateMsgRawText(context: Context, email: String?, label: String?, uid: Long, raw: String): Int {
+  fun updateRawMime(context: Context, email: String?, label: String?, uid: Long, mimeBytes: ByteArray): Int {
     val resolver = context.contentResolver
     return if (email != null && label != null && resolver != null) {
       val where = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
       val values = ContentValues()
-      values.put(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS, raw)
+      values.put(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS, mimeBytes)
       resolver.update(baseContentUri, values, where, arrayOf(email, label, uid.toString()))
     } else
       -1
@@ -461,7 +461,7 @@ class MessageDaoSource : BaseDaoSource() {
         cursor.getLong(cursor.getColumnIndex(COL_SENT_DATE)), null, null, null,
         cursor.getString(cursor.getColumnIndex(COL_SUBJECT)),
         listOf(*parseFlags(cursor.getString(cursor.getColumnIndex(COL_FLAGS)))),
-        !TextUtils.isEmpty(cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS))),
+        !cursor.isNull(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)),
         cursor.getInt(cursor.getColumnIndex(COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1,
         cursor.getInt(cursor.getColumnIndex(COL_IS_ENCRYPTED)) == 1,
         MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))),

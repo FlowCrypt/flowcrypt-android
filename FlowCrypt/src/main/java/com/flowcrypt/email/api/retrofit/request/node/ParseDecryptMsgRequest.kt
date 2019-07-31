@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.api.retrofit.request.node
 
-import android.text.TextUtils
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo
 import com.flowcrypt.email.model.PgpKeyInfo
@@ -20,7 +19,7 @@ import retrofit2.Response
  * Time: 03:29 PM
  * E-mail: DenBond7@gmail.com
  */
-class ParseDecryptMsgRequest @JvmOverloads constructor(val msg: String,
+class ParseDecryptMsgRequest @JvmOverloads constructor(override val data: ByteArray,
                                                        pgpKeyInfos: List<PgpKeyInfo>,
                                                        @Expose val isEmail: Boolean = false) : BaseNodeRequest() {
 
@@ -28,9 +27,6 @@ class ParseDecryptMsgRequest @JvmOverloads constructor(val msg: String,
   private val keys: List<PrivateKeyInfo> = pgpKeyInfos.map { PrivateKeyInfo(it.private!!, it.longid, it.passphrase) }
 
   override val endpoint: String = "parseDecryptMsg"
-
-  override val data: ByteArray
-    get() = if (TextUtils.isEmpty(msg)) byteArrayOf() else msg.toByteArray()
 
   override fun getResponse(nodeService: NodeService): Response<*> {
     return nodeService.parseDecryptMsg(this).execute()

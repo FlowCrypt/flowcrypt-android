@@ -466,8 +466,8 @@ class MessageDetailsActivityTest : BaseTest() {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
     incomingMsgInfo?.generalMsgDetails?.let {
       msgDaoSource.addRow(getTargetContext(), it)
-      msgDaoSource.updateMsgRawText(getTargetContext(), it.email, localFolder.folderAlias, it.uid.toLong(),
-          TestGeneralUtil.readFileFromAssetsAsString(getContext(), mimeMsgPath))
+      msgDaoSource.updateRawMime(getTargetContext(), it.email, localFolder.folderAlias, it.uid.toLong(),
+          TestGeneralUtil.readFileFromAssetsAsString(getContext(), mimeMsgPath).toByteArray())
     }
     return incomingMsgInfo
   }

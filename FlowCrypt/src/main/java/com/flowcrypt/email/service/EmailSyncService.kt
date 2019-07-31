@@ -17,7 +17,6 @@ import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
-import android.text.TextUtils
 import android.util.Log
 import android.util.LongSparseArray
 import com.flowcrypt.email.R
@@ -218,12 +217,12 @@ class EmailSyncService : BaseService(), SyncListener {
 
   override fun onMsgDetailsReceived(account: AccountDao, localFolder: LocalFolder,
                                     remoteFolder: IMAPFolder, uid: Long, msg: javax.mail.Message?,
-                                    rawMsgWithoutAtts: String, ownerKey: String, requestCode: Int) {
+                                    rawMimeBytes: ByteArray, ownerKey: String, requestCode: Int) {
     try {
       val msgDaoSource = MessageDaoSource()
-      msgDaoSource.updateMsgRawText(this, account.email, localFolder.folderAlias, uid, rawMsgWithoutAtts)
+      msgDaoSource.updateRawMime(this, account.email, localFolder.folderAlias, uid, rawMimeBytes)
 
-      if (TextUtils.isEmpty(rawMsgWithoutAtts)) {
+      if (rawMimeBytes.isEmpty()) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND)
       } else {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)

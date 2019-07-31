@@ -103,24 +103,27 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
           val encryptMsgResult = responseWrapper.result as EncryptedMsgResult?
           addResultLine("encrypt-msg", responseWrapper)
           encryptedMsg = encryptMsgResult!!.encryptedMsg
-          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_ecc, encryptedMsg!!, TestData.eccPrvKeyInfo())
+          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_ecc, encryptedMsg!!.toByteArray(), TestData
+              .eccPrvKeyInfo())
         }
 
         R.id.req_id_decrypt_msg_ecc -> {
           val eccDecryptMsgResult = responseWrapper.result as ParseDecryptedMsgResult?
           printDecryptMsgResult("decrypt-msg-ecc", eccDecryptMsgResult!!, responseWrapper.executionTime)
-          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_rsa_2048, encryptedMsg!!, TestData.rsa2048PrvKeyInfo())
+          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_rsa_2048, encryptedMsg!!.toByteArray(), TestData
+              .rsa2048PrvKeyInfo())
         }
 
         R.id.req_id_decrypt_msg_rsa_2048 -> {
           val rsa2048DecryptMsgResult = responseWrapper.result as ParseDecryptedMsgResult?
           printDecryptMsgResult("decrypt-msg-rsa2048", rsa2048DecryptMsgResult!!, responseWrapper.executionTime)
-          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_rsa_4096, encryptedMsg!!, TestData.rsa4096PrvKeyInfo())
+          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_rsa_4096, encryptedMsg!!.toByteArray(), TestData
+              .rsa4096PrvKeyInfo())
         }
 
         R.id.req_id_decrypt_msg_rsa_4096 -> {
           val rsa4096DecryptMsgResult = responseWrapper.result as ParseDecryptedMsgResult?
-          printDecryptMsgResult("decrypt-msg-rsa4096", rsa4096DecryptMsgResult!!, responseWrapper.executionTime)
+          printDecryptMsgResult("decrypt-rawMimeBytes-rsa4096", rsa4096DecryptMsgResult!!, responseWrapper.executionTime)
           requestsManager!!.encryptFile(R.id.req_id_encrypt_file, TEST_MSG.toByteArray())
         }
 

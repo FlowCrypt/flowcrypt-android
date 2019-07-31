@@ -15,7 +15,6 @@ import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.protocol.BODY
 import com.sun.mail.imap.protocol.BODYSTRUCTURE
 import com.sun.mail.imap.protocol.FetchResponse
-import com.sun.mail.util.ASCIIUtility
 import javax.mail.Flags
 import javax.mail.Folder
 import javax.mail.Session
@@ -46,7 +45,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     imapFolder.open(Folder.READ_WRITE)
 
     val rawMsg = imapFolder.doCommand { imapProtocol ->
-      var rawMsg: String? = null
+      var rawMimeBytes: ByteArray? = null
 
       val args = Argument()
       val list = Argument()
@@ -65,7 +64,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
           }
 
           val body = response.getItem(BODY::class.java)
-          body?.byteArrayInputStream?.let { rawMsg = ASCIIUtility.toString(it) }
+          body?.byteArrayInputStream?.let { rawMimeBytes = it.readBytes() }
 
           val bodystructure = response.getItem(BODYSTRUCTURE::class.java)
           bodystructure?.let {
@@ -73,7 +72,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
           }
         }
 
-        if (rawMsg == null) {
+        if (rawMimeBytes == null) {
           ExceptionUtil.handleError(IllegalStateException(
               "LoadMessageDetailsSyncTask:Server response = $serverStatusResponse" +
                   "\n There is no FetchResponse with right BODY" +
@@ -88,8 +87,8 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       imapProtocol.notifyResponseHandlers(responses)
       imapProtocol.handleResult(serverStatusResponse)
 
-      rawMsg
-    } as? String ?: throw IllegalStateException("An error occurred during receiving the message details")
+      rawMimeBytes
+    } as? ByteArray ?: throw IllegalStateException("An error occurred during receiving the message details")
 
     val message = imapFolder.getMessageByUID(uid)
     message?.setFlag(Flags.Flag.SEEN, true)
