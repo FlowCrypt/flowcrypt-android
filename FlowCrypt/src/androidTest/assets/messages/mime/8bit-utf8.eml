@@ -1,0 +1,20 @@
+Date: Mon, 29 Jul 2019 07:00:45 +0000
+To: 7bitencoding@domain.com
+From: "OLX.ua" <noreply@olx.ua>
+Subject: 8bit encoded utf broken
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OLXEU</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+Text: Ваше оголошення
+</body>
+</html>
+

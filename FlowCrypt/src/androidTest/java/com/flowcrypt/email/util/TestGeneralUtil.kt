@@ -37,6 +37,11 @@ class TestGeneralUtil {
     }
 
     @JvmStatic
+    fun readFileFromAssetsAsByteArray(context: Context, filePath: String): ByteArray {
+      return IOUtils.toByteArray(context.assets.open(filePath))
+    }
+
+    @JvmStatic
     fun deleteFiles(files: List<File>) {
       files.forEach { file ->
         if (!file.delete()) {
@@ -51,7 +56,7 @@ class TestGeneralUtil {
           .getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
       try {
         FileOutputStream(file).use { outputStream -> outputStream.write(fileText.toByteArray()) }
-      } catch (e: IOException) {
+      } catch (e: Exception) {
         e.printStackTrace()
       }
 
