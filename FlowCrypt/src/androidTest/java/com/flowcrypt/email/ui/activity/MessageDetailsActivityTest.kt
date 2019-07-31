@@ -333,6 +333,13 @@ class MessageDetailsActivityTest : BaseTest() {
         .check(matches(not<View>(isDisplayed())))
   }
 
+  @Test
+  @DoesNotNeedMailserver
+  fun test8bitEncodingUtf8() {
+    baseCheck(getMsgInfo("messages/info/msg_info_8bit-utf8.json",
+        "messages/mime/8bit-utf8.eml"))
+  }
+
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {
     assertThat(incomingMsgInfo, notNullValue())
 
@@ -467,7 +474,7 @@ class MessageDetailsActivityTest : BaseTest() {
     incomingMsgInfo?.generalMsgDetails?.let {
       msgDaoSource.addRow(getTargetContext(), it)
       msgDaoSource.updateRawMime(getTargetContext(), it.email, localFolder.folderAlias, it.uid.toLong(),
-          TestGeneralUtil.readFileFromAssetsAsString(getContext(), mimeMsgPath).toByteArray())
+          TestGeneralUtil.readFileFromAssetsAsByteArray(getContext(), mimeMsgPath))
     }
     return incomingMsgInfo
   }

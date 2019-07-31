@@ -1,0 +1,38 @@
+{
+  "encryptionType": "STANDARD",
+  "generalMsgDetails": {
+    "email": "flowcrypt.compatibility@gmail.com",
+    "from": [
+      {
+        "address": "noreply@olx.ua",
+        "encodedPersonal": "OLX.ua"
+      }
+    ],
+    "hasAtts": false,
+    "isEncrypted": false,
+    "isRawMsgAvailable": true,
+    "label": "INBOX",
+    "msgFlags": [
+      "\\SEEN"
+    ],
+    "msgState": "NONE",
+    "receivedDate": 1564500133000,
+    "sentDate": 1564383645000,
+    "subject": "8bit encoded utf broken",
+    "to": [
+      {
+        "address": "7bitencoding@domain.com"
+      }
+    ],
+    "uid": 37
+  },
+  "msgBlocks": [
+    {
+      "complete": true,
+      "content": "\n  \u003c!DOCTYPE html\u003e\u003chtml\u003e\n    \u003chead\u003e\n      \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\" /\u003e\n      \u003cstyle\u003e\n        body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n        body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n        body pre { white-space: pre-wrap !important; }\n        body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n      \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\u003cdiv class\u003d\"MsgBlock plain\" style\u003d\"background: white;padding-left: 8px;min-height: 50px;padding-top: 4px;padding-bottom: 4px;width: 100%;border: none;\"\u003e\n\n\n    OLXEU\n    \n    \n\n\nText: Ваше оголошення\u003c/div\u003e\u003c!-- next MsgBlock --\u003e\n\u003c/body\u003e\n  \u003c/html\u003e",
+      "type": "plainHtml"
+    }
+  ],
+  "origMsgHeaders": "Date: Mon, 29 Jul 2019 07:00:45 +0000\r\nTo: 7bitencoding@domain.com\r\nFrom: \"OLX.ua\" \u003cnoreply@olx.ua\u003e\r\nSubject: 8bit encoded utf broken\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset\u003dutf-8\r\nContent-Transfer-Encoding: 8bit",
+  "text": "OLXEU Text: Ваше оголошення"
+}
