@@ -5,11 +5,16 @@
 
 package com.flowcrypt.email.api.retrofit.node
 
+import android.content.Context
 import androidx.annotation.WorkerThread
+import androidx.preference.PreferenceManager
+import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.node.NodeSecret
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.gson.Gson
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -34,12 +39,9 @@ object NodeRetrofitHelper {
   private var retrofit: Retrofit? = null
   var gson: Gson = NodeGson.gson
 
-  private val httpLoggingInterceptor: Interceptor
-    get() = HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC)
-
   @WorkerThread
-  fun init(nodeSecret: NodeSecret) {
-    okHttpClient = getOkHttpClientBuilder(nodeSecret).build()
+  fun init(context: Context, nodeSecret: NodeSecret) {
+    okHttpClient = getOkHttpClientBuilder(context, nodeSecret).build()
 
     val retrofitBuilder = Retrofit.Builder()
         .baseUrl("https://localhost:" + nodeSecret.port + "/")
@@ -55,7 +57,7 @@ object NodeRetrofitHelper {
     return retrofit
   }
 
-  private fun getOkHttpClientBuilder(nodeSecret: NodeSecret): OkHttpClient.Builder {
+  private fun getOkHttpClientBuilder(context: Context, nodeSecret: NodeSecret): OkHttpClient.Builder {
     val builder = OkHttpClient.Builder()
         .connectTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
         .readTimeout(TIMEOUT.toLong(), TimeUnit.SECONDS)
@@ -67,7 +69,19 @@ object NodeRetrofitHelper {
         .hostnameVerifier(trustOurOwnCrtHostnameVerifier(nodeSecret))
 
     if (GeneralUtil.isDebugBuild()) {
-      builder.addInterceptor(httpLoggingInterceptor)
+      val isNodeHttpLogEnabled =
+          SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(context),
+              Constants.PREF_KEY_IS_NODE_HTTP_DEBUG_ENABLED, BuildConfig.IS_NODE_HTTP_DEBUG_ENABLED)
+
+      if (isNodeHttpLogEnabled) {
+        val levelString = SharedPreferencesHelper.getString(PreferenceManager
+            .getDefaultSharedPreferences(context), Constants.PREF_KEY_NODE_HTTP_LOG_LEVEL, BuildConfig.NODE_HTTP_LOG_LEVEL)
+
+        val loggingInterceptor = HttpLoggingInterceptor()
+        loggingInterceptor.level = HttpLoggingInterceptor.Level.valueOf(levelString
+            ?: HttpLoggingInterceptor.Level.NONE.name)
+        builder.addInterceptor(loggingInterceptor)
+      }
     }
 
     return builder

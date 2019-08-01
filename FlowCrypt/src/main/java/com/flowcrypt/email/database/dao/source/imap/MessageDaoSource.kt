@@ -161,11 +161,11 @@ class MessageDaoSource : BaseDaoSource() {
 
       val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER ==
           SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-              Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
       val onlyEncryptedMsgs = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
           SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-              Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
       for (msg in msgs) {
         try {

@@ -70,7 +70,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
 
     val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER ==
         SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-            Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+            Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
     if (isNotificationDisabled) {
       return
@@ -100,7 +100,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
                                            uidOfUnseenMsgs: List<Int>, isSilent: Boolean) {
     val onlyEncrypted = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
         SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-            Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+            Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
     val builder = NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_MESSAGES)
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -173,7 +173,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     val isEncryptedModeEnabled =
         NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
             SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-                Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+                Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
     val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     prepareAndShowMsgGroup(context, account, localFolder, manager, detailsList)
@@ -215,7 +215,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
                                      generalMsgDetailsList: List<GeneralMessageDetails>) {
     val isEncryptedModeEnabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
         SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-        Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+            Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
     if (isEncryptedModeEnabled) {
       var isEncryptedMsgFound = false

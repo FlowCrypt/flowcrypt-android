@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
 import androidx.preference.PreferenceManager
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.okhttp.ApiVersionInterceptor
 import com.flowcrypt.email.api.retrofit.okhttp.LoggingInFileInterceptor
@@ -42,19 +43,30 @@ class ApiHelper private constructor(context: Context) {
     okHttpClientBuilder.addInterceptor(ApiVersionInterceptor())
 
     if (GeneralUtil.isDebugBuild()) {
-      val isWriteLogsEnabled =
+      val isHttpLogEnabled =
           SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(context),
-              Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED, false)
+              Constants.PREF_KEY_IS_HTTP_LOG_ENABLED, BuildConfig.IS_HTTP_LOG_ENABLED)
 
-      if (isWriteLogsEnabled) {
-        val loggingInFileInterceptor = LoggingInFileInterceptor()
-        loggingInFileInterceptor.setLevel(LoggingInFileInterceptor.Level.BODY)
-        okHttpClientBuilder.addInterceptor(loggingInFileInterceptor)
+      if (isHttpLogEnabled) {
+        val levelString = SharedPreferencesHelper.getString(PreferenceManager
+            .getDefaultSharedPreferences(context), Constants.PREF_KEY_HTTP_LOG_LEVEL, BuildConfig.HTTP_LOG_LEVEL)
+
+        val isWriteLogsEnabled =
+            SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(context),
+                Constants.PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED, false)
+
+        if (isWriteLogsEnabled) {
+          val loggingInFileInterceptor = LoggingInFileInterceptor()
+          loggingInFileInterceptor.setLevel(LoggingInFileInterceptor.Level.valueOf(levelString
+              ?: LoggingInFileInterceptor.Level.NONE.name))
+          okHttpClientBuilder.addInterceptor(loggingInFileInterceptor)
+        }
+
+        val loggingInterceptor = HttpLoggingInterceptor()
+        loggingInterceptor.level = HttpLoggingInterceptor.Level.valueOf(levelString
+            ?: HttpLoggingInterceptor.Level.NONE.name)
+        okHttpClientBuilder.addInterceptor(loggingInterceptor)
       }
-
-      val loggingInterceptor = HttpLoggingInterceptor()
-      loggingInterceptor.level = HttpLoggingInterceptor.Level.BASIC
-      okHttpClientBuilder.addInterceptor(loggingInterceptor)
     }
 
     okHttpClient = okHttpClientBuilder.build()

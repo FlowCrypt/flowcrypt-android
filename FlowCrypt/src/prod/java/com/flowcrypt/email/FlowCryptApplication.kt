@@ -59,7 +59,7 @@ class FlowCryptApplication : BaseApplication() {
     if (!GeneralUtil.isDebugBuild()) {
       ACRA.init(this)
     } else if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
-            Constants.PREFERENCES_KEY_IS_ACRA_ENABLED, BuildConfig.IS_ACRA_ENABLED)) {
+            Constants.PREF_KEY_IS_ACRA_ENABLED, BuildConfig.IS_ACRA_ENABLED)) {
       ACRA.init(this)
     }
   }
@@ -70,7 +70,7 @@ class FlowCryptApplication : BaseApplication() {
   @Override
   override fun initLeakCanary() {
     if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
-            Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLED, false)) {
+            Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED, false)) {
       if (LeakCanary.isInAnalyzerProcess(this)) {
         // This process is dedicated to LeakCanary for heap analysis.
         // You should not init your app in this process.

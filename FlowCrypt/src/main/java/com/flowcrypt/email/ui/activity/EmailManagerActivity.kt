@@ -562,11 +562,11 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     if (onlyEncrypted) {
       val currentNotificationLevel = SharedPreferencesHelper.getString(PreferenceManager
-          .getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+          .getDefaultSharedPreferences(this), Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
       if (NotificationsSettingsFragment.NOTIFICATION_LEVEL_ALL_MESSAGES == currentNotificationLevel) {
         SharedPreferencesHelper.setString(PreferenceManager.getDefaultSharedPreferences(this),
-            Constants.PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER,
+            Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER,
             NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY)
       }
     }

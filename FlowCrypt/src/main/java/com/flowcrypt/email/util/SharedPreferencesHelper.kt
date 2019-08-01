@@ -19,7 +19,7 @@ import androidx.preference.PreferenceManager
 class SharedPreferencesHelper {
   companion object {
     @JvmStatic
-    fun getString(sharedPreferences: SharedPreferences, key: String, defaultValue: String): String? {
+    fun getString(sharedPreferences: SharedPreferences, key: String, defaultValue: String? = null): String? {
       return sharedPreferences.getString(key, defaultValue)
     }
 

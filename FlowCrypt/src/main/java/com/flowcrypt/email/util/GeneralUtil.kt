@@ -299,12 +299,12 @@ class GeneralUtil {
     @JvmStatic
     fun genAttOrderId(context: Context): Int {
       var lastId = SharedPreferencesHelper.getInt(PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, 0)
+          Constants.PREF_KEY_LAST_ATT_ORDER_ID, 0)
 
       lastId++
 
       SharedPreferencesHelper.setInt(PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREFERENCES_KEY_LAST_ATT_ORDER_ID, lastId)
+          Constants.PREF_KEY_LAST_ATT_ORDER_ID, lastId)
 
       return lastId
     }

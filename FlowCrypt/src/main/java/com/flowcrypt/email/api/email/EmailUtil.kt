@@ -277,8 +277,7 @@ class EmailUtil {
     fun hasEnabledDebug(context: Context): Boolean {
       return GeneralUtil.isDebugBuild() && SharedPreferencesHelper.getBoolean(
           PreferenceManager.getDefaultSharedPreferences(context.applicationContext),
-          Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLED,
-          BuildConfig.IS_MAIL_DEBUG_ENABLED)
+          Constants.PREF_KEY_IS_MAIL_DEBUG_ENABLED, BuildConfig.IS_MAIL_DEBUG_ENABLED)
     }
 
     /**
@@ -691,12 +690,12 @@ class EmailUtil {
     @JvmStatic
     fun genOutboxUID(context: Context): Long {
       var lastUid = SharedPreferencesHelper.getLong(PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREFERENCES_KEY_LAST_OUTBOX_UID, 0)
+          Constants.PREF_KEY_LAST_OUTBOX_UID, 0)
 
       lastUid++
 
       SharedPreferencesHelper.setLong(PreferenceManager.getDefaultSharedPreferences(context),
-          Constants.PREFERENCES_KEY_LAST_OUTBOX_UID, lastUid)
+          Constants.PREF_KEY_LAST_OUTBOX_UID, lastUid)
 
       return lastUid
     }

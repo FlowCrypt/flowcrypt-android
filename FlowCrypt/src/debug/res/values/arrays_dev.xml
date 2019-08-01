@@ -1,0 +1,13 @@
+<!--
+  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<resources>
+    <string-array name="http_log_level_entries_and_values">
+        <item>NONE</item>
+        <item>BASIC</item>
+        <item>HEADERS</item>
+        <item>BODY</item>
+    </string-array>
+</resources>

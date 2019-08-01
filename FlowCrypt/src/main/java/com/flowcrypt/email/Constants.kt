@@ -55,19 +55,24 @@ class Constants {
     /**
      * The preference keys.
      */
-    const val PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED = "preferences_key_is_write_logs_to_file_enabled"
-    const val PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLED = "preferences_key_is_detect_memory_leak_enabled"
-    const val PREFERENCES_KEY_IS_ACRA_ENABLED = "preferences_key_is_acra_enabled"
-    const val PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLED = "preferences_key_is_mail_debug_enabled"
+    const val PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED = "preferences_key_is_write_logs_to_file_enabled"
+    const val PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED = "preferences_key_is_detect_memory_leak_enabled"
+    const val PREF_KEY_IS_ACRA_ENABLED = "preferences_key_is_acra_enabled"
+    const val PREF_KEY_IS_MAIL_DEBUG_ENABLED = "preferences_key_is_mail_debug_enabled"
+    const val PREF_KEY_IS_HTTP_LOG_ENABLED = "pref_key_is_http_log_enabled"
+    const val PREF_KEY_HTTP_LOG_LEVEL = "pref_key_http_log_level"
+    const val PREF_KEY_IS_NODE_HTTP_DEBUG_ENABLED = "pref_key_is_node_http_debug_enabled"
+    const val PREF_KEY_NODE_HTTP_LOG_LEVEL = "pref_key_node_http_log_level"
+    const val PREF_KEY_IS_NATIVE_NODE_DEBUG_ENABLED = "pref_key_is_native_node_debug_enabled"
 
-    const val PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS = "preferences_key_temp_last_auth_credentials"
+    const val PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS = "preferences_key_temp_last_auth_credentials"
 
-    const val PREFERENCES_KEY_MESSAGES_NOTIFICATION_FILTER = "preferences_key_messages_notification_filter"
-    const val PREFERENCES_KEY_MANAGE_NOTIFICATIONS = "preferences_key_manage_notifications"
-    const val PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE = "preferences_key_security_change_pass_phrase"
-    const val PREFERENCES_KEY_LAST_OUTBOX_UID = "preferences_key_last_outbox_uid"
-    const val PREFERENCES_KEY_LAST_ATT_ORDER_ID = "preferences_key_last_att_order_id"
-    const val PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED = "preferences_key_is_check_keys_needed"
+    const val PREF_KEY_MESSAGES_NOTIFICATION_FILTER = "preferences_key_messages_notification_filter"
+    const val PREF_KEY_MANAGE_NOTIFICATIONS = "preferences_key_manage_notifications"
+    const val PREF_KEY_SECURITY_CHANGE_PASS_PHRASE = "preferences_key_security_change_pass_phrase"
+    const val PREF_KEY_LAST_OUTBOX_UID = "preferences_key_last_outbox_uid"
+    const val PREF_KEY_LAST_ATT_ORDER_ID = "preferences_key_last_att_order_id"
+    const val PREF_KEY_IS_CHECK_KEYS_NEEDED = "preferences_key_is_check_keys_needed"
 
     /**
      * The max total size off all attachment which can be send via the app.

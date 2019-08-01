@@ -15,7 +15,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
  *
  * @see [Node.js for Mobile Apps](https://code.janeasystems.com/nodejs-mobile/getting-started-android)
  */
-internal class NativeNode private constructor(private val nodeSecret: NodeSecret) {
+internal class NativeNode private constructor(private val isDebugEnabled: Boolean, private val nodeSecret: NodeSecret) {
 
   private var isRunning: Boolean = false
 
@@ -72,7 +72,7 @@ internal class NativeNode private constructor(private val nodeSecret: NodeSecret
     src += genConst("NODE_SSL_CRT", nodeSecret.crt!!)
     src += genConst("NODE_SSL_KEY", nodeSecret.key!!)
     src += genConst("NODE_AUTH_HEADER", nodeSecret.authHeader)
-    src += genConst("NODE_DEBUG", "false")
+    src += genConst("NODE_DEBUG", isDebugEnabled.toString())
     src += genConst("APP_ENV", "prod")
     src += genConst("APP_VERSION", BuildConfig.VERSION_NAME.split("_")[0])
     src += genConst("APP_PROFILE", "false")
@@ -87,10 +87,10 @@ internal class NativeNode private constructor(private val nodeSecret: NodeSecret
 
   companion object {
 
-    private val ASYNC_REQUEST_HEADER = "ASYNC_REQUEST|";
-    private val ASYNC_RESPONSE_SUCCESS_HEADER = "ASYNC_RESPONSE|SUCCESS|";
-    private val ASYNC_RESPONSE_ERROR_HEADER = "ASYNC_RESPONSE|ERROR|";
-    private val ASYNC_REQUEST_ID_LEN = 10;
+    private val ASYNC_REQUEST_HEADER = "ASYNC_REQUEST|"
+    private val ASYNC_RESPONSE_SUCCESS_HEADER = "ASYNC_RESPONSE|SUCCESS|"
+    private val ASYNC_RESPONSE_ERROR_HEADER = "ASYNC_RESPONSE|ERROR|"
+    private val ASYNC_REQUEST_ID_LEN = 10
     private val nodeHost = NodeHost()
 
     @Volatile
@@ -106,9 +106,9 @@ internal class NativeNode private constructor(private val nodeSecret: NodeSecret
     }
 
     @JvmStatic
-    fun getInstance(nodeSecret: NodeSecret): NativeNode {
+    fun getInstance(isDebugEnabled: Boolean, nodeSecret: NodeSecret): NativeNode {
       return INSTANCE ?: synchronized(this) {
-        INSTANCE ?: NativeNode(nodeSecret).also { INSTANCE = it }
+        INSTANCE ?: NativeNode(isDebugEnabled, nodeSecret).also { INSTANCE = it }
       }
     }
 
@@ -120,20 +120,20 @@ internal class NativeNode private constructor(private val nodeSecret: NodeSecret
       if (msg.startsWith("listening on ")) {
         isReady = true
       }
-      if(msg.startsWith(ASYNC_REQUEST_HEADER)) {
+      if (msg.startsWith(ASYNC_REQUEST_HEADER)) {
         if (GeneralUtil.isDebugBuild()) {
 //          println(msg)
         }
-        val idLen = 10;
+        val idLen = 10
         val id = msg.substring(ASYNC_REQUEST_HEADER.length, ASYNC_REQUEST_HEADER.length + idLen)
         val nameEndSeparator = msg.indexOf('|', ASYNC_REQUEST_HEADER.length + ASYNC_REQUEST_ID_LEN + 2)
-        val name = msg.substring(ASYNC_REQUEST_HEADER.length + ASYNC_REQUEST_ID_LEN + 1, nameEndSeparator);
+        val name = msg.substring(ASYNC_REQUEST_HEADER.length + ASYNC_REQUEST_ID_LEN + 1, nameEndSeparator)
         val reqBody = msg.subSequence(nameEndSeparator + 1, msg.length)
         val responseData = nodeHost.nodeReqHandler(name, reqBody)
-        var response: String;
+        var response: String
         try {
           response = "$ASYNC_RESPONSE_SUCCESS_HEADER$id|$responseData"
-        } catch(e: Exception) {
+        } catch (e: Exception) {
           response = "$ASYNC_RESPONSE_ERROR_HEADER$id|${e.stackTrace}"
         }
         if (GeneralUtil.isDebugBuild()) {

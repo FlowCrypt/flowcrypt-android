@@ -33,7 +33,7 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferenc
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(activity)
+    sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
   }
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -66,7 +66,7 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferenc
 
   override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
     when (key) {
-      Constants.PREFERENCES_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED -> if (sharedPreferences?.getBoolean(key, false) ==
+      Constants.PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED -> if (sharedPreferences?.getBoolean(key, false) ==
           true) {
         val isPermissionGranted = ContextCompat.checkSelfPermission(activity!!, Manifest.permission
             .WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
@@ -80,9 +80,12 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferenc
         showApplicationDetailsSettingsActivity()
       }
 
-      Constants.PREFERENCES_KEY_IS_DETECT_MEMORY_LEAK_ENABLED,
-      Constants.PREFERENCES_KEY_IS_ACRA_ENABLED,
-      Constants.PREFERENCES_KEY_IS_MAIL_DEBUG_ENABLED -> showApplicationDetailsSettingsActivity()
+      Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED,
+      Constants.PREF_KEY_IS_ACRA_ENABLED,
+      Constants.PREF_KEY_IS_NODE_HTTP_DEBUG_ENABLED,
+      Constants.PREF_KEY_NODE_HTTP_LOG_LEVEL,
+      Constants.PREF_KEY_IS_NATIVE_NODE_DEBUG_ENABLED,
+      Constants.PREF_KEY_IS_MAIL_DEBUG_ENABLED -> showApplicationDetailsSettingsActivity()
     }
   }
 
