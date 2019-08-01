@@ -103,7 +103,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
     }
 
     SharedPreferencesHelper.setBoolean(PreferenceManager
-        .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, false)
+        .getDefaultSharedPreferences(context), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, false)
   }
 
   constructor(source: Parcel) : this(

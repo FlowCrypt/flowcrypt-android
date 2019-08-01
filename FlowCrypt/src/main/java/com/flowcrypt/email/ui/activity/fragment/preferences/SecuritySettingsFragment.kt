@@ -32,7 +32,7 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
 
     account = AccountDaoSource().getActiveAccountInformation(context!!)
 
-    val preferenceChangePassPhrase = findPreference(Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE)
+    val preferenceChangePassPhrase = findPreference(Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE)
     if (preferenceChangePassPhrase != null) {
       preferenceChangePassPhrase.onPreferenceClickListener = this
     }
@@ -40,7 +40,7 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
 
   override fun onPreferenceClick(preference: Preference): Boolean {
     return when (preference.key) {
-      Constants.PREFERENCES_KEY_SECURITY_CHANGE_PASS_PHRASE -> {
+      Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE -> {
         if (UserIdEmailsKeysDaoSource().getLongIdsByEmail(context!!, account!!.email).isEmpty()) {
           UIUtil.showInfoSnackbar(view!!, getString(R.string.account_has_no_associated_keys,
               getString(R.string.support_email)))

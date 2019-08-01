@@ -91,9 +91,17 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'true'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
+            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'false'
+            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"NONE\""
+            buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'false'
+            buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"NONE\""
             resValue 'string', 'application_id', android.defaultConfig.applicationId
             resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
+            resValue 'string', 'gradle_is_http_log_enabled', 'false'
+            resValue 'string', 'gradle_http_log_level', 'NONE'
+            resValue 'string', 'gradle_is_node_http_debug_enabled', 'false'
+            resValue 'string', 'gradle_node_http_log_level', 'NONE'
         }
 
         enterprise {
@@ -133,8 +141,16 @@ android {
             signingConfig signingConfigs.debug
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'true'
+            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
+            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
+            buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'true'
+            buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"BODY\""
             resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'true'
+            resValue 'string', 'gradle_is_http_log_enabled', 'true'
+            resValue 'string', 'gradle_http_log_level', 'BODY'
+            resValue 'string', 'gradle_is_node_http_debug_enabled', 'true'
+            resValue 'string', 'gradle_node_http_log_level', 'BODY'
             versionNameSuffix "_dev"
             dimension "standard"
             minSdkVersion rootProject.ext.minSdkVersion
@@ -146,20 +162,32 @@ android {
             signingConfig signingConfigs.release
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'true'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
+            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
+            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BASIC\""
+            buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'true'
+            buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"BASIC\""
             resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
+            resValue 'string', 'gradle_is_http_log_enabled', 'false'
+            resValue 'string', 'gradle_is_node_http_debug_enabled', 'false'
+            resValue 'string', 'gradle_is_http_log_enabled', 'true'
+            resValue 'string', 'gradle_http_log_level', 'BASIC'
+            resValue 'string', 'gradle_is_node_http_debug_enabled', 'true'
+            resValue 'string', 'gradle_node_http_log_level', 'BASIC'
             dimension "standard"
         }
 
         //This flavor must be used only for a testing
         devTest {
             signingConfig signingConfigs.debug
-            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
-            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
-            resValue 'string', 'gradle_is_acra_enabled', 'false'
-            resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             versionNameSuffix "_devTest"
             dimension "standard"
+            buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
+            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'false'
+            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"NONE\""
+            buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'false'
+            buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"NONE\""
         }
     }
 
@@ -168,7 +196,7 @@ android {
         targetCompatibility rootProject.ext.javaSourceCompatibility
     }
 
-    lintOptions{
+    lintOptions {
         warningsAsErrors true
     }
 

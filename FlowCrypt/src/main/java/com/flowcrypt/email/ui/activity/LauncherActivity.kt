@@ -73,7 +73,7 @@ class LauncherActivity : BaseActivity() {
   private fun showEmailManagerActivity() {
     if (SecurityUtils.hasBackup(this)) {
       val isCheckKeysNeeded = SharedPreferencesHelper.getBoolean(PreferenceManager
-          .getDefaultSharedPreferences(this), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, true)
+          .getDefaultSharedPreferences(this), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, true)
 
       if (isCheckKeysNeeded) {
         ActionQueueDaoSource().addAction(this, EncryptPrivateKeysIfNeededAction(0, account!!.email, 0))

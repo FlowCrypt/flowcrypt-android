@@ -25,7 +25,7 @@ class AppUpdateBroadcastReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent?) {
     if (intent != null && Intent.ACTION_MY_PACKAGE_REPLACED == intent.action) {
       SharedPreferencesHelper.setBoolean(PreferenceManager
-          .getDefaultSharedPreferences(context), Constants.PREFERENCES_KEY_IS_CHECK_KEYS_NEEDED, true)
+          .getDefaultSharedPreferences(context), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, true)
     }
   }
 }

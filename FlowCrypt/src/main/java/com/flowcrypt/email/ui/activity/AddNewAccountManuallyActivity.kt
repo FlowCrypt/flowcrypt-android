@@ -109,7 +109,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     get() {
       val authCredsJson =
           SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(this),
-              Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, "")
+              Constants.PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS, "")
 
       if (!TextUtils.isEmpty(authCredsJson)) {
         try {
@@ -532,7 +532,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     authCreds!!.password = ""
     authCreds!!.smtpSignInPassword = null
     SharedPreferencesHelper.setString(PreferenceManager.getDefaultSharedPreferences(this),
-        Constants.PREFERENCES_KEY_TEMP_LAST_AUTH_CREDENTIALS, gson.toJson(authCreds))
+        Constants.PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS, gson.toJson(authCreds))
   }
 
   /**

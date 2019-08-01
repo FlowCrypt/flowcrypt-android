@@ -7,13 +7,16 @@ package com.flowcrypt.email.node
 
 import android.app.Application
 import android.content.Context
-import android.content.res.AssetManager
 import androidx.lifecycle.MutableLiveData
+import androidx.preference.PreferenceManager
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
 import com.flowcrypt.email.api.retrofit.node.RequestsManager
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.node.exception.NodeNotReady
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.SharedPreferencesHelper
 import org.apache.commons.io.IOUtils
 import java.io.FileNotFoundException
 import java.nio.charset.StandardCharsets
@@ -51,9 +54,9 @@ class Node private constructor(app: Application) {
         }
 
         requestsManager = RequestsManager
-        start(context.assets, nodeSecret)
+        start(context, nodeSecret)
         waitUntilReady()
-        NodeRetrofitHelper.init(nodeSecret!!)
+        NodeRetrofitHelper.init(context, nodeSecret!!)
 
         liveData.postValue(true)
       } catch (e: Exception) {
@@ -63,11 +66,14 @@ class Node private constructor(app: Application) {
     }).start()
   }
 
-  private fun start(am: AssetManager, nodeSecret: NodeSecret?) {
+  private fun start(context: Context, nodeSecret: NodeSecret?) {
     if (nativeNode == null) {
-      nativeNode = NativeNode.getInstance(nodeSecret!!) // takes about 100ms due to static native loads
+      val isDebugEnabled = GeneralUtil.isDebugBuild() && SharedPreferencesHelper.getBoolean(PreferenceManager
+          .getDefaultSharedPreferences(context), Constants.PREF_KEY_IS_NATIVE_NODE_DEBUG_ENABLED, false)
+
+      nativeNode = NativeNode.getInstance(isDebugEnabled, nodeSecret!!) // takes about 100ms due to static native loads
     }
-    nativeNode!!.start(IOUtils.toString(am.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8))
+    nativeNode!!.start(IOUtils.toString(context.assets.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8))
   }
 
   private fun waitUntilReady() {
