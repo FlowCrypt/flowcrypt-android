@@ -50,7 +50,7 @@ class CustomReportSender(config: ACRAConfiguration,
    * @return the filtered text
    */
   private fun filterFileNames(text: String?): String {
-    val regex = ("(?i)([\\S.-]+)[.](" + listOfExtensions.joinToString("|") + ")").toRegex()
+    val regex = ("(?i)\\b([^\\s:.-]+)[.](" + listOfExtensions.joinToString("|") + ")\\b").toRegex()
     return text?.replace(regex, "example.file") ?: ""
   }
 
@@ -59,14 +59,13 @@ class CustomReportSender(config: ACRAConfiguration,
         "WPD", "WPS", "CSV", "DAT", "GED", "KEY", "KEYCHAIN", "PPS", "PPT", "PPTX", "SDF", "TAR", "TAX2016", "TAX2018",
         "VCF", "XML", "AIF", "IFF", "M3U", "M4A", "MID", "MP3", "MPA", "WAV", "WMA", "3G2", "3GP", "ASF", "AVI", "FLV",
         "M4V", "MOV", "MP4", "MPG", "RM", "SRT", "SWF", "VOB", "WMV", "3DM", "3DS", "MAX", "OBJ", "BMP", "DDS", "GIF",
-        "HEIC", "JPG", "JPEG", "PNG", "PSD", "PSPIMAGE", "TGA", "THM", "TIF", "TIFF", "YUV", "AI", "EPS", "SVG",
-        "INDD", "PCT", "PDF", "XLR", "XLS", "XLSX", "ACCDB", "DB", "DBF", "MDB", "PDB", "SQL", "APK", "APP", "BAT",
-        "CGI", "COM", "EXE", "GADGET", "JAR", "WSF", "B", "DEM", "GAM", "NES", "ROM", "SAV", "DWG", "DXF", "GPX", "KML",
+        "HEIC", "JPG", "JPEG", "PNG", "PSD", "PSPIMAGE", "TGA", "THM", "TIF", "TIFF", "YUV", "EPS", "SVG",
+        "INDD", "PCT", "PDF", "XLR", "XLS", "XLSX", "ACCDB", "DB", "DBF", "MDB", "PDB", "SQL", "APK", "BAT",
+        "CGI", "COM", "EXE", "GADGET", "JAR", "WSF", "DEM", "GAM", "NES", "ROM", "SAV", "DWG", "DXF", "GPX", "KML",
         "KMZ", "ASP", "ASPX", "CER", "CFM", "CSR", "CSS", "DCR", "HTM", "HTML", "JS", "JSP", "PHP", "RSS", "XHTML",
         "CRX", "PLUGIN", "FNT", "FON", "OTF", "TTF", "CAB", "CPL", "CUR", "DESKTHEMEPACK", "DLL", "DMP", "DRV", "ICNS",
-        "ICO", "LNK", "SYS", "CFG", "INI", "PRF", "HQX", "MIM", "UUE", "7Z", "CBR", "DEB", "GZ", "PKG", "RAR", "RPM",
-        "SITX", "TARGZ", "ZIP", "ZIPX", "BIN", "CUE", "DMG", "ISO", "MDF", "TOAST", "VCD", "C", "CLASS", "CPP", "CS",
-        "DTD", "FLA", "H", "JAVA", "LUA", "M", "PL", "PY", "SH", "SLN", "SWIFT", "VB", "VCXPROJ", "XCODEPROJ", "BAK",
-        "TMP", "CRDOWNLOAD", "ICS", "MSI", "PART", "TORRENT")
+        "ICO", "LNK", "SYS", "CFG", "INI", "PRF", "HQX", "MIM", "UUE", "7Z", "CBR", "DEB", "PKG", "RAR", "RPM", "SITX",
+        "TARGZ", "ZIP", "ZIPX", "BIN", "CUE", "DMG", "ISO", "MDF", "TOAST", "VCD", "CLASS", "CPP", "DTD", "FLA", "LUA",
+        "SLN", "SWIFT", "VCXPROJ", "XCODEPROJ", "BAK", "TMP", "CRDOWNLOAD", "ICS", "MSI", "PART", "TORRENT")
   }
 }
