@@ -23,6 +23,7 @@ import javax.mail.Store
 import javax.mail.internet.InternetHeaders
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
+import javax.mail.internet.MimeMultipart
 
 /**
  * This task load detail information of a message. Currently, it loads only non-attachment parts
@@ -46,19 +47,13 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     imapFolder.open(Folder.READ_WRITE)
 
     val originalMsg: MimeMessage = imapFolder.getMessageByUID(uid) as MimeMessage
-    val allHeaders = Collections.list<String>(originalMsg.allHeaderLines)
-    val rawHeaders = TextUtils.join("\n", allHeaders)
+    val customMsg = CustomMimeMessage(session, TextUtils.join("\n", Collections.list<String>(originalMsg.allHeaderLines)))
 
-    if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-      fetchContent(originalMsg.content as Multipart)
-    }
-
-    val customMsg = CustomMimeMessage(session, rawHeaders)
-
-    val multipart = originalMsg.content as? Multipart
-    if (multipart != null) {
-      removeAttParts(multipart)
-      customMsg.setContent(multipart)
+    val originalMultipart = originalMsg.content as? Multipart
+    if (originalMultipart != null) {
+      val modifiedMultipart = CustomMimeMultipart(originalMultipart.contentType)
+      buildFromSource(originalMultipart, modifiedMultipart)
+      customMsg.setContent(modifiedMultipart)
     } else {
       customMsg.setContent(originalMsg.content, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)
     }
@@ -66,58 +61,74 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
 
     val outputStream = ByteArrayOutputStream()
     customMsg.writeTo(outputStream)
+    val bytes = outputStream.toByteArray()
 
-    listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, customMsg, outputStream.toByteArray(),
-        ownerKey, requestCode)
+    listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, customMsg, bytes, ownerKey, requestCode)
     imapFolder.close(false)
   }
 
-  /**
-   * Remove parts with a disposition = [Part.ATTACHMENT] from the original [Multipart]
-   *
-   * @param multipart The input [Multipart] object
-   */
-  private fun removeAttParts(multipart: Multipart) {
-    val removeCandidates = mutableListOf<BodyPart>()
-    val numberOfParts = multipart.count
+  private fun buildFromSource(sourceMultipart: Multipart, resultMultipart: Multipart) {
+    val candidates = LinkedList<BodyPart>()
+    val numberOfParts = sourceMultipart.count
     for (partCount in 0 until numberOfParts) {
-      val bodyPart = multipart.getBodyPart(partCount)
-      if (bodyPart is MimeBodyPart) {
-        if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-          removeAttParts(bodyPart.content as Multipart)
+      val item = sourceMultipart.getBodyPart(partCount)
+
+      if (item is MimeBodyPart) {
+        if (item.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+          val multi = item.content as Multipart
+          val mimeMultipart = CustomMimeMultipart(multi.contentType)
+          val part = getPart(item.content as Multipart)
+          part?.let { mimeMultipart.addBodyPart(it) }
+
+          val bodyPart = MimeBodyPart()
+          bodyPart.setContent(mimeMultipart)
+
+          candidates.add(bodyPart)
         } else {
-          if (Part.ATTACHMENT.equals(bodyPart.disposition, ignoreCase = true)) {
-            removeCandidates.add(bodyPart)
+          if (!Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
+            candidates.add(item)
           }
+        }
+      } else {
+        if (!Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
+          candidates.add(item)
         }
       }
     }
 
-    for (candidate in removeCandidates) {
-      multipart.removeBodyPart(candidate)
+    for (candidate in candidates) {
+      resultMultipart.addBodyPart(candidate)
     }
   }
 
-  /**
-   * Fetch only non-attachment parts as [Multipart].
-   *
-   * @param message The parent [Multipart].
-   * @return [Multipart] with already cached parts.
-   */
-  private fun fetchContent(multipart: Multipart) {
-    val numberOfParts = multipart.count
+  private fun getPart(originalMultipart: Multipart): BodyPart? {
+    val candidates = LinkedList<BodyPart>()
+    val numberOfParts = originalMultipart.count
     for (partCount in 0 until numberOfParts) {
-      val bodyPart = multipart.getBodyPart(partCount)
-      if (bodyPart is MimeBodyPart) {
-        if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-          fetchContent(bodyPart.content as Multipart)
+      val item = originalMultipart.getBodyPart(partCount)
+      if (item is MimeBodyPart) {
+        if (item.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+          return getPart(item.content as Multipart)
         } else {
-          if (!Part.ATTACHMENT.equals(bodyPart.disposition, ignoreCase = true)) {
-            bodyPart.content// just fetch this part and add to cache
+          if (!Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
+            candidates.add(item)
           }
         }
+      } else if (!Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
+        candidates.add(item)
       }
     }
+
+    val newMultiPart = CustomMimeMultipart(originalMultipart.contentType)
+
+    for (candidate in candidates) {
+      newMultiPart.addBodyPart(candidate)
+    }
+
+    val bodyPart = MimeBodyPart()
+    bodyPart.setContent(newMultiPart)
+
+    return bodyPart
   }
 
   /**
@@ -126,6 +137,12 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
   class CustomMimeMessage constructor(session: Session, rawMessage: String?) : MimeMessage(session) {
     init {
       headers = InternetHeaders(ByteArrayInputStream(rawMessage?.toByteArray() ?: "".toByteArray()))
+    }
+  }
+
+  class CustomMimeMultipart constructor(contentType: String) : MimeMultipart() {
+    init {
+      this.contentType = contentType
     }
   }
 }
