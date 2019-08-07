@@ -5,26 +5,27 @@
 
 package com.flowcrypt.email.api.email.sync.tasks
 
+import android.text.TextUtils
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
-import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.sun.mail.iap.Argument
 import com.sun.mail.imap.IMAPFolder
-import com.sun.mail.imap.protocol.BODY
-import com.sun.mail.imap.protocol.BODYSTRUCTURE
-import com.sun.mail.imap.protocol.FetchResponse
-import javax.mail.Flags
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.util.*
+import javax.mail.BodyPart
 import javax.mail.Folder
+import javax.mail.Multipart
+import javax.mail.Part
 import javax.mail.Session
 import javax.mail.Store
+import javax.mail.internet.InternetHeaders
+import javax.mail.internet.MimeBodyPart
+import javax.mail.internet.MimeMessage
 
 /**
- * This task load a detail information of some message. At now this task creates and executes
- * command like this "UID FETCH xxxxxxxxxxxxx (RFC822.SIZE BODY[]<0.1024000>)". We request first
- * 1000kb of a message, and if the message is small, we'll get the whole MIME message. If
- * larger than 1000kb, we'll get only the first part of it.
+ * This task load detail information of a message. Currently, it loads only non-attachment parts
  *
  * @param localFolder      The local localFolder implementation.
  * @param uid         The [com.sun.mail.imap.protocol.UID] of [javax.mail.Message]
@@ -44,57 +45,87 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
     imapFolder.open(Folder.READ_WRITE)
 
-    val rawMsg = imapFolder.doCommand { imapProtocol ->
-      var rawMimeBytes: ByteArray? = null
+    val originalMsg: MimeMessage = imapFolder.getMessageByUID(uid) as MimeMessage
+    val allHeaders = Collections.list<String>(originalMsg.allHeaderLines)
+    val rawHeaders = TextUtils.join("\n", allHeaders)
 
-      val args = Argument()
-      val list = Argument()
-      list.writeString("RFC822.SIZE")
-      list.writeString("BODY[]<0.1024000>")
-      list.writeString("BODYSTRUCTURE")
-      args.writeArgument(list)
+    if (originalMsg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+      fetchContent(originalMsg.content as Multipart)
+    }
 
-      val responses = imapProtocol.command("UID FETCH $uid", args)
-      val serverStatusResponse = responses[responses.size - 1]
+    val customMsg = CustomMimeMessage(session, rawHeaders)
 
-      if (serverStatusResponse.isOK) {
-        for (response in responses) {
-          if (response !is FetchResponse) {
-            continue
-          }
+    val multipart = originalMsg.content as? Multipart
+    if (multipart != null) {
+      removeAttParts(multipart)
+      customMsg.setContent(multipart)
+    } else {
+      customMsg.setContent(originalMsg.content, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)
+    }
+    customMsg.saveChanges()
 
-          val body = response.getItem(BODY::class.java)
-          body?.byteArrayInputStream?.let { rawMimeBytes = it.readBytes() }
+    val outputStream = ByteArrayOutputStream()
+    customMsg.writeTo(outputStream)
 
-          val bodystructure = response.getItem(BODYSTRUCTURE::class.java)
-          bodystructure?.let {
-            AttachmentDaoSource().updateAttsTable(listener.context, account.email, localFolder.fullName, uid, it)
-          }
-        }
-
-        if (rawMimeBytes == null) {
-          ExceptionUtil.handleError(IllegalStateException(
-              "LoadMessageDetailsSyncTask:Server response = $serverStatusResponse" +
-                  "\n There is no FetchResponse with right BODY" +
-                  "\n responses count = ${responses.size}"))
-        }
-
-      } else {
-        ExceptionUtil.handleError(IllegalStateException(
-            "LoadMessageDetailsSyncTask:Server response = $serverStatusResponse"))
-      }
-
-      imapProtocol.notifyResponseHandlers(responses)
-      imapProtocol.handleResult(serverStatusResponse)
-
-      rawMimeBytes
-    } as? ByteArray ?: throw IllegalStateException("An error occurred during receiving the message details")
-
-    val message = imapFolder.getMessageByUID(uid)
-    message?.setFlag(Flags.Flag.SEEN, true)
-
-    listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, message, rawMsg, ownerKey, requestCode)
-
+    listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, customMsg, outputStream.toByteArray(),
+        ownerKey, requestCode)
     imapFolder.close(false)
+  }
+
+  /**
+   * Remove parts with a disposition = [Part.ATTACHMENT] from the original [Multipart]
+   *
+   * @param multipart The input [Multipart] object
+   */
+  private fun removeAttParts(multipart: Multipart) {
+    val removeCandidates = mutableListOf<BodyPart>()
+    val numberOfParts = multipart.count
+    for (partCount in 0 until numberOfParts) {
+      val bodyPart = multipart.getBodyPart(partCount)
+      if (bodyPart is MimeBodyPart) {
+        if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+          removeAttParts(bodyPart.content as Multipart)
+        } else {
+          if (Part.ATTACHMENT.equals(bodyPart.disposition, ignoreCase = true)) {
+            removeCandidates.add(bodyPart)
+          }
+        }
+      }
+    }
+
+    for (candidate in removeCandidates) {
+      multipart.removeBodyPart(candidate)
+    }
+  }
+
+  /**
+   * Fetch only non-attachment parts as [Multipart].
+   *
+   * @param message The parent [Multipart].
+   * @return [Multipart] with already cached parts.
+   */
+  private fun fetchContent(multipart: Multipart) {
+    val numberOfParts = multipart.count
+    for (partCount in 0 until numberOfParts) {
+      val bodyPart = multipart.getBodyPart(partCount)
+      if (bodyPart is MimeBodyPart) {
+        if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+          fetchContent(bodyPart.content as Multipart)
+        } else {
+          if (!Part.ATTACHMENT.equals(bodyPart.disposition, ignoreCase = true)) {
+            bodyPart.content// just fetch this part and add to cache
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * It's a custom realization of [MimeMessage] which has an own realization of creation [InternetHeaders]
+   */
+  class CustomMimeMessage constructor(session: Session, rawMessage: String?) : MimeMessage(session) {
+    init {
+      headers = InternetHeaders(ByteArrayInputStream(rawMessage?.toByteArray() ?: "".toByteArray()))
+    }
   }
 }
