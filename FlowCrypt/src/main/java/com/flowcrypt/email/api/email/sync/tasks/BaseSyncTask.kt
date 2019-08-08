@@ -20,6 +20,7 @@ import javax.mail.Transport
  *
  * @property ownerKey    The name of the reply to [Messenger].
  * @property requestCode The unique request code for the reply to [Messenger].
+ * @property resetConnection The reset connection status (false by default).
  *
  * @author DenBond7
  * Date: 23.06.2017
@@ -27,7 +28,8 @@ import javax.mail.Transport
  * E-mail: DenBond7@gmail.com
  */
 
-abstract class BaseSyncTask constructor(override var ownerKey: String, override var requestCode: Int) : SyncTask {
+abstract class BaseSyncTask constructor(override var ownerKey: String, override var requestCode: Int,
+                                        override val resetConnection: Boolean = false) : SyncTask {
   override val isSMTPRequired: Boolean
     get() = false
 

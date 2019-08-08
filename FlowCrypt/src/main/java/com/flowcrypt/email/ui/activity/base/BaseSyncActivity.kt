@@ -241,11 +241,12 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param requestCode The unique request code for identify the current action.
    * @param localFolder [LocalFolder] object.
    * @param uid         The [com.sun.mail.imap.protocol.UID] of [).][javax.mail.Message]
+   * @param resetConnection The reset connection status
    */
-  fun loadMsgDetails(requestCode: Int, localFolder: LocalFolder, uid: Int) {
+  fun loadMsgDetails(requestCode: Int, localFolder: LocalFolder, uid: Int, resetConnection: Boolean = false) {
     if (checkServiceBound(isSyncServiceBound)) return
 
-    val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
+    val action = BaseService.Action(replyMessengerName, requestCode, localFolder, resetConnection)
 
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGE_DETAILS, uid, 0, action)
     msg.replyTo = syncReplyMessenger

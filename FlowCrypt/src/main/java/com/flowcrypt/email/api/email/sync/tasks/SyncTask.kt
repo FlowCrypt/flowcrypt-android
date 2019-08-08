@@ -44,6 +44,13 @@ interface SyncTask {
   val requestCode: Int
 
   /**
+   * Get the reset connection status.
+   *
+   * @return The reset connection status.
+   */
+  val resetConnection: Boolean
+
+  /**
    * Run current task in the separate thread.
    *
    * @param account   The account information which will be used of connection.

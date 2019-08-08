@@ -62,14 +62,16 @@ abstract class BaseService : Service() {
    * @param ownerKey    The name of reply to [Messenger]
    * @param requestCode The unique request code which identify some action
    * @param object      The object which will be passed to [BaseService].
+   * @param resetConnection The reset connection status.
    */
-  (val ownerKey: String, val requestCode: Int, val `object`: Any?) {
+  (val ownerKey: String, val requestCode: Int, val `object`: Any?, val resetConnection: Boolean = false) {
 
     override fun toString(): String {
       return "Action{" +
           "ownerKey='" + ownerKey + '\''.toString() +
           ", requestCode=" + requestCode +
           ", object=" + `object` +
+          ", resetConnection=" + resetConnection +
           '}'.toString()
     }
   }
