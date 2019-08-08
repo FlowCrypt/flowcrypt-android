@@ -693,7 +693,7 @@ class EmailSyncService : BaseService(), SyncListener {
 
           MESSAGE_LOAD_MESSAGE_DETAILS -> if (emailSyncManager != null && action != null) {
             val localFolder = action.`object` as LocalFolder
-            emailSyncManager.loadMsgDetails(ownerKey!!, requestCode, localFolder, msg.arg1)
+            emailSyncManager.loadMsgDetails(ownerKey!!, requestCode, localFolder, msg.arg1, action.resetConnection)
           }
 
           MESSAGE_MOVE_MESSAGE -> if (emailSyncManager != null && action != null) {

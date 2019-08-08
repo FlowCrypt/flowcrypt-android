@@ -38,7 +38,8 @@ import javax.mail.Store
 class LoadMessageDetailsSyncTask(ownerKey: String,
                                  requestCode: Int,
                                  private val localFolder: LocalFolder,
-                                 private val uid: Long) : BaseSyncTask(ownerKey, requestCode) {
+                                 private val uid: Long,
+                                 resetConnection: Boolean) : BaseSyncTask(ownerKey, requestCode, resetConnection) {
 
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder

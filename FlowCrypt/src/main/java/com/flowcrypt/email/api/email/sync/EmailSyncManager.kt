@@ -220,10 +220,10 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
    * @param localFolder The local implementation of the remote localFolder.
    * @param uid         The [com.sun.mail.imap.protocol.UID] of [).][Message]
    */
-  fun loadMsgDetails(ownerKey: String, requestCode: Int, localFolder: LocalFolder, uid: Int) {
+  fun loadMsgDetails(ownerKey: String, requestCode: Int, localFolder: LocalFolder, uid: Int, resetConnection: Boolean) {
     try {
       removeOldTasks(LoadMessageDetailsSyncTask::class.java, activeQueue)
-      activeQueue.put(LoadMessageDetailsSyncTask(ownerKey, requestCode, localFolder, uid.toLong()))
+      activeQueue.put(LoadMessageDetailsSyncTask(ownerKey, requestCode, localFolder, uid.toLong(), resetConnection))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }
@@ -469,20 +469,25 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
     internal fun resetConnIfNeeded(task: SyncTask?) {
       val activeStore = store ?: return
 
+      if (task?.resetConnection == true) {
+        disconnect(task)
+        return
+      }
+
       if (accountDao.authCreds != null) {
         if (!activeStore.urlName.username.equals(accountDao.authCreds!!.username, ignoreCase = true)) {
-          LogsUtil.d(tag, "Connection was reset!")
-
-          if (task != null) {
-            notifyActionProgress(task.ownerKey, task.requestCode, R.id.progress_id_resetting_connection)
-          }
-
-          activeStore.close()
-          sess = null
+          disconnect(task)
         }
       } else {
         throw ManualHandledException(listener.context.getString(R.string.device_not_supported_key_store_error))
       }
+    }
+
+    private fun disconnect(task: SyncTask?) {
+      LogsUtil.d(tag, "Connection was reset!")
+      task?.let { notifyActionProgress(it.ownerKey, it.requestCode, R.id.progress_id_resetting_connection) }
+      closeConn()
+      sess = null
     }
 
     internal fun closeConn() {
