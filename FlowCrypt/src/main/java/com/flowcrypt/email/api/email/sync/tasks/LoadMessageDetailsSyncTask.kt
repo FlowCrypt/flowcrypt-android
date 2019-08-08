@@ -10,6 +10,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.dao.source.AccountDao
+import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -58,6 +59,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       customMsg.setContent(originalMsg.content, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)
     }
     customMsg.saveChanges()
+    customMsg.setMessageId(originalMsg.messageID)
 
     val outputStream = ByteArrayOutputStream()
     customMsg.writeTo(outputStream)
@@ -73,7 +75,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     for (partCount in 0 until numberOfParts) {
       val item = sourceMultipart.getBodyPart(partCount)
 
-      if (item is MimeBodyPart) {
+      if (item is IMAPBodyPart) {
         if (item.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
           val multi = item.content as Multipart
           val mimeMultipart = CustomMimeMultipart(multi.contentType)
@@ -86,12 +88,8 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
           candidates.add(bodyPart)
         } else {
           if (!Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
-            candidates.add(item)
+            candidates.add(MimeBodyPart(item.mimeStream))
           }
-        }
-      } else {
-        if (!Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
-          candidates.add(item)
         }
       }
     }
@@ -106,16 +104,14 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     val numberOfParts = originalMultipart.count
     for (partCount in 0 until numberOfParts) {
       val item = originalMultipart.getBodyPart(partCount)
-      if (item is MimeBodyPart) {
+      if (item is IMAPBodyPart) {
         if (item.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
           return getPart(item.content as Multipart)
         } else {
           if (!Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
-            candidates.add(item)
+            candidates.add(MimeBodyPart(item.mimeStream))
           }
         }
-      } else if (!Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
-        candidates.add(item)
       }
     }
 
@@ -137,6 +133,10 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
   class CustomMimeMessage constructor(session: Session, rawMessage: String?) : MimeMessage(session) {
     init {
       headers = InternetHeaders(ByteArrayInputStream(rawMessage?.toByteArray() ?: "".toByteArray()))
+    }
+
+    fun setMessageId(msgId: String) {
+      setHeader("Message-ID", msgId)
     }
   }
 
