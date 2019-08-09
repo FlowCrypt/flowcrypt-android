@@ -78,10 +78,10 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
 
       if (item is IMAPBodyPart) {
         if (item.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-          val multi = item.content as Multipart
-          val mimeMultipart = CustomMimeMultipart(multi.contentType)
-          val part = getPart(item.content as Multipart)
-          part?.let { mimeMultipart.addBodyPart(it) }
+          val innerMutlipart = item.content as Multipart
+          val mimeMultipart = CustomMimeMultipart(innerMutlipart.contentType)
+          val innerPart = getPart(item.content as Multipart) ?: continue
+          mimeMultipart.addBodyPart(innerPart)
 
           val bodyPart = MimeBodyPart()
           bodyPart.setContent(mimeMultipart)
@@ -107,13 +107,18 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       val item = originalMultipart.getBodyPart(partCount)
       if (item is IMAPBodyPart) {
         if (item.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-          return getPart(item.content as Multipart)
+          val innerPart = getPart(item.content as Multipart)
+          innerPart?.let { candidates.add(it) }
         } else {
           if (isPartAllowed(item)) {
             candidates.add(MimeBodyPart(item.mimeStream))
           }
         }
       }
+    }
+
+    if (candidates.isEmpty()) {
+      return null
     }
 
     val newMultiPart = CustomMimeMultipart(originalMultipart.contentType)
