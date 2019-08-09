@@ -77843,6 +77843,7 @@ class Endpoints {
       let replyType = 'plain';
 
       for (const block of sequentialProcessedBlocks) {
+        // fix/adjust/format blocks before returning it over JSON
         if (block.content instanceof buf_1.Buf) {
           // cannot JSON-serialize Buf
           block.content = fmt_1.isContentBlock(block.type) ? block.content.toUtfStr() : block.content.toRawBytesStr();
@@ -77894,12 +77895,7 @@ class Endpoints {
           }
         } else if (fmt_1.isContentBlock(block.type)) {
           msgContentBlocks.push(block);
-        } else {
-          if (block.attMeta && !block.content.length) {
-            // add a note about lacking file support. todo - remove when added support
-            block.content = `${block.attMeta.name || '(unnamed file)'} [${common_1.Str.numberFormat(Math.ceil((block.attMeta.length || 0) / 1024)) + 'KB'}]\n(Improved file support coming very soon!)`;
-          }
-
+        } else if (block.type !== 'plainAtt') {
           blocks.push(block);
         }
       }
@@ -78095,7 +78091,7 @@ Debug.printChunk = (name, data) => {
   const header2 = ' '.repeat(header1.length);
   const chunk = Array.from(data.subarray(0, 30));
   const chunkIndices = chunk.map((_, i) => i);
-  console.log(`-\n${header1}-+-[${chunk.map(Debug.pad).join(' ')} ]\n${header2} |-[${chunk.map(Debug.char).map(Debug.pad).join(' ')} ]\n${header2} \`-[${chunkIndices.map(Debug.pad).join(' ')} ]`);
+  console.log(`-\n${header1} - +-[${chunk.map(Debug.pad).join(' ')}]\n${header2} | -[${chunk.map(Debug.char).map(Debug.pad).join(' ')}]\n${header2} \`-[${chunkIndices.map(Debug.pad).join(' ')} ]`);
 };
 
 Debug.char = byte => {
