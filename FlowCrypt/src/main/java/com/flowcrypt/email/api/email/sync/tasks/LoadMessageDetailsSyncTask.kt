@@ -88,7 +88,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
 
           candidates.add(bodyPart)
         } else {
-          if (!Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
+          if (isPartAllowed(item)) {
             candidates.add(MimeBodyPart(item.mimeStream))
           }
         }
@@ -109,7 +109,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
         if (item.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
           return getPart(item.content as Multipart)
         } else {
-          if (!Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
+          if (isPartAllowed(item)) {
             candidates.add(MimeBodyPart(item.mimeStream))
           }
         }
@@ -126,6 +126,35 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     bodyPart.setContent(newMultiPart)
 
     return bodyPart
+  }
+
+  private fun isPartAllowed(item: MimeBodyPart): Boolean {
+    var result = true
+    if (Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
+      result = false
+
+      //match allowed files
+      if (item.fileName in ALLOWED_FILE_NAMES) {
+        result = true
+      }
+
+      //match private keys
+      if (item.fileName?.matches("(?i)(cryptup|flowcrypt)-backup-[a-z0-9]+\\.key".toRegex()) == true) {
+        result = true
+      }
+
+      //match public keys
+      if (item.fileName?.matches("(?i)^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.(asc|key)\$".toRegex()) == true) {
+        result = true
+      }
+
+      //match signature
+      if (item.isMimeType("application/pgp-signature")) {
+        result = true
+      }
+    }
+
+    return result
   }
 
   /**
@@ -145,5 +174,21 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     init {
       this.contentType = contentType
     }
+  }
+
+  companion object {
+    val ALLOWED_FILE_NAMES = arrayOf(
+        "PGPexch.htm.pgp",
+        "PGPMIME version identification",
+        "Version.txt",
+        "PGPMIME Versions Identification",
+        "signature.asc",
+        "msg.asc",
+        "message",
+        "message.asc",
+        "encrypted.asc",
+        "encrypted.eml.pgp",
+        "Message.pgp"
+    )
   }
 }
