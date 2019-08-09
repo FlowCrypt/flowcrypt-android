@@ -12,6 +12,7 @@ import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
+import org.apache.commons.io.FilenameUtils
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.*
@@ -148,6 +149,11 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
         result = true
       }
 
+      //allow download keys less than 100kb
+      if (FilenameUtils.getExtension(item.fileName) in KEYS_EXTENSIONS && item.size < 102400) {
+        result = true
+      }
+
       //match signature
       if (item.isMimeType("application/pgp-signature")) {
         result = true
@@ -189,6 +195,11 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
         "encrypted.asc",
         "encrypted.eml.pgp",
         "Message.pgp"
+    )
+
+    val KEYS_EXTENSIONS = arrayOf(
+        "asc",
+        "key"
     )
   }
 }
