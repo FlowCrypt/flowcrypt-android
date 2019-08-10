@@ -75090,7 +75090,7 @@ Mime.process = async mimeMsg => {
 };
 
 Mime.isPlainInlineImg = b => {
-  return b.type === 'plainAtt' && b.attMeta && b.attMeta.inline && b.attMeta.type && ['image/jpeg', 'image/png', 'image/svg+xml'].includes(b.attMeta.type);
+  return b.type === 'plainAtt' && b.attMeta && b.attMeta.inline && b.attMeta.type && ['image/jpeg', 'image/jpg', 'image/bmp', 'image/png', 'image/svg+xml'].includes(b.attMeta.type);
 };
 
 Mime.headersToFrom = parsedMimeMsg => {
@@ -77422,7 +77422,7 @@ class Xss {}
 Xss.ALLOWED_BASIC_TAGS = ['p', 'div', 'br', 'u', 'i', 'em', 'b', 'ol', 'ul', 'pre', 'li', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'address', 'blockquote', 'dl', 'fieldset', 'a', 'font', 'strong', 'strike', 'code'];
 Xss.ALLOWED_ATTRS = {
   a: ['href', 'name', 'target'],
-  img: ['src', 'width', 'height'],
+  img: ['src', 'width', 'height', 'alt'],
   font: ['size', 'color', 'face'],
   span: ['color'],
   div: ['color'],
@@ -77451,7 +77451,8 @@ Xss.htmlSanitizeKeepBasicTags = dirtyHtml => {
           return {
             tagName: 'img',
             attribs: {
-              src: attribs.src
+              src: attribs.src,
+              alt: attribs.alt || ''
             }
           };
         } else if (srcBegin.indexOf('http://') === 0 || srcBegin.indexOf('https://') === 0) {
@@ -77531,8 +77532,25 @@ Xss.htmlSanitizeAndStripAllTags = (dirtyHtml, outputNl) => {
   text = text.replace(/\n{2,}/g, '\n\n'); // not all tags were removed above. Remove all remaining tags
 
   text = dereq_html_sanitize(text, {
-    allowedTags: []
+    allowedTags: ['img', 'span'],
+    allowedAttributes: {
+      img: ['src']
+    },
+    allowedSchemes: Xss.ALLOWED_SCHEMES,
+    transformTags: {
+      'img': (tagName, attribs) => {
+        return {
+          tagName: 'span',
+          attribs: {},
+          text: `[image: ${attribs.alt || attribs.title || 'no name'}]`
+        };
+      }
+    }
   });
+  text = dereq_html_sanitize(text, {
+    allowedTags: []
+  }); // clean it one more time to replace leftover spans with their text
+
   text = text.trim();
 
   if (outputNl !== '\n') {
