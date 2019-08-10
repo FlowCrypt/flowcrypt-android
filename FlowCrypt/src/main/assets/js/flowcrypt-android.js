@@ -74556,7 +74556,7 @@ const endpoints_1 = __webpack_require__(19);
 
 const native_1 = __webpack_require__(21);
 
-const util_1 = __webpack_require__(6);
+const util_1 = __webpack_require__(7);
 
 const buf_1 = __webpack_require__(16);
 
@@ -74802,11 +74802,13 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const common_1 = __webpack_require__(5);
+const mime_1 = __webpack_require__(5);
 
-const pgp_1 = __webpack_require__(8);
+const common_1 = __webpack_require__(6);
 
-const xss_1 = __webpack_require__(18);
+const pgp_1 = __webpack_require__(9);
+
+const xss_1 = __webpack_require__(17);
 
 const buf_1 = __webpack_require__(16);
 
@@ -74849,25 +74851,59 @@ exports.stripHtmlRootTags = html => {
 
   return html.trim();
 };
+/**
+ * replace content of imgs: <img src="cid:16c7a8c3c6a8d4ab1e01">
+ */
 
-exports.fmtContentBlock = contentBlocks => {
+
+const fillInlineHtmlImgs = (htmlContent, inlineImgsByCid) => {
+  return htmlContent.replace(/src="cid:([^"]+)"/g, (originalSrcAttr, cid) => {
+    const img = inlineImgsByCid[cid];
+
+    if (img) {
+      // in current usage, as used by `endpoints.ts`: `block.attMeta!.data` actually contains base64 encoded data, not Uint8Array as the type claims
+      let alteredSrcAttr = `src="data:${img.attMeta.type};base64,${img.attMeta.data}"`; // delete to find out if any imgs were unused
+      // later we can add the unused ones at the bottom 
+      // (though as implemented will cause issues if the same cid is reused in several places in html - which is theoretically valid - only first will get replaced)
+
+      delete inlineImgsByCid[cid];
+      return alteredSrcAttr;
+    } else {
+      return originalSrcAttr;
+    }
+  });
+};
+
+exports.fmtContentBlock = allContentBlocks => {
   let msgContentAsHtml = '';
   let msgContentAsText = '';
+  const contentBlocks = allContentBlocks.filter(b => !mime_1.Mime.isPlainInlineImg(b));
+  const imgsAtTheBottom = [];
+  const inlineImgsByCid = {};
+
+  for (let inlineImg of allContentBlocks.filter(b => mime_1.Mime.isPlainInlineImg(b))) {
+    if (inlineImg.attMeta.cid) {
+      inlineImgsByCid[inlineImg.attMeta.cid.replace(/>$/, '').replace(/^</, '')] = inlineImg;
+    } else {
+      imgsAtTheBottom.push(inlineImg);
+    }
+  }
 
   for (const block of contentBlocks) {
     if (block.type === 'decryptedText') {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(common_1.Str.asEscapedHtml(block.content.toString()), 'green');
       msgContentAsText += block.content.toString() + '\n';
     } else if (block.type === 'decryptedHtml') {
+      // todo - add support for inline imgs? when included using cid
       msgContentAsHtml += fmtMsgContentBlockAsHtml(exports.stripHtmlRootTags(block.content.toString()), 'green');
       msgContentAsText += xss_1.Xss.htmlSanitizeAndStripAllTags(block.content.toString(), '\n') + '\n';
     } else if (block.type === 'plainText') {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(common_1.Str.asEscapedHtml(block.content.toString()), 'plain');
       msgContentAsText += block.content.toString() + '\n';
     } else if (block.type === 'plainHtml') {
-      msgContentAsHtml += fmtMsgContentBlockAsHtml(exports.stripHtmlRootTags(block.content.toString()), 'plain');
-      msgContentAsText += xss_1.Xss.htmlSanitizeAndStripAllTags(block.content.toString(), '\n');
-      +'\n';
+      const dirtyHtmlWithImgs = fillInlineHtmlImgs(exports.stripHtmlRootTags(block.content.toString()), inlineImgsByCid);
+      msgContentAsHtml += fmtMsgContentBlockAsHtml(dirtyHtmlWithImgs, 'plain');
+      msgContentAsText += xss_1.Xss.htmlSanitizeAndStripAllTags(dirtyHtmlWithImgs, '\n') + '\n';
     } else if (block.type === 'verifiedMsg') {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(block.content.toString(), 'gray');
       msgContentAsText += block.content.toString() + '\n';
@@ -74875,6 +74911,15 @@ exports.fmtContentBlock = contentBlocks => {
       msgContentAsHtml += fmtMsgContentBlockAsHtml(block.content.toString(), 'plain');
       msgContentAsText += block.content.toString() + '\n';
     }
+  }
+
+  for (const inlineImg of imgsAtTheBottom.concat(Object.values(inlineImgsByCid))) {
+    // render any images we did not insert into content, at the bottom
+    let alt = `${inlineImg.attMeta.name || '(unnamed image)'} - ${inlineImg.attMeta.length / 1024}kb`; // in current usage, as used by `endpoints.ts`: `block.attMeta!.data` actually contains base64 encoded data, not Uint8Array as the type claims
+
+    let inlineImgTag = `<img src="data:${inlineImg.attMeta.type};base64,${inlineImg.attMeta.data}" alt="${xss_1.Xss.escape(alt)} " />`;
+    msgContentAsHtml += fmtMsgContentBlockAsHtml(inlineImgTag, 'plain');
+    msgContentAsText += `[image: ${alt}]\n`;
   }
 
   msgContentAsHtml = `
@@ -74939,7 +74984,390 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const util_js_1 = __webpack_require__(6);
+const common_js_1 = __webpack_require__(6);
+
+const pgp_js_1 = __webpack_require__(9);
+
+const att_js_1 = __webpack_require__(18);
+
+const catch_js_1 = __webpack_require__(11);
+
+const require_js_1 = __webpack_require__(13);
+
+const buf_js_1 = __webpack_require__(16);
+
+const MimeParser = require_js_1.requireMimeParser(); // tslint:disable-line:variable-name
+
+const MimeBuilder = require_js_1.requireMimeBuilder(); // tslint:disable-line:variable-name
+
+const Iso88592 = require_js_1.requireIso88592(); // tslint:disable-line:variable-name
+
+class Mime {}
+
+Mime.process = async mimeMsg => {
+  const decoded = await Mime.decode(mimeMsg);
+  const blocks = [];
+
+  if (decoded.text) {
+    const blocksFromTextPart = pgp_js_1.Pgp.armor.detectBlocks(common_js_1.Str.normalize(decoded.text)).blocks; // if there are some encryption-related blocks found in the text section, which we can use, and not look at the html section
+
+    if (blocksFromTextPart.find(b => b.type === 'encryptedMsg' || b.type === 'signedMsg' || b.type === 'publicKey' || b.type === 'privateKey' || b.type === 'cryptupVerification')) {
+      blocks.push(...blocksFromTextPart); // because the html most likely containt the same thing, just harder to parse pgp sections cause it's html
+    } else if (decoded.html) {
+      // if no pgp blocks found in text part and there is html part, prefer html
+      blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('plainHtml', decoded.html));
+    } else {
+      // else if no html and just a plain text message, use that
+      blocks.push(...blocksFromTextPart);
+    }
+  } else if (decoded.html) {
+    blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('plainHtml', decoded.html));
+  }
+
+  for (const file of decoded.atts) {
+    const treatAs = file.treatAs();
+
+    if (treatAs === 'encryptedMsg') {
+      const armored = pgp_js_1.Pgp.armor.clip(file.getData().toUtfStr());
+
+      if (armored) {
+        blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('encryptedMsg', armored));
+      }
+    } else if (treatAs === 'signature') {
+      decoded.signature = decoded.signature || file.getData().toUtfStr();
+    } else if (treatAs === 'publicKey') {
+      blocks.push(...pgp_js_1.Pgp.armor.detectBlocks(file.getData().toUtfStr()).blocks);
+    } else if (treatAs === 'privateKey') {
+      blocks.push(...pgp_js_1.Pgp.armor.detectBlocks(file.getData().toUtfStr()).blocks);
+    } else if (treatAs === 'encryptedFile') {
+      blocks.push(pgp_js_1.Pgp.internal.msgBlockAttObj('encryptedAtt', '', {
+        name: file.name,
+        type: file.type,
+        length: file.getData().length,
+        data: file.getData()
+      }));
+    } else if (treatAs === 'plainFile') {
+      blocks.push(pgp_js_1.Pgp.internal.msgBlockAttObj('plainAtt', '', {
+        name: file.name,
+        type: file.type,
+        length: file.getData().length,
+        data: file.getData(),
+        inline: file.inline,
+        cid: file.cid
+      }));
+    }
+  }
+
+  if (decoded.signature) {
+    for (const block of blocks) {
+      if (block.type === 'plainText') {
+        block.type = 'signedMsg';
+        block.signature = decoded.signature;
+      } else if (block.type === 'plainHtml') {
+        block.type = 'signedHtml';
+        block.signature = decoded.signature;
+      }
+    }
+
+    if (!blocks.find(block => block.type === 'plainText' || block.type === 'plainHtml' || block.type === 'signedMsg' || block.type === 'signedHtml')) {
+      // signed an empty message
+      blocks.push({
+        type: "signedMsg",
+        "content": "",
+        signature: decoded.signature,
+        complete: true
+      });
+    }
+  }
+
+  return {
+    headers: decoded.headers,
+    blocks,
+    from: decoded.from,
+    to: decoded.to,
+    rawSignedContent: decoded.rawSignedContent
+  };
+};
+
+Mime.isPlainInlineImg = b => {
+  return b.type === 'plainAtt' && b.attMeta && b.attMeta.inline && b.attMeta.type && ['image/jpeg', 'image/png', 'image/svg+xml'].includes(b.attMeta.type);
+};
+
+Mime.headersToFrom = parsedMimeMsg => {
+  const headerTo = [];
+  let headerFrom;
+
+  if (Array.isArray(parsedMimeMsg.headers.from) && parsedMimeMsg.headers.from[0] && parsedMimeMsg.headers.from[0].address) {
+    headerFrom = parsedMimeMsg.headers.from[0].address;
+  }
+
+  if (Array.isArray(parsedMimeMsg.headers.to)) {
+    for (const to of parsedMimeMsg.headers.to) {
+      if (to.address) {
+        headerTo.push(String(to.address));
+      }
+    }
+  }
+
+  return {
+    from: headerFrom,
+    to: headerTo
+  };
+};
+
+Mime.replyHeaders = parsedMimeMsg => {
+  const msgId = String(parsedMimeMsg.headers['message-id'] || '');
+  const refs = String(parsedMimeMsg.headers['in-reply-to'] || '');
+  return {
+    'in-reply-to': msgId,
+    'references': refs + ' ' + msgId
+  };
+};
+
+Mime.resemblesMsg = msg => {
+  const utf8 = new buf_js_1.Buf(msg.slice(0, 1000)).toUtfStr().toLowerCase();
+  const contentType = utf8.match(/content-type: +[0-9a-z\-\/]+/);
+
+  if (!contentType) {
+    return false;
+  }
+
+  if (utf8.match(/content-transfer-encoding: +[0-9a-z\-\/]+/) || utf8.match(/content-disposition: +[0-9a-z\-\/]+/) || utf8.match(/; boundary=/) || utf8.match(/; charset=/)) {
+    return true;
+  }
+
+  return Boolean(contentType.index === 0 && utf8.match(/boundary=/));
+};
+
+Mime.retrieveRawSignedContent = nodes => {
+  for (const node of nodes) {
+    if (node._isMultipart === 'signed' && node._childNodes && node._childNodes[0]) {
+      // PGP/MIME signed content uses <CR><LF> as in // use CR-LF https://tools.ietf.org/html/rfc3156#section-5
+      // however emailjs parser will replace it to <LF>, so we fix it here
+      let rawSignedContent = node._childNodes[0].raw.replace(/\r?\n/g, '\r\n');
+
+      if (/--$/.test(rawSignedContent)) {
+        // end of boundary without a mandatory newline
+        rawSignedContent += '\r\n'; // emailjs wrongly leaves out the last newline, fix it here
+      }
+
+      return rawSignedContent;
+    } else if (node._childNodes) {
+      return Mime.retrieveRawSignedContent(node._childNodes);
+    }
+  }
+
+  return undefined;
+};
+
+Mime.decode = mimeMsg => {
+  return new Promise(async resolve => {
+    const mimeContent = {
+      atts: [],
+      headers: {},
+      subject: undefined,
+      text: undefined,
+      html: undefined,
+      signature: undefined,
+      from: undefined,
+      to: []
+    };
+
+    try {
+      const parser = new MimeParser();
+      const leafNodes = {};
+
+      parser.onbody = node => {
+        const path = String(node.path.join('.'));
+
+        if (typeof leafNodes[path] === 'undefined') {
+          leafNodes[path] = node;
+        }
+      };
+
+      parser.onend = () => {
+        for (const name of Object.keys(parser.node.headers)) {
+          mimeContent.headers[name] = parser.node.headers[name][0].value;
+        }
+
+        mimeContent.rawSignedContent = Mime.retrieveRawSignedContent([parser.node]);
+
+        for (const node of Object.values(leafNodes)) {
+          if (Mime.getNodeType(node) === 'application/pgp-signature') {
+            mimeContent.signature = node.rawContent;
+          } else if (Mime.getNodeType(node) === 'text/html' && !Mime.getNodeFilename(node)) {
+            // html content may be broken up into smaller pieces by attachments in between
+            // AppleMail does this with inline attachments
+            mimeContent.html = (mimeContent.html || '') + Mime.getNodeContentAsUtfStr(node);
+          } else if (Mime.getNodeType(node) === 'text/plain' && !Mime.getNodeFilename(node)) {
+            mimeContent.text = Mime.getNodeContentAsUtfStr(node);
+          } else if (Mime.getNodeType(node) === 'text/rfc822-headers') {
+            if (node._parentNode && node._parentNode.headers.subject) {
+              mimeContent.subject = node._parentNode.headers.subject[0].value;
+            }
+          } else {
+            mimeContent.atts.push(Mime.getNodeAsAtt(node));
+          }
+        }
+
+        const {
+          from,
+          to
+        } = Mime.headersToFrom(mimeContent);
+        mimeContent.from = from;
+        mimeContent.to = to;
+        resolve(mimeContent);
+      };
+
+      parser.write(mimeMsg);
+      parser.end();
+    } catch (e) {
+      // todo - on Android we may want to fail when this happens, evaluate effect on browser extension
+      catch_js_1.Catch.reportErr(e);
+      resolve(mimeContent);
+    }
+  });
+};
+
+Mime.encode = async (body, headers, atts = []) => {
+  const rootNode = new MimeBuilder('multipart/mixed'); // tslint:disable-line:no-unsafe-any
+
+  for (const key of Object.keys(headers)) {
+    rootNode.addHeader(key, headers[key]); // tslint:disable-line:no-unsafe-any
+  }
+
+  if (typeof body === 'string') {
+    body = {
+      'text/plain': body
+    };
+  }
+
+  let contentNode;
+
+  if (Object.keys(body).length === 1) {
+    contentNode = Mime.newContentNode(MimeBuilder, Object.keys(body)[0], body[Object.keys(body)[0]] || '');
+  } else {
+    contentNode = new MimeBuilder('multipart/alternative'); // tslint:disable-line:no-unsafe-any
+
+    for (const type of Object.keys(body)) {
+      contentNode.appendChild(Mime.newContentNode(MimeBuilder, type, body[type])); // already present, that's why part of for loop
+    }
+  }
+
+  rootNode.appendChild(contentNode); // tslint:disable-line:no-unsafe-any
+
+  for (const att of atts) {
+    const type = `${att.type}; name="${att.name}"`;
+    const id = `f_${common_js_1.Str.sloppyRandom(30)}@flowcrypt`;
+    const header = {
+      'Content-Disposition': 'attachment',
+      'X-Attachment-Id': id,
+      'Content-ID': `<${id}>`,
+      'Content-Transfer-Encoding': 'base64'
+    };
+    rootNode.appendChild(new MimeBuilder(type, {
+      filename: att.name
+    }).setHeader(header).setContent(att.getData())); // tslint:disable-line:no-unsafe-any
+  }
+
+  return rootNode.build(); // tslint:disable-line:no-unsafe-any
+};
+
+Mime.getNodeType = node => {
+  if (node.headers['content-type'] && node.headers['content-type'][0]) {
+    return node.headers['content-type'][0].value;
+  }
+
+  return undefined;
+};
+
+Mime.getNodeContentId = node => {
+  if (node.headers['content-id'] && node.headers['content-id'][0]) {
+    return node.headers['content-id'][0].value;
+  }
+
+  return undefined;
+};
+
+Mime.getNodeFilename = node => {
+  if (node.headers['content-disposition'] && node.headers['content-disposition'][0]) {
+    const header = node.headers['content-disposition'][0];
+
+    if (header.params && header.params.filename) {
+      return String(header.params.filename);
+    }
+  }
+
+  if (node.headers['content-type'] && node.headers['content-type'][0]) {
+    const header = node.headers['content-type'][0];
+
+    if (header.params && header.params.name) {
+      return String(header.params.name);
+    }
+  }
+
+  return;
+};
+
+Mime.fromEqualSignNotationAsBuf = str => {
+  return buf_js_1.Buf.fromRawBytesStr(str.replace(/(=[A-F0-9]{2})+/g, equalSignUtfPart => {
+    const bytes = equalSignUtfPart.replace(/^=/, '').split('=').map(twoHexDigits => parseInt(twoHexDigits, 16));
+    return new buf_js_1.Buf(bytes).toRawBytesStr();
+  }));
+};
+
+Mime.getNodeAsAtt = node => {
+  return new att_js_1.Att({
+    name: Mime.getNodeFilename(node),
+    type: Mime.getNodeType(node),
+    data: node.contentTransferEncoding.value === 'quoted-printable' ? Mime.fromEqualSignNotationAsBuf(node.rawContent) : node.content,
+    cid: Mime.getNodeContentId(node)
+  });
+};
+
+Mime.getNodeContentAsUtfStr = node => {
+  if (node.charset === 'utf-8' && node.contentTransferEncoding.value === 'base64') {
+    return buf_js_1.Buf.fromUint8(node.content).toUtfStr();
+  }
+
+  if (node.charset === 'utf-8' && node.contentTransferEncoding.value === 'quoted-printable') {
+    return Mime.fromEqualSignNotationAsBuf(node.rawContent).toUtfStr();
+  }
+
+  if (node.charset && Iso88592.labels.includes(node.charset)) {
+    return Iso88592.decode(node.rawContent); // tslint:disable-line:no-unsafe-any
+  }
+
+  return buf_js_1.Buf.fromRawBytesStr(node.rawContent).toUtfStr();
+}; // tslint:disable-next-line:variable-name
+
+
+Mime.newContentNode = (MimeBuilder, type, content) => {
+  const node = new MimeBuilder(type).setContent(content); // tslint:disable-line:no-unsafe-any
+
+  if (type === 'text/plain') {
+    // gmail likes this
+    node.addHeader('Content-Transfer-Encoding', 'quoted-printable'); // tslint:disable-line:no-unsafe-any
+  }
+
+  return node;
+};
+
+exports.Mime = Mime;
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+const util_js_1 = __webpack_require__(7);
 
 class Str {}
 
@@ -75108,7 +75536,7 @@ Value.noop = () => undefined;
 exports.Value = Value;
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -75119,7 +75547,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const crypto_1 = __webpack_require__(7);
+const crypto_1 = __webpack_require__(8);
 
 exports.secureRandomBytes = length => {
   return crypto_1.randomBytes(length);
@@ -75139,13 +75567,13 @@ exports.setGlobals = () => {
 };
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = require("crypto");
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -75156,25 +75584,25 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const const_js_1 = __webpack_require__(9);
+const const_js_1 = __webpack_require__(10);
 
-const catch_js_1 = __webpack_require__(10);
+const catch_js_1 = __webpack_require__(11);
 
-const store_js_1 = __webpack_require__(11);
+const store_js_1 = __webpack_require__(12);
 
-const common_js_1 = __webpack_require__(5);
+const common_js_1 = __webpack_require__(6);
 
-const mime_js_1 = __webpack_require__(14);
+const mime_js_1 = __webpack_require__(5);
 
-const mnemonic_js_1 = __webpack_require__(17);
+const mnemonic_js_1 = __webpack_require__(15);
 
-const require_js_1 = __webpack_require__(12);
+const require_js_1 = __webpack_require__(13);
 
-const util_js_1 = __webpack_require__(6);
+const util_js_1 = __webpack_require__(7);
 
 const buf_js_1 = __webpack_require__(16);
 
-const xss_js_1 = __webpack_require__(18);
+const xss_js_1 = __webpack_require__(17);
 
 const openpgp = require_js_1.requireOpenpgp();
 
@@ -76553,7 +76981,7 @@ PgpMsg.pushArmoredPubkeysToBlocks = async (armoredPubkeys, blocks) => {
 exports.PgpMsg = PgpMsg;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -76582,7 +77010,7 @@ exports.gmailBackupSearchQuery = acctEmail => {
 };
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -76606,7 +77034,7 @@ Catch.report = (name, details) => {
 exports.Catch = Catch;
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -76617,7 +77045,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const require_js_1 = __webpack_require__(12);
+const require_js_1 = __webpack_require__(13);
 
 const openpgp = require_js_1.requireOpenpgp();
 let KEY_CACHE = {};
@@ -76666,7 +77094,7 @@ Store.keyCacheRenewExpiry = () => {
 exports.Store = Store;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -76684,7 +77112,7 @@ exports.requireOpenpgp = () => {
     return openpgp; // self-contained node-mobile
   }
 
-  return __webpack_require__(13); // normal desktop node, eg when running tests
+  return __webpack_require__(14); // normal desktop node, eg when running tests
 };
 
 exports.requireMimeParser = () => {
@@ -76705,387 +77133,10 @@ exports.requireIso88592 = () => {
 };
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports) {
 
 module.exports = require("openpgp");
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-const common_js_1 = __webpack_require__(5);
-
-const pgp_js_1 = __webpack_require__(8);
-
-const att_js_1 = __webpack_require__(15);
-
-const catch_js_1 = __webpack_require__(10);
-
-const require_js_1 = __webpack_require__(12);
-
-const buf_js_1 = __webpack_require__(16);
-
-const MimeParser = require_js_1.requireMimeParser(); // tslint:disable-line:variable-name
-
-const MimeBuilder = require_js_1.requireMimeBuilder(); // tslint:disable-line:variable-name
-
-const Iso88592 = require_js_1.requireIso88592(); // tslint:disable-line:variable-name
-
-class Mime {}
-
-Mime.process = async mimeMsg => {
-  const decoded = await Mime.decode(mimeMsg);
-  const blocks = [];
-
-  if (decoded.text) {
-    const blocksFromTextPart = pgp_js_1.Pgp.armor.detectBlocks(common_js_1.Str.normalize(decoded.text)).blocks; // if there are some encryption-related blocks found in the text section, which we can use, and not look at the html section
-
-    if (blocksFromTextPart.find(b => b.type === 'encryptedMsg' || b.type === 'signedMsg' || b.type === 'publicKey' || b.type === 'privateKey' || b.type === 'cryptupVerification')) {
-      blocks.push(...blocksFromTextPart); // because the html most likely containt the same thing, just harder to parse pgp sections cause it's html
-    } else if (decoded.html) {
-      // if no pgp blocks found in text part and there is html part, prefer html
-      blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('plainHtml', decoded.html));
-    } else {
-      // else if no html and just a plain text message, use that
-      blocks.push(...blocksFromTextPart);
-    }
-  } else if (decoded.html) {
-    blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('plainHtml', decoded.html));
-  }
-
-  for (const file of decoded.atts) {
-    const treatAs = file.treatAs();
-
-    if (treatAs === 'encryptedMsg') {
-      const armored = pgp_js_1.Pgp.armor.clip(file.getData().toUtfStr());
-
-      if (armored) {
-        blocks.push(pgp_js_1.Pgp.internal.msgBlockObj('encryptedMsg', armored));
-      }
-    } else if (treatAs === 'signature') {
-      decoded.signature = decoded.signature || file.getData().toUtfStr();
-    } else if (treatAs === 'publicKey') {
-      blocks.push(...pgp_js_1.Pgp.armor.detectBlocks(file.getData().toUtfStr()).blocks);
-    } else if (treatAs === 'privateKey') {
-      blocks.push(...pgp_js_1.Pgp.armor.detectBlocks(file.getData().toUtfStr()).blocks);
-    } else if (treatAs === 'encryptedFile') {
-      blocks.push(pgp_js_1.Pgp.internal.msgBlockAttObj('encryptedAtt', '', {
-        name: file.name,
-        type: file.type,
-        length: file.getData().length,
-        data: file.getData()
-      }));
-    } else if (treatAs === 'plainFile') {
-      blocks.push(pgp_js_1.Pgp.internal.msgBlockAttObj('plainAtt', '', {
-        name: file.name,
-        type: file.type,
-        length: file.getData().length,
-        data: file.getData()
-      }));
-    }
-  }
-
-  if (decoded.signature) {
-    for (const block of blocks) {
-      if (block.type === 'plainText') {
-        block.type = 'signedMsg';
-        block.signature = decoded.signature;
-      } else if (block.type === 'plainHtml') {
-        block.type = 'signedHtml';
-        block.signature = decoded.signature;
-      }
-    }
-
-    if (!blocks.find(block => block.type === 'plainText' || block.type === 'plainHtml' || block.type === 'signedMsg' || block.type === 'signedHtml')) {
-      // signed an empty message
-      blocks.push({
-        type: "signedMsg",
-        "content": "",
-        signature: decoded.signature,
-        complete: true
-      });
-    }
-  }
-
-  return {
-    headers: decoded.headers,
-    blocks,
-    from: decoded.from,
-    to: decoded.to,
-    rawSignedContent: decoded.rawSignedContent
-  };
-};
-
-Mime.headersToFrom = parsedMimeMsg => {
-  const headerTo = [];
-  let headerFrom;
-
-  if (Array.isArray(parsedMimeMsg.headers.from) && parsedMimeMsg.headers.from[0] && parsedMimeMsg.headers.from[0].address) {
-    headerFrom = parsedMimeMsg.headers.from[0].address;
-  }
-
-  if (Array.isArray(parsedMimeMsg.headers.to)) {
-    for (const to of parsedMimeMsg.headers.to) {
-      if (to.address) {
-        headerTo.push(String(to.address));
-      }
-    }
-  }
-
-  return {
-    from: headerFrom,
-    to: headerTo
-  };
-};
-
-Mime.replyHeaders = parsedMimeMsg => {
-  const msgId = String(parsedMimeMsg.headers['message-id'] || '');
-  const refs = String(parsedMimeMsg.headers['in-reply-to'] || '');
-  return {
-    'in-reply-to': msgId,
-    'references': refs + ' ' + msgId
-  };
-};
-
-Mime.resemblesMsg = msg => {
-  const utf8 = new buf_js_1.Buf(msg.slice(0, 1000)).toUtfStr().toLowerCase();
-  const contentType = utf8.match(/content-type: +[0-9a-z\-\/]+/);
-
-  if (!contentType) {
-    return false;
-  }
-
-  if (utf8.match(/content-transfer-encoding: +[0-9a-z\-\/]+/) || utf8.match(/content-disposition: +[0-9a-z\-\/]+/) || utf8.match(/; boundary=/) || utf8.match(/; charset=/)) {
-    return true;
-  }
-
-  return Boolean(contentType.index === 0 && utf8.match(/boundary=/));
-};
-
-Mime.retrieveRawSignedContent = nodes => {
-  for (const node of nodes) {
-    if (node._isMultipart === 'signed' && node._childNodes && node._childNodes[0]) {
-      // PGP/MIME signed content uses <CR><LF> as in // use CR-LF https://tools.ietf.org/html/rfc3156#section-5
-      // however emailjs parser will replace it to <LF>, so we fix it here
-      let rawSignedContent = node._childNodes[0].raw.replace(/\r?\n/g, '\r\n');
-
-      if (/--$/.test(rawSignedContent)) {
-        // end of boundary without a mandatory newline
-        rawSignedContent += '\r\n'; // emailjs wrongly leaves out the last newline, fix it here
-      }
-
-      return rawSignedContent;
-    } else if (node._childNodes) {
-      return Mime.retrieveRawSignedContent(node._childNodes);
-    }
-  }
-
-  return undefined;
-};
-
-Mime.decode = mimeMsg => {
-  return new Promise(async resolve => {
-    const mimeContent = {
-      atts: [],
-      headers: {},
-      subject: undefined,
-      text: undefined,
-      html: undefined,
-      signature: undefined,
-      from: undefined,
-      to: []
-    };
-
-    try {
-      const parser = new MimeParser();
-      const leafNodes = {};
-
-      parser.onbody = node => {
-        const path = String(node.path.join('.'));
-
-        if (typeof leafNodes[path] === 'undefined') {
-          leafNodes[path] = node;
-        }
-      };
-
-      parser.onend = () => {
-        for (const name of Object.keys(parser.node.headers)) {
-          mimeContent.headers[name] = parser.node.headers[name][0].value;
-        }
-
-        mimeContent.rawSignedContent = Mime.retrieveRawSignedContent([parser.node]);
-
-        for (const node of Object.values(leafNodes)) {
-          if (Mime.getNodeType(node) === 'application/pgp-signature') {
-            mimeContent.signature = node.rawContent;
-          } else if (Mime.getNodeType(node) === 'text/html' && !Mime.getNodeFilename(node)) {
-            // html content may be broken up into smaller pieces by attachments in between
-            // AppleMail does this with inline attachments
-            mimeContent.html = (mimeContent.html || '') + Mime.getNodeContentAsUtfStr(node);
-          } else if (Mime.getNodeType(node) === 'text/plain' && !Mime.getNodeFilename(node)) {
-            mimeContent.text = Mime.getNodeContentAsUtfStr(node);
-          } else if (Mime.getNodeType(node) === 'text/rfc822-headers') {
-            if (node._parentNode && node._parentNode.headers.subject) {
-              mimeContent.subject = node._parentNode.headers.subject[0].value;
-            }
-          } else {
-            mimeContent.atts.push(Mime.getNodeAsAtt(node));
-          }
-        }
-
-        const {
-          from,
-          to
-        } = Mime.headersToFrom(mimeContent);
-        mimeContent.from = from;
-        mimeContent.to = to;
-        resolve(mimeContent);
-      };
-
-      parser.write(mimeMsg);
-      parser.end();
-    } catch (e) {
-      // todo - on Android we may want to fail when this happens, evaluate effect on browser extension
-      catch_js_1.Catch.reportErr(e);
-      resolve(mimeContent);
-    }
-  });
-};
-
-Mime.encode = async (body, headers, atts = []) => {
-  const rootNode = new MimeBuilder('multipart/mixed'); // tslint:disable-line:no-unsafe-any
-
-  for (const key of Object.keys(headers)) {
-    rootNode.addHeader(key, headers[key]); // tslint:disable-line:no-unsafe-any
-  }
-
-  if (typeof body === 'string') {
-    body = {
-      'text/plain': body
-    };
-  }
-
-  let contentNode;
-
-  if (Object.keys(body).length === 1) {
-    contentNode = Mime.newContentNode(MimeBuilder, Object.keys(body)[0], body[Object.keys(body)[0]] || '');
-  } else {
-    contentNode = new MimeBuilder('multipart/alternative'); // tslint:disable-line:no-unsafe-any
-
-    for (const type of Object.keys(body)) {
-      contentNode.appendChild(Mime.newContentNode(MimeBuilder, type, body[type])); // already present, that's why part of for loop
-    }
-  }
-
-  rootNode.appendChild(contentNode); // tslint:disable-line:no-unsafe-any
-
-  for (const att of atts) {
-    const type = `${att.type}; name="${att.name}"`;
-    const id = `f_${common_js_1.Str.sloppyRandom(30)}@flowcrypt`;
-    const header = {
-      'Content-Disposition': 'attachment',
-      'X-Attachment-Id': id,
-      'Content-ID': `<${id}>`,
-      'Content-Transfer-Encoding': 'base64'
-    };
-    rootNode.appendChild(new MimeBuilder(type, {
-      filename: att.name
-    }).setHeader(header).setContent(att.getData())); // tslint:disable-line:no-unsafe-any
-  }
-
-  return rootNode.build(); // tslint:disable-line:no-unsafe-any
-};
-
-Mime.getNodeType = node => {
-  if (node.headers['content-type'] && node.headers['content-type'][0]) {
-    return node.headers['content-type'][0].value;
-  }
-
-  return undefined;
-};
-
-Mime.getNodeContentId = node => {
-  if (node.headers['content-id'] && node.headers['content-id'][0]) {
-    return node.headers['content-id'][0].value;
-  }
-
-  return undefined;
-};
-
-Mime.getNodeFilename = node => {
-  if (node.headers['content-disposition'] && node.headers['content-disposition'][0]) {
-    const header = node.headers['content-disposition'][0];
-
-    if (header.params && header.params.filename) {
-      return String(header.params.filename);
-    }
-  }
-
-  if (node.headers['content-type'] && node.headers['content-type'][0]) {
-    const header = node.headers['content-type'][0];
-
-    if (header.params && header.params.name) {
-      return String(header.params.name);
-    }
-  }
-
-  return;
-};
-
-Mime.fromEqualSignNotationAsBuf = str => {
-  return buf_js_1.Buf.fromRawBytesStr(str.replace(/(=[A-F0-9]{2})+/g, equalSignUtfPart => {
-    const bytes = equalSignUtfPart.replace(/^=/, '').split('=').map(twoHexDigits => parseInt(twoHexDigits, 16));
-    return new buf_js_1.Buf(bytes).toRawBytesStr();
-  }));
-};
-
-Mime.getNodeAsAtt = node => {
-  return new att_js_1.Att({
-    name: Mime.getNodeFilename(node),
-    type: Mime.getNodeType(node),
-    data: node.contentTransferEncoding.value === 'quoted-printable' ? Mime.fromEqualSignNotationAsBuf(node.rawContent) : node.content,
-    cid: Mime.getNodeContentId(node)
-  });
-};
-
-Mime.getNodeContentAsUtfStr = node => {
-  if (node.charset === 'utf-8' && node.contentTransferEncoding.value === 'base64') {
-    return buf_js_1.Buf.fromUint8(node.content).toUtfStr();
-  }
-
-  if (node.charset === 'utf-8' && node.contentTransferEncoding.value === 'quoted-printable') {
-    return Mime.fromEqualSignNotationAsBuf(node.rawContent).toUtfStr();
-  }
-
-  if (node.charset && Iso88592.labels.includes(node.charset)) {
-    return Iso88592.decode(node.rawContent); // tslint:disable-line:no-unsafe-any
-  }
-
-  return buf_js_1.Buf.fromRawBytesStr(node.rawContent).toUtfStr();
-}; // tslint:disable-next-line:variable-name
-
-
-Mime.newContentNode = (MimeBuilder, type, content) => {
-  const node = new MimeBuilder(type).setContent(content); // tslint:disable-line:no-unsafe-any
-
-  if (type === 'text/plain') {
-    // gmail likes this
-    node.addHeader('Content-Transfer-Encoding', 'quoted-printable'); // tslint:disable-line:no-unsafe-any
-  }
-
-  return node;
-};
-
-exports.Mime = Mime;
 
 /***/ }),
 /* 15 */
@@ -77098,118 +77149,35 @@ exports.Mime = Mime;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+const words = ["abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse", "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act", "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit", "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent", "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert", "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter", "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger", "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique", "anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch", "arctic", "area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange", "arrest", "arrive", "arrow", "art", "artefact", "artist", "artwork", "ask", "aspect", "assault", "asset", "assist", "assume", "asthma", "athlete", "atom", "attack", "attend", "attitude", "attract", "auction", "audit", "august", "aunt", "author", "auto", "autumn", "average", "avocado", "avoid", "awake", "aware", "away", "awesome", "awful", "awkward", "axis", "baby", "bachelor", "bacon", "badge", "bag", "balance", "balcony", "ball", "bamboo", "banana", "banner", "bar", "barely", "bargain", "barrel", "base", "basic", "basket", "battle", "beach", "bean", "beauty", "because", "become", "beef", "before", "begin", "behave", "behind", "believe", "below", "belt", "bench", "benefit", "best", "betray", "better", "between", "beyond", "bicycle", "bid", "bike", "bind", "biology", "bird", "birth", "bitter", "black", "blade", "blame", "blanket", "blast", "bleak", "bless", "blind", "blood", "blossom", "blouse", "blue", "blur", "blush", "board", "boat", "body", "boil", "bomb", "bone", "bonus", "book", "boost", "border", "boring", "borrow", "boss", "bottom", "bounce", "box", "boy", "bracket", "brain", "brand", "brass", "brave", "bread", "breeze", "brick", "bridge", "brief", "bright", "bring", "brisk", "broccoli", "broken", "bronze", "broom", "brother", "brown", "brush", "bubble", "buddy", "budget", "buffalo", "build", "bulb", "bulk", "bullet", "bundle", "bunker", "burden", "burger", "burst", "bus", "business", "busy", "butter", "buyer", "buzz", "cabbage", "cabin", "cable", "cactus", "cage", "cake", "call", "calm", "camera", "camp", "can", "canal", "cancel", "candy", "cannon", "canoe", "canvas", "canyon", "capable", "capital", "captain", "car", "carbon", "card", "cargo", "carpet", "carry", "cart", "case", "cash", "casino", "castle", "casual", "cat", "catalog", "catch", "category", "cattle", "caught", "cause", "caution", "cave", "ceiling", "celery", "cement", "census", "century", "cereal", "certain", "chair", "chalk", "champion", "change", "chaos", "chapter", "charge", "chase", "chat", "cheap", "check", "cheese", "chef", "cherry", "chest", "chicken", "chief", "child", "chimney", "choice", "choose", "chronic", "chuckle", "chunk", "churn", "cigar", "cinnamon", "circle", "citizen", "city", "civil", "claim", "clap", "clarify", "claw", "clay", "clean", "clerk", "clever", "click", "client", "cliff", "climb", "clinic", "clip", "clock", "clog", "close", "cloth", "cloud", "clown", "club", "clump", "cluster", "clutch", "coach", "coast", "coconut", "code", "coffee", "coil", "coin", "collect", "color", "column", "combine", "come", "comfort", "comic", "common", "company", "concert", "conduct", "confirm", "congress", "connect", "consider", "control", "convince", "cook", "cool", "copper", "copy", "coral", "core", "corn", "correct", "cost", "cotton", "couch", "country", "couple", "course", "cousin", "cover", "coyote", "crack", "cradle", "craft", "cram", "crane", "crash", "crater", "crawl", "crazy", "cream", "credit", "creek", "crew", "cricket", "crime", "crisp", "critic", "crop", "cross", "crouch", "crowd", "crucial", "cruel", "cruise", "crumble", "crunch", "crush", "cry", "crystal", "cube", "culture", "cup", "cupboard", "curious", "current", "curtain", "curve", "cushion", "custom", "cute", "cycle", "dad", "damage", "damp", "dance", "danger", "daring", "dash", "daughter", "dawn", "day", "deal", "debate", "debris", "decade", "december", "decide", "decline", "decorate", "decrease", "deer", "defense", "define", "defy", "degree", "delay", "deliver", "demand", "demise", "denial", "dentist", "deny", "depart", "depend", "deposit", "depth", "deputy", "derive", "describe", "desert", "design", "desk", "despair", "destroy", "detail", "detect", "develop", "device", "devote", "diagram", "dial", "diamond", "diary", "dice", "diesel", "diet", "differ", "digital", "dignity", "dilemma", "dinner", "dinosaur", "direct", "dirt", "disagree", "discover", "disease", "dish", "dismiss", "disorder", "display", "distance", "divert", "divide", "divorce", "dizzy", "doctor", "document", "dog", "doll", "dolphin", "domain", "donate", "donkey", "donor", "door", "dose", "double", "dove", "draft", "dragon", "drama", "drastic", "draw", "dream", "dress", "drift", "drill", "drink", "drip", "drive", "drop", "drum", "dry", "duck", "dumb", "dune", "during", "dust", "dutch", "duty", "dwarf", "dynamic", "eager", "eagle", "early", "earn", "earth", "easily", "east", "easy", "echo", "ecology", "economy", "edge", "edit", "educate", "effort", "egg", "eight", "either", "elbow", "elder", "electric", "elegant", "element", "elephant", "elevator", "elite", "else", "embark", "embody", "embrace", "emerge", "emotion", "employ", "empower", "empty", "enable", "enact", "end", "endless", "endorse", "enemy", "energy", "enforce", "engage", "engine", "enhance", "enjoy", "enlist", "enough", "enrich", "enroll", "ensure", "enter", "entire", "entry", "envelope", "episode", "equal", "equip", "era", "erase", "erode", "erosion", "error", "erupt", "escape", "essay", "essence", "estate", "eternal", "ethics", "evidence", "evil", "evoke", "evolve", "exact", "example", "excess", "exchange", "excite", "exclude", "excuse", "execute", "exercise", "exhaust", "exhibit", "exile", "exist", "exit", "exotic", "expand", "expect", "expire", "explain", "expose", "express", "extend", "extra", "eye", "eyebrow", "fabric", "face", "faculty", "fade", "faint", "faith", "fall", "false", "fame", "family", "famous", "fan", "fancy", "fantasy", "farm", "fashion", "fat", "fatal", "father", "fatigue", "fault", "favorite", "feature", "february", "federal", "fee", "feed", "feel", "female", "fence", "festival", "fetch", "fever", "few", "fiber", "fiction", "field", "figure", "file", "film", "filter", "final", "find", "fine", "finger", "finish", "fire", "firm", "first", "fiscal", "fish", "fit", "fitness", "fix", "flag", "flame", "flash", "flat", "flavor", "flee", "flight", "flip", "float", "flock", "floor", "flower", "fluid", "flush", "fly", "foam", "focus", "fog", "foil", "fold", "follow", "food", "foot", "force", "forest", "forget", "fork", "fortune", "forum", "forward", "fossil", "foster", "found", "fox", "fragile", "frame", "frequent", "fresh", "friend", "fringe", "frog", "front", "frost", "frown", "frozen", "fruit", "fuel", "fun", "funny", "furnace", "fury", "future", "gadget", "gain", "galaxy", "gallery", "game", "gap", "garage", "garbage", "garden", "garlic", "garment", "gas", "gasp", "gate", "gather", "gauge", "gaze", "general", "genius", "genre", "gentle", "genuine", "gesture", "ghost", "giant", "gift", "giggle", "ginger", "giraffe", "girl", "give", "glad", "glance", "glare", "glass", "glide", "glimpse", "globe", "gloom", "glory", "glove", "glow", "glue", "goat", "goddess", "gold", "good", "goose", "gorilla", "gospel", "gossip", "govern", "gown", "grab", "grace", "grain", "grant", "grape", "grass", "gravity", "great", "green", "grid", "grief", "grit", "grocery", "group", "grow", "grunt", "guard", "guess", "guide", "guilt", "guitar", "gun", "gym", "habit", "hair", "half", "hammer", "hamster", "hand", "happy", "harbor", "hard", "harsh", "harvest", "hat", "have", "hawk", "hazard", "head", "health", "heart", "heavy", "hedgehog", "height", "hello", "helmet", "help", "hen", "hero", "hidden", "high", "hill", "hint", "hip", "hire", "history", "hobby", "hockey", "hold", "hole", "holiday", "hollow", "home", "honey", "hood", "hope", "horn", "horror", "horse", "hospital", "host", "hotel", "hour", "hover", "hub", "huge", "human", "humble", "humor", "hundred", "hungry", "hunt", "hurdle", "hurry", "hurt", "husband", "hybrid", "ice", "icon", "idea", "identify", "idle", "ignore", "ill", "illegal", "illness", "image", "imitate", "immense", "immune", "impact", "impose", "improve", "impulse", "inch", "include", "income", "increase", "index", "indicate", "indoor", "industry", "infant", "inflict", "inform", "inhale", "inherit", "initial", "inject", "injury", "inmate", "inner", "innocent", "input", "inquiry", "insane", "insect", "inside", "inspire", "install", "intact", "interest", "into", "invest", "invite", "involve", "iron", "island", "isolate", "issue", "item", "ivory", "jacket", "jaguar", "jar", "jazz", "jealous", "jeans", "jelly", "jewel", "job", "join", "joke", "journey", "joy", "judge", "juice", "jump", "jungle", "junior", "junk", "just", "kangaroo", "keen", "keep", "ketchup", "key", "kick", "kid", "kidney", "kind", "kingdom", "kiss", "kit", "kitchen", "kite", "kitten", "kiwi", "knee", "knife", "knock", "know", "lab", "label", "labor", "ladder", "lady", "lake", "lamp", "language", "laptop", "large", "later", "latin", "laugh", "laundry", "lava", "law", "lawn", "lawsuit", "layer", "lazy", "leader", "leaf", "learn", "leave", "lecture", "left", "leg", "legal", "legend", "leisure", "lemon", "lend", "length", "lens", "leopard", "lesson", "letter", "level", "liar", "liberty", "library", "license", "life", "lift", "light", "like", "limb", "limit", "link", "lion", "liquid", "list", "little", "live", "lizard", "load", "loan", "lobster", "local", "lock", "logic", "lonely", "long", "loop", "lottery", "loud", "lounge", "love", "loyal", "lucky", "luggage", "lumber", "lunar", "lunch", "luxury", "lyrics", "machine", "mad", "magic", "magnet", "maid", "mail", "main", "major", "make", "mammal", "man", "manage", "mandate", "mango", "mansion", "manual", "maple", "marble", "march", "margin", "marine", "market", "marriage", "mask", "mass", "master", "match", "material", "math", "matrix", "matter", "maximum", "maze", "meadow", "mean", "measure", "meat", "mechanic", "medal", "media", "melody", "melt", "member", "memory", "mention", "menu", "mercy", "merge", "merit", "merry", "mesh", "message", "metal", "method", "middle", "midnight", "milk", "million", "mimic", "mind", "minimum", "minor", "minute", "miracle", "mirror", "misery", "miss", "mistake", "mix", "mixed", "mixture", "mobile", "model", "modify", "mom", "moment", "monitor", "monkey", "monster", "month", "moon", "moral", "more", "morning", "mosquito", "mother", "motion", "motor", "mountain", "mouse", "move", "movie", "much", "muffin", "mule", "multiply", "muscle", "museum", "mushroom", "music", "must", "mutual", "myself", "mystery", "myth", "naive", "name", "napkin", "narrow", "nasty", "nation", "nature", "near", "neck", "need", "negative", "neglect", "neither", "nephew", "nerve", "nest", "net", "network", "neutral", "never", "news", "next", "nice", "night", "noble", "noise", "nominee", "noodle", "normal", "north", "nose", "notable", "note", "nothing", "notice", "novel", "now", "nuclear", "number", "nurse", "nut", "oak", "obey", "object", "oblige", "obscure", "observe", "obtain", "obvious", "occur", "ocean", "october", "odor", "off", "offer", "office", "often", "oil", "okay", "old", "olive", "olympic", "omit", "once", "one", "onion", "online", "only", "open", "opera", "opinion", "oppose", "option", "orange", "orbit", "orchard", "order", "ordinary", "organ", "orient", "original", "orphan", "ostrich", "other", "outdoor", "outer", "output", "outside", "oval", "oven", "over", "own", "owner", "oxygen", "oyster", "ozone", "pact", "paddle", "page", "pair", "palace", "palm", "panda", "panel", "panic", "panther", "paper", "parade", "parent", "park", "parrot", "party", "pass", "patch", "path", "patient", "patrol", "pattern", "pause", "pave", "payment", "peace", "peanut", "pear", "peasant", "pelican", "pen", "penalty", "pencil", "people", "pepper", "perfect", "permit", "person", "pet", "phone", "photo", "phrase", "physical", "piano", "picnic", "picture", "piece", "pig", "pigeon", "pill", "pilot", "pink", "pioneer", "pipe", "pistol", "pitch", "pizza", "place", "planet", "plastic", "plate", "play", "please", "pledge", "pluck", "plug", "plunge", "poem", "poet", "point", "polar", "pole", "police", "pond", "pony", "pool", "popular", "portion", "position", "possible", "post", "potato", "pottery", "poverty", "powder", "power", "practice", "praise", "predict", "prefer", "prepare", "present", "pretty", "prevent", "price", "pride", "primary", "print", "priority", "prison", "private", "prize", "problem", "process", "produce", "profit", "program", "project", "promote", "proof", "property", "prosper", "protect", "proud", "provide", "public", "pudding", "pull", "pulp", "pulse", "pumpkin", "punch", "pupil", "puppy", "purchase", "purity", "purpose", "purse", "push", "put", "puzzle", "pyramid", "quality", "quantum", "quarter", "question", "quick", "quit", "quiz", "quote", "rabbit", "raccoon", "race", "rack", "radar", "radio", "rail", "rain", "raise", "rally", "ramp", "ranch", "random", "range", "rapid", "rare", "rate", "rather", "raven", "raw", "razor", "ready", "real", "reason", "rebel", "rebuild", "recall", "receive", "recipe", "record", "recycle", "reduce", "reflect", "reform", "refuse", "region", "regret", "regular", "reject", "relax", "release", "relief", "rely", "remain", "remember", "remind", "remove", "render", "renew", "rent", "reopen", "repair", "repeat", "replace", "report", "require", "rescue", "resemble", "resist", "resource", "response", "result", "retire", "retreat", "return", "reunion", "reveal", "review", "reward", "rhythm", "rib", "ribbon", "rice", "rich", "ride", "ridge", "rifle", "right", "rigid", "ring", "riot", "ripple", "risk", "ritual", "rival", "river", "road", "roast", "robot", "robust", "rocket", "romance", "roof", "rookie", "room", "rose", "rotate", "rough", "round", "route", "royal", "rubber", "rude", "rug", "rule", "run", "runway", "rural", "sad", "saddle", "sadness", "safe", "sail", "salad", "salmon", "salon", "salt", "salute", "same", "sample", "sand", "satisfy", "satoshi", "sauce", "sausage", "save", "say", "scale", "scan", "scare", "scatter", "scene", "scheme", "school", "science", "scissors", "scorpion", "scout", "scrap", "screen", "script", "scrub", "sea", "search", "season", "seat", "second", "secret", "section", "security", "seed", "seek", "segment", "select", "sell", "seminar", "senior", "sense", "sentence", "series", "service", "session", "settle", "setup", "seven", "shadow", "shaft", "shallow", "share", "shed", "shell", "sheriff", "shield", "shift", "shine", "ship", "shiver", "shock", "shoe", "shoot", "shop", "short", "shoulder", "shove", "shrimp", "shrug", "shuffle", "shy", "sibling", "sick", "side", "siege", "sight", "sign", "silent", "silk", "silly", "silver", "similar", "simple", "since", "sing", "siren", "sister", "situate", "six", "size", "skate", "sketch", "ski", "skill", "skin", "skirt", "skull", "slab", "slam", "sleep", "slender", "slice", "slide", "slight", "slim", "slogan", "slot", "slow", "slush", "small", "smart", "smile", "smoke", "smooth", "snack", "snake", "snap", "sniff", "snow", "soap", "soccer", "social", "sock", "soda", "soft", "solar", "soldier", "solid", "solution", "solve", "someone", "song", "soon", "sorry", "sort", "soul", "sound", "soup", "source", "south", "space", "spare", "spatial", "spawn", "speak", "special", "speed", "spell", "spend", "sphere", "spice", "spider", "spike", "spin", "spirit", "split", "spoil", "sponsor", "spoon", "sport", "spot", "spray", "spread", "spring", "spy", "square", "squeeze", "squirrel", "stable", "stadium", "staff", "stage", "stairs", "stamp", "stand", "start", "state", "stay", "steak", "steel", "stem", "step", "stereo", "stick", "still", "sting", "stock", "stomach", "stone", "stool", "story", "stove", "strategy", "street", "strike", "strong", "struggle", "student", "stuff", "stumble", "style", "subject", "submit", "subway", "success", "such", "sudden", "suffer", "sugar", "suggest", "suit", "summer", "sun", "sunny", "sunset", "super", "supply", "supreme", "sure", "surface", "surge", "surprise", "surround", "survey", "suspect", "sustain", "swallow", "swamp", "swap", "swarm", "swear", "sweet", "swift", "swim", "swing", "switch", "sword", "symbol", "symptom", "syrup", "system", "table", "tackle", "tag", "tail", "talent", "talk", "tank", "tape", "target", "task", "taste", "tattoo", "taxi", "teach", "team", "tell", "ten", "tenant", "tennis", "tent", "term", "test", "text", "thank", "that", "theme", "then", "theory", "there", "they", "thing", "this", "thought", "three", "thrive", "throw", "thumb", "thunder", "ticket", "tide", "tiger", "tilt", "timber", "time", "tiny", "tip", "tired", "tissue", "title", "toast", "tobacco", "today", "toddler", "toe", "together", "toilet", "token", "tomato", "tomorrow", "tone", "tongue", "tonight", "tool", "tooth", "top", "topic", "topple", "torch", "tornado", "tortoise", "toss", "total", "tourist", "toward", "tower", "town", "toy", "track", "trade", "traffic", "tragic", "train", "transfer", "trap", "trash", "travel", "tray", "treat", "tree", "trend", "trial", "tribe", "trick", "trigger", "trim", "trip", "trophy", "trouble", "truck", "true", "truly", "trumpet", "trust", "truth", "try", "tube", "tuition", "tumble", "tuna", "tunnel", "turkey", "turn", "turtle", "twelve", "twenty", "twice", "twin", "twist", "two", "type", "typical", "ugly", "umbrella", "unable", "unaware", "uncle", "uncover", "under", "undo", "unfair", "unfold", "unhappy", "uniform", "unique", "unit", "universe", "unknown", "unlock", "until", "unusual", "unveil", "update", "upgrade", "uphold", "upon", "upper", "upset", "urban", "urge", "usage", "use", "used", "useful", "useless", "usual", "utility", "vacant", "vacuum", "vague", "valid", "valley", "valve", "van", "vanish", "vapor", "various", "vast", "vault", "vehicle", "velvet", "vendor", "venture", "venue", "verb", "verify", "version", "very", "vessel", "veteran", "viable", "vibrant", "vicious", "victory", "video", "view", "village", "vintage", "violin", "virtual", "virus", "visa", "visit", "visual", "vital", "vivid", "vocal", "voice", "void", "volcano", "volume", "vote", "voyage", "wage", "wagon", "wait", "walk", "wall", "walnut", "want", "warfare", "warm", "warrior", "wash", "wasp", "waste", "water", "wave", "way", "wealth", "weapon", "wear", "weasel", "weather", "web", "wedding", "weekend", "weird", "welcome", "west", "wet", "whale", "what", "wheat", "wheel", "when", "where", "whip", "whisper", "wide", "width", "wife", "wild", "will", "win", "window", "wine", "wing", "wink", "winner", "winter", "wire", "wisdom", "wise", "wish", "witness", "wolf", "woman", "wonder", "wood", "wool", "word", "work", "world", "worry", "worth", "wrap", "wreck", "wrestle", "wrist", "write", "wrong", "yard", "year", "yellow", "you", "young", "youth", "zebra", "zero", "zone", "zoo"];
 
-const buf_js_1 = __webpack_require__(16);
+const leadingZeroes = (num, size) => {
+  let s = num + '';
 
-class Att {
-  constructor({
-    data,
-    type,
-    name,
-    length,
-    url,
-    inline,
-    id,
-    msgId,
-    treatAs,
-    cid
-  }) {
-    this.length = NaN;
-
-    this.hasData = () => this.bytes instanceof Uint8Array;
-
-    this.setData = bytes => {
-      if (this.hasData()) {
-        throw new Error('Att bytes already set');
-      }
-
-      this.bytes = bytes;
-    };
-
-    this.getData = () => {
-      if (this.bytes instanceof buf_js_1.Buf) {
-        return this.bytes;
-      }
-
-      if (this.bytes instanceof Uint8Array) {
-        return new buf_js_1.Buf(this.bytes);
-      }
-
-      throw new Error('Att has no data set');
-    };
-
-    this.treatAs = () => {
-      // todo - should return a probability in the range of certain-likely-maybe
-      // could also return possible types as an array - which makes basic usage more difficult - to think through
-      // better option - add an "unknown" type: when encountered, code consuming this should inspect a chunk of contents
-      if (this.treatAsValue) {
-        // pre-set
-        return this.treatAsValue;
-      } else if (['PGPexch.htm.pgp', 'PGPMIME version identification', 'Version.txt', 'PGPMIME Versions Identification'].includes(this.name)) {
-        return 'hidden'; // PGPexch.htm.pgp is html alternative of textual body content produced by PGP Desktop and GPG4o
-      } else if (this.name === 'signature.asc' || this.type === 'application/pgp-signature') {
-        return 'signature';
-      } else if (!this.name && !this.type.startsWith('image/')) {
-        // this.name may be '' or undefined - catch either
-        return this.length < 100 ? 'hidden' : 'encryptedMsg';
-      } else if (['message', 'msg.asc', 'message.asc', 'encrypted.asc', 'encrypted.eml.pgp', 'Message.pgp'].includes(this.name)) {
-        return 'encryptedMsg';
-      } else if (this.name.match(/(\.pgp$)|(\.gpg$)|(\.[a-zA-Z0-9]{3,4}\.asc$)/g)) {
-        // ends with one of .gpg, .pgp, .???.asc, .????.asc
-        return 'encryptedFile';
-      } else if (this.name.match(/(cryptup|flowcrypt)-backup-[a-z]+\.key/g)) {
-        return 'privateKey';
-      } else if (this.name.match(/^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\.asc$/g)) {
-        // name starts with a key id
-        return 'publicKey';
-      } else if (this.name.toLowerCase().includes('public') && this.name.match(/[A-F0-9]{8}.*\.asc$/g)) {
-        // name contains the word "public", any key id and ends with .asc
-        return 'publicKey';
-      } else if (this.name.match(/\.asc$/) && this.hasData() && buf_js_1.Buf.with(this.getData().subarray(0, 100)).toUtfStr().includes('-----BEGIN PGP PUBLIC KEY BLOCK-----')) {
-        return 'publicKey';
-      } else if (this.name.match(/\.asc$/) && this.length < 100000 && !this.inline) {
-        return 'encryptedMsg';
-      } else {
-        return 'plainFile';
-      }
-    };
-
-    if (typeof data === 'undefined' && typeof url === 'undefined' && typeof id === 'undefined') {
-      throw new Error('Att: one of data|url|id has to be set');
-    }
-
-    if (id && !msgId) {
-      throw new Error('Att: if id is set, msgId must be set too');
-    }
-
-    if (data) {
-      this.bytes = data;
-      this.length = data.length;
-    } else {
-      this.length = Number(length);
-    }
-
-    this.name = name || '';
-    this.type = type || 'application/octet-stream';
-    this.url = url || undefined;
-    this.inline = inline !== true;
-    this.id = id || undefined;
-    this.msgId = msgId || undefined;
-    this.treatAsValue = treatAs || undefined;
-    this.cid = cid || undefined;
+  while (s.length < size) {
+    s = '0' + s;
   }
 
-}
+  return s;
+};
 
-Att.attachmentsPattern = /^(((cryptup|flowcrypt)-backup-[a-z]+\.key)|(.+\.pgp)|(.+\.gpg)|(.+\.asc)|(noname)|(message)|(PGPMIME version identification)|())$/gm;
+const stringChunks = (str, length) => {
+  return str.match(new RegExp('.{1,' + length + '}', 'g'));
+};
 
-Att.keyinfoAsPubkeyAtt = ki => new Att({
-  data: buf_js_1.Buf.fromUtfStr(ki.public),
-  type: 'application/pgp-keys',
-  name: `0x${ki.longid}.asc`
-});
+exports.mnemonic = hex => {
+  if (!hex) {
+    return undefined;
+  }
 
-exports.Att = Att;
+  const binary = hex.split('').map(h => leadingZeroes(parseInt(h, 16).toString(2), 4)).join(''); // 0100111000011111011110011001101010100100111111110010001001111001
+
+  const binaryChunks = stringChunks(binary, 11); // ["01001110000", "11111011110", "01100110101", "01001001111", "11110010001", "001111001"]
+
+  const integers = binaryChunks.map(b => parseInt(b, 2)); // [624, 2014, 821, 591, 1937, 121]
+
+  return integers.map(i => words[i].toUpperCase()).join(' '); // "EVOKE WINK GRIT ENEMY VENDOR AUGUST"
+};
 
 /***/ }),
 /* 16 */
@@ -77223,7 +77191,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const util_js_1 = __webpack_require__(6);
+const util_js_1 = __webpack_require__(7);
 
 class Buf extends Uint8Array {
   constructor() {
@@ -77434,54 +77402,13 @@ exports.Buf = Buf;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-const words = ["abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse", "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act", "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit", "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent", "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert", "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter", "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger", "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique", "anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch", "arctic", "area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange", "arrest", "arrive", "arrow", "art", "artefact", "artist", "artwork", "ask", "aspect", "assault", "asset", "assist", "assume", "asthma", "athlete", "atom", "attack", "attend", "attitude", "attract", "auction", "audit", "august", "aunt", "author", "auto", "autumn", "average", "avocado", "avoid", "awake", "aware", "away", "awesome", "awful", "awkward", "axis", "baby", "bachelor", "bacon", "badge", "bag", "balance", "balcony", "ball", "bamboo", "banana", "banner", "bar", "barely", "bargain", "barrel", "base", "basic", "basket", "battle", "beach", "bean", "beauty", "because", "become", "beef", "before", "begin", "behave", "behind", "believe", "below", "belt", "bench", "benefit", "best", "betray", "better", "between", "beyond", "bicycle", "bid", "bike", "bind", "biology", "bird", "birth", "bitter", "black", "blade", "blame", "blanket", "blast", "bleak", "bless", "blind", "blood", "blossom", "blouse", "blue", "blur", "blush", "board", "boat", "body", "boil", "bomb", "bone", "bonus", "book", "boost", "border", "boring", "borrow", "boss", "bottom", "bounce", "box", "boy", "bracket", "brain", "brand", "brass", "brave", "bread", "breeze", "brick", "bridge", "brief", "bright", "bring", "brisk", "broccoli", "broken", "bronze", "broom", "brother", "brown", "brush", "bubble", "buddy", "budget", "buffalo", "build", "bulb", "bulk", "bullet", "bundle", "bunker", "burden", "burger", "burst", "bus", "business", "busy", "butter", "buyer", "buzz", "cabbage", "cabin", "cable", "cactus", "cage", "cake", "call", "calm", "camera", "camp", "can", "canal", "cancel", "candy", "cannon", "canoe", "canvas", "canyon", "capable", "capital", "captain", "car", "carbon", "card", "cargo", "carpet", "carry", "cart", "case", "cash", "casino", "castle", "casual", "cat", "catalog", "catch", "category", "cattle", "caught", "cause", "caution", "cave", "ceiling", "celery", "cement", "census", "century", "cereal", "certain", "chair", "chalk", "champion", "change", "chaos", "chapter", "charge", "chase", "chat", "cheap", "check", "cheese", "chef", "cherry", "chest", "chicken", "chief", "child", "chimney", "choice", "choose", "chronic", "chuckle", "chunk", "churn", "cigar", "cinnamon", "circle", "citizen", "city", "civil", "claim", "clap", "clarify", "claw", "clay", "clean", "clerk", "clever", "click", "client", "cliff", "climb", "clinic", "clip", "clock", "clog", "close", "cloth", "cloud", "clown", "club", "clump", "cluster", "clutch", "coach", "coast", "coconut", "code", "coffee", "coil", "coin", "collect", "color", "column", "combine", "come", "comfort", "comic", "common", "company", "concert", "conduct", "confirm", "congress", "connect", "consider", "control", "convince", "cook", "cool", "copper", "copy", "coral", "core", "corn", "correct", "cost", "cotton", "couch", "country", "couple", "course", "cousin", "cover", "coyote", "crack", "cradle", "craft", "cram", "crane", "crash", "crater", "crawl", "crazy", "cream", "credit", "creek", "crew", "cricket", "crime", "crisp", "critic", "crop", "cross", "crouch", "crowd", "crucial", "cruel", "cruise", "crumble", "crunch", "crush", "cry", "crystal", "cube", "culture", "cup", "cupboard", "curious", "current", "curtain", "curve", "cushion", "custom", "cute", "cycle", "dad", "damage", "damp", "dance", "danger", "daring", "dash", "daughter", "dawn", "day", "deal", "debate", "debris", "decade", "december", "decide", "decline", "decorate", "decrease", "deer", "defense", "define", "defy", "degree", "delay", "deliver", "demand", "demise", "denial", "dentist", "deny", "depart", "depend", "deposit", "depth", "deputy", "derive", "describe", "desert", "design", "desk", "despair", "destroy", "detail", "detect", "develop", "device", "devote", "diagram", "dial", "diamond", "diary", "dice", "diesel", "diet", "differ", "digital", "dignity", "dilemma", "dinner", "dinosaur", "direct", "dirt", "disagree", "discover", "disease", "dish", "dismiss", "disorder", "display", "distance", "divert", "divide", "divorce", "dizzy", "doctor", "document", "dog", "doll", "dolphin", "domain", "donate", "donkey", "donor", "door", "dose", "double", "dove", "draft", "dragon", "drama", "drastic", "draw", "dream", "dress", "drift", "drill", "drink", "drip", "drive", "drop", "drum", "dry", "duck", "dumb", "dune", "during", "dust", "dutch", "duty", "dwarf", "dynamic", "eager", "eagle", "early", "earn", "earth", "easily", "east", "easy", "echo", "ecology", "economy", "edge", "edit", "educate", "effort", "egg", "eight", "either", "elbow", "elder", "electric", "elegant", "element", "elephant", "elevator", "elite", "else", "embark", "embody", "embrace", "emerge", "emotion", "employ", "empower", "empty", "enable", "enact", "end", "endless", "endorse", "enemy", "energy", "enforce", "engage", "engine", "enhance", "enjoy", "enlist", "enough", "enrich", "enroll", "ensure", "enter", "entire", "entry", "envelope", "episode", "equal", "equip", "era", "erase", "erode", "erosion", "error", "erupt", "escape", "essay", "essence", "estate", "eternal", "ethics", "evidence", "evil", "evoke", "evolve", "exact", "example", "excess", "exchange", "excite", "exclude", "excuse", "execute", "exercise", "exhaust", "exhibit", "exile", "exist", "exit", "exotic", "expand", "expect", "expire", "explain", "expose", "express", "extend", "extra", "eye", "eyebrow", "fabric", "face", "faculty", "fade", "faint", "faith", "fall", "false", "fame", "family", "famous", "fan", "fancy", "fantasy", "farm", "fashion", "fat", "fatal", "father", "fatigue", "fault", "favorite", "feature", "february", "federal", "fee", "feed", "feel", "female", "fence", "festival", "fetch", "fever", "few", "fiber", "fiction", "field", "figure", "file", "film", "filter", "final", "find", "fine", "finger", "finish", "fire", "firm", "first", "fiscal", "fish", "fit", "fitness", "fix", "flag", "flame", "flash", "flat", "flavor", "flee", "flight", "flip", "float", "flock", "floor", "flower", "fluid", "flush", "fly", "foam", "focus", "fog", "foil", "fold", "follow", "food", "foot", "force", "forest", "forget", "fork", "fortune", "forum", "forward", "fossil", "foster", "found", "fox", "fragile", "frame", "frequent", "fresh", "friend", "fringe", "frog", "front", "frost", "frown", "frozen", "fruit", "fuel", "fun", "funny", "furnace", "fury", "future", "gadget", "gain", "galaxy", "gallery", "game", "gap", "garage", "garbage", "garden", "garlic", "garment", "gas", "gasp", "gate", "gather", "gauge", "gaze", "general", "genius", "genre", "gentle", "genuine", "gesture", "ghost", "giant", "gift", "giggle", "ginger", "giraffe", "girl", "give", "glad", "glance", "glare", "glass", "glide", "glimpse", "globe", "gloom", "glory", "glove", "glow", "glue", "goat", "goddess", "gold", "good", "goose", "gorilla", "gospel", "gossip", "govern", "gown", "grab", "grace", "grain", "grant", "grape", "grass", "gravity", "great", "green", "grid", "grief", "grit", "grocery", "group", "grow", "grunt", "guard", "guess", "guide", "guilt", "guitar", "gun", "gym", "habit", "hair", "half", "hammer", "hamster", "hand", "happy", "harbor", "hard", "harsh", "harvest", "hat", "have", "hawk", "hazard", "head", "health", "heart", "heavy", "hedgehog", "height", "hello", "helmet", "help", "hen", "hero", "hidden", "high", "hill", "hint", "hip", "hire", "history", "hobby", "hockey", "hold", "hole", "holiday", "hollow", "home", "honey", "hood", "hope", "horn", "horror", "horse", "hospital", "host", "hotel", "hour", "hover", "hub", "huge", "human", "humble", "humor", "hundred", "hungry", "hunt", "hurdle", "hurry", "hurt", "husband", "hybrid", "ice", "icon", "idea", "identify", "idle", "ignore", "ill", "illegal", "illness", "image", "imitate", "immense", "immune", "impact", "impose", "improve", "impulse", "inch", "include", "income", "increase", "index", "indicate", "indoor", "industry", "infant", "inflict", "inform", "inhale", "inherit", "initial", "inject", "injury", "inmate", "inner", "innocent", "input", "inquiry", "insane", "insect", "inside", "inspire", "install", "intact", "interest", "into", "invest", "invite", "involve", "iron", "island", "isolate", "issue", "item", "ivory", "jacket", "jaguar", "jar", "jazz", "jealous", "jeans", "jelly", "jewel", "job", "join", "joke", "journey", "joy", "judge", "juice", "jump", "jungle", "junior", "junk", "just", "kangaroo", "keen", "keep", "ketchup", "key", "kick", "kid", "kidney", "kind", "kingdom", "kiss", "kit", "kitchen", "kite", "kitten", "kiwi", "knee", "knife", "knock", "know", "lab", "label", "labor", "ladder", "lady", "lake", "lamp", "language", "laptop", "large", "later", "latin", "laugh", "laundry", "lava", "law", "lawn", "lawsuit", "layer", "lazy", "leader", "leaf", "learn", "leave", "lecture", "left", "leg", "legal", "legend", "leisure", "lemon", "lend", "length", "lens", "leopard", "lesson", "letter", "level", "liar", "liberty", "library", "license", "life", "lift", "light", "like", "limb", "limit", "link", "lion", "liquid", "list", "little", "live", "lizard", "load", "loan", "lobster", "local", "lock", "logic", "lonely", "long", "loop", "lottery", "loud", "lounge", "love", "loyal", "lucky", "luggage", "lumber", "lunar", "lunch", "luxury", "lyrics", "machine", "mad", "magic", "magnet", "maid", "mail", "main", "major", "make", "mammal", "man", "manage", "mandate", "mango", "mansion", "manual", "maple", "marble", "march", "margin", "marine", "market", "marriage", "mask", "mass", "master", "match", "material", "math", "matrix", "matter", "maximum", "maze", "meadow", "mean", "measure", "meat", "mechanic", "medal", "media", "melody", "melt", "member", "memory", "mention", "menu", "mercy", "merge", "merit", "merry", "mesh", "message", "metal", "method", "middle", "midnight", "milk", "million", "mimic", "mind", "minimum", "minor", "minute", "miracle", "mirror", "misery", "miss", "mistake", "mix", "mixed", "mixture", "mobile", "model", "modify", "mom", "moment", "monitor", "monkey", "monster", "month", "moon", "moral", "more", "morning", "mosquito", "mother", "motion", "motor", "mountain", "mouse", "move", "movie", "much", "muffin", "mule", "multiply", "muscle", "museum", "mushroom", "music", "must", "mutual", "myself", "mystery", "myth", "naive", "name", "napkin", "narrow", "nasty", "nation", "nature", "near", "neck", "need", "negative", "neglect", "neither", "nephew", "nerve", "nest", "net", "network", "neutral", "never", "news", "next", "nice", "night", "noble", "noise", "nominee", "noodle", "normal", "north", "nose", "notable", "note", "nothing", "notice", "novel", "now", "nuclear", "number", "nurse", "nut", "oak", "obey", "object", "oblige", "obscure", "observe", "obtain", "obvious", "occur", "ocean", "october", "odor", "off", "offer", "office", "often", "oil", "okay", "old", "olive", "olympic", "omit", "once", "one", "onion", "online", "only", "open", "opera", "opinion", "oppose", "option", "orange", "orbit", "orchard", "order", "ordinary", "organ", "orient", "original", "orphan", "ostrich", "other", "outdoor", "outer", "output", "outside", "oval", "oven", "over", "own", "owner", "oxygen", "oyster", "ozone", "pact", "paddle", "page", "pair", "palace", "palm", "panda", "panel", "panic", "panther", "paper", "parade", "parent", "park", "parrot", "party", "pass", "patch", "path", "patient", "patrol", "pattern", "pause", "pave", "payment", "peace", "peanut", "pear", "peasant", "pelican", "pen", "penalty", "pencil", "people", "pepper", "perfect", "permit", "person", "pet", "phone", "photo", "phrase", "physical", "piano", "picnic", "picture", "piece", "pig", "pigeon", "pill", "pilot", "pink", "pioneer", "pipe", "pistol", "pitch", "pizza", "place", "planet", "plastic", "plate", "play", "please", "pledge", "pluck", "plug", "plunge", "poem", "poet", "point", "polar", "pole", "police", "pond", "pony", "pool", "popular", "portion", "position", "possible", "post", "potato", "pottery", "poverty", "powder", "power", "practice", "praise", "predict", "prefer", "prepare", "present", "pretty", "prevent", "price", "pride", "primary", "print", "priority", "prison", "private", "prize", "problem", "process", "produce", "profit", "program", "project", "promote", "proof", "property", "prosper", "protect", "proud", "provide", "public", "pudding", "pull", "pulp", "pulse", "pumpkin", "punch", "pupil", "puppy", "purchase", "purity", "purpose", "purse", "push", "put", "puzzle", "pyramid", "quality", "quantum", "quarter", "question", "quick", "quit", "quiz", "quote", "rabbit", "raccoon", "race", "rack", "radar", "radio", "rail", "rain", "raise", "rally", "ramp", "ranch", "random", "range", "rapid", "rare", "rate", "rather", "raven", "raw", "razor", "ready", "real", "reason", "rebel", "rebuild", "recall", "receive", "recipe", "record", "recycle", "reduce", "reflect", "reform", "refuse", "region", "regret", "regular", "reject", "relax", "release", "relief", "rely", "remain", "remember", "remind", "remove", "render", "renew", "rent", "reopen", "repair", "repeat", "replace", "report", "require", "rescue", "resemble", "resist", "resource", "response", "result", "retire", "retreat", "return", "reunion", "reveal", "review", "reward", "rhythm", "rib", "ribbon", "rice", "rich", "ride", "ridge", "rifle", "right", "rigid", "ring", "riot", "ripple", "risk", "ritual", "rival", "river", "road", "roast", "robot", "robust", "rocket", "romance", "roof", "rookie", "room", "rose", "rotate", "rough", "round", "route", "royal", "rubber", "rude", "rug", "rule", "run", "runway", "rural", "sad", "saddle", "sadness", "safe", "sail", "salad", "salmon", "salon", "salt", "salute", "same", "sample", "sand", "satisfy", "satoshi", "sauce", "sausage", "save", "say", "scale", "scan", "scare", "scatter", "scene", "scheme", "school", "science", "scissors", "scorpion", "scout", "scrap", "screen", "script", "scrub", "sea", "search", "season", "seat", "second", "secret", "section", "security", "seed", "seek", "segment", "select", "sell", "seminar", "senior", "sense", "sentence", "series", "service", "session", "settle", "setup", "seven", "shadow", "shaft", "shallow", "share", "shed", "shell", "sheriff", "shield", "shift", "shine", "ship", "shiver", "shock", "shoe", "shoot", "shop", "short", "shoulder", "shove", "shrimp", "shrug", "shuffle", "shy", "sibling", "sick", "side", "siege", "sight", "sign", "silent", "silk", "silly", "silver", "similar", "simple", "since", "sing", "siren", "sister", "situate", "six", "size", "skate", "sketch", "ski", "skill", "skin", "skirt", "skull", "slab", "slam", "sleep", "slender", "slice", "slide", "slight", "slim", "slogan", "slot", "slow", "slush", "small", "smart", "smile", "smoke", "smooth", "snack", "snake", "snap", "sniff", "snow", "soap", "soccer", "social", "sock", "soda", "soft", "solar", "soldier", "solid", "solution", "solve", "someone", "song", "soon", "sorry", "sort", "soul", "sound", "soup", "source", "south", "space", "spare", "spatial", "spawn", "speak", "special", "speed", "spell", "spend", "sphere", "spice", "spider", "spike", "spin", "spirit", "split", "spoil", "sponsor", "spoon", "sport", "spot", "spray", "spread", "spring", "spy", "square", "squeeze", "squirrel", "stable", "stadium", "staff", "stage", "stairs", "stamp", "stand", "start", "state", "stay", "steak", "steel", "stem", "step", "stereo", "stick", "still", "sting", "stock", "stomach", "stone", "stool", "story", "stove", "strategy", "street", "strike", "strong", "struggle", "student", "stuff", "stumble", "style", "subject", "submit", "subway", "success", "such", "sudden", "suffer", "sugar", "suggest", "suit", "summer", "sun", "sunny", "sunset", "super", "supply", "supreme", "sure", "surface", "surge", "surprise", "surround", "survey", "suspect", "sustain", "swallow", "swamp", "swap", "swarm", "swear", "sweet", "swift", "swim", "swing", "switch", "sword", "symbol", "symptom", "syrup", "system", "table", "tackle", "tag", "tail", "talent", "talk", "tank", "tape", "target", "task", "taste", "tattoo", "taxi", "teach", "team", "tell", "ten", "tenant", "tennis", "tent", "term", "test", "text", "thank", "that", "theme", "then", "theory", "there", "they", "thing", "this", "thought", "three", "thrive", "throw", "thumb", "thunder", "ticket", "tide", "tiger", "tilt", "timber", "time", "tiny", "tip", "tired", "tissue", "title", "toast", "tobacco", "today", "toddler", "toe", "together", "toilet", "token", "tomato", "tomorrow", "tone", "tongue", "tonight", "tool", "tooth", "top", "topic", "topple", "torch", "tornado", "tortoise", "toss", "total", "tourist", "toward", "tower", "town", "toy", "track", "trade", "traffic", "tragic", "train", "transfer", "trap", "trash", "travel", "tray", "treat", "tree", "trend", "trial", "tribe", "trick", "trigger", "trim", "trip", "trophy", "trouble", "truck", "true", "truly", "trumpet", "trust", "truth", "try", "tube", "tuition", "tumble", "tuna", "tunnel", "turkey", "turn", "turtle", "twelve", "twenty", "twice", "twin", "twist", "two", "type", "typical", "ugly", "umbrella", "unable", "unaware", "uncle", "uncover", "under", "undo", "unfair", "unfold", "unhappy", "uniform", "unique", "unit", "universe", "unknown", "unlock", "until", "unusual", "unveil", "update", "upgrade", "uphold", "upon", "upper", "upset", "urban", "urge", "usage", "use", "used", "useful", "useless", "usual", "utility", "vacant", "vacuum", "vague", "valid", "valley", "valve", "van", "vanish", "vapor", "various", "vast", "vault", "vehicle", "velvet", "vendor", "venture", "venue", "verb", "verify", "version", "very", "vessel", "veteran", "viable", "vibrant", "vicious", "victory", "video", "view", "village", "vintage", "violin", "virtual", "virus", "visa", "visit", "visual", "vital", "vivid", "vocal", "voice", "void", "volcano", "volume", "vote", "voyage", "wage", "wagon", "wait", "walk", "wall", "walnut", "want", "warfare", "warm", "warrior", "wash", "wasp", "waste", "water", "wave", "way", "wealth", "weapon", "wear", "weasel", "weather", "web", "wedding", "weekend", "weird", "welcome", "west", "wet", "whale", "what", "wheat", "wheel", "when", "where", "whip", "whisper", "wide", "width", "wife", "wild", "will", "win", "window", "wine", "wing", "wink", "winner", "winter", "wire", "wisdom", "wise", "wish", "witness", "wolf", "woman", "wonder", "wood", "wool", "word", "work", "world", "worry", "worth", "wrap", "wreck", "wrestle", "wrist", "write", "wrong", "yard", "year", "yellow", "you", "young", "youth", "zebra", "zero", "zone", "zoo"];
-
-const leadingZeroes = (num, size) => {
-  let s = num + '';
-
-  while (s.length < size) {
-    s = '0' + s;
-  }
-
-  return s;
-};
-
-const stringChunks = (str, length) => {
-  return str.match(new RegExp('.{1,' + length + '}', 'g'));
-};
-
-exports.mnemonic = hex => {
-  if (!hex) {
-    return undefined;
-  }
-
-  const binary = hex.split('').map(h => leadingZeroes(parseInt(h, 16).toString(2), 4)).join(''); // 0100111000011111011110011001101010100100111111110010001001111001
-
-  const binaryChunks = stringChunks(binary, 11); // ["01001110000", "11111011110", "01100110101", "01001001111", "11110010001", "001111001"]
-
-  const integers = binaryChunks.map(b => parseInt(b, 2)); // [624, 2014, 821, 591, 1937, 121]
-
-  return integers.map(i => words[i].toUpperCase()).join(' '); // "EVOKE WINK GRIT ENEMY VENDOR AUGUST"
-};
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
 
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const common_1 = __webpack_require__(5);
+const common_1 = __webpack_require__(6);
 /**
  * This file needs to be in platform/ folder because its implementation is platform-dependant
  *  - on browser, it uses DOMPurify
@@ -77632,6 +77559,130 @@ Xss.htmlUnescape = str => {
 exports.Xss = Xss;
 
 /***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* © 2016-2018 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com */
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+const buf_js_1 = __webpack_require__(16);
+
+class Att {
+  constructor({
+    data,
+    type,
+    name,
+    length,
+    url,
+    inline,
+    id,
+    msgId,
+    treatAs,
+    cid
+  }) {
+    this.length = NaN;
+
+    this.hasData = () => this.bytes instanceof Uint8Array;
+
+    this.setData = bytes => {
+      if (this.hasData()) {
+        throw new Error('Att bytes already set');
+      }
+
+      this.bytes = bytes;
+    };
+
+    this.getData = () => {
+      if (this.bytes instanceof buf_js_1.Buf) {
+        return this.bytes;
+      }
+
+      if (this.bytes instanceof Uint8Array) {
+        return new buf_js_1.Buf(this.bytes);
+      }
+
+      throw new Error('Att has no data set');
+    };
+
+    this.treatAs = () => {
+      // todo - should return a probability in the range of certain-likely-maybe
+      // could also return possible types as an array - which makes basic usage more difficult - to think through
+      // better option - add an "unknown" type: when encountered, code consuming this should inspect a chunk of contents
+      if (this.treatAsValue) {
+        // pre-set
+        return this.treatAsValue;
+      } else if (['PGPexch.htm.pgp', 'PGPMIME version identification', 'Version.txt', 'PGPMIME Versions Identification'].includes(this.name)) {
+        return 'hidden'; // PGPexch.htm.pgp is html alternative of textual body content produced by PGP Desktop and GPG4o
+      } else if (this.name === 'signature.asc' || this.type === 'application/pgp-signature') {
+        return 'signature';
+      } else if (!this.name && !this.type.startsWith('image/')) {
+        // this.name may be '' or undefined - catch either
+        return this.length < 100 ? 'hidden' : 'encryptedMsg';
+      } else if (['message', 'msg.asc', 'message.asc', 'encrypted.asc', 'encrypted.eml.pgp', 'Message.pgp'].includes(this.name)) {
+        return 'encryptedMsg';
+      } else if (this.name.match(/(\.pgp$)|(\.gpg$)|(\.[a-zA-Z0-9]{3,4}\.asc$)/g)) {
+        // ends with one of .gpg, .pgp, .???.asc, .????.asc
+        return 'encryptedFile';
+      } else if (this.name.match(/(cryptup|flowcrypt)-backup-[a-z]+\.key/g)) {
+        return 'privateKey';
+      } else if (this.name.match(/^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\.asc$/g)) {
+        // name starts with a key id
+        return 'publicKey';
+      } else if (this.name.toLowerCase().includes('public') && this.name.match(/[A-F0-9]{8}.*\.asc$/g)) {
+        // name contains the word "public", any key id and ends with .asc
+        return 'publicKey';
+      } else if (this.name.match(/\.asc$/) && this.hasData() && buf_js_1.Buf.with(this.getData().subarray(0, 100)).toUtfStr().includes('-----BEGIN PGP PUBLIC KEY BLOCK-----')) {
+        return 'publicKey';
+      } else if (this.name.match(/\.asc$/) && this.length < 100000 && !this.inline) {
+        return 'encryptedMsg';
+      } else {
+        return 'plainFile';
+      }
+    };
+
+    if (typeof data === 'undefined' && typeof url === 'undefined' && typeof id === 'undefined') {
+      throw new Error('Att: one of data|url|id has to be set');
+    }
+
+    if (id && !msgId) {
+      throw new Error('Att: if id is set, msgId must be set too');
+    }
+
+    if (data) {
+      this.bytes = data;
+      this.length = data.length;
+    } else {
+      this.length = Number(length);
+    }
+
+    this.name = name || '';
+    this.type = type || 'application/octet-stream';
+    this.url = url || undefined;
+    this.inline = inline !== true;
+    this.id = id || undefined;
+    this.msgId = msgId || undefined;
+    this.treatAsValue = treatAs || undefined;
+    this.cid = cid || undefined;
+  }
+
+}
+
+Att.attachmentsPattern = /^(((cryptup|flowcrypt)-backup-[a-z]+\.key)|(.+\.pgp)|(.+\.gpg)|(.+\.asc)|(noname)|(message)|(PGPMIME version identification)|())$/gm;
+
+Att.keyinfoAsPubkeyAtt = ki => new Att({
+  data: buf_js_1.Buf.fromUtfStr(ki.public),
+  type: 'application/pgp-keys',
+  name: `0x${ki.longid}.asc`
+});
+
+exports.Att = Att;
+
+/***/ }),
 /* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -77644,27 +77695,27 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-const pgp_1 = __webpack_require__(8);
+const pgp_1 = __webpack_require__(9);
 
 const validate_1 = __webpack_require__(20);
 
 const fmt_1 = __webpack_require__(4);
 
-const const_1 = __webpack_require__(9);
+const const_1 = __webpack_require__(10);
 
-const require_1 = __webpack_require__(12);
+const require_1 = __webpack_require__(13);
 
-const common_1 = __webpack_require__(5);
+const common_1 = __webpack_require__(6);
 
-const mime_1 = __webpack_require__(14);
+const mime_1 = __webpack_require__(5);
 
 const buf_1 = __webpack_require__(16);
 
-const store_1 = __webpack_require__(11);
+const store_1 = __webpack_require__(12);
 
-const xss_1 = __webpack_require__(18);
+const xss_1 = __webpack_require__(17);
 
-const const_2 = __webpack_require__(9);
+const const_2 = __webpack_require__(10);
 
 const openpgp = require_1.requireOpenpgp();
 
@@ -77894,6 +77945,8 @@ class Endpoints {
             });
           }
         } else if (fmt_1.isContentBlock(block.type)) {
+          msgContentBlocks.push(block);
+        } else if (mime_1.Mime.isPlainInlineImg(block)) {
           msgContentBlocks.push(block);
         } else if (block.type !== 'plainAtt') {
           blocks.push(block);
@@ -78310,7 +78363,7 @@ Object.defineProperty(exports, "__esModule", {
 
 const EventEmitter = __webpack_require__(22);
 
-const common_1 = __webpack_require__(5);
+const common_1 = __webpack_require__(6);
 
 const ASYNC_REQUEST_HEADER = "ASYNC_REQUEST|";
 const ASYNC_RESPONSE_HEADER = "ASYNC_RESPONSE|";
