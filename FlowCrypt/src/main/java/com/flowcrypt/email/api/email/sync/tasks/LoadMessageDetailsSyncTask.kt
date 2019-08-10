@@ -17,6 +17,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.*
 import javax.mail.BodyPart
+import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Multipart
 import javax.mail.Part
@@ -48,16 +49,29 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
     imapFolder.open(Folder.READ_WRITE)
 
-    val originalMsg: MimeMessage = imapFolder.getMessageByUID(uid) as MimeMessage
+    val originalMsg = imapFolder.getMessageByUID(uid) as? MimeMessage
+
+    if (originalMsg == null) {
+      listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, null, byteArrayOf(), ownerKey, requestCode)
+      imapFolder.close(false)
+      return
+    }
+
+    val fetchProfile = FetchProfile()
+    fetchProfile.add(FetchProfile.Item.SIZE)
+    fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+    fetchProfile.add(IMAPFolder.FetchProfileItem.HEADERS)
+    imapFolder.fetch(arrayOf(originalMsg), fetchProfile)
+
     val customMsg = CustomMimeMessage(session, TextUtils.join("\n", Collections.list<String>(originalMsg.allHeaderLines)))
 
     val originalMultipart = originalMsg.content as? Multipart
     if (originalMultipart != null) {
       val modifiedMultipart = CustomMimeMultipart(originalMultipart.contentType)
       buildFromSource(originalMultipart, modifiedMultipart)
-      customMsg.setContent(modifiedMultipart)
+      customMsg.setContent(modifiedMultipart, originalMsg.contentType)
     } else {
-      customMsg.setContent(originalMsg.content, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)
+      customMsg.setContent(originalMsg.content, originalMsg.contentType)
     }
     customMsg.saveChanges()
     customMsg.setMessageId(originalMsg.messageID)
@@ -84,7 +98,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
           mimeMultipart.addBodyPart(innerPart)
 
           val bodyPart = MimeBodyPart()
-          bodyPart.setContent(mimeMultipart)
+          bodyPart.setContent(mimeMultipart, item.contentType)
 
           candidates.add(bodyPart)
         } else {
@@ -128,7 +142,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     }
 
     val bodyPart = MimeBodyPart()
-    bodyPart.setContent(newMultiPart)
+    bodyPart.setContent(newMultiPart, originalMultipart.contentType)
 
     return bodyPart
   }
