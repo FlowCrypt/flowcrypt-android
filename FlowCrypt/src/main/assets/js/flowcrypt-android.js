@@ -75919,7 +75919,7 @@ Pgp.key = {
         for (const {
           keyPacket
         } of key.getKeys(optionalKeyid)) {
-          if (keyPacket.isDecrypted() === false) {
+          if (keyPacket.isDecrypted() === false && keyPacket.encrypted) {
             try {
               await keyPacket.decrypt(passphrases[0]);
             } catch (e) {
@@ -76359,23 +76359,28 @@ Pgp.internal = {
     keys.encryptedFor = await Pgp.internal.longids(encryptedForKeyids);
     await Pgp.internal.cryptoMsgGetSignedBy(msg, keys);
 
-    for (const ki of kiWithPp) {
-      ki.parsed = await Pgp.key.read(ki.private); // this is inefficient because we are doing unnecessary parsing of all keys here
-      // better would be to compare to already stored KeyInfo, however KeyInfo currently only holds primary longid, not longids of subkeys
-      // while messages are typically encrypted for subkeys, thus we have to parse the key to get the info
-      // we are filtering here to avoid a significant performance issue of having to attempt decrypting with all keys simultaneously
+    if (keys.encryptedFor.length) {
+      for (const ki of kiWithPp) {
+        ki.parsed = await Pgp.key.read(ki.private); // this is inefficient because we are doing unnecessary parsing of all keys here
+        // better would be to compare to already stored KeyInfo, however KeyInfo currently only holds primary longid, not longids of subkeys
+        // while messages are typically encrypted for subkeys, thus we have to parse the key to get the info
+        // we are filtering here to avoid a significant performance issue of having to attempt decrypting with all keys simultaneously
 
-      for (const longid of await Promise.all(ki.parsed.getKeyIds().map(({
-        bytes
-      }) => Pgp.key.longid(bytes)))) {
-        if (keys.encryptedFor.includes(longid)) {
-          keys.prvMatching.push(ki);
-          break;
+        for (const longid of await Promise.all(ki.parsed.getKeyIds().map(({
+          bytes
+        }) => Pgp.key.longid(bytes)))) {
+          if (keys.encryptedFor.includes(longid)) {
+            keys.prvMatching.push(ki);
+            break;
+          }
         }
       }
-    }
 
-    keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp;
+      keys.prvForDecrypt = keys.prvMatching.length ? keys.prvMatching : kiWithPp;
+    } else {
+      // prvs not needed for signed msgs
+      keys.prvForDecrypt = [];
+    }
 
     for (const ki of keys.prvForDecrypt) {
       const optionalMatchingKeyid = Pgp.internal.cryptoKeyOptionalMatchingKeyid(ki.parsed, encryptedForKeyids);
