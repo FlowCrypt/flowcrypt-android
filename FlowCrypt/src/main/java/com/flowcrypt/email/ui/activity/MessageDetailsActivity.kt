@@ -108,7 +108,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         val uri = MessageDaoSource().baseContentUri
         val selection = (MessageDaoSource.COL_EMAIL + "= ? AND " + MessageDaoSource.COL_FOLDER + " = ? AND "
             + MessageDaoSource.COL_UID + " = ? ")
-        val selectionArgs = arrayOf(details!!.email, localFolder!!.folderAlias, details!!.uid.toString())
+        val selectionArgs = arrayOf(details!!.email, localFolder!!.fullName, details!!.uid.toString())
         return CursorLoader(this, uri, null, selection, selectionArgs, null)
       }
 
@@ -138,7 +138,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
           if (isRetrieveIncomingMsgNeeded) {
             isRetrieveIncomingMsgNeeded = false
             isReceiveMsgBodyNeeded = false
-            messageDaoSource.setSeenStatus(this, details!!.email, localFolder!!.folderAlias, details!!.uid.toLong())
+            messageDaoSource.setSeenStatus(this, details!!.email, localFolder!!.fullName, details!!.uid.toLong())
             setResult(RESULT_CODE_UPDATE_LIST, null)
             decryptMsg()
           }
@@ -211,8 +211,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         isRequestMsgDetailsStarted = false
         when (resultCode) {
           EmailSyncService.REPLY_RESULT_CODE_ACTION_OK -> {
-            val folderAlias = localFolder!!.folderAlias
-            MessageDaoSource().setSeenStatus(this, details!!.email, folderAlias, details!!.uid.toLong())
+            val folderName = localFolder!!.fullName
+            MessageDaoSource().setSeenStatus(this, details!!.email, folderName, details!!.uid.toLong())
             setResult(RESULT_CODE_UPDATE_LIST, null)
             LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_raw_mime_msg_from_db, null, this)
           }
@@ -236,9 +236,9 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             }
 
             Toast.makeText(this, toastMsgResId, Toast.LENGTH_SHORT).show()
-            val folderAlias = localFolder!!.folderAlias
-            MessageDaoSource().deleteMsg(this, details!!.email, folderAlias, details!!.uid.toLong())
-            AttachmentDaoSource().deleteAtts(this, details!!.email, folderAlias, details!!.uid.toLong())
+            val folderName = localFolder!!.fullName
+            MessageDaoSource().deleteMsg(this, details!!.email, folderName, details!!.uid.toLong())
+            AttachmentDaoSource().deleteAtts(this, details!!.email, folderName, details!!.uid.toLong())
             setResult(RESULT_CODE_UPDATE_LIST, null)
             finish()
           }
@@ -394,9 +394,9 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   private fun messageNotAvailableInFolder() {
-    val folderAlias = localFolder!!.folderAlias
-    MessageDaoSource().deleteMsg(this, details!!.email, folderAlias, details!!.uid.toLong())
-    AttachmentDaoSource().deleteAtts(this, details!!.email, folderAlias, details!!.uid.toLong())
+    val folderName = localFolder!!.fullName
+    MessageDaoSource().deleteMsg(this, details!!.email, folderName, details!!.uid.toLong())
+    AttachmentDaoSource().deleteAtts(this, details!!.email, folderName, details!!.uid.toLong())
     setResult(RESULT_CODE_UPDATE_LIST, null)
     Toast.makeText(this, R.string.email_does_not_available_in_this_folder, Toast.LENGTH_LONG).show()
     finish()

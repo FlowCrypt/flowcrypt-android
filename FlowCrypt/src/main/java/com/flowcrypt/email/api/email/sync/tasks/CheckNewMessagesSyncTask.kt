@@ -34,14 +34,14 @@ class CheckNewMessagesSyncTask(ownerKey: String,
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
     val email = account.email
-    val folderAlias = localFolder.folderAlias!!
+    val folderName = localFolder.fullName
     val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, email)
 
     val folder = store.getFolder(localFolder.fullName) as IMAPFolder
     folder.open(Folder.READ_ONLY)
 
     val nextUID = folder.uidNext
-    val newestCachedUID = MessageDaoSource().getLastUIDOfMsgInLabel(context, email, folderAlias)
+    val newestCachedUID = MessageDaoSource().getLastUIDOfMsgInLabel(context, email, folderName)
     var newMsgs: Array<Message> = emptyArray()
 
     if (newestCachedUID < nextUID - 1) {

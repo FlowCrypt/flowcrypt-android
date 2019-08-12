@@ -220,7 +220,7 @@ class EmailSyncService : BaseService(), SyncListener {
                                     rawMimeBytes: ByteArray, ownerKey: String, requestCode: Int) {
     try {
       val msgDaoSource = MessageDaoSource()
-      msgDaoSource.updateRawMime(this, account.email, localFolder.folderAlias, uid, rawMimeBytes)
+      msgDaoSource.updateRawMime(this, account.email, localFolder.fullName, uid, rawMimeBytes)
 
       if (rawMimeBytes.isEmpty()) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND)
@@ -249,12 +249,12 @@ class EmailSyncService : BaseService(), SyncListener {
         "count: " + msgs.size)
     try {
       val email = account.email
-      val folderAlias = localFolder.folderAlias!!
+      val folder = localFolder.fullName
 
       val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(this, email)
 
       val messageDaoSource = MessageDaoSource()
-      messageDaoSource.addRows(this, email, folderAlias, remoteFolder, msgs, false, isEncryptedModeEnabled)
+      messageDaoSource.addRows(this, email, folder, remoteFolder, msgs, false, isEncryptedModeEnabled)
 
       if (!isEncryptedModeEnabled) {
         emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)
@@ -284,12 +284,12 @@ class EmailSyncService : BaseService(), SyncListener {
     LogsUtil.d(TAG, "onMessagesReceived:message count: " + newMsgs.size)
     try {
       val email = account.email
-      val folderAlias = localFolder.folderAlias!!
+      val folderName = localFolder.fullName
 
       val msgDaoSource = MessageDaoSource()
       val folderType = FoldersManager.getFolderType(localFolder)
       val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
-      msgDaoSource.addRows(this, email, folderAlias, remoteFolder, newMsgs, msgsEncryptionStates, isNew, false)
+      msgDaoSource.addRows(this, email, folderName, remoteFolder, newMsgs, msgsEncryptionStates, isNew, false)
 
       if (newMsgs.isNotEmpty()) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE)
@@ -298,8 +298,8 @@ class EmailSyncService : BaseService(), SyncListener {
       }
 
       if (!GeneralUtil.isAppForegrounded()) {
-        val detailsList = msgDaoSource.getNewMsgs(this, email, folderAlias)
-        val uidListOfUnseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, email, folderAlias)
+        val detailsList = msgDaoSource.getNewMsgs(this, email, folderName)
+        val uidListOfUnseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, email, folderName)
         notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, false)
       }
     } catch (e: MessagingException) {
@@ -352,16 +352,16 @@ class EmailSyncService : BaseService(), SyncListener {
     LogsUtil.d(TAG, "onRefreshMessagesReceived: imapFolder = " + remoteFolder.fullName + " newMessages " +
         "count: " + newMsgs.size + ", updateMessages count = " + updateMsgs.size)
     val email = account.email
-    val folderAlias = localFolder.folderAlias!!
+    val folderName = localFolder.fullName
 
     try {
       val msgsDaoSource = MessageDaoSource()
 
-      val mapOfUIDAndMsgFlags = msgsDaoSource.getMapOfUIDAndMsgFlags(this, email, folderAlias)
+      val mapOfUIDAndMsgFlags = msgsDaoSource.getMapOfUIDAndMsgFlags(this, email, folderName)
       val msgsUIDs = HashSet(mapOfUIDAndMsgFlags.keys)
       val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(msgsUIDs, remoteFolder, updateMsgs)
 
-      msgsDaoSource.deleteMsgsByUID(this, email, folderAlias, deleteCandidatesUIDs)
+      msgsDaoSource.deleteMsgsByUID(this, email, folderName, deleteCandidatesUIDs)
 
       val folderType = FoldersManager.getFolderType(localFolder)
       if (!GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX) {
@@ -370,8 +370,8 @@ class EmailSyncService : BaseService(), SyncListener {
             notificationManager.cancel(uid.toInt())
           }
         } else {
-          val detailsList = msgsDaoSource.getNewMsgs(this, email, folderAlias)
-          val uidListOfUnseenMsgs = msgsDaoSource.getUIDOfUnseenMsgs(this, email, folderAlias)
+          val detailsList = msgsDaoSource.getNewMsgs(this, email, folderName)
+          val uidListOfUnseenMsgs = msgsDaoSource.getUIDOfUnseenMsgs(this, email, folderName)
           notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, false)
         }
       }
@@ -381,14 +381,14 @@ class EmailSyncService : BaseService(), SyncListener {
       val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(this, email)
       val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
 
-      msgsDaoSource.addRows(this, email, folderAlias, remoteFolder, newCandidates, isNew, isEncryptedModeEnabled)
+      msgsDaoSource.addRows(this, email, folderName, remoteFolder, newCandidates, isNew, isEncryptedModeEnabled)
 
       if (!isEncryptedModeEnabled) {
         emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)
       }
 
       val msgs = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, updateMsgs)
-      msgsDaoSource.updateMsgsByUID(this, email, folderAlias, remoteFolder, msgs)
+      msgsDaoSource.updateMsgsByUID(this, email, folderName, remoteFolder, msgs)
 
       if (newMsgs.isNotEmpty() || updateMsgs.isNotEmpty()) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE)
@@ -490,7 +490,7 @@ class EmailSyncService : BaseService(), SyncListener {
   override fun onMsgChanged(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                             msg: javax.mail.Message, ownerKey: String, requestCode: Int) {
     val email = account.email
-    val folderAlias = localFolder.folderAlias!!
+    val folderName = localFolder.fullName
     val folderType = FoldersManager.getFolderType(localFolder)
 
     if (!GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX) {
@@ -505,8 +505,8 @@ class EmailSyncService : BaseService(), SyncListener {
 
       } else {
         val msgDaoSource = MessageDaoSource()
-        val detailsList = msgDaoSource.getNewMsgs(this, email, folderAlias)
-        val uidListOfUnseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, email, folderAlias)
+        val detailsList = msgDaoSource.getNewMsgs(this, email, folderName)
+        val uidListOfUnseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, email, folderName)
         notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, true)
       }
     }
@@ -515,14 +515,14 @@ class EmailSyncService : BaseService(), SyncListener {
   override fun onIdentificationToEncryptionCompleted(account: AccountDao, localFolder: LocalFolder,
                                                      remoteFolder: IMAPFolder, ownerKey: String, requestCode: Int) {
     val email = account.email
-    val folderAlias = localFolder.folderAlias!!
+    val folderName = localFolder.fullName
     val folderType = FoldersManager.getFolderType(localFolder)
 
     if (folderType === FoldersManager.FolderType.INBOX && !GeneralUtil.isAppForegrounded()) {
       val msgDaoSource = MessageDaoSource()
 
-      val detailsList = msgDaoSource.getNewMsgs(this, email, folderAlias)
-      val uidListOfUnseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, email, folderAlias)
+      val detailsList = msgDaoSource.getNewMsgs(this, email, folderName)
+      val uidListOfUnseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, email, folderName)
 
       notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, false)
     }

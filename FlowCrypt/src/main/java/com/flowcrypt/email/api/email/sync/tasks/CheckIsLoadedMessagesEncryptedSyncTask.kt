@@ -32,11 +32,11 @@ class CheckIsLoadedMessagesEncryptedSyncTask(ownerKey: String,
     super.runIMAPAction(account, session, store, listener)
 
     val context = listener.context
-    val folder = localFolder.folderAlias
+    val folder = localFolder.fullName
 
     val msgDaoSource = MessageDaoSource()
 
-    val uidList = msgDaoSource.getNotCheckedUIDs(context, account.email, folder!!)
+    val uidList = msgDaoSource.getNotCheckedUIDs(context, account.email, folder)
 
     if (uidList.isEmpty()) {
       return

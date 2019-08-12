@@ -496,7 +496,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun refreshFoldersFromCache() {
     foldersManager = FoldersManager.fromDatabase(this, currentAccountDao!!.email)
-    if (currentFolder != null && !TextUtils.isEmpty(currentFolder!!.folderAlias)) {
+    if (currentFolder != null && !TextUtils.isEmpty(currentFolder!!.fullName)) {
       currentFolder = foldersManager!!.getFolderByAlias(currentFolder!!.folderAlias!!)
     }
   }

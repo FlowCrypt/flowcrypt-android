@@ -119,21 +119,20 @@ class SyncJobService : JobService(), SyncListener {
                                      updateMsgs: Array<Message>, ownerKey: String, requestCode: Int) {
     try {
       val msgDaoSource = MessageDaoSource()
-      val folderAlias = localFolder.folderAlias!!
-      val mapOfUIDsAndMsgsFlags = msgDaoSource.getMapOfUIDAndMsgFlags(applicationContext, account.email, folderAlias)
+      val folderName = localFolder.fullName
+      val mapOfUIDsAndMsgsFlags = msgDaoSource.getMapOfUIDAndMsgFlags(applicationContext, account.email, folderName)
       val uidSet = HashSet(mapOfUIDsAndMsgsFlags.keys)
       val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(uidSet, remoteFolder, updateMsgs)
 
-      val generalMsgDetailsBeforeUpdate = msgDaoSource.getNewMsgs(applicationContext, account.email, folderAlias)
+      val generalMsgDetailsBeforeUpdate = msgDaoSource.getNewMsgs(applicationContext, account.email, folderName)
 
-      msgDaoSource.deleteMsgsByUID(applicationContext, account.email, localFolder.folderAlias,
-          deleteCandidatesUIDs)
+      msgDaoSource.deleteMsgsByUID(applicationContext, account.email, folderName, deleteCandidatesUIDs)
 
-      msgDaoSource.updateMsgsByUID(applicationContext, account.email, localFolder.folderAlias,
-          remoteFolder, EmailUtil.genUpdateCandidates(mapOfUIDsAndMsgsFlags, remoteFolder, updateMsgs))
+      msgDaoSource.updateMsgsByUID(applicationContext, account.email, folderName, remoteFolder,
+          EmailUtil.genUpdateCandidates(mapOfUIDsAndMsgsFlags, remoteFolder, updateMsgs))
 
       val detailsAfterUpdate = msgDaoSource.getNewMsgs(applicationContext,
-          account.email, folderAlias)
+          account.email, folderName)
 
       val detailsDeleteCandidates = LinkedList(generalMsgDetailsBeforeUpdate)
       detailsDeleteCandidates.removeAll(detailsAfterUpdate)
@@ -146,7 +145,7 @@ class SyncJobService : JobService(), SyncListener {
           }
         } else {
           if (!detailsDeleteCandidates.isEmpty()) {
-            val unseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, account.email, folderAlias)
+            val unseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, account.email, folderName)
             messagesNotificationManager!!.notify(this, account, localFolder, detailsAfterUpdate, unseenMsgs, true)
           }
         }
@@ -195,14 +194,14 @@ class SyncJobService : JobService(), SyncListener {
       val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
 
       val msgDaoSource = MessageDaoSource()
-      val folderAlias = localFolder.folderAlias!!
-      val mapOfUIDAndMsgFlags = msgDaoSource.getMapOfUIDAndMsgFlags(context, account.email, folderAlias)
+      val folderName = localFolder.fullName
+      val mapOfUIDAndMsgFlags = msgDaoSource.getMapOfUIDAndMsgFlags(context, account.email, folderName)
 
       val uids = HashSet(mapOfUIDAndMsgFlags.keys)
 
       val newCandidates = EmailUtil.genNewCandidates(uids, remoteFolder, newMsgs)
 
-      msgDaoSource.addRows(context, account.email, folderAlias, remoteFolder, newCandidates,
+      msgDaoSource.addRows(context, account.email, folderName, remoteFolder, newCandidates,
           msgsEncryptionStates, !GeneralUtil.isAppForegrounded(), isEncryptedModeEnabled)
 
       if (!GeneralUtil.isAppForegrounded()) {
@@ -211,8 +210,8 @@ class SyncJobService : JobService(), SyncListener {
         }
 
         val newMsgsList = msgDaoSource.getNewMsgs(applicationContext,
-            account.email, folderAlias)
-        val unseenUIDs = msgDaoSource.getUIDOfUnseenMsgs(this, account.email, folderAlias)
+            account.email, folderName)
+        val unseenUIDs = msgDaoSource.getUIDOfUnseenMsgs(this, account.email, folderName)
 
         messagesNotificationManager!!.notify(this, account, localFolder, newMsgsList, unseenUIDs, false)
       }

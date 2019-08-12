@@ -32,10 +32,10 @@ class SyncFolderSyncTask(ownerKey: String,
 
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
-    val folderName = localFolder.folderAlias!!
+    val folderName = localFolder.fullName
     val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
 
-    val folder = store.getFolder(localFolder.fullName) as IMAPFolder
+    val folder = store.getFolder(folderName) as IMAPFolder
     folder.open(javax.mail.Folder.READ_ONLY)
 
     val messageDaoSource = MessageDaoSource()

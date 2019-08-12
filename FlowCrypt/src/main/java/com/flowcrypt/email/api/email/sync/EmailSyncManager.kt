@@ -693,7 +693,7 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
       val msg = e.message
       if (msg != null && e.messageChangeType == MessageChangedEvent.FLAGS_CHANGED) {
         try {
-          msgDaoSource.updateLocalMsgFlags(listener.context, accountDao.email, local.folderAlias,
+          msgDaoSource.updateLocalMsgFlags(listener.context, accountDao.email, local.fullName,
               remote.getUID(msg), msg.flags)
           listener.onMsgChanged(accountDao, local, remote, msg, "", 0)
         } catch (msgException: MessagingException) {
