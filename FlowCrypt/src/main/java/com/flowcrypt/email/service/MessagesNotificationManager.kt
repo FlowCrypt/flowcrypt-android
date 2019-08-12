@@ -90,8 +90,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     val localFolder = foldersManager.findInboxFolder()
 
     if (localFolder != null) {
-      MessageDaoSource().setOldStatus(context,
-          account.email, localFolder.folderAlias)
+      MessageDaoSource().setOldStatus(context, account.email, localFolder.fullName)
     }
   }
 
@@ -280,7 +279,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     val intent = Intent(context, MarkMessagesAsOldBroadcastReceiver::class.java)
     intent.action = MarkMessagesAsOldBroadcastReceiver.ACTION_MARK_MESSAGES_AS_OLD
     intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_EMAIL, account.email)
-    intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_LABEL, localFolder.folderAlias)
+    intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_LABEL, localFolder.fullName)
 
     if (!CollectionUtils.isEmpty(generalMsgDetailsList)) {
       val uidList = ArrayList<String>()

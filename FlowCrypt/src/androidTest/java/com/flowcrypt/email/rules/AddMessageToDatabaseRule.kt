@@ -66,6 +66,6 @@ class AddMessageToDatabaseRule(val account: AccountDao, val localFolder: LocalFo
   }
 
   private fun saveMsgToDatabase() {
-    MessageDaoSource().addRow(targetContext, account.email, localFolder.folderAlias, 0, message, false)
+    MessageDaoSource().addRow(targetContext, account.email, localFolder.fullName, 0, message, false)
   }
 }

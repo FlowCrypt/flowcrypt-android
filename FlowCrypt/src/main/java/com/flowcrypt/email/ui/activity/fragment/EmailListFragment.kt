@@ -428,14 +428,15 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
         }
 
         LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache)
-        val isEmptyFolferAliases = TextUtils.isEmpty(listener!!.currentFolder!!.folderAlias)
-        if (isEmptyFolferAliases || !isItSyncOrOutboxFolder(listener!!.currentFolder!!) || isForceClearCacheNeeded) {
+        val isFolderNameEmpty = TextUtils.isEmpty(listener!!.currentFolder!!.fullName)
+        if ((!isFolderNameEmpty && !isItSyncOrOutboxFolder(listener!!.currentFolder!!)) || isForceClearCacheNeeded) {
           val folder = listener!!.currentFolder
 
           val folderName = if (TextUtils.isEmpty(folder!!.searchQuery))
             folder.fullName
           else
             SearchMessagesActivity.SEARCH_FOLDER_NAME
+
           DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao?.email, folderName)
         }
       }
@@ -656,13 +657,13 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
     var selection = (MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
         + if (isEncryptedModeEnabled) " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" else "")
 
-    if (JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.folderAlias!!, ignoreCase = true)) {
+    if (JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)) {
       selection += (" AND " + MessageDaoSource.COL_STATE + " NOT IN (" + MessageState.SENT.value
           + ", " + MessageState.SENT_WITHOUT_LOCAL_COPY.value + ")")
     }
 
     return CursorLoader(context!!, MessageDaoSource().baseContentUri, null, selection,
-        arrayOf(listener!!.currentAccountDao?.email, listener!!.currentFolder!!.folderAlias!!),
+        arrayOf(listener!!.currentAccountDao?.email, listener!!.currentFolder!!.fullName),
         MessageDaoSource.COL_RECEIVED_DATE + " DESC")
   }
 
