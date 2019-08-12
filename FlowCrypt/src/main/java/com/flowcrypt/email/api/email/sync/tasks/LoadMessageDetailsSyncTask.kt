@@ -5,26 +5,31 @@
 
 package com.flowcrypt.email.api.email.sync.tasks
 
+import android.text.TextUtils
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
-import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.sun.mail.iap.Argument
+import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
-import com.sun.mail.imap.protocol.BODY
-import com.sun.mail.imap.protocol.BODYSTRUCTURE
-import com.sun.mail.imap.protocol.FetchResponse
-import javax.mail.Flags
+import org.apache.commons.io.FilenameUtils
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.util.*
+import javax.mail.BodyPart
+import javax.mail.FetchProfile
 import javax.mail.Folder
+import javax.mail.Multipart
+import javax.mail.Part
 import javax.mail.Session
 import javax.mail.Store
+import javax.mail.internet.InternetHeaders
+import javax.mail.internet.MimeBodyPart
+import javax.mail.internet.MimeMessage
+import javax.mail.internet.MimeMultipart
 
 /**
- * This task load a detail information of some message. At now this task creates and executes
- * command like this "UID FETCH xxxxxxxxxxxxx (RFC822.SIZE BODY[]<0.1024000>)". We request first
- * 1000kb of a message, and if the message is small, we'll get the whole MIME message. If
- * larger than 1000kb, we'll get only the first part of it.
+ * This task load detail information of a message. Currently, it loads only non-attachment parts
  *
  * @param localFolder      The local localFolder implementation.
  * @param uid         The [com.sun.mail.imap.protocol.UID] of [javax.mail.Message]
@@ -45,57 +50,180 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
     imapFolder.open(Folder.READ_WRITE)
 
-    val rawMsg = imapFolder.doCommand { imapProtocol ->
-      var rawMimeBytes: ByteArray? = null
+    val originalMsg = imapFolder.getMessageByUID(uid) as? MimeMessage
 
-      val args = Argument()
-      val list = Argument()
-      list.writeString("RFC822.SIZE")
-      list.writeString("BODY[]<0.1024000>")
-      list.writeString("BODYSTRUCTURE")
-      args.writeArgument(list)
+    if (originalMsg == null) {
+      listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, null, byteArrayOf(), ownerKey, requestCode)
+      imapFolder.close(false)
+      return
+    }
 
-      val responses = imapProtocol.command("UID FETCH $uid", args)
-      val serverStatusResponse = responses[responses.size - 1]
+    val fetchProfile = FetchProfile()
+    fetchProfile.add(FetchProfile.Item.SIZE)
+    fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+    fetchProfile.add(IMAPFolder.FetchProfileItem.HEADERS)
+    imapFolder.fetch(arrayOf(originalMsg), fetchProfile)
 
-      if (serverStatusResponse.isOK) {
-        for (response in responses) {
-          if (response !is FetchResponse) {
-            continue
-          }
+    val customMsg = CustomMimeMessage(session, TextUtils.join("\n", Collections.list<String>(originalMsg.allHeaderLines)))
 
-          val body = response.getItem(BODY::class.java)
-          body?.byteArrayInputStream?.let { rawMimeBytes = it.readBytes() }
+    val originalMultipart = originalMsg.content as? Multipart
+    if (originalMultipart != null) {
+      val modifiedMultipart = CustomMimeMultipart(originalMultipart.contentType)
+      buildFromSource(originalMultipart, modifiedMultipart)
+      customMsg.setContent(modifiedMultipart, originalMsg.contentType)
+    } else {
+      customMsg.setContent(originalMsg.content, originalMsg.contentType)
+    }
+    customMsg.saveChanges()
+    customMsg.setMessageId(originalMsg.messageID)
 
-          val bodystructure = response.getItem(BODYSTRUCTURE::class.java)
-          bodystructure?.let {
-            AttachmentDaoSource().updateAttsTable(listener.context, account.email, localFolder.fullName, uid, it)
+    val outputStream = ByteArrayOutputStream()
+    customMsg.writeTo(outputStream)
+    var bytes = outputStream.toByteArray()
+
+    //Remove it when a cache will be ready
+    if (bytes.size > 1024 * 1000) {
+      bytes = bytes.sliceArray(IntRange(0, 1024 * 1000))
+    }
+
+    listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, customMsg, bytes, ownerKey, requestCode)
+    imapFolder.close(false)
+  }
+
+  private fun buildFromSource(sourceMultipart: Multipart, resultMultipart: Multipart) {
+    val candidates = LinkedList<BodyPart>()
+    val numberOfParts = sourceMultipart.count
+    for (partCount in 0 until numberOfParts) {
+      val item = sourceMultipart.getBodyPart(partCount)
+
+      if (item is IMAPBodyPart) {
+        if (item.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+          val innerMutlipart = item.content as Multipart
+          val mimeMultipart = CustomMimeMultipart(innerMutlipart.contentType)
+          val innerPart = getPart(item.content as Multipart) ?: continue
+          mimeMultipart.addBodyPart(innerPart)
+
+          val bodyPart = MimeBodyPart()
+          bodyPart.setContent(mimeMultipart, item.contentType)
+
+          candidates.add(bodyPart)
+        } else {
+          if (isPartAllowed(item)) {
+            candidates.add(MimeBodyPart(item.mimeStream))
           }
         }
+      }
+    }
 
-        if (rawMimeBytes == null) {
-          ExceptionUtil.handleError(IllegalStateException(
-              "LoadMessageDetailsSyncTask:Server response = $serverStatusResponse" +
-                  "\n There is no FetchResponse with right BODY" +
-                  "\n responses count = ${responses.size}"))
+    for (candidate in candidates) {
+      resultMultipart.addBodyPart(candidate)
+    }
+  }
+
+  private fun getPart(originalMultipart: Multipart): BodyPart? {
+    val candidates = LinkedList<BodyPart>()
+    val numberOfParts = originalMultipart.count
+    for (partCount in 0 until numberOfParts) {
+      val item = originalMultipart.getBodyPart(partCount)
+      if (item is IMAPBodyPart) {
+        if (item.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+          val innerPart = getPart(item.content as Multipart)
+          innerPart?.let { candidates.add(it) }
+        } else {
+          if (isPartAllowed(item)) {
+            candidates.add(MimeBodyPart(item.mimeStream))
+          }
         }
+      }
+    }
 
-      } else {
-        ExceptionUtil.handleError(IllegalStateException(
-            "LoadMessageDetailsSyncTask:Server response = $serverStatusResponse"))
+    if (candidates.isEmpty()) {
+      return null
+    }
+
+    val newMultiPart = CustomMimeMultipart(originalMultipart.contentType)
+
+    for (candidate in candidates) {
+      newMultiPart.addBodyPart(candidate)
+    }
+
+    val bodyPart = MimeBodyPart()
+    bodyPart.setContent(newMultiPart, originalMultipart.contentType)
+
+    return bodyPart
+  }
+
+  private fun isPartAllowed(item: MimeBodyPart): Boolean {
+    var result = true
+    if (Part.ATTACHMENT.equals(item.disposition, ignoreCase = true)) {
+      result = false
+
+      //match allowed files
+      if (item.fileName in ALLOWED_FILE_NAMES) {
+        result = true
       }
 
-      imapProtocol.notifyResponseHandlers(responses)
-      imapProtocol.handleResult(serverStatusResponse)
+      //match private keys
+      if (item.fileName?.matches("(?i)(cryptup|flowcrypt)-backup-[a-z0-9]+\\.key".toRegex()) == true) {
+        result = true
+      }
 
-      rawMimeBytes
-    } as? ByteArray ?: throw IllegalStateException("An error occurred during receiving the message details")
+      //match public keys
+      if (item.fileName?.matches("(?i)^(0|0x)?[A-F0-9]{8}([A-F0-9]{8})?.*\\.(asc|key)\$".toRegex()) == true) {
+        result = true
+      }
 
-    val message = imapFolder.getMessageByUID(uid)
-    message?.setFlag(Flags.Flag.SEEN, true)
+      //allow download keys less than 100kb
+      if (FilenameUtils.getExtension(item.fileName) in KEYS_EXTENSIONS && item.size < 102400) {
+        result = true
+      }
 
-    listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, message, rawMsg, ownerKey, requestCode)
+      //match signature
+      if (item.isMimeType("application/pgp-signature")) {
+        result = true
+      }
+    }
 
-    imapFolder.close(false)
+    return result
+  }
+
+  /**
+   * It's a custom realization of [MimeMessage] which has an own realization of creation [InternetHeaders]
+   */
+  class CustomMimeMessage constructor(session: Session, rawMessage: String?) : MimeMessage(session) {
+    init {
+      headers = InternetHeaders(ByteArrayInputStream(rawMessage?.toByteArray() ?: "".toByteArray()))
+    }
+
+    fun setMessageId(msgId: String) {
+      setHeader("Message-ID", msgId)
+    }
+  }
+
+  class CustomMimeMultipart constructor(contentType: String) : MimeMultipart() {
+    init {
+      this.contentType = contentType
+    }
+  }
+
+  companion object {
+    val ALLOWED_FILE_NAMES = arrayOf(
+        "PGPexch.htm.pgp",
+        "PGPMIME version identification",
+        "Version.txt",
+        "PGPMIME Versions Identification",
+        "signature.asc",
+        "msg.asc",
+        "message",
+        "message.asc",
+        "encrypted.asc",
+        "encrypted.eml.pgp",
+        "Message.pgp"
+    )
+
+    val KEYS_EXTENSIONS = arrayOf(
+        "asc",
+        "key"
+    )
   }
 }

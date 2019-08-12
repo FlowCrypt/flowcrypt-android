@@ -38,6 +38,7 @@ class PropertiesHelper {
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = BOOLEAN_VALUE_TRUE
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = BOOLEAN_VALUE_TRUE
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
+      prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE] = 1024 * 128
 
       return prop
     }
@@ -81,6 +82,7 @@ class PropertiesHelper {
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = it.hasCustomSignInForSmtp
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = it.smtpOpt === SecurityType.Option.SSL_TLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] = it.smtpOpt === SecurityType.Option.STARTLS
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE] = 1024 * 128
       }
 
       return prop
