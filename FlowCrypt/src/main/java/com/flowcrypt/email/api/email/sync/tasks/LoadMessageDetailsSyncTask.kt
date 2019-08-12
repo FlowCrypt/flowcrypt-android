@@ -79,7 +79,12 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
 
     val outputStream = ByteArrayOutputStream()
     customMsg.writeTo(outputStream)
-    val bytes = outputStream.toByteArray()
+    var bytes = outputStream.toByteArray()
+
+    //Remove it when a cache will be ready
+    if (bytes.size > 1024 * 1000) {
+      bytes = bytes.sliceArray(IntRange(0, 1024 * 1000))
+    }
 
     listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, customMsg, bytes, ownerKey, requestCode)
     imapFolder.close(false)
