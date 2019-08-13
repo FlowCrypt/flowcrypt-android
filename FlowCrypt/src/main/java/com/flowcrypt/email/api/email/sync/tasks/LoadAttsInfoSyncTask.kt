@@ -9,13 +9,12 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
-import com.sun.mail.iap.Argument
 import com.sun.mail.imap.IMAPFolder
-import com.sun.mail.imap.protocol.BODYSTRUCTURE
-import com.sun.mail.imap.protocol.FetchResponse
+import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Session
 import javax.mail.Store
+import javax.mail.internet.MimeMessage
 
 /**
  * This task helps download attachments info of some message
@@ -34,30 +33,20 @@ class LoadAttsInfoSyncTask(ownerKey: String,
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
     imapFolder.open(Folder.READ_ONLY)
 
-    imapFolder.doCommand { imapProtocol ->
-      val args = Argument()
-      val list = Argument()
-      list.writeString("BODYSTRUCTURE")
-      args.writeArgument(list)
+    val msg = imapFolder.getMessageByUID(uid) as? MimeMessage
 
-      val responses = imapProtocol.command("UID FETCH $uid", args)
-      val serverStatusResponse = responses[responses.size - 1]
-
-      if (serverStatusResponse.isOK) {
-        for (response in responses) {
-          if (response !is FetchResponse) {
-            continue
-          }
-
-          val bodystructure = response.getItem(BODYSTRUCTURE::class.java)
-          bodystructure?.let { AttachmentDaoSource().updateAttsTable(listener.context, account.email, localFolder.fullName, uid, it) }
-        }
-      }
-
-      imapProtocol.notifyResponseHandlers(responses)
-      imapProtocol.handleResult(serverStatusResponse)
+    if (msg == null) {
+      listener.onAttsInfoReceived(account, localFolder, imapFolder, uid, ownerKey, requestCode)
+      imapFolder.close(false)
+      return
     }
 
+    val fetchProfile = FetchProfile()
+    fetchProfile.add(FetchProfile.Item.SIZE)
+    fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+    imapFolder.fetch(arrayOf(msg), fetchProfile)
+
+    AttachmentDaoSource().updateAttsTable(listener.context, account.email, localFolder.fullName, uid, msg)
     listener.onAttsInfoReceived(account, localFolder, imapFolder, uid, ownerKey, requestCode)
 
     imapFolder.close(false)

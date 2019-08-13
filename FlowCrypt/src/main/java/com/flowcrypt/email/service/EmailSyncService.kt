@@ -31,6 +31,7 @@ import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.model.EmailAndNamePair
@@ -243,8 +244,7 @@ class EmailSyncService : BaseService(), SyncListener {
   override fun onMsgsReceived(account: AccountDao, localFolder: LocalFolder,
                               remoteFolder: IMAPFolder, msgs: Array<javax.mail.Message>, ownerKey: String,
                               requestCode: Int) {
-    LogsUtil.d(TAG, "onMessagesReceived: imapFolder = " + remoteFolder.fullName + " message " +
-        "count: " + msgs.size)
+    LogsUtil.d(TAG, "onMessagesReceived: imapFolder = " + remoteFolder.fullName + " message count: " + msgs.size)
     try {
       val email = account.email
       val folder = localFolder.fullName
@@ -262,6 +262,11 @@ class EmailSyncService : BaseService(), SyncListener {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE, localFolder)
       } else {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, localFolder)
+      }
+
+      val attDaoSource = AttachmentDaoSource()
+      for (msg in msgs) {
+        attDaoSource.updateAttsTable(this, account.email, localFolder.fullName, remoteFolder.getUID(msg), msg)
       }
 
       updateLocalContactsIfNeeded(remoteFolder, msgs)
