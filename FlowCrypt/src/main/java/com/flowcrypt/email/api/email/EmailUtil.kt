@@ -39,9 +39,9 @@ import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.services.gmail.GmailScopes
 import com.sun.mail.gimap.GmailRawSearchTerm
 import com.sun.mail.iap.Argument
+import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.imap.protocol.BODY
-import com.sun.mail.imap.protocol.BODYSTRUCTURE
 import com.sun.mail.imap.protocol.FetchResponse
 import com.sun.mail.imap.protocol.UID
 import com.sun.mail.imap.protocol.UIDSet
@@ -767,33 +767,30 @@ class EmailUtil {
     }
 
     /**
-     * Get information about attachments from the given [BODYSTRUCTURE]
+     * Get information about attachments from the given [Part]
      *
-     * @param depth          The depth of the given [BODYSTRUCTURE]
-     * @param bodystructure  The given [BODYSTRUCTURE]
+     * @param depth          The depth of the given [Part]
+     * @param part           The given [Part]
      * @return a list of found attachments
      */
-    fun getAttsInfoFromBodystructure(bodystructure: BODYSTRUCTURE, depth: String = "0"): MutableList<AttachmentInfo> {
+    fun getAttsInfoFromPart(part: Part, depth: String = "0"): MutableList<AttachmentInfo> {
       val attachmentInfoList = mutableListOf<AttachmentInfo>()
-
-      if (bodystructure.bodies == null) {
-        if (Part.ATTACHMENT.equals(bodystructure.disposition, ignoreCase = true)) {
-          val attachmentInfo = AttachmentInfo()
-          attachmentInfo.name = bodystructure.dParams?.get("filename") ?: bodystructure.cParams?.get("name") ?: depth
-          attachmentInfo.encodedSize = bodystructure.size.toLong()
-          attachmentInfo.type = if (bodystructure.type != null && bodystructure.subtype != null) {
-            bodystructure.type + "/" + bodystructure.subtype
-          } else {
-            ""
-          }
-          attachmentInfo.id = bodystructure.id ?: generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
-          attachmentInfo.path = depth
-          attachmentInfoList.add(attachmentInfo)
+      if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
+        val multiPart = part.content as Multipart
+        val partsNumber = multiPart.count
+        for (partCount in 0 until partsNumber) {
+          val bodyPart = multiPart.getBodyPart(partCount)
+          attachmentInfoList.addAll(getAttsInfoFromPart(bodyPart, "$depth${AttachmentInfo.DEPTH_SEPARATOR}$partCount"))
         }
-      } else {
-        for ((index, body) in bodystructure.bodies.withIndex()) {
-          attachmentInfoList.addAll(getAttsInfoFromBodystructure(body, "$depth${AttachmentInfo.DEPTH_SEPARATOR}$index"))
-        }
+      } else if (Part.ATTACHMENT.equals(part.disposition, ignoreCase = true)) {
+        val attachmentInfo = AttachmentInfo()
+        attachmentInfo.name = part.fileName ?: depth
+        attachmentInfo.encodedSize = part.size.toLong()
+        attachmentInfo.type = part.contentType ?: ""
+        attachmentInfo.id = (part as? IMAPBodyPart)?.contentID
+            ?: generateContentId(AttachmentInfo.INNER_ATTACHMENT_PREFIX)
+        attachmentInfo.path = depth
+        attachmentInfoList.add(attachmentInfo)
       }
 
       return attachmentInfoList

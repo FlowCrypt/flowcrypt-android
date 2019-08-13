@@ -17,6 +17,7 @@ import com.flowcrypt.email.database.dao.source.BaseDaoSource
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.protocol.BODYSTRUCTURE
 import java.util.*
+import javax.mail.Message
 
 /**
  * @author Denis Bondarenko
@@ -200,8 +201,8 @@ class AttachmentDaoSource : BaseDaoSource() {
    * @param bodystructure     The given [BODYSTRUCTURE]
    * @return The number of rows deleted.
    */
-  fun updateAttsTable(context: Context, email: String, label: String, uid: Long, bodystructure: BODYSTRUCTURE) {
-    val attachmentInfoList = EmailUtil.getAttsInfoFromBodystructure(bodystructure)
+  fun updateAttsTable(context: Context, email: String, label: String, uid: Long, msg: Message) {
+    val attachmentInfoList = EmailUtil.getAttsInfoFromPart(msg)
     val contentValuesList = mutableListOf<ContentValues>()
 
     for (att in attachmentInfoList) {
