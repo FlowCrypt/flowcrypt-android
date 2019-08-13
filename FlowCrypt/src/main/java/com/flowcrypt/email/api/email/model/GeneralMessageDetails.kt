@@ -23,6 +23,7 @@ import javax.mail.internet.InternetAddress
 data class GeneralMessageDetails constructor(val email: String,
                                              val label: String,
                                              val uid: Int = 0,
+                                             val id: Int,
                                              val receivedDate: Long = 0,
                                              val sentDate: Long = 0,
                                              var from: List<InternetAddress>? = null,
@@ -69,6 +70,7 @@ data class GeneralMessageDetails constructor(val email: String,
       source.readString()!!,
       source.readString()!!,
       source.readInt(),
+      source.readInt(),
       source.readLong(),
       source.readLong(),
       mutableListOf<InternetAddress>().apply { source.readList(this, InternetAddress::class.java.classLoader) },
@@ -91,6 +93,7 @@ data class GeneralMessageDetails constructor(val email: String,
       writeString(email)
       writeString(label)
       writeInt(uid)
+      writeInt(id)
       writeLong(receivedDate)
       writeLong(sentDate)
       writeList(from)

@@ -218,12 +218,16 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
    * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for the reply to [android.os.Messenger].
    * @param localFolder The local implementation of the remote localFolder.
-   * @param uid         The [com.sun.mail.imap.protocol.UID] of [).][Message]
+   * @param uid         The [com.sun.mail.imap.protocol.UID] of [Message]
+   * @param id          A unique id of the row in the local database which identifies a message
    */
-  fun loadMsgDetails(ownerKey: String, requestCode: Int, localFolder: LocalFolder, uid: Int, resetConnection: Boolean) {
+
+  fun loadMsgDetails(ownerKey: String, requestCode: Int, localFolder: LocalFolder, uid: Int, id: Int,
+                     resetConnection: Boolean) {
     try {
       removeOldTasks(LoadMessageDetailsSyncTask::class.java, activeQueue)
-      activeQueue.put(LoadMessageDetailsSyncTask(ownerKey, requestCode, localFolder, uid.toLong(), resetConnection))
+      activeQueue.put(LoadMessageDetailsSyncTask(ownerKey, requestCode, localFolder, uid.toLong(), id.toLong(),
+          resetConnection))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }

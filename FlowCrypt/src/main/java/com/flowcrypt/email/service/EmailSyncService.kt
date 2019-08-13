@@ -23,6 +23,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.EmailSyncManager
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
@@ -216,16 +217,13 @@ class EmailSyncService : BaseService(), SyncListener {
   }
 
   override fun onMsgDetailsReceived(account: AccountDao, localFolder: LocalFolder,
-                                    remoteFolder: IMAPFolder, uid: Long, msg: javax.mail.Message?,
-                                    rawMimeBytes: ByteArray, ownerKey: String, requestCode: Int) {
+                                    remoteFolder: IMAPFolder, uid: Long, id: Long, msg: javax.mail.Message?,
+                                    ownerKey: String, requestCode: Int) {
     try {
-      val msgDaoSource = MessageDaoSource()
-      msgDaoSource.updateRawMime(this, account.email, localFolder.fullName, uid, rawMimeBytes)
-
-      if (rawMimeBytes.isEmpty()) {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND)
-      } else {
+      if (MsgsCacheManager.isMsgExist(id.toString())) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
+      } else {
+        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND)
       }
     } catch (e: RemoteException) {
       e.printStackTrace()
@@ -693,7 +691,8 @@ class EmailSyncService : BaseService(), SyncListener {
 
           MESSAGE_LOAD_MESSAGE_DETAILS -> if (emailSyncManager != null && action != null) {
             val localFolder = action.`object` as LocalFolder
-            emailSyncManager.loadMsgDetails(ownerKey!!, requestCode, localFolder, msg.arg1, action.resetConnection)
+            emailSyncManager.loadMsgDetails(ownerKey!!, requestCode, localFolder, msg.arg1, msg.arg2,
+                action.resetConnection)
           }
 
           MESSAGE_MOVE_MESSAGE -> if (emailSyncManager != null && action != null) {

@@ -294,6 +294,7 @@ dependencies {
     implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofitVersion}"
     implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofitVersion}"
     implementation "com.squareup.okhttp3:logging-interceptor:${rootProject.ext.okhttpVersion}"
+    implementation 'com.jakewharton:disklrucache:2.0.2'
 
     implementation "com.sun.mail:android-mail:${rootProject.ext.javaMailVersion}"
     implementation("com.sun.mail:gimap:${rootProject.ext.javaMailVersion}") {

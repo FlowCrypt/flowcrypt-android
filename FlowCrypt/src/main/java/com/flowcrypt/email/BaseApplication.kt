@@ -9,6 +9,7 @@ import android.app.Application
 import android.app.job.JobScheduler
 import android.content.Context
 import androidx.fragment.app.FragmentManager
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.jobscheduler.SyncJobService
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
@@ -32,6 +33,7 @@ abstract class BaseApplication : Application() {
   override fun onCreate() {
     super.onCreate()
     CacheManager.init(this)
+    MsgsCacheManager.init(this)
     NotificationChannelManager.registerNotificationChannels(this)
 
     initLeakCanary()

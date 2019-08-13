@@ -123,7 +123,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
       var hasAllowedNotifications = false
 
       val inboxStyle = NotificationCompat.InboxStyle()
-      for ((_, _, _, _, _, from, _, _, subject, _, _, _, isEncrypted) in details) {
+      for ((_, _, _, _, _, _, from, _, _, subject, _, _, _, isEncrypted) in details) {
         if (onlyEncrypted && !isEncrypted) {
           continue
         }

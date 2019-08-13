@@ -457,6 +457,7 @@ class MessageDaoSource : BaseDaoSource() {
         cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
         cursor.getString(cursor.getColumnIndex(COL_FOLDER)),
         cursor.getInt(cursor.getColumnIndex(COL_UID)),
+        cursor.getInt(cursor.getColumnIndex(BaseColumns._ID)),
         cursor.getLong(cursor.getColumnIndex(COL_RECEIVED_DATE)),
         cursor.getLong(cursor.getColumnIndex(COL_SENT_DATE)), null, null, null,
         cursor.getString(cursor.getColumnIndex(COL_SUBJECT)),
