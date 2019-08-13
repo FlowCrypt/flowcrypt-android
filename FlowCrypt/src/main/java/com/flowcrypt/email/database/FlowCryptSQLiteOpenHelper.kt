@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.database
 
+import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
@@ -82,6 +83,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
       2 -> {
@@ -98,6 +100,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
       3 -> {
@@ -113,6 +116,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
       4 -> {
@@ -127,6 +131,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
       5 -> {
@@ -140,6 +145,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
       6 -> {
@@ -152,6 +158,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
       7 -> {
@@ -163,6 +170,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
       8 -> {
@@ -173,6 +181,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
       9 -> {
@@ -182,6 +191,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
       10 -> {
@@ -190,6 +200,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
       11 -> {
@@ -197,20 +208,30 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
       12 -> {
         upgradeDatabaseFrom12To13Version(sqLiteDatabase)
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
       13 -> {
         upgradeDatabaseFrom13To14Version(sqLiteDatabase)
         upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
       }
 
-      14 -> upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+      14 -> {
+        upgradeDatabaseFrom14To15Version(sqLiteDatabase)
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
+      }
+
+      15 -> {
+        upgradeDatabaseFrom15To16Version(sqLiteDatabase)
+      }
     }
 
     LogsUtil.d(TAG, "Database updated from OLD_VERSION = " + oldVersion
@@ -451,10 +472,28 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
     }
   }
 
+  private fun upgradeDatabaseFrom15To16Version(sqLiteDatabase: SQLiteDatabase) {
+    sqLiteDatabase.beginTransaction()
+    try {
+      sqLiteDatabase.delete(MessageDaoSource.TABLE_NAME_MESSAGES,
+          MessageDaoSource.COL_FOLDER + " NOT IN(?,?) ", arrayOf("INBOX", "Outbox"))
+      sqLiteDatabase.delete(AttachmentDaoSource.TABLE_NAME_ATTACHMENT,
+          AttachmentDaoSource.COL_FOLDER + " NOT IN(?,?) ", arrayOf("INBOX", "Outbox"))
+
+      val contentValues = ContentValues()
+      contentValues.putNull(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)
+      sqLiteDatabase.update(MessageDaoSource.TABLE_NAME_MESSAGES, contentValues,
+          MessageDaoSource.COL_FOLDER + " = ? ", arrayOf("INBOX"))
+      sqLiteDatabase.setTransactionSuccessful()
+    } finally {
+      sqLiteDatabase.endTransaction()
+    }
+  }
+
   companion object {
     const val COLUMN_NAME_COUNT = "COUNT(*)"
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 15
+    const val DB_VERSION = 16
 
     private val TAG = FlowCryptSQLiteOpenHelper::class.java.simpleName
     private const val DROP_TABLE = "DROP TABLE IF EXISTS "
