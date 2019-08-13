@@ -157,7 +157,7 @@ abstract class BaseTest {
   }
 
   protected fun getHtmlString(html: String): String {
-    return Html.fromHtml(html).toString()
+    return Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString()
   }
 
   fun getTargetContext(): Context {
