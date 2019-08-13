@@ -32,6 +32,7 @@ class GeneralMessageDetailsTest {
         "email",
         "label",
         456,
+        11,
         1557815912496,
         1557815912496,
         listOf(InternetAddress("hello@example.com"), InternetAddress("test@example.com")),
