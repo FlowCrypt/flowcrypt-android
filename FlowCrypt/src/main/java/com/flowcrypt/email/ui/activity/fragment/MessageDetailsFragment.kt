@@ -341,7 +341,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         getString(R.string.retry), View.OnClickListener {
       UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
       (baseActivity as BaseSyncActivity).loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg,
-          localFolder!!, details!!.uid, true)
+          localFolder!!, details!!.uid, details!!.id, true)
     })
   }
 

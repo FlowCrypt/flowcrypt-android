@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.sync.tasks
 
 import android.text.TextUtils
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.dao.source.AccountDao
@@ -44,6 +45,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
                                  requestCode: Int,
                                  private val localFolder: LocalFolder,
                                  private val uid: Long,
+                                 private val id: Long,
                                  resetConnection: Boolean) : BaseSyncTask(ownerKey, requestCode, resetConnection) {
 
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
@@ -53,7 +55,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     val originalMsg = imapFolder.getMessageByUID(uid) as? MimeMessage
 
     if (originalMsg == null) {
-      listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, null, byteArrayOf(), ownerKey, requestCode)
+      listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, id, null, ownerKey, requestCode)
       imapFolder.close(false)
       return
     }
@@ -79,14 +81,9 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
 
     val outputStream = ByteArrayOutputStream()
     customMsg.writeTo(outputStream)
-    var bytes = outputStream.toByteArray()
+    MsgsCacheManager.addMsg(id.toString(), ByteArrayInputStream(outputStream.toByteArray()))
 
-    //Remove it when a cache will be ready
-    if (bytes.size > 1024 * 1000) {
-      bytes = bytes.sliceArray(IntRange(0, 1024 * 1000))
-    }
-
-    listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, customMsg, bytes, ownerKey, requestCode)
+    listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, id, customMsg, ownerKey, requestCode)
     imapFolder.close(false)
   }
 

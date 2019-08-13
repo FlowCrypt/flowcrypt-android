@@ -129,6 +129,7 @@ interface SyncListener {
    * @param localFolder       The local implementation of the remote folder;
    * @param remoteFolder      The folder where the new messages exist;
    * @param uid               The UID of the message;
+   * @param id               A unique id of the row in the local database which identifies a message
    * @param msg               The received message;
    * @param rawMimeBytes      The raw mime bytes of a message without attachments;
    * @param ownerKey          The name of the reply to [android.os.Messenger];
@@ -140,8 +141,8 @@ interface SyncListener {
       localFolder: LocalFolder,
       remoteFolder: IMAPFolder,
       uid: Long,
+      id: Long,
       msg: Message?,
-      rawMimeBytes: ByteArray,
       ownerKey: String,
       requestCode: Int
   )

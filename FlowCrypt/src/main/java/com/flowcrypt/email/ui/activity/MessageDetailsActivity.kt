@@ -22,6 +22,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
@@ -129,8 +130,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
     when (loader.id) {
       R.id.loader_id_load_raw_mime_msg_from_db -> if (cursor != null && cursor.moveToFirst()) {
-        this.rawMimeBytes = cursor.getBlob(cursor.getColumnIndex(MessageDaoSource
-            .COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS))
+        this.rawMimeBytes = MsgsCacheManager.getMsgAsByteArray(details!!.id.toString())
 
         updateMsgDetails(details!!)
 
@@ -145,7 +145,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         } else {
           if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
             this.isRequestMsgDetailsStarted = true
-            loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, localFolder!!, details!!.uid)
+            loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, localFolder!!, details!!.uid, details!!.id)
           } else {
             isReceiveMsgBodyNeeded = true
           }
@@ -201,7 +201,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   override fun onSyncServiceConnected() {
     super.onSyncServiceConnected()
     if (isReceiveMsgBodyNeeded) {
-      loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, localFolder!!, details!!.uid)
+      loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, localFolder!!, details!!.uid, details!!.id)
     }
   }
 
