@@ -9,6 +9,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'com.akaita.android.easylauncher'
 
 def keystoreProperties = new Properties()
 File propertiesFile = project.file("keystore.properties")
@@ -243,6 +244,17 @@ android {
         Task taskPackageProdEnterprise = tasks.findByName('packageProdEnterprise')
         if (taskPackageProdEnterprise != null) {
             taskPackageProdEnterprise.finalizedBy renameReleaseBuilds
+        }
+    }
+}
+
+easylauncher {
+    foregroundIconNames "@mipmap/ic_launcher_foreground" // Foreground of adaptive launcher icon
+    buildTypes {
+        debug {
+            filters = [
+                    customColorRibbonFilter("debug", "#556600CC", "#FFFFFF", "bottom")
+            ]
         }
     }
 }
