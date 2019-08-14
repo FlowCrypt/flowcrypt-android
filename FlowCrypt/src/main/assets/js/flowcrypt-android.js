@@ -75914,40 +75914,44 @@ Pgp.key = {
       errs: allErrs
     };
   },
-  decrypt: async (key, passphrases, optionalKeyid, optionalBehaviorFlag) => {
-    try {
-      return await key.decrypt(passphrases, optionalKeyid); // when no keyid intersection found, it will decrypt all
-    } catch (e) {
-      if (e instanceof Error && e.message.toLowerCase().includes('passphrase')) {
-        return false;
-      } else if (e instanceof Error && e.message.toLowerCase().includes('already decrypted') && optionalBehaviorFlag === 'OK-IF-ALREADY-DECRYPTED') {
-        // OpenPGP.js will say key.isDecrypted() -> false, but still throw 'already decrypted', if some packets were already decrypted, but not others
-        // below we can gracefully decrypt the remaining required packets, if a flag was provided to do so
-        if (passphrases.length !== 1) {
-          throw new Error(`Key packet is already decrypted + cannot gracefully decrypt with more than one pass phrase`);
+  isPacketPrivate: p => p.tag === openpgp.enums.packet.secretKey || p.tag === openpgp.enums.packet.secretSubkey,
+  decrypt: async (prv, passphrases, optionalKeyid, optionalBehaviorFlag) => {
+    if (!prv.isPrivate()) {
+      throw new Error("Nothing to decrypt in a public key");
+    }
+
+    if (passphrases.length !== 1) {
+      // todo - do not accept an array anymore
+      throw new Error("Can only work with one pass phrase at a time");
+    }
+
+    const chosenPrvPackets = prv.getKeys(optionalKeyid).map(k => k.keyPacket).filter(Pgp.key.isPacketPrivate);
+
+    if (!chosenPrvPackets.length) {
+      throw new Error(`No private key packets selected of ${prv.getKeys().map(k => k.keyPacket).filter(Pgp.key.isPacketPrivate).length} prv packets available`);
+    }
+
+    for (const prvPacket of chosenPrvPackets) {
+      if (prvPacket.isDecrypted()) {
+        if (optionalBehaviorFlag === 'OK-IF-ALREADY-DECRYPTED') {
+          continue;
+        } else {
+          throw new Error("Decryption failed - key packet was already decrypted");
         }
-
-        for (const {
-          keyPacket
-        } of key.getKeys(optionalKeyid)) {
-          if (keyPacket.isDecrypted() === false && keyPacket.encrypted) {
-            try {
-              await keyPacket.decrypt(passphrases[0]);
-            } catch (e) {
-              if (e instanceof Error && e.message.includes('passphrase')) {
-                return false;
-              }
-
-              throw e;
-            }
-          }
-        }
-
-        return true;
       }
 
-      throw e;
+      try {
+        await prvPacket.decrypt(passphrases[0]); // throws on password mismatch
+      } catch (e) {
+        if (e instanceof Error && e.message.toLowerCase().includes('passphrase')) {
+          return false;
+        }
+
+        throw e;
+      }
     }
+
+    return true;
   },
   normalize: async armored => {
     try {
@@ -76045,6 +76049,23 @@ Pgp.key = {
 
     return await Pgp.key.usableButExpired(pubkey);
   },
+  expired: async key => {
+    if (!key) {
+      return false;
+    }
+
+    const exp = await key.getExpirationTime('encrypt');
+
+    if (exp === Infinity || !exp) {
+      return false;
+    }
+
+    if (exp instanceof Date) {
+      return Date.now() > exp.getTime();
+    }
+
+    throw new Error(`Got unexpected value for expiration: ${exp}`); // exp must be either null, Infinity or a Date
+  },
   usableButExpired: async key => {
     if (!key) {
       return false;
@@ -76065,7 +76086,7 @@ Pgp.key = {
   },
   dateBeforeExpiration: async key => {
     const openPgpKey = typeof key === 'string' ? await Pgp.key.read(key) : key;
-    const expires = await openPgpKey.getExpirationTime();
+    const expires = await openPgpKey.getExpirationTime('encrypt');
 
     if (expires instanceof Date && expires.getTime() < Date.now()) {
       // expired
@@ -77564,9 +77585,6 @@ class Att {
     };
 
     this.treatAs = () => {
-      // todo - should return a probability in the range of certain-likely-maybe
-      // could also return possible types as an array - which makes basic usage more difficult - to think through
-      // better option - add an "unknown" type: when encountered, code consuming this should inspect a chunk of contents
       if (this.treatAsValue) {
         // pre-set
         return this.treatAsValue;
@@ -77577,6 +77595,8 @@ class Att {
       } else if (!this.name && !this.type.startsWith('image/')) {
         // this.name may be '' or undefined - catch either
         return this.length < 100 ? 'hidden' : 'encryptedMsg';
+      } else if (this.name === 'msg.asc' && this.length < 100 && this.type === 'application/pgp-encrypted') {
+        return 'hidden'; // mail.ch does this - although it looks like encrypted msg, it will just contain PGP version eg "Version: 1"
       } else if (['message', 'msg.asc', 'message.asc', 'encrypted.asc', 'encrypted.eml.pgp', 'Message.pgp'].includes(this.name)) {
         return 'encryptedMsg';
       } else if (this.name.match(/(\.pgp$)|(\.gpg$)|(\.[a-zA-Z0-9]{3,4}\.asc$)/g)) {
