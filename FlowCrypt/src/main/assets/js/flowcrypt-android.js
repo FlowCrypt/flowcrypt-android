@@ -75915,14 +75915,9 @@ Pgp.key = {
     };
   },
   isPacketPrivate: p => p.tag === openpgp.enums.packet.secretKey || p.tag === openpgp.enums.packet.secretSubkey,
-  decrypt: async (prv, passphrases, optionalKeyid, optionalBehaviorFlag) => {
+  decrypt: async (prv, passphrase, optionalKeyid, optionalBehaviorFlag) => {
     if (!prv.isPrivate()) {
       throw new Error("Nothing to decrypt in a public key");
-    }
-
-    if (passphrases.length !== 1) {
-      // todo - do not accept an array anymore
-      throw new Error("Can only work with one pass phrase at a time");
     }
 
     const chosenPrvPackets = prv.getKeys(optionalKeyid).map(k => k.keyPacket).filter(Pgp.key.isPacketPrivate);
@@ -75941,7 +75936,7 @@ Pgp.key = {
       }
 
       try {
-        await prvPacket.decrypt(passphrases[0]); // throws on password mismatch
+        await prvPacket.decrypt(passphrase); // throws on password mismatch
       } catch (e) {
         if (e instanceof Error && e.message.toLowerCase().includes('passphrase')) {
           return false;
@@ -75952,6 +75947,24 @@ Pgp.key = {
     }
 
     return true;
+  },
+  encrypt: async (prv, passphrase) => {
+    if (!passphrase || passphrase === 'undefined' || passphrase === 'null') {
+      throw new Error(`Encryption passphrase should not be empty:${typeof passphrase}:${passphrase}`);
+    }
+
+    const secretPackets = prv.getKeys().map(k => k.keyPacket).filter(Pgp.key.isPacketPrivate);
+    const encryptedPacketCount = secretPackets.filter(p => p.isDecrypted() === false).length;
+
+    if (!secretPackets.length) {
+      throw new Error(`No private key packets in key to encrypt. Is this a private key?`);
+    }
+
+    if (encryptedPacketCount) {
+      throw new Error(`Cannot encrypt a key that has ${encryptedPacketCount} of ${secretPackets.length} private packets still encrypted`);
+    }
+
+    await prv.encrypt(passphrase);
   },
   normalize: async armored => {
     try {
@@ -76422,7 +76435,7 @@ Pgp.internal = {
       if (cachedDecryptedKey && (cachedDecryptedKey.isDecrypted() || optionalMatchingKeyid && cachedDecryptedKey.getKeys(optionalMatchingKeyid).every(k => k.isDecrypted() === true))) {
         ki.decrypted = cachedDecryptedKey;
         keys.prvForDecryptDecrypted.push(ki);
-      } else if (ki.parsed.isDecrypted() || (await Pgp.key.decrypt(ki.parsed, [ki.passphrase], optionalMatchingKeyid, 'OK-IF-ALREADY-DECRYPTED')) === true) {
+      } else if (ki.parsed.isDecrypted() || (await Pgp.key.decrypt(ki.parsed, ki.passphrase, optionalMatchingKeyid, 'OK-IF-ALREADY-DECRYPTED')) === true) {
         store_js_1.Store.decryptedKeyCacheSet(ki.parsed);
         ki.decrypted = ki.parsed;
         keys.prvForDecryptDecrypted.push(ki);
@@ -78060,9 +78073,15 @@ class Endpoints {
         armored,
         passphrases
       } = validate_1.Validate.decryptKey(uncheckedReq);
+
+      if (passphrases.length !== 1) {
+        // todo - refactor endpoint decryptKey api to accept a single pp
+        throw new Error(`decryptKey: Can only accept exactly 1 pass phrase for decrypt, received: ${passphrases.length}`);
+      }
+
       const key = await readArmoredKeyOrThrow(armored);
 
-      if (await pgp_1.Pgp.key.decrypt(key, passphrases)) {
+      if (await pgp_1.Pgp.key.decrypt(key, passphrases[0])) {
         return fmt_1.fmtRes({
           decryptedKey: key.armor()
         });
