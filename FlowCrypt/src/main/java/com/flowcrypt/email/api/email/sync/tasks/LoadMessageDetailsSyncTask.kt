@@ -70,9 +70,9 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
 
     val originalMultipart = originalMsg.content as? Multipart
     if (originalMultipart != null) {
-      val modifiedMultipart = CustomMimeMultipart(originalMultipart.contentType)
+      val modifiedMultipart = CustomMimeMultipart(customMsg.contentType)
       buildFromSource(originalMultipart, modifiedMultipart)
-      customMsg.setContent(modifiedMultipart, originalMsg.contentType)
+      customMsg.setContent(modifiedMultipart)
     } else {
       customMsg.setContent(originalMsg.content, originalMsg.contentType)
     }
@@ -96,14 +96,8 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       if (item is IMAPBodyPart) {
         if (item.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
           val innerMutlipart = item.content as Multipart
-          val mimeMultipart = CustomMimeMultipart(innerMutlipart.contentType)
-          val innerPart = getPart(item.content as Multipart) ?: continue
-          mimeMultipart.addBodyPart(innerPart)
-
-          val bodyPart = MimeBodyPart()
-          bodyPart.setContent(mimeMultipart, item.contentType)
-
-          candidates.add(bodyPart)
+          val innerPart = getPart(innerMutlipart) ?: continue
+          candidates.add(innerPart)
         } else {
           if (isPartAllowed(item)) {
             candidates.add(MimeBodyPart(item.mimeStream))
@@ -118,6 +112,10 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
   }
 
   private fun getPart(originalMultipart: Multipart): BodyPart? {
+    val part = originalMultipart.parent
+    val headers = part.getHeader("Content-Type")
+    val contentType = headers?.first() ?: part.contentType
+
     val candidates = LinkedList<BodyPart>()
     val numberOfParts = originalMultipart.count
     for (partCount in 0 until numberOfParts) {
@@ -138,14 +136,14 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       return null
     }
 
-    val newMultiPart = CustomMimeMultipart(originalMultipart.contentType)
+    val newMultiPart = CustomMimeMultipart(contentType)
 
     for (candidate in candidates) {
       newMultiPart.addBodyPart(candidate)
     }
 
     val bodyPart = MimeBodyPart()
-    bodyPart.setContent(newMultiPart, originalMultipart.contentType)
+    bodyPart.setContent(newMultiPart)
 
     return bodyPart
   }
