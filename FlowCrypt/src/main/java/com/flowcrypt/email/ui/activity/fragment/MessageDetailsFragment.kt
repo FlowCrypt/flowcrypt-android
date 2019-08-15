@@ -616,6 +616,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
       override fun onPageFinished() {
         updateReplyButtons()
+        (activity as MessageDetailsActivity).idlingForWebView.setIdleState(true)
       }
     })
   }

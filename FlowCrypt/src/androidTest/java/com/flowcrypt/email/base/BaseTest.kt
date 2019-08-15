@@ -66,7 +66,8 @@ abstract class BaseTest {
   }
 
   /**
-   * Check is [Toast] displayed.
+   * Check is [Toast] displayed. This method can be used only with activity. It doesn't work if a toast is displayed
+   * when some dialog is displayed.
    *
    * @param activity A root [Activity]
    * @param message  A message which was displayed.

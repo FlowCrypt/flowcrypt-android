@@ -17,12 +17,12 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Time: 3:59 PM
  * E-mail: DenBond7@gmail.com
  */
-class SingleIdlingResources : IdlingResource {
+class SingleIdlingResources(initialValue: Boolean = true) : IdlingResource {
   @Volatile
   private var resourceCallback: IdlingResource.ResourceCallback? = null
 
   // Idleness is controlled with this boolean.
-  private val mIsIdleNow = AtomicBoolean(true)
+  private val mIsIdleNow = AtomicBoolean(initialValue)
 
   override fun getName(): String {
     return this.javaClass.name

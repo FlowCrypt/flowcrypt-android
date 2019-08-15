@@ -43,6 +43,7 @@ import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
+import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.sun.mail.util.ASCIIUtility
 import java.util.*
 
@@ -62,6 +63,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   @get:VisibleForTesting
   var idlingForDecryption: CountingIdlingResource? = null
     private set
+  val idlingForWebView: SingleIdlingResources = SingleIdlingResources(false)
 
   private var isReceiveMsgBodyNeeded: Boolean = false
   private var isBackEnabled = true
@@ -358,6 +360,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         }
 
         Status.ERROR -> {
+          idlingForWebView.setIdleState(true)
           showErrorInfo(nodeResponseWrapper.result!!.error, null)
           if (!idlingForDecryption!!.isIdleNow) {
             idlingForDecryption!!.decrement()
