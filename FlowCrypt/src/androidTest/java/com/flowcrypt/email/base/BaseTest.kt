@@ -66,12 +66,12 @@ abstract class BaseTest {
   }
 
   /**
-   * Check is [Toast] displaying.
+   * Check is [Toast] displayed.
    *
    * @param activity A root [Activity]
    * @param message  A message which was displayed.
    */
-  protected fun checkIsToastDisplayed(activity: Activity?, message: String) {
+  protected fun isToastDisplayed(activity: Activity?, message: String) {
     onView(withText(message))
         .inRoot(withDecorView(not<View>(`is`<View>(activity?.window!!.decorView))))
         .check(matches(isDisplayed()))

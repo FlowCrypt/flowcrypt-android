@@ -396,7 +396,7 @@ class CreateMessageActivityTest : BaseTest() {
     onView(withText(R.string.copy_from_other_contact))
         .check(matches(isDisplayed()))
         .perform(click())
-    checkIsToastDisplayed(activityTestRule?.activity, getResString(R.string.key_successfully_copied))
+    isToastDisplayed(activityTestRule?.activity, getResString(R.string.key_successfully_copied))
   }
 
   private fun checkIsDisplayedEncryptedAttributes() {

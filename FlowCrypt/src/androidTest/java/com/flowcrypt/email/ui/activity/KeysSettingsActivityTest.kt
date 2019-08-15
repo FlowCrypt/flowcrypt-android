@@ -38,7 +38,6 @@ import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.isToastDisplayed
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.model.KeyDetails
@@ -132,9 +131,7 @@ class KeysSettingsActivityTest : BaseTest() {
     onView(withId(R.id.btnCopyToClipboard))
         .check(matches(isDisplayed()))
         .perform(click())
-    onView(withText(getResString(R.string.copied)))
-        .inRoot(isToastDisplayed())
-        .check(matches(isDisplayed()))
+    isToastDisplayed(activityTestRule?.activity, getResString(R.string.copied))
     UiThreadStatement.runOnUiThread { checkClipboardText(TestGeneralUtil.replaceVersionInKey(details.publicKey)) }
   }
 
@@ -145,9 +142,7 @@ class KeysSettingsActivityTest : BaseTest() {
     onView(withId(R.id.btnShowPrKey))
         .check(matches(isDisplayed()))
         .perform(click())
-    onView(withText(getResString(R.string.see_backups_to_save_your_private_keys)))
-        .inRoot(isToastDisplayed())
-        .check(matches(isDisplayed()))
+    isToastDisplayed(activityTestRule?.activity, getResString(R.string.see_backups_to_save_your_private_keys))
   }
 
   @Test
@@ -203,9 +198,7 @@ class KeysSettingsActivityTest : BaseTest() {
     onView(withId(R.id.btnSaveToFile))
         .check(matches(isDisplayed()))
         .perform(click())
-    onView(withText(getResString(R.string.saved)))
-        .inRoot(isToastDisplayed())
-        .check(matches(isDisplayed()))
+    isToastDisplayed(activityTestRule?.activity, getResString(R.string.saved))
   }
 
   private fun selectFirstKey() {
