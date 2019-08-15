@@ -7,7 +7,6 @@ package com.flowcrypt.email.matchers
 
 import android.view.View
 import android.widget.ListView
-import androidx.test.espresso.Root
 import androidx.test.espresso.matcher.BoundedMatcher
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.google.android.material.appbar.AppBarLayout
@@ -31,11 +30,6 @@ class CustomMatchers {
     @JvmStatic
     fun emptyDrawable(): Matcher<View> {
       return DrawableMatcher(DrawableMatcher.EMPTY)
-    }
-
-    @JvmStatic
-    fun isToastDisplayed(): Matcher<Root> {
-      return ToastMatcher()
     }
 
     @JvmStatic

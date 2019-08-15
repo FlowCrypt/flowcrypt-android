@@ -94,7 +94,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
     onView(withId(R.id.recyclerViewContacts))
         .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0,
             ClickOnViewInRecyclerViewItem(R.id.buttonSaveContact)))
-    checkIsToastDisplayed(activityTestRule?.activity, getResString(R.string.contact_successfully_saved))
+    isToastDisplayed(activityTestRule?.activity, getResString(R.string.contact_successfully_saved))
   }
 
   @Test

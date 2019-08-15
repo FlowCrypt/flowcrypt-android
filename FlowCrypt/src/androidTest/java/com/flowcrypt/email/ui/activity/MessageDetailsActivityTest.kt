@@ -45,7 +45,6 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.isToastDisplayed
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -267,9 +266,7 @@ class MessageDetailsActivityTest : BaseTest() {
     onView(withId(R.id.buttonOk))
         .check(matches(isDisplayed()))
         .perform(click())
-    onView(withText(getResString(R.string.please_select_key)))
-        .inRoot(isToastDisplayed())
-        .check(matches(isDisplayed()))
+    isToastDisplayed(activityTestRule?.activity, getResString(R.string.please_select_key))
     onData(anything())
         .inAdapterView(withId(R.id.listViewKeys))
         .atPosition(1)
