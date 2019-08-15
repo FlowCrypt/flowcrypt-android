@@ -33,7 +33,6 @@ import androidx.test.espresso.web.webdriver.Locator
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
@@ -119,7 +118,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testReplyButton() {
     testStandardMsgPlaneText()
     onView(withId(R.id.layoutReplyButton))
@@ -129,7 +127,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testReplyAllButton() {
     testStandardMsgPlaneText()
     onView(withId(R.id.layoutReplyAllButton))
@@ -139,7 +136,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testFwdButton() {
     testStandardMsgPlaneText()
     onView(withId(R.id.layoutFwdButton))
@@ -149,28 +145,24 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testStandardMsgPlaneText() {
     baseCheck(getMsgInfo("messages/info/standard_msg_info_plain_text.json",
         "messages/mime/standard_msg_info_plain_text.txt"))
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testStandardMsgPlaneTextWithOneAttachment() {
     baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plain_text_with_one_att.json",
         "messages/mime/standard_msg_info_plain_text_with_one_att.txt"), simpleAttachmentRule)
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testEncryptedMsgPlaneText() {
     baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plain_text.json",
         "messages/mime/encrypted_msg_info_plain_text.txt"))
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testMissingKeyErrorImportKey() {
     testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt"))
@@ -198,14 +190,12 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testMissingPubKey() {
     testMissingKey(getMsgInfo("messages/info/encrypted_msg_info_plain_text_error_one_pub_key.json",
         "messages/mime/encrypted_msg_info_plain_text_error_one_pub_key.txt"))
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testBadlyFormattedMsg() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_error_badly_formatted.json",
         "messages/mime/encrypted_msg_info_plain_text_error_badly_formatted.txt")
@@ -230,7 +220,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testMissingKeyErrorChooseSinglePubKey() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt")
@@ -279,7 +268,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testEncryptedMsgPlaneTextWithOneAttachment() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_one_att.json",
         "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt")
@@ -287,7 +275,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testEncryptedMsgPlaneTextWithPubKey() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_pub_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_pub_key.txt")
@@ -332,7 +319,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun test8bitEncodingUtf8() {
     baseCheck(getMsgInfo("messages/info/msg_info_8bit-utf8.json",
         "messages/mime/8bit-utf8.eml"))
