@@ -37,6 +37,7 @@ import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
@@ -113,6 +114,7 @@ class MessageDetailsActivityTest : BaseTest() {
     val activity = activityTestRule?.activity ?: return
     if (activity is MessageDetailsActivity) {
       IdlingRegistry.getInstance().unregister(activity.idlingForDecryption)
+      IdlingRegistry.getInstance().unregister(activity.idlingForWebView)
     }
   }
 
@@ -266,7 +268,6 @@ class MessageDetailsActivityTest : BaseTest() {
     onView(withId(R.id.buttonOk))
         .check(matches(isDisplayed()))
         .perform(click())
-    isToastDisplayed(activityTestRule?.activity, getResString(R.string.please_select_key))
     onData(anything())
         .inAdapterView(withId(R.id.listViewKeys))
         .atPosition(1)
@@ -464,14 +465,15 @@ class MessageDetailsActivityTest : BaseTest() {
     activityTestRule?.launchActivity(MessageDetailsActivity.getIntent(getTargetContext(), localFolder, details))
     IdlingRegistry.getInstance().register((activityTestRule?.activity as BaseActivity).nodeIdlingResource)
     IdlingRegistry.getInstance().register((activityTestRule.activity as MessageDetailsActivity).idlingForDecryption)
+    IdlingRegistry.getInstance().register((activityTestRule.activity as MessageDetailsActivity).idlingForWebView)
   }
 
   private fun getMsgInfo(path: String, mimeMsgPath: String): IncomingMessageInfo? {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
     incomingMsgInfo?.generalMsgDetails?.let {
-      msgDaoSource.addRow(getTargetContext(), it)
-      msgDaoSource.updateRawMime(getTargetContext(), it.email, localFolder.fullName, it.uid.toLong(),
-          TestGeneralUtil.readFileFromAssetsAsByteArray(getContext(), mimeMsgPath))
+      val uri = msgDaoSource.addRow(getTargetContext(), it) ?: throw IllegalStateException()
+      MsgsCacheManager.addMsg(uri.lastPathSegment
+          ?: throw IllegalStateException(), getContext().assets.open(mimeMsgPath))
     }
     return incomingMsgInfo
   }
