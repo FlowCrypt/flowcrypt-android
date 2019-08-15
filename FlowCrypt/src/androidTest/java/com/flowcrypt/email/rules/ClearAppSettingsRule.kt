@@ -7,12 +7,14 @@ package com.flowcrypt.email.rules
 
 import android.net.Uri
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.database.provider.FlowcryptContract
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
+import java.io.File
 import java.io.IOException
 
 /**
@@ -43,6 +45,7 @@ class ClearAppSettingsRule : BaseRule() {
   private fun clearApp() {
     SharedPreferencesHelper.clear(targetContext)
     FileAndDirectoryUtils.cleanDir(targetContext.cacheDir)
+    FileAndDirectoryUtils.cleanDir(File(targetContext.filesDir, MsgsCacheManager.CACHE_DIR_NAME))
     targetContext.contentResolver.delete(Uri.parse(FlowcryptContract.AUTHORITY_URI.toString()
         + "/" + FlowcryptContract.ERASE_DATABASE), null, null)
     UiThreadStatement.runOnUiThread { KeysStorageImpl.getInstance(targetContext).refresh(targetContext) }
