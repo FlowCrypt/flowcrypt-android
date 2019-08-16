@@ -11,11 +11,13 @@ import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
+import okio.Okio
 import org.apache.commons.io.FilenameUtils
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 import java.util.*
 import javax.mail.BodyPart
 import javax.mail.FetchProfile
@@ -78,10 +80,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     }
     customMsg.saveChanges()
     customMsg.setMessageId(originalMsg.messageID)
-
-    val outputStream = ByteArrayOutputStream()
-    customMsg.writeTo(outputStream)
-    MsgsCacheManager.addMsg(id.toString(), ByteArrayInputStream(outputStream.toByteArray()))
+    storeMsg(id.toString(), originalMsg)
 
     listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, id, customMsg, ownerKey, requestCode)
     imapFolder.close(false)
@@ -182,6 +181,22 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     return result
   }
 
+  private fun storeMsg(key: String, msg: MimeMessage) {
+    val editor = MsgsCacheManager.diskLruCache.edit(key) ?: return
+
+    val bufferedSink = Okio.buffer(editor.newSink(0))
+    val outputStream = bufferedSink.outputStream()
+    val progressOutputStream = ProgressOutputStream(outputStream)
+    try {
+      msg.writeTo(progressOutputStream)
+      bufferedSink.flush()
+      editor.commit()
+    } catch (e: SyncTaskTerminatedException) {
+      e.printStackTrace()
+      editor.abort()
+    }
+  }
+
   /**
    * It's a custom realization of [MimeMessage] which has an own realization of creation [InternetHeaders]
    */
@@ -198,6 +213,35 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
   class CustomMimeMultipart constructor(contentType: String) : MimeMultipart() {
     init {
       this.contentType = contentType
+    }
+  }
+
+  /**
+   * This class itself simply overrides all methods of [OutputStream] with versions that pass
+   * all requests to the underlying output stream.
+   */
+  inner class ProgressOutputStream(val out: OutputStream) : OutputStream() {
+    override fun write(b: ByteArray?) {
+      if (isCancelled) {
+        throw SyncTaskTerminatedException()
+      }
+      out.write(b)
+    }
+
+    override fun write(b: Int) {
+      if (isCancelled) {
+        throw SyncTaskTerminatedException()
+      }
+
+      out.write(b)
+    }
+
+    override fun write(b: ByteArray?, off: Int, len: Int) {
+      if (isCancelled) {
+        throw SyncTaskTerminatedException()
+      }
+
+      out.write(b, off, len)
     }
   }
 

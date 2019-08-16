@@ -51,6 +51,13 @@ interface SyncTask {
   val resetConnection: Boolean
 
   /**
+   * This flag helps understand that a task is cancelled or not
+   *
+   * @return a state of cancelling
+   */
+  var isCancelled: Boolean
+
+  /**
    * Run current task in the separate thread.
    *
    * @param account   The account information which will be used of connection.
