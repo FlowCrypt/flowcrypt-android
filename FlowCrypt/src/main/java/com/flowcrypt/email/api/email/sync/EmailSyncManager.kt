@@ -74,6 +74,7 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
   private val executorService: ExecutorService
   private var activeFuture: Future<*>? = null
   private var passiveFuture: Future<*>? = null
+  private var activeSyncTask: SyncTask? = null
 
   /**
    * This fields created as volatile because will be used in different threads.
@@ -143,7 +144,16 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
    * Clear the queue of sync tasks.
    */
   fun cancelAllSyncTasks() {
+    activeSyncTask?.isCancelled = true
+
+    for (syncTask in activeQueue) {
+      syncTask.isCancelled = true
+    }
     activeQueue.clear()
+
+    for (syncTask in passiveQueue) {
+      syncTask.isCancelled = true
+    }
     passiveQueue.clear()
   }
 
@@ -228,6 +238,11 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
       removeOldTasks(LoadMessageDetailsSyncTask::class.java, activeQueue)
       activeQueue.put(LoadMessageDetailsSyncTask(ownerKey, requestCode, localFolder, uid.toLong(), id.toLong(),
           resetConnection))
+
+      if (LoadMessageDetailsSyncTask::class.java.isInstance(activeSyncTask)) {
+        activeSyncTask?.isCancelled = true
+      }
+
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }
@@ -438,7 +453,9 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
   private fun removeOldTasks(cls: Class<*>, queue: BlockingQueue<SyncTask>) {
     val iterator = queue.iterator()
     while (iterator.hasNext()) {
-      if (cls.isInstance(iterator.next())) {
+      val item = iterator.next()
+      if (cls.isInstance(item)) {
+        item.isCancelled = true
         iterator.remove()
       }
     }
@@ -635,10 +652,10 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
       while (!Thread.interrupted()) {
         try {
           LogsUtil.d(tag, "ActiveSyncTaskBlockingQueue size = " + activeQueue.size)
-          val syncTask = activeQueue.take()
-
+          activeSyncTask = activeQueue.take()
           runIdleInboxIfNeeded()
-          runSyncTask(syncTask, true)
+          runSyncTask(activeSyncTask, true)
+          activeSyncTask = null
         } catch (e: InterruptedException) {
           e.printStackTrace()
         }

@@ -33,6 +33,8 @@ abstract class BaseSyncTask constructor(override var ownerKey: String, override 
   override val isSMTPRequired: Boolean
     get() = false
 
+  override var isCancelled: Boolean = false
+
   override fun runSMTPAction(account: AccountDao, session: Session, store: Store, syncListener: SyncListener) {
   }
 
