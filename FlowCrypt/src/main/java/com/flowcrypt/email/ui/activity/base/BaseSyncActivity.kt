@@ -252,7 +252,23 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGE_DETAILS, uid, id, action)
     msg.replyTo = syncReplyMessenger
     try {
-      syncMessenger!!.send(msg)
+      syncMessenger?.send(msg)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  /**
+   * Cancel a job which load the current message details
+   */
+  fun cancelLoadMsgDetails() {
+    if (checkServiceBound(isSyncServiceBound)) return
+
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS)
+    msg.replyTo = syncReplyMessenger
+    try {
+      syncMessenger?.send(msg)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)

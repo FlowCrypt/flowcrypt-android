@@ -249,6 +249,21 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
   }
 
   /**
+   * Discard the active task if it is an instance of [LoadMessageDetailsSyncTask]
+   */
+
+  fun cancelActiveLoadMsgDetailsTask() {
+    try {
+      if (LoadMessageDetailsSyncTask::class.java.isInstance(activeSyncTask)) {
+        activeSyncTask?.isCancelled = true
+      }
+
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
+    }
+  }
+
+  /**
    * This method create a new [LoadAttsInfoSyncTask] object and added it to the current synchronization [BlockingQueue].
    *
    * @param ownerKey    The name of the reply to [android.os.Messenger].
