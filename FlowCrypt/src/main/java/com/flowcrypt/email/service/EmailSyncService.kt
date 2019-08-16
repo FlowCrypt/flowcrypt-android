@@ -742,6 +742,9 @@ class EmailSyncService : BaseService(), SyncListener {
             emailSyncManager.loadAttsInfo(ownerKey!!, requestCode, localFolder, msg.arg1)
           }
 
+          MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS -> emailSyncManager?.cancelActiveLoadMsgDetailsTask()
+
+
           else -> super.handleMessage(msg)
         }
       }
@@ -772,6 +775,7 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_SEARCH_MESSAGES = 11
     const val MESSAGE_CANCEL_ALL_TASKS = 12
     const val MESSAGE_LOAD_ATTS_INFO = 13
+    const val MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS = 14
 
     private val TAG = EmailSyncService::class.java.simpleName
 

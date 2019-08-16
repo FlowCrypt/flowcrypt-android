@@ -127,6 +127,11 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     }
   }
 
+  override fun onDestroy() {
+    cancelLoadMsgDetails()
+    super.onDestroy()
+  }
+
   override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor?) {
     val messageDaoSource = MessageDaoSource()
 
