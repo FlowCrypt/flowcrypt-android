@@ -9,7 +9,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
@@ -241,9 +240,6 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
   private fun upgradeDatabaseFrom1To2Version(sqLiteDatabase: SQLiteDatabase) {
     sqLiteDatabase.beginTransaction()
     try {
-      sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE)
-      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT)
-
       sqLiteDatabase.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
           " ADD COLUMN " + MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS + " INTEGER DEFAULT 0;")
 
@@ -259,16 +255,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
   }
 
   private fun upgradeDatabaseFrom2To3Version(sqLiteDatabase: SQLiteDatabase) {
-    sqLiteDatabase.beginTransaction()
-    try {
-      dropTable(sqLiteDatabase, AttachmentDaoSource.TABLE_NAME_ATTACHMENT)
-      sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE)
-      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT)
-
-      sqLiteDatabase.setTransactionSuccessful()
-    } finally {
-      sqLiteDatabase.endTransaction()
-    }
+    // Removed as redundant
   }
 
   private fun upgradeDatabaseFrom3To4Version(sqLiteDatabase: SQLiteDatabase) {
@@ -418,33 +405,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
   }
 
   private fun upgradeDatabaseFrom12To13Version(sqLiteDatabase: SQLiteDatabase) {
-    sqLiteDatabase.beginTransaction()
-    try {
-      //delete attachments from non-INBOX folders. OUTBOX is excluded too. We can easy delete such attachments
-      // because it's just a cache.
-      sqLiteDatabase.delete(AttachmentDaoSource.TABLE_NAME_ATTACHMENT, AttachmentDaoSource.COL_FOLDER
-          + " NOT IN (?, ?)", arrayOf(JavaEmailConstants.FOLDER_INBOX, JavaEmailConstants.FOLDER_OUTBOX))
-
-      val tempTableName = "att"
-
-      sqLiteDatabase.execSQL(CREATE_TEMP_TABLE_IF_NOT_EXISTS + tempTableName + " AS SELECT * FROM "
-          + AttachmentDaoSource.TABLE_NAME_ATTACHMENT + " GROUP BY " +
-          AttachmentDaoSource.COL_EMAIL + ", " +
-          AttachmentDaoSource.COL_UID + ", " +
-          AttachmentDaoSource.COL_FOLDER + ", " +
-          AttachmentDaoSource.COL_ATTACHMENT_ID)
-
-      sqLiteDatabase.execSQL(DROP_TABLE + AttachmentDaoSource.TABLE_NAME_ATTACHMENT)
-      sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE)
-      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT)
-
-      sqLiteDatabase.execSQL("INSERT INTO " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT
-          + " SELECT * FROM " + tempTableName)
-      sqLiteDatabase.execSQL(DROP_TABLE + tempTableName)
-      sqLiteDatabase.setTransactionSuccessful()
-    } finally {
-      sqLiteDatabase.endTransaction()
-    }
+    //removed as redundant
   }
 
   /**
@@ -459,13 +420,25 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
     }
   }
 
-
   private fun upgradeDatabaseFrom14To15Version(sqLiteDatabase: SQLiteDatabase) {
     sqLiteDatabase.beginTransaction()
     try {
+      //delete non-OUTBOX attachments
+      sqLiteDatabase.delete(AttachmentDaoSource.TABLE_NAME_ATTACHMENT, AttachmentDaoSource.COL_FOLDER
+          + " NOT IN (?)", arrayOf(JavaEmailConstants.FOLDER_OUTBOX))
+
+      val tempTableName = "att"
+
+      sqLiteDatabase.execSQL(CREATE_TEMP_TABLE_IF_NOT_EXISTS + tempTableName + " AS SELECT * FROM "
+          + AttachmentDaoSource.TABLE_NAME_ATTACHMENT)
+
       sqLiteDatabase.execSQL(DROP_TABLE + AttachmentDaoSource.TABLE_NAME_ATTACHMENT)
       sqLiteDatabase.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE)
-      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_PATH_IN_ATTACHMENT)
+      sqLiteDatabase.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT)
+
+      sqLiteDatabase.execSQL("INSERT INTO " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT
+          + " SELECT *, 0 FROM " + tempTableName)
+      sqLiteDatabase.execSQL(DROP_TABLE + tempTableName)
       sqLiteDatabase.setTransactionSuccessful()
     } finally {
       sqLiteDatabase.endTransaction()
