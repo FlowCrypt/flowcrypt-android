@@ -19,6 +19,7 @@ import android.os.Messenger
 import android.os.RemoteException
 import android.util.Log
 import android.util.LongSparseArray
+import androidx.core.app.NotificationManagerCompat
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
@@ -798,6 +799,8 @@ class EmailSyncService : BaseService(), SyncListener {
      */
     @JvmStatic
     fun switchAccount(context: Context) {
+      NotificationManagerCompat.from(context).cancelAll()
+
       val startEmailServiceIntent = Intent(context, EmailSyncService::class.java)
       startEmailServiceIntent.action = ACTION_SWITCH_ACCOUNT
       context.startService(startEmailServiceIntent)

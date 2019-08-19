@@ -22,6 +22,7 @@ import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.loader.ChangePassPhraseAsyncTaskLoader
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
 import com.flowcrypt.email.ui.loader.SaveBackupToInboxAsyncTaskLoader
+import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.UIUtil
 import java.util.*
 
@@ -37,6 +38,11 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
 
   override fun onConfirmPassPhraseSuccess() {
     LoaderManager.getInstance(this).restartLoader(R.id.loader_id_change_pass_phrase, null, this)
+  }
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    SystemNotificationManager(this).cancel(SystemNotificationManager.NOTIFICATION_ID_PASSPHRASE_TOO_WEAK)
   }
 
   override fun onBackPressed() {
