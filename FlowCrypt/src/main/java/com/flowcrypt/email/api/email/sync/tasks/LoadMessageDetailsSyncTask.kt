@@ -17,6 +17,7 @@ import com.sun.mail.imap.IMAPFolder
 import okio.Okio
 import org.apache.commons.io.FilenameUtils
 import java.io.ByteArrayInputStream
+import java.io.IOException
 import java.io.OutputStream
 import java.util.*
 import javax.mail.BodyPart
@@ -191,6 +192,8 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       msg.writeTo(progressOutputStream)
       bufferedSink.flush()
       editor.commit()
+
+      MsgsCacheManager.diskLruCache.get(key) ?: throw IOException("No space left on device")
     } catch (e: SyncTaskTerminatedException) {
       e.printStackTrace()
       editor.abort()
