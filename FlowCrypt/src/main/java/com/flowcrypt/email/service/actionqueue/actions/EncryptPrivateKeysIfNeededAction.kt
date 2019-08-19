@@ -14,11 +14,14 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.broadcastreceivers.UpdateStorageConnectorBroadcastReceiver
 import com.flowcrypt.email.database.dao.KeysDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.gson.annotations.SerializedName
 import java.util.*
@@ -70,20 +73,27 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
         continue
       }
 
-      val (encryptedKey) = NodeCallsExecutor.encryptKey(privateKey!!, passphrase!!)
+      try {
+        val (encryptedKey) = NodeCallsExecutor.encryptKey(privateKey!!, passphrase!!)
 
-      if (TextUtils.isEmpty(encryptedKey)) {
-        ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key encryption"))
-        continue
+        if (TextUtils.isEmpty(encryptedKey)) {
+          ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key encryption"))
+          continue
+        }
+
+        val modifiedKeyDetailsList = NodeCallsExecutor.parseKeys(encryptedKey!!)
+        if (CollectionUtils.isEmpty(modifiedKeyDetailsList) || modifiedKeyDetailsList.size != 1) {
+          ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key parsing| 2"))
+          continue
+        }
+
+        keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, modifiedKeyDetailsList[0], passphrase))
+      } catch (e: NodeException) {
+        if (e.nodeError?.msg == "Error: Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.") {
+          val currentAccount = AccountDaoSource().getActiveAccountInformation(context)
+          SystemNotificationManager(context).showPassphraseTooLowNotification(currentAccount)
+        }
       }
-
-      val modifiedKeyDetailsList = NodeCallsExecutor.parseKeys(encryptedKey!!)
-      if (CollectionUtils.isEmpty(modifiedKeyDetailsList) || modifiedKeyDetailsList.size != 1) {
-        ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key parsing| 2"))
-        continue
-      }
-
-      keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, modifiedKeyDetailsList[0], passphrase))
     }
 
     if (keysDaoList.size > 0) {
