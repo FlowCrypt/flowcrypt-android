@@ -81,7 +81,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     }
     customMsg.saveChanges()
     customMsg.setMessageId(originalMsg.messageID)
-    storeMsg(id.toString(), originalMsg)
+    storeMsg(id.toString(), customMsg)
 
     listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, id, customMsg, ownerKey, requestCode)
     imapFolder.close(false)
