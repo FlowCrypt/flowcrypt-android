@@ -256,6 +256,12 @@ easylauncher {
                     customColorRibbonFilter("debug", "#556600CC", "#FFFFFF", "bottom")
             ]
         }
+
+        enterprise {
+            filters = [
+                    customColorRibbonFilter("enterprise", "#55CC5F00", "#FFFFFF", "bottom")
+            ]
+        }
     }
 }
 
