@@ -150,8 +150,8 @@ android {
             resConfigs "en", "xxhdpi"
         }
 
-        //This is a production flavor
-        prod {
+        //This is a consumer flavor
+        consumer {
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'true'
             buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
             buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
@@ -244,14 +244,14 @@ android {
     }
 
     afterEvaluate {
-        Task taskPackageProdRelease = tasks.findByName('packageProdRelease')
-        if (taskPackageProdRelease != null) {
-            taskPackageProdRelease.finalizedBy renameReleaseBuilds
+        Task taskPackageConsumerRelease = tasks.findByName('packageConsumerRelease')
+        if (taskPackageConsumerRelease != null) {
+            taskPackageConsumerRelease.finalizedBy renameReleaseBuilds
         }
 
-        Task taskPackageProdEnterprise = tasks.findByName('packageEnterpriseRelease')
-        if (taskPackageProdEnterprise != null) {
-            taskPackageProdEnterprise.finalizedBy renameReleaseBuilds
+        Task taskPackageConsumerEnterprise = tasks.findByName('packageEnterpriseRelease')
+        if (taskPackageConsumerEnterprise != null) {
+            taskPackageConsumerEnterprise.finalizedBy renameReleaseBuilds
         }
 
         android.applicationVariants.all { variant ->
@@ -261,11 +261,20 @@ android {
 }
 
 easylauncher {
+    iconNames "@mipmap/ic_launcher_foreground"
     foregroundIconNames "@mipmap/ic_launcher_foreground" // Foreground of adaptive launcher icon
     buildTypes {
         debug {
             filters = [
-                    customColorRibbonFilter("", "#556600CC", "#FFFFFF", "bottom", 0.05)
+                    customColorRibbonFilter("debug", "#556600CC", "#FFFFFF", "top")
+            ]
+        }
+    }
+
+    variants {
+        devDebug {
+            filters = [
+                    customColorRibbonFilter("dev", "#55CC5F00", "#FFFFFF", "top")
             ]
         }
     }
