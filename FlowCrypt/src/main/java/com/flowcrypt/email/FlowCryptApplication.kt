@@ -5,7 +5,16 @@
 
 package com.flowcrypt.email
 
+import android.app.Application
+import android.app.job.JobScheduler
+import android.content.Context
+import androidx.fragment.app.FragmentManager
 import androidx.preference.PreferenceManager
+import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.jobscheduler.JobIdManager
+import com.flowcrypt.email.jobscheduler.SyncJobService
+import com.flowcrypt.email.ui.notifications.NotificationChannelManager
+import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.acra.CustomReportSenderFactory
@@ -52,10 +61,28 @@ import org.acra.sender.HttpSender
   ReportField.USER_CRASH_DATE,
   ReportField.USER_EMAIL]
     , httpMethod = HttpSender.Method.POST, reportType = HttpSender.Type.JSON, buildConfigClass = BuildConfig::class)
-class FlowCryptApplication : BaseApplication() {
+class FlowCryptApplication : Application() {
 
-  @Override
-  override fun initAcra() {
+  override fun onCreate() {
+    super.onCreate()
+    CacheManager.init(this)
+    MsgsCacheManager.init(this)
+    NotificationChannelManager.registerNotificationChannels(this)
+
+    initLeakCanary()
+    FragmentManager.enableDebugLogging(GeneralUtil.isDebugBuild())
+
+    val scheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+    scheduler.cancel(JobIdManager.JOB_TYPE_SYNC)
+    SyncJobService.schedule(this)
+  }
+
+  override fun attachBaseContext(base: Context) {
+    super.attachBaseContext(base)
+    initAcra()
+  }
+
+  fun initAcra() {
     if (!GeneralUtil.isDebugBuild()) {
       ACRA.init(this)
     } else if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
@@ -67,8 +94,7 @@ class FlowCryptApplication : BaseApplication() {
   /**
    * Init the LeakCanary tools if the current build is debug and detect memory leaks enabled.
    */
-  @Override
-  override fun initLeakCanary() {
+  fun initLeakCanary() {
     if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
             Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED, false)) {
       if (LeakCanary.isInAnalyzerProcess(this)) {
