@@ -49,7 +49,7 @@ class AccountAliasesDaoSource : BaseDaoSource() {
    * @param list    The list of an account aliases.
    */
   fun addRows(context: Context, list: List<AccountAliasesDao>?): Int {
-    return if (list != null && !list.isEmpty()) {
+    return if (list != null && list.isNotEmpty()) {
       val contentResolver = context.contentResolver
       val contentValuesArray = arrayOfNulls<ContentValues>(list.size)
 
@@ -114,13 +114,13 @@ class AccountAliasesDaoSource : BaseDaoSource() {
   fun deleteAccountAliases(context: Context, account: AccountDao?): Int {
     if (account != null) {
       var email = account.email
-      email = email.toLowerCase()
+      email = email.toLowerCase(Locale.getDefault())
 
       var type = account.accountType
       if (type == null) {
         return -1
       } else {
-        type = type.toLowerCase()
+        type = type.toLowerCase(Locale.getDefault())
       }
 
       val contentResolver = context.contentResolver
@@ -142,15 +142,15 @@ class AccountAliasesDaoSource : BaseDaoSource() {
   private fun generateContentValues(accountAliasesDao: AccountAliasesDao): ContentValues? {
     val contentValues = ContentValues()
     if (accountAliasesDao.email != null) {
-      contentValues.put(COL_EMAIL, accountAliasesDao.email!!.toLowerCase())
+      contentValues.put(COL_EMAIL, accountAliasesDao.email!!.toLowerCase(Locale.getDefault()))
     } else {
       return null
     }
 
     contentValues.put(COL_ACCOUNT_TYPE, accountAliasesDao.accountType)
     contentValues.put(COL_DISPLAY_NAME, accountAliasesDao.displayName)
-    contentValues.put(COL_SEND_AS_EMAIL, accountAliasesDao.sendAsEmail!!.toLowerCase())
-    contentValues.put(COL_SEND_AS_EMAIL, accountAliasesDao.sendAsEmail!!.toLowerCase())
+    contentValues.put(COL_SEND_AS_EMAIL, accountAliasesDao.sendAsEmail!!.toLowerCase(Locale.getDefault()))
+    contentValues.put(COL_SEND_AS_EMAIL, accountAliasesDao.sendAsEmail!!.toLowerCase(Locale.getDefault()))
     contentValues.put(COL_IS_DEFAULT, accountAliasesDao.isDefault)
     contentValues.put(COL_VERIFICATION_STATUS, accountAliasesDao.verificationStatus)
     return contentValues
@@ -193,10 +193,10 @@ class AccountAliasesDaoSource : BaseDaoSource() {
     fun getCurrent(cursor: Cursor): AccountAliasesDao {
       val dao = AccountAliasesDao()
       val accountEmail = cursor.getString(cursor.getColumnIndex(COL_EMAIL))
-      dao.email = accountEmail?.toLowerCase()
+      dao.email = accountEmail?.toLowerCase(Locale.getDefault())
       dao.accountType = cursor.getString(cursor.getColumnIndex(COL_ACCOUNT_TYPE))
       val sendAsEmail = cursor.getString(cursor.getColumnIndex(COL_SEND_AS_EMAIL))
-      dao.sendAsEmail = sendAsEmail?.toLowerCase()
+      dao.sendAsEmail = sendAsEmail?.toLowerCase(Locale.getDefault())
       dao.displayName = cursor.getString(cursor.getColumnIndex(COL_DISPLAY_NAME))
       dao.isDefault = cursor.getInt(cursor.getColumnIndex(COL_IS_DEFAULT)) == 1
       dao.verificationStatus = cursor.getString(cursor.getColumnIndex(COL_VERIFICATION_STATUS))

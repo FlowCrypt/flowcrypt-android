@@ -344,7 +344,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
         Constants.PASSWORD_QUALITY_WEAK -> qualityValue = getString(R.string.password_quality_weak)
       }
 
-      qualityValue = qualityValue!!.toUpperCase()
+      qualityValue = qualityValue!!.toUpperCase(Locale.getDefault())
     }
 
     return qualityValue

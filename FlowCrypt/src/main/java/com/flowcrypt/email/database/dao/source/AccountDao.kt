@@ -11,6 +11,7 @@ import android.os.Parcelable
 import android.text.TextUtils
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import java.util.*
 
 /**
  * The simple POJO object which describes an account information.
@@ -43,7 +44,7 @@ data class AccountDao constructor(val email: String,
   constructor(googleSignInAccount: GoogleSignInAccount) : this(
       email = googleSignInAccount.email!!,
       displayName = googleSignInAccount.displayName,
-      accountType = googleSignInAccount.account?.type?.toLowerCase(),
+      accountType = googleSignInAccount.account?.type?.toLowerCase(Locale.getDefault()),
       givenName = googleSignInAccount.givenName,
       familyName = googleSignInAccount.familyName,
       photoUrl = googleSignInAccount.photoUrl?.toString())

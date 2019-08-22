@@ -97,7 +97,6 @@ android {
             buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'false'
             buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"NONE\""
             resValue 'string', 'application_id', android.defaultConfig.applicationId
-            resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
             resValue 'string', 'gradle_http_log_level', 'NONE'
@@ -140,7 +139,6 @@ android {
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
             buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'true'
             buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"BODY\""
-            resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'true'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
             resValue 'string', 'gradle_http_log_level', 'BODY'
@@ -160,7 +158,6 @@ android {
             buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BASIC\""
             buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'true'
             buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"BASIC\""
-            resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
             resValue 'string', 'gradle_is_node_http_debug_enabled', 'false'
@@ -237,7 +234,6 @@ android {
     task copyReleaseApks(type: Copy) {
         from("$buildDir") {
             include '**/*release*.apk'
-            include '**/*enterprise*.apk'
         }
 
         includeEmptyDirs = false

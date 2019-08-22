@@ -57,7 +57,7 @@ class ContactsDaoSource : BaseDaoSource() {
       var i = 0
       for ((email, name) in pairs) {
         val contentValues = ContentValues()
-        contentValues.put(COL_EMAIL, email!!.toLowerCase())
+        contentValues.put(COL_EMAIL, email!!.toLowerCase(Locale.getDefault()))
         contentValues.put(COL_NAME, name)
         contentValues.put(COL_HAS_PGP, false)
         contentValuesArray[i] = contentValues
@@ -153,7 +153,7 @@ class ContactsDaoSource : BaseDaoSource() {
       return null
     }
 
-    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase()
+    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase(Locale.getDefault())
 
     val contentResolver = context.contentResolver
     val selection = "$COL_EMAIL = ?"
@@ -203,7 +203,7 @@ class ContactsDaoSource : BaseDaoSource() {
   fun getPgpContacts(context: Context, emails: MutableList<String>): List<PgpContact> {
     val iterator = emails.listIterator()
     while (iterator.hasNext()) {
-      iterator.set(iterator.next().toLowerCase())
+      iterator.set(iterator.next().toLowerCase(Locale.getDefault()))
     }
 
     val selection = COL_EMAIL + " IN " + prepareSelection(emails)
@@ -244,7 +244,7 @@ class ContactsDaoSource : BaseDaoSource() {
       contentValues.put(COL_KEYWORDS, pgpContact.keywords)
 
       val selection = "$COL_EMAIL = ?"
-      val selectionArgs = arrayOf(pgpContact.email.toLowerCase())
+      val selectionArgs = arrayOf(pgpContact.email.toLowerCase(Locale.getDefault()))
       contentResolver.update(baseContentUri, contentValues, selection, selectionArgs)
     } else
       -1
@@ -277,7 +277,7 @@ class ContactsDaoSource : BaseDaoSource() {
       contentValues.put(COL_KEYWORDS, remoteContact.keywords)
 
       val selection = "$COL_EMAIL = ?"
-      val selectionArgs = arrayOf(localContact.email.toLowerCase())
+      val selectionArgs = arrayOf(localContact.email.toLowerCase(Locale.getDefault()))
       return contentResolver.update(baseContentUri, contentValues, selection, selectionArgs)
     } else
       return -1
@@ -297,7 +297,7 @@ class ContactsDaoSource : BaseDaoSource() {
       for ((email, name) in pairs) {
         contentProviderOperationList.add(ContentProviderOperation.newUpdate(baseContentUri)
             .withValue(COL_NAME, name)
-            .withSelection("$COL_EMAIL= ?", arrayOf(email!!.toLowerCase()))
+            .withSelection("$COL_EMAIL= ?", arrayOf(email!!.toLowerCase(Locale.getDefault())))
             .withYieldAllowed(true)
             .build())
       }
@@ -328,7 +328,7 @@ class ContactsDaoSource : BaseDaoSource() {
             .withValue(COL_LONG_ID, longid)
             .withValue(COL_KEYWORDS, keywords)
             .withValue(COL_LAST_USE, lastUse)
-            .withSelection("$COL_EMAIL= ?", arrayOf(email.toLowerCase()))
+            .withSelection("$COL_EMAIL= ?", arrayOf(email.toLowerCase(Locale.getDefault())))
             .withYieldAllowed(true)
             .build())
       }
@@ -353,7 +353,7 @@ class ContactsDaoSource : BaseDaoSource() {
       contentValues.put(COL_LAST_USE, System.currentTimeMillis())
 
       val where = "$COL_EMAIL = ?"
-      val selectionArgs = arrayOf(contact.toLowerCase())
+      val selectionArgs = arrayOf(contact.toLowerCase(Locale.getDefault()))
       contentResolver.update(baseContentUri, contentValues, where, selectionArgs)
     } else {
       -1
@@ -371,7 +371,7 @@ class ContactsDaoSource : BaseDaoSource() {
   fun updateNameOfPgpContact(context: Context, email: String, name: String?): Int {
     val contentResolver = context.contentResolver
     return if (contentResolver != null) {
-      val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase()
+      val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase(Locale.getDefault())
 
       val contentValues = ContentValues()
       contentValues.put(COL_NAME, name)
@@ -391,7 +391,7 @@ class ContactsDaoSource : BaseDaoSource() {
    * @return The count of deleted rows. Will be 1 if a contact was deleted or -1 otherwise.
    */
   fun deletePgpContact(context: Context, email: String): Int {
-    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase()
+    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase(Locale.getDefault())
 
     val contentResolver = context.contentResolver
     return contentResolver?.delete(baseContentUri, "$COL_EMAIL = ?", arrayOf(emailInLowerCase)) ?: -1
@@ -399,7 +399,7 @@ class ContactsDaoSource : BaseDaoSource() {
 
   private fun prepareContentValues(pgpContact: PgpContact): ContentValues {
     val contentValues = ContentValues()
-    contentValues.put(COL_EMAIL, pgpContact.email.toLowerCase())
+    contentValues.put(COL_EMAIL, pgpContact.email.toLowerCase(Locale.getDefault()))
     contentValues.put(COL_NAME, pgpContact.name)
     contentValues.put(COL_PUBLIC_KEY, pgpContact.pubkey)
     contentValues.put(COL_HAS_PGP, pgpContact.hasPgp)

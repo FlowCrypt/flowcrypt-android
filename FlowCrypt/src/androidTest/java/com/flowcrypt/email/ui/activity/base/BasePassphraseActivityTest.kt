@@ -24,6 +24,7 @@ import org.hamcrest.Matchers.startsWith
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.util.*
 
 /**
  * @author Denis Bondarenko
@@ -162,7 +163,7 @@ abstract class BasePassphraseActivityTest : BaseTest() {
           .check(matches(isDisplayed()))
           .perform(replaceText(passPhrases[i]))
       onView(withId(R.id.textViewPasswordQualityInfo))
-          .check(matches(withText(startsWith(degreeOfReliabilityOfPassPhrase[i].toUpperCase()))))
+          .check(matches(withText(startsWith(degreeOfReliabilityOfPassPhrase[i].toUpperCase(Locale.getDefault())))))
       onView(withId(R.id.editTextKeyPassword))
           .check(matches(isDisplayed()))
           .perform(clearText())

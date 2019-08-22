@@ -98,7 +98,7 @@ class MessageDaoSource : BaseDaoSource() {
         contentValues.put(COL_TO_ADDRESSES, InternetAddress.toString(to?.toTypedArray()))
         contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(cc?.toTypedArray()))
         contentValues.put(COL_SUBJECT, subject)
-        contentValues.put(COL_FLAGS, msgFlags.toString().toUpperCase())
+        contentValues.put(COL_FLAGS, msgFlags.toString().toUpperCase(Locale.getDefault()))
         contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, hasAtts)
       }
 
@@ -282,7 +282,7 @@ class MessageDaoSource : BaseDaoSource() {
         val selection = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
 
         val builder = ContentProviderOperation.newUpdate(baseContentUri)
-            .withValue(COL_FLAGS, message.flags.toString().toUpperCase())
+            .withValue(COL_FLAGS, message.flags.toString().toUpperCase(Locale.getDefault()))
             .withSelection(selection, arrayOf(email, label, folder.getUID(message).toString()))
             .withYieldAllowed(true)
 
@@ -436,7 +436,7 @@ class MessageDaoSource : BaseDaoSource() {
     val resolver = context.contentResolver
     return if (email != null && label != null && resolver != null) {
       val values = ContentValues()
-      values.put(COL_FLAGS, flags.toString().toUpperCase())
+      values.put(COL_FLAGS, flags.toString().toUpperCase(Locale.getDefault()))
       if (flags.contains(Flags.Flag.SEEN)) {
         values.put(COL_IS_NEW, false)
       }
@@ -1131,7 +1131,7 @@ class MessageDaoSource : BaseDaoSource() {
       contentValues.put(COL_TO_ADDRESSES, InternetAddress.toString(msg.getRecipients(Message.RecipientType.TO)))
       contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)))
       contentValues.put(COL_SUBJECT, msg.subject)
-      contentValues.put(COL_FLAGS, msg.flags.toString().toUpperCase())
+      contentValues.put(COL_FLAGS, msg.flags.toString().toUpperCase(Locale.getDefault()))
       contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, EmailUtil.hasAtt(msg))
       if (!msg.flags.contains(Flags.Flag.SEEN)) {
         contentValues.put(COL_IS_NEW, isNew)
