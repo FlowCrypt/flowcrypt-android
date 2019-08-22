@@ -366,11 +366,11 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
         Status.ERROR -> {
           idlingForWebView.setIdleState(true)
-          showErrorInfo(nodeResponseWrapper.result!!.error, null)
+          showErrorInfo(nodeResponseWrapper.result?.error, null)
           if (!idlingForDecryption!!.isIdleNow) {
             idlingForDecryption!!.decrement()
           }
-          ExceptionUtil.handleError(ManualHandledException("" + nodeResponseWrapper.result?.error!!))
+          ExceptionUtil.handleError(ManualHandledException("" + nodeResponseWrapper.result?.error))
         }
 
         Status.EXCEPTION -> {

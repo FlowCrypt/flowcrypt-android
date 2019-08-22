@@ -76,19 +76,15 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
   override fun onChanged(responseWrapper: NodeResponseWrapper<*>?) {
     if (responseWrapper != null) {
-      if (responseWrapper.exception != null) {
-        addResultLine("FAIL", 0, "exception: " + responseWrapper.exception?.message, true)
+      responseWrapper.exception?.let {
+        addResultLine("FAIL", 0, "exception: " + it.message, true)
         return
       }
 
-      if (responseWrapper.result == null) {
-        addResultLine("FAIL", 0, "result == null ", true)
-        return
-      }
+      val result = responseWrapper.result ?: return
 
-      if (responseWrapper.result?.error != null) {
-        addResultLine("ERROR", responseWrapper.executionTime,
-            "error: " + responseWrapper.result?.error!!, true)
+      result.error?.let {
+        addResultLine("ERROR", responseWrapper.executionTime, "error: $it", true)
         return
       }
 
@@ -238,11 +234,11 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
   }
 
   private fun addResultLine(actionName: String, result: NodeResponseWrapper<*>) {
-    if (result.exception != null) {
-      addResultLine(actionName, 0, result.exception!!)
-    } else {
-      addResultLine(actionName, result.executionTime, "ok", false)
+    result.exception?.let {
+      addResultLine(actionName, 0, it)
+      return
     }
+    addResultLine(actionName, result.executionTime, "ok", false)
   }
 
   private fun addResultLine(actionName: String, result: BaseNodeResponse?, executionTime: Long) {
@@ -255,6 +251,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
     }
   }
 
+  @Suppress("DEPRECATION")
   private fun printDecryptMsgResult(actionName: String, r: ParseDecryptedMsgResult, executionTime: Long) {
     if (r.error != null) {
       addResultLine(actionName, r, executionTime)

@@ -30,7 +30,7 @@ data class DecryptedAttMsgBlock(@Expose override val content: String?,
   constructor(source: Parcel) : this(
       source.readString(),
       1 == source.readInt(),
-      source.readParcelable<AttMeta>(AttMeta::class.java.classLoader),
+      source.readParcelable<AttMeta>(AttMeta::class.java.classLoader)!!,
       source.readParcelable<DecryptError>(DecryptError::class.java.classLoader)
   ) {
     fileUri = source.readParcelable<Uri>(Uri::class.java.classLoader)

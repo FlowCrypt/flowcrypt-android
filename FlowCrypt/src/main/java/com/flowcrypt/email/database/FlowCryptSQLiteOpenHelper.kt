@@ -254,6 +254,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
     }
   }
 
+  @Suppress("UNUSED_PARAMETER")
   private fun upgradeDatabaseFrom2To3Version(sqLiteDatabase: SQLiteDatabase) {
     // Removed as redundant
   }
@@ -404,6 +405,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
     }
   }
 
+  @Suppress("UNUSED_PARAMETER")
   private fun upgradeDatabaseFrom12To13Version(sqLiteDatabase: SQLiteDatabase) {
     //removed as redundant
   }

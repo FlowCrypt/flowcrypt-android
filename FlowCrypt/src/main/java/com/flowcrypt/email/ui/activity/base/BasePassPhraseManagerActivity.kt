@@ -224,9 +224,8 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
             updateStrengthViews()
           }
 
-          Status.ERROR -> if (nodeResponseWrapper.result != null) {
-            val error = nodeResponseWrapper.result?.error
-            Toast.makeText(this, error?.toString() ?: "", Toast.LENGTH_SHORT).show()
+          Status.ERROR -> nodeResponseWrapper.result?.let {
+            Toast.makeText(this, it.error?.toString() ?: "", Toast.LENGTH_SHORT).show()
           }
 
           Status.EXCEPTION -> if (nodeResponseWrapper.result != null) {

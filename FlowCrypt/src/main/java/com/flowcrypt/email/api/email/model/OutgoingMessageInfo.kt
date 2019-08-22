@@ -54,7 +54,7 @@ data class OutgoingMessageInfo constructor(val subject: String,
       parcel.readString(),
       mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
       mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) },
-      parcel.readParcelable(MessageEncryptionType::class.java.classLoader),
+      parcel.readParcelable<MessageEncryptionType>(MessageEncryptionType::class.java.classLoader)!!,
       parcel.readByte() != 0.toByte(),
       parcel.readLong())
 
