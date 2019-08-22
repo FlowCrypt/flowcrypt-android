@@ -170,7 +170,6 @@ android {
 
         //This flavor must be used only for a testing
         devTest {
-            signingConfig signingConfigs.debug
             versionNameSuffix "_devTest"
             dimension "standard"
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
@@ -184,7 +183,7 @@ android {
             resValue 'string', 'gradle_http_log_level', 'NONE'
             resValue 'string', 'gradle_is_node_http_debug_enabled', 'false'
             resValue 'string', 'gradle_node_http_log_level', 'NONE'
-        }k
+        }
 
         //This is an enterprise flavor
         enterprise {
