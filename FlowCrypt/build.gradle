@@ -221,8 +221,7 @@ android {
     tasks.register('renameReleaseBuilds') {
         doLast {
             applicationVariants.all { variant ->
-                if (variant.buildType.buildType == buildTypes.release
-                        || variant.buildType.buildType == buildTypes.enterprise) {
+                if (variant.buildType.buildType == buildTypes.release) {
                     variant.outputs.each { output ->
                         def file = output.outputFile
                         def newName = file.name.replace(".apk", "_" + defaultConfig.versionCode +
@@ -254,7 +253,7 @@ android {
             taskPackageProdRelease.finalizedBy renameReleaseBuilds
         }
 
-        Task taskPackageProdEnterprise = tasks.findByName('packageProdEnterprise')
+        Task taskPackageProdEnterprise = tasks.findByName('packageEnterpriseRelease')
         if (taskPackageProdEnterprise != null) {
             taskPackageProdEnterprise.finalizedBy renameReleaseBuilds
         }
