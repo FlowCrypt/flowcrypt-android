@@ -86,7 +86,7 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
       source.readString(),
       mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) },
       source.readString(),
-      source.readParcelable(MessageEncryptionType::class.java.classLoader)
+      source.readParcelable(MessageEncryptionType::class.java.classLoader)!!
   )
 
   override fun describeContents() = 0

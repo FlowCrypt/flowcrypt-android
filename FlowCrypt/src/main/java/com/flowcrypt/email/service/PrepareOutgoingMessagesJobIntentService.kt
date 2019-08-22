@@ -86,10 +86,11 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
   override fun onHandleWork(intent: Intent) {
     LogsUtil.d(TAG, "onHandleWork")
+    val accountDao = account ?: return
     if (intent.hasExtra(EXTRA_KEY_OUTGOING_MESSAGE_INFO)) {
       val outgoingMsgInfo = intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
       val uid = outgoingMsgInfo.uid
-      val email = account!!.email
+      val email = accountDao.email
       val label = JavaEmailConstants.FOLDER_OUTBOX
 
       if (msgDaoSource.getMsg(this, email, label, uid) != null) {
@@ -109,7 +110,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
           val senderEmail = outgoingMsgInfo.from
           pubKeys = SecurityUtils.getRecipientsPubKeys(this,
-              outgoingMsgInfo.getAllRecipients().toMutableList(), account!!, senderEmail!!)
+              outgoingMsgInfo.getAllRecipients().toMutableList(), accountDao, senderEmail)
         }
 
         val rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys)
