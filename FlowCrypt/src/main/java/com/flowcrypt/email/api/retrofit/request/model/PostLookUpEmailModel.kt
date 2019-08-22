@@ -9,6 +9,7 @@ import android.text.TextUtils
 
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import java.util.*
 
 /**
  * This is a POJO object which used to make a request to the API "https://flowcrypt.com/attester/lookup/email"
@@ -22,7 +23,7 @@ import com.google.gson.annotations.SerializedName
 data class PostLookUpEmailModel(@SerializedName("email") @Expose var email: String) : RequestModel {
   init {
     if (!TextUtils.isEmpty(email)) {
-      this.email = email.toLowerCase()
+      this.email = email.toLowerCase(Locale.getDefault())
     }
   }
 }

@@ -264,7 +264,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
       var keyOwner: String? = nodeKeyDetails.primaryPgpContact.email
 
       if (keyOwner != null) {
-        keyOwner = keyOwner.toLowerCase()
+        keyOwner = keyOwner.toLowerCase(Locale.getDefault())
 
         if (emails.contains(keyOwner)) {
           return null

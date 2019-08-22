@@ -100,7 +100,7 @@ class AccountDaoSource : BaseDaoSource() {
    * @return The [AccountDao];
    */
   fun getAccountInformation(context: Context, email: String): AccountDao? {
-    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase()
+    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase(Locale.getDefault())
     val selection = "$COL_EMAIL = ?"
     val selectionArgs = arrayOf(emailInLowerCase)
     val cursor = context.contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
@@ -144,14 +144,14 @@ class AccountDaoSource : BaseDaoSource() {
       if (email == null) {
         return -1
       } else {
-        email = email.toLowerCase()
+        email = email.toLowerCase(Locale.getDefault())
       }
 
       var type: String? = account.type
       if (type == null) {
         return -1
       } else {
-        type = type.toLowerCase()
+        type = type.toLowerCase(Locale.getDefault())
       }
 
       val contentResolver = context.contentResolver
@@ -179,14 +179,14 @@ class AccountDaoSource : BaseDaoSource() {
       if (email == null) {
         return -1
       } else {
-        email = email.toLowerCase()
+        email = email.toLowerCase(Locale.getDefault())
       }
 
       var type = account.accountType
       if (type == null) {
         return -1
       } else {
-        type = type.toLowerCase()
+        type = type.toLowerCase(Locale.getDefault())
       }
 
       val contentResolver = context.contentResolver
@@ -207,7 +207,7 @@ class AccountDaoSource : BaseDaoSource() {
    * @return The list of all added account without the active account
    */
   fun getAccountsWithoutActive(context: Context, email: String): List<AccountDao> {
-    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase()
+    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase(Locale.getDefault())
 
     val selection = "$COL_EMAIL != ?"
     val selectionArgs = arrayOf(emailInLowerCase)
@@ -233,7 +233,7 @@ class AccountDaoSource : BaseDaoSource() {
    * @return true if need to show only encrypted messages
    */
   fun isEncryptedModeEnabled(context: Context, email: String): Boolean {
-    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase()
+    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase(Locale.getDefault())
 
     val selection = "$COL_EMAIL = ?"
     val selectionArgs = arrayOf(emailInLowerCase)
@@ -262,7 +262,7 @@ class AccountDaoSource : BaseDaoSource() {
       return -1
     }
 
-    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase()
+    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase(Locale.getDefault())
 
     val contentResolver = context.contentResolver
     return if (contentResolver != null) {
@@ -286,7 +286,7 @@ class AccountDaoSource : BaseDaoSource() {
       return -1
     }
 
-    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase()
+    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase(Locale.getDefault())
     val contentResolver = context.contentResolver
     return if (contentResolver != null) {
       val contentValuesDeactivateAllAccount = ContentValues()
@@ -314,14 +314,14 @@ class AccountDaoSource : BaseDaoSource() {
   private fun genContentValues(googleSign: GoogleSignInAccount): ContentValues? {
     val contentValues = ContentValues()
     if (googleSign.email != null) {
-      contentValues.put(COL_EMAIL, googleSign.email!!.toLowerCase())
+      contentValues.put(COL_EMAIL, googleSign.email!!.toLowerCase(Locale.getDefault()))
     } else
       return null
 
     val account = googleSign.account
 
     if (account?.type != null) {
-      contentValues.put(COL_ACCOUNT_TYPE, account.type.toLowerCase())
+      contentValues.put(COL_ACCOUNT_TYPE, account.type.toLowerCase(Locale.getDefault()))
     }
 
     contentValues.put(COL_DISPLAY_NAME, googleSign.displayName)
@@ -355,7 +355,7 @@ class AccountDaoSource : BaseDaoSource() {
     val contentValues = ContentValues()
     val email = authCreds.email
     if (!TextUtils.isEmpty(email)) {
-      contentValues.put(COL_EMAIL, email.toLowerCase())
+      contentValues.put(COL_EMAIL, email.toLowerCase(Locale.getDefault()))
     } else
       return null
 

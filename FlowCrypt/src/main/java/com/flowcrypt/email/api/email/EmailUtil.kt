@@ -169,7 +169,7 @@ class EmailUtil {
     @JvmStatic
     fun genAttInfoFromPubKey(nodeKeyDetails: NodeKeyDetails?): AttachmentInfo? {
       if (nodeKeyDetails != null) {
-        val fileName = "0x" + nodeKeyDetails.longId!!.toUpperCase() + ".asc"
+        val fileName = "0x" + nodeKeyDetails.longId!!.toUpperCase(Locale.getDefault()) + ".asc"
 
         if (!TextUtils.isEmpty(nodeKeyDetails.publicKey)) {
           val attachmentInfo = AttachmentInfo()

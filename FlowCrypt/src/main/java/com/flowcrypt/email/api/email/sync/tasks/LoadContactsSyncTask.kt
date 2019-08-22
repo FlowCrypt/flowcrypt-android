@@ -42,9 +42,9 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
 
     if (msgs.isNotEmpty()) {
       val fetchProfile = FetchProfile()
-      fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase())
-      fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase())
-      fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase())
+      fetchProfile.add(Message.RecipientType.TO.toString().toUpperCase(Locale.getDefault()))
+      fetchProfile.add(Message.RecipientType.CC.toString().toUpperCase(Locale.getDefault()))
+      fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase(Locale.getDefault()))
       imapFolder.fetch(msgs, fetchProfile)
 
       updateContacts(listener, msgs)
@@ -78,8 +78,8 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
     val updateCandidates = mutableListOf<EmailAndNamePair>()
 
     for ((email, name) in availablePgpContacts) {
-      contactsInDatabase.add(email.toLowerCase())
-      emailNamePairsMap[email.toLowerCase()] = name
+      contactsInDatabase.add(email.toLowerCase(Locale.getDefault()))
+      emailNamePairsMap[email.toLowerCase(Locale.getDefault())] = name
     }
 
     for (emailAndNamePair in emailAndNamePairs) {
@@ -124,7 +124,7 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
             val emailAndNamePairs = mutableListOf<EmailAndNamePair>()
             for (i in addresses.indices) {
               val address = addresses[i]
-              emailAndNamePairs[i] = EmailAndNamePair(address.address.toLowerCase(), address.personal)
+              emailAndNamePairs[i] = EmailAndNamePair(address.address.toLowerCase(Locale.getDefault()), address.personal)
             }
 
             return emailAndNamePairs

@@ -264,7 +264,7 @@ class GeneralUtil {
         return contentResolver.getType(uri)
       } else {
         val fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
-        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase())
+        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase(Locale.getDefault()))
       }
     }
 

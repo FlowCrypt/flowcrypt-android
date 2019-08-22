@@ -40,7 +40,7 @@ class UserIdEmailsKeysDaoSource : BaseDaoSource() {
     return if (!TextUtils.isEmpty(longId) && !TextUtils.isEmpty(email) && contentResolver != null) {
       val contentValues = ContentValues()
       contentValues.put(COL_LONG_ID, longId)
-      contentValues.put(COL_USER_ID_EMAIL, email.toLowerCase())
+      contentValues.put(COL_USER_ID_EMAIL, email.toLowerCase(Locale.getDefault()))
       contentResolver.insert(baseContentUri, contentValues)
     } else {
       null
@@ -64,7 +64,7 @@ class UserIdEmailsKeysDaoSource : BaseDaoSource() {
         val pair = pairs[i]
         val contentValues = ContentValues()
         contentValues.put(COL_LONG_ID, pair.first)
-        contentValues.put(COL_USER_ID_EMAIL, pair.second.toLowerCase())
+        contentValues.put(COL_USER_ID_EMAIL, pair.second.toLowerCase(Locale.getDefault()))
         contentValuesArray[i] = contentValues
       }
 
@@ -102,7 +102,7 @@ class UserIdEmailsKeysDaoSource : BaseDaoSource() {
     val longIdsList = ArrayList<String>()
     if (!TextUtils.isEmpty(email)) {
       val selection = "$COL_USER_ID_EMAIL = ?"
-      val selectionArgs = arrayOf(email.toLowerCase())
+      val selectionArgs = arrayOf(email.toLowerCase(Locale.getDefault()))
       val cursor = context.contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
 
       if (cursor != null) {

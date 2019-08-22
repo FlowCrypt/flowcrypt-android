@@ -185,7 +185,7 @@ class ActionQueueDaoSource : BaseDaoSource() {
   private fun generateContentValues(action: Action): ContentValues? {
     val contentValues = ContentValues()
     if (action.email != null) {
-      contentValues.put(COL_EMAIL, action.email!!.toLowerCase())
+      contentValues.put(COL_EMAIL, action.email!!.toLowerCase(Locale.getDefault()))
     } else {
       return null
     }

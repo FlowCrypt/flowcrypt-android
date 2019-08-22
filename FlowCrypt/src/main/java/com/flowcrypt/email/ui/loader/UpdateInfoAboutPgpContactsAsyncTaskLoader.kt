@@ -75,7 +75,7 @@ class UpdateInfoAboutPgpContactsAsyncTaskLoader(context: Context,
     try {
       for (email in emails) {
         if (GeneralUtil.isEmailValid(email)) {
-          val emailLowerCase = email.toLowerCase()
+          val emailLowerCase = email.toLowerCase(Locale.getDefault())
 
           var localPgpContact = contactsDaoSource.getPgpContact(context, emailLowerCase)
 
