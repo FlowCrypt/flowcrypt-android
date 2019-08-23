@@ -122,9 +122,9 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
           if (!TextUtils.isEmpty(header[0])) {
             val addresses = InternetAddress.parse(header[0])
             val emailAndNamePairs = mutableListOf<EmailAndNamePair>()
-            for (i in addresses.indices) {
-              val address = addresses[i]
-              emailAndNamePairs[i] = EmailAndNamePair(address.address.toLowerCase(Locale.getDefault()), address.personal)
+            for (address in addresses) {
+              emailAndNamePairs.add(EmailAndNamePair(
+                  address.address.toLowerCase(Locale.getDefault()), address.personal))
             }
 
             return emailAndNamePairs
