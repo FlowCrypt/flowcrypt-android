@@ -67,7 +67,7 @@ import javax.mail.AuthenticationFailedException
  * E-mail: DenBond7@gmail.com
  */
 
-class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, AbsListView.OnScrollListener,
+class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     SwipeRefreshLayout.OnRefreshListener, AbsListView.MultiChoiceModeListener {
 
   private var listView: ListView? = null
@@ -195,28 +195,6 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
-    }
-  }
-
-  override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-    activeMsgDetails = parent.adapter.getItem(position) as? GeneralMessageDetails
-    if (activeMsgDetails == null) {
-      return
-    }
-    val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)
-    if (isOutbox || activeMsgDetails!!.isRawMsgAvailable || GeneralUtil.isConnected(context!!)) {
-      when (activeMsgDetails!!.msgState) {
-        MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
-        MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
-        MessageState.ERROR_CACHE_PROBLEM,
-        MessageState.ERROR_DURING_CREATION,
-        MessageState.ERROR_SENDING_FAILED,
-        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> handleOutgoingMsgWhichHasSomeError(activeMsgDetails!!)
-        else -> startActivityForResult(MessageDetailsActivity.getIntent(context,
-            listener!!.currentFolder, activeMsgDetails), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
-      }
-    } else {
-      showInfoSnackbar(getView()!!, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
     }
   }
 
@@ -774,7 +752,7 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
     progressBarActionProgress = view.findViewById(R.id.progressBarActionProgress)
 
     listView = view.findViewById(R.id.listViewMessages)
-    listView!!.onItemClickListener = this
+    listView!!.onItemClickListener = CustomOnItemClickListener()
     listView!!.setMultiChoiceModeListener(this)
 
     footerProgressView = LayoutInflater.from(context).inflate(R.layout.list_view_progress_footer, listView, false)
@@ -802,13 +780,44 @@ class EmailListFragment : BaseSyncFragment(), AdapterView.OnItemClickListener, A
     fun onRetryGoogleAuth()
   }
 
+  inner class CustomOnItemClickListener : AdapterView.OnItemClickListener {
+    private val timeout = 800
+    private var lastClickTime = 0L
+
+    override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+      if (System.currentTimeMillis() - lastClickTime < timeout) {
+        return
+      }
+
+      activeMsgDetails = parent?.adapter?.getItem(position) as? GeneralMessageDetails ?: return
+
+      val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)
+      if (isOutbox || activeMsgDetails!!.isRawMsgAvailable || GeneralUtil.isConnected(context!!)) {
+        when (activeMsgDetails!!.msgState) {
+          MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+          MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
+          MessageState.ERROR_CACHE_PROBLEM,
+          MessageState.ERROR_DURING_CREATION,
+          MessageState.ERROR_SENDING_FAILED,
+          MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> handleOutgoingMsgWhichHasSomeError(activeMsgDetails!!)
+          else -> startActivityForResult(MessageDetailsActivity.getIntent(context,
+              listener!!.currentFolder, activeMsgDetails), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
+        }
+      } else {
+        showInfoSnackbar(getView()!!, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
+      }
+
+      lastClickTime = System.currentTimeMillis()
+    }
+  }
+
   companion object {
 
-    private val REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10
-    private val REQUEST_CODE_DELETE_MESSAGES = 11
-    private val REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 12
+    private const val REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10
+    private const val REQUEST_CODE_DELETE_MESSAGES = 11
+    private const val REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 12
 
-    private val TIMEOUT_BETWEEN_REQUESTS = 500
-    private val LOADING_SHIFT_IN_ITEMS = 5
+    private const val TIMEOUT_BETWEEN_REQUESTS = 500
+    private const val LOADING_SHIFT_IN_ITEMS = 5
   }
 }
