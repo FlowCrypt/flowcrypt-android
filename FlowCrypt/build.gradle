@@ -258,6 +258,11 @@ android {
             taskPackageConsumerEnterprise.finalizedBy renameReleaseBuilds
         }
 
+        Task renameReleaseBuilds = tasks.findByName('renameReleaseBuilds')
+        if (renameReleaseBuilds != null) {
+            renameReleaseBuilds.finalizedBy copyReleaseApks
+        }
+
         android.applicationVariants.all { variant ->
             variant.resValue 'string', 'application_id', variant.applicationId
         }
