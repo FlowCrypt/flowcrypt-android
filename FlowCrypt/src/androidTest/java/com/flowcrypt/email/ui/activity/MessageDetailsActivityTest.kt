@@ -400,7 +400,7 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   private fun matchAtt(att: AttachmentInfo) {
-    onView(withId(R.id.textViewAttchmentName))
+    onView(withId(R.id.textViewAttachmentName))
         .check(matches(withText(att.name)))
     onView(withId(R.id.textViewAttSize))
         .check(matches(withText(Formatter.formatFileSize(getContext(), att.encodedSize))))

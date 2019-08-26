@@ -198,7 +198,6 @@ class AttachmentDaoSource : BaseDaoSource() {
    * @param email   The email that the message linked.
    * @param label   The folder label.
    * @param uid     The message UID.
-   * @param bodystructure     The given [BODYSTRUCTURE]
    * @return The number of rows deleted.
    */
   fun updateAttsTable(context: Context, email: String, label: String, uid: Long, msg: Message) {
@@ -336,7 +335,7 @@ class AttachmentDaoSource : BaseDaoSource() {
           uri,
           false,
           !cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))
-              && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0, 0
+              && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0, false, 0
       )
     }
   }

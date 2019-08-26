@@ -375,14 +375,14 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
     startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY,
         MessageEncryptionType.STANDARD,
-        ServiceInfo(false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            getString(R.string.message_was_encrypted_for_wrong_key),
-            atts)))
+        ServiceInfo(isToFieldEditable = false,
+            isFromFieldEditable = false,
+            isMsgEditable = false,
+            isSubjectEditable = false,
+            isMsgTypeSwitchable = false,
+            hasAbilityToAddNewAtt = false,
+            systemMsg = getString(R.string.message_was_encrypted_for_wrong_key),
+            atts = atts)))
   }
 
   /**
@@ -501,7 +501,11 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       for (att in atts) {
         val rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMsgParts, false)
 
-        val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttchmentName)
+        if (att.isDecrypted) {
+          rootView.setBackgroundResource(R.drawable.bg_att_decrypted)
+        }
+
+        val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttachmentName)
         textViewAttName.text = att.name
 
         val textViewAttSize = rootView.findViewById<TextView>(R.id.textViewAttSize)
@@ -594,6 +598,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           val decryptAtt: DecryptedAttMsgBlock = block as DecryptedAttMsgBlock
           val att = EmailUtil.getAttInfoFromUri(activity, decryptAtt.fileUri)
           if (att != null) {
+            att.isDecrypted = true
             att.uri = FileProvider.getUriForFile(context!!, Constants.FILE_PROVIDER_AUTHORITY, File(att.uri?.path))
             atts.add(att)
           }

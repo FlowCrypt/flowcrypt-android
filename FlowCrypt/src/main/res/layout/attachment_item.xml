@@ -3,70 +3,30 @@
   ~ Contributors: DenBond7
   -->
 
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layoutAtt"
     android:layout_width="match_parent"
     android:layout_height="@dimen/layout_height_attachment_item"
-    android:layout_marginLeft="@dimen/default_margin_content"
-    android:layout_marginTop="@dimen/default_margin_small"
-    android:layout_marginRight="@dimen/default_margin_content"
-    android:layout_marginBottom="@dimen/default_margin_small"
-    android:background="@color/aluminum"
-    android:maxWidth="@dimen/layout_width_attachment_item">
+    android:layout_gravity="center"
+    android:background="@drawable/bg_att"
+    android:clickable="true"
+    android:focusable="true">
 
-    <LinearLayout
-        android:id="@+id/layoutAtt"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:orientation="horizontal"
-        android:paddingLeft="@dimen/default_margin_content"
-        android:paddingRight="@dimen/default_margin_content">
-
-        <ImageView
-            android:id="@+id/imageViewAttIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:contentDescription="@string/attachment"
-            app:srcCompat="@mipmap/ic_attachment" />
-
-        <LinearLayout
-            android:id="@+id/layoutTexts"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:paddingLeft="@dimen/default_margin_small"
-            android:paddingRight="@dimen/default_margin_small">
-
-            <TextView
-                android:id="@+id/textViewAttchmentName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="middle"
-                android:singleLine="true"
-                tools:text="Some very very very very very large file name.txt" />
-
-            <TextView
-                android:id="@+id/textViewAttSize"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="@dimen/default_text_size_very_small"
-                tools:text="12.02 Mb" />
-        </LinearLayout>
-
+    <FrameLayout
+        android:id="@+id/actionButtons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+        app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
             android:id="@+id/imageButtonDownloadAtt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
+            android:layout_gravity="center"
             android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/download"
             app:srcCompat="@mipmap/ic_file_download" />
@@ -75,12 +35,60 @@
             android:id="@+id/imageButtonClearAtt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
+            android:layout_gravity="center"
             android:background="?android:attr/selectableItemBackground"
             android:contentDescription="@string/download"
             android:visibility="gone"
             app:srcCompat="@mipmap/ic_clear" />
 
-    </LinearLayout>
-</androidx.cardview.widget.CardView>
+    </FrameLayout>
 
+    <ImageView
+        android:id="@+id/imageViewAttIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/attachment"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@mipmap/ic_attachment" />
+
+    <TextView
+        android:id="@+id/textViewAttachmentName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/default_margin_small"
+        android:layout_marginEnd="@dimen/default_margin_small"
+        android:ellipsize="middle"
+        android:singleLine="true"
+        app:layout_constraintEnd_toStartOf="@+id/actionButtons"
+        app:layout_constraintStart_toEndOf="@+id/imageViewAttIcon"
+        app:layout_constraintTop_toTopOf="@+id/actionButtons"
+        tools:text="Some very very very very very very very very large file name.txt" />
+
+
+    <TextView
+        android:id="@+id/textViewAttSize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/default_text_size_very_small"
+        app:layout_constraintBottom_toBottomOf="@+id/actionButtons"
+        app:layout_constraintStart_toStartOf="@+id/textViewAttachmentName"
+        app:layout_constraintTop_toBottomOf="@+id/textViewAttachmentName"
+        tools:text="12.02 Mb" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="@dimen/default_margin_content" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="@dimen/default_margin_content" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

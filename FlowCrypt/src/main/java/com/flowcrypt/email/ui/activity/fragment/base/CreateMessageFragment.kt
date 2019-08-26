@@ -1398,7 +1398,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       for (att in atts) {
         val rootView = layoutInflater.inflate(R.layout.attachment_item, layoutAtts, false)
 
-        val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttchmentName)
+        val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttachmentName)
         textViewAttName.text = att.name
 
         val textViewAttSize = rootView.findViewById<TextView>(R.id.textViewAttSize)
