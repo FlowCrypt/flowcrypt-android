@@ -77,7 +77,7 @@ class Constants {
     /**
      * The max total size off all attachment which can be send via the app.
      */
-    const val MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES = 1024 * 1024 * 3
+    const val MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES = 1024 * 1024 * 5
 
     /**
      * The max size off an attachment which can be decrypted via the app.
