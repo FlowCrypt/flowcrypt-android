@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:drawable="?android:attr/selectableItemBackground" />
+
+    <item android:gravity="left">
+        <shape>
+            <size android:width="@dimen/width_pgp_message_type_line" />
+            <solid android:color="@color/colorPrimary" />
+        </shape>
+    </item>
+
+    <item>
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="1px"
+                android:color="@color/silver" />
+        </shape>
+    </item>
+</layer-list>

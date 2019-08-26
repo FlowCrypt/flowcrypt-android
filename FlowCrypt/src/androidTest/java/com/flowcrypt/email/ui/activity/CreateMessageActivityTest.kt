@@ -320,7 +320,7 @@ class CreateMessageActivityTest : BaseTest() {
       deleteAtt(att)
     }
 
-    onView(withId(R.id.textViewAttchmentName))
+    onView(withId(R.id.textViewAttachmentName))
         .check(doesNotExist())
   }
 
