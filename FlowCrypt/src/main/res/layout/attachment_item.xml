@@ -10,6 +10,7 @@
     android:layout_width="match_parent"
     android:layout_height="@dimen/layout_height_attachment_item"
     android:layout_gravity="center"
+    android:layout_marginBottom="@dimen/margin_bottom_att"
     android:background="@drawable/bg_att"
     android:clickable="true"
     android:focusable="true">

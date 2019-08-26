@@ -519,7 +519,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           layoutAtt.setOnClickListener(getOpenFileClickListener(att, button))
         }
 
-        layoutMsgParts!!.addView(rootView)
+        layoutMsgParts?.addView(rootView)
       }
     }
   }
