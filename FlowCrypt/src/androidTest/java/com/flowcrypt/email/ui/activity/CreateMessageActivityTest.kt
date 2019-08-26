@@ -30,7 +30,6 @@ import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -413,7 +412,8 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   private fun deleteAtt(att: File) {
-    onView(allOf<View>(withId(R.id.imageButtonClearAtt), hasSibling(withChild(withText(att.name)))))
+    onView(allOf<View>(withId(R.id.imageButtonClearAtt), ViewMatchers.withParent(
+        allOf<View>(withId(R.id.actionButtons), hasSibling(withText(att.name))))))
         .check(matches(isDisplayed()))
         .perform(click())
     onView(withText(att.name))
