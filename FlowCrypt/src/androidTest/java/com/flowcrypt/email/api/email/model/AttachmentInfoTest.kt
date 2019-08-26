@@ -40,8 +40,9 @@ class AttachmentInfoTest {
         "0",
         Uri.EMPTY,
         true,
-        false,
-        12)
+        isForwarded = false,
+        isDecrypted = false,
+        orderNumber = 12)
 
     val parcel = Parcel.obtain()
     original.writeToParcel(parcel, original.describeContents())

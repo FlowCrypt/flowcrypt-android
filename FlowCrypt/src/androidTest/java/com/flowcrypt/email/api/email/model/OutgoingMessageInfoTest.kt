@@ -41,9 +41,10 @@ class OutgoingMessageInfoTest {
         "1245fsdfs4597sdf4564",
         "0",
         Uri.EMPTY,
-        true,
-        false,
-        12)
+        isProtected = true,
+        isForwarded = false,
+        isDecrypted = false,
+        orderNumber = 12)
 
     val att2 = AttachmentInfo("rawData",
         "email",
@@ -57,9 +58,10 @@ class OutgoingMessageInfoTest {
         "1245fsdfs4597sdf4564",
         "0",
         Uri.EMPTY,
-        true,
-        false,
-        12)
+        isProtected = true,
+        isForwarded = false,
+        isDecrypted = false,
+        orderNumber = 12)
 
     val original = OutgoingMessageInfo(
         "subject",
