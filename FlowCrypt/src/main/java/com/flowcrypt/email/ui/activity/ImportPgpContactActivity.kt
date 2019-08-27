@@ -23,8 +23,8 @@ import androidx.loader.content.Loader
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.ApiName
 import com.flowcrypt.email.api.retrofit.BaseResponse
-import com.flowcrypt.email.api.retrofit.request.attester.LookUpRequest
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse
+import com.flowcrypt.email.api.retrofit.request.attester.PubRequest
+import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.results.LoaderResult
@@ -118,7 +118,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
       R.id.loader_id_search_public_key -> {
         this.isSearchingActiveNow = true
         UIUtil.exchangeViewVisibility(applicationContext, true, layoutProgress, layoutContentView)
-        val lookUpRequest = LookUpRequest(ApiName.GET_LOOKUP, editTextEmailOrId!!.text.toString())
+        val lookUpRequest = PubRequest(ApiName.GET_PUB, editTextEmailOrId!!.text.toString())
         ApiServiceAsyncTaskLoader(applicationContext, lookUpRequest)
       }
       else -> super.onCreateLoader(id, args)
@@ -132,8 +132,8 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
         val baseResponse = result as BaseResponse<*>?
         if (baseResponse != null) {
           if (baseResponse.responseModel != null) {
-            val lookUpResponse = baseResponse.responseModel as LookUpResponse?
-            handleLookupResponse(lookUpResponse!!)
+            val pubResponse = baseResponse.responseModel as PubResponse?
+            handlePubResponse(pubResponse!!)
           } else {
             UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
             UIUtil.showInfoSnackbar(rootView, getString(R.string.api_error))
@@ -153,6 +153,11 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
       EditorInfo.IME_ACTION_SEARCH -> {
         UIUtil.hideSoftInput(this@ImportPgpContactActivity, v)
 
+        if (v?.text.isNullOrEmpty()) {
+          Toast.makeText(this, R.string.please_type_key_id_or_email, Toast.LENGTH_SHORT).show()
+          return true
+        }
+
         if (GeneralUtil.isConnected(this)) {
           LoaderManager.getInstance(this).restartLoader(R.id.loader_id_search_public_key, null,
               this@ImportPgpContactActivity)
@@ -162,7 +167,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
       }
     }
 
-    return false
+    return true
   }
 
   override fun onError(loaderId: Int, e: Exception?) {
@@ -183,29 +188,18 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
     this.editTextEmailOrId!!.setOnEditorActionListener(this)
   }
 
-  private fun handleLookupResponse(lookUpResponse: LookUpResponse) {
-    if (lookUpResponse.apiError != null) {
+  private fun handlePubResponse(pubResponse: PubResponse) {
+    if (pubResponse.apiError != null) {
       UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
-      UIUtil.showInfoSnackbar(rootView, lookUpResponse.apiError.msg!!)
+      UIUtil.showInfoSnackbar(rootView, pubResponse.apiError.msg!!)
     } else {
-      val lookUpPublicKeyInfoArrayList = lookUpResponse.results?.filterNotNull()
-      if (lookUpPublicKeyInfoArrayList != null) {
-        val builder = StringBuilder()
-
-        for (lookUpPublicKeyInfo in lookUpPublicKeyInfoArrayList) {
-          builder.append(lookUpPublicKeyInfo.pubKey)
-        }
-
-        if (builder.isNotEmpty()) {
-          startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, builder.toString()),
-              REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
-        } else {
-          UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
-          Toast.makeText(this, R.string.no_public_key_found, Toast.LENGTH_SHORT).show()
-        }
+      val pubkey = pubResponse.pubkey
+      if (!pubkey.isNullOrEmpty()) {
+        startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, pubkey),
+            REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
       } else {
         UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
-        UIUtil.showInfoSnackbar(rootView, getString(R.string.api_error))
+        Toast.makeText(this, R.string.no_public_key_found, Toast.LENGTH_SHORT).show()
       }
     }
   }

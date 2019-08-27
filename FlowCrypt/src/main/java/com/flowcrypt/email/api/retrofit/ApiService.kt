@@ -15,9 +15,7 @@ import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
-
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -80,10 +78,10 @@ interface ApiService {
   fun postHelpFeedbackResponse(@Body body: PostHelpFeedbackModel): Call<PostHelpFeedbackResponse>
 
   /**
-   * This method create a [Call] object for the API "https://flowcrypt.com/attester/lookup"
+   * This method create a [Call] object for the API "https://flowcrypt.com/attester/pub"
    *
    * @return [<]
    */
-  @GET("lookup/{keyIdOrEmail}")
-  fun getLookUp(@Path("keyIdOrEmail") keyIdOrEmail: String): Call<LookUpResponse>
+  @GET("pub/{keyIdOrEmail}")
+  fun getPub(@Path("keyIdOrEmail") keyIdOrEmail: String): Call<String>
 }
