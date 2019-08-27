@@ -396,4 +396,5 @@
     <string name="system_notifications_notification_chanel">The system notifications channel</string>
     <string name="warning_passphrase_is_too_weak">Your private key pass phrase is too weak. Please change it in the
         settings.</string>
+    <string name="please_type_key_id_or_email">Please type key id or email</string>
 </resources>

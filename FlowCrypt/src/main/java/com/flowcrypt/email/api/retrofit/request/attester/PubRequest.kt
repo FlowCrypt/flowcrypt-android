@@ -10,7 +10,7 @@ import com.flowcrypt.email.api.retrofit.request.BaseRequest
 import com.flowcrypt.email.api.retrofit.request.model.RequestModel
 
 /**
- * This class describes the request to the API "https://flowcrypt.com/attester/lookup"
+ * This class describes the request to the API "https://flowcrypt.com/attester/pub"
  *
  * @author DenBond7
  * Date: 05.05.2018
@@ -18,8 +18,8 @@ import com.flowcrypt.email.api.retrofit.request.model.RequestModel
  * E-mail: DenBond7@gmail.com
  */
 
-class LookUpRequest @JvmOverloads constructor(override val apiName: ApiName = ApiName.GET_LOOKUP,
-                                              val query: String) : BaseRequest<RequestModel> {
+class PubRequest @JvmOverloads constructor(override val apiName: ApiName = ApiName.GET_PUB,
+                                           val query: String) : BaseRequest<RequestModel> {
   override val requestModel: RequestModel = object : RequestModel {}
 }
 

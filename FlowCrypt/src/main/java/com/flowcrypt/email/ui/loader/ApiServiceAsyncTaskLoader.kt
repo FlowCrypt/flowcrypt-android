@@ -14,12 +14,12 @@ import com.flowcrypt.email.api.retrofit.BaseResponse
 import com.flowcrypt.email.api.retrofit.request.BaseRequest
 import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest
 import com.flowcrypt.email.api.retrofit.request.attester.LookUpEmailRequest
-import com.flowcrypt.email.api.retrofit.request.attester.LookUpRequest
+import com.flowcrypt.email.api.retrofit.request.attester.PubRequest
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpResponse
+import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.util.exception.ExceptionUtil
 
@@ -106,21 +106,22 @@ class ApiServiceAsyncTaskLoader(context: Context,
             baseResponse = initialLegacySubmitResponse
           }
 
-          ApiName.GET_LOOKUP -> {
-            val lookUpResponse = BaseResponse<LookUpResponse>()
-            lookUpResponse.apiName = baseRequest.apiName
+          ApiName.GET_PUB -> {
+            val pubResponse = BaseResponse<PubResponse>()
+            pubResponse.apiName = baseRequest.apiName
 
             if (apiService != null) {
               try {
-                lookUpResponse.setResponse(apiService!!.getLookUp((baseRequest as LookUpRequest).query).execute())
+                val response = apiService!!.getPub((baseRequest as PubRequest).query).execute()
+                pubResponse.setResponse(retrofit2.Response.success(PubResponse(null, response.body())))
               } catch (e: Exception) {
                 e.printStackTrace()
                 ExceptionUtil.handleError(e)
-                lookUpResponse.exception = e
+                pubResponse.exception = e
               }
 
             }
-            baseResponse = lookUpResponse
+            baseResponse = pubResponse
           }
           else -> throw IllegalStateException("Unsupported call")
         }
