@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.base
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -12,10 +13,14 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity
 import com.flowcrypt.email.ui.activity.BaseNodeActivity
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
 
 /**
  * This activity will be a common point of a sign-in logic.
@@ -32,13 +37,15 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
   protected var isRunSignInWithGmailNeeded: Boolean = false
 
   @JvmField
-  protected var sign: GoogleSignInAccount? = null
+  protected var googleSignInAccount: GoogleSignInAccount? = null
+
+  abstract fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
     if (savedInstanceState != null) {
-      this.sign = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT)
+      this.googleSignInAccount = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT)
     }
 
     client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
@@ -47,11 +54,23 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
 
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
-    outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, sign)
+    outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, googleSignInAccount)
   }
 
   public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
+      REQUEST_CODE_RESOLVE_SIGN_IN_ERROR -> {
+        if (resultCode == Activity.RESULT_OK) {
+          GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, rootView, REQUEST_CODE_SIGN_IN)
+        }
+      }
+
+      REQUEST_CODE_SIGN_IN -> {
+        if (resultCode == Activity.RESULT_OK) {
+          handleSignInResult(GoogleSignIn.getSignedInAccountFromIntent(data))
+        }
+      }
+
       REQUEST_CODE_ADD_OTHER_ACCOUNT -> when (resultCode) {
         AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL -> this.isRunSignInWithGmailNeeded = true
       }
@@ -83,9 +102,25 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
     }
   }
 
+  private fun handleSignInResult(task: Task<GoogleSignInAccount>) {
+    try {
+      if (task.isSuccessful) {
+        googleSignInAccount = task.getResult(ApiException::class.java)
+        onSignSuccess(googleSignInAccount)
+      } else {
+        val error = task.exception
+        UIUtil.showInfoSnackbar(rootView, error?.message ?: getString(R.string.unknown_error))
+      }
+    } catch (e: ApiException) {
+      UIUtil.showInfoSnackbar(rootView,
+          "Error. statusCode = " + GoogleSignInStatusCodes.getStatusCodeString(e.statusCode))
+    }
+  }
+
   companion object {
     const val REQUEST_CODE_SIGN_IN = 10
     const val REQUEST_CODE_ADD_OTHER_ACCOUNT = 11
+    const val REQUEST_CODE_RESOLVE_SIGN_IN_ERROR = 12
 
     private val KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT =
         GeneralUtil.generateUniqueExtraKey("KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT", BaseSignInActivity::class.java)

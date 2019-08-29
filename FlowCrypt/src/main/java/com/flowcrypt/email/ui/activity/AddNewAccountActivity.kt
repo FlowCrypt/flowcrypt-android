@@ -26,7 +26,7 @@ import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
 import java.util.*
@@ -63,23 +63,6 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
-      REQUEST_CODE_SIGN_IN -> {
-        val signInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
-        if (signInResult.isSuccess) {
-          this.sign = signInResult.signInAccount
-          if (this.sign != null) {
-            if (AccountDaoSource().getAccountInformation(this, this.sign!!.email!!) == null) {
-              LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null,
-                  this)
-            } else {
-              showInfoSnackbar(rootView, getString(R.string.template_email_alredy_added,
-                  this.sign!!.email), Snackbar.LENGTH_LONG)
-            }
-          } else
-            throw NullPointerException("GoogleSignInAccount is null!")
-        }
-      }
-
       REQUEST_CODE_ADD_OTHER_ACCOUNT -> when (resultCode) {
         Activity.RESULT_OK -> try {
           val authCreds = data!!.getParcelableExtra<AuthCredentials>(AddNewAccountManuallyActivity
@@ -128,7 +111,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
     return when (id) {
       R.id.loader_id_load_private_key_backups_from_email -> {
         UIUtil.exchangeViewVisibility(this, true, progressView!!, content!!)
-        val account = AccountDao(sign!!.email!!, AccountDao.ACCOUNT_TYPE_GOOGLE)
+        val account = AccountDao(googleSignInAccount!!.email!!, AccountDao.ACCOUNT_TYPE_GOOGLE)
         LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
       }
 
@@ -142,7 +125,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
 
   override fun onLoaderReset(loader: Loader<LoaderResult>) {
     when (loader.id) {
-      R.id.loader_id_load_private_key_backups_from_email -> this.sign = null
+      R.id.loader_id_load_private_key_backups_from_email -> this.googleSignInAccount = null
     }
   }
 
@@ -152,7 +135,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
       R.id.loader_id_load_private_key_backups_from_email -> {
         val keyDetailsList = result as ArrayList<NodeKeyDetails>?
         if (CollectionUtils.isEmpty(keyDetailsList)) {
-          val account = AccountDao(sign!!.email!!, AccountDao.ACCOUNT_TYPE_GOOGLE)
+          val account = AccountDao(googleSignInAccount!!.email!!, AccountDao.ACCOUNT_TYPE_GOOGLE)
           startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
               REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL)
           UIUtil.exchangeViewVisibility(this, false, progressView!!, content!!)
@@ -184,6 +167,16 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
     }
   }
 
+  override fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?) {
+    if (AccountDaoSource().getAccountInformation(this, this.googleSignInAccount!!.email!!) == null) {
+      LoaderManager.getInstance(this)
+          .restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
+    } else {
+      showInfoSnackbar(rootView, getString(R.string.template_email_alredy_added,
+          this.googleSignInAccount!!.email), Snackbar.LENGTH_LONG)
+    }
+  }
+
   private fun returnResultOk() {
     val accountDaoSource = saveGmailAccount()
 
@@ -196,8 +189,8 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
 
   private fun saveGmailAccount(): AccountDaoSource {
     val accountDaoSource = AccountDaoSource()
-    accountDaoSource.addRow(this, sign)
-    accountDaoSource.setActiveAccount(this, sign!!.email)
+    accountDaoSource.addRow(this, googleSignInAccount)
+    accountDaoSource.setActiveAccount(this, googleSignInAccount!!.email)
     return accountDaoSource
   }
 
