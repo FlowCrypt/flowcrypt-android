@@ -13,9 +13,9 @@ import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity
 import com.flowcrypt.email.ui.activity.BaseNodeActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 
 /**
  * This activity will be a common point of a sign-in logic.
@@ -26,12 +26,9 @@ import com.google.android.gms.common.api.GoogleApiClient
  * E-mail: DenBond7@gmail.com
  */
 
-abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener,
-    GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
-  /**
-   * The main entry point for Google Play services integration.
-   */
-  protected lateinit var client: GoogleApiClient
+abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
+
+  protected lateinit var client: GoogleSignInClient
   protected var isRunSignInWithGmailNeeded: Boolean = false
 
   @JvmField
@@ -44,7 +41,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener,
       this.sign = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT)
     }
 
-    initGoogleApiClient()
+    client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
     initViews()
   }
 
@@ -74,26 +71,6 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener,
         showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
       }
     }
-  }
-
-  override fun onConnected(bundle: Bundle?) {
-    if (this.isRunSignInWithGmailNeeded) {
-      this.isRunSignInWithGmailNeeded = false
-      GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, rootView, REQUEST_CODE_SIGN_IN)
-    }
-  }
-
-  override fun onConnectionSuspended(i: Int) {
-
-  }
-
-  override fun onConnectionFailed(connResult: ConnectionResult) {
-    showInfoSnackbar(rootView, connResult.errorMessage)
-  }
-
-  protected fun initGoogleApiClient() {
-    val googleSignInOptions = GoogleApiClientHelper.generateGoogleSignInOptions()
-    client = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, googleSignInOptions)
   }
 
   private fun initViews() {

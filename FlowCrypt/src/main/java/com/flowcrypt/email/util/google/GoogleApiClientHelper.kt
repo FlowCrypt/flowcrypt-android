@@ -5,22 +5,18 @@
 
 package com.flowcrypt.email.util.google
 
-import android.content.Context
 import android.view.View
-import android.widget.Toast
-import androidx.fragment.app.FragmentActivity
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.GeneralUtil
-import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.Scope
 import com.google.android.material.snackbar.Snackbar
 
 /**
- * This class describes methods which can be used to work with [GoogleApiClient].
+ * This class describes methods which can be used to work with Google API.
  *
  * @author Denis Bondarenko
  * Date: 09.10.2017
@@ -39,51 +35,22 @@ class GoogleApiClientHelper {
           .build()
     }
 
-    @JvmStatic
-    fun generateGoogleApiClient(context: Context, fragmentActivity: FragmentActivity,
-                                listener: GoogleApiClient.OnConnectionFailedListener,
-                                connCallbacks: GoogleApiClient.ConnectionCallbacks,
-                                googleSignInOptions: GoogleSignInOptions): GoogleApiClient {
-      return GoogleApiClient.Builder(context)
-          .enableAutoManage(fragmentActivity, listener)
-          .addConnectionCallbacks(connCallbacks)
-          .addApi(Auth.GOOGLE_SIGN_IN_API, googleSignInOptions)
-          .build()
-    }
-
-    /**
-     * Sign out from the Google account.
-     */
-    @JvmStatic
-    fun signOutFromGoogleAccount(context: Context, googleApiClient: GoogleApiClient) {
-      Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback { status ->
-        if (!status.isSuccess) {
-          Toast.makeText(context, R.string.error_occurred_while_this_action_running, Toast.LENGTH_SHORT).show()
-        }
-      }
-    }
-
     /**
      * Do sign in with Gmail account using OAuth2 mechanism.
      *
-     * @param baseActivity    An instance of [BaseActivity]
-     * @param googleApiClient An instance of [GoogleApiClient]
+     * @param activity        An instance of [BaseActivity]
+     * @param client          An instance of [GoogleSignInClient]
      * @param rootView        A view which will be used for showing an info [Snackbar]
      * @param requestCode     A request code for handling the result.
      */
     @JvmStatic
-    fun signInWithGmailUsingOAuth2(baseActivity: BaseActivity, googleApiClient: GoogleApiClient?,
+    fun signInWithGmailUsingOAuth2(activity: BaseActivity, client: GoogleSignInClient,
                                    rootView: View, requestCode: Int) {
-      if (GeneralUtil.isConnected(baseActivity)) {
-        if (googleApiClient != null && googleApiClient.isConnected) {
-          googleApiClient.clearDefaultAccountAndReconnect()
-          val signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient)
-          baseActivity.startActivityForResult(signInIntent, requestCode)
-        } else {
-          baseActivity.showInfoSnackbar(rootView, baseActivity.getString(R.string.google_api_is_not_available))
-        }
+      if (GeneralUtil.isConnected(activity)) {
+        client.signOut()
+        activity.startActivityForResult(client.signInIntent, requestCode)
       } else {
-        baseActivity.showInfoSnackbar(rootView, baseActivity.getString(R.string.internet_connection_is_not_available))
+        activity.showInfoSnackbar(rootView, activity.getString(R.string.internet_connection_is_not_available))
       }
     }
   }
