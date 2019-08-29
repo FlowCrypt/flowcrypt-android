@@ -9,7 +9,6 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.View
 import android.widget.Toast
 import androidx.loader.app.LoaderManager
@@ -31,10 +30,12 @@ import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInResult
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
+import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.util.CollectionUtils
+import com.google.android.gms.tasks.Task
 import java.util.*
 
 /**
@@ -66,8 +67,9 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
       REQUEST_CODE_SIGN_IN -> {
-        val signInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
-        handleSignInResult(signInResult)
+        if (resultCode == Activity.RESULT_OK) {
+          handleSignInResult(GoogleSignIn.getSignedInAccountFromIntent(data))
+        }
       }
 
       REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL -> {
@@ -224,17 +226,19 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
     }
   }
 
-  private fun handleSignInResult(signInResult: GoogleSignInResult) {
-    if (signInResult.isSuccess) {
-      sign = signInResult.signInAccount
-
-      startService(Intent(this, CheckClipboardToFindKeyService::class.java))
-      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
-    } else {
-      if (!TextUtils.isEmpty(signInResult.status.statusMessage)) {
-        UIUtil.showInfoSnackbar(rootView, signInResult.status.statusMessage!!)
+  private fun handleSignInResult(task: Task<GoogleSignInAccount>) {
+    try {
+      if (task.isSuccessful) {
+        sign = task.getResult(ApiException::class.java)
+        startService(Intent(this, CheckClipboardToFindKeyService::class.java))
+        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
+      } else {
+        val error = task.exception
+        UIUtil.showInfoSnackbar(rootView, error?.message ?: getString(R.string.unknown_error))
       }
-      UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
+    } catch (e: ApiException) {
+      UIUtil.showInfoSnackbar(rootView,
+          "Error. statusCode = " + GoogleSignInStatusCodes.getStatusCodeString(e.statusCode))
     }
   }
 

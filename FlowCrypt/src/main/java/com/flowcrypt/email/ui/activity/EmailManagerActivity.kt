@@ -62,8 +62,8 @@ import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.flowcrypt.email.util.graphics.glide.transformations.CircleTransformation
 import com.google.android.gms.auth.api.Auth
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.sun.mail.imap.protocol.SearchSequence
@@ -77,10 +77,9 @@ import com.sun.mail.imap.protocol.SearchSequence
  * E-mail: DenBond7@gmail.com
  */
 class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigationItemSelectedListener,
-    LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener, GoogleApiClient.OnConnectionFailedListener,
-    GoogleApiClient.ConnectionCallbacks, SearchView.OnQueryTextListener {
+    LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener, SearchView.OnQueryTextListener {
 
-  private var apiClient: GoogleApiClient? = null
+  private lateinit var client: GoogleSignInClient
   override var currentAccountDao: AccountDao? = null
   private var foldersManager: FoldersManager? = null
   override var currentFolder: LocalFolder? = null
@@ -163,9 +162,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     currentAccountDao = AccountDaoSource().getActiveAccountInformation(this)
 
     if (currentAccountDao != null) {
-      val options = GoogleApiClientHelper.generateGoogleSignInOptions()
-
-      apiClient = GoogleApiClientHelper.generateGoogleApiClient(this, this, this, this, options)
+      client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
       ActionManager(this).checkAndAddActionsToQueue(currentAccountDao!!)
       LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this)
@@ -452,19 +449,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   override fun onRetryGoogleAuth() {
-    GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, apiClient, rootView, REQUEST_CODE_SIGN_IN)
-  }
-
-  override fun onConnected(bundle: Bundle?) {
-
-  }
-
-  override fun onConnectionSuspended(i: Int) {
-
-  }
-
-  override fun onConnectionFailed(connResult: ConnectionResult) {
-    connResult.errorMessage?.let { UIUtil.showInfoSnackbar(rootView, it) }
+    GoogleApiClientHelper.signInWithGmailUsingOAuth2(this, client, rootView, REQUEST_CODE_SIGN_IN)
   }
 
   override fun onQueryTextSubmit(query: String): Boolean {
@@ -511,11 +496,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     val accountDaoList = accountDaoSource.getAccountsWithoutActive(this, currentAccountDao!!.email)
 
     when (currentAccountDao!!.accountType) {
-      AccountDao.ACCOUNT_TYPE_GOOGLE -> if (apiClient != null && apiClient!!.isConnected) {
-        GoogleApiClientHelper.signOutFromGoogleAccount(this, apiClient!!)
-      } else {
-        showInfoSnackbar(rootView, getString(R.string.google_api_is_not_available))
-      }
+      AccountDao.ACCOUNT_TYPE_GOOGLE -> client.signOut()
     }
 
     if (currentAccountDao != null) {

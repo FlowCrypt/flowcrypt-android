@@ -27,7 +27,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.api.Auth
-import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
 import java.util.*
@@ -41,8 +40,8 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener, GoogleApiClient.OnConnectionFailedListener,
-    GoogleApiClient.ConnectionCallbacks, LoaderManager.LoaderCallbacks<LoaderResult> {
+class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
+    LoaderManager.LoaderCallbacks<LoaderResult> {
 
   private var progressView: View? = null
   private var content: View? = null
