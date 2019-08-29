@@ -30,12 +30,9 @@ import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
-import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.util.CollectionUtils
-import com.google.android.gms.tasks.Task
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import java.util.*
 
 /**
@@ -66,12 +63,6 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
-      REQUEST_CODE_SIGN_IN -> {
-        if (resultCode == Activity.RESULT_OK) {
-          handleSignInResult(GoogleSignIn.getSignedInAccountFromIntent(data))
-        }
-      }
-
       REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL -> {
         isStartCheckKeysActivityEnabled = false
 
@@ -79,7 +70,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
           Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> runEmailManagerActivity()
 
           Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
-            this.sign = null
+            this.googleSignInAccount = null
             UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
           }
         }
@@ -89,7 +80,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
         Activity.RESULT_OK -> runEmailManagerActivity()
 
         Activity.RESULT_CANCELED, CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
-          this.sign = null
+          this.googleSignInAccount = null
           UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
         }
       }
@@ -143,8 +134,8 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
         var account: AccountDao? = null
         UIUtil.exchangeViewVisibility(this, true, progressView!!, rootView)
-        if (sign != null) {
-          account = AccountDao(sign!!.email!!, AccountDao.ACCOUNT_TYPE_GOOGLE)
+        if (googleSignInAccount != null) {
+          account = AccountDao(googleSignInAccount!!.email!!, AccountDao.ACCOUNT_TYPE_GOOGLE)
         }
         LoadPrivateKeysFromMailAsyncTaskLoader(this, account!!)
       }
@@ -159,8 +150,8 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
       R.id.loader_id_load_private_key_backups_from_email -> if (loaderResult.result != null) {
         val keyDetailsList = loaderResult.result as ArrayList<NodeKeyDetails>?
         if (CollectionUtils.isEmpty(keyDetailsList)) {
-          if (sign != null) {
-            val intent = CreateOrImportKeyActivity.newIntent(this, AccountDao(sign!!), true)
+          if (googleSignInAccount != null) {
+            val intent = CreateOrImportKeyActivity.newIntent(this, AccountDao(googleSignInAccount!!), true)
             startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
           }
         } else if (isStartCheckKeysActivityEnabled) {
@@ -178,13 +169,24 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
         }
       } else if (loaderResult.exception != null) {
         UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
-        UIUtil.showInfoSnackbar(rootView, loaderResult.exception?.message ?: "")
+
+        if (loaderResult.exception is UserRecoverableAuthIOException) {
+          startActivityForResult((loaderResult.exception as UserRecoverableAuthIOException).intent,
+              REQUEST_CODE_RESOLVE_SIGN_IN_ERROR)
+        } else {
+          UIUtil.showInfoSnackbar(rootView, loaderResult.exception?.message ?: "")
+        }
       }
     }
   }
 
   override fun onLoaderReset(loader: Loader<LoaderResult>) {
 
+  }
+
+  override fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?) {
+    startService(Intent(this, CheckClipboardToFindKeyService::class.java))
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
   }
 
   private fun addNewAccount(authCreds: AuthCredentials) {
@@ -205,7 +207,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
   private fun runEmailManagerActivity() {
     EmailSyncService.startEmailSyncService(this)
 
-    val account = addGmailAccount(sign)
+    val account = addGmailAccount(googleSignInAccount)
     if (account != null) {
       EmailManagerActivity.runEmailManagerActivity(this)
       finish()
@@ -223,22 +225,6 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
     if (account != null) {
       val uri = Uri.parse(FlowcryptContract.AUTHORITY_URI.toString() + "/" + FlowcryptContract.CLEAN_DATABASE)
       contentResolver.delete(uri, null, arrayOf(account.email))
-    }
-  }
-
-  private fun handleSignInResult(task: Task<GoogleSignInAccount>) {
-    try {
-      if (task.isSuccessful) {
-        sign = task.getResult(ApiException::class.java)
-        startService(Intent(this, CheckClipboardToFindKeyService::class.java))
-        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
-      } else {
-        val error = task.exception
-        UIUtil.showInfoSnackbar(rootView, error?.message ?: getString(R.string.unknown_error))
-      }
-    } catch (e: ApiException) {
-      UIUtil.showInfoSnackbar(rootView,
-          "Error. statusCode = " + GoogleSignInStatusCodes.getStatusCodeString(e.statusCode))
     }
   }
 
