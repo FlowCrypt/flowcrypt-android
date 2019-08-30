@@ -9,6 +9,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity
 import com.flowcrypt.email.ui.activity.BaseNodeActivity
@@ -66,9 +67,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
       }
 
       REQUEST_CODE_SIGN_IN -> {
-        if (resultCode == Activity.RESULT_OK) {
-          handleSignInResult(GoogleSignIn.getSignedInAccountFromIntent(data))
-        }
+        handleSignInResult(resultCode, GoogleSignIn.getSignedInAccountFromIntent(data))
       }
 
       REQUEST_CODE_ADD_OTHER_ACCOUNT -> when (resultCode) {
@@ -102,18 +101,27 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
     }
   }
 
-  private fun handleSignInResult(task: Task<GoogleSignInAccount>) {
+  private fun handleSignInResult(resultCode: Int, task: Task<GoogleSignInAccount>) {
     try {
       if (task.isSuccessful) {
         googleSignInAccount = task.getResult(ApiException::class.java)
         onSignSuccess(googleSignInAccount)
       } else {
         val error = task.exception
+
+        if (error is ApiException) {
+          throw error
+        }
+
         UIUtil.showInfoSnackbar(rootView, error?.message ?: getString(R.string.unknown_error))
       }
     } catch (e: ApiException) {
-      UIUtil.showInfoSnackbar(rootView,
-          "Error. statusCode = " + GoogleSignInStatusCodes.getStatusCodeString(e.statusCode))
+      val msg = GoogleSignInStatusCodes.getStatusCodeString(e.statusCode)
+      if (resultCode == Activity.RESULT_OK) {
+        UIUtil.showInfoSnackbar(rootView, msg)
+      } else {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+      }
     }
   }
 
