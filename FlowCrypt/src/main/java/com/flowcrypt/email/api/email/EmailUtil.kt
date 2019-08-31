@@ -11,6 +11,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.text.TextUtils
+import android.text.format.DateFormat
 import android.util.Base64
 import android.util.LongSparseArray
 import android.util.SparseArray
@@ -20,6 +21,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.model.AttachmentInfo
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
@@ -833,6 +835,28 @@ class EmailUtil {
         e.printStackTrace()
         return false
       }
+    }
+
+    /**
+     * Prepare a reply quotes text
+     *
+     * @return The reply quotes text
+     */
+    fun prepareReplyQuotes(context: Context?, userName: String?, email: String,
+                           msgInfo: IncomingMessageInfo?): String {
+      val dateFormat: java.text.DateFormat
+      val timeFormat: java.text.DateFormat
+      if (context != null) {
+        dateFormat = DateFormat.getDateFormat(context)
+        timeFormat = DateFormat.getTimeFormat(context)
+      } else {
+        dateFormat = SimpleDateFormat("EEE, MMM d, yyyy", Locale.US)
+        timeFormat = SimpleDateFormat("K:mm a", Locale.US)
+      }
+      val user = userName ?: ""
+      val date = Date()
+      val replyText = msgInfo?.text?.replace("(?m)^".toRegex(), "> ") ?: ""
+      return "\nOn " + dateFormat.format(date) + " at " + timeFormat.format(date) + " $user $email wrote:\n" + replyText
     }
   }
 }
