@@ -617,7 +617,17 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
   private fun setupWebView(block: MsgBlock) {
     emailWebView?.configure()
-    emailWebView?.loadDataWithBaseURL(null, block.content!!, "text/html", StandardCharsets.UTF_8.displayName(), null)
+
+    var text = block.content
+
+    text?.let {
+      if (it.length > CONTENT_MAX_ALLOWED_LENGTH) {
+        text = it.take(CONTENT_MAX_ALLOWED_LENGTH) +
+            "\n\n" + getString(R.string.clipped_message_too_large)
+      }
+    }
+
+    emailWebView?.loadDataWithBaseURL(null, text, "text/html", StandardCharsets.UTF_8.displayName(), null)
     emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
       override fun onPageFinished() {
         updateReplyButtons()
@@ -896,5 +906,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     private const val REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100
     private const val REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 101
     private const val REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102
+    private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }
 }
