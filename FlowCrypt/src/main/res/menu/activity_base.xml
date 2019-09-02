@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/menuFeedback"
+        android:icon="@mipmap/ic_help"
+        android:menuCategory="system"
+        android:orderInCategory="1000"
+        android:title="@string/feedback"
+        app:showAsAction="always" />
+</menu>

@@ -16,5 +16,5 @@
         android:id="@+id/menuActionSend"
         android:icon="@mipmap/ic_action_send"
         android:title="@string/send"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
 </menu>

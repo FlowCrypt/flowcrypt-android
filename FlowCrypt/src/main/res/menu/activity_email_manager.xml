@@ -6,6 +6,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/menuFeedback"
+        android:icon="@mipmap/ic_help"
+        android:menuCategory="system"
+        android:orderInCategory="1000"
+        android:title="@string/feedback"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/menuSearch"
         android:icon="@mipmap/ic_action_search"
         android:menuCategory="system"

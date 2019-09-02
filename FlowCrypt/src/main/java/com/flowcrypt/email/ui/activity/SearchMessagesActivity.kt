@@ -118,7 +118,7 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
     searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
     searchView.clearFocus()
 
-    return true
+    return super.onCreateOptionsMenu(menu)
   }
 
   override fun onQueryTextSubmit(query: String): Boolean {

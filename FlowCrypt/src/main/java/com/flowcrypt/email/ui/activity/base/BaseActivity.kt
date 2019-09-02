@@ -14,6 +14,7 @@ import android.os.Handler
 import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.annotation.VisibleForTesting
@@ -31,6 +32,9 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.idling.NodeIdlingResource
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
+import org.rm3l.maoni.Maoni
+import org.rm3l.maoni.common.contract.Listener
+import org.rm3l.maoni.common.model.Feedback
 import java.lang.ref.WeakReference
 
 /**
@@ -125,13 +129,42 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
     LogsUtil.d(tag, "onDestroy")
   }
 
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    menuInflater.inflate(R.menu.activity_base, menu)
+    return true
+  }
+
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
       android.R.id.home -> if (isDisplayHomeAsUpEnabled) {
         finish()
         true
-      } else
+      } else {
         super.onOptionsItemSelected(item)
+      }
+
+      R.id.menuFeedback -> {
+        Maoni.Builder(null)
+            .withTheme(R.style.AppTheme_NoActionBar)
+            //.withHeader(R.mipmap.ic_launcher)
+            .withWindowTitle("withWindowTitle") //Set to an empty string to clear it
+            .withMessage("withMessage")
+            .withFeedbackContentHint("withFeedbackContentHint")
+            .withIncludeScreenshotText("withIncludeScreenshotText")
+            .withTouchToPreviewScreenshotText("withTouchToPreviewScreenshotText")
+            .withContentErrorMessage("withContentErrorMessage")
+            .withScreenshotHint("withScreenshotHint")
+            .withListener(object : Listener {
+              override fun onDismiss() {}
+
+              override fun onSendButtonClicked(feedback: Feedback?): Boolean {
+                return true
+              }
+            })
+            .build()
+            .start(this)
+        true
+      }
 
       else -> super.onOptionsItemSelected(item)
     }
