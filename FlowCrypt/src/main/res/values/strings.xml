@@ -398,4 +398,5 @@
         settings.</string>
     <string name="please_type_key_id_or_email">Please type key id or email</string>
     <string name="clipped_message_too_large">[clipped - message too large]</string>
+    <string name="feedback">Feedback</string>
 </resources>

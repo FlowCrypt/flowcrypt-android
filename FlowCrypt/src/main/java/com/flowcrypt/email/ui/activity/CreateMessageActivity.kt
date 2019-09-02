@@ -75,9 +75,8 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
-    val inflater = menuInflater
-    inflater.inflate(R.menu.activity_send_message, menu)
-    return true
+    menuInflater.inflate(R.menu.activity_send_message, menu)
+    return super.onCreateOptionsMenu(menu)
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
