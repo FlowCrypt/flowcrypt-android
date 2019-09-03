@@ -19,6 +19,7 @@ import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.service.FeedbackJobIntentService
 import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -48,6 +49,7 @@ class LauncherActivity : BaseActivity() {
     PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false)
     ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
     MessagesSenderJobService.schedule(applicationContext)
+    FeedbackJobIntentService.enqueueWork(this, null, null)
 
     account = AccountDaoSource().getActiveAccountInformation(this)
     if (account != null && isNodeReady) {

@@ -80,7 +80,7 @@ class ApiServiceAsyncTaskLoader(context: Context,
 
             if (apiService != null) {
               try {
-                postHelpFeedbackResponse.setResponse(apiService!!.postHelpFeedbackResponse(postHelpFeedbackRequest!!
+                postHelpFeedbackResponse.setResponse(apiService!!.postHelpFeedback(postHelpFeedbackRequest!!
                     .requestModel).execute())
               } catch (e: Exception) {
                 postHelpFeedbackResponse.exception = catchException(e)
