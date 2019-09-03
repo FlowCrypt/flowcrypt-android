@@ -22,10 +22,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.Observer
 import androidx.loader.content.Loader
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.service.BaseService
+import com.flowcrypt.email.service.FeedbackJobIntentService
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -144,7 +147,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
       }
 
       R.id.menuFeedback -> {
-        Maoni.Builder(null)
+        Maoni.Builder(Constants.FILE_PROVIDER_AUTHORITY)
             .withTheme(R.style.AppTheme_NoActionBar)
             //.withHeader(R.mipmap.ic_launcher)
             .withWindowTitle("withWindowTitle") //Set to an empty string to clear it
@@ -158,6 +161,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
               override fun onDismiss() {}
 
               override fun onSendButtonClicked(feedback: Feedback?): Boolean {
+                val account = AccountDaoSource().getActiveAccountInformation(this@BaseActivity)
+                FeedbackJobIntentService.enqueueWork(this@BaseActivity, account, feedback)
                 return true
               }
             })

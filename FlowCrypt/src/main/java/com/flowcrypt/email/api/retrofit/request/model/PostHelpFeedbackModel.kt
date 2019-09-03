@@ -19,4 +19,6 @@ import com.google.gson.annotations.SerializedName
  */
 
 data class PostHelpFeedbackModel(@Expose val email: String,
+                                 @Expose val logs: String? = null,
+                                 @Expose val screenshot: String? = null,
                                  @SerializedName("message") @Expose val msg: String) : RequestModel

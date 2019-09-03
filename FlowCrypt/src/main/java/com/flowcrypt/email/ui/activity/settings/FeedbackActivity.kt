@@ -113,7 +113,7 @@ class FeedbackActivity : BaseBackStackSyncActivity(), LoaderManager.LoaderCallba
         val text = editTextUserMsg.text.toString() + "\n\n" + "Android v" + BuildConfig.VERSION_CODE
 
         return ApiServiceAsyncTaskLoader(applicationContext, PostHelpFeedbackRequest(ApiName.POST_HELP_FEEDBACK,
-            PostHelpFeedbackModel(account!!.email, text)))
+            PostHelpFeedbackModel(email = account!!.email, msg = text)))
       }
       else -> return Loader(this)
     }
