@@ -49,7 +49,7 @@ class LauncherActivity : BaseActivity() {
     PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false)
     ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
     MessagesSenderJobService.schedule(applicationContext)
-    FeedbackJobIntentService.enqueueWork(this, null, null)
+    FeedbackJobIntentService.enqueueWork(this)
 
     account = AccountDaoSource().getActiveAccountInformation(this)
     if (account != null && isNodeReady) {
