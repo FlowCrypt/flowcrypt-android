@@ -7,7 +7,6 @@ package com.flowcrypt.email.service
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.util.Base64
 import androidx.core.app.JobIntentService
 import com.flowcrypt.email.api.retrofit.ApiHelper
@@ -20,8 +19,6 @@ import com.google.gson.GsonBuilder
 import okhttp3.internal.cache.DiskLruCache
 import okhttp3.internal.io.FileSystem
 import okio.Okio
-import org.apache.commons.io.IOUtils
-import org.rm3l.maoni.common.model.Feedback
 import java.io.File
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
@@ -60,24 +57,12 @@ class FeedbackJobIntentService : JobIntentService() {
   private fun addFeedbackFromIntentToCache(intent: Intent) {
     val account = intent.getParcelableExtra<AccountDao>(EXTRA_KEY_ACCOUNT)
     val feedbackMsg = intent.getStringExtra(EXTRA_KEY_FEEDBACK_MSG)
-    val logsUri = intent.getParcelableExtra<Uri>(EXTRA_KEY_LOGS_URI)
-    val screenShotUri = intent.getParcelableExtra<Uri>(EXTRA_KEY_SCREENSHOT_URI)
-
-    val logs = if (logsUri != null) {
-      IOUtils.toString(contentResolver.openInputStream(logsUri), StandardCharsets.UTF_8)
-    } else {
-      null
-    }
-
-    val screenShot = if (screenShotUri != null) {
-      Base64.encodeToString(contentResolver.openInputStream(screenShotUri)?.readBytes(), Base64.DEFAULT)
-    } else {
-      null
-    }
+    val screenShotBytes = intent.getByteArrayExtra(EXTRA_KEY_SCREENSHOT_BYTES)
+    val screenShotBase64 = Base64.encodeToString(screenShotBytes ?: byteArrayOf(), Base64.DEFAULT)
 
     feedbackMsg?.let {
       addFeedbackToCache(UUID.randomUUID().toString(),
-          FeedBackItem(account?.email, feedbackMsg, logs, screenShot))
+          FeedBackItem(account?.email, feedbackMsg, screenShotBase64))
     }
   }
 
@@ -104,7 +89,7 @@ class FeedbackJobIntentService : JobIntentService() {
 
       val response = with(feedBackItem) {
         apiService
-            .postHelpFeedback(PostHelpFeedbackModel(email ?: "", logs, screenShot, feedbackMsg))
+            .postHelpFeedback(PostHelpFeedbackModel(email ?: "", "", screenShot, feedbackMsg))
             .execute()
       }
 
@@ -122,10 +107,8 @@ class FeedbackJobIntentService : JobIntentService() {
         GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT", FeedbackJobIntentService::class.java)
     private val EXTRA_KEY_FEEDBACK_MSG =
         GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_FEEDBACK_MSG", FeedbackJobIntentService::class.java)
-    private val EXTRA_KEY_LOGS_URI =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_LOGS_URI", FeedbackJobIntentService::class.java)
-    private val EXTRA_KEY_SCREENSHOT_URI =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_SCREENSHOT_URI", FeedbackJobIntentService::class.java)
+    private val EXTRA_KEY_SCREENSHOT_BYTES =
+        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_SCREENSHOT_BYTES", FeedbackJobIntentService::class.java)
 
     private const val CACHE_VERSION = 1
     private const val CACHE_SIZE: Long = 1024 * 1000 * 3 //3Mb
@@ -137,30 +120,16 @@ class FeedbackJobIntentService : JobIntentService() {
      *
      * @param context   Interface to global information about an application environment.
      * @param account   An active account.
-     * @param feedback  A feedback which will be sent.
+     * @param userComment  A feedback which will be sent.
+     * @param screenShotBytes  A screenshot bytes array.
      */
     @JvmStatic
-    fun enqueueWork(context: Context, account: AccountDao?, feedback: Feedback?) {
+    fun enqueueWork(context: Context, account: AccountDao? = null, userComment: String? = null,
+                    screenShotBytes: ByteArray? = null) {
       val intent = Intent(context, FeedbackJobIntentService::class.java)
       intent.putExtra(EXTRA_KEY_ACCOUNT, account)
-
-      if (feedback != null) {
-        intent.putExtra(EXTRA_KEY_FEEDBACK_MSG, feedback.userComment)
-
-        val logsUri = if (feedback.logsFile != null) {
-          Uri.fromFile(feedback.logsFile)
-        } else {
-          feedback.logsFileUri
-        }
-        intent.putExtra(EXTRA_KEY_LOGS_URI, logsUri)
-
-        val screenShotUri = if (feedback.screenshotFile != null) {
-          Uri.fromFile(feedback.screenshotFile)
-        } else {
-          feedback.screenshotFileUri
-        }
-        intent.putExtra(EXTRA_KEY_SCREENSHOT_URI, screenShotUri)
-      }
+      intent.putExtra(EXTRA_KEY_FEEDBACK_MSG, userComment)
+      intent.putExtra(EXTRA_KEY_SCREENSHOT_BYTES, screenShotBytes)
       enqueueWork(context, FeedbackJobIntentService::class.java,
           JobIdManager.JOB_TYPE_FEEDBACK, intent)
     }
@@ -171,6 +140,5 @@ class FeedbackJobIntentService : JobIntentService() {
    */
   data class FeedBackItem(val email: String?,
                           val feedbackMsg: String,
-                          val logs: String?,
                           val screenShot: String?)
 }

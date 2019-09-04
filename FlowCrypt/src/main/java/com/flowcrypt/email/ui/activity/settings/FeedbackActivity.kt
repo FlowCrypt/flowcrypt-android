@@ -10,7 +10,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -18,13 +17,16 @@ import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.Toast
 import androidx.constraintlayout.widget.Group
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.service.FeedbackJobIntentService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import com.google.android.material.textfield.TextInputLayout
 
 /**
  * The feedback activity. Anywhere there is a question mark, it should take the user to this
@@ -38,6 +40,7 @@ import com.flowcrypt.email.util.UIUtil
 
 class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedChangeListener {
   override lateinit var rootView: View
+  private lateinit var inputLayoutMsg: TextInputLayout
   private lateinit var editTextUserMsg: EditText
   private lateinit var imageButtonScreenshot: ImageButton
   private lateinit var screenShotGroup: Group
@@ -48,16 +51,6 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_feedback
-
-  private val isInformationValid: Boolean
-    get() {
-      return if (TextUtils.isEmpty(editTextUserMsg.text.toString())) {
-        UIUtil.showInfoSnackbar(editTextUserMsg, getString(R.string.your_message_must_be_non_empty))
-        false
-      } else {
-        true
-      }
-    }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -77,6 +70,22 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.menuActionSend -> {
+        if (editTextUserMsg.text.isEmpty()) {
+          editTextUserMsg.requestFocus()
+          Toast.makeText(this, getString(R.string.your_message_must_be_non_empty), Toast
+              .LENGTH_SHORT).show()
+        } else {
+          val account = AccountDaoSource().getActiveAccountInformation(this)
+          val screenShotBytes = UIUtil.getCompressedByteArrayOfBitmap(
+              if (checkBoxScreenshot.isChecked) {
+                bitmap
+              } else {
+                null
+              }, 100)
+          FeedbackJobIntentService.enqueueWork(this, account,
+              editTextUserMsg.text.toString(), screenShotBytes)
+          finish()
+        }
         return true
       }
 
@@ -99,6 +108,7 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
   }
 
   private fun initViews() {
+    inputLayoutMsg = findViewById(R.id.textInputLayoutUserMessage)
     editTextUserMsg = findViewById(R.id.editTextUserMessage)
     imageButtonScreenshot = findViewById(R.id.imageButtonScreenshot)
     rootView = findViewById(R.id.layoutContent)

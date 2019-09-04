@@ -22,7 +22,6 @@ import com.google.android.material.snackbar.Snackbar
 import java.io.ByteArrayOutputStream
 
 
-
 /**
  * User interface util methods.
  *
@@ -184,9 +183,16 @@ class UIUtil {
           if (height > 0) height else 480, Bitmap.Config.RGB_565)
       val canvas = Canvas(bitmap)
       view.draw(canvas)
+      return getCompressedByteArrayOfBitmap(bitmap, 50)
+    }
 
+    /**
+     * Get a compressed byte array from the given bitmap using the given quality value.
+     * @return an array of bytes of a compressed bitmap.
+     */
+    fun getCompressedByteArrayOfBitmap(bitmap: Bitmap?, quality: Int): ByteArray? {
       val stream = ByteArrayOutputStream()
-      bitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream)
+      bitmap?.compress(Bitmap.CompressFormat.PNG, quality, stream)
       return stream.toByteArray()
     }
   }
