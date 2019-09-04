@@ -22,22 +22,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.Observer
 import androidx.loader.content.Loader
-import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.service.BaseService
-import com.flowcrypt.email.service.FeedbackJobIntentService
+import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.idling.NodeIdlingResource
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
-import org.rm3l.maoni.Maoni
-import org.rm3l.maoni.common.contract.Listener
-import org.rm3l.maoni.common.model.Feedback
 import java.lang.ref.WeakReference
 
 /**
@@ -147,27 +142,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
       }
 
       R.id.menuFeedback -> {
-        Maoni.Builder(Constants.FILE_PROVIDER_AUTHORITY)
-            .withTheme(R.style.AppTheme_NoActionBar)
-            //.withHeader(R.mipmap.ic_launcher)
-            .withWindowTitle("withWindowTitle") //Set to an empty string to clear it
-            .withMessage("withMessage")
-            .withFeedbackContentHint("withFeedbackContentHint")
-            .withIncludeScreenshotText("withIncludeScreenshotText")
-            .withTouchToPreviewScreenshotText("withTouchToPreviewScreenshotText")
-            .withContentErrorMessage("withContentErrorMessage")
-            .withScreenshotHint("withScreenshotHint")
-            .withListener(object : Listener {
-              override fun onDismiss() {}
-
-              override fun onSendButtonClicked(feedback: Feedback?): Boolean {
-                val account = AccountDaoSource().getActiveAccountInformation(this@BaseActivity)
-                FeedbackJobIntentService.enqueueWork(this@BaseActivity, account, feedback)
-                return true
-              }
-            })
-            .build()
-            .start(this)
+        FeedbackActivity.show(this)
         true
       }
 

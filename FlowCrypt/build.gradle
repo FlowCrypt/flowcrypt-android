@@ -350,9 +350,4 @@ dependencies {
     implementation 'com.nulab-inc:zxcvbn:1.2.5'
     implementation 'com.madgag.spongycastle:pkix:1.54.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
-
-    //for feedbacks
-    implementation ('org.rm3l:maoni:7.0.0@aar') {
-        transitive = true
-    }
 }

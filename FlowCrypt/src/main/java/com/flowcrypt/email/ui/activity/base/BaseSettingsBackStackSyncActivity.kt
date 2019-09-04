@@ -5,10 +5,8 @@
 
 package com.flowcrypt.email.ui.activity.base
 
-import android.content.Intent
 import android.view.Menu
 import android.view.MenuItem
-
 import com.flowcrypt.email.R
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
@@ -31,7 +29,7 @@ abstract class BaseSettingsBackStackSyncActivity : BaseBackStackSyncActivity() {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
       R.id.menuActionHelp -> {
-        startActivity(Intent(this, FeedbackActivity::class.java))
+        FeedbackActivity.show(this)
         true
       }
 

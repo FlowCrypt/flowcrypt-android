@@ -9,6 +9,8 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Build
 import android.text.Html
 import android.text.Spanned
@@ -17,6 +19,9 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import com.google.android.material.snackbar.Snackbar
+import java.io.ByteArrayOutputStream
+
+
 
 /**
  * User interface util methods.
@@ -165,6 +170,24 @@ class UIUtil {
     @JvmStatic
     fun getColor(context: Context, colorResourcesId: Int): Int {
       return context.resources.getColor(colorResourcesId, context.theme)
+    }
+
+    /**
+     * Get a screenshot of the given activity.
+     * @return an array of bytes of a compressed screenshot.
+     */
+    fun getScreenShotByteArray(activity: Activity): ByteArray? {
+      val view = activity.window.decorView ?: return null
+      val width = view.width
+      val height = view.height
+      val bitmap = Bitmap.createBitmap(if (width > 0) width else 640,
+          if (height > 0) height else 480, Bitmap.Config.RGB_565)
+      val canvas = Canvas(bitmap)
+      view.draw(canvas)
+
+      val stream = ByteArrayOutputStream()
+      bitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream)
+      return stream.toByteArray()
     }
   }
 }

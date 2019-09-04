@@ -63,7 +63,7 @@ class PreviewImportPgpContactActivity : BaseBackStackActivity() {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
       R.id.menuActionHelp -> {
-        startActivity(Intent(this, FeedbackActivity::class.java))
+        FeedbackActivity.show(this)
         true
       }
 

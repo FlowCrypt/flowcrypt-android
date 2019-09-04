@@ -105,7 +105,7 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.menuActionHelp -> {
-        startActivity(Intent(this, FeedbackActivity::class.java))
+        FeedbackActivity.show(this)
         return true
       }
 
