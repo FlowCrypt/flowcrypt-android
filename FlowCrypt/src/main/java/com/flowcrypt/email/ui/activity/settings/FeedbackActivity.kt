@@ -5,27 +5,24 @@
 
 package com.flowcrypt.email.ui.activity.settings
 
+import android.app.Activity
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.CheckBox
+import android.widget.CompoundButton
 import android.widget.EditText
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.Loader
-import com.flowcrypt.email.BuildConfig
+import android.widget.ImageButton
+import androidx.constraintlayout.widget.Group
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.ApiName
-import com.flowcrypt.email.api.retrofit.BaseResponse
-import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest
-import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
-import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
-import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
@@ -39,15 +36,15 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 
-class FeedbackActivity : BaseBackStackSyncActivity(), LoaderManager.LoaderCallbacks<LoaderResult> {
-
-  private lateinit var progressBar: View
-  private lateinit var layoutInput: View
+class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedChangeListener {
   override lateinit var rootView: View
   private lateinit var editTextUserMsg: EditText
+  private lateinit var imageButtonScreenshot: ImageButton
+  private lateinit var screenShotGroup: Group
+  private lateinit var checkBoxScreenshot: CheckBox
 
   private var account: AccountDao? = null
-  private var isMsgSent: Boolean = false
+  private var bitmap: Bitmap? = null
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_feedback
@@ -64,18 +61,12 @@ class FeedbackActivity : BaseBackStackSyncActivity(), LoaderManager.LoaderCallba
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    if (savedInstanceState != null) {
-      this.isMsgSent = savedInstanceState.getBoolean(KEY_IS_MESSAGE_SENT)
-    }
+
+    account = intent?.getParcelableExtra(KEY_ACCOUNT)
+    val bitmapRaw = intent?.getByteArrayExtra(KEY_BITMAP)
+    bitmapRaw?.let { bitmap = BitmapFactory.decodeByteArray(bitmapRaw, 0, bitmapRaw.size) }
 
     initViews()
-
-    account = AccountDaoSource().getActiveAccountInformation(this)
-  }
-
-  override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
-    super.onSaveInstanceState(outState, outPersistentState)
-    outState.putBoolean(KEY_IS_MESSAGE_SENT, isMsgSent)
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -86,19 +77,6 @@ class FeedbackActivity : BaseBackStackSyncActivity(), LoaderManager.LoaderCallba
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.menuActionSend -> {
-        if (!isMsgSent) {
-          if (isInformationValid) {
-            if (GeneralUtil.isConnected(this)) {
-              UIUtil.hideSoftInput(this, editTextUserMsg)
-              LoaderManager.getInstance(this).restartLoader(R.id.loader_id_post_help_feedback, null, this)
-            } else {
-              UIUtil.showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
-            }
-          }
-        } else {
-          UIUtil.showInfoSnackbar(rootView, getString(R.string
-              .you_already_sent_this_message))
-        }
         return true
       }
 
@@ -106,63 +84,44 @@ class FeedbackActivity : BaseBackStackSyncActivity(), LoaderManager.LoaderCallba
     }
   }
 
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
-    when (id) {
-      R.id.loader_id_post_help_feedback -> {
-        UIUtil.exchangeViewVisibility(this, true, progressBar, layoutInput)
-        val text = editTextUserMsg.text.toString() + "\n\n" + "Android v" + BuildConfig.VERSION_CODE
-
-        return ApiServiceAsyncTaskLoader(applicationContext, PostHelpFeedbackRequest(ApiName.POST_HELP_FEEDBACK,
-            PostHelpFeedbackModel(email = account!!.email, msg = text)))
-      }
-      else -> return Loader(this)
-    }
-  }
-
-  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult?) {
-    when (loader.id) {
-      R.id.loader_id_post_help_feedback -> {
-        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutInput)
-        if (loaderResult != null) {
-          if (loaderResult.result != null) {
-            val baseResponse = loaderResult.result as BaseResponse<*>?
-            val response = baseResponse!!.responseModel as PostHelpFeedbackResponse?
-            if (response!!.isSent) {
-              this.isMsgSent = true
-              showBackAction(response)
-            } else if (response.apiError != null) {
-              UIUtil.showInfoSnackbar(rootView, response.apiError.msg!!)
-            } else {
-              UIUtil.showInfoSnackbar(rootView, getString(R.string.unknown_error))
-            }
-          } else if (loaderResult.exception != null) {
-            UIUtil.showInfoSnackbar(rootView, loaderResult.exception!!.message ?: "")
+  override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
+    buttonView?.let {
+      when (buttonView.id) {
+        R.id.checkBoxScreenshot -> {
+          screenShotGroup.visibility = if (isChecked) {
+            View.VISIBLE
           } else {
-            UIUtil.showInfoSnackbar(rootView, getString(R.string.unknown_error))
+            View.GONE
           }
-        } else {
-          UIUtil.showInfoSnackbar(rootView, getString(R.string.unknown_error))
         }
       }
     }
   }
 
-  override fun onLoaderReset(loader: Loader<LoaderResult>) {
-
-  }
-
-  private fun showBackAction(response: PostHelpFeedbackResponse) {
-    UIUtil.showSnackbar(rootView, response.text!!, getString(R.string.back), View.OnClickListener { finish() })
-  }
-
   private fun initViews() {
     editTextUserMsg = findViewById(R.id.editTextUserMessage)
-    progressBar = findViewById(R.id.progressBar)
-    layoutInput = findViewById(R.id.layoutInput)
+    imageButtonScreenshot = findViewById(R.id.imageButtonScreenshot)
     rootView = findViewById(R.id.layoutContent)
+    screenShotGroup = findViewById(R.id.screenShotGroup)
+    checkBoxScreenshot = findViewById(R.id.checkBoxScreenshot)
+    checkBoxScreenshot.setOnCheckedChangeListener(this)
+
+    bitmap?.let { imageButtonScreenshot.setImageBitmap(it) }
   }
 
   companion object {
-    private const val KEY_IS_MESSAGE_SENT = BuildConfig.APPLICATION_ID + ".KEY_IS_MESSAGE_SENT"
+    private val KEY_ACCOUNT =
+        GeneralUtil.generateUniqueExtraKey("KEY_ACCOUNT", FeedbackActivity::class.java)
+    private val KEY_BITMAP =
+        GeneralUtil.generateUniqueExtraKey("KEY_BITMAP", FeedbackActivity::class.java)
+
+    fun show(activity: Activity) {
+      val account = AccountDaoSource().getActiveAccountInformation(activity)
+      val screenShotByteArray = UIUtil.getScreenShotByteArray(activity)
+      val intent = Intent(activity, FeedbackActivity::class.java)
+      intent.putExtra(KEY_ACCOUNT, account)
+      intent.putExtra(KEY_BITMAP, screenShotByteArray)
+      activity.startActivity(intent)
+    }
   }
 }
