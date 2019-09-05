@@ -13,17 +13,18 @@
         </menu>
     </item>
 
-    <item android:title="@string/authentication">
-        <menu>
-            <item
-                android:id="@+id/navigationMenuLogOut"
-                android:icon="@mipmap/ic_sign_out"
-                android:title="@string/log_out" />
-        </menu>
-    </item>
+    <item
+        android:id="@+id/navMenuLogOut"
+        android:icon="@drawable/ic_exit_to_app_grey_32dp"
+        android:title="@string/log_out" />
 
     <item
-        android:id="@+id/navigationMenuActionSettings"
-        android:icon="@mipmap/ic_settings"
+        android:id="@+id/navMenuActionReportProblem"
+        android:icon="@drawable/ic_bug_report_grey_32dp"
+        android:title="@string/report_problem" />
+
+    <item
+        android:id="@+id/navMenuActionSettings"
+        android:icon="@drawable/ic_settings_grey_32dp"
         android:title="@string/action_settings" />
 </menu>
