@@ -50,8 +50,8 @@
         android:textAlignment="center"
         android:textAllCaps="false"
         android:textSize="@dimen/text_size_logo_crypt"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonTerms"
         app:srcCompat="@mipmap/logo_flowcrypt" />
@@ -95,5 +95,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/buttonSignInWithGmail" />
+
+    <Button
+        android:id="@+id/buttonHelp"
+        style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
+        android:layout_marginBottom="@dimen/default_margin_huge"
+        android:text="@string/help"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
