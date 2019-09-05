@@ -99,7 +99,7 @@
     <Button
         android:id="@+id/buttonHelp"
         style="@style/AppWidget.Button.Transparent.MainScreenTopButton"
-        android:layout_marginBottom="@dimen/default_margin_huge"
+        android:layout_marginBottom="@dimen/default_margin_content"
         android:text="@string/help"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
