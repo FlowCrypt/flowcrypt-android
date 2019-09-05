@@ -26,6 +26,7 @@ import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity
+import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -122,6 +123,9 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
       R.id.buttonSecurity ->
         startActivity(HtmlViewFromAssetsRawActivity.newIntent(this, getString(R.string.security), "html/security.htm"))
+
+      R.id.buttonHelp -> FeedbackActivity.show(this)
+
       else -> super.onClick(v)
     }
 
@@ -258,25 +262,12 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
     rootView = findViewById(R.id.signInView)
     progressView = findViewById(R.id.progressView)
 
-    if (findViewById<View>(R.id.buttonSignInWithGmail) != null) {
-      findViewById<View>(R.id.buttonSignInWithGmail).setOnClickListener(this)
-    }
-
-    if (findViewById<View>(R.id.buttonOtherEmailProvider) != null) {
-      findViewById<View>(R.id.buttonOtherEmailProvider).setOnClickListener(this)
-    }
-
-    if (findViewById<View>(R.id.buttonPrivacy) != null) {
-      findViewById<View>(R.id.buttonPrivacy).setOnClickListener(this)
-    }
-
-    if (findViewById<View>(R.id.buttonTerms) != null) {
-      findViewById<View>(R.id.buttonTerms).setOnClickListener(this)
-    }
-
-    if (findViewById<View>(R.id.buttonSecurity) != null) {
-      findViewById<View>(R.id.buttonSecurity).setOnClickListener(this)
-    }
+    findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener(this)
+    findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener(this)
+    findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener(this)
+    findViewById<View>(R.id.buttonTerms)?.setOnClickListener(this)
+    findViewById<View>(R.id.buttonSecurity)?.setOnClickListener(this)
+    findViewById<View>(R.id.buttonHelp)?.setOnClickListener(this)
   }
 
   companion object {
