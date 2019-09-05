@@ -56,6 +56,8 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
   override val contentViewResourceId: Int
     get() = R.layout.activity_feedback
 
+  override val isSyncEnabled: Boolean = false
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
