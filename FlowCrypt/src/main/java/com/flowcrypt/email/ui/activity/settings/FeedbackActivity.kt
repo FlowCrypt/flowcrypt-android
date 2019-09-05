@@ -19,11 +19,13 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.constraintlayout.widget.Group
+import androidx.fragment.app.Fragment
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.service.FeedbackJobIntentService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
+import com.flowcrypt.email.ui.activity.fragment.dialog.EditScreenshotDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.material.textfield.TextInputLayout
@@ -38,7 +40,8 @@ import com.google.android.material.textfield.TextInputLayout
  * E-mail: DenBond7@gmail.com
  */
 
-class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedChangeListener {
+class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedChangeListener,
+    View.OnClickListener, EditScreenshotDialogFragment.OnScreenshotChangeListener {
   override lateinit var rootView: View
   private lateinit var inputLayoutMsg: TextInputLayout
   private lateinit var editTextUserMsg: EditText
@@ -47,6 +50,7 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
   private lateinit var checkBoxScreenshot: CheckBox
 
   private var account: AccountDao? = null
+  private var bitmapRaw: ByteArray? = null
   private var bitmap: Bitmap? = null
 
   override val contentViewResourceId: Int
@@ -56,8 +60,8 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
     super.onCreate(savedInstanceState)
 
     account = intent?.getParcelableExtra(KEY_ACCOUNT)
-    val bitmapRaw = intent?.getByteArrayExtra(KEY_BITMAP)
-    bitmapRaw?.let { bitmap = BitmapFactory.decodeByteArray(bitmapRaw, 0, bitmapRaw.size) }
+    bitmapRaw = intent?.getByteArrayExtra(KEY_BITMAP)
+    bitmapRaw?.let { bitmap = BitmapFactory.decodeByteArray(bitmapRaw, 0, bitmapRaw!!.size) }
 
     initViews()
   }
@@ -65,6 +69,14 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
     menuInflater.inflate(R.menu.activity_feedback, menu)
     return true
+  }
+
+  override fun onAttachFragment(fragment: Fragment?) {
+    super.onAttachFragment(fragment)
+
+    if (fragment is EditScreenshotDialogFragment) {
+      fragment.setOnScreenshotChangeListener(this)
+    }
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -107,10 +119,26 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
     }
   }
 
+  override fun onClick(v: View?) {
+    when (v?.id) {
+      R.id.imageButtonScreenshot -> {
+        val editScreenShotDialogFragment = EditScreenshotDialogFragment.newInstance(bitmapRaw)
+        editScreenShotDialogFragment.show(supportFragmentManager, EditScreenshotDialogFragment::class.java.simpleName)
+      }
+    }
+  }
+
+  override fun onScreenshotChanged(byteArray: ByteArray?) {
+    bitmapRaw = byteArray
+    bitmapRaw?.let { bitmap = BitmapFactory.decodeByteArray(bitmapRaw, 0, bitmapRaw!!.size) }
+    bitmap?.let { imageButtonScreenshot.setImageBitmap(it) }
+  }
+
   private fun initViews() {
     inputLayoutMsg = findViewById(R.id.textInputLayoutUserMessage)
     editTextUserMsg = findViewById(R.id.editTextUserMessage)
     imageButtonScreenshot = findViewById(R.id.imageButtonScreenshot)
+    imageButtonScreenshot.setOnClickListener(this)
     rootView = findViewById(R.id.layoutContent)
     screenShotGroup = findViewById(R.id.screenShotGroup)
     checkBoxScreenshot = findViewById(R.id.checkBoxScreenshot)
