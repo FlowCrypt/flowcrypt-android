@@ -427,7 +427,8 @@ class CreateMessageActivityTest : BaseTest() {
         allOf(hasAction(Intent.ACTION_OPEN_DOCUMENT), hasType("*/*"),
             hasCategories(hasItem(equalTo(Intent.CATEGORY_OPENABLE)))))))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
-    onView(withId(R.id.menuActionAttachFile))
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.attach_file))
         .check(matches(isDisplayed()))
         .perform(click())
     onView(withText(att.name))
