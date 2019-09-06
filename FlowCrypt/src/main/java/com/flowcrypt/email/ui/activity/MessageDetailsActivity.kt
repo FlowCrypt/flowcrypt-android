@@ -111,7 +111,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         val uri = MessageDaoSource().baseContentUri
         val selection = (MessageDaoSource.COL_EMAIL + "= ? AND " + MessageDaoSource.COL_FOLDER + " = ? AND "
             + MessageDaoSource.COL_UID + " = ? ")
-        val selectionArgs = arrayOf(details!!.email, localFolder!!.fullName, details!!.uid.toString())
+        val selectionArgs = arrayOf(details?.email ?: "", localFolder?.fullName ?: "",
+            details?.uid?.toString() ?: "")
         return CursorLoader(this, uri, null, selection, selectionArgs, null)
       }
 
