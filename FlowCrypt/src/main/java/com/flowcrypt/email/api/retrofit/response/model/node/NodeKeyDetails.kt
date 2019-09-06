@@ -10,6 +10,7 @@ import android.os.Parcelable
 import android.text.TextUtils
 import android.util.Patterns
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.util.exception.FlowCryptException
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import java.util.*
@@ -92,7 +93,7 @@ data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
       }
 
       if (email == null) {
-        throw IllegalArgumentException("No user ids with mail address")
+        throw object : FlowCryptException("No user ids with mail address") {}
       }
 
       return PgpContact(email, name, publicKey, !TextUtils.isEmpty(publicKey), null,
