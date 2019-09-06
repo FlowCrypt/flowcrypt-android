@@ -4,17 +4,23 @@
   -->
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <item
         android:id="@+id/menuActionAttachFile"
         android:icon="@mipmap/ic_action_attach_file"
+        android:menuCategory="system"
+        android:orderInCategory="2000"
         android:title="@string/attach_file"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always"
+        tools:ignore="AlwaysShowAction" />
 
     <item
         android:id="@+id/menuActionSend"
         android:icon="@mipmap/ic_action_send"
+        android:menuCategory="system"
+        android:orderInCategory="2001"
         android:title="@string/send"
         app:showAsAction="always" />
 </menu>
