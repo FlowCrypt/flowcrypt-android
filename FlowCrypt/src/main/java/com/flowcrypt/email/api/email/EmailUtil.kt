@@ -848,7 +848,7 @@ class EmailUtil {
       val date = if(msgInfo != null) SimpleDateFormat("yyyy-MM-dd' at 'HH:mm").format(msgInfo.getReceiveDate()) else "unknown date"
       val sender = msgInfo?.getFrom()?.firstOrNull()?.toString() ?: "unknown sender"
       val replyText = msgInfo?.text?.replace("(?m)^".toRegex(), "> ") ?: "(unknown content)"
-      return "\n\n\nOn $date, $sender wrote:\n$replyText"
+      return "\n\nOn $date, $sender wrote:\n$replyText"
     }
   }
 }
