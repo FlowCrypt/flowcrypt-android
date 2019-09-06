@@ -69,7 +69,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageViewLogo"
-        app:layout_constraintVertical_bias="0.215" />
+        app:layout_constraintVertical_bias="0.150" />
 
     <Button
         android:id="@+id/buttonSignInWithGmail"
