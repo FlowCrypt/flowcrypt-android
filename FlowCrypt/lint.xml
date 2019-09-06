@@ -9,6 +9,7 @@
         <!-- Those issues are not relevant to our project, we can skip them -->
         <ignore path="**/httpclient-4.5.5.jar" />
         <ignore path="**/pkix-1.54.0.0.jar" />
+        <ignore path="**/httpclient-4.5.8.jar" />
     </issue>
     <issue id="TrustAllX509TrustManager">
         <!-- Those issues are not relevant to our project, we can skip them -->

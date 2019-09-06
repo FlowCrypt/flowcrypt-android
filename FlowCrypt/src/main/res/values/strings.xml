@@ -31,7 +31,6 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="log_out">Log out</string>
-    <string name="authentication">Authentication</string>
     <string name="all_labels">All labels</string>
     <string name="no_results">No results</string>
     <string name="set_up_flow_crypt">Set up FlowCrypt</string>
@@ -71,7 +70,6 @@
     <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Thank you for trying FlowCrypt! We\'re here to help.</string>
     <string name="your_message">Your message</string>
     <string name="back">Back</string>
-    <string name="you_already_sent_this_message">You already sent this message</string>
     <string name="see_more_backup_options">See more backup options</string>
     <string name="warning_if_you_lose_your_device_and_have_not_backup">If you lose your device, or it stops working, your encrypted email will be unreadable.</string>
     <string name="there_are_no_backups_on_this_account">There are no backups on this account</string>
@@ -99,7 +97,6 @@
     <string name="sending_message_must_not_be_empty">Message should not be empty</string>
     <string name="there_was_syncing_problem">There was a syncing problem</string>
     <string name="info_about_some_contacts_not_received">Could not get information about some %1$s contacts</string>
-    <string name="error_occurred_while_this_action_running">Error: could not complete action</string>
     <string name="error_occurred_while_receiving_private_keys">Could not retrieve your private key</string>
     <string name="no_subject">(no subject)</string>
     <string name="error_occurred_please_try_again">Error occurred, please try again</string>
@@ -204,7 +201,6 @@
         have any other keys available, you should import them now.</string>
     <string name="email_does_not_available_in_this_folder">Message not found, it may have been moved to another folder.</string>
     <string name="from">From</string>
-    <string name="google_api_is_not_available">Error: Google API is not available</string>
     <string name="show_original_message">Show original content</string>
     <string name="hide_original_message">Hide original content</string>
     <string name="import_missing_key">Import missing key</string>
