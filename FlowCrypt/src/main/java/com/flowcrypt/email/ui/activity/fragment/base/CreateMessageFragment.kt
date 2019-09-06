@@ -158,7 +158,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private fun getOutgoingMsgInfo(): OutgoingMessageInfo {
     var msg = editTextEmailMsg?.text.toString()
     if (messageType == MessageType.REPLY || messageType == MessageType.REPLY_ALL) {
-      msg += EmailUtil.prepareReplyQuotes(context, account?.displayName, account?.email!!, msgInfo)
+      msg += EmailUtil.prepareReplyQuotes(msgInfo)
     }
 
     return OutgoingMessageInfo(

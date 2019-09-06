@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.email
 
 import android.accounts.Account
+import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
@@ -842,21 +843,12 @@ class EmailUtil {
      *
      * @return The reply quotes text
      */
-    fun prepareReplyQuotes(context: Context?, userName: String?, email: String,
-                           msgInfo: IncomingMessageInfo?): String {
-      val dateFormat: java.text.DateFormat
-      val timeFormat: java.text.DateFormat
-      if (context != null) {
-        dateFormat = DateFormat.getDateFormat(context)
-        timeFormat = DateFormat.getTimeFormat(context)
-      } else {
-        dateFormat = SimpleDateFormat("EEE, MMM d, yyyy", Locale.US)
-        timeFormat = SimpleDateFormat("K:mm a", Locale.US)
-      }
-      val user = userName ?: ""
-      val date = Date()
-      val replyText = msgInfo?.text?.replace("(?m)^".toRegex(), "> ") ?: ""
-      return "\nOn " + dateFormat.format(date) + " at " + timeFormat.format(date) + " $user $email wrote:\n" + replyText
+    @SuppressLint("SimpleDateFormat") // for now we use iso format, regardles of locality
+    fun prepareReplyQuotes(msgInfo: IncomingMessageInfo?): String {
+      val date = if(msgInfo != null) SimpleDateFormat("yyyy-MM-dd' at 'HH:mm").format(msgInfo.getReceiveDate()) else "unknown date"
+      val sender = msgInfo?.getFrom()?.firstOrNull()?.toString() ?: "unknown sender"
+      val replyText = msgInfo?.text?.replace("(?m)^".toRegex(), "> ") ?: "(unknown content)"
+      return "\n\n\nOn $date, $sender wrote:\n$replyText"
     }
   }
 }
