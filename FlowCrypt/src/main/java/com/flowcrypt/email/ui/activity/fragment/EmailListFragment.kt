@@ -410,12 +410,14 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
         if ((!isFolderNameEmpty && !isItSyncOrOutboxFolder(listener!!.currentFolder!!)) || isForceClearCacheNeeded) {
           val folder = listener!!.currentFolder
 
-          val folderName = if (TextUtils.isEmpty(folder!!.searchQuery))
-            folder.fullName
+          val folderName = if (folder?.searchQuery.isNullOrEmpty())
+            folder?.fullName
           else
             SearchMessagesActivity.SEARCH_FOLDER_NAME
 
-          DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao?.email, folderName)
+          folderName?.let {
+            DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao?.email, it)
+          }
         }
       }
 
@@ -640,9 +642,14 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
           + ", " + MessageState.SENT_WITHOUT_LOCAL_COPY.value + ")")
     }
 
+    val label = if (listener!!.currentFolder!!.searchQuery.isNullOrEmpty()) {
+      listener!!.currentFolder!!.fullName
+    } else {
+      SearchMessagesActivity.SEARCH_FOLDER_NAME
+    }
+
     return CursorLoader(context!!, MessageDaoSource().baseContentUri, null, selection,
-        arrayOf(listener!!.currentAccountDao?.email, listener!!.currentFolder!!.fullName),
-        MessageDaoSource.COL_RECEIVED_DATE + " DESC")
+        arrayOf(listener!!.currentAccountDao?.email, label), MessageDaoSource.COL_RECEIVED_DATE + " DESC")
   }
 
   private fun handleOutgoingMsgWhichHasSomeError(details: GeneralMessageDetails) {

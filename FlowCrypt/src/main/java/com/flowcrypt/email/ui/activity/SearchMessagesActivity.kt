@@ -60,10 +60,10 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
     this.currentAccountDao = AccountDaoSource().getActiveAccountInformation(this)
     if (intent != null && intent.hasExtra(EXTRA_KEY_FOLDER)) {
       this.initQuery = intent.getStringExtra(EXTRA_KEY_QUERY)
-      this.currentFolder = intent.getParcelableExtra(EXTRA_KEY_FOLDER)
-      if (currentFolder != null) {
-        currentFolder!!.folderAlias = SEARCH_FOLDER_NAME
-        currentFolder!!.searchQuery = initQuery
+      val incomingFolder: LocalFolder? = intent.getParcelableExtra(EXTRA_KEY_FOLDER)
+      if (incomingFolder != null) {
+        this.currentFolder = incomingFolder.copy(folderAlias = SEARCH_FOLDER_NAME,
+            searchQuery = initQuery, msgCount = 0)
       }
     } else {
       finish()
@@ -131,7 +131,7 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
     }
 
     currentFolder!!.searchQuery = initQuery
-    onFolderChanged()
+    onFolderChanged(true)
     return false
   }
 
