@@ -17,10 +17,15 @@ import com.sun.mail.imap.IMAPFolder
 import java.util.*
 import javax.mail.FetchProfile
 import javax.mail.Folder
+import javax.mail.Message
 import javax.mail.Session
 import javax.mail.Store
 import javax.mail.UIDFolder
 import javax.mail.search.AndTerm
+import javax.mail.search.BodyTerm
+import javax.mail.search.FromStringTerm
+import javax.mail.search.OrTerm
+import javax.mail.search.RecipientStringTerm
 import javax.mail.search.SearchTerm
 import javax.mail.search.StringTerm
 import javax.mail.search.SubjectTerm
@@ -97,14 +102,25 @@ class SearchMessagesSyncTask(ownerKey: String,
         val stringTerm = searchTerm as StringTerm
         GmailRawSearchTerm(localFolder.searchQuery + " AND (" + stringTerm.pattern + ")")
       } else {
-        AndTerm(searchTerm, SubjectTerm(localFolder.searchQuery))
+        AndTerm(searchTerm, generateNonGmailSearchTerm())
       }
     } else {
       return if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
         GmailRawSearchTerm(localFolder.searchQuery)
       } else {
-        SubjectTerm(localFolder.searchQuery)
+        generateNonGmailSearchTerm()
       }
     }
+  }
+
+  private fun generateNonGmailSearchTerm(): SearchTerm {
+    return OrTerm(arrayOf(
+        SubjectTerm(localFolder.searchQuery),
+        BodyTerm(localFolder.searchQuery),
+        FromStringTerm(localFolder.searchQuery),
+        RecipientStringTerm(Message.RecipientType.TO, localFolder.searchQuery),
+        RecipientStringTerm(Message.RecipientType.CC, localFolder.searchQuery),
+        RecipientStringTerm(Message.RecipientType.BCC, localFolder.searchQuery)
+    ))
   }
 }
