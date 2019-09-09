@@ -399,4 +399,6 @@
     <string name="touch_to_preview_and_edit">Touch to preview and edit</string>
     <string name="screenshot">Screenshot</string>
     <string name="report_problem">Report problem</string>
+    <string name="not_available_check_imap_settings">Not available. Please check your account IMAP
+        settings</string>
 </resources>

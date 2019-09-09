@@ -45,6 +45,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -61,6 +62,7 @@ import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.FolderNotAvailableException
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
@@ -251,7 +253,27 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
       R.id.syns_request_archive_message, R.id.syns_request_delete_message, R.id.syns_request_move_message_to_inbox -> {
         UIUtil.exchangeViewVisibility(context, false, statusView!!, contentView!!)
-        showRetryActionHint(requestCode, e!!)
+        if (e is FolderNotAvailableException) {
+          when (requestCode) {
+            R.id.syns_request_archive_message -> {
+              isArchiveActionEnabled = false
+            }
+
+            R.id.syns_request_delete_message -> {
+              isDeleteActionEnabled = false
+            }
+
+            R.id.syns_request_move_message_to_inbox -> {
+              isMoveToInboxActionEnabled = false
+            }
+          }
+          (baseActivity as? BaseSyncActivity)?.updateLabels(R.id
+              .syns_request_code_update_label_passive, true)
+          activity?.invalidateOptionsMenu()
+          Toast.makeText(context, R.string.not_available_check_imap_settings, Toast.LENGTH_LONG).show()
+        } else {
+          showRetryActionHint(requestCode, e!!)
+        }
       }
     }
   }
@@ -427,7 +449,19 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       isDeleteActionEnabled = true
     }
 
-    activity!!.invalidateOptionsMenu()
+    val account = AccountDaoSource().getActiveAccountInformation(context!!)
+    if (account != null) {
+      val foldersManager = FoldersManager.fromDatabase(context!!, account.email)
+      if (foldersManager.folderAll == null) {
+        isArchiveActionEnabled = false
+      }
+
+      if (foldersManager.folderTrash == null) {
+        isDeleteActionEnabled = false
+      }
+    }
+
+    activity?.invalidateOptionsMenu()
   }
 
   /**
