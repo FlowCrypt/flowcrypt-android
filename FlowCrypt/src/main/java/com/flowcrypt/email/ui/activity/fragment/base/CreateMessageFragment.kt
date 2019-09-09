@@ -286,8 +286,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     initDraftCacheDir()
 
     account = AccountDaoSource().getActiveAccountInformation(context!!)
-    fromAddrs = FromAddressesAdapter(context!!, android.R.layout.simple_list_item_1, android.R.id.text1,
-        ArrayList())
+    fromAddrs = FromAddressesAdapter(context!!, android.R.layout.simple_list_item_1,
+        android.R.id.text1, ArrayList())
     fromAddrs!!.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
     fromAddrs!!.setUseKeysInfo(listener!!.msgEncryptionType === MessageEncryptionType.ENCRYPTED)
     if (account != null) {

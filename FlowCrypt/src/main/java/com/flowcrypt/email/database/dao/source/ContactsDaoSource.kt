@@ -57,7 +57,7 @@ class ContactsDaoSource : BaseDaoSource() {
       var i = 0
       for ((email, name) in pairs) {
         val contentValues = ContentValues()
-        contentValues.put(COL_EMAIL, email!!.toLowerCase(Locale.getDefault()))
+        contentValues.put(COL_EMAIL, email?.toLowerCase(Locale.getDefault()))
         contentValues.put(COL_NAME, name)
         contentValues.put(COL_HAS_PGP, false)
         contentValuesArray[i] = contentValues

@@ -16,6 +16,7 @@ import com.hootsuite.nachos.chip.Chip
 import com.hootsuite.nachos.chip.ChipCreator
 import com.hootsuite.nachos.chip.ChipSpan
 import com.hootsuite.nachos.chip.ChipSpanChipCreator
+import java.util.*
 
 /**
  * This [ChipSpanChipCreator] responsible for displaying [Chip].
@@ -33,7 +34,7 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
   private val textColorNoPgpNoExists: Int = UIUtil.getColor(context, R.color.dark)
 
   override fun createChip(context: Context, text: CharSequence, data: Any?): PGPContactChipSpan {
-    return PGPContactChipSpan(context, text, null, data)
+    return PGPContactChipSpan(context, text.toString().toLowerCase(Locale.getDefault()), null, data)
   }
 
   override fun createChip(context: Context, pgpContactChipSpan: PGPContactChipSpan): PGPContactChipSpan {
