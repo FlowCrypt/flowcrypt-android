@@ -354,7 +354,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         if (newLocalFolder != null) {
           if (currentFolder == null || currentFolder!!.fullName != newLocalFolder.fullName) {
             this.currentFolder = newLocalFolder
-            onFolderChanged()
+            onFolderChanged(false)
             invalidateOptionsMenu()
           }
         }
@@ -411,7 +411,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
             currentFolder = foldersManager!!.findInboxFolder()
           }
 
-          onFolderChanged()
+          onFolderChanged(false)
         } else {
           val newestLocalFolderInfo = foldersManager!!.getFolderByAlias(currentFolder!!.folderAlias!!)
           if (newestLocalFolderInfo != null) {
