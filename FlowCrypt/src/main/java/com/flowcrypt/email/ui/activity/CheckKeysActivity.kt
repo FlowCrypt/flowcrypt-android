@@ -107,7 +107,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
       finish()
     }
 
-    if (keyDetailsList!!.isNotEmpty()) {
+    if (keyDetailsList?.isNotEmpty() == true) {
       initViews()
     }
   }
