@@ -116,6 +116,17 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  fun testSearchOverSubjectBodyFrom() {
+    onView(allOf<View>(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .check(matches(isDisplayed()))
+    onView(isAssignableFrom(EditText::class.java))
+        .check(matches(withText(DEFAULT_QUERY_TEXT)))
+        .perform(clearText(), typeText(QUERY_TEXT_FOR_SUBJECT_BODY_FROM), pressImeActionButton())
+    onView(withId(R.id.listViewMessages))
+        .check(matches(withListViewItemCount(3))).check(matches(isDisplayed()))
+  }
+
+  @Test
   fun testShowNotEmptyList() {
     onView(withId(R.id.listViewMessages))
         .check(matches(isDisplayed()))
@@ -162,5 +173,6 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     private const val FOLDER_NAME = "INBOX"
     private const val DEFAULT_QUERY_TEXT = "Search"
     private const val SECOND_QUERY_TEXT = "Espresso"
+    private const val QUERY_TEXT_FOR_SUBJECT_BODY_FROM = "android"
   }
 }
