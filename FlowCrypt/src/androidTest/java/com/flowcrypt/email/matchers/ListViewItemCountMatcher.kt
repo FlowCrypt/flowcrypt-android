@@ -6,6 +6,7 @@
 package com.flowcrypt.email.matchers
 
 import android.view.View
+import android.widget.HeaderViewListAdapter
 import android.widget.ListView
 import org.hamcrest.BaseMatcher
 import org.hamcrest.Description
@@ -19,7 +20,13 @@ import org.hamcrest.Description
 class ListViewItemCountMatcher<T : View>(val itemCount: Int) : BaseMatcher<T>() {
   override fun matches(item: Any): Boolean {
     return if (item is ListView) {
-      item.adapter.count == itemCount
+      val adapter = item.adapter
+
+      if (adapter is HeaderViewListAdapter) {
+        adapter.count == itemCount + adapter.headersCount + adapter.footersCount
+      } else {
+        adapter.count == itemCount
+      }
     } else {
       false
     }

@@ -32,6 +32,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyListView
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withListViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.UpdateAccountRule
@@ -61,7 +62,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   override val activityTestRule: ActivityTestRule<*>? =
       object : IntentsTestRule<SearchMessagesActivity>(SearchMessagesActivity::class.java) {
         override fun getActivityIntent(): Intent {
-          return SearchMessagesActivity.newIntent(getTargetContext(), QUERY, LocalFolder(
+          return SearchMessagesActivity.newIntent(getTargetContext(), DEFAULT_QUERY_TEXT, LocalFolder(
               fullName = FOLDER_NAME,
               folderAlias = FOLDER_NAME))
         }
@@ -91,11 +92,27 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  fun testSearchQueryAtStart() {
+  fun testDefaultSearchQueryAtStart() {
     onView(allOf<View>(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
     onView(isAssignableFrom(EditText::class.java))
-        .check(matches(withText(QUERY)))
+        .check(matches(withText(DEFAULT_QUERY_TEXT)))
+    onView(withId(R.id.listViewMessages))
+        .check(matches(withListViewItemCount(1))).check(matches(isDisplayed()))
+  }
+
+  @Test
+  fun testSearchQuery() {
+    onView(withId(R.id.listViewMessages))
+        .check(matches(withListViewItemCount(1))).check(matches(isDisplayed()))
+
+    onView(allOf<View>(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        .check(matches(isDisplayed()))
+    onView(isAssignableFrom(EditText::class.java))
+        .check(matches(withText(DEFAULT_QUERY_TEXT)))
+        .perform(clearText(), typeText(SECOND_QUERY_TEXT), pressImeActionButton())
+    onView(withId(R.id.listViewMessages))
+        .check(matches(withListViewItemCount(2))).check(matches(isDisplayed()))
   }
 
   @Test
@@ -143,6 +160,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
 
   companion object {
     private const val FOLDER_NAME = "INBOX"
-    private const val QUERY = "Search"
+    private const val DEFAULT_QUERY_TEXT = "Search"
+    private const val SECOND_QUERY_TEXT = "Espresso"
   }
 }
