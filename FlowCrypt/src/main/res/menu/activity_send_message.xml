@@ -11,11 +11,4 @@
         android:orderInCategory="100"
         android:title="@string/switch_to_standard_email"
         app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/menuActionHelp"
-        android:icon="@mipmap/ic_help"
-        android:orderInCategory="101"
-        android:title="@string/help"
-        app:showAsAction="ifRoom" />
 </menu>
