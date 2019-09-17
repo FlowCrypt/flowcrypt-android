@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -28,10 +27,10 @@ import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.ui.adapter.PubKeysArrayAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.gms.common.util.CollectionUtils
-import java.util.*
 
 /**
  * This dialog can be used for collecting information about user public keys.
@@ -44,11 +43,11 @@ import java.util.*
 
 class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener, Observer<NodeResponseWrapper<*>> {
 
-  private var atts: ArrayList<AttachmentInfo>? = null
+  private var atts: MutableList<AttachmentInfo> = mutableListOf()
   private var listViewKeys: ListView? = null
   private var textViewMsg: TextView? = null
   private var progressBar: View? = null
-  private var content: View? = null
+  private var buttonOk: View? = null
   private var to: String? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,8 +56,6 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     if (arguments != null) {
       this.to = arguments!!.getString(KEY_TO)
     }
-
-    this.atts = ArrayList()
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -68,9 +65,8 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     textViewMsg = view.findViewById(R.id.textViewMessage)
     progressBar = view.findViewById(R.id.progressBar)
     listViewKeys = view.findViewById(R.id.listViewKeys)
-    content = view.findViewById(R.id.groupContent)
-    val buttonOk = view.findViewById<View>(R.id.buttonOk)
-    buttonOk.setOnClickListener(this)
+    buttonOk = view.findViewById(R.id.buttonOk)
+    buttonOk?.setOnClickListener(this)
 
     val builder = AlertDialog.Builder(context!!)
     builder.setView(view)
@@ -80,19 +76,15 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.buttonOk -> if (atts != null) {
-        if (atts!!.size == 1) {
-          sendResult(Activity.RESULT_OK, atts!!)
-          dismiss()
-        } else {
-          if (atts!!.isNotEmpty()) {
-            sendResult()
-          } else {
-            dismiss()
-          }
-        }
-      } else {
+      R.id.buttonOk -> if (atts.size == 1) {
+        sendResult(Activity.RESULT_OK, atts)
         dismiss()
+      } else {
+        if (atts.isNotEmpty()) {
+          sendResult()
+        } else {
+          dismiss()
+        }
       }
     }
   }
@@ -107,7 +99,10 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {
     when (nodeResponseWrapper.requestCode) {
       R.id.live_data_id_fetch_keys -> when (nodeResponseWrapper.status) {
-        Status.LOADING -> UIUtil.exchangeViewVisibility(context, true, progressBar!!, content!!)
+        Status.LOADING -> {
+          buttonOk?.visibility = View.GONE
+          UIUtil.exchangeViewVisibility(context, true, progressBar!!, listViewKeys!!)
+        }
 
         Status.SUCCESS -> {
           val parseKeysResult = nodeResponseWrapper.result as ParseKeysResult?
@@ -118,36 +113,29 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
             for (nodeKeyDetails in nodeKeyDetailsList) {
               val att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails)
               if (att != null) {
-                atts!!.add(att)
+                atts.add(att)
               }
             }
 
-            UIUtil.exchangeViewVisibility(context, false, progressBar!!, content!!)
+            buttonOk?.visibility = View.VISIBLE
+            UIUtil.exchangeViewVisibility(context, false, progressBar!!, listViewKeys!!)
 
             val matchedKeys = getMatchedKeys(nodeKeyDetailsList)
             if (!CollectionUtils.isEmpty(matchedKeys)) {
-              atts!!.clear()
+              atts.clear()
               for (nodeKeyDetails in matchedKeys) {
                 val att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails)
                 if (att != null) {
-                  atts!!.add(att)
+                  atts.add(att)
                 }
               }
             }
 
-            if (atts!!.size > 1) {
+            if (atts.size > 1) {
               textViewMsg!!.setText(R.string.tell_sender_to_update_their_settings)
               textViewMsg!!.append("\n\n")
-              textViewMsg!!.append(getString(R.string.select_key))
-
-              val strings = arrayOfNulls<String>(atts!!.size)
-              for (i in atts!!.indices) {
-                val (_, email, _, _, _, _, name) = atts!![i]
-                strings[i] = email + "\n" + name
-              }
-
-              val adapter = ArrayAdapter<String>(context!!,
-                  android.R.layout.simple_list_item_single_choice, strings)
+              textViewMsg!!.append(getString(R.string.choose_public_key_to_share))
+              val adapter = PubKeysArrayAdapter(context!!, atts)
 
               listViewKeys!!.choiceMode = ListView.CHOICE_MODE_SINGLE
               listViewKeys!!.adapter = adapter
@@ -184,7 +172,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
       for (i in 0 until checkedItemPositions.size()) {
         val key = checkedItemPositions.keyAt(i)
         if (checkedItemPositions.get(key)) {
-          selectedAtts.add(atts!![key])
+          selectedAtts.add(atts[key])
         }
       }
     }
@@ -197,13 +185,13 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     }
   }
 
-  private fun sendResult(result: Int, atts: ArrayList<AttachmentInfo>) {
+  private fun sendResult(result: Int, atts: MutableList<AttachmentInfo>) {
     if (targetFragment == null) {
       return
     }
 
     val intent = Intent()
-    intent.putParcelableArrayListExtra(KEY_ATTACHMENT_INFO_LIST, atts)
+    intent.putParcelableArrayListExtra(KEY_ATTACHMENT_INFO_LIST, ArrayList(atts))
 
     targetFragment!!.onActivityResult(targetRequestCode, result, intent)
   }
