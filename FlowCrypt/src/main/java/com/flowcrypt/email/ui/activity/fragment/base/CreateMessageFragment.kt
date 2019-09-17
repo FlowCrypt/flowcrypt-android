@@ -1415,9 +1415,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         }
 
         val imageButtonDownloadAtt = rootView.findViewById<View>(R.id.imageButtonDownloadAtt)
-        imageButtonDownloadAtt.visibility = View.GONE
 
         if (!att.isProtected) {
+          imageButtonDownloadAtt.visibility = View.GONE
           val imageButtonClearAtt = rootView.findViewById<View>(R.id.imageButtonClearAtt)
           imageButtonClearAtt.visibility = View.VISIBLE
           imageButtonClearAtt.setOnClickListener {
@@ -1430,6 +1430,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
               context!!.contentResolver.delete(uri, null, null)
             }
           }
+        } else {
+          imageButtonDownloadAtt.visibility = View.INVISIBLE
         }
         layoutAtts!!.addView(rootView)
       }
