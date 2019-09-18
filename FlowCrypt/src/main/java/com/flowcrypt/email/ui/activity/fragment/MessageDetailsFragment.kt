@@ -23,6 +23,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ListView
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
@@ -377,7 +378,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
    * Show a dialog where the user can select some public key which will be attached to a message.
    */
   private fun showSendersPublicKeyDialog() {
-    val fragment = ChoosePublicKeyDialogFragment.newInstance(details!!.email)
+    val fragment = ChoosePublicKeyDialogFragment.newInstance(details!!.email,
+        ListView.CHOICE_MODE_SINGLE, R.plurals.tell_sender_to_update_their_settings)
     fragment.setTargetFragment(this@MessageDetailsFragment, REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION)
     fragment.show(fragmentManager!!, ChoosePublicKeyDialogFragment::class.java.simpleName)
   }

@@ -33,6 +33,7 @@ data class AttachmentInfo constructor(var rawData: String? = null,
                                       var isProtected: Boolean = false,
                                       var isForwarded: Boolean = false,
                                       var isDecrypted: Boolean = false,
+                                      var isEncryptionAllowed: Boolean = true,
                                       var orderNumber: Int = 0) : Parcelable {
 
   val uniqueStringId: String
@@ -55,6 +56,7 @@ data class AttachmentInfo constructor(var rawData: String? = null,
       source.readString(),
       source.readString()!!,
       source.readParcelable(Uri::class.java.classLoader),
+      source.readByte() != 0.toByte(),
       source.readByte() != 0.toByte(),
       source.readByte() != 0.toByte(),
       source.readByte() != 0.toByte(),
@@ -82,6 +84,7 @@ data class AttachmentInfo constructor(var rawData: String? = null,
       writeByte(if (isProtected) 1.toByte() else 0.toByte())
       writeByte(if (isForwarded) 1.toByte() else 0.toByte())
       writeByte(if (isDecrypted) 1.toByte() else 0.toByte())
+      writeByte(if (isEncryptionAllowed) 1.toByte() else 0.toByte())
       writeInt(orderNumber)
     }
   }

@@ -44,6 +44,7 @@ class OutgoingMessageInfoTest {
         isProtected = true,
         isForwarded = false,
         isDecrypted = false,
+        isEncryptionAllowed = true,
         orderNumber = 12)
 
     val att2 = AttachmentInfo("rawData",
@@ -61,6 +62,7 @@ class OutgoingMessageInfoTest {
         isProtected = true,
         isForwarded = false,
         isDecrypted = false,
+        isEncryptionAllowed = true,
         orderNumber = 12)
 
     val original = OutgoingMessageInfo(

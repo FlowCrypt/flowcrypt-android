@@ -42,6 +42,7 @@ class AttachmentInfoTest {
         true,
         isForwarded = false,
         isDecrypted = false,
+        isEncryptionAllowed = true,
         orderNumber = 12)
 
     val parcel = Parcel.obtain()

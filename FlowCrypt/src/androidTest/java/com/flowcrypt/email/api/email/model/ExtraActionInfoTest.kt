@@ -43,6 +43,7 @@ class ExtraActionInfoTest {
         isProtected = true,
         isForwarded = false,
         isDecrypted = false,
+        isEncryptionAllowed = true,
         orderNumber = 12)
 
     val att2 = AttachmentInfo("rawData",
@@ -60,6 +61,7 @@ class ExtraActionInfoTest {
         isProtected = true,
         isForwarded = false,
         isDecrypted = false,
+        isEncryptionAllowed = true,
         orderNumber = 12)
 
     val original = ExtraActionInfo(

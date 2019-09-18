@@ -12,7 +12,6 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.text.TextUtils
-import android.text.format.DateFormat
 import android.util.Base64
 import android.util.LongSparseArray
 import android.util.SparseArray
@@ -183,6 +182,7 @@ class EmailUtil {
           attachmentInfo.type = Constants.MIME_TYPE_PGP_KEY
           attachmentInfo.email = nodeKeyDetails.primaryPgpContact.email
           attachmentInfo.id = generateContentId()
+          attachmentInfo.isEncryptionAllowed = false
 
           return attachmentInfo
         } else {
@@ -845,7 +845,7 @@ class EmailUtil {
      */
     @SuppressLint("SimpleDateFormat") // for now we use iso format, regardles of locality
     fun prepareReplyQuotes(msgInfo: IncomingMessageInfo?): String {
-      val date = if(msgInfo != null) SimpleDateFormat("yyyy-MM-dd' at 'HH:mm").format(msgInfo.getReceiveDate()) else "unknown date"
+      val date = if (msgInfo != null) SimpleDateFormat("yyyy-MM-dd' at 'HH:mm").format(msgInfo.getReceiveDate()) else "unknown date"
       val sender = msgInfo?.getFrom()?.firstOrNull()?.toString() ?: "unknown sender"
       val replyText = msgInfo?.text?.replace("(?m)^".toRegex(), "> ") ?: "(unknown content)"
       return "\n\nOn $date, $sender wrote:\n$replyText"

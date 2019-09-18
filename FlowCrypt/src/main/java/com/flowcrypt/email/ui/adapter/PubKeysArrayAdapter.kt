@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.ListView
 import android.widget.TextView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -21,9 +22,14 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
  *         Time: 8:38 AM
  *         E-mail: DenBond7@gmail.com
  */
-class PubKeysArrayAdapter(context: Context, atts: List<AttachmentInfo>) :
-    ArrayAdapter<AttachmentInfo>(context, R.layout.pub_key_adapter_item, atts) {
+class PubKeysArrayAdapter(context: Context, atts: List<AttachmentInfo>, choiceMode: Int) :
+    ArrayAdapter<AttachmentInfo>(context, R.layout.pub_key_adapter_item_radio_button, atts) {
   private val inflater: LayoutInflater = LayoutInflater.from(context)
+  private val layoutId = if (choiceMode == ListView.CHOICE_MODE_MULTIPLE) {
+    R.layout.pub_key_adapter_item_checkbox
+  } else {
+    R.layout.pub_key_adapter_item_radio_button
+  }
 
   override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
     var view = convertView
@@ -32,7 +38,7 @@ class PubKeysArrayAdapter(context: Context, atts: List<AttachmentInfo>) :
     val viewHolder: ViewHolder
     if (view == null) {
       viewHolder = ViewHolder()
-      view = inflater.inflate(R.layout.pub_key_adapter_item, parent, false)
+      view = inflater.inflate(layoutId, parent, false)
       viewHolder.textViewEmail = view.findViewById(R.id.textViewEmail)
       viewHolder.textViewLongId = view.findViewById(R.id.textViewLongId)
       view.tag = viewHolder
