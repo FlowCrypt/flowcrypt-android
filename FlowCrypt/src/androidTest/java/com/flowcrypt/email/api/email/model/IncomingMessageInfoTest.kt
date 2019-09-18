@@ -57,6 +57,7 @@ class IncomingMessageInfoTest {
         Uri.EMPTY,
         isProtected = true,
         isForwarded = false,
+        isEncryptionAllowed = true,
         orderNumber = 12)
 
     val att2 = AttachmentInfo("rawData",
@@ -73,6 +74,7 @@ class IncomingMessageInfoTest {
         Uri.EMPTY,
         isProtected = true,
         isForwarded = false,
+        isEncryptionAllowed = true,
         orderNumber = 12)
 
     val details = GeneralMessageDetails(

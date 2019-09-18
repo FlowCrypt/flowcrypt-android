@@ -218,9 +218,10 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             continue
           }
 
-          if (msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+          if (att.isEncryptionAllowed &&
+              msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
             val encryptedTempFile = File(attsCacheDir, att.name!! + Constants.PGP_FILE_EXT)
-            val request = EncryptFileRequest(this, origFileUri!!, att.name!!, pubKeys!!)
+            val request = EncryptFileRequest(this, origFileUri, att.name!!, pubKeys!!)
 
             val response = nodeService.encryptFile(request).execute()
             val encryptedFileResult = response.body()
@@ -267,7 +268,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
           att.type = Constants.MIME_TYPE_BINARY_DATA
         }
 
-        if (msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+        if (att.isEncryptionAllowed && msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
           val encryptedAtt = att.copy(JavaEmailConstants.FOLDER_OUTBOX)
           encryptedAtt.name = encryptedAtt.name!! + Constants.PGP_FILE_EXT
           cachedAtts.add(encryptedAtt)

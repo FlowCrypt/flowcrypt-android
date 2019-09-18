@@ -335,8 +335,10 @@ class AttachmentDaoSource : BaseDaoSource() {
           uri,
           false,
           !cursor.isNull(cursor.getColumnIndex(COL_FORWARDED_FOLDER))
-              && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0, false, 0
-      )
+              && cursor.getInt(cursor.getColumnIndex(COL_FORWARDED_UID)) > 0,
+          isDecrypted = false,
+          isEncryptionAllowed = true,
+          orderNumber = 0)
     }
   }
 }

@@ -37,7 +37,8 @@ class EncryptFileRequest : BaseNodeRequest {
     this.pubKeys = pubKeys
   }
 
-  constructor(context: Context, uri: Uri, name: String, pubKeys: List<String>) : super(context, uri) {
+  constructor(context: Context?, uri: Uri?, name: String, pubKeys: List<String>)
+      : super(context, uri) {
     this.name = name
     this.pubKeys = pubKeys
     this.data = ByteArray(0)

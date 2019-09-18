@@ -32,6 +32,7 @@ import android.widget.FilterQueryProvider
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.Spinner
@@ -64,6 +65,7 @@ import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity
 import com.flowcrypt.email.ui.activity.SelectContactsActivity
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
@@ -417,6 +419,16 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         }
       }
 
+      REQUEST_CODE_SHOW_PUB_KEY_DIALOG -> when (resultCode) {
+        Activity.RESULT_OK -> {
+          if (data != null) {
+            val pubkeyList: List<AttachmentInfo> = data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST)
+            this.atts?.addAll(pubkeyList)
+            showAtts()
+          }
+        }
+      }
+
       else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
@@ -448,6 +460,11 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
       R.id.menuActionAttachFile -> {
         attachFile()
+        return true
+      }
+
+      R.id.menuActionIncludePubKey -> {
+        showPubKeyDialog()
         return true
       }
 
@@ -1441,6 +1458,18 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   /**
+   * Show a dialog where the user can select a public key which will be attached to a message.
+   */
+  private fun showPubKeyDialog() {
+    if (!account?.email.isNullOrEmpty()) {
+      val fragment = ChoosePublicKeyDialogFragment.newInstance(
+          account?.email!!, ListView.CHOICE_MODE_MULTIPLE, R.plurals.choose_pub_key)
+      fragment.setTargetFragment(this@CreateMessageFragment, REQUEST_CODE_SHOW_PUB_KEY_DIALOG)
+      fragment.show(fragmentManager!!, ChoosePublicKeyDialogFragment::class.java.simpleName)
+    }
+  }
+
+  /**
    * This interface will be used when we send a message.
    */
   interface OnMessageSendListener {
@@ -1454,6 +1483,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     private const val REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT = 103
     private const val REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE = 104
     private const val REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO = 105
+    private const val REQUEST_CODE_SHOW_PUB_KEY_DIALOG = 106
     private val TAG = CreateMessageFragment::class.java.simpleName
   }
 }

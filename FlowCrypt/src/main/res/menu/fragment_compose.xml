@@ -23,4 +23,12 @@
         android:orderInCategory="2001"
         android:title="@string/send"
         app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menuActionIncludePubKey"
+        android:icon="@drawable/ic_key_white_24dp"
+        android:menuCategory="system"
+        android:orderInCategory="2002"
+        android:title="@string/include_public_key"
+        app:showAsAction="ifRoom" />
 </menu>

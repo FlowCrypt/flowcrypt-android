@@ -48,14 +48,17 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   private var textViewMsg: TextView? = null
   private var progressBar: View? = null
   private var buttonOk: View? = null
-  private var to: String? = null
+  private var email: String? = null
+  private var title: Int? = null
+  private var choiceMode: Int = ListView.CHOICE_MODE_NONE
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    if (arguments != null) {
-      this.to = arguments!!.getString(KEY_TO)
-    }
+    this.email = arguments?.getString(KEY_EMAIL)
+    this.title = arguments?.getInt(KEY_TITLE_RESOURCE_ID)
+    this.choiceMode = arguments?.getInt(KEY_CHOICE_MODE, ListView.CHOICE_MODE_NONE)
+        ?: ListView.CHOICE_MODE_NONE
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -77,7 +80,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   override fun onClick(v: View) {
     when (v.id) {
       R.id.buttonOk -> if (atts.size == 1) {
-        sendResult(Activity.RESULT_OK, atts)
+        sendResult(atts)
         dismiss()
       } else {
         if (atts.isNotEmpty()) {
@@ -108,7 +111,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
           val parseKeysResult = nodeResponseWrapper.result as ParseKeysResult?
           val nodeKeyDetailsList = parseKeysResult!!.nodeKeyDetails
           if (CollectionUtils.isEmpty(nodeKeyDetailsList)) {
-            textViewMsg!!.text = getString(R.string.no_pub_keys)
+            textViewMsg?.text = getString(R.string.no_pub_keys)
           } else {
             for (nodeKeyDetails in nodeKeyDetailsList) {
               val att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails)
@@ -131,16 +134,15 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
               }
             }
 
-            if (atts.size > 1) {
-              textViewMsg!!.setText(R.string.tell_sender_to_update_their_settings)
-              textViewMsg!!.append("\n\n")
-              textViewMsg!!.append(getString(R.string.choose_public_key_to_share))
-              val adapter = PubKeysArrayAdapter(context!!, atts)
+            title?.let {
+              textViewMsg?.text = resources.getQuantityString(it, atts.size)
+            }
 
-              listViewKeys!!.choiceMode = ListView.CHOICE_MODE_SINGLE
+            if (atts.size > 1) {
+              val adapter = PubKeysArrayAdapter(context!!, atts, choiceMode)
+              listViewKeys!!.choiceMode = choiceMode
               listViewKeys!!.adapter = adapter
             } else {
-              textViewMsg!!.setText(R.string.tell_sender_to_update_their_settings)
               listViewKeys!!.visibility = View.GONE
             }
           }
@@ -148,12 +150,12 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
         Status.ERROR -> {
           UIUtil.exchangeViewVisibility(context, false, progressBar!!, textViewMsg!!)
-          textViewMsg!!.text = nodeResponseWrapper.result!!.error!!.toString()
+          textViewMsg?.text = nodeResponseWrapper.result!!.error!!.toString()
         }
 
         Status.EXCEPTION -> {
           UIUtil.exchangeViewVisibility(context, false, progressBar!!, textViewMsg!!)
-          textViewMsg!!.text = nodeResponseWrapper.exception!!.message
+          textViewMsg?.text = nodeResponseWrapper.exception!!.message
         }
       }
     }
@@ -180,12 +182,12 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     if (selectedAtts.isEmpty()) {
       showToast(getString(R.string.please_select_key))
     } else {
-      sendResult(Activity.RESULT_OK, selectedAtts)
+      sendResult(selectedAtts)
       dismiss()
     }
   }
 
-  private fun sendResult(result: Int, atts: MutableList<AttachmentInfo>) {
+  private fun sendResult(atts: MutableList<AttachmentInfo>) {
     if (targetFragment == null) {
       return
     }
@@ -193,12 +195,12 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     val intent = Intent()
     intent.putParcelableArrayListExtra(KEY_ATTACHMENT_INFO_LIST, ArrayList(atts))
 
-    targetFragment!!.onActivityResult(targetRequestCode, result, intent)
+    targetFragment!!.onActivityResult(targetRequestCode, Activity.RESULT_OK, intent)
   }
 
   /**
-   * Get a list with the matched [NodeKeyDetails]. If the sender email matched to the email from
-   * [PgpContact] which got from the private key than we return a list with the relevant public key.
+   * Get a list with the matched [NodeKeyDetails]. If the sender email matched email the email from
+   * [PgpContact] which got from the private key than we return a list with relevant public keys.
    *
    * @return A matched [NodeKeyDetails] or null.
    */
@@ -207,7 +209,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
     for (nodeKeyDetails in nodeKeyDetailsList) {
       val (email) = nodeKeyDetails.primaryPgpContact
-      if (email.equals(to!!, ignoreCase = true)) {
+      if (email.equals(email, ignoreCase = true)) {
         keyDetails.add(nodeKeyDetails)
       }
     }
@@ -216,16 +218,26 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   }
 
   companion object {
-    @JvmField
     val KEY_ATTACHMENT_INFO_LIST =
-        GeneralUtil.generateUniqueExtraKey("KEY_ATTACHMENT_INFO_LIST", InfoDialogFragment::class.java)
+        GeneralUtil.generateUniqueExtraKey("KEY_ATTACHMENT_INFO_LIST",
+            ChoosePublicKeyDialogFragment::class.java)
 
-    private val KEY_TO = GeneralUtil.generateUniqueExtraKey("KEY_TO", InfoDialogFragment::class.java)
+    private val KEY_EMAIL = GeneralUtil.generateUniqueExtraKey("KEY_EMAIL",
+        ChoosePublicKeyDialogFragment::class.java)
+
+    private val KEY_CHOICE_MODE = GeneralUtil.generateUniqueExtraKey("KEY_CHOICE_MODE",
+        ChoosePublicKeyDialogFragment::class.java)
+
+    private val KEY_TITLE_RESOURCE_ID = GeneralUtil.generateUniqueExtraKey("KEY_TITLE_RESOURCE_ID",
+        ChoosePublicKeyDialogFragment::class.java)
 
     @JvmStatic
-    fun newInstance(to: String): ChoosePublicKeyDialogFragment {
+    fun newInstance(email: String, choiceMode: Int, titleResourceId: Int?):
+        ChoosePublicKeyDialogFragment {
       val args = Bundle()
-      args.putString(KEY_TO, to)
+      args.putString(KEY_EMAIL, email)
+      args.putInt(KEY_CHOICE_MODE, choiceMode)
+      titleResourceId?.let { args.putInt(KEY_TITLE_RESOURCE_ID, it) }
 
       val fragment = ChoosePublicKeyDialogFragment()
       fragment.arguments = args
