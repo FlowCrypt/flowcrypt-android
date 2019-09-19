@@ -143,8 +143,9 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
             if (atts.size > 1) {
               val adapter = PubKeysArrayAdapter(context!!, atts, choiceMode)
-              listViewKeys!!.choiceMode = choiceMode
-              listViewKeys!!.adapter = adapter
+              listViewKeys?.choiceMode = choiceMode
+              listViewKeys?.adapter = adapter
+              listViewKeys?.setItemChecked(0, true)
             } else {
               if (returnResultImmediatelyIfSingle) {
                 sendResult(atts)
