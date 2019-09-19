@@ -425,9 +425,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       REQUEST_CODE_SHOW_PUB_KEY_DIALOG -> when (resultCode) {
         Activity.RESULT_OK -> {
           if (data != null) {
-            val pubkeyList: List<AttachmentInfo> = data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST)
-            this.atts?.addAll(pubkeyList)
-            showAtts()
+            val keyList: List<AttachmentInfo> = data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST)
+            val key = keyList.first()
+            if (this.atts?.none { it.name == key.name && it.encodedSize == key.encodedSize } == true) {
+              this.atts.add(key)
+              showAtts()
+            }
           }
         }
       }
@@ -1466,7 +1469,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private fun showPubKeyDialog() {
     if (!account?.email.isNullOrEmpty()) {
       val fragment = ChoosePublicKeyDialogFragment.newInstance(
-          account?.email!!, ListView.CHOICE_MODE_MULTIPLE, R.plurals.choose_pub_key)
+          account?.email!!, ListView.CHOICE_MODE_SINGLE, R.plurals.choose_pub_key, true)
       fragment.setTargetFragment(this@CreateMessageFragment, REQUEST_CODE_SHOW_PUB_KEY_DIALOG)
       fragment.show(fragmentManager!!, ChoosePublicKeyDialogFragment::class.java.simpleName)
     }

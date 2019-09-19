@@ -51,6 +51,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   private var email: String? = null
   private var title: Int? = null
   private var choiceMode: Int = ListView.CHOICE_MODE_NONE
+  private var returnResultImmediatelyIfSingle: Boolean = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -59,6 +60,8 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     this.title = arguments?.getInt(KEY_TITLE_RESOURCE_ID)
     this.choiceMode = arguments?.getInt(KEY_CHOICE_MODE, ListView.CHOICE_MODE_NONE)
         ?: ListView.CHOICE_MODE_NONE
+    this.returnResultImmediatelyIfSingle =
+        arguments?.getBoolean(KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE, false) ?: false
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -143,7 +146,12 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
               listViewKeys!!.choiceMode = choiceMode
               listViewKeys!!.adapter = adapter
             } else {
-              listViewKeys!!.visibility = View.GONE
+              if (returnResultImmediatelyIfSingle) {
+                sendResult(atts)
+                dismiss()
+              } else {
+                listViewKeys!!.visibility = View.GONE
+              }
             }
           }
         }
@@ -209,7 +217,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
     for (nodeKeyDetails in nodeKeyDetailsList) {
       val (email) = nodeKeyDetails.primaryPgpContact
-      if (email.equals(email, ignoreCase = true)) {
+      if (email.equals(this.email, ignoreCase = true)) {
         keyDetails.add(nodeKeyDetails)
       }
     }
@@ -231,13 +239,19 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     private val KEY_TITLE_RESOURCE_ID = GeneralUtil.generateUniqueExtraKey("KEY_TITLE_RESOURCE_ID",
         ChoosePublicKeyDialogFragment::class.java)
 
+    private val KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE =
+        GeneralUtil.generateUniqueExtraKey("KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE",
+            ChoosePublicKeyDialogFragment::class.java)
+
     @JvmStatic
-    fun newInstance(email: String, choiceMode: Int, titleResourceId: Int?):
-        ChoosePublicKeyDialogFragment {
+    fun newInstance(email: String, choiceMode: Int,
+                    titleResourceId: Int?,
+                    returnResultImmediatelyIfSingle: Boolean = false): ChoosePublicKeyDialogFragment {
       val args = Bundle()
       args.putString(KEY_EMAIL, email)
       args.putInt(KEY_CHOICE_MODE, choiceMode)
       titleResourceId?.let { args.putInt(KEY_TITLE_RESOURCE_ID, it) }
+      args.putBoolean(KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE, returnResultImmediatelyIfSingle)
 
       val fragment = ChoosePublicKeyDialogFragment()
       fragment.arguments = args
