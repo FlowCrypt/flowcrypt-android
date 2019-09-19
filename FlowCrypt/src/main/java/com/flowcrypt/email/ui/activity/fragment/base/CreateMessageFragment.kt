@@ -163,6 +163,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       msg += EmailUtil.prepareReplyQuotes(msgInfo)
     }
 
+    val attachments = atts?.minus(forwardedAtts)
+    attachments?.forEachIndexed { index, attachmentInfo -> attachmentInfo.path = index.toString() }
+
     return OutgoingMessageInfo(
         editTextEmailSubject?.text.toString(),
         msg,
@@ -171,7 +174,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         recipientsBcc?.chipValues,
         editTextFrom?.text.toString(),
         msgInfo?.origMsgHeaders,
-        atts?.minus(forwardedAtts),
+        attachments,
         forwardedAtts,
         listener!!.msgEncryptionType,
         messageType === MessageType.FORWARD,
