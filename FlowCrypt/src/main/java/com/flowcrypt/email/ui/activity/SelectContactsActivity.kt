@@ -73,7 +73,7 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
       supportActionBar!!.title = title
     }
 
-    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this)
+    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_pgp, null, this)
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -97,7 +97,7 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
 
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
     when (id) {
-      R.id.loader_id_load_contacts_with_has_pgp_true -> {
+      R.id.loader_id_load_contacts_with_pgp -> {
         var selection = ContactsDaoSource.COL_HAS_PGP + " = ?"
         var selectionArgs = arrayOf("1")
 
@@ -118,7 +118,7 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
 
   override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
     when (loader.id) {
-      R.id.loader_id_load_contacts_with_has_pgp_true -> {
+      R.id.loader_id_load_contacts_with_pgp -> {
         UIUtil.exchangeViewVisibility(this, false, progressBar!!, listView!!)
 
         if (data != null && data.count > 0) {
@@ -133,7 +133,7 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
 
   override fun onLoaderReset(loader: Loader<Cursor>) {
     when (loader.id) {
-      R.id.loader_id_load_contacts_with_has_pgp_true -> adapter!!.swapCursor(null)
+      R.id.loader_id_load_contacts_with_pgp -> adapter!!.swapCursor(null)
     }
   }
 
@@ -149,13 +149,13 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
 
   override fun onQueryTextSubmit(query: String): Boolean {
     this.searchPattern = query
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this)
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_pgp, null, this)
     return true
   }
 
   override fun onQueryTextChange(newText: String): Boolean {
     this.searchPattern = newText
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this)
+    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_pgp, null, this)
     return true
   }
 

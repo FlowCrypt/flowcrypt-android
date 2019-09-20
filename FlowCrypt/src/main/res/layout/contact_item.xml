@@ -8,6 +8,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:descendantFocusability="blocksDescendants"
     android:orientation="vertical">
 
     <androidx.constraintlayout.widget.Guideline
@@ -86,6 +87,8 @@
         android:layout_marginEnd="@dimen/default_margin_content_small"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/delete"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         app:layout_constraintBottom_toBottomOf="@+id/constraintLayout"
         app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
         app:layout_constraintTop_toTopOf="parent"
