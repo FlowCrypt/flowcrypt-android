@@ -40,7 +40,7 @@ import java.util.*
  * Time: 12:43
  * E-mail: DenBond7@gmail.com
  */
-class KeyDetailsFragment : BaseFragment(), View.OnClickListener {
+class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
 
   private var details: NodeKeyDetails? = null
 
@@ -58,7 +58,7 @@ class KeyDetailsFragment : BaseFragment(), View.OnClickListener {
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, bundle: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_key_details, container, false)
+    return inflater.inflate(R.layout.fragment_private_key_details, container, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -193,12 +193,12 @@ class KeyDetailsFragment : BaseFragment(), View.OnClickListener {
 
   companion object {
     private val KEY_NODE_KEY_DETAILS = GeneralUtil.generateUniqueExtraKey("KEY_NODE_KEY_DETAILS",
-        KeyDetailsFragment::class.java)
+        PrivateKeyDetailsFragment::class.java)
     private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
 
     @JvmStatic
-    fun newInstance(details: NodeKeyDetails): KeyDetailsFragment {
-      val keyDetailsFragment = KeyDetailsFragment()
+    fun newInstance(details: NodeKeyDetails): PrivateKeyDetailsFragment {
+      val keyDetailsFragment = PrivateKeyDetailsFragment()
       val args = Bundle()
       args.putParcelable(KEY_NODE_KEY_DETAILS, details)
       keyDetailsFragment.arguments = args
