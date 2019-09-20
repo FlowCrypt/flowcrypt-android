@@ -411,4 +411,5 @@
         <item quantity="one">Your public key is ready to be added</item>
         <item quantity="other">Choose Public Keys to share</item>
     </plurals>
+    <string name="contact_pub_key">Contact (Public Key)</string>
 </resources>

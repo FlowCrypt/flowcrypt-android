@@ -91,32 +91,32 @@ class UIUtil {
      * @param second  The second view.
      */
     @JvmStatic
-    fun exchangeViewVisibility(context: Context?, show: Boolean, first: View, second: View) {
+    fun exchangeViewVisibility(context: Context?, show: Boolean, first: View?, second: View?) {
       if (context == null) {
         return
       }
 
-      if (show && first.visibility == View.VISIBLE && second.visibility == View.GONE) {
+      if (show && first?.visibility == View.VISIBLE && second?.visibility == View.GONE) {
         return
       }
 
-      if (!show && second.visibility == View.VISIBLE && first.visibility == View.GONE) {
+      if (!show && second?.visibility == View.VISIBLE && first?.visibility == View.GONE) {
         return
       }
 
       val shortAnimTime = context.resources.getInteger(android.R.integer.config_shortAnimTime)
 
-      second.visibility = if (show) View.GONE else View.VISIBLE
-      second.animate().setDuration(shortAnimTime.toLong()).alpha((if (show) 0 else 1).toFloat())
-          .setListener(object : AnimatorListenerAdapter() {
+      second?.visibility = if (show) View.GONE else View.VISIBLE
+      second?.animate()?.setDuration(shortAnimTime.toLong())?.alpha((if (show) 0 else 1).toFloat())
+          ?.setListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
               second.visibility = if (show) View.GONE else View.VISIBLE
             }
           })
 
-      first.visibility = if (show) View.VISIBLE else View.GONE
-      first.animate().setDuration(shortAnimTime.toLong()).alpha((if (show) 1 else 0).toFloat())
-          .setListener(object : AnimatorListenerAdapter() {
+      first?.visibility = if (show) View.VISIBLE else View.GONE
+      first?.animate()?.setDuration(shortAnimTime.toLong())?.alpha((if (show) 1 else 0).toFloat())
+          ?.setListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
               first.visibility = if (show) View.VISIBLE else View.GONE
             }
