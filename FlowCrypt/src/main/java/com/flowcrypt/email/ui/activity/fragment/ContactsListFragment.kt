@@ -124,15 +124,14 @@ class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteC
 
   override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
     val cursor = (parent?.getItemAtPosition(position) as? Cursor)
+    val email = cursor?.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL))
     val publicKey = cursor?.getString(cursor.getColumnIndex(ContactsDaoSource.COL_PUBLIC_KEY))
 
-    publicKey?.let {
-      fragmentManager!!
-          .beginTransaction()
-          .replace(R.id.layoutContent, PublicKeyDetailsFragment.newInstance(it))
-          .addToBackStack(null)
-          .commit()
-    }
+    fragmentManager!!
+        .beginTransaction()
+        .replace(R.id.layoutContent, PublicKeyDetailsFragment.newInstance(email, publicKey))
+        .addToBackStack(null)
+        .commit()
   }
 
   private fun initViews(root: View) {

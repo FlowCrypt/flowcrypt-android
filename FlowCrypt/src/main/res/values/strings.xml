@@ -411,5 +411,10 @@
         <item quantity="one">Your public key is ready to be added</item>
         <item quantity="other">Choose Public Keys to share</item>
     </plurals>
-    <string name="contact_pub_key">Contact (Public Key)</string>
+    <string name="pub_key">Public Key</string>
+    <string name="template_created">Created: %1$s</string>
+    <string name="template_algorithm">Algorithm: %1$s</string>
+    <string name="template_user">User %1$d: %2$s</string>
+    <string name="template_long_id">LongID %1$d: %2$s</string>
+    <string name="public_key_copied_to_clipboard">Public Key copied to clipboard</string>
 </resources>

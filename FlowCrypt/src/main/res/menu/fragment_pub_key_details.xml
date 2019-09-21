@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <item
+        android:id="@+id/menuActionCopy"
+        android:icon="@drawable/ic_content_copy_white_24dp"
+        android:menuCategory="system"
+        android:orderInCategory="2000"
+        android:title="@string/copy_to_clipboard"
+        app:showAsAction="always"
+        tools:ignore="AlwaysShowAction" />
+
+    <item
+        android:id="@+id/menuActionSave"
+        android:icon="@drawable/ic_save_white_24dp"
+        android:menuCategory="system"
+        android:orderInCategory="2001"
+        android:title="@string/save_to_file"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menuActionDelete"
+        android:icon="@drawable/ic_delete_forever_white_24dp"
+        android:menuCategory="system"
+        android:orderInCategory="2002"
+        android:title="@string/delete"
+        app:showAsAction="ifRoom" />
+</menu>
