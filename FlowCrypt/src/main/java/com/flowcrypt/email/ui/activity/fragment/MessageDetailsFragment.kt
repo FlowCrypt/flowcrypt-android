@@ -22,6 +22,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.Switch
@@ -88,7 +89,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var viewFooterOfHeader: View? = null
   private var layoutMsgParts: ViewGroup? = null
   private var layoutContent: View? = null
-  private var imageBtnReplyAll: View? = null
+  private var imageBtnReplyAll: ImageButton? = null
   private var imageBtnMoreOptions: View? = null
   private var progressBarActionRunning: View? = null
   override var contentView: View? = null
@@ -719,6 +720,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
         imageViewReply.setImageResource(R.mipmap.ic_reply_green)
         imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_green)
+        imageBtnReplyAll?.setImageResource(R.mipmap.ic_reply_all_green)
         imageViewFwd.setImageResource(R.mipmap.ic_forward_green)
 
         textViewReply.setText(R.string.reply_encrypted)
@@ -727,6 +729,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       } else {
         imageViewReply.setImageResource(R.mipmap.ic_reply_red)
         imageViewReplyAll.setImageResource(R.mipmap.ic_reply_all_red)
+        imageBtnReplyAll?.setImageResource(R.mipmap.ic_reply_all_red)
         imageViewFwd.setImageResource(R.mipmap.ic_forward_red)
 
         textViewReply.setText(R.string.reply)
