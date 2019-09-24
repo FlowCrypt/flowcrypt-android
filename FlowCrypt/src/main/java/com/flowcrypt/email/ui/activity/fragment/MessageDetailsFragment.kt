@@ -27,6 +27,7 @@ import android.widget.ListView
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.flowcrypt.email.Constants
@@ -88,9 +89,12 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var layoutMsgParts: ViewGroup? = null
   private var layoutContent: View? = null
   private var imageBtnReplyAll: View? = null
+  private var imageBtnMoreOptions: View? = null
   private var progressBarActionRunning: View? = null
   override var contentView: View? = null
     private set
+  private var layoutReplyButton: View? = null
+  private var layoutFwdButton: View? = null
   private var layoutReplyBtns: View? = null
   private var emailWebView: EmailWebView? = null
 
@@ -219,6 +223,30 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY_ALL, msgEncryptType))
       }
 
+      R.id.imageButtonMoreOptions -> {
+        val popup = PopupMenu(context!!, v)
+        popup.menuInflater.inflate(R.menu.popup_reply_actions, popup.menu)
+        popup.setOnMenuItemClickListener {
+          when (it.itemId) {
+            R.id.menuActionReply -> {
+              layoutReplyButton?.let { view -> onClick(view) }
+              true
+            }
+
+            R.id.menuActionForward -> {
+              layoutFwdButton?.let { view -> onClick(view) }
+              true
+            }
+            else -> {
+              true
+            }
+          }
+        }
+
+        popup.show()
+      }
+
+
       R.id.layoutFwdButton -> {
         if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
           if (atts.isNotEmpty()) {
@@ -302,7 +330,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
     this.msgInfo = msgInfo
     this.msgEncryptType = msgInfo.encryptionType
-    imageBtnReplyAll!!.visibility = View.VISIBLE
+    imageBtnReplyAll?.visibility = View.VISIBLE
+    imageBtnMoreOptions?.visibility = View.VISIBLE
     isAdditionalActionEnabled = true
     if (activity != null) {
       activity!!.invalidateOptionsMenu()
@@ -507,7 +536,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
     layoutContent = view.findViewById(R.id.layoutContent)
     imageBtnReplyAll = view.findViewById(R.id.imageButtonReplyAll)
-    imageBtnReplyAll!!.setOnClickListener(this)
+    imageBtnReplyAll?.setOnClickListener(this)
+    imageBtnMoreOptions = view.findViewById(R.id.imageButtonMoreOptions)
+    imageBtnMoreOptions?.setOnClickListener(this)
   }
 
   private fun updateViews() {
@@ -703,9 +734,11 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         textViewFwd.setText(R.string.forward)
       }
 
-      layoutReplyBtns!!.findViewById<View>(R.id.layoutReplyButton).setOnClickListener(this)
+      layoutReplyButton = layoutReplyBtns?.findViewById(R.id.layoutReplyButton)
+      layoutReplyButton?.setOnClickListener(this)
+      layoutFwdButton = layoutReplyBtns?.findViewById(R.id.layoutFwdButton)
+      layoutFwdButton?.setOnClickListener(this)
       layoutReplyBtns!!.findViewById<View>(R.id.layoutReplyAllButton).setOnClickListener(this)
-      layoutReplyBtns!!.findViewById<View>(R.id.layoutFwdButton).setOnClickListener(this)
 
       layoutReplyBtns!!.visibility = View.VISIBLE
     }
