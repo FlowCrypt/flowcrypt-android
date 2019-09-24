@@ -226,7 +226,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
       val textViewKeywords = TextView(context)
       textViewKeywords.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
       textViewKeywords.text = s.keywords
-      textViewKeywords.setTextColor(resources.getColor(R.color.green, context?.theme))
+      textViewKeywords.setTextColor(resources.getColor(R.color.gray, context?.theme))
       layoutLongIdsAndKeyWords?.addView(textViewKeywords)
     }
 
