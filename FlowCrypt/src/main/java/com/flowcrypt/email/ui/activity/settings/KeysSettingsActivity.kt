@@ -10,7 +10,7 @@ import android.os.Bundle
 import android.view.View
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
-import com.flowcrypt.email.ui.activity.fragment.KeysListFragment
+import com.flowcrypt.email.ui.activity.fragment.PrivateKeysListFragment
 
 /**
  * This [Activity] shows information about available keys in the database.
@@ -36,7 +36,7 @@ class KeysSettingsActivity : BaseBackStackActivity() {
     super.onCreate(savedInstanceState)
 
     if (savedInstanceState == null) {
-      val keysListFragment = KeysListFragment.newInstance()
+      val keysListFragment = PrivateKeysListFragment.newInstance()
       supportFragmentManager.beginTransaction().replace(R.id.layoutContent, keysListFragment).commitNow()
     }
   }
@@ -47,7 +47,7 @@ class KeysSettingsActivity : BaseBackStackActivity() {
       val fragmentList = supportFragmentManager.fragments
 
       for (fragment in fragmentList) {
-        if (fragment is KeysListFragment) {
+        if (fragment is PrivateKeysListFragment) {
           fragment.fetchKeys()
           return
         }

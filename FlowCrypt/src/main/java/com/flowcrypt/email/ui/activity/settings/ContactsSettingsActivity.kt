@@ -5,19 +5,11 @@
 
 package com.flowcrypt.email.ui.activity.settings
 
-import android.database.Cursor
 import android.os.Bundle
 import android.view.View
-import android.widget.ListView
-import android.widget.Toast
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.CursorLoader
-import androidx.loader.content.Loader
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
-import com.flowcrypt.email.ui.activity.ImportPgpContactActivity
-import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter
-import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.ui.activity.fragment.ContactsListFragment
+import com.flowcrypt.email.ui.activity.fragment.PublicKeyDetailsFragment
 
 /**
  * This Activity show information about contacts where has_pgp == true.
@@ -32,12 +24,12 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 
-class ContactsSettingsActivity : BaseSettingsActivity(), LoaderManager.LoaderCallbacks<Cursor>,
-    ContactsListCursorAdapter.OnDeleteContactListener, View.OnClickListener {
-  private lateinit var progressBar: View
-  private lateinit var listView: ListView
-  private lateinit var emptyView: View
-  private var adapter: ContactsListCursorAdapter? = null
+class ContactsSettingsActivity : BaseSettingsActivity(), PublicKeyDetailsFragment.OnContactDeletedListener {
+  private var contactsListFragment: ContactsListFragment? = null
+
+  override fun onContactDeleted(email: String) {
+    contactsListFragment?.onContactDeleteClick(email)
+  }
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_contacts_settings
@@ -47,64 +39,15 @@ class ContactsSettingsActivity : BaseSettingsActivity(), LoaderManager.LoaderCal
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    this.progressBar = findViewById(R.id.progressBar)
-    this.listView = findViewById(R.id.listViewContacts)
-    this.emptyView = findViewById(R.id.emptyView)
-    this.adapter = ContactsListCursorAdapter(this, null, false, this)
-    listView.adapter = adapter
 
-    if (findViewById<View>(R.id.floatActionButtonImportPublicKey) != null) {
-      findViewById<View>(R.id.floatActionButtonImportPublicKey).setOnClickListener(this)
-    }
-
-    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this)
-  }
-
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
-    return when (id) {
-      R.id.loader_id_load_contacts_with_has_pgp_true -> {
-
-        val uri = ContactsDaoSource().baseContentUri
-        val selection = ContactsDaoSource.COL_HAS_PGP + " = ?"
-        val selectionArgs = arrayOf("1")
-
-        CursorLoader(this, uri, null, selection, selectionArgs, null)
+    if (savedInstanceState == null) {
+      contactsListFragment = ContactsListFragment.newInstance()
+      contactsListFragment?.let {
+        supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.layoutContent, it)
+            .commitNow()
       }
-
-      else -> Loader(this)
-    }
-  }
-
-  override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
-    when (loader.id) {
-      R.id.loader_id_load_contacts_with_has_pgp_true -> {
-        UIUtil.exchangeViewVisibility(this, false, progressBar, listView)
-
-        if (data != null && data.count > 0) {
-          adapter!!.swapCursor(data)
-          UIUtil.exchangeViewVisibility(this, false, emptyView, listView)
-        } else {
-          UIUtil.exchangeViewVisibility(this, true, emptyView, listView)
-        }
-      }
-    }
-  }
-
-  override fun onLoaderReset(loader: Loader<Cursor>) {
-    when (loader.id) {
-      R.id.loader_id_load_contacts_with_has_pgp_true -> adapter!!.swapCursor(null)
-    }
-  }
-
-  override fun onClick(email: String) {
-    ContactsDaoSource().deletePgpContact(this, email)
-    Toast.makeText(this, getString(R.string.the_contact_was_deleted, email), Toast.LENGTH_SHORT).show()
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_has_pgp_true, null, this)
-  }
-
-  override fun onClick(v: View) {
-    when (v.id) {
-      R.id.floatActionButtonImportPublicKey -> startActivityForResult(ImportPgpContactActivity.newIntent(this), 0)
     }
   }
 }

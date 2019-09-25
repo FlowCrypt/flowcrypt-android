@@ -68,7 +68,7 @@ class ContactsListCursorAdapter @JvmOverloads constructor(context: Context,
     if (isDeleteEnabled) {
       imageButtonDeleteContact.visibility = View.VISIBLE
       imageButtonDeleteContact.setOnClickListener {
-        listener?.onClick(email)
+        listener?.onContactDeleteClick(email)
       }
     } else {
       imageButtonDeleteContact.visibility = View.GONE
@@ -79,6 +79,6 @@ class ContactsListCursorAdapter @JvmOverloads constructor(context: Context,
    * This listener can be used to determinate when a contact was deleted.
    */
   interface OnDeleteContactListener {
-    fun onClick(email: String)
+    fun onContactDeleteClick(email: String)
   }
 }

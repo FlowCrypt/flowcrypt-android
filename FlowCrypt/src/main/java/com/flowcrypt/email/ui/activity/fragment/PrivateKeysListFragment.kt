@@ -40,7 +40,7 @@ import java.util.*
  * Time: 10:30
  * E-mail: DenBond7@gmail.com
  */
-class KeysListFragment : BaseFragment(), View.OnClickListener, PrivateKeysRecyclerViewAdapter.OnKeySelectedListener,
+class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKeysRecyclerViewAdapter.OnKeySelectedListener,
     Observer<NodeResponseWrapper<*>> {
 
   private var progressBar: View? = null
@@ -96,7 +96,7 @@ class KeysListFragment : BaseFragment(), View.OnClickListener, PrivateKeysRecycl
     nodeKeyDetails?.let {
       fragmentManager!!
           .beginTransaction()
-          .replace(R.id.layoutContent, KeyDetailsFragment.newInstance(it))
+          .replace(R.id.layoutContent, PrivateKeyDetailsFragment.newInstance(it))
           .addToBackStack(null)
           .commit()
     }
@@ -169,8 +169,8 @@ class KeysListFragment : BaseFragment(), View.OnClickListener, PrivateKeysRecycl
     private const val REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 0
 
     @JvmStatic
-    fun newInstance(): KeysListFragment {
-      return KeysListFragment()
+    fun newInstance(): PrivateKeysListFragment {
+      return PrivateKeysListFragment()
     }
   }
 }
