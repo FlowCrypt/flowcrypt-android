@@ -28,7 +28,6 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.dialog.EditScreenshotDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
-import com.google.android.material.textfield.TextInputLayout
 
 /**
  * The feedback activity. Anywhere there is a question mark, it should take the user to this
@@ -43,8 +42,8 @@ import com.google.android.material.textfield.TextInputLayout
 class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedChangeListener,
     View.OnClickListener, EditScreenshotDialogFragment.OnScreenshotChangeListener {
   override lateinit var rootView: View
-  private lateinit var inputLayoutMsg: TextInputLayout
   private lateinit var editTextUserMsg: EditText
+  private lateinit var editTextUserEmail: EditText
   private lateinit var imageButtonScreenshot: ImageButton
   private lateinit var screenShotGroup: Group
   private lateinit var checkBoxScreenshot: CheckBox
@@ -84,19 +83,35 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.menuActionSend -> {
+        if (account == null) {
+          if (editTextUserEmail.text.isEmpty()) {
+            editTextUserEmail.requestFocus()
+            Toast.makeText(this, getString(R.string.email_must_be_non_empty), Toast
+                .LENGTH_LONG).show()
+            return true
+          } else if (!GeneralUtil.isEmailValid(editTextUserEmail.text)) {
+            editTextUserEmail.requestFocus()
+            Toast.makeText(this, getString(R.string.error_email_is_not_valid), Toast
+                .LENGTH_LONG).show()
+            return true
+          }
+        }
+
         if (editTextUserMsg.text.isEmpty()) {
           editTextUserMsg.requestFocus()
           Toast.makeText(this, getString(R.string.your_message_must_be_non_empty), Toast
-              .LENGTH_SHORT).show()
+              .LENGTH_LONG).show()
         } else {
-          val account = AccountDaoSource().getActiveAccountInformation(this)
           val screenShotBytes = UIUtil.getCompressedByteArrayOfBitmap(
               if (checkBoxScreenshot.isChecked) {
                 bitmap
               } else {
                 null
               }, 100)
-          FeedbackJobIntentService.enqueueWork(this, account,
+
+          val nonNullAccount = account ?: AccountDao(editTextUserEmail.text.toString(), "")
+
+          FeedbackJobIntentService.enqueueWork(this, nonNullAccount,
               editTextUserMsg.text.toString(), screenShotBytes)
           finish()
         }
@@ -137,14 +152,15 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
   }
 
   private fun initViews() {
-    inputLayoutMsg = findViewById(R.id.textInputLayoutUserMessage)
     editTextUserMsg = findViewById(R.id.editTextUserMessage)
+    editTextUserEmail = findViewById(R.id.editTextUserEmail)
     imageButtonScreenshot = findViewById(R.id.imageButtonScreenshot)
     imageButtonScreenshot.setOnClickListener(this)
     rootView = findViewById(R.id.layoutContent)
     screenShotGroup = findViewById(R.id.screenShotGroup)
     checkBoxScreenshot = findViewById(R.id.checkBoxScreenshot)
     checkBoxScreenshot.setOnCheckedChangeListener(this)
+    account?.let { editTextUserEmail.visibility = View.GONE }
 
     bitmap?.let { imageButtonScreenshot.setImageBitmap(it) }
   }
