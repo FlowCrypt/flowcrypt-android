@@ -34,7 +34,7 @@
             android:id="@+id/textInputLayoutUserEmail"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:hint="@string/email"
+            android:hint="@string/your_email_address"
             android:textColorHint="@color/silver"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
