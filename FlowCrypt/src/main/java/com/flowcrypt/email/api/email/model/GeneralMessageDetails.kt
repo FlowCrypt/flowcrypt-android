@@ -27,6 +27,7 @@ data class GeneralMessageDetails constructor(val email: String,
                                              val receivedDate: Long = 0,
                                              val sentDate: Long = 0,
                                              var from: List<InternetAddress>? = null,
+                                             var replyTo: List<InternetAddress>? = null,
                                              var to: List<InternetAddress>? = null,
                                              var cc: List<InternetAddress>? = null,
                                              var subject: String? = null,
@@ -76,6 +77,7 @@ data class GeneralMessageDetails constructor(val email: String,
       mutableListOf<InternetAddress>().apply { source.readList(this, InternetAddress::class.java.classLoader) },
       mutableListOf<InternetAddress>().apply { source.readList(this, InternetAddress::class.java.classLoader) },
       mutableListOf<InternetAddress>().apply { source.readList(this, InternetAddress::class.java.classLoader) },
+      mutableListOf<InternetAddress>().apply { source.readList(this, InternetAddress::class.java.classLoader) },
       source.readString(),
       source.createStringArrayList()!!,
       1 == source.readInt(),
@@ -97,6 +99,7 @@ data class GeneralMessageDetails constructor(val email: String,
       writeLong(receivedDate)
       writeLong(sentDate)
       writeList(from)
+      writeList(replyTo)
       writeList(to)
       writeList(cc)
       writeString(subject)

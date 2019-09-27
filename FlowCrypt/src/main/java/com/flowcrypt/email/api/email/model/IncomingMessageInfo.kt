@@ -33,6 +33,8 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
 
   fun getFrom(): List<InternetAddress>? = generalMsgDetails.from
 
+  fun getReplyTo(): List<InternetAddress>? = generalMsgDetails.replyTo
+
   fun getReceiveDate(): Date = Date(generalMsgDetails.receivedDate)
 
   fun getTo(): List<InternetAddress>? = generalMsgDetails.to
