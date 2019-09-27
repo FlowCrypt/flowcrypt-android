@@ -30,17 +30,25 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <TextView
-            android:id="@+id/textViewAuthorHint"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayoutUserEmail"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="@string/i_will_usually_reply_within_an_hour_except_when_i_sleep_tom"
-            android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
-            android:textColor="@color/gray"
-            app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
+            android:hint="@string/email"
+            android:textColorHint="@color/silver"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
-            app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toTopOf="@+id/guidelineTop">
 
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextUserEmail"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:inputType="textEmailAddress">
+
+                <requestFocus />
+            </com.google.android.material.textfield.TextInputEditText>
+        </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textInputLayoutUserMessage"
@@ -51,7 +59,7 @@
             app:layout_constraintBottom_toTopOf="@+id/checkBoxScreenshot"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toTopOf="@+id/guidelineTop">
+            app:layout_constraintTop_toBottomOf="@+id/textInputLayoutUserEmail">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextUserMessage"
@@ -60,6 +68,17 @@
                 android:gravity="top"
                 android:inputType="textCapSentences|textMultiLine" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/textViewAuthorHint"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/i_will_usually_reply_within_an_hour_except_when_i_sleep_tom"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+            android:textColor="@color/gray"
+            app:layout_constraintBottom_toTopOf="@+id/guidelineBottom"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft" />
 
         <CheckBox
             android:id="@+id/checkBoxScreenshot"

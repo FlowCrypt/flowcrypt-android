@@ -417,4 +417,5 @@
     <string name="template_user">User %1$d: %2$s</string>
     <string name="template_long_id">LongID %1$d: %2$s</string>
     <string name="public_key_copied_to_clipboard">Public Key copied to clipboard</string>
+    <string name="email_must_be_non_empty">Email should not be empty</string>
 </resources>
