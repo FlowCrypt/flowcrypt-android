@@ -85,6 +85,7 @@ class IncomingMessageInfoTest {
         1557815912496,
         1557815912496,
         listOf(InternetAddress("hello@example.com"), InternetAddress("test@example.com")),
+        listOf(InternetAddress("hello0@example.com"), InternetAddress("test0@example.com")),
         listOf(InternetAddress("hello1@example.com"), InternetAddress("test1@example.com")),
         listOf(InternetAddress("hello2@example.com"), InternetAddress("test2@example.com")),
         "subject",

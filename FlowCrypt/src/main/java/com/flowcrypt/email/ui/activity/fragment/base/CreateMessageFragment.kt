@@ -1222,7 +1222,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         recipientsCc!!.append(prepareRecipients(msgInfo!!.getCc()))
       }
     } else {
-      recipientsTo!!.setText(prepareRecipients(msgInfo!!.getFrom()))
+      recipientsTo?.setText(prepareRecipients(
+          if (msgInfo?.getReplyTo().isNullOrEmpty()) {
+            msgInfo?.getFrom()
+          } else {
+            msgInfo?.getReplyTo()
+          }))
 
       val ccSet = HashSet<InternetAddress>()
 
@@ -1272,7 +1277,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         FoldersManager.FolderType.SENT,
         FoldersManager.FolderType.OUTBOX -> recipientsTo!!.setText(prepareRecipients(msgInfo!!.getTo()))
 
-        else -> recipientsTo!!.setText(prepareRecipients(msgInfo!!.getFrom()))
+        else -> recipientsTo!!.setText(prepareRecipients(
+            if (msgInfo?.getReplyTo().isNullOrEmpty()) {
+              msgInfo?.getFrom()
+            } else {
+              msgInfo?.getReplyTo()
+            }))
       }
     } else {
       recipientsTo!!.setText(prepareRecipients(msgInfo!!.getFrom()))

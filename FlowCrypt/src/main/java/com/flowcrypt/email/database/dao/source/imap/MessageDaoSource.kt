@@ -459,7 +459,7 @@ class MessageDaoSource : BaseDaoSource() {
         cursor.getInt(cursor.getColumnIndex(COL_UID)),
         cursor.getInt(cursor.getColumnIndex(BaseColumns._ID)),
         cursor.getLong(cursor.getColumnIndex(COL_RECEIVED_DATE)),
-        cursor.getLong(cursor.getColumnIndex(COL_SENT_DATE)), null, null, null,
+        cursor.getLong(cursor.getColumnIndex(COL_SENT_DATE)), null, null, null, null,
         cursor.getString(cursor.getColumnIndex(COL_SUBJECT)),
         listOf(*parseFlags(cursor.getString(cursor.getColumnIndex(COL_FLAGS)))),
         !cursor.isNull(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)),
@@ -473,6 +473,14 @@ class MessageDaoSource : BaseDaoSource() {
     try {
       val fromAddresses = cursor.getString(cursor.getColumnIndex(COL_FROM_ADDRESSES))
       details.from = if (TextUtils.isEmpty(fromAddresses)) null else listOf(*InternetAddress.parse(fromAddresses))
+    } catch (e: AddressException) {
+      e.printStackTrace()
+    }
+
+    try {
+      val replyToAddresses = cursor.getString(cursor.getColumnIndex(COL_REPLY_TO))
+      details.replyTo = if (TextUtils.isEmpty(replyToAddresses)) null else listOf(*InternetAddress
+          .parse(replyToAddresses))
     } catch (e: AddressException) {
       e.printStackTrace()
     }
@@ -1070,6 +1078,7 @@ class MessageDaoSource : BaseDaoSource() {
     const val COL_STATE = "state"
     const val COL_ATTACHMENTS_DIRECTORY = "attachments_directory"
     const val COL_ERROR_MSG = "error_msg"
+    const val COL_REPLY_TO = "reply_to"
 
     const val ENCRYPTED_STATE_UNDEFINED = -1
 
@@ -1092,7 +1101,8 @@ class MessageDaoSource : BaseDaoSource() {
         COL_IS_NEW + " INTEGER DEFAULT -1, " +
         COL_STATE + " INTEGER DEFAULT -1, " +
         COL_ATTACHMENTS_DIRECTORY + " TEXT, " +
-        COL_ERROR_MSG + " TEXT DEFAULT NULL" + ");"
+        COL_ERROR_MSG + " TEXT DEFAULT NULL, " +
+        COL_REPLY_TO + " TEXT DEFAULT NULL" + ");"
 
     const val CREATE_INDEX_EMAIL_IN_MESSAGES = INDEX_PREFIX + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
         " ON " + TABLE_NAME_MESSAGES + " (" + COL_EMAIL + ")"
@@ -1128,6 +1138,7 @@ class MessageDaoSource : BaseDaoSource() {
         contentValues.put(COL_SENT_DATE, msg.sentDate.time)
       }
       contentValues.put(COL_FROM_ADDRESSES, InternetAddress.toString(msg.from))
+      contentValues.put(COL_REPLY_TO, InternetAddress.toString(msg.replyTo))
       contentValues.put(COL_TO_ADDRESSES, InternetAddress.toString(msg.getRecipients(Message.RecipientType.TO)))
       contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)))
       contentValues.put(COL_SUBJECT, msg.subject)
