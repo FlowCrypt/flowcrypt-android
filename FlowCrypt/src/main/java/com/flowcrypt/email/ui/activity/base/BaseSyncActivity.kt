@@ -246,6 +246,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun loadMsgDetails(requestCode: Int, localFolder: LocalFolder, uid: Int, id: Int, resetConnection: Boolean = false) {
     if (checkServiceBound(isSyncServiceBound)) return
+    onProgressReplyReceived(requestCode, R.id.progress_id_connecting, 5)
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder, resetConnection)
 

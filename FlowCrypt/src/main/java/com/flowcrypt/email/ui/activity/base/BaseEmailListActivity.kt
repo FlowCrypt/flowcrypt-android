@@ -82,11 +82,11 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
 
         R.id.progress_id_queue_is_not_empty -> updateActionProgressState(15, "Queue is not empty")
 
-        R.id.progress_id_thread_is_cancalled_and_done -> updateActionProgressState(15, "Thread is cancelled and done")
+        R.id.progress_id_thread_is_cancelled_and_done -> updateActionProgressState(15, "Thread is cancelled and done")
 
         R.id.progress_id_thread_is_done -> updateActionProgressState(15, "Thread is done")
 
-        R.id.progress_id_thread_is_cancalled -> updateActionProgressState(15, "Thread is cancelled")
+        R.id.progress_id_thread_is_cancelled -> updateActionProgressState(15, "Thread is cancelled")
 
         R.id.progress_id_running_task -> updateActionProgressState(20, "Running task")
 
@@ -167,7 +167,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
    * @param progress The action progress.
    * @param message  The user friendly message.
    */
-  protected fun updateActionProgressState(progress: Int, message: String?) {
+  private fun updateActionProgressState(progress: Int, message: String?) {
     val emailListFragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 

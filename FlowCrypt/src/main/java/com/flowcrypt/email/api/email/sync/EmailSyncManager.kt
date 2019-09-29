@@ -303,14 +303,14 @@ class EmailSyncManager(account: AccountDao, listener: SyncListener) {
         val future = activeFuture ?: return
 
         if (future.isCancelled && future.isDone) {
-          notifyActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_cancalled_and_done)
+          notifyActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_cancelled_and_done)
         } else {
           if (future.isDone) {
             notifyActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_done)
           }
 
           if (future.isCancelled) {
-            notifyActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_cancalled)
+            notifyActionProgress(ownerKey, requestCode, R.id.progress_id_thread_is_cancelled)
           }
         }
       }
