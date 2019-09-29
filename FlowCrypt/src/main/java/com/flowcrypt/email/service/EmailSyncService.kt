@@ -477,13 +477,14 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onActionProgress(account: AccountDao, ownerKey: String, requestCode: Int, resultCode: Int) {
+  override fun onActionProgress(account: AccountDao, ownerKey: String, requestCode: Int,
+                                resultCode: Int, value: Int) {
     LogsUtil.d(TAG,
         "onActionProgress: account$account| ownerKey =$ownerKey| requestCode =$requestCode")
     try {
       if (replyToMessengers.containsKey(ownerKey)) {
         val messenger = replyToMessengers[ownerKey]
-        messenger!!.send(Message.obtain(null, REPLY_ACTION_PROGRESS, requestCode, resultCode, account))
+        messenger!!.send(Message.obtain(null, REPLY_ACTION_PROGRESS, requestCode, resultCode, value))
       }
     } catch (e: RemoteException) {
       e.printStackTrace()

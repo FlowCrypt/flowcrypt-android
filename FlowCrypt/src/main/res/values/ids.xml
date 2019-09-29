@@ -60,9 +60,14 @@
     <item name="progress_id_opening_store" type="id" />
     <item name="progress_id_getting_list_of_emails" type="id" />
     <item name="progress_id_queue_is_not_empty" type="id" />
-    <item name="progress_id_thread_is_cancalled_and_done" type="id" />
+    <item name="progress_id_thread_is_cancelled_and_done" type="id" />
     <item name="progress_id_thread_is_done" type="id" />
-    <item name="progress_id_thread_is_cancalled" type="id" />
+    <item name="progress_id_thread_is_cancelled" type="id" />
+    <item name="progress_id_connecting" type="id" />
+    <item name="progress_id_fetching_message" type="id" />
+    <item name="progress_id_decrypting" type="id" />
+    <item name="progress_id_rendering" type="id" />
+
 
     <item name="live_data_id_fetch_keys" type="id" />
     <item name="live_data_id_parse_and_decrypt_msg" type="id" />

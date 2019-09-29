@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.email.sync.tasks
 
 import android.text.TextUtils
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -16,8 +17,10 @@ import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
 import okio.Okio
 import org.apache.commons.io.FilenameUtils
+import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.IOException
+import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
 import javax.mail.BodyPart
@@ -51,9 +54,22 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
                                  private val id: Long,
                                  resetConnection: Boolean) : BaseSyncTask(ownerKey, requestCode, resetConnection) {
 
+  private var msgSize: Int = 0
+  private var downloadedMsgSize: Int = 0
+  private var listener: SyncListener? = null
+  private var account: AccountDao? = null
+  private var lastPercentage = 0
+  private var currentPercentage = 0
+  private var lastUpdateTime = System.currentTimeMillis()
+
+
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+    this.account = account
+    this.listener = listener
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
+    listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_connecting, 10)
     imapFolder.open(Folder.READ_WRITE)
+    listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_connecting, 20)
 
     val originalMsg = imapFolder.getMessageByUID(uid) as? MimeMessage
 
@@ -63,13 +79,17 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       return
     }
 
+    msgSize = originalMsg.size
+
     val fetchProfile = FetchProfile()
     fetchProfile.add(FetchProfile.Item.SIZE)
     fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
     fetchProfile.add(IMAPFolder.FetchProfileItem.HEADERS)
     imapFolder.fetch(arrayOf(originalMsg), fetchProfile)
 
-    val customMsg = CustomMimeMessage(session, TextUtils.join("\n", Collections.list<String>(originalMsg.allHeaderLines)))
+    val rawHeaders = TextUtils.join("\n", Collections.list<String>(originalMsg.allHeaderLines))
+    if (rawHeaders.isNotEmpty()) downloadedMsgSize += rawHeaders.length
+    val customMsg = CustomMimeMessage(session, rawHeaders)
 
     val originalMultipart = originalMsg.content as? Multipart
     if (originalMultipart != null) {
@@ -78,11 +98,14 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       customMsg.setContent(modifiedMultipart)
     } else {
       customMsg.setContent(originalMsg.content, originalMsg.contentType)
+      downloadedMsgSize += originalMsg.size
     }
+
     customMsg.saveChanges()
     customMsg.setMessageId(originalMsg.messageID ?: "")
     storeMsg(id.toString(), customMsg)
 
+    listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_fetching_message, 60)
     listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, id, customMsg, ownerKey, requestCode)
     imapFolder.close(false)
   }
@@ -100,7 +123,9 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
           candidates.add(innerPart)
         } else {
           if (isPartAllowed(item)) {
-            candidates.add(MimeBodyPart(item.mimeStream))
+            candidates.add(MimeBodyPart(FetchingInputStream(item.mimeStream)))
+          } else {
+            if (item.size > 0) downloadedMsgSize += item.size
           }
         }
       }
@@ -126,7 +151,9 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
           innerPart?.let { candidates.add(it) }
         } else {
           if (isPartAllowed(item)) {
-            candidates.add(MimeBodyPart(item.mimeStream))
+            candidates.add(MimeBodyPart(FetchingInputStream(item.mimeStream)))
+          } else {
+            if (item.size > 0) downloadedMsgSize += item.size
           }
         }
       }
@@ -200,12 +227,27 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     }
   }
 
+  private fun sendProgress() {
+    if (msgSize > 0) {
+      currentPercentage = (downloadedMsgSize * 100 / msgSize)
+      val isUpdateNeeded = System.currentTimeMillis() - lastUpdateTime >= MIN_UPDATE_PROGRESS_INTERVAL
+      if (currentPercentage - lastPercentage >= 1 && isUpdateNeeded) {
+        lastPercentage = currentPercentage
+        lastUpdateTime = System.currentTimeMillis()
+        account?.let {
+          val value = (currentPercentage * 40 / 100) + 20
+          listener?.onActionProgress(it, ownerKey, requestCode, R.id.progress_id_fetching_message, value)
+        }
+      }
+    }
+  }
+
   /**
    * It's a custom realization of [MimeMessage] which has an own realization of creation [InternetHeaders]
    */
-  class CustomMimeMessage constructor(session: Session, rawMessage: String?) : MimeMessage(session) {
+  class CustomMimeMessage constructor(session: Session, rawHeaders: String?) : MimeMessage(session) {
     init {
-      headers = InternetHeaders(ByteArrayInputStream(rawMessage?.toByteArray() ?: "".toByteArray()))
+      headers = InternetHeaders(ByteArrayInputStream(rawHeaders?.toByteArray() ?: "".toByteArray()))
     }
 
     fun setMessageId(msgId: String) {
@@ -248,7 +290,27 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     }
   }
 
+  /**
+   * This class will be used to identify the fetching progress.
+   */
+  inner class FetchingInputStream(val stream: InputStream) : BufferedInputStream(stream) {
+    override fun read(b: ByteArray?, off: Int, len: Int): Int {
+      if (isCancelled) {
+        throw SyncTaskTerminatedException()
+      }
+
+      val value = super.read(b, off, len)
+      if (value != -1) {
+        downloadedMsgSize += value
+        sendProgress()
+      }
+      return value
+    }
+  }
+
   companion object {
+    private const val MIN_UPDATE_PROGRESS_INTERVAL = 500
+
     val ALLOWED_FILE_NAMES = arrayOf(
         "PGPexch.htm.pgp",
         "PGPMIME version identification",
