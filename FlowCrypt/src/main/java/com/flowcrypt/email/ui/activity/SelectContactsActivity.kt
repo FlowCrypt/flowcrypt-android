@@ -47,10 +47,10 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
   private var searchPattern: String? = null
 
   override val contentViewResourceId: Int
-    get() = R.layout.activity_contacts_settings
+    get() = R.layout.activity_select_contact
 
   override val rootView: View
-    get() = View(this)
+    get() = findViewById(R.id.content)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -63,14 +63,15 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
     this.progressBar = findViewById(R.id.progressBar)
     this.emptyView = findViewById(R.id.emptyView)
     this.listView = findViewById(R.id.listViewContacts)
-    this.listView!!.adapter = adapter
-    this.listView!!.choiceMode = if (isMultiply) ListView.CHOICE_MODE_MULTIPLE else ListView.CHOICE_MODE_SINGLE
+    this.listView?.adapter = adapter
+    this.listView?.choiceMode = if (isMultiply) ListView.CHOICE_MODE_MULTIPLE else ListView
+        .CHOICE_MODE_SINGLE
     if (!isMultiply) {
-      this.listView!!.onItemClickListener = this
+      this.listView?.onItemClickListener = this
     }
 
-    if (!TextUtils.isEmpty(title) && supportActionBar != null) {
-      supportActionBar!!.title = title
+    if (!TextUtils.isEmpty(title)) {
+      supportActionBar?.title = title
     }
 
     LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_pgp, null, this)
@@ -119,13 +120,13 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
   override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
     when (loader.id) {
       R.id.loader_id_load_contacts_with_pgp -> {
-        UIUtil.exchangeViewVisibility(this, false, progressBar!!, listView!!)
+        UIUtil.exchangeViewVisibility(this, false, progressBar, listView)
 
         if (data != null && data.count > 0) {
-          emptyView!!.visibility = View.GONE
-          adapter!!.swapCursor(data)
+          emptyView?.visibility = View.GONE
+          adapter?.swapCursor(data)
         } else {
-          UIUtil.exchangeViewVisibility(this, true, emptyView!!, listView!!)
+          UIUtil.exchangeViewVisibility(this, true, emptyView, listView)
         }
       }
     }
@@ -133,7 +134,7 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
 
   override fun onLoaderReset(loader: Loader<Cursor>) {
     when (loader.id) {
-      R.id.loader_id_load_contacts_with_pgp -> adapter!!.swapCursor(null)
+      R.id.loader_id_load_contacts_with_pgp -> adapter?.swapCursor(null)
     }
   }
 
