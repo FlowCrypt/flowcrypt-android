@@ -230,7 +230,8 @@ class MessageDetailsActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(scrollTo(), click())
     onView(withId(R.id.textViewMessage)).check(
-        matches(withText(getResString(R.string.tell_sender_to_update_their_settings))))
+        matches(withText(getTargetContext().resources.getQuantityString(R.plurals
+            .tell_sender_to_update_their_settings, 1))))
     onView(withId(R.id.buttonOk))
         .check(matches(isDisplayed()))
         .perform(click())
@@ -250,7 +251,8 @@ class MessageDetailsActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(scrollTo(), click())
 
-    val msg = (getResString(R.string.tell_sender_to_update_their_settings) + "\n\n" + getResString(R.string.select_key))
+    val msg = getTargetContext().resources.getQuantityString(R.plurals
+        .tell_sender_to_update_their_settings, 2)
 
     onView(withId(R.id.textViewMessage))
         .check(matches(withText(msg)))
