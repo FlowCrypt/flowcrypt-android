@@ -373,7 +373,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     when (nodeResponseWrapper.requestCode) {
       R.id.live_data_id_parse_and_decrypt_msg -> when (nodeResponseWrapper.status) {
         Status.SUCCESS -> {
-          updateActionProgressState(100, null)
+          onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
+              .progress_id_decrypting, 90)
           val result = nodeResponseWrapper.result as ParseDecryptedMsgResult?
           if (result == null) {
             Toast.makeText(this, getString(R.string.unknown_error), Toast.LENGTH_LONG).show()
@@ -423,7 +424,11 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   fun decryptMsg() {
     if (rawMimeBytes?.isNotEmpty() == true) {
       idlingForDecryption!!.increment()
+      onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
+          .progress_id_decrypting, 65)
       viewModel.decryptMessage(rawMimeBytes!!)
+      onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
+          .progress_id_decrypting, 70)
     }
   }
 

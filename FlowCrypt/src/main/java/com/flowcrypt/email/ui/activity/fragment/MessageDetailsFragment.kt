@@ -708,6 +708,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       override fun onPageFinished() {
         updateReplyButtons()
         (activity as? MessageDetailsActivity)?.idlingForWebView?.setIdleState(true)
+        setActionProgress(100, null)
       }
     })
   }
