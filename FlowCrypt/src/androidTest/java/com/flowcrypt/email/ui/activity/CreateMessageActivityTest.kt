@@ -20,6 +20,7 @@ import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
@@ -48,6 +49,7 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -212,14 +214,12 @@ class CreateMessageActivityTest : BaseTest() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
 
-    openActionBarOverflowOrOptionsMenu(getTargetContext())
-    onView(withText(R.string.help))
+    onView(withId(R.id.menuFeedback))
         .check(matches(isDisplayed()))
         .perform(click())
 
-    onView(withId(R.id.textViewAuthorHint))
-        .check(matches(isDisplayed()))
-        .check(matches(withText(R.string.i_will_usually_reply_within_an_hour_except_when_i_sleep_tom)))
+    Intents.intended(hasComponent(FeedbackActivity::class.java.name))
+
     onView(withText(R.string.help_feedback_or_question))
         .check(matches(isDisplayed()))
   }
