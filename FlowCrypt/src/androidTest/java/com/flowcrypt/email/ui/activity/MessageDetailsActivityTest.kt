@@ -20,6 +20,7 @@ import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.intent.rule.IntentsTestRule
+import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -45,6 +46,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -127,6 +129,11 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
+  fun testTopReplyButton() {
+    testTopReplyAction(getResString(R.string.reply))
+  }
+
+  @Test
   fun testReplyAllButton() {
     testStandardMsgPlaneText()
     onView(withId(R.id.layoutReplyAllButton))
@@ -142,6 +149,11 @@ class MessageDetailsActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(scrollTo(), click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
+  }
+
+  @Test
+  fun testTopForwardButton() {
+    testTopReplyAction(getResString(R.string.forward))
   }
 
   @Test
@@ -464,5 +476,22 @@ class MessageDetailsActivityTest : BaseTest() {
           ?: throw IllegalStateException(), getContext().assets.open(mimeMsgPath))
     }
     return incomingMsgInfo
+  }
+
+  private fun testTopReplyAction(title: String) {
+    testStandardMsgPlaneText()
+
+    onView(withId(R.id.imageButtonMoreOptions))
+        .check(matches(isDisplayed()))
+        .perform(scrollTo(), click())
+
+    onView(withText(title))
+        .inRoot(RootMatchers.isPlatformPopup())
+        .perform(click())
+
+    intended(hasComponent(CreateMessageActivity::class.java.name))
+
+    onView(withId(R.id.toolbar))
+        .check(matches(CustomMatchers.withToolBarText(title)))
   }
 }
