@@ -172,7 +172,6 @@
         </LinearLayout>
     </com.flowcrypt.email.ui.widget.NonLockingScrollView>
 
-
     <ProgressBar
         android:id="@+id/progressBarActionRunning"
         style="?android:attr/progressBarStyle"
@@ -180,5 +179,39 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:visibility="gone" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutActionProgress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom">
+
+        <TextView
+            android:id="@+id/textViewActionProgress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/default_margin_content_small"
+            android:layout_marginEnd="@dimen/default_margin_content_small"
+            android:textSize="@dimen/default_text_size_very_small"
+            app:layout_constraintBottom_toTopOf="@+id/progressBarActionProgress"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="5% Connecting to mail server" />
+
+        <ProgressBar
+            android:id="@+id/progressBarActionProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:maxHeight="@dimen/default_twice_dip"
+            android:minHeight="@dimen/default_twice_dip"
+            android:progressDrawable="@drawable/download_progress_style"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:progress="45" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

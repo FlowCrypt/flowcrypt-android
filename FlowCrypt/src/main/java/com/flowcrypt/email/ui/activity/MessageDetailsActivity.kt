@@ -265,6 +265,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     when (requestCode) {
       R.id.syns_request_code_load_raw_mime_msg -> {
         isRequestMsgDetailsStarted = false
+        updateActionProgressState(100, null)
         onErrorOccurred(requestCode, errorType, e)
       }
 
@@ -275,6 +276,32 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
       else -> onErrorOccurred(requestCode, errorType, e)
     }
+  }
+
+  override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
+    when (requestCode) {
+      R.id.syns_request_code_load_raw_mime_msg -> {
+        val value = obj as? Int ?: -1
+        when (resultCode) {
+          R.id.progress_id_connecting -> updateActionProgressState(value, "Connecting")
+
+          R.id.progress_id_fetching_message -> updateActionProgressState(value, "Fetching message")
+
+          R.id.progress_id_decrypting -> updateActionProgressState(value, "Decrypting")
+
+          R.id.progress_id_rendering -> updateActionProgressState(value, "Rendering")
+        }
+      }
+
+      else -> super.onProgressReplyReceived(requestCode, resultCode, obj)
+    }
+  }
+
+  private fun updateActionProgressState(progress: Int, message: String?) {
+    val fragment = supportFragmentManager
+        .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
+
+    fragment?.setActionProgress(progress, message)
   }
 
   override fun onArchiveMsgClicked() {
@@ -346,6 +373,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     when (nodeResponseWrapper.requestCode) {
       R.id.live_data_id_parse_and_decrypt_msg -> when (nodeResponseWrapper.status) {
         Status.SUCCESS -> {
+          onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
+              .progress_id_decrypting, 90)
           val result = nodeResponseWrapper.result as ParseDecryptedMsgResult?
           if (result == null) {
             Toast.makeText(this, getString(R.string.unknown_error), Toast.LENGTH_LONG).show()
@@ -395,7 +424,11 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   fun decryptMsg() {
     if (rawMimeBytes?.isNotEmpty() == true) {
       idlingForDecryption!!.increment()
+      onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
+          .progress_id_decrypting, 65)
       viewModel.decryptMessage(rawMimeBytes!!)
+      onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
+          .progress_id_decrypting, 70)
     }
   }
 

@@ -25,6 +25,7 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ListView
+import android.widget.ProgressBar
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
@@ -98,6 +99,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var layoutFwdButton: View? = null
   private var layoutReplyBtns: View? = null
   private var emailWebView: EmailWebView? = null
+  private var layoutActionProgress: View? = null
+  private var textViewActionProgress: TextView? = null
+  private var progressBarActionProgress: ProgressBar? = null
 
   private var dateFormat: java.text.DateFormat? = null
   private var msgInfo: IncomingMessageInfo? = null
@@ -525,6 +529,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   }
 
   private fun initViews(view: View) {
+    layoutActionProgress = view.findViewById(R.id.layoutActionProgress)
+    textViewActionProgress = view.findViewById(R.id.textViewActionProgress)
+    progressBarActionProgress = view.findViewById(R.id.progressBarActionProgress)
+
     textViewSenderAddress = view.findViewById(R.id.textViewSenderAddress)
     textViewDate = view.findViewById(R.id.textViewDate)
     textViewSubject = view.findViewById(R.id.textViewSubject)
@@ -676,7 +684,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       }
       isFirstMsgPartText = false
     }
-    updateReplyButtons()
+
+    if (!isHtmlDisplayed) {
+      updateReplyButtons()
+    }
 
     if (atts.size > 0) {
       details?.hasAtts = true
@@ -698,6 +709,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     emailWebView?.loadDataWithBaseURL(null, text, "text/html", StandardCharsets.UTF_8.displayName(), null)
     emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
       override fun onPageFinished() {
+        setActionProgress(100, null)
         updateReplyButtons()
         (activity as? MessageDetailsActivity)?.idlingForWebView?.setIdleState(true)
       }
@@ -964,6 +976,20 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       buttonView.setText(if (isChecked) R.string.hide_original_message else R.string.show_original_message)
     }
     return viewGroup
+  }
+
+  fun setActionProgress(progress: Int, message: String?) {
+    if (progress > 0) {
+      progressBarActionProgress?.progress = progress
+    }
+
+    if (progress != 100) {
+      textViewActionProgress?.text = getString(R.string.progress_message, progress, message)
+      textViewActionProgress?.visibility = View.VISIBLE
+    } else {
+      textViewActionProgress?.text = null
+      layoutActionProgress?.visibility = View.GONE
+    }
   }
 
   interface OnActionListener {
