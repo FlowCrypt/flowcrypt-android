@@ -36,7 +36,6 @@ import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
@@ -454,15 +453,5 @@ class MessageDetailsActivityTest : BaseTest() {
     IdlingRegistry.getInstance().register((activityTestRule?.activity as BaseActivity).nodeIdlingResource)
     IdlingRegistry.getInstance().register((activityTestRule.activity as MessageDetailsActivity).idlingForDecryption)
     IdlingRegistry.getInstance().register((activityTestRule.activity as MessageDetailsActivity).idlingForWebView)
-  }
-
-  private fun getMsgInfo(path: String, mimeMsgPath: String): IncomingMessageInfo? {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
-    incomingMsgInfo?.generalMsgDetails?.let {
-      val uri = msgDaoSource.addRow(getTargetContext(), it) ?: throw IllegalStateException()
-      MsgsCacheManager.addMsg(uri.lastPathSegment
-          ?: throw IllegalStateException(), getContext().assets.open(mimeMsgPath))
-    }
-    return incomingMsgInfo
   }
 }
