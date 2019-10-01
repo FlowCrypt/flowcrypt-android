@@ -684,7 +684,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       }
       isFirstMsgPartText = false
     }
-    updateReplyButtons()
+
+    if (!isHtmlDisplayed) {
+      updateReplyButtons()
+    }
 
     if (atts.size > 0) {
       details?.hasAtts = true
@@ -706,9 +709,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     emailWebView?.loadDataWithBaseURL(null, text, "text/html", StandardCharsets.UTF_8.displayName(), null)
     emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
       override fun onPageFinished() {
+        setActionProgress(100, null)
         updateReplyButtons()
         (activity as? MessageDetailsActivity)?.idlingForWebView?.setIdleState(true)
-        setActionProgress(100, null)
       }
     })
   }
