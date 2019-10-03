@@ -5,20 +5,31 @@
 
 package com.flowcrypt.email.ui.activity
 
+import android.app.Activity
+import android.app.Instrumentation
+import android.content.Intent
 import android.database.Cursor
+import android.os.Environment
 import android.text.format.DateFormat
+import androidx.core.content.FileProvider
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.matcher.IntentMatchers
+import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import androidx.test.internal.runner.junit4.statement.UiThreadStatement
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
@@ -29,14 +40,19 @@ import com.flowcrypt.email.rules.AddContactsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity
 import com.flowcrypt.email.util.PrivateKeysManager
+import com.flowcrypt.email.util.TestGeneralUtil
+import org.hamcrest.CoreMatchers
 import org.hamcrest.Description
 import org.hamcrest.Matcher
+import org.hamcrest.Matchers
+import org.hamcrest.core.AllOf
 import org.junit.AfterClass
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -51,7 +67,7 @@ import java.util.concurrent.TimeUnit
 @RunWith(AndroidJUnit4::class)
 class PublicKeyDetailsFragmentTest : BaseTest() {
 
-  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(ContactsSettingsActivity::class.java)
+  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(ContactsSettingsActivity::class.java)
 
   private val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/denbond7@denbond7.com_pub.json")
 
@@ -65,9 +81,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
 
   @Test
   fun testPubKeyDetails() {
-    onData(withItemContent(EMAIL_DENBOND7))
-        .inAdapterView(withId(R.id.listViewContacts))
-        .perform(click())
+    chooseContact()
 
     keyDetails.users!!.forEachIndexed { index, s ->
       onView(withText(getResString(R.string.template_user, index + 1, s)))
@@ -88,6 +102,75 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
         .check(matches(withText(getResString(R.string.template_created,
             DateFormat.getMediumDateFormat(getTargetContext()).format(
                 Date(TimeUnit.MILLISECONDS.convert(keyDetails.created, TimeUnit.SECONDS)))))))
+  }
+
+  @Test
+  fun testActionCopy() {
+    chooseContact()
+
+    onView(withId(R.id.menuActionCopy))
+        .check(matches(isDisplayed()))
+        .perform(click())
+    isToastDisplayed(activityTestRule?.activity, getResString(R.string.public_key_copied_to_clipboard))
+    UiThreadStatement.runOnUiThread {
+      checkClipboardText(TestGeneralUtil.replaceVersionInKey(keyDetails.publicKey))
+    }
+  }
+
+  @Test
+  fun testActionSave() {
+    chooseContact()
+
+    val sanitizedEmail = EMAIL_DENBOND7.replace("[^a-z0-9]".toRegex(), "")
+    val fileName = "0x" + keyDetails.longId + "-" + sanitizedEmail + "-publickey" + ".asc"
+
+    val file =
+        File(getTargetContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName)
+
+    if (file.exists()) {
+      file.delete()
+    }
+
+    val resultData = Intent()
+    resultData.data = FileProvider.getUriForFile(getTargetContext(), Constants.FILE_PROVIDER_AUTHORITY, file)
+
+    Intents.intending(AllOf.allOf(IntentMatchers.hasAction(Intent.ACTION_CREATE_DOCUMENT),
+        IntentMatchers.hasCategories(CoreMatchers.hasItem(Matchers.equalTo(Intent.CATEGORY_OPENABLE))),
+        IntentMatchers.hasType(Constants.MIME_TYPE_PGP_KEY)))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, resultData))
+
+    onView(withId(R.id.menuActionSave))
+        .check(matches(isDisplayed()))
+        .perform(click())
+
+    isToastDisplayed(activityTestRule?.activity, getResString(R.string.saved))
+  }
+
+  @Test
+  fun testActionDelete() {
+    chooseContact()
+
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.delete))
+        .check(matches(isDisplayed()))
+        .perform(click())
+
+    isToastDisplayed(activityTestRule?.activity, getResString(R.string.the_contact_was_deleted,
+        EMAIL_DENBOND7))
+
+    onView(withText(R.string.no_results))
+        .check(matches(isDisplayed()))
+  }
+
+  @Test
+  fun testActionHelp() {
+    testHelpScreen()
+  }
+
+  private fun chooseContact() {
+    onData(withItemContent(EMAIL_DENBOND7))
+        .inAdapterView(withId(R.id.listViewContacts))
+        .perform(click())
   }
 
   /**
