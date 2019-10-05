@@ -8,19 +8,19 @@
 
     <item
         android:id="@+id/menuActionArchiveMessage"
-        android:icon="@mipmap/ic_archive_message_white"
+        android:icon="@drawable/ic_archive_white_24dp"
         android:title="@string/archive"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/menuActionDeleteMessage"
-        android:icon="@mipmap/ic_delete_message_white"
+        android:icon="@drawable/ic_delete_white_24dp"
         android:title="@string/delete"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/menuActionMoveToInbox"
-        android:icon="@mipmap/ic_move_to_inbox"
+        android:icon="@drawable/ic_move_to_inbox_white_24dp"
         android:title="@string/move_to_inbox"
         app:showAsAction="ifRoom" />
 </menu>
