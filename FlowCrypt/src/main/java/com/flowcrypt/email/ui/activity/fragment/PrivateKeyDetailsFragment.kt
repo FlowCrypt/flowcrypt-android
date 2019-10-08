@@ -31,6 +31,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
 import java.io.FileNotFoundException
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * This [Fragment] helps to show details about the given key.
@@ -53,7 +54,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
     }
 
     if (details == null) {
-      fragmentManager!!.popBackStack()
+      fragmentManager?.popBackStack()
     }
   }
 
@@ -68,10 +69,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-
-    if (supportActionBar != null) {
-      supportActionBar!!.setTitle(R.string.my_public_key)
-    }
+    supportActionBar?.setTitle(R.string.my_public_key)
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -134,7 +132,6 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
 
       showInfoSnackbar(view!!, error ?: "")
     }
-
   }
 
   private fun initViews(view: View) {
@@ -153,11 +150,11 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
         GeneralUtil.doSectionsInText(" ", details!!.fingerprint, 4)), textViewFingerprint)
 
     val textViewLongId = view.findViewById<TextView>(R.id.textViewLongId)
-    textViewLongId.text = getString(R.string.template_longid, details!!.longId)
+    textViewLongId?.text = getString(R.string.template_longid, details!!.longId)
 
     val textViewDate = view.findViewById<TextView>(R.id.textViewDate)
-    textViewDate.text = getString(R.string.template_date,
-        DateFormat.getMediumDateFormat(context).format(Date(details!!.created)))
+    textViewDate?.text = getString(R.string.template_created, DateFormat.getMediumDateFormat(context).format(
+        Date(TimeUnit.MILLISECONDS.convert(details?.created ?: 0, TimeUnit.SECONDS))))
 
     val textViewUsers = view.findViewById<TextView>(R.id.textViewUsers)
     textViewUsers.text = getString(R.string.template_users, TextUtils.join(", ", emails))
@@ -166,21 +163,10 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
   }
 
   private fun initButtons(view: View) {
-    if (view.findViewById<View>(R.id.btnShowPubKey) != null) {
-      view.findViewById<View>(R.id.btnShowPubKey).setOnClickListener(this)
-    }
-
-    if (view.findViewById<View>(R.id.btnCopyToClipboard) != null) {
-      view.findViewById<View>(R.id.btnCopyToClipboard).setOnClickListener(this)
-    }
-
-    if (view.findViewById<View>(R.id.btnSaveToFile) != null) {
-      view.findViewById<View>(R.id.btnSaveToFile).setOnClickListener(this)
-    }
-
-    if (view.findViewById<View>(R.id.btnShowPrKey) != null) {
-      view.findViewById<View>(R.id.btnShowPrKey).setOnClickListener(this)
-    }
+    view.findViewById<View>(R.id.btnShowPubKey)?.setOnClickListener(this)
+    view.findViewById<View>(R.id.btnCopyToClipboard)?.setOnClickListener(this)
+    view.findViewById<View>(R.id.btnSaveToFile)?.setOnClickListener(this)
+    view.findViewById<View>(R.id.btnShowPrKey)?.setOnClickListener(this)
   }
 
   private fun chooseDest() {
@@ -192,8 +178,9 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
   }
 
   companion object {
-    private val KEY_NODE_KEY_DETAILS = GeneralUtil.generateUniqueExtraKey("KEY_NODE_KEY_DETAILS",
-        PrivateKeyDetailsFragment::class.java)
+    private val KEY_NODE_KEY_DETAILS =
+        GeneralUtil.generateUniqueExtraKey("KEY_NODE_KEY_DETAILS",
+            PrivateKeyDetailsFragment::class.java)
     private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
 
     @JvmStatic

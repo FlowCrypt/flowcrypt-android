@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * This adapter will be used to show a list of private keys.
@@ -44,7 +45,8 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
 
     val timestamp = nodeKeyDetails.created
     if (timestamp != -1L) {
-      viewHolder.textViewCreationDate.text = dateFormat.format(Date(timestamp))
+      viewHolder.textViewCreationDate.text = dateFormat.format(
+          Date(TimeUnit.MILLISECONDS.convert(timestamp, TimeUnit.SECONDS)))
     } else {
       viewHolder.textViewCreationDate.text = null
     }
@@ -55,7 +57,7 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
   }
 
   override fun getItemCount(): Int {
-    return list!!.size
+    return list?.size ?: 0
   }
 
   fun swap(nodeKeyDetailsList: List<NodeKeyDetails>) {
