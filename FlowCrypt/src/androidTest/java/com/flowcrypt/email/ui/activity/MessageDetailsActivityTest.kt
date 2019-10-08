@@ -12,6 +12,7 @@ import android.text.format.Formatter
 import android.view.View
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingPolicies
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
@@ -67,6 +68,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -171,6 +173,13 @@ class MessageDetailsActivityTest : BaseTest() {
   fun testEncryptedMsgPlaneText() {
     baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plain_text.json",
         "messages/mime/encrypted_msg_info_plain_text.txt"))
+  }
+
+  @Test
+  fun testEncryptedBigInlineAtt() {
+    IdlingPolicies.setIdlingResourceTimeout(3, TimeUnit.MINUTES)
+    baseCheck(getMsgInfo("messages/info/encrypted_msg_big_inline_att.json",
+        "messages/mime/encrypted_msg_big_inline_att.txt"))
   }
 
   @Test
