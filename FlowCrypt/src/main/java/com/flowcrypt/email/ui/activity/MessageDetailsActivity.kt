@@ -475,39 +475,41 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   private fun updateViews() {
-    if (supportActionBar != null) {
-      var actionBarTitle: String? = null
-      var actionBarSubTitle: String? = null
+    var actionBarTitle: String? = null
+    var actionBarSubTitle: String? = null
 
-      if (details != null) {
-        if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
-          actionBarTitle = getString(R.string.outgoing)
+    if (details != null) {
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
+        actionBarTitle = getString(R.string.outgoing)
 
-          when (details!!.msgState) {
-            MessageState.NEW, MessageState.NEW_FORWARDED -> actionBarSubTitle = getString(R.string.preparing)
+        when (details!!.msgState) {
+          MessageState.NEW, MessageState.NEW_FORWARDED -> actionBarSubTitle = getString(R.string.preparing)
 
-            MessageState.QUEUED -> actionBarSubTitle = getString(R.string.queued)
+          MessageState.QUEUED -> actionBarSubTitle = getString(R.string.queued)
 
-            MessageState.SENDING -> actionBarSubTitle = getString(R.string.sending)
+          MessageState.SENDING -> actionBarSubTitle = getString(R.string.sending)
 
-            MessageState.SENT, MessageState.SENT_WITHOUT_LOCAL_COPY -> actionBarSubTitle = getString(R.string.sent)
+          MessageState.SENT, MessageState.SENT_WITHOUT_LOCAL_COPY -> actionBarSubTitle = getString(R.string.sent)
 
-            MessageState.ERROR_CACHE_PROBLEM,
-            MessageState.ERROR_DURING_CREATION,
-            MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
-            MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
-            MessageState.ERROR_SENDING_FAILED,
-            MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> actionBarSubTitle = getString(R.string.an_error_has_occurred)
+          MessageState.ERROR_CACHE_PROBLEM,
+          MessageState.ERROR_DURING_CREATION,
+          MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+          MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
+          MessageState.ERROR_SENDING_FAILED,
+          MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> actionBarSubTitle = getString(R.string.an_error_has_occurred)
 
-            else -> {
-            }
+          else -> {
           }
         }
+      } else when (details?.msgState) {
+        MessageState.PENDING_ARCHIVING -> actionBarTitle = getString(R.string.pending)
+        else -> {
+        }
       }
-
-      supportActionBar!!.title = actionBarTitle
-      supportActionBar!!.subtitle = actionBarSubTitle
     }
+
+    supportActionBar?.title = actionBarTitle
+    supportActionBar?.subtitle = actionBarSubTitle
   }
 
   companion object {

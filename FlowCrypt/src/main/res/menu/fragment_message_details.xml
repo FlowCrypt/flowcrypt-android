@@ -23,4 +23,10 @@
         android:icon="@drawable/ic_move_to_inbox_white_24dp"
         android:title="@string/move_to_inbox"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuActionCancelArchiving"
+        android:title="@string/cancel_archiving"
+        android:visible="false"
+        app:showAsAction="never" />
 </menu>

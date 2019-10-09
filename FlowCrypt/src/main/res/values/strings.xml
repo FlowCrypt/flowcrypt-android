@@ -417,4 +417,6 @@
     <string name="public_key_copied_to_clipboard">Public Key copied to clipboard</string>
     <string name="email_must_be_non_empty">Email should not be empty</string>
     <string name="your_email_address">Your email address</string>
+    <string name="pending">Pending&#8230;</string>
+    <string name="cancel_archiving">Cancel archiving</string>
 </resources>

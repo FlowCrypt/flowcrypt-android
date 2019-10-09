@@ -49,8 +49,10 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
@@ -193,23 +195,35 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     val menuItemArchiveMsg = menu!!.findItem(R.id.menuActionArchiveMessage)
     val menuItemDeleteMsg = menu.findItem(R.id.menuActionDeleteMessage)
     val menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox)
+    val menuActionCancelArchiving = menu.findItem(R.id.menuActionCancelArchiving)
 
-    if (menuItemArchiveMsg != null) {
-      menuItemArchiveMsg.isVisible = isArchiveActionEnabled && isAdditionalActionEnabled
-    }
+    menuItemArchiveMsg?.isVisible = isArchiveActionEnabled && isAdditionalActionEnabled
+    menuItemDeleteMsg?.isVisible = isDeleteActionEnabled && isAdditionalActionEnabled
+    menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled && isAdditionalActionEnabled
 
-    if (menuItemDeleteMsg != null) {
-      menuItemDeleteMsg.isVisible = isDeleteActionEnabled && isAdditionalActionEnabled
-    }
-
-    if (menuActionMoveToInbox != null) {
-      menuActionMoveToInbox.isVisible = isMoveToInboxActionEnabled && isAdditionalActionEnabled
+    when (details?.msgState) {
+      MessageState.PENDING_ARCHIVING -> menuActionCancelArchiving?.isVisible = true
+      else -> menuActionCancelArchiving?.isVisible = false
     }
   }
 
   override fun onOptionsItemSelected(item: MenuItem?): Boolean {
     return when (item!!.itemId) {
-      R.id.menuActionArchiveMessage, R.id.menuActionDeleteMessage, R.id.menuActionMoveToInbox -> {
+      R.id.menuActionArchiveMessage -> {
+        MessageDaoSource().updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+            details?.uid?.toLong() ?: 0, MessageState.PENDING_ARCHIVING)
+        activity?.finish()
+        true
+      }
+
+      R.id.menuActionCancelArchiving -> {
+        MessageDaoSource().updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+            details?.uid?.toLong() ?: 0, MessageState.NONE)
+        activity?.finish()
+        true
+      }
+
+      R.id.menuActionDeleteMessage, R.id.menuActionMoveToInbox -> {
         runMsgAction(item.itemId)
         true
       }
@@ -497,6 +511,12 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       }
     }
 
+    when (details?.msgState) {
+      MessageState.PENDING_ARCHIVING -> isArchiveActionEnabled = false
+      else -> {
+      }
+    }
+
     activity?.invalidateOptionsMenu()
   }
 
@@ -510,17 +530,17 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     if (GeneralUtil.isConnected(context!!) || isOutbox) {
       if (!isOutbox) {
         isAdditionalActionEnabled = false
-        activity!!.invalidateOptionsMenu()
-        statusView!!.visibility = View.GONE
-        UIUtil.exchangeViewVisibility(context, true, progressBarActionRunning!!, layoutContent!!)
+        activity?.invalidateOptionsMenu()
+        statusView?.visibility = View.GONE
+        UIUtil.exchangeViewVisibility(context, true, progressBarActionRunning, layoutContent!!)
       }
 
       when (menuId) {
-        R.id.menuActionArchiveMessage -> onActionListener!!.onArchiveMsgClicked()
+        R.id.menuActionArchiveMessage -> onActionListener?.onArchiveMsgClicked()
 
-        R.id.menuActionDeleteMessage -> onActionListener!!.onDeleteMsgClicked()
+        R.id.menuActionDeleteMessage -> onActionListener?.onDeleteMsgClicked()
 
-        R.id.menuActionMoveToInbox -> onActionListener!!.onMoveMsgToInboxClicked()
+        R.id.menuActionMoveToInbox -> onActionListener?.onMoveMsgToInboxClicked()
       }
     } else {
       showSnackbar(view!!, getString(R.string.internet_connection_is_not_available), getString(R.string.retry),

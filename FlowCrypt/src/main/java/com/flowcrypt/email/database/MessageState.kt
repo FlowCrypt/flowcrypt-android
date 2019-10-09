@@ -29,7 +29,8 @@ enum class MessageState constructor(val value: Int) : Parcelable {
   ERROR_ORIGINAL_MESSAGE_MISSING(9),
   ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND(10),
   ERROR_SENDING_FAILED(11),
-  ERROR_PRIVATE_KEY_NOT_FOUND(12);
+  ERROR_PRIVATE_KEY_NOT_FOUND(12),
+  PENDING_ARCHIVING(13);
 
   override fun describeContents(): Int {
     return 0
