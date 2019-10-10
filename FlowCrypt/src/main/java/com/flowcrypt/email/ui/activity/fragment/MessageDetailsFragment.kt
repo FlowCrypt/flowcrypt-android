@@ -53,6 +53,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.jobscheduler.MessagesMovingJobService
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
@@ -212,6 +213,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       R.id.menuActionArchiveMessage -> {
         MessageDaoSource().updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
             details?.uid?.toLong() ?: 0, MessageState.PENDING_ARCHIVING)
+        MessagesMovingJobService.schedule(context?.applicationContext)
         activity?.finish()
         true
       }

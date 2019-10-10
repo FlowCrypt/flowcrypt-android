@@ -77,13 +77,14 @@ class AccountDaoSource : BaseDaoSource() {
    * @param context Interface to global information about an application environment.
    * @return The [AccountDao];
    */
-  fun getActiveAccountInformation(context: Context): AccountDao? {
+  fun getActiveAccountInformation(context: Context?): AccountDao? {
     val selection = "$COL_IS_ACTIVE = ?"
-    val cursor = context.contentResolver.query(baseContentUri, null, selection, arrayOf("1"), null)
+    val cursor = context?.contentResolver?.query(baseContentUri, null, selection, arrayOf("1"),
+        null)
 
     var account: AccountDao? = null
 
-    if (cursor != null && cursor.moveToFirst()) {
+    if (cursor?.moveToFirst() == true) {
       account = getCurrentAccountDao(context, cursor)
     }
 

@@ -528,6 +528,33 @@ class MessageDaoSource : BaseDaoSource() {
   }
 
   /**
+   * Get messages of some folder by the given state.
+   *
+   * @param context Interface to global information about an application environment.
+   * @param email   The email of the [LocalFolder].
+   * @param state   The message state.
+   * @return A  list of [GeneralMessageDetails] objects.
+   */
+  fun getMsgsWithState(context: Context, email: String, state: MessageState):
+      List<GeneralMessageDetails> {
+    val contentResolver = context.contentResolver
+    val selection = "$COL_EMAIL= ? AND $COL_STATE = ?"
+    val cursor = contentResolver.query(baseContentUri,
+        null, selection, arrayOf(email, state.value.toString()), null)
+
+    val generalMsgDetailsList = mutableListOf<GeneralMessageDetails>()
+
+    if (cursor != null) {
+      while (cursor.moveToNext()) {
+        generalMsgDetailsList.add(getMsgInfo(cursor))
+      }
+      cursor.close()
+    }
+
+    return generalMsgDetailsList
+  }
+
+  /**
    * Get all messages of the outbox folder.
    *
    * @param context  Interface to global information about an application environment.

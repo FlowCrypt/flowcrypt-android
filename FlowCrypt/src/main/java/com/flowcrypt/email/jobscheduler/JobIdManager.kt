@@ -24,5 +24,6 @@ class JobIdManager {
     const val JOB_TYPE_SEND_MESSAGES = 5
     const val JOB_TYPE_DOWNLOAD_FORWARDED_ATTACHMENTS = 6
     const val JOB_TYPE_FEEDBACK = 6
+    const val JOB_TYPE_MOVE_MESSAGES = 7
   }
 }
