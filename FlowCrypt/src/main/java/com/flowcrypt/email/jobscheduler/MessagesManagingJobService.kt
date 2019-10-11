@@ -24,6 +24,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.FolderNotAvailableException
 import com.sun.mail.imap.IMAPFolder
 import java.lang.ref.WeakReference
+import javax.mail.Flags
 import javax.mail.Folder
 import javax.mail.Message
 import javax.mail.Session
@@ -84,13 +85,29 @@ class MessagesManagingJobService : JobService() {
             val candidatesForArchiving = msgDaoSource.getMsgsWithState(context, account.email,
                 MessageState.PENDING_ARCHIVING)
 
-            if (candidatesForArchiving.isNotEmpty()) {
+            val candidatesForMarkUnread = msgDaoSource.getMsgsWithState(context, account.email,
+                MessageState.PENDING_MARK_UNREAD)
+
+            val candidatesForMarkRead = msgDaoSource.getMsgsWithState(context, account.email,
+                MessageState.PENDING_MARK_READ)
+
+            if (candidatesForArchiving.isNotEmpty()
+                || candidatesForMarkUnread.isNotEmpty()
+                || candidatesForMarkRead.isNotEmpty()) {
               sess = OpenStoreHelper.getAccountSess(context, account)
               store = OpenStoreHelper.openStore(context, account, sess!!)
             }
 
             if (candidatesForArchiving.isNotEmpty()) {
               archiveMsgs(context, account, msgDaoSource, store!!)
+            }
+
+            if (candidatesForMarkUnread.isNotEmpty()) {
+              changeMsgsReadState(context, account, msgDaoSource, store!!, MessageState.PENDING_MARK_UNREAD)
+            }
+
+            if (candidatesForMarkRead.isNotEmpty()) {
+              changeMsgsReadState(context, account, msgDaoSource, store!!, MessageState.PENDING_MARK_READ)
             }
 
             store?.close()
@@ -160,6 +177,51 @@ class MessagesManagingJobService : JobService() {
 
       destFolder.close(false)
       srcFolder.close(false)
+    }
+
+    private fun changeMsgsReadState(context: Context, account: AccountDao, msgDaoSource:
+    MessageDaoSource, store: Store, state: MessageState) {
+      while (true) {
+        val candidatesForMark = msgDaoSource.getMsgsWithState(context, account.email, state)
+
+        if (candidatesForMark.isEmpty()) {
+          break
+        } else {
+          val setOfFolders = candidatesForMark.map { it.label }.toSet()
+
+          for (folder in setOfFolders) {
+            val filteredMsgs = candidatesForMark.filter { it.label == folder }
+
+            if (filteredMsgs.isEmpty()) {
+              continue
+            }
+
+            val imapFolder = store.getFolder(folder) as IMAPFolder
+            imapFolder.open(Folder.READ_WRITE)
+
+            if (!imapFolder.exists()) {
+              continue
+            }
+
+            val uidList = filteredMsgs.map { it.uid.toLong() }
+            val msgs: List<Message> = imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
+
+            if (msgs.isNotEmpty()) {
+              val value = state == MessageState.PENDING_MARK_READ
+              imapFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.SEEN), value)
+              for (uid in uidList) {
+                val msg = msgDaoSource.getMsg(context, account.email, folder, uid)
+
+                if (msg?.msgState == state) {
+                  msgDaoSource.updateMsgState(context, account.email, folder, uid, MessageState.NONE)
+                }
+              }
+            }
+
+            imapFolder.close()
+          }
+        }
+      }
     }
   }
 

@@ -167,6 +167,13 @@ class MessageListAdapter(context: Context, c: Cursor?) : CursorAdapter(context, 
           }
         }
 
+        MessageState.PENDING_MARK_UNREAD -> {
+          with(viewHolder.imageViewStatus) {
+            this?.visibility = View.VISIBLE
+            this?.setBackgroundResource(R.drawable.ic_markunread_blue_16dp)
+          }
+        }
+
         else -> viewHolder.imageViewStatus?.visibility = View.GONE
       }
 

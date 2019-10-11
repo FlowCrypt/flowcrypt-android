@@ -120,6 +120,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
   private var atts = mutableListOf<AttachmentInfo>()
+  private val msgDaoSource = MessageDaoSource()
 
   override fun onAttach(context: Context?) {
     super.onAttach(context)
@@ -193,14 +194,21 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   override fun onPrepareOptionsMenu(menu: Menu?) {
     super.onPrepareOptionsMenu(menu)
 
-    val menuItemArchiveMsg = menu!!.findItem(R.id.menuActionArchiveMessage)
-    val menuItemDeleteMsg = menu.findItem(R.id.menuActionDeleteMessage)
-    val menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox)
-    val menuActionCancelArchiving = menu.findItem(R.id.menuActionCancelArchiving)
+    val menuItemArchiveMsg = menu?.findItem(R.id.menuActionArchiveMessage)
+    val menuItemDeleteMsg = menu?.findItem(R.id.menuActionDeleteMessage)
+    val menuActionMoveToInbox = menu?.findItem(R.id.menuActionMoveToInbox)
+    val menuActionCancelArchiving = menu?.findItem(R.id.menuActionCancelArchiving)
+    val menuActionMarkUnread = menu?.findItem(R.id.menuActionMarkUnread)
 
-    menuItemArchiveMsg?.isVisible = isArchiveActionEnabled && isAdditionalActionEnabled
-    menuItemDeleteMsg?.isVisible = isDeleteActionEnabled && isAdditionalActionEnabled
-    menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled && isAdditionalActionEnabled
+    menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
+    menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
+    menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled
+
+    menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
+    menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
+    menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
+    menuActionCancelArchiving?.isEnabled = isAdditionalActionEnabled
+    menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
 
     when (details?.msgState) {
       MessageState.PENDING_ARCHIVING -> menuActionCancelArchiving?.isVisible = true
@@ -211,7 +219,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   override fun onOptionsItemSelected(item: MenuItem?): Boolean {
     return when (item!!.itemId) {
       R.id.menuActionArchiveMessage -> {
-        MessageDaoSource().updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+        msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
             details?.uid?.toLong() ?: 0, MessageState.PENDING_ARCHIVING)
         MessagesManagingJobService.schedule(context?.applicationContext)
         activity?.finish()
@@ -219,14 +227,26 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       }
 
       R.id.menuActionCancelArchiving -> {
-        MessageDaoSource().updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
-            details?.uid?.toLong() ?: 0, MessageState.NONE)
+        if (details?.msgState == MessageState.PENDING_ARCHIVING) {
+          msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+              details?.uid?.toLong() ?: 0, MessageState.NONE)
+        }
         activity?.finish()
         true
       }
 
       R.id.menuActionDeleteMessage, R.id.menuActionMoveToInbox -> {
         runMsgAction(item.itemId)
+        true
+      }
+
+      R.id.menuActionMarkUnread -> {
+        msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+            details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_UNREAD)
+        msgDaoSource.setSeenStatus(context!!, details?.email, details?.label, details?.uid?.toLong()
+            ?: 0L, false)
+        MessagesManagingJobService.schedule(context?.applicationContext)
+        activity?.finish()
         true
       }
 

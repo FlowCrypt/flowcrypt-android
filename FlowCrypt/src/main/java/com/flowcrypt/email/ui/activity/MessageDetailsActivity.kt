@@ -37,6 +37,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.jetpack.viewmodel.DecryptMessageViewModel
+import com.flowcrypt.email.jobscheduler.MessagesManagingJobService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
@@ -140,7 +141,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor?) {
-    val messageDaoSource = MessageDaoSource()
+    val msgDaoSource = MessageDaoSource()
 
     when (loader.id) {
       R.id.loader_id_load_raw_mime_msg_from_db -> if (cursor != null && cursor.moveToFirst()) {
@@ -152,7 +153,10 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
           if (isRetrieveIncomingMsgNeeded) {
             isRetrieveIncomingMsgNeeded = false
             isReceiveMsgBodyNeeded = false
-            messageDaoSource.setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
+            msgDaoSource.setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
+            msgDaoSource.updateMsgState(this, details?.email ?: "", details?.label ?: "",
+                details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_READ)
+            MessagesManagingJobService.schedule(applicationContext)
             setResult(RESULT_CODE_UPDATE_LIST, null)
             decryptMsg()
           }
@@ -167,7 +171,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
       }
 
       R.id.loader_id_subscribe_to_message_changes -> if (cursor != null && cursor.moveToFirst()) {
-        details = messageDaoSource.getMsgInfo(cursor)
+        details = msgDaoSource.getMsgInfo(cursor)
         updateViews()
       }
 

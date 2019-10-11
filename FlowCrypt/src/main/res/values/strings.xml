@@ -419,4 +419,5 @@
     <string name="your_email_address">Your email address</string>
     <string name="pending">Pending&#8230;</string>
     <string name="cancel_archiving">Cancel archiving</string>
+    <string name="mark_unread">Mark unread</string>
 </resources>

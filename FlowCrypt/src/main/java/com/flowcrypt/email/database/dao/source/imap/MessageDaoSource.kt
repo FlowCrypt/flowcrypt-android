@@ -361,13 +361,19 @@ class MessageDaoSource : BaseDaoSource() {
    * @param email   The email that the message linked.
    * @param label   The folder label.
    * @param uid     The message UID.
+   * @param isSeen  true if seen
    * @return The count of the updated row or -1 up.
    */
-  fun setSeenStatus(context: Context, email: String?, label: String?, uid: Long): Int {
+  fun setSeenStatus(context: Context, email: String?, label: String?, uid: Long,
+                    isSeen: Boolean = true): Int {
     val resolver = context.contentResolver
     return if (email != null && label != null && resolver != null) {
       val values = ContentValues()
-      values.put(COL_FLAGS, MessageFlag.SEEN.value)
+      if (isSeen) {
+        values.put(COL_FLAGS, MessageFlag.SEEN.value)
+      } else {
+        values.put(COL_FLAGS, "")//todo-denbond7 maybe it is not a good idea to erase all flags
+      }
 
       val where = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
       resolver.update(baseContentUri, values, where, arrayOf(email, label, uid.toString()))
