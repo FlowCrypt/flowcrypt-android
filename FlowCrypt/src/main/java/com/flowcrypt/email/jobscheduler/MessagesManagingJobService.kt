@@ -30,15 +30,14 @@ import javax.mail.Session
 import javax.mail.Store
 
 /**
- * This [JobService] moves messages from one folder to another one (archiving, deleting, total
- * deleting and etc).
+ * This [JobService] manages messages (archiving, deleting, total deleting and etc).
  *
  * @author Denis Bondarenko
  *         Date: 10/9/19
  *         Time: 7:05 PM
  *         E-mail: DenBond7@gmail.com
  */
-class MessagesMovingJobService : JobService() {
+class MessagesManagingJobService : JobService() {
 
   override fun onCreate() {
     super.onCreate()
@@ -65,9 +64,9 @@ class MessagesMovingJobService : JobService() {
   /**
    * This is an implementation of [AsyncTask] which sends the outgoing messages.
    */
-  private class MoveMessagesAsyncTask internal constructor(jobService: MessagesMovingJobService)
+  private class MoveMessagesAsyncTask internal constructor(jobService: MessagesManagingJobService)
     : AsyncTask<JobParameters, Boolean, JobParameters>() {
-    private val weakRef: WeakReference<MessagesMovingJobService> = WeakReference(jobService)
+    private val weakRef: WeakReference<MessagesManagingJobService> = WeakReference(jobService)
 
     private var sess: Session? = null
     private var store: Store? = null
@@ -166,14 +165,14 @@ class MessagesMovingJobService : JobService() {
 
   companion object {
 
-    private val TAG = MessagesMovingJobService::class.java.simpleName
+    private val TAG = MessagesManagingJobService::class.java.simpleName
 
     @JvmStatic
     fun schedule(context: Context?) {
       context ?: return
 
       val jobInfoBuilder = JobInfo.Builder(JobIdManager.JOB_TYPE_MOVE_MESSAGES,
-          ComponentName(context, MessagesMovingJobService::class.java))
+          ComponentName(context, MessagesManagingJobService::class.java))
           .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
           .setPersisted(true)
 

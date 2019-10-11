@@ -286,7 +286,7 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".jobscheduler.MessagesMovingJobService"
+            android:name=".jobscheduler.MessagesManagingJobService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
