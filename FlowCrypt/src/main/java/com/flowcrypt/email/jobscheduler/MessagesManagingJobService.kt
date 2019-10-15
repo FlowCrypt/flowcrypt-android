@@ -14,6 +14,7 @@ import android.content.Context
 import android.os.AsyncTask
 import android.util.Log
 import com.flowcrypt.email.api.email.FoldersManager
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
@@ -91,9 +92,13 @@ class MessagesManagingJobService : JobService() {
             val candidatesForMarkRead = msgDaoSource.getMsgsWithState(context, account.email,
                 MessageState.PENDING_MARK_READ)
 
+            val candidatesForDeleting = msgDaoSource.getMsgsWithState(context, account.email,
+                MessageState.PENDING_DELETING)
+
             if (candidatesForArchiving.isNotEmpty()
                 || candidatesForMarkUnread.isNotEmpty()
-                || candidatesForMarkRead.isNotEmpty()) {
+                || candidatesForMarkRead.isNotEmpty()
+                || candidatesForDeleting.isNotEmpty()) {
               sess = OpenStoreHelper.getAccountSess(context, account)
               store = OpenStoreHelper.openStore(context, account, sess!!)
             }
@@ -108,6 +113,10 @@ class MessagesManagingJobService : JobService() {
 
             if (candidatesForMarkRead.isNotEmpty()) {
               changeMsgsReadState(context, account, msgDaoSource, store!!, MessageState.PENDING_MARK_READ)
+            }
+
+            if (candidatesForDeleting.isNotEmpty()) {
+              deleteMsgs(context, account, msgDaoSource, store!!)
             }
 
             store?.close()
@@ -179,6 +188,35 @@ class MessagesManagingJobService : JobService() {
       srcFolder.close(false)
     }
 
+    fun deleteMsgs(context: Context, account: AccountDao, msgDaoSource: MessageDaoSource,
+                   store: Store) {
+      val foldersManager = FoldersManager.fromDatabase(context, account.email)
+      val trash = foldersManager.folderTrash ?: return
+
+      while (true) {
+        val candidatesForDeleting = msgDaoSource.getMsgsWithState(context, account.email,
+            MessageState.PENDING_DELETING)
+
+        if (candidatesForDeleting.isEmpty()) {
+          break
+        } else {
+          val setOfFolders = candidatesForDeleting.map { it.label }.toSet()
+
+          for (folder in setOfFolders) {
+            val filteredMsgs = candidatesForDeleting.filter { it.label == folder }
+
+            if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)) {
+              continue
+            }
+
+            val uidList = filteredMsgs.map { it.uid.toLong() }
+            moveMsg(folder, trash.fullName, store, uidList.toLongArray())
+            msgDaoSource.deleteMsgsByUID(context, account.email, folder, uidList)
+          }
+        }
+      }
+    }
+
     private fun changeMsgsReadState(context: Context, account: AccountDao, msgDaoSource:
     MessageDaoSource, store: Store, state: MessageState) {
       while (true) {
@@ -222,6 +260,33 @@ class MessagesManagingJobService : JobService() {
           }
         }
       }
+    }
+
+    private fun moveMsg(srcFolderFullName: String, destFolderFullName: String, store: Store,
+                        uids: LongArray) {
+      val remoteSrcFolder = store.getFolder(srcFolderFullName) as IMAPFolder
+      val remoteDestFolder = store.getFolder(destFolderFullName) as IMAPFolder
+
+      if (!remoteSrcFolder.exists()) {
+        return
+      }
+
+      remoteSrcFolder.open(Folder.READ_WRITE)
+
+      val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uids).filterNotNull()
+
+      if (msgs.isNotEmpty()) {
+        if (!remoteDestFolder.exists()) {
+          remoteSrcFolder.close(false)
+          return
+        }
+
+        remoteDestFolder.open(Folder.READ_WRITE)
+        remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
+        remoteDestFolder.close(false)
+      }
+
+      remoteSrcFolder.close(false)
     }
   }
 

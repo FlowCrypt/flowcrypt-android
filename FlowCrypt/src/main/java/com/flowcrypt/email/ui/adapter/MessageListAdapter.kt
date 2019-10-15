@@ -174,6 +174,13 @@ class MessageListAdapter(context: Context, c: Cursor?) : CursorAdapter(context, 
           }
         }
 
+        MessageState.PENDING_DELETING -> {
+          with(viewHolder.imageViewStatus) {
+            this?.visibility = View.VISIBLE
+            this?.setBackgroundResource(R.drawable.ic_delete_blue_16dp)
+          }
+        }
+
         else -> viewHolder.imageViewStatus?.visibility = View.GONE
       }
 

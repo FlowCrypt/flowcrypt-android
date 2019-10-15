@@ -32,7 +32,8 @@ enum class MessageState constructor(val value: Int) : Parcelable {
   ERROR_PRIVATE_KEY_NOT_FOUND(12),
   PENDING_ARCHIVING(13),
   PENDING_MARK_UNREAD(14),
-  PENDING_MARK_READ(15);
+  PENDING_MARK_READ(15),
+  PENDING_DELETING(16);
 
   override fun describeContents(): Int {
     return 0

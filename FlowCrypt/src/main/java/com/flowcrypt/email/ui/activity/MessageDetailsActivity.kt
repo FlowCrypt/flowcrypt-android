@@ -238,17 +238,13 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         }
       }
 
-      R.id.syns_request_archive_message, R.id.syns_request_delete_message, R.id.syns_request_move_message_to_inbox -> {
+      R.id.syns_request_move_message_to_inbox -> {
         isBackEnabled = true
         when (resultCode) {
           EmailSyncService.REPLY_RESULT_CODE_ACTION_OK -> {
             var toastMsgResId = 0
 
             when (requestCode) {
-              R.id.syns_request_archive_message -> toastMsgResId = R.string.message_was_archived
-
-              R.id.syns_request_delete_message -> toastMsgResId = R.string.message_was_deleted
-
               R.id.syns_request_move_message_to_inbox -> toastMsgResId = R.string.message_was_moved_to_inbox
             }
 
@@ -273,7 +269,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         onErrorOccurred(requestCode, errorType, e)
       }
 
-      R.id.syns_request_archive_message, R.id.syns_request_delete_message, R.id.syns_request_move_message_to_inbox -> {
+      R.id.syns_request_move_message_to_inbox -> {
         isBackEnabled = true
         onErrorOccurred(requestCode, errorType, e)
       }
@@ -306,61 +302,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
 
     fragment?.setActionProgress(progress, message)
-  }
-
-  override fun onArchiveMsgClicked() {
-    isBackEnabled = false
-    val foldersManager = FoldersManager.fromDatabase(this, details!!.email)
-    val archive = foldersManager.folderArchive
-    if (archive == null) {
-      ExceptionUtil.handleError(IllegalArgumentException("Folder 'All Mail' not found for provider = "
-          + EmailUtil.getDomain(details!!.email) + "\n"
-          + foldersManager.serverFolders.joinToString { it.fullName + ":" + it.attributes }))
-      isBackEnabled = true
-      onErrorOccurred(R.id.syns_request_archive_message, SyncErrorTypes.UNKNOWN_ERROR,
-          IllegalStateException(getString(R.string.unknown_error)))
-    } else {
-      moveMsg(R.id.syns_request_archive_message, localFolder!!, archive, details!!.uid)
-    }
-  }
-
-  override fun onDeleteMsgClicked() {
-    isBackEnabled = false
-    if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
-      val msgDaoSource = MessageDaoSource()
-      val details = msgDaoSource.getMsg(this, this.details!!.email,
-          this.details!!.label, this.details!!.uid.toLong())
-
-      if (details == null || details.msgState === MessageState.SENDING) {
-        Toast.makeText(this, if (details == null)
-          R.string.can_not_delete_sent_message
-        else
-          R.string.can_not_delete_sending_message, Toast.LENGTH_LONG).show()
-      } else {
-        val deletedRows = MessageDaoSource().deleteOutgoingMsg(this, details)
-        if (deletedRows > 0) {
-          Toast.makeText(this, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
-        } else {
-          Toast.makeText(this, R.string.can_not_delete_sent_message, Toast.LENGTH_LONG).show()
-        }
-      }
-
-      setResult(RESULT_CODE_UPDATE_LIST, null)
-      finish()
-    } else {
-      val foldersManager = FoldersManager.fromDatabase(this, details!!.email)
-      val trash = foldersManager.folderTrash
-      if (trash == null) {
-        ExceptionUtil.handleError(IllegalArgumentException("Folder 'Trash' not found for provider = "
-            + EmailUtil.getDomain(details!!.email) + "\n"
-            + foldersManager.serverFolders.joinToString { it.fullName + ":" + it.attributes }))
-        isBackEnabled = true
-        onErrorOccurred(R.id.syns_request_delete_message, SyncErrorTypes.UNKNOWN_ERROR,
-            IllegalStateException(getString(R.string.unknown_error)))
-      } else {
-        moveMsg(R.id.syns_request_delete_message, localFolder!!, trash, details!!.uid)
-      }
-    }
   }
 
   override fun onMoveMsgToInboxClicked() {

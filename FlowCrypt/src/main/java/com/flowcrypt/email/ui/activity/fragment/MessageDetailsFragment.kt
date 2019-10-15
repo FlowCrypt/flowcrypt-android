@@ -235,7 +235,37 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         true
       }
 
-      R.id.menuActionDeleteMessage, R.id.menuActionMoveToInbox -> {
+      R.id.menuActionDeleteMessage -> {
+        if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
+          val msgDaoSource = MessageDaoSource()
+          val details = msgDaoSource.getMsg(context!!, this.details!!.email,
+              this.details!!.label, this.details!!.uid.toLong())
+
+          if (details == null || details.msgState === MessageState.SENDING) {
+            Toast.makeText(context!!, if (details == null)
+              R.string.can_not_delete_sent_message
+            else
+              R.string.can_not_delete_sending_message, Toast.LENGTH_LONG).show()
+          } else {
+            val deletedRows = MessageDaoSource().deleteOutgoingMsg(context!!, details)
+            if (deletedRows > 0) {
+              Toast.makeText(context!!, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
+            } else {
+              Toast.makeText(context!!, R.string.can_not_delete_sent_message, Toast.LENGTH_LONG).show()
+            }
+          }
+
+          activity?.setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null)
+        } else {
+          msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+              details?.uid?.toLong() ?: 0, MessageState.PENDING_DELETING)
+          MessagesManagingJobService.schedule(context?.applicationContext)
+        }
+        activity?.finish()
+        true
+      }
+
+      R.id.menuActionMoveToInbox -> {
         runMsgAction(item.itemId)
         true
       }
@@ -321,18 +351,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         }
       }
 
-      R.id.syns_request_archive_message, R.id.syns_request_delete_message, R.id.syns_request_move_message_to_inbox -> {
+      R.id.syns_request_move_message_to_inbox -> {
         UIUtil.exchangeViewVisibility(context, false, statusView!!, contentView!!)
         if (e is FolderNotAvailableException) {
           when (requestCode) {
-            R.id.syns_request_archive_message -> {
-              isArchiveActionEnabled = false
-            }
-
-            R.id.syns_request_delete_message -> {
-              isDeleteActionEnabled = false
-            }
-
             R.id.syns_request_move_message_to_inbox -> {
               isMoveToInboxActionEnabled = false
             }
@@ -420,10 +442,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     showSnackbar(view!!, e.message ?: "", getString(R.string.retry), Snackbar.LENGTH_LONG,
         View.OnClickListener {
           when (requestCode) {
-            R.id.syns_request_archive_message -> runMsgAction(R.id.menuActionArchiveMessage)
-
-            R.id.syns_request_delete_message -> runMsgAction(R.id.menuActionDeleteMessage)
-
             R.id.syns_request_move_message_to_inbox -> runMsgAction(R.id.menuActionMoveToInbox)
           }
         })
@@ -558,10 +576,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       }
 
       when (menuId) {
-        R.id.menuActionArchiveMessage -> onActionListener?.onArchiveMsgClicked()
-
-        R.id.menuActionDeleteMessage -> onActionListener?.onDeleteMsgClicked()
-
         R.id.menuActionMoveToInbox -> onActionListener?.onMoveMsgToInboxClicked()
       }
     } else {
@@ -1035,10 +1049,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   }
 
   interface OnActionListener {
-    fun onArchiveMsgClicked()
-
-    fun onDeleteMsgClicked()
-
     fun onMoveMsgToInboxClicked()
   }
 
