@@ -20,7 +20,6 @@ import androidx.loader.content.Loader
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -57,7 +56,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.LoaderCallbacks<Cursor>,
-    MessageDetailsFragment.OnActionListener, Observer<NodeResponseWrapper<*>> {
+    Observer<NodeResponseWrapper<*>> {
 
   private var details: GeneralMessageDetails? = null
   private var localFolder: LocalFolder? = null
@@ -67,7 +66,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   val idlingForWebView: SingleIdlingResources = SingleIdlingResources(false)
 
   private var isReceiveMsgBodyNeeded: Boolean = false
-  private var isBackEnabled = true
   private var isRequestMsgDetailsStarted: Boolean = false
   private var isRetrieveIncomingMsgNeeded = true
   private lateinit var viewModel: DecryptMessageViewModel
@@ -103,14 +101,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     updateViews()
 
     LoaderManager.getInstance(this).initLoader(R.id.loader_id_subscribe_to_message_changes, null, this)
-  }
-
-  override fun onBackPressed() {
-    if (isBackEnabled) {
-      super.onBackPressed()
-    } else {
-      Toast.makeText(this, R.string.please_wait_while_action_will_be_completed, Toast.LENGTH_SHORT).show()
-    }
   }
 
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
@@ -239,22 +229,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
       }
 
       R.id.syns_request_move_message_to_inbox -> {
-        isBackEnabled = true
         when (resultCode) {
-          EmailSyncService.REPLY_RESULT_CODE_ACTION_OK -> {
-            var toastMsgResId = 0
-
-            when (requestCode) {
-              R.id.syns_request_move_message_to_inbox -> toastMsgResId = R.string.message_was_moved_to_inbox
-            }
-
-            Toast.makeText(this, toastMsgResId, Toast.LENGTH_SHORT).show()
-            MessageDaoSource().deleteMsg(this, details!!.email, label, details!!.uid.toLong())
-            AttachmentDaoSource().deleteAtts(this, details!!.email, label, details!!.uid.toLong())
-            setResult(RESULT_CODE_UPDATE_LIST, null)
-            finish()
-          }
-
           EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_EXISTS -> messageNotAvailableInFolder()
         }
       }
@@ -266,11 +241,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
       R.id.syns_request_code_load_raw_mime_msg -> {
         isRequestMsgDetailsStarted = false
         updateActionProgressState(100, null)
-        onErrorOccurred(requestCode, errorType, e)
-      }
-
-      R.id.syns_request_move_message_to_inbox -> {
-        isBackEnabled = true
         onErrorOccurred(requestCode, errorType, e)
       }
 
@@ -302,16 +272,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
 
     fragment?.setActionProgress(progress, message)
-  }
-
-  override fun onMoveMsgToInboxClicked() {
-    isBackEnabled = false
-    val foldersManager = FoldersManager.fromDatabase(this, details!!.email)
-    val folderInbox = foldersManager.folderInbox
-    if (folderInbox == null) {
-      ExceptionUtil.handleError(IllegalArgumentException("Folder 'Inbox' not found"))
-    }
-    moveMsg(R.id.syns_request_move_message_to_inbox, localFolder!!, folderInbox!!, details!!.uid)
   }
 
   override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {

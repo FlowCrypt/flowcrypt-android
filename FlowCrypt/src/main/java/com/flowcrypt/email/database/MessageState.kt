@@ -33,7 +33,8 @@ enum class MessageState constructor(val value: Int) : Parcelable {
   PENDING_ARCHIVING(13),
   PENDING_MARK_UNREAD(14),
   PENDING_MARK_READ(15),
-  PENDING_DELETING(16);
+  PENDING_DELETING(16),
+  PENDING_MOVE_TO_INBOX(17);
 
   override fun describeContents(): Int {
     return 0

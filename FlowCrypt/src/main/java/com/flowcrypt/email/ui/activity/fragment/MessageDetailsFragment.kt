@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -69,10 +68,8 @@ import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.FolderNotAvailableException
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.common.util.CollectionUtils
-import com.google.android.material.snackbar.Snackbar
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -116,20 +113,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var isDeleteActionEnabled: Boolean = false
   private var isArchiveActionEnabled: Boolean = false
   private var isMoveToInboxActionEnabled: Boolean = false
-  private var onActionListener: OnActionListener? = null
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
   private var atts = mutableListOf<AttachmentInfo>()
   private val msgDaoSource = MessageDaoSource()
-
-  override fun onAttach(context: Context?) {
-    super.onAttach(context)
-    if (context is BaseSyncActivity) {
-      this.onActionListener = context as OnActionListener?
-    } else
-      throw IllegalArgumentException(context!!.toString() + " must implement " +
-          OnActionListener::class.java.simpleName)
-  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -266,7 +253,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       }
 
       R.id.menuActionMoveToInbox -> {
-        runMsgAction(item.itemId)
+        msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+            details?.uid?.toLong() ?: 0, MessageState.PENDING_MOVE_TO_INBOX)
+        MessagesManagingJobService.schedule(context?.applicationContext)
+        activity?.finish()
         true
       }
 
@@ -350,23 +340,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           return
         }
       }
-
-      R.id.syns_request_move_message_to_inbox -> {
-        UIUtil.exchangeViewVisibility(context, false, statusView!!, contentView!!)
-        if (e is FolderNotAvailableException) {
-          when (requestCode) {
-            R.id.syns_request_move_message_to_inbox -> {
-              isMoveToInboxActionEnabled = false
-            }
-          }
-          (baseActivity as? BaseSyncActivity)?.updateLabels(R.id
-              .syns_request_code_update_label_passive, true)
-          activity?.invalidateOptionsMenu()
-          Toast.makeText(context, R.string.not_available_check_imap_settings, Toast.LENGTH_LONG).show()
-        } else {
-          showRetryActionHint(requestCode, e!!)
-        }
-      }
     }
   }
 
@@ -436,15 +409,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       updateMsgView()
       showAttsIfTheyExist()
     }
-  }
-
-  private fun showRetryActionHint(requestCode: Int, e: Exception) {
-    showSnackbar(view!!, e.message ?: "", getString(R.string.retry), Snackbar.LENGTH_LONG,
-        View.OnClickListener {
-          when (requestCode) {
-            R.id.syns_request_move_message_to_inbox -> runMsgAction(R.id.menuActionMoveToInbox)
-          }
-        })
   }
 
   private fun showConnLostHint() {
@@ -558,30 +522,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     }
 
     activity?.invalidateOptionsMenu()
-  }
-
-  /**
-   * Run the message action (archive/delete/move to inbox).
-   *
-   * @param menuId The action menu id.
-   */
-  private fun runMsgAction(menuId: Int) {
-    val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)
-    if (GeneralUtil.isConnected(context!!) || isOutbox) {
-      if (!isOutbox) {
-        isAdditionalActionEnabled = false
-        activity?.invalidateOptionsMenu()
-        statusView?.visibility = View.GONE
-        UIUtil.exchangeViewVisibility(context, true, progressBarActionRunning, layoutContent!!)
-      }
-
-      when (menuId) {
-        R.id.menuActionMoveToInbox -> onActionListener?.onMoveMsgToInboxClicked()
-      }
-    } else {
-      showSnackbar(view!!, getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
-          Snackbar.LENGTH_LONG, View.OnClickListener { runMsgAction(menuId) })
-    }
   }
 
   private fun initViews(view: View) {
@@ -1046,10 +986,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       textViewActionProgress?.text = null
       layoutActionProgress?.visibility = View.GONE
     }
-  }
-
-  interface OnActionListener {
-    fun onMoveMsgToInboxClicked()
   }
 
   companion object {

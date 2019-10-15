@@ -181,6 +181,13 @@ class MessageListAdapter(context: Context, c: Cursor?) : CursorAdapter(context, 
           }
         }
 
+        MessageState.PENDING_MOVE_TO_INBOX -> {
+          with(viewHolder.imageViewStatus) {
+            this?.visibility = View.VISIBLE
+            this?.setBackgroundResource(R.drawable.ic_move_to_inbox_blue_16dp)
+          }
+        }
+
         else -> viewHolder.imageViewStatus?.visibility = View.GONE
       }
 

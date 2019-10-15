@@ -95,10 +95,14 @@ class MessagesManagingJobService : JobService() {
             val candidatesForDeleting = msgDaoSource.getMsgsWithState(context, account.email,
                 MessageState.PENDING_DELETING)
 
+            val candidatesForMovingToInbox = msgDaoSource.getMsgsWithState(context, account.email,
+                MessageState.PENDING_MOVE_TO_INBOX)
+
             if (candidatesForArchiving.isNotEmpty()
                 || candidatesForMarkUnread.isNotEmpty()
                 || candidatesForMarkRead.isNotEmpty()
-                || candidatesForDeleting.isNotEmpty()) {
+                || candidatesForDeleting.isNotEmpty()
+                || candidatesForMovingToInbox.isNotEmpty()) {
               sess = OpenStoreHelper.getAccountSess(context, account)
               store = OpenStoreHelper.openStore(context, account, sess!!)
             }
@@ -117,6 +121,10 @@ class MessagesManagingJobService : JobService() {
 
             if (candidatesForDeleting.isNotEmpty()) {
               deleteMsgs(context, account, msgDaoSource, store!!)
+            }
+
+            if (candidatesForMovingToInbox.isNotEmpty()) {
+              moveMsgsToInbox(context, account, msgDaoSource, store!!)
             }
 
             store?.close()
@@ -211,6 +219,35 @@ class MessagesManagingJobService : JobService() {
 
             val uidList = filteredMsgs.map { it.uid.toLong() }
             moveMsg(folder, trash.fullName, store, uidList.toLongArray())
+            msgDaoSource.deleteMsgsByUID(context, account.email, folder, uidList)
+          }
+        }
+      }
+    }
+
+    fun moveMsgsToInbox(context: Context, account: AccountDao, msgDaoSource: MessageDaoSource,
+                        store: Store) {
+      val foldersManager = FoldersManager.fromDatabase(context, account.email)
+      val inbox = foldersManager.findInboxFolder() ?: return
+
+      while (true) {
+        val candidatesForMovingToInbox = msgDaoSource.getMsgsWithState(context, account.email,
+            MessageState.PENDING_MOVE_TO_INBOX)
+
+        if (candidatesForMovingToInbox.isEmpty()) {
+          break
+        } else {
+          val setOfFolders = candidatesForMovingToInbox.map { it.label }.toSet()
+
+          for (folder in setOfFolders) {
+            val filteredMsgs = candidatesForMovingToInbox.filter { it.label == folder }
+
+            if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)) {
+              continue
+            }
+
+            val uidList = filteredMsgs.map { it.uid.toLong() }
+            moveMsg(folder, inbox.fullName, store, uidList.toLongArray())
             msgDaoSource.deleteMsgsByUID(context, account.email, folder, uidList)
           }
         }
