@@ -135,7 +135,11 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
     when (loader.id) {
       R.id.loader_id_load_raw_mime_msg_from_db -> if (cursor != null && cursor.moveToFirst()) {
-        this.rawMimeBytes = MsgsCacheManager.getMsgAsByteArray(details!!.id.toString())
+        this.rawMimeBytes = if (JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)) {
+          cursor.getBlob(cursor.getColumnIndex(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS))
+        } else {
+          MsgsCacheManager.getMsgAsByteArray(details!!.id.toString())
+        }
 
         updateMsgDetails(details!!)
 
@@ -143,11 +147,15 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
           if (isRetrieveIncomingMsgNeeded) {
             isRetrieveIncomingMsgNeeded = false
             isReceiveMsgBodyNeeded = false
-            msgDaoSource.setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
-            msgDaoSource.updateMsgState(this, details?.email ?: "", details?.label ?: "",
-                details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_READ)
-            MessagesManagingJobService.schedule(applicationContext)
-            setResult(RESULT_CODE_UPDATE_LIST, null)
+
+            if (!JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)) {
+              msgDaoSource.setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
+              msgDaoSource.updateMsgState(this, details?.email ?: "", details?.label ?: "",
+                  details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_READ)
+              MessagesManagingJobService.schedule(applicationContext)
+              setResult(RESULT_CODE_UPDATE_LIST, null)
+            }
+
             decryptMsg()
           }
         } else {

@@ -190,6 +190,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
     menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
     menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled
+    menuActionMarkUnread?.isVisible = !JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)
 
     menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
     menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
