@@ -153,7 +153,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
     textViewLongId?.text = getString(R.string.template_longid, details!!.longId)
 
     val textViewDate = view.findViewById<TextView>(R.id.textViewDate)
-    textViewDate?.text = getString(R.string.template_created, DateFormat.getMediumDateFormat(context).format(
+    textViewDate?.text = getString(R.string.template_date, DateFormat.getMediumDateFormat(context).format(
         Date(TimeUnit.MILLISECONDS.convert(details?.created ?: 0, TimeUnit.SECONDS))))
 
     val textViewUsers = view.findViewById<TextView>(R.id.textViewUsers)

@@ -223,7 +223,7 @@ class CreateMessageActivityTest : BaseTest() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
 
-    onView(withId(R.id.menuFeedback))
+    onView(withId(R.id.menuActionHelp))
         .check(matches(isDisplayed()))
         .perform(click())
 

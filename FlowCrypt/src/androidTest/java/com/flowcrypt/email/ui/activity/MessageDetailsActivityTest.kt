@@ -259,6 +259,7 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
+
   fun testMissingKeyErrorChooseFromFewPubKeys() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt")
@@ -276,9 +277,6 @@ class MessageDetailsActivityTest : BaseTest() {
 
     onView(withId(R.id.textViewMessage))
         .check(matches(withText(msg)))
-    onView(withId(R.id.buttonOk))
-        .check(matches(isDisplayed()))
-        .perform(click())
     onData(anything())
         .inAdapterView(withId(R.id.listViewKeys))
         .atPosition(1)

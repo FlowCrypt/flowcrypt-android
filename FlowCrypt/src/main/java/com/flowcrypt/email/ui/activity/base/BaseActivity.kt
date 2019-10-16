@@ -141,7 +141,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
         super.onOptionsItemSelected(item)
       }
 
-      R.id.menuFeedback -> {
+      R.id.menuActionHelp -> {
         FeedbackActivity.show(this)
         true
       }
