@@ -41,8 +41,6 @@ class EmailSyncManager(val account: AccountDao, val listener: SyncListener) {
   private val idleExecutorService: ExecutorService = Executors.newSingleThreadExecutor()
   private var connectionFuture: Future<*>? = null
   private var idleFuture: Future<*>? = null
-  @Volatile
-  private var isIdleSupported = true
   private val connectionRunnable = ConnectionSyncRunnable(account, listener)
 
   /**
@@ -75,7 +73,7 @@ class EmailSyncManager(val account: AccountDao, val listener: SyncListener) {
    * Run a thread where we will idle INBOX folder.
    */
   private fun runIdleInboxIfNeeded() {
-    if (isIdleSupported && !isThreadAlreadyWorking(idleFuture)) {
+    if (!isThreadAlreadyWorking(idleFuture)) {
       idleFuture = idleExecutorService.submit(IdleSyncRunnable(account, listener, this))
     }
   }
@@ -87,17 +85,6 @@ class EmailSyncManager(val account: AccountDao, val listener: SyncListener) {
    */
   private fun isThreadAlreadyWorking(future: Future<*>?): Boolean {
     return future != null && !future.isCancelled && !future.isDone
-  }
-
-  /**
-   * This method can be used for debugging. Using this method we can identify a progress of some operation.
-   *
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for the reply to [android.os.Messenger].
-   * @param resultCode  The unique result code for the reply which identifies the progress of some request.
-   */
-  private fun notifyActionProgress(ownerKey: String, requestCode: Int, resultCode: Int) {
-    listener.onActionProgress(account, ownerKey, requestCode, resultCode)
   }
 
   /**

@@ -25,6 +25,7 @@ class SyncTaskRunnable(val accountDao: AccountDao, val synListener: SyncListener
   private val tag: String = javaClass.simpleName
   override fun run() {
     try {
+      val time = System.currentTimeMillis()
       Thread.currentThread().name = javaClass.simpleName
       LogsUtil.d(tag, "Start a new task = " + task.javaClass.simpleName + " for store " + store.toString())
 
@@ -35,7 +36,8 @@ class SyncTaskRunnable(val accountDao: AccountDao, val synListener: SyncListener
         synListener.onActionProgress(accountDao, task.ownerKey, task.requestCode, R.id.progress_id_running_imap_action)
         task.runIMAPAction(accountDao, session, store, synListener)
       }
-      LogsUtil.d(tag, "The task = " + task.javaClass.simpleName + " completed")
+      LogsUtil.d(tag, "The task = " + task.javaClass.simpleName + " completed (" + (System
+          .currentTimeMillis() - time) + "ms)")
     } catch (e: Exception) {
       e.printStackTrace()
     }
