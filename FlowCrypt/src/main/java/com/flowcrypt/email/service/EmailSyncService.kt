@@ -109,21 +109,18 @@ class EmailSyncService : BaseService(), SyncListener {
         ACTION_SWITCH_ACCOUNT -> {
           val account: AccountDao? = AccountDaoSource().getActiveAccountInformation(this)
           account?.let {
-            if (::emailSyncManager.isInitialized) {
-              emailSyncManager.switchAccount(it)
-            } else {
-              emailSyncManager = EmailSyncManager(it, this)
-              messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
-            }
+            emailSyncManager = EmailSyncManager(it, this)
+            messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
+            emailSyncManager.beginSync()
           }
         }
 
         else -> if (::emailSyncManager.isInitialized) {
-          emailSyncManager.beginSync(false)
+          emailSyncManager.beginSync()
         }
       }
     } else if (::emailSyncManager.isInitialized) {
-      emailSyncManager.beginSync(false)
+      emailSyncManager.beginSync()
     }
 
     return super.onStartCommand(intent, flags, startId)
@@ -553,7 +550,7 @@ class EmailSyncService : BaseService(), SyncListener {
       if (GeneralUtil.isConnected(this)) {
         LogsUtil.d(TAG, "networkInfo = $networkInfo")
         if (::emailSyncManager.isInitialized) {
-          emailSyncManager.beginSync(false)
+          emailSyncManager.beginSync()
         }
       }
     }
@@ -693,7 +690,7 @@ class EmailSyncService : BaseService(), SyncListener {
 
           MESSAGE_REFRESH_MESSAGES -> if (emailSyncManager != null && action != null) {
             val refreshLocalFolder = action.`object` as LocalFolder
-            emailSyncManager.refreshMsgs(ownerKey!!, requestCode, refreshLocalFolder, true)
+            emailSyncManager.refreshMsgs(ownerKey!!, requestCode, refreshLocalFolder)
           }
 
           MESSAGE_LOAD_MESSAGE_DETAILS -> if (emailSyncManager != null && action != null) {
@@ -705,7 +702,7 @@ class EmailSyncService : BaseService(), SyncListener {
           MESSAGE_MOVE_MESSAGE -> if (emailSyncManager != null && action != null) {
             val localFolders = action.`object` as Array<LocalFolder?>
 
-            val emailDomain = emailSyncManager.accountDao.accountType
+            val emailDomain = emailSyncManager.account.accountType
 
             if (localFolders.size != 2) {
               throw IllegalArgumentException(emailDomain!! + "|Can't move the message. Folders are null.")
@@ -736,7 +733,7 @@ class EmailSyncService : BaseService(), SyncListener {
           }
 
           MESSAGE_CANCEL_ALL_TASKS -> if (emailSyncManager != null && action != null) {
-            emailSyncManager.cancelAllSyncTasks()
+            //emailSyncManager.cancelAllSyncTasks()
           }
 
           MESSAGE_LOAD_ATTS_INFO -> if (emailSyncManager != null && action != null) {
@@ -744,7 +741,8 @@ class EmailSyncService : BaseService(), SyncListener {
             emailSyncManager.loadAttsInfo(ownerKey!!, requestCode, localFolder, msg.arg1)
           }
 
-          MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS -> emailSyncManager?.cancelActiveLoadMsgDetailsTask()
+          MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS -> {
+          }
 
 
           else -> super.handleMessage(msg)
