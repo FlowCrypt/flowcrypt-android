@@ -19,6 +19,7 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.MovingToInboxSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask
@@ -107,6 +108,15 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
     try {
       removeOldTasks(ChangeMsgsReadState::class.java, tasksQueue)
       tasksQueue.put(ChangeMsgsReadState(ownerKey, requestCode))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
+    }
+  }
+
+  fun moveMsgsToINBOX(ownerKey: String, requestCode: Int) {
+    try {
+      removeOldTasks(MovingToInboxSyncTask::class.java, tasksQueue)
+      tasksQueue.put(MovingToInboxSyncTask(ownerKey, requestCode))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }

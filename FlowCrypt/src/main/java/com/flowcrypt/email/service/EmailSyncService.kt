@@ -750,6 +750,8 @@ class EmailSyncService : BaseService(), SyncListener {
 
           MESSAGE_CHANGE_MSGS_READ_STATE -> emailSyncManager?.changeMsgsReadState()
 
+          MESSAGE_MOVE_MSGS_TO_INBOX -> emailSyncManager?.moveMsgsToINBOX()
+
           else -> super.handleMessage(msg)
         }
       }
@@ -784,6 +786,7 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_DELETE_MSGS = 15
     const val MESSAGE_ARCHIVE_MSGS = 16
     const val MESSAGE_CHANGE_MSGS_READ_STATE = 17
+    const val MESSAGE_MOVE_MSGS_TO_INBOX = 18
 
     private val TAG = EmailSyncService::class.java.simpleName
 

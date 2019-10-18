@@ -52,7 +52,6 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
-import com.flowcrypt.email.jobscheduler.MessagesManagingJobService
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
@@ -240,7 +239,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       R.id.menuActionMoveToInbox -> {
         msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
             details?.uid?.toLong() ?: 0, MessageState.PENDING_MOVE_TO_INBOX)
-        MessagesManagingJobService.schedule(context?.applicationContext)
+        (activity as? BaseSyncActivity)?.moveMsgsToINBOX()
         activity?.finish()
         true
       }

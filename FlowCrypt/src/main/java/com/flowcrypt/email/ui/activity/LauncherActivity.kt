@@ -16,7 +16,6 @@ import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
-import com.flowcrypt.email.jobscheduler.MessagesManagingJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.service.EmailSyncService
@@ -50,7 +49,6 @@ class LauncherActivity : BaseActivity() {
     PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false)
     ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
     MessagesSenderJobService.schedule(applicationContext)
-    MessagesManagingJobService.schedule(applicationContext)
     FeedbackJobIntentService.enqueueWork(this)
 
     account = AccountDaoSource().getActiveAccountInformation(this)

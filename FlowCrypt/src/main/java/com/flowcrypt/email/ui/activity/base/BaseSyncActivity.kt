@@ -274,6 +274,26 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   }
 
   /**
+   * Move messages back to inbox
+   *
+   * @param requestCode    The unique request code for identify the current action.
+   */
+  fun moveMsgsToINBOX(requestCode: Int = -1) {
+    if (checkServiceBound(isSyncServiceBound)) return
+
+    val action = BaseService.Action(replyMessengerName, requestCode, null)
+
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_MOVE_MSGS_TO_INBOX, action)
+    msg.replyTo = syncReplyMessenger
+    try {
+      syncMessenger?.send(msg)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  /**
    * Load the last messages which not exist in the database.
    *
    * @param requestCode        The unique request code for identify the current action.
