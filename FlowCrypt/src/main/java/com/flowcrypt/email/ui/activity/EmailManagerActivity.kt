@@ -330,7 +330,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onSyncServiceConnected() {
     super.onSyncServiceConnected()
-    updateLabels(R.id.syns_request_code_update_label_passive, true)
+    updateLabels(R.id.syns_request_code_update_label_passive)
   }
 
   override fun onBackPressed() {
@@ -736,7 +736,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
       if (GeneralUtil.isConnected(this@EmailManagerActivity)) {
         countingIdlingResourceForLabel!!.increment()
-        updateLabels(R.id.syns_request_code_update_label_passive, true)
+        updateLabels(R.id.syns_request_code_update_label_passive)
       }
 
       LoaderManager.getInstance(this@EmailManagerActivity).restartLoader(R.id.loader_id_load_gmail_labels,

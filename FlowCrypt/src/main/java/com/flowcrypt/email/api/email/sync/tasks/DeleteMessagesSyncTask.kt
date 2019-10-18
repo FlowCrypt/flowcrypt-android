@@ -64,7 +64,7 @@ class DeleteMessagesSyncTask(ownerKey: String,
             msgDaoSource.deleteMsgsByUID(context, account.email, folder, uidList)
           }
 
-          remoteSrcFolder.close(false)
+          remoteSrcFolder.close()
         }
       }
     }

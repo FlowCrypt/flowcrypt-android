@@ -544,7 +544,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
         Snackbar.LENGTH_LONG, View.OnClickListener {
       setSupportActionBarTitle(getString(R.string.loading))
       UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
-      (activity as BaseSyncActivity).updateLabels(R.id.syns_request_code_update_label_active, false)
+      (activity as BaseSyncActivity).updateLabels(R.id.syns_request_code_update_label_active)
     })
   }
 

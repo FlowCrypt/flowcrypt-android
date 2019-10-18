@@ -184,7 +184,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     val menuItemArchiveMsg = menu?.findItem(R.id.menuActionArchiveMessage)
     val menuItemDeleteMsg = menu?.findItem(R.id.menuActionDeleteMessage)
     val menuActionMoveToInbox = menu?.findItem(R.id.menuActionMoveToInbox)
-    val menuActionCancelArchiving = menu?.findItem(R.id.menuActionCancelArchiving)
     val menuActionMarkUnread = menu?.findItem(R.id.menuActionMarkUnread)
 
     menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
@@ -195,13 +194,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
     menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
     menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
-    menuActionCancelArchiving?.isEnabled = isAdditionalActionEnabled
     menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
-
-    when (details?.msgState) {
-      MessageState.PENDING_ARCHIVING -> menuActionCancelArchiving?.isVisible = true
-      else -> menuActionCancelArchiving?.isVisible = false
-    }
   }
 
   override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -209,16 +202,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       R.id.menuActionArchiveMessage -> {
         msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
             details?.uid?.toLong() ?: 0, MessageState.PENDING_ARCHIVING)
-        MessagesManagingJobService.schedule(context?.applicationContext)
-        activity?.finish()
-        true
-      }
-
-      R.id.menuActionCancelArchiving -> {
-        if (details?.msgState == MessageState.PENDING_ARCHIVING) {
-          msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
-              details?.uid?.toLong() ?: 0, MessageState.NONE)
-        }
+        (activity as? BaseSyncActivity)?.archiveMsgs()
         activity?.finish()
         true
       }

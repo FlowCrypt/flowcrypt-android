@@ -746,6 +746,8 @@ class EmailSyncService : BaseService(), SyncListener {
 
           MESSAGE_DELETE_MSGS -> emailSyncManager?.deleteMsgs()
 
+          MESSAGE_ARCHIVE_MSGS -> emailSyncManager?.archiveMsgs()
+
           else -> super.handleMessage(msg)
         }
       }
@@ -778,6 +780,7 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_LOAD_ATTS_INFO = 13
     const val MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS = 14
     const val MESSAGE_DELETE_MSGS = 15
+    const val MESSAGE_ARCHIVE_MSGS = 16
 
     private val TAG = EmailSyncService::class.java.simpleName
 

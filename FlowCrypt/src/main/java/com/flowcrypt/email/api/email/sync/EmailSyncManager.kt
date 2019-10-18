@@ -97,6 +97,16 @@ class EmailSyncManager(val account: AccountDao, val listener: SyncListener) {
   }
 
   /**
+   * Archive marked messages.
+   *
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
+   */
+  fun archiveMsgs(ownerKey: String = "", requestCode: Int = -1) {
+    connectionRunnable.archiveMsgs(ownerKey, requestCode)
+  }
+
+  /**
    * Run update a folders list.
    *
    * @param ownerKey       The name of the reply to [android.os.Messenger].

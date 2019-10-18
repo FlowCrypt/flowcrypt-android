@@ -197,9 +197,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * Run update a folders list.
    *
    * @param requestCode    The unique request code for identify the current action.
-   * @param isInBackground if true we will run this task using the passive queue, else we will use the active queue.
    */
-  fun updateLabels(requestCode: Int, isInBackground: Boolean) {
+  fun updateLabels(requestCode: Int) {
     if (checkServiceBound(isSyncServiceBound)) return
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
@@ -225,6 +224,26 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_DELETE_MSGS, action)
+    msg.replyTo = syncReplyMessenger
+    try {
+      syncMessenger?.send(msg)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  /**
+   * Archive marked messages
+   *
+   * @param requestCode    The unique request code for identify the current action.
+   */
+  fun archiveMsgs(requestCode: Int = -1) {
+    if (checkServiceBound(isSyncServiceBound)) return
+
+    val action = BaseService.Action(replyMessengerName, requestCode, null)
+
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_ARCHIVE_MSGS, action)
     msg.replyTo = syncReplyMessenger
     try {
       syncMessenger?.send(msg)
