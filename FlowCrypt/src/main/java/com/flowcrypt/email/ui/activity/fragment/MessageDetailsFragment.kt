@@ -247,7 +247,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         } else {
           msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
               details?.uid?.toLong() ?: 0, MessageState.PENDING_DELETING)
-          MessagesManagingJobService.schedule(context?.applicationContext)
+          (activity as? BaseSyncActivity)?.deleteMsgs()
         }
         activity?.finish()
         true

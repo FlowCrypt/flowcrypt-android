@@ -675,7 +675,7 @@ class EmailSyncService : BaseService(), SyncListener {
           }
 
           MESSAGE_UPDATE_LABELS -> if (emailSyncManager != null && action != null) {
-            emailSyncManager.updateLabels(ownerKey!!, requestCode, msg.arg1 == 1)
+            emailSyncManager.updateLabels(ownerKey!!, requestCode)
           }
 
           MESSAGE_LOAD_MESSAGES -> if (emailSyncManager != null && action != null) {
@@ -744,6 +744,7 @@ class EmailSyncService : BaseService(), SyncListener {
           MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS -> {
           }
 
+          MESSAGE_DELETE_MSGS -> emailSyncManager?.deleteMsgs()
 
           else -> super.handleMessage(msg)
         }
@@ -776,6 +777,7 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_CANCEL_ALL_TASKS = 12
     const val MESSAGE_LOAD_ATTS_INFO = 13
     const val MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS = 14
+    const val MESSAGE_DELETE_MSGS = 15
 
     private val TAG = EmailSyncService::class.java.simpleName
 

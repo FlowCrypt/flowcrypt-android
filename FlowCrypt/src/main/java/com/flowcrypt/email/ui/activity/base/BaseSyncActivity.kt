@@ -204,10 +204,30 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS, if (isInBackground) 1 else 0, 0, action)
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS, action)
     msg.replyTo = syncReplyMessenger
     try {
-      syncMessenger!!.send(msg)
+      syncMessenger?.send(msg)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  /**
+   * Delete marked messages
+   *
+   * @param requestCode    The unique request code for identify the current action.
+   */
+  fun deleteMsgs(requestCode: Int = -1) {
+    if (checkServiceBound(isSyncServiceBound)) return
+
+    val action = BaseService.Action(replyMessengerName, requestCode, null)
+
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_DELETE_MSGS, action)
+    msg.replyTo = syncReplyMessenger
+    try {
+      syncMessenger?.send(msg)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)

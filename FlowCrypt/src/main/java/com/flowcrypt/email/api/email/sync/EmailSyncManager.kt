@@ -12,7 +12,6 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
@@ -88,24 +87,22 @@ class EmailSyncManager(val account: AccountDao, val listener: SyncListener) {
   }
 
   /**
-   * Run update a folders list.
+   * Delete marked messages.
    *
    * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for the reply to [android.os.Messenger].
-   * @param queue       The queue where [UpdateLabelsSyncTask] will be run.
    */
-  fun updateLabels(ownerKey: String, requestCode: Int) {
-    connectionRunnable.updateLabels(ownerKey, requestCode)
+  fun deleteMsgs(ownerKey: String = "", requestCode: Int = -1) {
+    connectionRunnable.deleteMsgs(ownerKey, requestCode)
   }
 
   /**
    * Run update a folders list.
    *
    * @param ownerKey       The name of the reply to [android.os.Messenger].
-   * @param requestCode    The unique request code for the reply to [android.os.Messenger].
-   * @param isInBackground if true we will run this task using the passive queue, else we will use the active queue.
+   * @param requestCode    The unique request code for the reply to [android.os.Messenger]
    */
-  fun updateLabels(ownerKey: String, requestCode: Int, isInBackground: Boolean) {
+  fun updateLabels(ownerKey: String, requestCode: Int) {
     connectionRunnable.updateLabels(ownerKey, requestCode)
   }
 

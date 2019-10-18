@@ -9,6 +9,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.DeleteMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadAttsInfoSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask
@@ -77,6 +78,15 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
     try {
       removeOldTasks(UpdateLabelsSyncTask::class.java, tasksQueue)
       tasksQueue.put(UpdateLabelsSyncTask(ownerKey, requestCode))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
+    }
+  }
+
+  fun deleteMsgs(ownerKey: String, requestCode: Int) {
+    try {
+      removeOldTasks(DeleteMessagesSyncTask::class.java, tasksQueue)
+      tasksQueue.put(DeleteMessagesSyncTask(ownerKey, requestCode))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }
