@@ -254,6 +254,26 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   }
 
   /**
+   * Change messages read state.
+   *
+   * @param requestCode    The unique request code for identify the current action.
+   */
+  fun changeMsgsReadState(requestCode: Int = -1) {
+    if (checkServiceBound(isSyncServiceBound)) return
+
+    val action = BaseService.Action(replyMessengerName, requestCode, null)
+
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_CHANGE_MSGS_READ_STATE, action)
+    msg.replyTo = syncReplyMessenger
+    try {
+      syncMessenger?.send(msg)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  /**
    * Load the last messages which not exist in the database.
    *
    * @param requestCode        The unique request code for identify the current action.

@@ -36,7 +36,6 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.jetpack.viewmodel.DecryptMessageViewModel
-import com.flowcrypt.email.jobscheduler.MessagesManagingJobService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
@@ -148,11 +147,12 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             isRetrieveIncomingMsgNeeded = false
             isReceiveMsgBodyNeeded = false
 
-            if (!JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)) {
+            if (!JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)
+                && details?.isSeen() == false) {
               msgDaoSource.setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
               msgDaoSource.updateMsgState(this, details?.email ?: "", details?.label ?: "",
                   details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_READ)
-              MessagesManagingJobService.schedule(applicationContext)
+              changeMsgsReadState()
               setResult(RESULT_CODE_UPDATE_LIST, null)
             }
 

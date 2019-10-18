@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.sync
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.ArchiveMsgsSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.ChangeMsgsReadState
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.DeleteMessagesSyncTask
@@ -97,6 +98,15 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
     try {
       removeOldTasks(ArchiveMsgsSyncTask::class.java, tasksQueue)
       tasksQueue.put(ArchiveMsgsSyncTask(ownerKey, requestCode))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
+    }
+  }
+
+  fun changeMsgsReadState(ownerKey: String, requestCode: Int) {
+    try {
+      removeOldTasks(ChangeMsgsReadState::class.java, tasksQueue)
+      tasksQueue.put(ChangeMsgsReadState(ownerKey, requestCode))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }

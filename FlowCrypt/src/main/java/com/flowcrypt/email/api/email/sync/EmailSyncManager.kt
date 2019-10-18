@@ -107,6 +107,16 @@ class EmailSyncManager(val account: AccountDao, val listener: SyncListener) {
   }
 
   /**
+   * Change messages read state
+   *
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
+   */
+  fun changeMsgsReadState(ownerKey: String = "", requestCode: Int = -1) {
+    connectionRunnable.changeMsgsReadState(ownerKey, requestCode)
+  }
+
+  /**
    * Run update a folders list.
    *
    * @param ownerKey       The name of the reply to [android.os.Messenger].

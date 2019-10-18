@@ -250,7 +250,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
             details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_UNREAD)
         msgDaoSource.setSeenStatus(context!!, details?.email, details?.label, details?.uid?.toLong()
             ?: 0L, false)
-        MessagesManagingJobService.schedule(context?.applicationContext)
+        (activity as? BaseSyncActivity)?.changeMsgsReadState()
         activity?.finish()
         true
       }
