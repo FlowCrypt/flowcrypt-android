@@ -54,6 +54,12 @@ class EmailSyncManager(val account: AccountDao, val listener: SyncListener) {
 
     runIdleInboxIfNeeded()
 
+    //run the tasks which maybe not completed last time
+    archiveMsgs()
+    changeMsgsReadState()
+    deleteMsgs()
+    moveMsgsToINBOX()
+
     ForwardedAttachmentsDownloaderJobService.schedule(listener.context)
     MessagesSenderJobService.schedule(listener.context)
   }
