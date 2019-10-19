@@ -22,6 +22,7 @@ import javax.mail.event.MessageChangedEvent
 import javax.mail.event.MessageChangedListener
 import javax.mail.event.MessageCountEvent
 import javax.mail.event.MessageCountListener
+import javax.mail.search.SubjectTerm
 
 /**
  * This is a thread where we do a sync of some IMAP folder.
@@ -85,6 +86,17 @@ class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListen
     }
   }
 
+  /**
+   * To interrupt the idle action we should run any IMAP command for the current remote folder. For example search
+   */
+  fun interruptIdle() {
+    LogsUtil.d(tag, "interruptIdle")
+    Thread(Runnable {
+      Thread.currentThread().name = "IdleStopper"
+      remoteFolder?.search(SubjectTerm("HelloWorld"))
+    }).start()
+  }
+
   internal fun idle() {
     try {
       resetConnIfNeeded(null)
@@ -107,16 +119,16 @@ class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListen
 
       LogsUtil.d(tag, "Start idling for store $activeStore")
 
-      remoteFolder = activeStore.getFolder(localFolder!!.fullName) as IMAPFolder
-      remoteFolder!!.open(javax.mail.Folder.READ_ONLY)
+      remoteFolder = activeStore.getFolder(localFolder?.fullName) as IMAPFolder
+      remoteFolder?.open(javax.mail.Folder.READ_ONLY)
 
       syncFolderState()
 
-      remoteFolder!!.addMessageCountListener(this)
-      remoteFolder!!.addMessageChangedListener(this)
+      remoteFolder?.addMessageCountListener(this)
+      remoteFolder?.addMessageChangedListener(this)
 
       while (!Thread.interrupted() && isIdlingAvailable) {
-        remoteFolder!!.idle()
+        remoteFolder?.idle()
       }
     } catch (e: Exception) {
       e.printStackTrace()

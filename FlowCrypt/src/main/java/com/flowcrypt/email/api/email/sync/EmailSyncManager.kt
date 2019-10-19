@@ -41,6 +41,7 @@ class EmailSyncManager(val account: AccountDao, val listener: SyncListener) {
   private var connectionFuture: Future<*>? = null
   private var idleFuture: Future<*>? = null
   private val connectionRunnable = ConnectionSyncRunnable(account, listener)
+  private val idleSyncRunnable = IdleSyncRunnable(account, listener, this)
 
   /**
    * Start a synchronization.
@@ -70,6 +71,7 @@ class EmailSyncManager(val account: AccountDao, val listener: SyncListener) {
   fun stopSync() {
     connectionFuture?.cancel(true)
     idleFuture?.cancel(true)
+    idleSyncRunnable.interruptIdle()
     connectionExecutorService.shutdown()
     idleExecutorService.shutdown()
   }
@@ -79,7 +81,7 @@ class EmailSyncManager(val account: AccountDao, val listener: SyncListener) {
    */
   private fun runIdleInboxIfNeeded() {
     if (!isThreadAlreadyWorking(idleFuture)) {
-      idleFuture = idleExecutorService.submit(IdleSyncRunnable(account, listener, this))
+      idleFuture = idleExecutorService.submit(idleSyncRunnable)
     }
   }
 
