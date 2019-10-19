@@ -59,6 +59,9 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
         runSyncTask(tasksQueue.take(), true)
       } catch (e: InterruptedException) {
         e.printStackTrace()
+        tasksQueue.clear()
+        tasksExecutorService.shutdown()
+        break
       }
     }
 
@@ -251,7 +254,9 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
 
         val activeStore = store ?: return
         val activeSess = sess ?: return
-        tasksExecutorService.execute(SyncTaskRunnable(account, syncListener, task, activeStore, activeSess))
+        if (!tasksExecutorService.isShutdown) {
+          tasksExecutorService.execute(SyncTaskRunnable(account, syncListener, task, activeStore, activeSess))
+        }
 
       } catch (e: Exception) {
         e.printStackTrace()

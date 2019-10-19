@@ -106,15 +106,6 @@ class EmailSyncService : BaseService(), SyncListener {
 
     if (intent != null && intent.action != null) {
       when (intent.action) {
-        ACTION_SWITCH_ACCOUNT -> {
-          val account: AccountDao? = AccountDaoSource().getActiveAccountInformation(this)
-          account?.let {
-            emailSyncManager = EmailSyncManager(it, this)
-            messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
-            emailSyncManager.beginSync()
-          }
-        }
-
         else -> if (::emailSyncManager.isInitialized) {
           emailSyncManager.beginSync()
         }
@@ -759,9 +750,6 @@ class EmailSyncService : BaseService(), SyncListener {
   }
 
   companion object {
-    const val ACTION_SWITCH_ACCOUNT = "ACTION_SWITCH_ACCOUNT"
-    const val ACTION_BEGIN_SYNC = "ACTION_BEGIN_SYNC"
-
     const val REPLY_RESULT_CODE_ACTION_OK = 0
     const val REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND = 1
     const val REPLY_RESULT_CODE_ACTION_ERROR_BACKUP_NOT_SENT = 2
@@ -798,7 +786,6 @@ class EmailSyncService : BaseService(), SyncListener {
     @JvmStatic
     fun startEmailSyncService(context: Context) {
       val startEmailServiceIntent = Intent(context, EmailSyncService::class.java)
-      startEmailServiceIntent.action = ACTION_BEGIN_SYNC
       context.startService(startEmailServiceIntent)
     }
 
@@ -810,10 +797,9 @@ class EmailSyncService : BaseService(), SyncListener {
     @JvmStatic
     fun switchAccount(context: Context) {
       NotificationManagerCompat.from(context).cancelAll()
-
-      val startEmailServiceIntent = Intent(context, EmailSyncService::class.java)
-      startEmailServiceIntent.action = ACTION_SWITCH_ACCOUNT
-      context.startService(startEmailServiceIntent)
+      val intent = Intent(context, EmailSyncService::class.java)
+      context.stopService(intent)
+      context.startService(intent)
     }
   }
 }

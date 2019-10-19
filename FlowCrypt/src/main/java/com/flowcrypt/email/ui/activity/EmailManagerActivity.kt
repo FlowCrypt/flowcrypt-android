@@ -250,8 +250,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     when (requestCode) {
       REQUEST_CODE_ADD_NEW_ACCOUNT -> when (resultCode) {
         Activity.RESULT_OK -> {
-          EmailSyncService.switchAccount(this@EmailManagerActivity)
           finish()
+          EmailSyncService.switchAccount(this@EmailManagerActivity)
           runEmailManagerActivity(this@EmailManagerActivity)
         }
       }
@@ -510,8 +510,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     if (!accountDaoList.isEmpty()) {
       val (email) = accountDaoList[0]
       AccountDaoSource().setActiveAccount(this@EmailManagerActivity, email)
-      EmailSyncService.switchAccount(this@EmailManagerActivity)
       finish()
+      EmailSyncService.switchAccount(this@EmailManagerActivity)
       runEmailManagerActivity(this@EmailManagerActivity)
     } else {
       stopService(Intent(this, EmailSyncService::class.java))
