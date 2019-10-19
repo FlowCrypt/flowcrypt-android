@@ -250,6 +250,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     when (requestCode) {
       REQUEST_CODE_ADD_NEW_ACCOUNT -> when (resultCode) {
         Activity.RESULT_OK -> {
+          disconnectFromSyncService()
           finish()
           EmailSyncService.switchAccount(this@EmailManagerActivity)
           runEmailManagerActivity(this@EmailManagerActivity)
@@ -509,6 +510,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     if (!accountDaoList.isEmpty()) {
       val (email) = accountDaoList[0]
+      disconnectFromSyncService()
       AccountDaoSource().setActiveAccount(this@EmailManagerActivity, email)
       finish()
       EmailSyncService.switchAccount(this@EmailManagerActivity)
@@ -698,6 +700,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     view.setOnClickListener {
       finish()
       if (account != null) {
+        disconnectFromSyncService()
         AccountDaoSource().setActiveAccount(this@EmailManagerActivity, account.email)
         EmailSyncService.switchAccount(this@EmailManagerActivity)
         runEmailManagerActivity(this@EmailManagerActivity)

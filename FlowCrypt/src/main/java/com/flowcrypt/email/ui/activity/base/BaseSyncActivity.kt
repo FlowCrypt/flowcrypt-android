@@ -75,6 +75,10 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
 
   override fun onDestroy() {
     super.onDestroy()
+    disconnectFromSyncService()
+  }
+
+  protected fun disconnectFromSyncService() {
     if (isSyncEnabled && isSyncServiceBound) {
       if (syncMessenger != null) {
         unregisterReplyMessenger(EmailSyncService.MESSAGE_REMOVE_REPLY_MESSENGER, syncMessenger!!, syncReplyMessenger)
