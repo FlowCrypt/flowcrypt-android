@@ -172,18 +172,18 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     }
   }
 
-  override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
     super.onCreateOptionsMenu(menu, inflater)
-    inflater!!.inflate(R.menu.fragment_message_details, menu)
+    inflater.inflate(R.menu.fragment_message_details, menu)
   }
 
-  override fun onPrepareOptionsMenu(menu: Menu?) {
+  override fun onPrepareOptionsMenu(menu: Menu) {
     super.onPrepareOptionsMenu(menu)
 
-    val menuItemArchiveMsg = menu?.findItem(R.id.menuActionArchiveMessage)
-    val menuItemDeleteMsg = menu?.findItem(R.id.menuActionDeleteMessage)
-    val menuActionMoveToInbox = menu?.findItem(R.id.menuActionMoveToInbox)
-    val menuActionMarkUnread = menu?.findItem(R.id.menuActionMarkUnread)
+    val menuItemArchiveMsg = menu.findItem(R.id.menuActionArchiveMessage)
+    val menuItemDeleteMsg = menu.findItem(R.id.menuActionDeleteMessage)
+    val menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox)
+    val menuActionMarkUnread = menu.findItem(R.id.menuActionMarkUnread)
 
     menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
     menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
@@ -196,8 +196,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
   }
 
-  override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-    return when (item!!.itemId) {
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
       R.id.menuActionArchiveMessage -> {
         msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
             details?.uid?.toLong() ?: 0, MessageState.PENDING_ARCHIVING)

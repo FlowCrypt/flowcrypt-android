@@ -269,12 +269,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     atts = ArrayList()
   }
 
-  override fun onAttach(context: Context?) {
+  override fun onAttach(context: Context) {
     super.onAttach(context)
     if (context is OnMessageSendListener) {
       this.onMsgSendListener = context
     } else
-      throw IllegalArgumentException(context!!.toString() + " must implement " +
+      throw IllegalArgumentException(context.toString() + " must implement " +
           OnMessageSendListener::class.java.simpleName)
 
     if (context is OnChangeMessageEncryptionTypeListener) {
@@ -439,13 +439,13 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
   }
 
-  override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
     super.onCreateOptionsMenu(menu, inflater)
-    inflater!!.inflate(R.menu.fragment_compose, menu)
+    inflater.inflate(R.menu.fragment_compose, menu)
   }
 
-  override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-    when (item!!.itemId) {
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
       R.id.menuActionSend -> {
         if (snackBar != null) {
           snackBar!!.dismiss()

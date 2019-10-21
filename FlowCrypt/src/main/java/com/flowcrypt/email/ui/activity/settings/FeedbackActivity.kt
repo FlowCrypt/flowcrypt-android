@@ -72,7 +72,7 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
     return true
   }
 
-  override fun onAttachFragment(fragment: Fragment?) {
+  override fun onAttachFragment(fragment: Fragment) {
     super.onAttachFragment(fragment)
 
     if (fragment is EditScreenshotDialogFragment) {

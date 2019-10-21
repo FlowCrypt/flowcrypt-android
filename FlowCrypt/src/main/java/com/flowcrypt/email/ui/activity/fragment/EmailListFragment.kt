@@ -121,13 +121,13 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
   override val contentView: View?
     get() = listView
 
-  override fun onAttach(context: Context?) {
+  override fun onAttach(context: Context) {
     super.onAttach(context)
 
     if (context is OnManageEmailsListener) {
       this.listener = context
     } else
-      throw IllegalArgumentException(context!!.toString() + " must implement " +
+      throw IllegalArgumentException(context.toString() + " must implement " +
           OnManageEmailsListener::class.java.simpleName)
 
     if (context is BaseSyncActivity) {

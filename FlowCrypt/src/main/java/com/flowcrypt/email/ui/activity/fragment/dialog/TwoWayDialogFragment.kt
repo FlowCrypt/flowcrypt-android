@@ -30,7 +30,7 @@ class TwoWayDialogFragment : DialogFragment() {
   private var negativeBtnTitle: String? = null
   private var listener: OnTwoWayDialogListener? = null
 
-  override fun onAttach(context: Context?) {
+  override fun onAttach(context: Context) {
     super.onAttach(context)
 
     if (context is OnTwoWayDialogListener) {

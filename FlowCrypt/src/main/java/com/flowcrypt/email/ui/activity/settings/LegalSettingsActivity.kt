@@ -138,7 +138,7 @@ class LegalSettingsActivity : BaseSettingsActivity() {
   private inner class TabPagerAdapter internal constructor(fragmentManager: FragmentManager)
     : FragmentStatePagerAdapter(fragmentManager) {
 
-    override fun getItem(i: Int): Fragment? {
+    override fun getItem(i: Int): Fragment {
       when (i) {
         TAB_POSITION_PRIVACY -> return WebViewFragment.newInstance(Uri.parse(Constants.FLOWCRYPT_PRIVACY_URL))
 
@@ -149,7 +149,7 @@ class LegalSettingsActivity : BaseSettingsActivity() {
         TAB_POSITION_SOURCES -> return WebViewFragment.newInstance("html/sources.htm")
       }
 
-      return null
+      return WebViewFragment.newInstance("")
     }
 
     override fun getCount(): Int {
