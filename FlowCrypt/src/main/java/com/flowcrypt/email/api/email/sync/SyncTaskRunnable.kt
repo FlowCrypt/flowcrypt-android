@@ -9,7 +9,8 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.util.LogsUtil
-import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.sun.mail.iap.ConnectionException
 import javax.mail.Session
 import javax.mail.Store
 
@@ -24,7 +25,12 @@ import javax.mail.Store
 class SyncTaskRunnable(val accountDao: AccountDao, val synListener: SyncListener,
                        val task: SyncTask, val store: Store, val session: Session) : Runnable {
   private val tag: String = javaClass.simpleName
+
   override fun run() {
+    runTask(true)
+  }
+
+  private fun runTask(isRetryEnabled: Boolean) {
     try {
       val time = System.currentTimeMillis()
       Thread.currentThread().name = javaClass.simpleName
@@ -39,16 +45,19 @@ class SyncTaskRunnable(val accountDao: AccountDao, val synListener: SyncListener
       }
       LogsUtil.d(tag, "The task = " + task.javaClass.simpleName + " completed (" + (System
           .currentTimeMillis() - time) + "ms)")
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
-      LogsUtil.d(tag, "Task " + task.javaClass.simpleName + "with uniqueId = {${task.uniqueId}" +
-          " was interrupted")
-    } catch (e: SyncTaskTerminatedException) {
-      e.printStackTrace()
-      LogsUtil.d(tag, "Task " + task.javaClass.simpleName + "with uniqueId = {${task.uniqueId}" +
-          " was terminated")
     } catch (e: Exception) {
       e.printStackTrace()
+      if (e is ConnectionException) {
+        if (isRetryEnabled) {
+          runTask(false)
+        } else {
+          ExceptionUtil.handleError(e)
+          task.handleException(accountDao, e, synListener)
+        }
+      } else {
+        ExceptionUtil.handleError(e)
+        task.handleException(accountDao, e, synListener)
+      }
     }
   }
 }
