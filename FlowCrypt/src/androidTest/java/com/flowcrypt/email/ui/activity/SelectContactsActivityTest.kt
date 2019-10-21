@@ -49,7 +49,6 @@ import java.util.*
 
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class SelectContactsActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(SelectContactsActivity::class.java)
@@ -75,6 +74,7 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowListContacts() {
     onView(withId(R.id.listViewContacts))
         .check(matches(isDisplayed())).check(matches(not<View>(withEmptyListView())))
@@ -91,6 +91,7 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testCheckSearchExistingContact() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))
@@ -106,6 +107,7 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testNoResults() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))

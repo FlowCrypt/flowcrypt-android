@@ -87,7 +87,6 @@ import java.io.File
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class CreateMessageActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? =
@@ -114,6 +113,7 @@ class CreateMessageActivityTest : BaseTest() {
     }
 
   @Test
+  @DoesNotNeedMailserver
   fun testEmptyRecipient() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -127,6 +127,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testEmptyEmailSubject() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -146,6 +147,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testEmptyEmailMsg() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -166,6 +168,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testUsingStandardMsgEncryptionType() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -181,6 +184,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testUsingSecureMsgEncryptionType() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -195,6 +199,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSwitchBetweenEncryptionTypes() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -219,6 +224,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowHelpScreen() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -234,6 +240,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testIsScreenOfComposeNewMsg() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -249,6 +256,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testWrongFormatOfRecipientEmailAddress() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -270,6 +278,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowMsgAboutUpdateRecipientInformation() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -295,6 +304,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testAddingAtts() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -309,6 +319,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testDeletingAtts() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -333,6 +344,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSelectImportPublicKeyFromPopUp() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -350,6 +362,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSelectedStandardEncryptionTypeFromPopUp() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -365,6 +378,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSelectedRemoveRecipientFromPopUp() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -389,6 +403,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
