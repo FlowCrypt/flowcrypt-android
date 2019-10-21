@@ -30,9 +30,12 @@ import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.iap.ConnectionException
 import java.util.concurrent.BlockingQueue
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import java.util.concurrent.LinkedBlockingQueue
+
 
 /**
  * @author Denis Bondarenko
@@ -44,6 +47,7 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
   : BaseSyncRunnable(account, syncListener) {
   private val tasksQueue: BlockingQueue<SyncTask> = LinkedBlockingQueue()
   private val tasksExecutorService: ExecutorService = Executors.newFixedThreadPool(MAX_RUNNING_TASKS_COUNT)
+  private val tasksMap = ConcurrentHashMap<String, Future<*>>()
 
   init {
     updateLabels("", 0)
@@ -142,13 +146,12 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
     }
   }
 
-  fun loadMsgDetails(ownerKey: String, requestCode: Int, localFolder: LocalFolder, uid: Int, id: Int,
-                     resetConnection: Boolean) {
+  fun loadMsgDetails(ownerKey: String, requestCode: Int, uniqueId: String,
+                     localFolder: LocalFolder, uid: Int, id: Int, resetConnection: Boolean) {
     try {
       removeOldTasks(LoadMessageDetailsSyncTask::class.java, tasksQueue)
-      tasksQueue.put(LoadMessageDetailsSyncTask(ownerKey, requestCode, localFolder, uid.toLong(), id.toLong(),
-          resetConnection))
-
+      tasksQueue.put(LoadMessageDetailsSyncTask(ownerKey, requestCode, uniqueId, localFolder, uid
+          .toLong(), id.toLong(), resetConnection))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }
@@ -225,6 +228,13 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
     }
   }
 
+  fun cancelTask(uniqueId: String) {
+    val future = tasksMap[uniqueId]
+    if (future?.isDone == false) {
+      future.cancel(true)
+    }
+  }
+
   private fun loadContactsInfoIfNeeded() {
     if (!account.areContactsLoaded) {
       //we need to update labels before we can use the SENT folder for retrieve contacts
@@ -254,8 +264,18 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
 
         val activeStore = store ?: return
         val activeSess = sess ?: return
+
+        val iterator = tasksMap.iterator()
+        while (iterator.hasNext()) {
+          val entry = iterator.next()
+          if (entry.value.isDone) {
+            iterator.remove()
+          }
+        }
+
         if (!tasksExecutorService.isShutdown) {
-          tasksExecutorService.execute(SyncTaskRunnable(account, syncListener, task, activeStore, activeSess))
+          tasksMap[task.uniqueId] = tasksExecutorService.submit(SyncTaskRunnable(account, syncListener,
+              task, activeStore, activeSess))
         }
 
       } catch (e: Exception) {

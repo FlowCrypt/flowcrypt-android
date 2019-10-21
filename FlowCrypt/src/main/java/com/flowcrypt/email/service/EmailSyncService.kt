@@ -640,12 +640,14 @@ class EmailSyncService : BaseService(), SyncListener {
         val emailSyncManager = gmailSynsManagerWeakRef.get()
         var action: Action? = null
         var ownerKey: String? = null
+        var uniqueId: String? = null
         var requestCode = -1
 
         if (msg.obj is Action) {
           action = msg.obj as Action
           ownerKey = action.ownerKey
           requestCode = action.requestCode
+          uniqueId = action.uniqueId
         }
 
         when (msg.what) {
@@ -686,8 +688,8 @@ class EmailSyncService : BaseService(), SyncListener {
 
           MESSAGE_LOAD_MESSAGE_DETAILS -> if (emailSyncManager != null && action != null) {
             val localFolder = action.`object` as LocalFolder
-            emailSyncManager.loadMsgDetails(ownerKey!!, requestCode, localFolder, msg.arg1, msg.arg2,
-                action.resetConnection)
+            emailSyncManager.loadMsgDetails(ownerKey!!, requestCode, action.uniqueId, localFolder,
+                msg.arg1, msg.arg2, action.resetConnection)
           }
 
           MESSAGE_MOVE_MESSAGE -> if (emailSyncManager != null && action != null) {
@@ -733,6 +735,7 @@ class EmailSyncService : BaseService(), SyncListener {
           }
 
           MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS -> {
+            uniqueId?.let { emailSyncManager?.cancelLoadMsgDetails(it) }
           }
 
           MESSAGE_DELETE_MSGS -> emailSyncManager?.deleteMsgs()

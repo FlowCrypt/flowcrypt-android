@@ -44,6 +44,13 @@ interface SyncTask {
   val requestCode: Int
 
   /**
+   * Get the task unique id.
+   *
+   * @return The task unique id. It can be used to identify the identity of this task.
+   */
+  val uniqueId: String
+
+  /**
    * Get the reset connection status.
    *
    * @return The reset connection status.

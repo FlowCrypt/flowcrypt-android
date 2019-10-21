@@ -70,6 +70,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   private lateinit var viewModel: DecryptMessageViewModel
   private var rawMimeBytes: ByteArray? = null
   private lateinit var label: String
+  private val uniqueId = UUID.randomUUID().toString()
 
   override val rootView: View
     get() = View(this)
@@ -125,7 +126,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   override fun onDestroy() {
-    cancelLoadMsgDetails()
+    cancelLoadMsgDetails(uniqueId)
     super.onDestroy()
   }
 
@@ -161,7 +162,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         } else {
           if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
             this.isRequestMsgDetailsStarted = true
-            loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, localFolder!!, details!!.uid, details!!.id)
+            loadMsgDetails()
           } else {
             isReceiveMsgBodyNeeded = true
           }
@@ -217,7 +218,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   override fun onSyncServiceConnected() {
     super.onSyncServiceConnected()
     if (isReceiveMsgBodyNeeded) {
-      loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, localFolder!!, details!!.uid, details!!.id)
+      loadMsgDetails()
     }
   }
 
@@ -273,13 +274,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
       else -> super.onProgressReplyReceived(requestCode, resultCode, obj)
     }
-  }
-
-  private fun updateActionProgressState(progress: Int, message: String?) {
-    val fragment = supportFragmentManager
-        .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
-
-    fragment?.setActionProgress(progress, message)
   }
 
   override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {
@@ -343,6 +337,18 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
       onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
           .progress_id_decrypting, 70)
     }
+  }
+
+  fun loadMsgDetails() {
+    loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, uniqueId, localFolder!!,
+        details!!.uid, details!!.id)
+  }
+
+  private fun updateActionProgressState(progress: Int, message: String?) {
+    val fragment = supportFragmentManager
+        .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
+
+    fragment?.setActionProgress(progress, message)
   }
 
   private fun showErrorInfo(error: Error?, e: Throwable?) {

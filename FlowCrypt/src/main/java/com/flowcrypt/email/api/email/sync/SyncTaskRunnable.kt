@@ -9,6 +9,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import javax.mail.Session
 import javax.mail.Store
 
@@ -38,6 +39,14 @@ class SyncTaskRunnable(val accountDao: AccountDao, val synListener: SyncListener
       }
       LogsUtil.d(tag, "The task = " + task.javaClass.simpleName + " completed (" + (System
           .currentTimeMillis() - time) + "ms)")
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
+      LogsUtil.d(tag, "Task " + task.javaClass.simpleName + "with uniqueId = {${task.uniqueId}" +
+          " was interrupted")
+    } catch (e: SyncTaskTerminatedException) {
+      e.printStackTrace()
+      LogsUtil.d(tag, "Task " + task.javaClass.simpleName + "with uniqueId = {${task.uniqueId}" +
+          " was terminated")
     } catch (e: Exception) {
       e.printStackTrace()
     }

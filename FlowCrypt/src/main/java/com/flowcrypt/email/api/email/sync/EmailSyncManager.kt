@@ -178,14 +178,24 @@ class EmailSyncManager(val account: AccountDao, val listener: SyncListener) {
    *
    * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for the reply to [android.os.Messenger].
+   * @param uniqueId    The task unique id.
    * @param localFolder The local implementation of the remote localFolder.
    * @param uid         The [com.sun.mail.imap.protocol.UID] of [Message]
    * @param id          A unique id of the row in the local database which identifies a message
    */
 
-  fun loadMsgDetails(ownerKey: String, requestCode: Int, localFolder: LocalFolder, uid: Int, id: Int,
-                     resetConnection: Boolean) {
-    connectionRunnable.loadMsgDetails(ownerKey, requestCode, localFolder, uid, id, resetConnection)
+  fun loadMsgDetails(ownerKey: String, requestCode: Int, uniqueId: String, localFolder: LocalFolder,
+                     uid: Int, id: Int, resetConnection: Boolean) {
+    connectionRunnable.loadMsgDetails(ownerKey, requestCode, uniqueId, localFolder, uid, id,
+        resetConnection)
+  }
+
+  /**
+   * Cancel loading details of some message
+   *
+   */
+  fun cancelLoadMsgDetails(uniqueId: String) {
+    connectionRunnable.cancelTask(uniqueId)
   }
 
   /**

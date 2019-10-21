@@ -399,8 +399,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     showSnackbar(view!!, getString(R.string.failed_load_message_from_email_server),
         getString(R.string.retry), View.OnClickListener {
       UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
-      (baseActivity as BaseSyncActivity).loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg,
-          localFolder!!, details!!.uid, details!!.id, true)
+      (baseActivity as MessageDetailsActivity).loadMsgDetails()
     })
   }
 
