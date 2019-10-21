@@ -667,7 +667,11 @@ class AttachmentDownloadManagerService : Service() {
     private val TAG = AttachmentDownloadManagerService::class.java.simpleName
 
     @JvmStatic
-    fun newIntent(context: Context, attInfo: AttachmentInfo): Intent {
+    fun newIntent(context: Context?, attInfo: AttachmentInfo?): Intent? {
+      if (context == null || attInfo == null) {
+        return null
+      }
+
       val intent = Intent(context, AttachmentDownloadManagerService::class.java)
       intent.action = ACTION_START_DOWNLOAD_ATTACHMENT
       intent.putExtra(EXTRA_KEY_ATTACHMENT_INFO, attInfo)

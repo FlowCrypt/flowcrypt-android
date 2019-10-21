@@ -331,8 +331,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     when (requestCode) {
       REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE -> {
         if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          val intent = AttachmentDownloadManagerService.newIntent(context!!, lastClickedAtt!!)
-          context!!.startService(intent)
+          AttachmentDownloadManagerService.newIntent(context, lastClickedAtt)?.let {
+            context?.startService(it)
+          }
         } else {
           Toast.makeText(activity, R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG).show()
         }
