@@ -53,7 +53,8 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
   override fun onStart() {
     super.onStart()
     if (hasHtml) {
-      (dialog.findViewById<View>(android.R.id.message) as TextView).movementMethod = LinkMovementMethod.getInstance()
+      (dialog?.findViewById<View>(android.R.id.message) as TextView).movementMethod =
+          LinkMovementMethod.getInstance()
     }
   }
 

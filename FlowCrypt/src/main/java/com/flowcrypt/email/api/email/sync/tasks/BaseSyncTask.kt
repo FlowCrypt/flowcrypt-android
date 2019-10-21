@@ -6,11 +6,13 @@
 package com.flowcrypt.email.api.email.sync.tasks
 
 import android.content.Context
+import android.os.Messenger
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.sun.mail.util.MailConnectException
+import java.util.*
 import javax.mail.Session
 import javax.mail.Store
 import javax.mail.Transport
@@ -28,7 +30,9 @@ import javax.mail.Transport
  * E-mail: DenBond7@gmail.com
  */
 
-abstract class BaseSyncTask constructor(override var ownerKey: String, override var requestCode: Int,
+abstract class BaseSyncTask constructor(override var ownerKey: String,
+                                        override var requestCode: Int,
+                                        override val uniqueId: String = UUID.randomUUID().toString(),
                                         override val resetConnection: Boolean = false) : SyncTask {
   override val isSMTPRequired: Boolean
     get() = false

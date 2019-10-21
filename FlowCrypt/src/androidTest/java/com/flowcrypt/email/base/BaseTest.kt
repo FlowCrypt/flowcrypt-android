@@ -26,7 +26,11 @@ import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiT
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers
@@ -167,5 +171,15 @@ abstract class BaseTest {
 
   fun getContext(): Context {
     return InstrumentationRegistry.getInstrumentation().context
+  }
+
+  fun getMsgInfo(path: String, mimeMsgPath: String): IncomingMessageInfo? {
+    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
+    incomingMsgInfo?.generalMsgDetails?.let {
+      val uri = MessageDaoSource().addRow(getTargetContext(), it) ?: throw IllegalStateException()
+      MsgsCacheManager.addMsg(uri.lastPathSegment
+          ?: throw IllegalStateException(), getContext().assets.open(mimeMsgPath))
+    }
+    return incomingMsgInfo
   }
 }

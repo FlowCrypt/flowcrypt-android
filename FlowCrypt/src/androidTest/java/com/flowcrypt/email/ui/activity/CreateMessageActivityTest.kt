@@ -11,6 +11,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.view.View
+import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.clearText
@@ -28,6 +29,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
 import androidx.test.espresso.intent.rule.IntentsTestRule
+import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -39,10 +41,13 @@ import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
+import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
@@ -53,6 +58,8 @@ import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import org.hamcrest.Description
+import org.hamcrest.Matcher
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
@@ -80,17 +87,18 @@ import java.io.File
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class CreateMessageActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? =
       IntentsTestRule(CreateMessageActivity::class.java, false, false)
 
+  private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
+
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
-      .around(AddPrivateKeyToDatabaseRule())
+      .around(addPrivateKeyToDatabaseRule)
       .around(activityTestRule)
 
   private val intent: Intent = CreateMessageActivity.generateIntent(getTargetContext(), null,
@@ -105,6 +113,7 @@ class CreateMessageActivityTest : BaseTest() {
     }
 
   @Test
+  @DoesNotNeedMailserver
   fun testEmptyRecipient() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -118,6 +127,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testEmptyEmailSubject() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -137,6 +147,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testEmptyEmailMsg() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -157,6 +168,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testUsingStandardMsgEncryptionType() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -172,6 +184,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testUsingSecureMsgEncryptionType() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -186,6 +199,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSwitchBetweenEncryptionTypes() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -210,11 +224,12 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowHelpScreen() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
 
-    onView(withId(R.id.menuFeedback))
+    onView(withId(R.id.menuActionHelp))
         .check(matches(isDisplayed()))
         .perform(click())
 
@@ -225,6 +240,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testIsScreenOfComposeNewMsg() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -240,6 +256,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testWrongFormatOfRecipientEmailAddress() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -261,6 +278,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowMsgAboutUpdateRecipientInformation() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -286,6 +304,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testAddingAtts() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -300,6 +319,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testDeletingAtts() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -324,6 +344,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSelectImportPublicKeyFromPopUp() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -341,6 +362,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSelectedStandardEncryptionTypeFromPopUp() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -356,6 +378,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSelectedRemoveRecipientFromPopUp() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -380,6 +403,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
@@ -396,6 +420,70 @@ class CreateMessageActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
     isToastDisplayed(activityTestRule?.activity, getResString(R.string.key_successfully_copied))
+  }
+
+  @Test
+  fun testSharePubKeySingle() {
+    activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
+
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.include_public_key))
+        .check(matches(isDisplayed()))
+        .perform(click())
+
+    val att = EmailUtil.genAttInfoFromPubKey(addPrivateKeyToDatabaseRule.nodeKeyDetails)
+
+    onView(withText(att!!.name))
+        .check(matches(isDisplayed()))
+  }
+
+  @Test
+  fun testSharePubKeyMultiply() {
+    val secondKeyDetails =
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_secondKey_prv_strong.json")
+    PrivateKeysManager.saveKeyToDatabase(secondKeyDetails, TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+    val att = EmailUtil.genAttInfoFromPubKey(secondKeyDetails)
+
+    activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
+
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.include_public_key))
+        .check(matches(isDisplayed()))
+        .perform(click())
+
+    onData(withPubKeyName(att!!.name!!))
+        .inAdapterView(withId(R.id.listViewKeys))
+        .perform(click())
+
+    onView(withId(R.id.buttonOk))
+        .check(matches(isDisplayed()))
+        .perform(click())
+
+    onView(withText(att.name))
+        .check(matches(isDisplayed()))
+  }
+
+  @Test
+  fun testSharePubKeyNoOwnKeys() {
+    PrivateKeysManager.deleteKey(addPrivateKeyToDatabaseRule.keyPath)
+    val keyDetails =
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/key_testing@denbond7.com_keyB_default.json")
+    PrivateKeysManager.saveKeyToDatabase(keyDetails, TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
+
+    activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
+
+    openActionBarOverflowOrOptionsMenu(getTargetContext())
+    onView(withText(R.string.include_public_key))
+        .check(matches(isDisplayed()))
+        .perform(click())
+
+    val att = EmailUtil.genAttInfoFromPubKey(keyDetails)
+
+    onView(withText(att!!.name))
+        .check(matches(isDisplayed()))
   }
 
   private fun checkIsDisplayedEncryptedAttributes() {
@@ -451,6 +539,21 @@ class CreateMessageActivityTest : BaseTest() {
     onView(withId(R.id.editTextEmailMessage))
         .check(matches(isDisplayed()))
         .perform(typeText(EMAIL_SUBJECT), closeSoftKeyboard())
+  }
+
+  /**
+   * Match an item in an adapter which has the given name
+   */
+  private fun withPubKeyName(attName: String): Matcher<Any> {
+    return object : BoundedMatcher<Any, AttachmentInfo>(AttachmentInfo::class.java) {
+      public override fun matchesSafely(att: AttachmentInfo): Boolean {
+        return att.name == attName
+      }
+
+      override fun describeTo(description: Description) {
+        description.appendText("with item content: ")
+      }
+    }
   }
 
   companion object {

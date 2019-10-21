@@ -20,7 +20,6 @@ import androidx.loader.content.Loader
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -56,7 +55,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.LoaderCallbacks<Cursor>,
-    MessageDetailsFragment.OnActionListener, Observer<NodeResponseWrapper<*>> {
+    Observer<NodeResponseWrapper<*>> {
 
   private var details: GeneralMessageDetails? = null
   private var localFolder: LocalFolder? = null
@@ -66,12 +65,12 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   val idlingForWebView: SingleIdlingResources = SingleIdlingResources(false)
 
   private var isReceiveMsgBodyNeeded: Boolean = false
-  private var isBackEnabled = true
   private var isRequestMsgDetailsStarted: Boolean = false
   private var isRetrieveIncomingMsgNeeded = true
   private lateinit var viewModel: DecryptMessageViewModel
   private var rawMimeBytes: ByteArray? = null
   private lateinit var label: String
+  private val uniqueId = UUID.randomUUID().toString()
 
   override val rootView: View
     get() = View(this)
@@ -104,14 +103,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     LoaderManager.getInstance(this).initLoader(R.id.loader_id_subscribe_to_message_changes, null, this)
   }
 
-  override fun onBackPressed() {
-    if (isBackEnabled) {
-      super.onBackPressed()
-    } else {
-      Toast.makeText(this, R.string.please_wait_while_action_will_be_completed, Toast.LENGTH_SHORT).show()
-    }
-  }
-
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
     when (id) {
       R.id.loader_id_load_raw_mime_msg_from_db, R.id.loader_id_subscribe_to_message_changes -> {
@@ -135,16 +126,20 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   override fun onDestroy() {
-    cancelLoadMsgDetails()
+    cancelLoadMsgDetails(uniqueId)
     super.onDestroy()
   }
 
   override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor?) {
-    val messageDaoSource = MessageDaoSource()
+    val msgDaoSource = MessageDaoSource()
 
     when (loader.id) {
       R.id.loader_id_load_raw_mime_msg_from_db -> if (cursor != null && cursor.moveToFirst()) {
-        this.rawMimeBytes = MsgsCacheManager.getMsgAsByteArray(details!!.id.toString())
+        this.rawMimeBytes = if (JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)) {
+          cursor.getBlob(cursor.getColumnIndex(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS))
+        } else {
+          MsgsCacheManager.getMsgAsByteArray(details!!.id.toString())
+        }
 
         updateMsgDetails(details!!)
 
@@ -152,14 +147,22 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
           if (isRetrieveIncomingMsgNeeded) {
             isRetrieveIncomingMsgNeeded = false
             isReceiveMsgBodyNeeded = false
-            messageDaoSource.setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
-            setResult(RESULT_CODE_UPDATE_LIST, null)
+
+            if (!JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)
+                && details?.isSeen() == false) {
+              msgDaoSource.setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
+              msgDaoSource.updateMsgState(this, details?.email ?: "", details?.label ?: "",
+                  details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_READ)
+              changeMsgsReadState()
+              setResult(RESULT_CODE_UPDATE_LIST, null)
+            }
+
             decryptMsg()
           }
         } else {
           if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
             this.isRequestMsgDetailsStarted = true
-            loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, localFolder!!, details!!.uid, details!!.id)
+            loadMsgDetails()
           } else {
             isReceiveMsgBodyNeeded = true
           }
@@ -167,7 +170,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
       }
 
       R.id.loader_id_subscribe_to_message_changes -> if (cursor != null && cursor.moveToFirst()) {
-        details = messageDaoSource.getMsgInfo(cursor)
+        details = msgDaoSource.getMsgInfo(cursor)
         updateViews()
       }
 
@@ -215,7 +218,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   override fun onSyncServiceConnected() {
     super.onSyncServiceConnected()
     if (isReceiveMsgBodyNeeded) {
-      loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, localFolder!!, details!!.uid, details!!.id)
+      loadMsgDetails()
     }
   }
 
@@ -234,27 +237,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         }
       }
 
-      R.id.syns_request_archive_message, R.id.syns_request_delete_message, R.id.syns_request_move_message_to_inbox -> {
-        isBackEnabled = true
+      R.id.syns_request_move_message_to_inbox -> {
         when (resultCode) {
-          EmailSyncService.REPLY_RESULT_CODE_ACTION_OK -> {
-            var toastMsgResId = 0
-
-            when (requestCode) {
-              R.id.syns_request_archive_message -> toastMsgResId = R.string.message_was_archived
-
-              R.id.syns_request_delete_message -> toastMsgResId = R.string.message_was_deleted
-
-              R.id.syns_request_move_message_to_inbox -> toastMsgResId = R.string.message_was_moved_to_inbox
-            }
-
-            Toast.makeText(this, toastMsgResId, Toast.LENGTH_SHORT).show()
-            MessageDaoSource().deleteMsg(this, details!!.email, label, details!!.uid.toLong())
-            AttachmentDaoSource().deleteAtts(this, details!!.email, label, details!!.uid.toLong())
-            setResult(RESULT_CODE_UPDATE_LIST, null)
-            finish()
-          }
-
           EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_EXISTS -> messageNotAvailableInFolder()
         }
       }
@@ -266,11 +250,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
       R.id.syns_request_code_load_raw_mime_msg -> {
         isRequestMsgDetailsStarted = false
         updateActionProgressState(100, null)
-        onErrorOccurred(requestCode, errorType, e)
-      }
-
-      R.id.syns_request_archive_message, R.id.syns_request_delete_message, R.id.syns_request_move_message_to_inbox -> {
-        isBackEnabled = true
         onErrorOccurred(requestCode, errorType, e)
       }
 
@@ -295,78 +274,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
       else -> super.onProgressReplyReceived(requestCode, resultCode, obj)
     }
-  }
-
-  private fun updateActionProgressState(progress: Int, message: String?) {
-    val fragment = supportFragmentManager
-        .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
-
-    fragment?.setActionProgress(progress, message)
-  }
-
-  override fun onArchiveMsgClicked() {
-    isBackEnabled = false
-    val foldersManager = FoldersManager.fromDatabase(this, details!!.email)
-    val archive = foldersManager.folderArchive
-    if (archive == null) {
-      ExceptionUtil.handleError(IllegalArgumentException("Folder 'All Mail' not found for provider = "
-          + EmailUtil.getDomain(details!!.email) + "\n"
-          + foldersManager.serverFolders.joinToString { it.fullName + ":" + it.attributes }))
-      isBackEnabled = true
-      onErrorOccurred(R.id.syns_request_archive_message, SyncErrorTypes.UNKNOWN_ERROR,
-          IllegalStateException(getString(R.string.unknown_error)))
-    } else {
-      moveMsg(R.id.syns_request_archive_message, localFolder!!, archive, details!!.uid)
-    }
-  }
-
-  override fun onDeleteMsgClicked() {
-    isBackEnabled = false
-    if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
-      val msgDaoSource = MessageDaoSource()
-      val details = msgDaoSource.getMsg(this, this.details!!.email,
-          this.details!!.label, this.details!!.uid.toLong())
-
-      if (details == null || details.msgState === MessageState.SENDING) {
-        Toast.makeText(this, if (details == null)
-          R.string.can_not_delete_sent_message
-        else
-          R.string.can_not_delete_sending_message, Toast.LENGTH_LONG).show()
-      } else {
-        val deletedRows = MessageDaoSource().deleteOutgoingMsg(this, details)
-        if (deletedRows > 0) {
-          Toast.makeText(this, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
-        } else {
-          Toast.makeText(this, R.string.can_not_delete_sent_message, Toast.LENGTH_LONG).show()
-        }
-      }
-
-      setResult(RESULT_CODE_UPDATE_LIST, null)
-      finish()
-    } else {
-      val foldersManager = FoldersManager.fromDatabase(this, details!!.email)
-      val trash = foldersManager.folderTrash
-      if (trash == null) {
-        ExceptionUtil.handleError(IllegalArgumentException("Folder 'Trash' not found for provider = "
-            + EmailUtil.getDomain(details!!.email) + "\n"
-            + foldersManager.serverFolders.joinToString { it.fullName + ":" + it.attributes }))
-        isBackEnabled = true
-        onErrorOccurred(R.id.syns_request_delete_message, SyncErrorTypes.UNKNOWN_ERROR,
-            IllegalStateException(getString(R.string.unknown_error)))
-      } else {
-        moveMsg(R.id.syns_request_delete_message, localFolder!!, trash, details!!.uid)
-      }
-    }
-  }
-
-  override fun onMoveMsgToInboxClicked() {
-    isBackEnabled = false
-    val foldersManager = FoldersManager.fromDatabase(this, details!!.email)
-    val folderInbox = foldersManager.folderInbox
-    if (folderInbox == null) {
-      ExceptionUtil.handleError(IllegalArgumentException("Folder 'Inbox' not found"))
-    }
-    moveMsg(R.id.syns_request_move_message_to_inbox, localFolder!!, folderInbox!!, details!!.uid)
   }
 
   override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {
@@ -432,6 +339,18 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     }
   }
 
+  fun loadMsgDetails() {
+    loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, uniqueId, localFolder!!,
+        details!!.uid, details!!.id)
+  }
+
+  private fun updateActionProgressState(progress: Int, message: String?) {
+    val fragment = supportFragmentManager
+        .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
+
+    fragment?.setActionProgress(progress, message)
+  }
+
   private fun showErrorInfo(error: Error?, e: Throwable?) {
     val fragment = supportFragmentManager
         .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
@@ -475,39 +394,41 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   private fun updateViews() {
-    if (supportActionBar != null) {
-      var actionBarTitle: String? = null
-      var actionBarSubTitle: String? = null
+    var actionBarTitle: String? = null
+    var actionBarSubTitle: String? = null
 
-      if (details != null) {
-        if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
-          actionBarTitle = getString(R.string.outgoing)
+    if (details != null) {
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
+        actionBarTitle = getString(R.string.outgoing)
 
-          when (details!!.msgState) {
-            MessageState.NEW, MessageState.NEW_FORWARDED -> actionBarSubTitle = getString(R.string.preparing)
+        when (details!!.msgState) {
+          MessageState.NEW, MessageState.NEW_FORWARDED -> actionBarSubTitle = getString(R.string.preparing)
 
-            MessageState.QUEUED -> actionBarSubTitle = getString(R.string.queued)
+          MessageState.QUEUED -> actionBarSubTitle = getString(R.string.queued)
 
-            MessageState.SENDING -> actionBarSubTitle = getString(R.string.sending)
+          MessageState.SENDING -> actionBarSubTitle = getString(R.string.sending)
 
-            MessageState.SENT, MessageState.SENT_WITHOUT_LOCAL_COPY -> actionBarSubTitle = getString(R.string.sent)
+          MessageState.SENT, MessageState.SENT_WITHOUT_LOCAL_COPY -> actionBarSubTitle = getString(R.string.sent)
 
-            MessageState.ERROR_CACHE_PROBLEM,
-            MessageState.ERROR_DURING_CREATION,
-            MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
-            MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
-            MessageState.ERROR_SENDING_FAILED,
-            MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> actionBarSubTitle = getString(R.string.an_error_has_occurred)
+          MessageState.ERROR_CACHE_PROBLEM,
+          MessageState.ERROR_DURING_CREATION,
+          MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+          MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
+          MessageState.ERROR_SENDING_FAILED,
+          MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> actionBarSubTitle = getString(R.string.an_error_has_occurred)
 
-            else -> {
-            }
+          else -> {
           }
         }
+      } else when (details?.msgState) {
+        MessageState.PENDING_ARCHIVING -> actionBarTitle = getString(R.string.pending)
+        else -> {
+        }
       }
-
-      supportActionBar!!.title = actionBarTitle
-      supportActionBar!!.subtitle = actionBarSubTitle
     }
+
+    supportActionBar?.title = actionBarTitle
+    supportActionBar?.subtitle = actionBarSubTitle
   }
 
   companion object {

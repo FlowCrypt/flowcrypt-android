@@ -12,6 +12,7 @@ import android.text.format.Formatter
 import android.view.View
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingPolicies
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
@@ -20,6 +21,7 @@ import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.intent.rule.IntentsTestRule
+import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -36,7 +38,6 @@ import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
@@ -45,6 +46,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -66,6 +68,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -127,6 +130,11 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
+  fun testTopReplyButton() {
+    testTopReplyAction(getResString(R.string.reply))
+  }
+
+  @Test
   fun testReplyAllButton() {
     testStandardMsgPlaneText()
     onView(withId(R.id.layoutReplyAllButton))
@@ -145,6 +153,11 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
+  fun testTopForwardButton() {
+    testTopReplyAction(getResString(R.string.forward))
+  }
+
+  @Test
   fun testStandardMsgPlaneText() {
     baseCheck(getMsgInfo("messages/info/standard_msg_info_plain_text.json",
         "messages/mime/standard_msg_info_plain_text.txt"))
@@ -160,6 +173,13 @@ class MessageDetailsActivityTest : BaseTest() {
   fun testEncryptedMsgPlaneText() {
     baseCheck(getMsgInfo("messages/info/encrypted_msg_info_plain_text.json",
         "messages/mime/encrypted_msg_info_plain_text.txt"))
+  }
+
+  @Test
+  fun testEncryptedBigInlineAtt() {
+    IdlingPolicies.setIdlingResourceTimeout(3, TimeUnit.MINUTES)
+    baseCheck(getMsgInfo("messages/info/encrypted_msg_big_inline_att.json",
+        "messages/mime/encrypted_msg_big_inline_att.txt"))
   }
 
   @Test
@@ -239,6 +259,7 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
+
   fun testMissingKeyErrorChooseFromFewPubKeys() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt")
@@ -256,9 +277,6 @@ class MessageDetailsActivityTest : BaseTest() {
 
     onView(withId(R.id.textViewMessage))
         .check(matches(withText(msg)))
-    onView(withId(R.id.buttonOk))
-        .check(matches(isDisplayed()))
-        .perform(click())
     onData(anything())
         .inAdapterView(withId(R.id.listViewKeys))
         .atPosition(1)
@@ -456,13 +474,20 @@ class MessageDetailsActivityTest : BaseTest() {
     IdlingRegistry.getInstance().register((activityTestRule.activity as MessageDetailsActivity).idlingForWebView)
   }
 
-  private fun getMsgInfo(path: String, mimeMsgPath: String): IncomingMessageInfo? {
-    val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
-    incomingMsgInfo?.generalMsgDetails?.let {
-      val uri = msgDaoSource.addRow(getTargetContext(), it) ?: throw IllegalStateException()
-      MsgsCacheManager.addMsg(uri.lastPathSegment
-          ?: throw IllegalStateException(), getContext().assets.open(mimeMsgPath))
-    }
-    return incomingMsgInfo
+  private fun testTopReplyAction(title: String) {
+    testStandardMsgPlaneText()
+
+    onView(withId(R.id.imageButtonMoreOptions))
+        .check(matches(isDisplayed()))
+        .perform(scrollTo(), click())
+
+    onView(withText(title))
+        .inRoot(RootMatchers.isPlatformPopup())
+        .perform(click())
+
+    intended(hasComponent(CreateMessageActivity::class.java.name))
+
+    onView(withId(R.id.toolbar))
+        .check(matches(CustomMatchers.withToolBarText(title)))
   }
 }

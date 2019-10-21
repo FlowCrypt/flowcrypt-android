@@ -6,8 +6,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/menuFeedback"
-        android:icon="@mipmap/ic_help"
+        android:id="@+id/menuActionHelp"
+        android:icon="@drawable/ic_help_white_24dp"
         android:menuCategory="system"
         android:orderInCategory="1000"
         android:title="@string/feedback"

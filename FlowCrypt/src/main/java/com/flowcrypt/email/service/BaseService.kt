@@ -9,6 +9,7 @@ import android.app.Service
 import android.os.Messenger
 
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
+import java.util.*
 
 /**
  * The base [Service] class for a between threads communication.
@@ -61,15 +62,18 @@ abstract class BaseService : Service() {
    *
    * @param ownerKey    The name of reply to [Messenger]
    * @param requestCode The unique request code which identify some action
+   * @param uniqueId    The task unique id.
    * @param object      The object which will be passed to [BaseService].
    * @param resetConnection The reset connection status.
    */
-  (val ownerKey: String, val requestCode: Int, val `object`: Any?, val resetConnection: Boolean = false) {
+  (val ownerKey: String, val requestCode: Int, val `object`: Any?,
+   val resetConnection: Boolean = false, val uniqueId: String = UUID.randomUUID().toString()) {
 
     override fun toString(): String {
       return "Action{" +
           "ownerKey='" + ownerKey + '\''.toString() +
           ", requestCode=" + requestCode +
+          ", uniqueId=" + uniqueId +
           ", object=" + `object` +
           ", resetConnection=" + resetConnection +
           '}'.toString()

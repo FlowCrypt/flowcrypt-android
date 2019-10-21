@@ -86,8 +86,6 @@
     <string name="backed_up_successfully">Backed up successfully</string>
     <string name="backup_was_not_sent">Error backing up, please try again</string>
     <string name="message_was_deleted">The message was deleted</string>
-    <string name="please_wait_while_action_will_be_completed">Still working, please wait</string>
-    <string name="message_was_archived">Message archived</string>
     <string name="retry">Retry</string>
     <string name="warning">Warning</string>
     <string name="no_connection">No connection</string>
@@ -143,7 +141,6 @@
     <string name="import_public_key">Import Public Key</string>
     <string name="private_">Private</string>
     <string name="public_">Public</string>
-    <string name="message_was_moved_to_inbox">The message was moved to inbox</string>
     <string name="attachment">Attachment</string>
     <string name="can_not_connect_to_the_imap_server">Cannot connect to the IMAP server</string>
     <string name="failed_load_message_from_email_server">Failed to load message from email server</string>
@@ -396,8 +393,6 @@
     <string name="touch_to_preview_and_edit">Touch to preview and edit</string>
     <string name="screenshot">Screenshot</string>
     <string name="report_problem">Report problem</string>
-    <string name="not_available_check_imap_settings">Not available. Please check your account IMAP
-        settings</string>
     <string name="include_public_key">Include Public Key</string>
     <plurals name="tell_sender_to_update_their_settings">
         <item quantity="one">You should tell the sender to update their settings and send a
@@ -417,4 +412,6 @@
     <string name="public_key_copied_to_clipboard">Public Key copied to clipboard</string>
     <string name="email_must_be_non_empty">Email should not be empty</string>
     <string name="your_email_address">Your email address</string>
+    <string name="pending">Pending&#8230;</string>
+    <string name="mark_unread">Mark unread</string>
 </resources>

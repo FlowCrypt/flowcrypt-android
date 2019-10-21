@@ -49,10 +49,12 @@ import javax.mail.internet.MimeMultipart
 
 class LoadMessageDetailsSyncTask(ownerKey: String,
                                  requestCode: Int,
+                                 uniqueId: String,
                                  private val localFolder: LocalFolder,
                                  private val uid: Long,
                                  private val id: Long,
-                                 resetConnection: Boolean) : BaseSyncTask(ownerKey, requestCode, resetConnection) {
+                                 resetConnection: Boolean) :
+    BaseSyncTask(ownerKey, requestCode, uniqueId, resetConnection) {
 
   private var msgSize: Int = 0
   private var downloadedMsgSize: Int = 0
@@ -61,7 +63,6 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
   private var lastPercentage = 0
   private var currentPercentage = 0
   private var lastUpdateTime = System.currentTimeMillis()
-
 
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     this.account = account
@@ -267,14 +268,14 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
    */
   inner class ProgressOutputStream(val out: OutputStream) : OutputStream() {
     override fun write(b: ByteArray?) {
-      if (isCancelled) {
+      if (Thread.interrupted()) {
         throw SyncTaskTerminatedException()
       }
       out.write(b)
     }
 
     override fun write(b: Int) {
-      if (isCancelled) {
+      if (Thread.interrupted()) {
         throw SyncTaskTerminatedException()
       }
 
@@ -282,7 +283,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     }
 
     override fun write(b: ByteArray?, off: Int, len: Int) {
-      if (isCancelled) {
+      if (Thread.interrupted()) {
         throw SyncTaskTerminatedException()
       }
 
@@ -295,7 +296,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
    */
   inner class FetchingInputStream(val stream: InputStream) : BufferedInputStream(stream) {
     override fun read(b: ByteArray?, off: Int, len: Int): Int {
-      if (isCancelled) {
+      if (Thread.interrupted()) {
         throw SyncTaskTerminatedException()
       }
 

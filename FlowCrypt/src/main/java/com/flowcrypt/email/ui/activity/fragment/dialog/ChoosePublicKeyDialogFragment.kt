@@ -116,18 +116,18 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
           if (CollectionUtils.isEmpty(nodeKeyDetailsList)) {
             textViewMsg?.text = getString(R.string.no_pub_keys)
           } else {
-            for (nodeKeyDetails in nodeKeyDetailsList) {
-              val att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails)
-              if (att != null) {
-                atts.add(att)
-              }
-            }
-
             buttonOk?.visibility = View.VISIBLE
             UIUtil.exchangeViewVisibility(context, false, progressBar!!, listViewKeys!!)
 
             val matchedKeys = getMatchedKeys(nodeKeyDetailsList)
-            if (!CollectionUtils.isEmpty(matchedKeys)) {
+            if (CollectionUtils.isEmpty(matchedKeys)) {
+              for (nodeKeyDetails in nodeKeyDetailsList) {
+                val att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails)
+                if (att != null) {
+                  atts.add(att)
+                }
+              }
+            } else {
               atts.clear()
               for (nodeKeyDetails in matchedKeys) {
                 val att = EmailUtil.genAttInfoFromPubKey(nodeKeyDetails)

@@ -106,24 +106,12 @@ class EmailSyncService : BaseService(), SyncListener {
 
     if (intent != null && intent.action != null) {
       when (intent.action) {
-        ACTION_SWITCH_ACCOUNT -> {
-          val account: AccountDao? = AccountDaoSource().getActiveAccountInformation(this)
-          account?.let {
-            if (::emailSyncManager.isInitialized) {
-              emailSyncManager.switchAccount(it)
-            } else {
-              emailSyncManager = EmailSyncManager(it, this)
-              messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
-            }
-          }
-        }
-
         else -> if (::emailSyncManager.isInitialized) {
-          emailSyncManager.beginSync(false)
+          emailSyncManager.beginSync()
         }
       }
     } else if (::emailSyncManager.isInitialized) {
-      emailSyncManager.beginSync(false)
+      emailSyncManager.beginSync()
     }
 
     return super.onStartCommand(intent, flags, startId)
@@ -553,7 +541,7 @@ class EmailSyncService : BaseService(), SyncListener {
       if (GeneralUtil.isConnected(this)) {
         LogsUtil.d(TAG, "networkInfo = $networkInfo")
         if (::emailSyncManager.isInitialized) {
-          emailSyncManager.beginSync(false)
+          emailSyncManager.beginSync()
         }
       }
     }
@@ -652,12 +640,14 @@ class EmailSyncService : BaseService(), SyncListener {
         val emailSyncManager = gmailSynsManagerWeakRef.get()
         var action: Action? = null
         var ownerKey: String? = null
+        var uniqueId: String? = null
         var requestCode = -1
 
         if (msg.obj is Action) {
           action = msg.obj as Action
           ownerKey = action.ownerKey
           requestCode = action.requestCode
+          uniqueId = action.uniqueId
         }
 
         when (msg.what) {
@@ -678,7 +668,7 @@ class EmailSyncService : BaseService(), SyncListener {
           }
 
           MESSAGE_UPDATE_LABELS -> if (emailSyncManager != null && action != null) {
-            emailSyncManager.updateLabels(ownerKey!!, requestCode, msg.arg1 == 1)
+            emailSyncManager.updateLabels(ownerKey!!, requestCode)
           }
 
           MESSAGE_LOAD_MESSAGES -> if (emailSyncManager != null && action != null) {
@@ -693,19 +683,19 @@ class EmailSyncService : BaseService(), SyncListener {
 
           MESSAGE_REFRESH_MESSAGES -> if (emailSyncManager != null && action != null) {
             val refreshLocalFolder = action.`object` as LocalFolder
-            emailSyncManager.refreshMsgs(ownerKey!!, requestCode, refreshLocalFolder, true)
+            emailSyncManager.refreshMsgs(ownerKey!!, requestCode, refreshLocalFolder)
           }
 
           MESSAGE_LOAD_MESSAGE_DETAILS -> if (emailSyncManager != null && action != null) {
             val localFolder = action.`object` as LocalFolder
-            emailSyncManager.loadMsgDetails(ownerKey!!, requestCode, localFolder, msg.arg1, msg.arg2,
-                action.resetConnection)
+            emailSyncManager.loadMsgDetails(ownerKey!!, requestCode, action.uniqueId, localFolder,
+                msg.arg1, msg.arg2, action.resetConnection)
           }
 
           MESSAGE_MOVE_MESSAGE -> if (emailSyncManager != null && action != null) {
             val localFolders = action.`object` as Array<LocalFolder?>
 
-            val emailDomain = emailSyncManager.accountDao.accountType
+            val emailDomain = emailSyncManager.account.accountType
 
             if (localFolders.size != 2) {
               throw IllegalArgumentException(emailDomain!! + "|Can't move the message. Folders are null.")
@@ -736,7 +726,7 @@ class EmailSyncService : BaseService(), SyncListener {
           }
 
           MESSAGE_CANCEL_ALL_TASKS -> if (emailSyncManager != null && action != null) {
-            emailSyncManager.cancelAllSyncTasks()
+            //emailSyncManager.cancelAllSyncTasks()
           }
 
           MESSAGE_LOAD_ATTS_INFO -> if (emailSyncManager != null && action != null) {
@@ -744,8 +734,17 @@ class EmailSyncService : BaseService(), SyncListener {
             emailSyncManager.loadAttsInfo(ownerKey!!, requestCode, localFolder, msg.arg1)
           }
 
-          MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS -> emailSyncManager?.cancelActiveLoadMsgDetailsTask()
+          MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS -> {
+            uniqueId?.let { emailSyncManager?.cancelLoadMsgDetails(it) }
+          }
 
+          MESSAGE_DELETE_MSGS -> emailSyncManager?.deleteMsgs()
+
+          MESSAGE_ARCHIVE_MSGS -> emailSyncManager?.archiveMsgs()
+
+          MESSAGE_CHANGE_MSGS_READ_STATE -> emailSyncManager?.changeMsgsReadState()
+
+          MESSAGE_MOVE_MSGS_TO_INBOX -> emailSyncManager?.moveMsgsToINBOX()
 
           else -> super.handleMessage(msg)
         }
@@ -754,9 +753,6 @@ class EmailSyncService : BaseService(), SyncListener {
   }
 
   companion object {
-    const val ACTION_SWITCH_ACCOUNT = "ACTION_SWITCH_ACCOUNT"
-    const val ACTION_BEGIN_SYNC = "ACTION_BEGIN_SYNC"
-
     const val REPLY_RESULT_CODE_ACTION_OK = 0
     const val REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND = 1
     const val REPLY_RESULT_CODE_ACTION_ERROR_BACKUP_NOT_SENT = 2
@@ -778,6 +774,10 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_CANCEL_ALL_TASKS = 12
     const val MESSAGE_LOAD_ATTS_INFO = 13
     const val MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS = 14
+    const val MESSAGE_DELETE_MSGS = 15
+    const val MESSAGE_ARCHIVE_MSGS = 16
+    const val MESSAGE_CHANGE_MSGS_READ_STATE = 17
+    const val MESSAGE_MOVE_MSGS_TO_INBOX = 18
 
     private val TAG = EmailSyncService::class.java.simpleName
 
@@ -789,7 +789,6 @@ class EmailSyncService : BaseService(), SyncListener {
     @JvmStatic
     fun startEmailSyncService(context: Context) {
       val startEmailServiceIntent = Intent(context, EmailSyncService::class.java)
-      startEmailServiceIntent.action = ACTION_BEGIN_SYNC
       context.startService(startEmailServiceIntent)
     }
 
@@ -801,10 +800,9 @@ class EmailSyncService : BaseService(), SyncListener {
     @JvmStatic
     fun switchAccount(context: Context) {
       NotificationManagerCompat.from(context).cancelAll()
-
-      val startEmailServiceIntent = Intent(context, EmailSyncService::class.java)
-      startEmailServiceIntent.action = ACTION_SWITCH_ACCOUNT
-      context.startService(startEmailServiceIntent)
+      val intent = Intent(context, EmailSyncService::class.java)
+      context.stopService(intent)
+      context.startService(intent)
     }
   }
 }

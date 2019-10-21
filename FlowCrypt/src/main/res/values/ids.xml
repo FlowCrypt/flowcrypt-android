@@ -36,8 +36,6 @@
     <item name="syns_request_code_load_raw_mime_msg" type="id" />
     <item name="sync_request_code_search_messages" type="id" />
     <item name="syns_request_code_load_atts_info" type="id" />
-    <item name="syns_request_archive_message" type="id" />
-    <item name="syns_request_delete_message" type="id" />
     <item name="syns_request_move_message_to_inbox" type="id" />
     <item name="syns_request_send_encrypted_message" type="id" />
     <item name="syns_load_private_keys" type="id" />

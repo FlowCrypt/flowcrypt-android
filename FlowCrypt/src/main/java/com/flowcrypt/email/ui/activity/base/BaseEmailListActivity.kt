@@ -157,6 +157,12 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
       if (currentFolder != null && isOutbox) {
         ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
         MessagesSenderJobService.schedule(applicationContext)
+      } else {
+        //run the tasks which maybe not completed last time
+        archiveMsgs()
+        changeMsgsReadState()
+        deleteMsgs()
+        moveMsgsToINBOX()
       }
     }
   }

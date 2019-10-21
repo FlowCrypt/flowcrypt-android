@@ -123,7 +123,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
         .perform(clearText(), typeText(QUERY_TEXT_FOR_SUBJECT_BODY_FROM), pressImeActionButton())
     onView(withId(R.id.listViewMessages))
-        .check(matches(withListViewItemCount(3))).check(matches(isDisplayed()))
+        .check(matches(withListViewItemCount(4))).check(matches(isDisplayed()))
   }
 
   @Test

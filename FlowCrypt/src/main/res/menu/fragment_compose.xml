@@ -9,7 +9,7 @@
 
     <item
         android:id="@+id/menuActionAttachFile"
-        android:icon="@mipmap/ic_action_attach_file"
+        android:icon="@drawable/ic_attach_file_white_24dp"
         android:menuCategory="system"
         android:orderInCategory="2000"
         android:title="@string/attach_file"
@@ -18,7 +18,7 @@
 
     <item
         android:id="@+id/menuActionSend"
-        android:icon="@mipmap/ic_action_send"
+        android:icon="@drawable/ic_send_white_24dp"
         android:menuCategory="system"
         android:orderInCategory="2001"
         android:title="@string/send"

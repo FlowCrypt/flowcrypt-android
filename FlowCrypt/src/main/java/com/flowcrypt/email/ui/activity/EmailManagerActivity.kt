@@ -250,8 +250,9 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     when (requestCode) {
       REQUEST_CODE_ADD_NEW_ACCOUNT -> when (resultCode) {
         Activity.RESULT_OK -> {
-          EmailSyncService.switchAccount(this@EmailManagerActivity)
+          disconnectFromSyncService()
           finish()
+          EmailSyncService.switchAccount(this@EmailManagerActivity)
           runEmailManagerActivity(this@EmailManagerActivity)
         }
       }
@@ -330,7 +331,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onSyncServiceConnected() {
     super.onSyncServiceConnected()
-    updateLabels(R.id.syns_request_code_update_label_passive, true)
+    updateLabels(R.id.syns_request_code_update_label_passive)
   }
 
   override fun onBackPressed() {
@@ -509,9 +510,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     if (!accountDaoList.isEmpty()) {
       val (email) = accountDaoList[0]
+      disconnectFromSyncService()
       AccountDaoSource().setActiveAccount(this@EmailManagerActivity, email)
-      EmailSyncService.switchAccount(this@EmailManagerActivity)
       finish()
+      EmailSyncService.switchAccount(this@EmailManagerActivity)
       runEmailManagerActivity(this@EmailManagerActivity)
     } else {
       stopService(Intent(this, EmailSyncService::class.java))
@@ -698,6 +700,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     view.setOnClickListener {
       finish()
       if (account != null) {
+        disconnectFromSyncService()
         AccountDaoSource().setActiveAccount(this@EmailManagerActivity, account.email)
         EmailSyncService.switchAccount(this@EmailManagerActivity)
         runEmailManagerActivity(this@EmailManagerActivity)
@@ -736,7 +739,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
       if (GeneralUtil.isConnected(this@EmailManagerActivity)) {
         countingIdlingResourceForLabel!!.increment()
-        updateLabels(R.id.syns_request_code_update_label_passive, true)
+        updateLabels(R.id.syns_request_code_update_label_passive)
       }
 
       LoaderManager.getInstance(this@EmailManagerActivity).restartLoader(R.id.loader_id_load_gmail_labels,

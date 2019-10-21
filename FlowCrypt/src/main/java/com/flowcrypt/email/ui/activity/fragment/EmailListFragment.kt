@@ -121,13 +121,13 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
   override val contentView: View?
     get() = listView
 
-  override fun onAttach(context: Context?) {
+  override fun onAttach(context: Context) {
     super.onAttach(context)
 
     if (context is OnManageEmailsListener) {
       this.listener = context
     } else
-      throw IllegalArgumentException(context!!.toString() + " must implement " +
+      throw IllegalArgumentException(context.toString() + " must implement " +
           OnManageEmailsListener::class.java.simpleName)
 
     if (context is BaseSyncActivity) {
@@ -544,7 +544,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
         Snackbar.LENGTH_LONG, View.OnClickListener {
       setSupportActionBarTitle(getString(R.string.loading))
       UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
-      (activity as BaseSyncActivity).updateLabels(R.id.syns_request_code_update_label_active, false)
+      (activity as BaseSyncActivity).updateLabels(R.id.syns_request_code_update_label_active)
     })
   }
 

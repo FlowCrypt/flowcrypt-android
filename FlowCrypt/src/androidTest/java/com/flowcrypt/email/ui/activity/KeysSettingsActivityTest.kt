@@ -59,6 +59,7 @@ import org.junit.rules.TestRule
 import org.junit.runner.RunWith
 import java.io.File
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -146,12 +147,14 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
+
   @DoesNotNeedMailserver
   fun testKeyDetailsCheckDetails() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
     onView(withId(R.id.textViewKeyWords))
-        .check(matches(withText(getHtmlString(getResString(R.string.template_key_words, details.keywords ?: "")))))
+        .check(matches(withText(getHtmlString(getResString(R.string.template_key_words, details.keywords
+            ?: "")))))
 
     onView(withId(R.id.textViewFingerprint))
         .check(matches(withText(getHtmlString(getResString(R.string.template_fingerprint,
@@ -162,7 +165,8 @@ class KeysSettingsActivityTest : BaseTest() {
 
     onView(withId(R.id.textViewDate))
         .check(matches(withText(getHtmlString(getResString(R.string.template_date,
-            DateFormat.getMediumDateFormat(getTargetContext()).format(Date(details.created)))))))
+            DateFormat.getMediumDateFormat(getTargetContext()).format(
+                Date(TimeUnit.MILLISECONDS.convert(details.created, TimeUnit.SECONDS))))))))
 
     val emails = ArrayList<String>()
 

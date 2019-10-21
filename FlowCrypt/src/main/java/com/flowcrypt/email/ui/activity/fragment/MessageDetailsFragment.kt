@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -49,8 +48,10 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
@@ -66,10 +67,8 @@ import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.FolderNotAvailableException
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.common.util.CollectionUtils
-import com.google.android.material.snackbar.Snackbar
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -113,19 +112,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var isDeleteActionEnabled: Boolean = false
   private var isArchiveActionEnabled: Boolean = false
   private var isMoveToInboxActionEnabled: Boolean = false
-  private var onActionListener: OnActionListener? = null
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
   private var atts = mutableListOf<AttachmentInfo>()
-
-  override fun onAttach(context: Context?) {
-    super.onAttach(context)
-    if (context is BaseSyncActivity) {
-      this.onActionListener = context as OnActionListener?
-    } else
-      throw IllegalArgumentException(context!!.toString() + " must implement " +
-          OnActionListener::class.java.simpleName)
-  }
+  private val msgDaoSource = MessageDaoSource()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -182,35 +172,85 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     }
   }
 
-  override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
     super.onCreateOptionsMenu(menu, inflater)
-    inflater!!.inflate(R.menu.fragment_message_details, menu)
+    inflater.inflate(R.menu.fragment_message_details, menu)
   }
 
-  override fun onPrepareOptionsMenu(menu: Menu?) {
+  override fun onPrepareOptionsMenu(menu: Menu) {
     super.onPrepareOptionsMenu(menu)
 
-    val menuItemArchiveMsg = menu!!.findItem(R.id.menuActionArchiveMessage)
+    val menuItemArchiveMsg = menu.findItem(R.id.menuActionArchiveMessage)
     val menuItemDeleteMsg = menu.findItem(R.id.menuActionDeleteMessage)
     val menuActionMoveToInbox = menu.findItem(R.id.menuActionMoveToInbox)
+    val menuActionMarkUnread = menu.findItem(R.id.menuActionMarkUnread)
 
-    if (menuItemArchiveMsg != null) {
-      menuItemArchiveMsg.isVisible = isArchiveActionEnabled && isAdditionalActionEnabled
-    }
+    menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
+    menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
+    menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled
+    menuActionMarkUnread?.isVisible = !JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)
 
-    if (menuItemDeleteMsg != null) {
-      menuItemDeleteMsg.isVisible = isDeleteActionEnabled && isAdditionalActionEnabled
-    }
-
-    if (menuActionMoveToInbox != null) {
-      menuActionMoveToInbox.isVisible = isMoveToInboxActionEnabled && isAdditionalActionEnabled
-    }
+    menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
+    menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
+    menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
+    menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
   }
 
-  override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-    return when (item!!.itemId) {
-      R.id.menuActionArchiveMessage, R.id.menuActionDeleteMessage, R.id.menuActionMoveToInbox -> {
-        runMsgAction(item.itemId)
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
+      R.id.menuActionArchiveMessage -> {
+        msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+            details?.uid?.toLong() ?: 0, MessageState.PENDING_ARCHIVING)
+        (activity as? BaseSyncActivity)?.archiveMsgs()
+        activity?.finish()
+        true
+      }
+
+      R.id.menuActionDeleteMessage -> {
+        if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
+          val msgDaoSource = MessageDaoSource()
+          val details = msgDaoSource.getMsg(context!!, this.details!!.email,
+              this.details!!.label, this.details!!.uid.toLong())
+
+          if (details == null || details.msgState === MessageState.SENDING) {
+            Toast.makeText(context!!, if (details == null)
+              R.string.can_not_delete_sent_message
+            else
+              R.string.can_not_delete_sending_message, Toast.LENGTH_LONG).show()
+          } else {
+            val deletedRows = MessageDaoSource().deleteOutgoingMsg(context!!, details)
+            if (deletedRows > 0) {
+              Toast.makeText(context!!, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
+            } else {
+              Toast.makeText(context!!, R.string.can_not_delete_sent_message, Toast.LENGTH_LONG).show()
+            }
+          }
+
+          activity?.setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null)
+        } else {
+          msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+              details?.uid?.toLong() ?: 0, MessageState.PENDING_DELETING)
+          (activity as? BaseSyncActivity)?.deleteMsgs()
+        }
+        activity?.finish()
+        true
+      }
+
+      R.id.menuActionMoveToInbox -> {
+        msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+            details?.uid?.toLong() ?: 0, MessageState.PENDING_MOVE_TO_INBOX)
+        (activity as? BaseSyncActivity)?.moveMsgsToINBOX()
+        activity?.finish()
+        true
+      }
+
+      R.id.menuActionMarkUnread -> {
+        msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+            details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_UNREAD)
+        msgDaoSource.setSeenStatus(context!!, details?.email, details?.label, details?.uid?.toLong()
+            ?: 0L, false)
+        (activity as? BaseSyncActivity)?.changeMsgsReadState()
+        activity?.finish()
         true
       }
 
@@ -284,31 +324,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           return
         }
       }
-
-      R.id.syns_request_archive_message, R.id.syns_request_delete_message, R.id.syns_request_move_message_to_inbox -> {
-        UIUtil.exchangeViewVisibility(context, false, statusView!!, contentView!!)
-        if (e is FolderNotAvailableException) {
-          when (requestCode) {
-            R.id.syns_request_archive_message -> {
-              isArchiveActionEnabled = false
-            }
-
-            R.id.syns_request_delete_message -> {
-              isDeleteActionEnabled = false
-            }
-
-            R.id.syns_request_move_message_to_inbox -> {
-              isMoveToInboxActionEnabled = false
-            }
-          }
-          (baseActivity as? BaseSyncActivity)?.updateLabels(R.id
-              .syns_request_code_update_label_passive, true)
-          activity?.invalidateOptionsMenu()
-          Toast.makeText(context, R.string.not_available_check_imap_settings, Toast.LENGTH_LONG).show()
-        } else {
-          showRetryActionHint(requestCode, e!!)
-        }
-      }
     }
   }
 
@@ -316,8 +331,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     when (requestCode) {
       REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE -> {
         if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          val intent = AttachmentDownloadManagerService.newIntent(context!!, lastClickedAtt!!)
-          context!!.startService(intent)
+          AttachmentDownloadManagerService.newIntent(context, lastClickedAtt)?.let {
+            context?.startService(it)
+          }
         } else {
           Toast.makeText(activity, R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG).show()
         }
@@ -380,25 +396,11 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     }
   }
 
-  private fun showRetryActionHint(requestCode: Int, e: Exception) {
-    showSnackbar(view!!, e.message ?: "", getString(R.string.retry), Snackbar.LENGTH_LONG,
-        View.OnClickListener {
-          when (requestCode) {
-            R.id.syns_request_archive_message -> runMsgAction(R.id.menuActionArchiveMessage)
-
-            R.id.syns_request_delete_message -> runMsgAction(R.id.menuActionDeleteMessage)
-
-            R.id.syns_request_move_message_to_inbox -> runMsgAction(R.id.menuActionMoveToInbox)
-          }
-        })
-  }
-
   private fun showConnLostHint() {
     showSnackbar(view!!, getString(R.string.failed_load_message_from_email_server),
         getString(R.string.retry), View.OnClickListener {
       UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
-      (baseActivity as BaseSyncActivity).loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg,
-          localFolder!!, details!!.uid, details!!.id, true)
+      (baseActivity as MessageDetailsActivity).loadMsgDetails()
     })
   }
 
@@ -497,35 +499,13 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       }
     }
 
-    activity?.invalidateOptionsMenu()
-  }
-
-  /**
-   * Run the message action (archive/delete/move to inbox).
-   *
-   * @param menuId The action menu id.
-   */
-  private fun runMsgAction(menuId: Int) {
-    val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)
-    if (GeneralUtil.isConnected(context!!) || isOutbox) {
-      if (!isOutbox) {
-        isAdditionalActionEnabled = false
-        activity!!.invalidateOptionsMenu()
-        statusView!!.visibility = View.GONE
-        UIUtil.exchangeViewVisibility(context, true, progressBarActionRunning!!, layoutContent!!)
+    when (details?.msgState) {
+      MessageState.PENDING_ARCHIVING -> isArchiveActionEnabled = false
+      else -> {
       }
-
-      when (menuId) {
-        R.id.menuActionArchiveMessage -> onActionListener!!.onArchiveMsgClicked()
-
-        R.id.menuActionDeleteMessage -> onActionListener!!.onDeleteMsgClicked()
-
-        R.id.menuActionMoveToInbox -> onActionListener!!.onMoveMsgToInboxClicked()
-      }
-    } else {
-      showSnackbar(view!!, getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
-          Snackbar.LENGTH_LONG, View.OnClickListener { runMsgAction(menuId) })
     }
+
+    activity?.invalidateOptionsMenu()
   }
 
   private fun initViews(view: View) {
@@ -990,14 +970,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       textViewActionProgress?.text = null
       layoutActionProgress?.visibility = View.GONE
     }
-  }
-
-  interface OnActionListener {
-    fun onArchiveMsgClicked()
-
-    fun onDeleteMsgClicked()
-
-    fun onMoveMsgToInboxClicked()
   }
 
   companion object {

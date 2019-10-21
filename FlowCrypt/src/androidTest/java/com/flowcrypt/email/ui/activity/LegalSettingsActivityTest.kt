@@ -68,8 +68,6 @@ class LegalSettingsActivityTest : BaseTest() {
 
   @Test
   fun testShowHelpScreen() {
-    //Added a timeout because an initialization of WebViews needs more time.
-    Thread.sleep(5000)
     testHelpScreen()
   }
 

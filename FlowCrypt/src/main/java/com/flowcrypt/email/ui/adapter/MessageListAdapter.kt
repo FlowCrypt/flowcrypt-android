@@ -44,8 +44,7 @@ import javax.mail.internet.InternetAddress
  * E-mail: DenBond7@gmail.com
  */
 
-class MessageListAdapter(context: Context,
-                         c: Cursor?) : CursorAdapter(context, c, false) {
+class MessageListAdapter(context: Context, c: Cursor?) : CursorAdapter(context, c, false) {
   private val msgDaoSource: MessageDaoSource = MessageDaoSource()
   var localFolder: LocalFolder? = null
     set(localFolder) {
@@ -79,6 +78,7 @@ class MessageListAdapter(context: Context,
     viewHolder.textViewDate = view.findViewById(R.id.textViewDate)
     viewHolder.textViewSubject = view.findViewById(R.id.textViewSubject)
     viewHolder.imageViewAtts = view.findViewById(R.id.imageViewAtts)
+    viewHolder.imageViewStatus = view.findViewById(R.id.imageViewStatus)
     viewHolder.viewIsEncrypted = view.findViewById(R.id.viewIsEncrypted)
 
     updateItem(context, msgDaoSource.getMsgInfo(cursor), viewHolder)
@@ -158,6 +158,39 @@ class MessageListAdapter(context: Context,
 
       viewHolder.imageViewAtts!!.visibility = if (details.hasAtts) View.VISIBLE else View.GONE
       viewHolder.viewIsEncrypted!!.visibility = if (details.isEncrypted) View.VISIBLE else View.GONE
+
+      when (details.msgState) {
+        MessageState.PENDING_ARCHIVING -> {
+          with(viewHolder.imageViewStatus) {
+            this?.visibility = View.VISIBLE
+            this?.setBackgroundResource(R.drawable.ic_archive_blue_16dp)
+          }
+        }
+
+        MessageState.PENDING_MARK_UNREAD -> {
+          with(viewHolder.imageViewStatus) {
+            this?.visibility = View.VISIBLE
+            this?.setBackgroundResource(R.drawable.ic_markunread_blue_16dp)
+          }
+        }
+
+        MessageState.PENDING_DELETING -> {
+          with(viewHolder.imageViewStatus) {
+            this?.visibility = View.VISIBLE
+            this?.setBackgroundResource(R.drawable.ic_delete_blue_16dp)
+          }
+        }
+
+        MessageState.PENDING_MOVE_TO_INBOX -> {
+          with(viewHolder.imageViewStatus) {
+            this?.visibility = View.VISIBLE
+            this?.setBackgroundResource(R.drawable.ic_move_to_inbox_blue_16dp)
+          }
+        }
+
+        else -> viewHolder.imageViewStatus?.visibility = View.GONE
+      }
+
     } else {
       clearItem(viewHolder)
     }
@@ -214,11 +247,12 @@ class MessageListAdapter(context: Context,
    * @param viewHolder A View holder object which consist links to views.
    */
   private fun clearItem(viewHolder: ViewHolder) {
-    viewHolder.textViewSenderAddress!!.text = null
-    viewHolder.textViewSubject!!.text = null
-    viewHolder.textViewDate!!.text = null
-    viewHolder.imageViewAtts!!.visibility = View.GONE
-    viewHolder.viewIsEncrypted!!.visibility = View.GONE
+    viewHolder.textViewSenderAddress?.text = null
+    viewHolder.textViewSubject?.text = null
+    viewHolder.textViewDate?.text = null
+    viewHolder.imageViewAtts?.visibility = View.GONE
+    viewHolder.viewIsEncrypted?.visibility = View.GONE
+    viewHolder.imageViewStatus?.visibility = View.GONE
 
     changeViewsTypeface(viewHolder, Typeface.NORMAL)
   }
@@ -321,6 +355,7 @@ class MessageListAdapter(context: Context,
     internal var textViewDate: TextView? = null
     internal var textViewSubject: TextView? = null
     internal var imageViewAtts: ImageView? = null
+    internal var imageViewStatus: ImageView? = null
     internal var viewIsEncrypted: View? = null
   }
 }

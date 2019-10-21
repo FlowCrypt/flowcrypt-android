@@ -75,6 +75,10 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
 
   override fun onDestroy() {
     super.onDestroy()
+    disconnectFromSyncService()
+  }
+
+  protected fun disconnectFromSyncService() {
     if (isSyncEnabled && isSyncServiceBound) {
       if (syncMessenger != null) {
         unregisterReplyMessenger(EmailSyncService.MESSAGE_REMOVE_REPLY_MESSENGER, syncMessenger!!, syncReplyMessenger)
@@ -197,17 +201,96 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * Run update a folders list.
    *
    * @param requestCode    The unique request code for identify the current action.
-   * @param isInBackground if true we will run this task using the passive queue, else we will use the active queue.
    */
-  fun updateLabels(requestCode: Int, isInBackground: Boolean) {
+  fun updateLabels(requestCode: Int) {
     if (checkServiceBound(isSyncServiceBound)) return
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS, if (isInBackground) 1 else 0, 0, action)
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_UPDATE_LABELS, action)
     msg.replyTo = syncReplyMessenger
     try {
-      syncMessenger!!.send(msg)
+      syncMessenger?.send(msg)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  /**
+   * Delete marked messages
+   *
+   * @param requestCode    The unique request code for identify the current action.
+   */
+  fun deleteMsgs(requestCode: Int = -1) {
+    if (checkServiceBound(isSyncServiceBound)) return
+
+    val action = BaseService.Action(replyMessengerName, requestCode, null)
+
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_DELETE_MSGS, action)
+    msg.replyTo = syncReplyMessenger
+    try {
+      syncMessenger?.send(msg)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  /**
+   * Archive marked messages
+   *
+   * @param requestCode    The unique request code for identify the current action.
+   */
+  fun archiveMsgs(requestCode: Int = -1) {
+    if (checkServiceBound(isSyncServiceBound)) return
+
+    val action = BaseService.Action(replyMessengerName, requestCode, null)
+
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_ARCHIVE_MSGS, action)
+    msg.replyTo = syncReplyMessenger
+    try {
+      syncMessenger?.send(msg)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  /**
+   * Change messages read state.
+   *
+   * @param requestCode    The unique request code for identify the current action.
+   */
+  fun changeMsgsReadState(requestCode: Int = -1) {
+    if (checkServiceBound(isSyncServiceBound)) return
+
+    val action = BaseService.Action(replyMessengerName, requestCode, null)
+
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_CHANGE_MSGS_READ_STATE, action)
+    msg.replyTo = syncReplyMessenger
+    try {
+      syncMessenger?.send(msg)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  /**
+   * Move messages back to inbox
+   *
+   * @param requestCode    The unique request code for identify the current action.
+   */
+  fun moveMsgsToINBOX(requestCode: Int = -1) {
+    if (checkServiceBound(isSyncServiceBound)) return
+
+    val action = BaseService.Action(replyMessengerName, requestCode, null)
+
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_MOVE_MSGS_TO_INBOX, action)
+    msg.replyTo = syncReplyMessenger
+    try {
+      syncMessenger?.send(msg)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
@@ -240,15 +323,17 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    *
    * @param requestCode The unique request code for identify the current action.
    * @param localFolder [LocalFolder] object.
+   * @param uniqueId    The task unique id.
    * @param uid         The [com.sun.mail.imap.protocol.UID] of [javax.mail.Message]
    * @param id          A unique id of the row in the local database which identifies a message
    * @param resetConnection The reset connection status
    */
-  fun loadMsgDetails(requestCode: Int, localFolder: LocalFolder, uid: Int, id: Int, resetConnection: Boolean = false) {
+  fun loadMsgDetails(requestCode: Int, uniqueId: String, localFolder: LocalFolder, uid: Int,
+                     id: Int, resetConnection: Boolean = false) {
     if (checkServiceBound(isSyncServiceBound)) return
     onProgressReplyReceived(requestCode, R.id.progress_id_connecting, 5)
 
-    val action = BaseService.Action(replyMessengerName, requestCode, localFolder, resetConnection)
+    val action = BaseService.Action(replyMessengerName, requestCode, localFolder, resetConnection, uniqueId)
 
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGE_DETAILS, uid, id, action)
     msg.replyTo = syncReplyMessenger
@@ -262,11 +347,15 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
 
   /**
    * Cancel a job which load the current message details
+   *
+   * @param uniqueId    The task unique id. This parameter helps identify which tasks should be
+   * stopped
    */
-  fun cancelLoadMsgDetails() {
+  fun cancelLoadMsgDetails(uniqueId: String) {
     if (checkServiceBound(isSyncServiceBound)) return
 
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS)
+    val action = BaseService.Action(replyMessengerName, -1, null, false, uniqueId)
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS, action)
     msg.replyTo = syncReplyMessenger
     try {
       syncMessenger?.send(msg)
