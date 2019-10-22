@@ -18,4 +18,11 @@ interface FlavourSettings {
     get() = false
   val serverClientId: String
     get() = ""
+  val buildType: BuildType
+    get() = BuildType.REGULAR
+
+  enum class BuildType {
+    REGULAR,
+    ENTERPRISE
+  }
 }

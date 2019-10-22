@@ -18,4 +18,5 @@ object FlavourSettingsImpl : FlavourSettings {
   override val isIdTokenNeeded: Boolean = true
   override val serverClientId: String
     get() = SERVER_CLIENT_ID
+  override val buildType: FlavourSettings.BuildType = FlavourSettings.BuildType.ENTERPRISE
 }
