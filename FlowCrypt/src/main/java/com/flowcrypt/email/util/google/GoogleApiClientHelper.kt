@@ -7,6 +7,7 @@ package com.flowcrypt.email.util.google
 
 import android.view.View
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.FlavourSettingsImpl
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -29,10 +30,16 @@ class GoogleApiClientHelper {
   companion object {
     @JvmStatic
     fun generateGoogleSignInOptions(): GoogleSignInOptions {
-      return GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-          .requestScopes(Scope(Constants.SCOPE_MAIL_GOOGLE_COM))
-          .requestEmail()
-          .build()
+      val builder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+
+      builder.requestScopes(Scope(Constants.SCOPE_MAIL_GOOGLE_COM))
+      builder.requestEmail()
+
+      if (FlavourSettingsImpl.isIdTokenNeeded) {
+        builder.requestIdToken(FlavourSettingsImpl.serverClientId)
+      }
+
+      return builder.build()
     }
 
     /**
