@@ -22,7 +22,7 @@ import com.google.gson.annotations.SerializedName
 
 data class ApiError constructor(@Expose val code: Int = 0,
                                 @SerializedName("message") @Expose val msg: String?,
-                                @Expose val internal: String?) : Parcelable {
+                                @Expose val internal: String? = null) : Parcelable {
   constructor(source: Parcel) : this(
       source.readInt(),
       source.readString(),
