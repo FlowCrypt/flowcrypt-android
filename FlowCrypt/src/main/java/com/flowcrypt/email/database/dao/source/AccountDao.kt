@@ -9,6 +9,8 @@ import android.accounts.Account
 import android.os.Parcel
 import android.os.Parcelable
 import android.text.TextUtils
+import com.flowcrypt.email.FlavourSettings
+import com.flowcrypt.email.FlavourSettingsImpl
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import java.util.*
@@ -84,6 +86,19 @@ data class AccountDao constructor(val email: String,
       writeString(uuid)
       writeStringList(domainRules)
     }
+  }
+
+  fun isRuleExist(domainRule: DomainRule): Boolean {
+    return when (FlavourSettingsImpl.buildType) {
+      FlavourSettings.BuildType.ENTERPRISE -> domainRule.name in domainRules ?: emptyList()
+      else -> false
+    }
+  }
+
+  enum class DomainRule {
+    NO_PRV_CREATE,
+    NO_PRV_BACKUP,
+    ENFORCE_ATTESTER_SUBMIT
   }
 
   companion object {
