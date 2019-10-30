@@ -190,7 +190,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
 
   private fun saveGmailAccount(): AccountDaoSource {
     val accountDaoSource = AccountDaoSource()
-    accountDaoSource.addRow(this, googleSignInAccount, uuid)
+    accountDaoSource.addRow(this, googleSignInAccount, uuid, domainRules)
     accountDaoSource.setActiveAccount(this, googleSignInAccount!!.email)
     return accountDaoSource
   }

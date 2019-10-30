@@ -45,7 +45,8 @@ class AccountDaoSource : BaseDaoSource() {
    * @param googleSignInAccount Reflecting the user's sign in information.
    * @return The created [Uri] or null;
    */
-  fun addRow(context: Context, googleSignInAccount: GoogleSignInAccount?, uuid: String? = null): Uri? {
+  fun addRow(context: Context, googleSignInAccount: GoogleSignInAccount?, uuid: String? = null,
+             domainRules: List<String>? = null): Uri? {
     val contentResolver = context.contentResolver
     if (googleSignInAccount != null && contentResolver != null) {
       val contentValues = genContentValues(googleSignInAccount) ?: return null
@@ -55,6 +56,8 @@ class AccountDaoSource : BaseDaoSource() {
           val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
           contentValues.put(COL_UUID, keyStoreCryptoManager.encryptWithRSAOrAES(it))
         }
+
+        domainRules?.let { contentValues.put(COL_DOMAIN_RULES, it.joinToString()) }
       }
 
       return contentResolver.insert(baseContentUri, contentValues)
@@ -419,6 +422,7 @@ class AccountDaoSource : BaseDaoSource() {
     const val COL_IS_CONTACTS_LOADED = "ic_contacts_loaded"
     const val COL_IS_SHOW_ONLY_ENCRYPTED = "is_show_only_encrypted"
     const val COL_UUID = "uuid"
+    const val COL_DOMAIN_RULES = "domain_rules"
 
     const val ACCOUNTS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
         TABLE_NAME_ACCOUNTS + " (" +
@@ -448,7 +452,8 @@ class AccountDaoSource : BaseDaoSource() {
         COL_SMTP_PASSWORD + " TEXT DEFAULT NULL, " +
         COL_IS_CONTACTS_LOADED + " INTEGER DEFAULT 0, " +
         COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0, " +
-        COL_UUID + " TEXT DEFAULT NULL " + ");"
+        COL_UUID + " TEXT DEFAULT NULL, " +
+        COL_DOMAIN_RULES + " TEXT DEFAULT NULL " + ");"
 
     const val CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS = (UNIQUE_INDEX_PREFIX
         + COL_EMAIL + "_" + COL_ACCOUNT_TYPE + "_in_" + TABLE_NAME_ACCOUNTS + " ON " + TABLE_NAME_ACCOUNTS +
@@ -477,6 +482,13 @@ class AccountDaoSource : BaseDaoSource() {
         ExceptionUtil.handleError(e)
       }
 
+      val domainRulesString = cursor.getString(cursor.getColumnIndex(COL_DOMAIN_RULES))
+      val domainRules = if (domainRulesString.isNullOrEmpty()) {
+        emptyList()
+      } else {
+        domainRulesString.split(",").map { it.trim() }
+      }
+
       return AccountDao(
           cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
           cursor.getString(cursor.getColumnIndex(COL_ACCOUNT_TYPE)),
@@ -486,7 +498,8 @@ class AccountDaoSource : BaseDaoSource() {
           cursor.getString(cursor.getColumnIndex(COL_PHOTO_URL)),
           cursor.getInt(cursor.getColumnIndex(COL_IS_CONTACTS_LOADED)) == 1,
           authCreds,
-          uuid)
+          uuid,
+          domainRules)
     }
 
     /**

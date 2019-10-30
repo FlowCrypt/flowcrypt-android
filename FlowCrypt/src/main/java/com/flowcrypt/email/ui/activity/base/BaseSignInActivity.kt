@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.FlavourSettings
 import com.flowcrypt.email.FlavourSettingsImpl
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResult
 import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
@@ -46,6 +47,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
   protected var isRunSignInWithGmailNeeded: Boolean = false
   protected lateinit var enterpriseDomainRulesViewModel: EnterpriseDomainRulesViewModel
   protected var uuid: String? = null
+  protected var domainRules: List<String>? = null
 
   abstract val progressView: View?
 
@@ -158,6 +160,8 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
           }
 
           ApiResult.Status.SUCCESS -> {
+            val result = it.data as? DomainRulesResponse
+            domainRules = result?.domainRules?.flags
             onSignSuccess(googleSignInAccount)
           }
 

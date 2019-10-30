@@ -30,7 +30,8 @@ data class AccountDao constructor(val email: String,
                                   val photoUrl: String? = null,
                                   val areContactsLoaded: Boolean = false,
                                   val authCreds: AuthCredentials? = null,
-                                  val uuid: String? = null) : Parcelable {
+                                  val uuid: String? = null,
+                                  val domainRules: List<String>? = null) : Parcelable {
 
   init {
     if (TextUtils.isEmpty(accountType)) {
@@ -59,7 +60,8 @@ data class AccountDao constructor(val email: String,
       source.readString(),
       1 == source.readInt(),
       source.readParcelable(AuthCredentials::class.java.classLoader),
-      source.readString())
+      source.readString(),
+      mutableListOf<String>().apply { source.readStringList(this) })
 
   constructor(email: String, accountTypeGoogle: String) : this(
       email = email,
@@ -80,6 +82,7 @@ data class AccountDao constructor(val email: String,
       writeInt((if (areContactsLoaded) 1 else 0))
       writeParcelable(authCreds, flags)
       writeString(uuid)
+      writeStringList(domainRules)
     }
   }
 

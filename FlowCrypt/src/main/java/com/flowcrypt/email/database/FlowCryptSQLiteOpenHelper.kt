@@ -520,6 +520,8 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
     try {
       sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
           " ADD COLUMN " + AccountDaoSource.COL_UUID + " TEXT DEFAULT NULL;")
+      sqLiteDatabase.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
+          " ADD COLUMN " + AccountDaoSource.COL_DOMAIN_RULES + " TEXT DEFAULT NULL;")
       sqLiteDatabase.setTransactionSuccessful()
     } finally {
       sqLiteDatabase.endTransaction()

@@ -252,7 +252,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
     val isAccountUpdated = accountDaoSource.updateAccountInformation(this, googleSignInAccount) > 0
     if (!isAccountUpdated) {
-      accountDaoSource.addRow(this, googleSignInAccount, uuid)
+      accountDaoSource.addRow(this, googleSignInAccount, uuid, domainRules)
     }
 
     return AccountDaoSource().getAccountInformation(this, googleSignInAccount.email!!)
