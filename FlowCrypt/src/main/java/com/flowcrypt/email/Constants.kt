@@ -73,6 +73,7 @@ class Constants {
     const val PREF_KEY_LAST_OUTBOX_UID = "preferences_key_last_outbox_uid"
     const val PREF_KEY_LAST_ATT_ORDER_ID = "preferences_key_last_att_order_id"
     const val PREF_KEY_IS_CHECK_KEYS_NEEDED = "preferences_key_is_check_keys_needed"
+    const val PREF_KEY_BACKUPS = "pref_key_backups"
 
     /**
      * The max total size off all attachment which can be send via the app.

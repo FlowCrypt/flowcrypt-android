@@ -33,9 +33,9 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
     account = AccountDaoSource().getActiveAccountInformation(context!!)
 
     val preferenceChangePassPhrase = findPreference(Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE)
-    if (preferenceChangePassPhrase != null) {
-      preferenceChangePassPhrase.onPreferenceClickListener = this
-    }
+    preferenceChangePassPhrase?.onPreferenceClickListener = this
+    preferenceChangePassPhrase?.isVisible =
+        !(account?.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP) ?: false)
   }
 
   override fun onPreferenceClick(preference: Preference): Boolean {

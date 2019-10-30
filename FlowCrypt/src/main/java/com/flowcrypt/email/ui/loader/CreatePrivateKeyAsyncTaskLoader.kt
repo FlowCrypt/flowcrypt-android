@@ -77,8 +77,10 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
 
       val daoSource = ActionQueueDaoSource()
 
-      if (!saveCreatedPrivateKeyAsBackupToInbox(nodeKeyDetails)) {
-        daoSource.addAction(context, BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.longId!!))
+      if (!account.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP)) {
+        if (!saveCreatedPrivateKeyAsBackupToInbox(nodeKeyDetails)) {
+          daoSource.addAction(context, BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.longId!!))
+        }
       }
 
       if (!registerUserPublicKey(nodeKeyDetails)) {

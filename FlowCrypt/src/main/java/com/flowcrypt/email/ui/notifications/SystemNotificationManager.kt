@@ -8,12 +8,14 @@ package com.flowcrypt.email.ui.notifications
 import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.graphics.BitmapFactory
 import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity
+import com.flowcrypt.email.ui.activity.EmailManagerActivity
 
 /**
  * It's a manager which helps to show system notifications.
@@ -37,7 +39,12 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
       cancel(NOTIFICATION_ID_PASSPHRASE_TOO_WEAK)
     }
 
-    val intent = ChangePassPhraseActivity.newIntent(context, account)
+    val intent = if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP) == true) {
+      Intent(context, EmailManagerActivity::class.java)
+    } else {
+      ChangePassPhraseActivity.newIntent(context, account)
+    }
+
     val pendingIntent = PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)
 
     val builder = NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_SYSTEM)

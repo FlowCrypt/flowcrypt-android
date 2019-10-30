@@ -474,7 +474,7 @@ class AccountDaoSource : BaseDaoSource() {
         val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
         authCreds = getCurrentAuthCredsFromCursor(context, keyStoreCryptoManager, cursor)
         val encryptedUuid = cursor.getString(cursor.getColumnIndex(COL_UUID))
-        if (encryptedUuid.isNotEmpty()) {
+        if (!encryptedUuid.isNullOrEmpty()) {
           uuid = keyStoreCryptoManager.decryptWithRSAOrAES(context, encryptedUuid)
         }
       } catch (e: Exception) {
