@@ -11,22 +11,15 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.FlavourSettings
-import com.flowcrypt.email.FlavourSettingsImpl
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AuthCredentials
-import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
-import com.flowcrypt.email.api.retrofit.response.base.ApiResult
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.provider.FlowcryptContract
-import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.SecurityUtils
@@ -53,9 +46,11 @@ import java.util.*
  */
 class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<LoaderResult> {
 
-  override lateinit var rootView: View
-  private lateinit var enterpriseDomainRulesViewModel: EnterpriseDomainRulesViewModel
-  private var progressView: View? = null
+  override val rootView: View
+    get() = findViewById(R.id.signInView)
+
+  override val progressView: View
+    get() = findViewById(R.id.progressView)
 
   private var isStartCheckKeysActivityEnabled: Boolean = false
 
@@ -68,7 +63,6 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     initViews()
-    setupEnterpriseViewModel()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -81,7 +75,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
           Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
             this.googleSignInAccount = null
-            UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
+            UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
           }
         }
       }
@@ -91,7 +85,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
         Activity.RESULT_CANCELED, CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
           this.googleSignInAccount = null
-          UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
+          UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
         }
       }
 
@@ -146,7 +140,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
         isStartCheckKeysActivityEnabled = true
 
         var account: AccountDao? = null
-        UIUtil.exchangeViewVisibility(this, true, progressView!!, rootView)
+        UIUtil.exchangeViewVisibility(this, true, progressView, rootView)
         if (googleSignInAccount != null) {
           account = AccountDao(googleSignInAccount!!.email!!, AccountDao.ACCOUNT_TYPE_GOOGLE)
         }
@@ -181,7 +175,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
         }
       } else if (loaderResult.exception != null) {
-        UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
+        UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
 
         if (loaderResult.exception is UserRecoverableAuthIOException) {
           startActivityForResult((loaderResult.exception as UserRecoverableAuthIOException).intent,
@@ -222,14 +216,8 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
     val account = addGmailAccount(googleSignInAccount)
     if (account != null) {
-      if (FlavourSettingsImpl.buildType == FlavourSettings.BuildType.ENTERPRISE) {
-        googleSignInAccount?.idToken?.let {
-          enterpriseDomainRulesViewModel.login(account, it)
-        }
-      } else {
-        EmailManagerActivity.runEmailManagerActivity(this)
-        finish()
-      }
+      EmailManagerActivity.runEmailManagerActivity(this)
+      finish()
     } else {
       Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
     }
@@ -264,7 +252,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
     val isAccountUpdated = accountDaoSource.updateAccountInformation(this, googleSignInAccount) > 0
     if (!isAccountUpdated) {
-      accountDaoSource.addRow(this, googleSignInAccount)
+      accountDaoSource.addRow(this, googleSignInAccount, uuid)
     }
 
     return AccountDaoSource().getAccountInformation(this, googleSignInAccount.email!!)
@@ -274,40 +262,12 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
    * In this method we init all used views.
    */
   private fun initViews() {
-    rootView = findViewById(R.id.signInView)
-    progressView = findViewById(R.id.progressView)
-
     findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener(this)
     findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener(this)
     findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener(this)
     findViewById<View>(R.id.buttonTerms)?.setOnClickListener(this)
     findViewById<View>(R.id.buttonSecurity)?.setOnClickListener(this)
     findViewById<View>(R.id.buttonHelp)?.setOnClickListener(this)
-  }
-
-  private fun setupEnterpriseViewModel() {
-    enterpriseDomainRulesViewModel = ViewModelProvider(this).get(EnterpriseDomainRulesViewModel::class.java)
-    val nameObserver = Observer<ApiResult<LoginResponse>?> {
-      it?.let {
-        when (it.status) {
-          ApiResult.Status.LOADING -> {
-            UIUtil.exchangeViewVisibility(this, true, progressView, rootView)
-          }
-
-          ApiResult.Status.SUCCESS -> {
-            UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
-          }
-
-          ApiResult.Status.ERROR -> {
-            UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
-            Toast.makeText(this, it.error?.message
-                ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
-          }
-        }
-      }
-    }
-
-    enterpriseDomainRulesViewModel.loginLiveData.observe(this, nameObserver)
   }
 
   companion object {

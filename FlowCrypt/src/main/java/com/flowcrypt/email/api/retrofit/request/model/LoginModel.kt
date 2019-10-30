@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.retrofit.request.model
 import com.google.gson.annotations.Expose
 
 /**
- * The request model for the https://flowcrypt.com/api/account/login API.
+ * The request model for the https://flowcrypt.com/api/account/login(or get) API.
  *
  * @author Denis Bondarenko
  *         Date: 10/23/19

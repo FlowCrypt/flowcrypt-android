@@ -6,7 +6,9 @@
 package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
+import com.flowcrypt.email.api.retrofit.request.api.DomainRulesRequest
 import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
+import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResult
 
@@ -24,4 +26,10 @@ interface ApiRepository {
    * @param request An instance of [LoginRequest].
    */
   suspend fun login(context: Context, request: LoginRequest): ApiResult<LoginResponse>
+
+  /**
+   * @param context Interface to global information about an application environment.
+   * @param request An instance of [DomainRulesRequest].
+   */
+  suspend fun getDomainRules(context: Context, request: DomainRulesRequest): ApiResult<DomainRulesResponse>
 }

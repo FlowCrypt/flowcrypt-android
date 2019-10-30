@@ -10,7 +10,15 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import com.flowcrypt.email.FlavourSettings
+import com.flowcrypt.email.FlavourSettingsImpl
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.flowcrypt.email.api.retrofit.response.base.ApiResult
+import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
+import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity
 import com.flowcrypt.email.ui.activity.BaseNodeActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -36,6 +44,10 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
 
   protected lateinit var client: GoogleSignInClient
   protected var isRunSignInWithGmailNeeded: Boolean = false
+  protected lateinit var enterpriseDomainRulesViewModel: EnterpriseDomainRulesViewModel
+  protected var uuid: String? = null
+
+  abstract val progressView: View?
 
   @JvmField
   protected var googleSignInAccount: GoogleSignInAccount? = null
@@ -47,15 +59,18 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
 
     if (savedInstanceState != null) {
       this.googleSignInAccount = savedInstanceState.getParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT)
+      this.uuid = savedInstanceState.getString(KEY_UUID)
     }
 
     client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
     initViews()
+    setupEnterpriseViewModel()
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
     outState.putParcelable(KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT, googleSignInAccount)
+    outState.putString(KEY_UUID, uuid)
   }
 
   public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -105,7 +120,15 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
     try {
       if (task.isSuccessful) {
         googleSignInAccount = task.getResult(ApiException::class.java)
-        onSignSuccess(googleSignInAccount)
+
+        if (FlavourSettingsImpl.buildType == FlavourSettings.BuildType.ENTERPRISE) {
+          val account = googleSignInAccount?.account?.name ?: return
+          val idToken = googleSignInAccount?.idToken ?: return
+          uuid = SecurityUtils.generateRandomUUID()
+          uuid?.let { enterpriseDomainRulesViewModel.getDomainRules(account, it, idToken) }
+        } else {
+          onSignSuccess(googleSignInAccount)
+        }
       } else {
         val error = task.exception
 
@@ -125,6 +148,31 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
     }
   }
 
+  private fun setupEnterpriseViewModel() {
+    enterpriseDomainRulesViewModel = ViewModelProvider(this).get(EnterpriseDomainRulesViewModel::class.java)
+    val observer = Observer<ApiResult<ApiResponse>?> {
+      it?.let {
+        when (it.status) {
+          ApiResult.Status.LOADING -> {
+            UIUtil.exchangeViewVisibility(this, true, progressView, rootView)
+          }
+
+          ApiResult.Status.SUCCESS -> {
+            onSignSuccess(googleSignInAccount)
+          }
+
+          ApiResult.Status.ERROR -> {
+            UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+            Toast.makeText(this, it.error?.message
+                ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
+          }
+        }
+      }
+    }
+
+    enterpriseDomainRulesViewModel.domainRulesLiveData.observe(this, observer)
+  }
+
   companion object {
     const val REQUEST_CODE_SIGN_IN = 10
     const val REQUEST_CODE_ADD_OTHER_ACCOUNT = 11
@@ -132,5 +180,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
 
     private val KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT =
         GeneralUtil.generateUniqueExtraKey("KEY_CURRENT_GOOGLE_SIGN_IN_ACCOUNT", BaseSignInActivity::class.java)
+    private val KEY_UUID =
+        GeneralUtil.generateUniqueExtraKey("KEY_UUID", BaseSignInActivity::class.java)
   }
 }

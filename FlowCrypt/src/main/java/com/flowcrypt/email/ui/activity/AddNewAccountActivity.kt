@@ -43,7 +43,6 @@ import java.util.*
 class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
     LoaderManager.LoaderCallbacks<LoaderResult> {
 
-  private var progressView: View? = null
   private var content: View? = null
 
   override val isDisplayHomeAsUpEnabled: Boolean
@@ -55,9 +54,11 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
   override val rootView: View
     get() = findViewById(R.id.screenContent)
 
+  override val progressView: View
+    get() = findViewById(R.id.progressView)
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    progressView = findViewById(R.id.progressView)
     content = findViewById(R.id.layoutContent)
   }
 
@@ -90,7 +91,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
         Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> returnResultOk()
 
         Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
-          UIUtil.exchangeViewVisibility(this, false, progressView!!, content!!)
+          UIUtil.exchangeViewVisibility(this, false, progressView, content!!)
           LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email)
         }
       }
@@ -110,7 +111,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
     return when (id) {
       R.id.loader_id_load_private_key_backups_from_email -> {
-        UIUtil.exchangeViewVisibility(this, true, progressView!!, content!!)
+        UIUtil.exchangeViewVisibility(this, true, progressView, content!!)
         val account = AccountDao(googleSignInAccount!!.email!!, AccountDao.ACCOUNT_TYPE_GOOGLE)
         LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
       }
@@ -138,7 +139,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
           val account = AccountDao(googleSignInAccount!!.email!!, AccountDao.ACCOUNT_TYPE_GOOGLE)
           startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
               REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL)
-          UIUtil.exchangeViewVisibility(this, false, progressView!!, content!!)
+          UIUtil.exchangeViewVisibility(this, false, progressView, content!!)
         } else {
           val bottomTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList!!.size, keyDetailsList.size)
@@ -156,7 +157,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
   override fun onError(loaderId: Int, e: Exception?) {
     when (loaderId) {
       R.id.loader_id_load_private_key_backups_from_email -> {
-        UIUtil.exchangeViewVisibility(this, false, progressView!!, content!!)
+        UIUtil.exchangeViewVisibility(this, false, progressView, content!!)
         showInfoSnackbar(rootView, if (e != null && !TextUtils.isEmpty(e.message))
           e.message
         else
@@ -189,7 +190,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
 
   private fun saveGmailAccount(): AccountDaoSource {
     val accountDaoSource = AccountDaoSource()
-    accountDaoSource.addRow(this, googleSignInAccount)
+    accountDaoSource.addRow(this, googleSignInAccount, uuid)
     accountDaoSource.setActiveAccount(this, googleSignInAccount!!.email)
     return accountDaoSource
   }

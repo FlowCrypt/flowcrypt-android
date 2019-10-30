@@ -12,6 +12,7 @@ import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
@@ -97,4 +98,12 @@ interface ApiService {
   @POST(Constants.FLOWCRYPT_API_URL + "account/login")
   suspend fun postLogin(@Body body: LoginModel, @Header("Authorization") tokenId: String):
       Response<LoginResponse>
+
+  /**
+   * This method calls the API "https://flowcrypt.com/api/account/get"
+   *
+   * @param body POJO model for requests
+   */
+  @POST(Constants.FLOWCRYPT_API_URL + "account/get")
+  suspend fun getDomainRules(@Body body: LoginModel): Response<DomainRulesResponse>
 }

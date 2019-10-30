@@ -6,7 +6,9 @@
 package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
+import com.flowcrypt.email.api.retrofit.request.api.DomainRulesRequest
 import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
+import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResult
@@ -24,11 +26,16 @@ import retrofit2.Response
  *         E-mail: DenBond7@gmail.com
  */
 class FlowcryptApiRepository : ApiRepository {
-
   override suspend fun login(context: Context, request: LoginRequest): ApiResult<LoginResponse> =
       withContext(Dispatchers.IO) {
         val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
         getResult { apiService.postLogin(request.requestModel, "Bearer ${request.tokenId}") }
+      }
+
+  override suspend fun getDomainRules(context: Context, request: DomainRulesRequest): ApiResult<DomainRulesResponse> =
+      withContext(Dispatchers.IO) {
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        getResult { apiService.getDomainRules(request.requestModel) }
       }
 
   /**
@@ -48,6 +55,7 @@ class FlowcryptApiRepository : ApiRepository {
         ApiResult.error(ApiException(ApiError(response.code(), response.message())))
       }
     } catch (e: Exception) {
+      e.printStackTrace()
       ApiResult.error(e)
     }
   }

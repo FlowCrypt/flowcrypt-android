@@ -6,16 +6,20 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.ApiName
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
+import com.flowcrypt.email.api.retrofit.request.api.DomainRulesRequest
 import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
-import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResult
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.util.exception.ApiException
 import kotlinx.coroutines.launch
 
 /**
@@ -28,14 +32,46 @@ import kotlinx.coroutines.launch
  */
 class EnterpriseDomainRulesViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val repository: ApiRepository = FlowcryptApiRepository()
-  val loginLiveData: MutableLiveData<ApiResult<LoginResponse>?> = MutableLiveData()
+  val domainRulesLiveData: MutableLiveData<ApiResult<ApiResponse>?> = MutableLiveData()
 
-  fun login(accountDao: AccountDao, tokenId: String) {
-    loginLiveData.value = ApiResult.loading(null)
+  fun getDomainRules(account: String, uuid: String, tokenId: String) {
+    domainRulesLiveData.value = ApiResult.loading(null)
+    val context: Context = getApplication()
+
     viewModelScope.launch {
-      val result = repository.login(getApplication(),
-          LoginRequest(ApiName.POST_LOGIN, LoginModel(accountDao.email, accountDao.uuid!!), tokenId))
-      loginLiveData.value = result
+      val loginResult = repository.login(context,
+          LoginRequest(ApiName.POST_LOGIN, LoginModel(account, uuid), tokenId))
+
+      when (loginResult.status) {
+        ApiResult.Status.ERROR -> {
+          domainRulesLiveData.value = loginResult
+          return@launch
+        }
+
+        ApiResult.Status.SUCCESS -> {
+          if (loginResult.data?.isRegistered == true && loginResult.data.isVerified) {
+            val domainRulesResult = repository.getDomainRules(context,
+                DomainRulesRequest(ApiName.POST_GET_DOMAIN_RULES, LoginModel(account, uuid)))
+            domainRulesLiveData.value = domainRulesResult
+          } else when {
+            loginResult.data?.isRegistered == false ->
+              domainRulesLiveData.value = ApiResult.error(ApiException(ApiError(-1,
+                  context.getString(R.string.user_not_registered))))
+
+            loginResult.data?.isVerified == false ->
+              domainRulesLiveData.value = ApiResult.error(ApiException(ApiError(-1,
+                  context.getString(R.string.user_not_verified))))
+
+            loginResult.data?.isRegistered == false && !loginResult.data.isVerified ->
+              domainRulesLiveData.value = ApiResult.error(ApiException(ApiError(-1,
+                  context.getString(R.string.user_not_registered_not_verified))))
+          }
+        }
+
+        else -> {
+          domainRulesLiveData.value = ApiResult.error(IllegalStateException("Unhandled error"))
+        }
+      }
     }
   }
 }
