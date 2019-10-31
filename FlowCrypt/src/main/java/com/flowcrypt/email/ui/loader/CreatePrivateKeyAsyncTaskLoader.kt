@@ -29,6 +29,7 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
 import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
 import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction
+import com.flowcrypt.email.util.exception.ApiException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import java.io.IOException
 import java.util.*
@@ -77,14 +78,28 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
 
       val daoSource = ActionQueueDaoSource()
 
-      if (!account.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP)) {
-        if (!saveCreatedPrivateKeyAsBackupToInbox(nodeKeyDetails)) {
-          daoSource.addAction(context, BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.longId!!))
-        }
-      }
+      if (account.isRuleExist(AccountDao.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        val model = InitialLegacySubmitModel(account.email, nodeKeyDetails.publicKey!!)
+        val response = apiService.postInitialLegacySubmit(model).execute()
+        val body = response.body()
+        body?.apiError?.let { throw ApiException(body.apiError) }
 
-      if (!registerUserPublicKey(nodeKeyDetails)) {
-        daoSource.addAction(context, RegisterUserPublicKeyAction(0, email, 0, nodeKeyDetails.publicKey!!))
+        if (!account.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP)) {
+          if (!saveCreatedPrivateKeyAsBackupToInbox(nodeKeyDetails)) {
+            daoSource.addAction(context, BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.longId!!))
+          }
+        }
+      } else {
+        if (!account.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP)) {
+          if (!saveCreatedPrivateKeyAsBackupToInbox(nodeKeyDetails)) {
+            daoSource.addAction(context, BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.longId!!))
+          }
+        }
+
+        if (!registerUserPublicKey(nodeKeyDetails)) {
+          daoSource.addAction(context, RegisterUserPublicKeyAction(0, email, 0, nodeKeyDetails.publicKey!!))
+        }
       }
 
       if (!requestingTestMsgWithNewPublicKey(nodeKeyDetails)) {

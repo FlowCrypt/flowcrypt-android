@@ -18,5 +18,5 @@ import java.io.IOException
  * E-mail: DenBond7@gmail.com
  */
 
-class ApiException(apiError: ApiError) :
+class ApiException(val apiError: ApiError) :
     IOException("API error: code = " + apiError.code + ", message = " + apiError.msg)
