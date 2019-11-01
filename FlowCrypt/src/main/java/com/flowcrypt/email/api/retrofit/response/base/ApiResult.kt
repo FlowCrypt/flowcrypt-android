@@ -13,11 +13,12 @@ package com.flowcrypt.email.api.retrofit.response.base
  *         Time: 3:42 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ApiResult<out T>(val status: Status, val data: T?, val error: Throwable?) {
+class ApiResult<out T>(val status: Status, val data: T?, val exception: Throwable?) {
 
   enum class Status {
     SUCCESS,
     ERROR,
+    EXCEPTION,
     LOADING
   }
 
@@ -26,8 +27,12 @@ class ApiResult<out T>(val status: Status, val data: T?, val error: Throwable?) 
       return ApiResult(Status.SUCCESS, data, null)
     }
 
-    fun <T> error(error: Throwable, data: T? = null): ApiResult<T> {
-      return ApiResult(Status.ERROR, data, error)
+    fun <T> exception(error: Throwable, data: T? = null): ApiResult<T> {
+      return ApiResult(Status.EXCEPTION, data, error)
+    }
+
+    fun <T> error(data: T? = null): ApiResult<T> {
+      return ApiResult(Status.ERROR, data, null)
     }
 
     fun <T> loading(data: T? = null): ApiResult<T> {

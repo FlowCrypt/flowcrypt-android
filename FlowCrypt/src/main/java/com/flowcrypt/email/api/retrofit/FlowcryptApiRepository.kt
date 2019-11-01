@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResult
 import com.flowcrypt.email.util.exception.ApiException
 import kotlinx.coroutines.Dispatchers
@@ -47,16 +48,25 @@ class FlowcryptApiRepository : ApiRepository {
       if (response.isSuccessful) {
         val body = response.body()
         if (body != null) {
-          ApiResult.success(body)
+          val apiResponse = body
+          if (apiResponse is ApiResponse) {
+            if (apiResponse.apiError != null) {
+              ApiResult.error(body)
+            } else {
+              ApiResult.success(body)
+            }
+          } else {
+            ApiResult.success(body)
+          }
         } else {
-          ApiResult.error(ApiException(ApiError(response.code(), response.message())))
+          ApiResult.exception(ApiException(ApiError(response.code(), response.message())))
         }
       } else {
-        ApiResult.error(ApiException(ApiError(response.code(), response.message())))
+        ApiResult.exception(ApiException(ApiError(response.code(), response.message())))
       }
     } catch (e: Exception) {
       e.printStackTrace()
-      ApiResult.error(e)
+      ApiResult.exception(e)
     }
   }
 }

@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit
 
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
@@ -95,7 +96,7 @@ interface ApiService {
    *
    * @param body POJO model for requests
    */
-  @POST(Constants.FLOWCRYPT_API_URL + "account/login")
+  @POST(BuildConfig.API_URL + "account/login")
   suspend fun postLogin(@Body body: LoginModel, @Header("Authorization") tokenId: String):
       Response<LoginResponse>
 
@@ -104,6 +105,6 @@ interface ApiService {
    *
    * @param body POJO model for requests
    */
-  @POST(Constants.FLOWCRYPT_API_URL + "account/get")
+  @POST(BuildConfig.API_URL + "account/get")
   suspend fun getDomainRules(@Body body: LoginModel): Response<DomainRulesResponse>
 }

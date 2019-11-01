@@ -23,19 +23,19 @@ import com.google.gson.annotations.SerializedName
 data class LoginResponse constructor(@SerializedName("error")
                                      @Expose override val apiError: ApiError?,
                                      @SerializedName("registered")
-                                     @Expose val isRegistered: Boolean,
+                                     @Expose val isRegistered: Boolean?,
                                      @SerializedName("verified")
-                                     @Expose val isVerified: Boolean) : ApiResponse {
+                                     @Expose val isVerified: Boolean?) : ApiResponse {
   constructor(parcel: Parcel) : this(
       parcel.readParcelable(ApiError::class.java.classLoader),
-      parcel.readByte() != 0.toByte(),
-      parcel.readByte() != 0.toByte())
+      parcel.readValue(Boolean::class.java.classLoader) as Boolean?,
+      parcel.readValue(Boolean::class.java.classLoader) as Boolean?)
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {
     with(parcel) {
       writeParcelable(apiError, flags)
-      writeInt((if (isRegistered) 1 else 0))
-      writeInt((if (isVerified) 1 else 0))
+      writeValue(isRegistered)
+      writeValue(isVerified)
     }
   }
 

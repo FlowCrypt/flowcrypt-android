@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.rules
 
+import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.rules.TestRule
 
@@ -15,6 +16,6 @@ import org.junit.rules.TestRule
  *         E-mail: DenBond7@gmail.com
  */
 abstract class BaseRule : TestRule {
-  protected val context = InstrumentationRegistry.getInstrumentation().context
-  protected val targetContext = InstrumentationRegistry.getInstrumentation().targetContext
+  protected val context: Context = InstrumentationRegistry.getInstrumentation().context
+  protected val targetContext: Context = InstrumentationRegistry.getInstrumentation().targetContext
 }

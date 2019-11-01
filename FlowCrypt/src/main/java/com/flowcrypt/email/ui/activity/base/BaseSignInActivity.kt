@@ -167,7 +167,13 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
 
           ApiResult.Status.ERROR -> {
             UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
-            Toast.makeText(this, it.error?.message
+            Toast.makeText(this, it.data?.apiError?.msg
+                ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
+          }
+
+          ApiResult.Status.EXCEPTION -> {
+            UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+            Toast.makeText(this, it.exception?.message
                 ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
           }
         }
