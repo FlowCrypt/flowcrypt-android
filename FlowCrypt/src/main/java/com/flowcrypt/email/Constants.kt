@@ -18,16 +18,6 @@ import androidx.core.content.FileProvider
 
 class Constants {
   companion object {
-    /**
-     * The base URL for attester.
-     */
-    const val ATTESTER_URL = "https://flowcrypt.com/attester/"
-
-    /**
-     * The base API URL.
-     */
-    const val FLOWCRYPT_API_URL = "https://flowcrypt.com/api"
-
     const val FLOWCRYPT_PRIVACY_URL = "https://flowcrypt.com/privacy"
     const val FLOWCRYPT_TERMS_URL = "https://flowcrypt.com/terms"
 

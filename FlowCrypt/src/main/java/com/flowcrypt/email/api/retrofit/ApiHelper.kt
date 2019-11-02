@@ -79,7 +79,7 @@ class ApiHelper private constructor(context: Context) {
         .create()
 
     val retrofitBuilder = Retrofit.Builder()
-        .baseUrl(Constants.ATTESTER_URL)
+        .baseUrl(BuildConfig.ATTESTER_URL)
         .addConverterFactory(ScalarsConverterFactory.create())
         .addConverterFactory(GsonConverterFactory.create(gson))
         .client(okHttpClient)

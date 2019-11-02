@@ -6,7 +6,6 @@
 package com.flowcrypt.email.api.retrofit
 
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
@@ -80,7 +79,7 @@ interface ApiService {
    * @param body POJO model for requests
    * @return [<]
    */
-  @POST(Constants.FLOWCRYPT_API_URL + "/help/feedback")
+  @POST(BuildConfig.API_URL + "help/feedback")
   fun postHelpFeedback(@Body body: PostHelpFeedbackModel): Call<PostHelpFeedbackResponse>
 
   /**
