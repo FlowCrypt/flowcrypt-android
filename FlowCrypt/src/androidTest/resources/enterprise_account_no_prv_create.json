@@ -1,0 +1,23 @@
+{
+  "email": "default@denbond7.com",
+  "accountType": "denbond7.com",
+  "displayName": "displayName",
+  "givenName": "givenName",
+  "familyName": "familyName",
+  "photoUrl": "photoUrl",
+  "authCreds": {
+    "email": "default@denbond7.com",
+    "imapPort": 143,
+    "imapOpt": "NONE",
+    "imapServer": "imap.denbond7.com",
+    "hasCustomSignInForSmtp": false,
+    "password": "qwerty1234",
+    "smtpPort": 25,
+    "smtpOpt": "NONE",
+    "smtpServer": "smtp.denbond7.com",
+    "username": "default@denbond7.com"
+  },
+  "domainRules": [
+    "NO_PRV_CREATE"
+  ]
+}
