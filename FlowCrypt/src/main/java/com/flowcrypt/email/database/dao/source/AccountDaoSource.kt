@@ -66,6 +66,45 @@ class AccountDaoSource : BaseDaoSource() {
   }
 
   /**
+   * Save information about an account using the [AccountDao];
+   *
+   * @param context    Interface to global information about an application environment;
+   * @param accountDao An instance of [AccountDao].
+   * @return The created [Uri] or null;
+   * @throws Exception An exception maybe occurred when encrypt the user password.
+   */
+  fun addRow(context: Context, accountDao: AccountDao?): Uri? {
+    return if (accountDao != null) {
+      val contentValues = ContentValues()
+
+      contentValues.put(COL_DISPLAY_NAME, accountDao.displayName)
+      contentValues.put(COL_USERNAME, accountDao.email)
+      contentValues.put(COL_GIVEN_NAME, accountDao.givenName)
+      contentValues.put(COL_FAMILY_NAME, accountDao.familyName)
+      contentValues.put(COL_PHOTO_URL, accountDao.photoUrl)
+      contentValues.put(COL_IS_CONTACTS_LOADED, accountDao.areContactsLoaded)
+      contentValues.put(COL_ACCOUNT_TYPE, accountDao.accountType)
+
+      if (accountDao.authCreds != null) {
+        val authCredentialsValues = genContentValues(context, accountDao.authCreds)
+        authCredentialsValues?.let { contentValues.putAll(it) }
+      }
+
+      if (FlavourSettingsImpl.buildType == FlavourSettings.BuildType.ENTERPRISE) {
+        accountDao.uuid?.let {
+          val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
+          contentValues.put(COL_UUID, keyStoreCryptoManager.encryptWithRSAOrAES(it))
+        }
+
+        accountDao.domainRules?.let { contentValues.put(COL_DOMAIN_RULES, it.joinToString()) }
+      }
+
+      context.contentResolver?.insert(baseContentUri, contentValues)
+    } else
+      null
+  }
+
+  /**
    * Save information about an account using the [AuthCredentials];
    *
    * @param context   Interface to global information about an application environment;

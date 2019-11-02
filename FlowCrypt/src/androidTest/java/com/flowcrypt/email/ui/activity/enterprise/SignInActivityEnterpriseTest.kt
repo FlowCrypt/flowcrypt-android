@@ -54,7 +54,7 @@ import java.io.InputStreamReader
 @DoesNotNeedMailserverEnterprise
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-class EnterpriseSignInActivityTest : BaseTest() {
+class SignInActivityEnterpriseTest : BaseTest() {
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(SignInActivity::class.java)
 
   @get:Rule
