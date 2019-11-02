@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui
+package com.flowcrypt.email.ui.activity.enterprise
 
 import android.app.Activity
 import android.app.Instrumentation
