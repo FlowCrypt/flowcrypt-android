@@ -127,7 +127,7 @@ class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteC
     val email = cursor?.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL))
     val publicKey = cursor?.getString(cursor.getColumnIndex(ContactsDaoSource.COL_PUBLIC_KEY))
 
-    fragmentManager!!
+    parentFragmentManager
         .beginTransaction()
         .replace(R.id.layoutContent, PublicKeyDetailsFragment.newInstance(email, publicKey))
         .addToBackStack(null)

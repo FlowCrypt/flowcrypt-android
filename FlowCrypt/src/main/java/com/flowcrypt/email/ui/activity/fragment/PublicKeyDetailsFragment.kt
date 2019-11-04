@@ -80,7 +80,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     email = arguments?.getString(KEY_EMAIL)
 
     if (publicKey == null || email == null) {
-      fragmentManager?.popBackStack()
+      parentFragmentManager.popBackStack()
     }
   }
 
@@ -123,7 +123,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
       }
 
       R.id.menuActionDelete -> {
-        fragmentManager?.popBackStack()
+        parentFragmentManager.popBackStack()
         email?.let { onContactDeletedListener?.onContactDeleted(it) }
         return true
       }
@@ -153,7 +153,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
           val nodeKeyDetailsList = parseKeysResult!!.nodeKeyDetails
           if (CollectionUtils.isEmpty(nodeKeyDetailsList)) {
             Toast.makeText(context, R.string.unknown_error, Toast.LENGTH_SHORT).show()
-            fragmentManager?.popBackStack()
+            parentFragmentManager.popBackStack()
           } else {
             details = nodeKeyDetailsList.first()
             updateViews()

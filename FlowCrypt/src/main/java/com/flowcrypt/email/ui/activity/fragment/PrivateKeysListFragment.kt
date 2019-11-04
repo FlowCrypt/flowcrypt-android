@@ -94,7 +94,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
   override fun onKeySelected(position: Int, nodeKeyDetails: NodeKeyDetails?) {
     nodeKeyDetails?.let {
-      fragmentManager!!
+      parentFragmentManager
           .beginTransaction()
           .replace(R.id.layoutContent, PrivateKeyDetailsFragment.newInstance(it))
           .addToBackStack(null)

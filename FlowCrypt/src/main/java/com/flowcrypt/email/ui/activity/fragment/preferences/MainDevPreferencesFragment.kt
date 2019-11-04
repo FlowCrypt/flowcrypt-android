@@ -44,7 +44,7 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferenc
     if (preference is BuildConfInfoPreference) {
       val dialogFragment = BuildConfigInfoPreferencesFragment.newInstance(preference.getKey())
       dialogFragment.setTargetFragment(this, 0)
-      dialogFragment.show(fragmentManager!!, null)
+      dialogFragment.show(parentFragmentManager, null)
     } else {
       super.onDisplayPreferenceDialog(preference)
     }

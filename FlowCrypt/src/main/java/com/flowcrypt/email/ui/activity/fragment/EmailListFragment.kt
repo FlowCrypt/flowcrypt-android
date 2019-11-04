@@ -351,7 +351,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
             resources.getQuantityString(R.plurals.delete_messages, checkedItemPositions.size(),
                 checkedItemPositions.size()), getString(android.R.string.ok), getString(R.string.cancel), true)
         twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_DELETE_MESSAGES)
-        twoWayDialogFragment.show(fragmentManager!!, TwoWayDialogFragment::class.java.simpleName)
+        twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
 
         false
       }
@@ -678,7 +678,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
         val twoWayDialogFragment = TwoWayDialogFragment.newInstance("",
             getString(R.string.message_failed_to_send), getString(R.string.retry), getString(R.string.cancel), true)
         twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_RETRY_TO_SEND_MESSAGES)
-        twoWayDialogFragment.show(fragmentManager!!, TwoWayDialogFragment::class.java.simpleName)
+        twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
         return
       }
 

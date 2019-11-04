@@ -1413,7 +1413,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private fun showNoPgpFoundDialog(pgpContact: PgpContact, isRemoveActionEnabled: Boolean) {
     val dialogFragment = NoPgpFoundDialogFragment.newInstance(pgpContact, isRemoveActionEnabled)
     dialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG)
-    dialogFragment.show(fragmentManager!!, NoPgpFoundDialogFragment::class.java.simpleName)
+    dialogFragment.show(parentFragmentManager, NoPgpFoundDialogFragment::class.java.simpleName)
   }
 
   /**
@@ -1481,7 +1481,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       val fragment = ChoosePublicKeyDialogFragment.newInstance(
           account?.email!!, ListView.CHOICE_MODE_SINGLE, R.plurals.choose_pub_key, true)
       fragment.setTargetFragment(this@CreateMessageFragment, REQUEST_CODE_SHOW_PUB_KEY_DIALOG)
-      fragment.show(fragmentManager!!, ChoosePublicKeyDialogFragment::class.java.simpleName)
+      fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
     }
   }
 
