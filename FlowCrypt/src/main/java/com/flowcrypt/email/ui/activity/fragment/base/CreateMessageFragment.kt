@@ -707,30 +707,34 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       when (messageEncryptionType) {
         MessageEncryptionType.ENCRYPTED -> {
           emailMassageHint = getString(R.string.prompt_compose_security_email)
-          recipientsTo!!.onFocusChangeListener.onFocusChange(recipientsTo, false)
-          recipientsCc!!.onFocusChangeListener.onFocusChange(recipientsCc, false)
-          recipientsBcc!!.onFocusChangeListener.onFocusChange(recipientsBcc, false)
-          fromAddrs!!.setUseKeysInfo(true)
+          recipientsTo?.onFocusChangeListener?.onFocusChange(recipientsTo, false)
+          recipientsCc?.onFocusChangeListener?.onFocusChange(recipientsCc, false)
+          recipientsBcc?.onFocusChangeListener?.onFocusChange(recipientsBcc, false)
+          fromAddrs?.setUseKeysInfo(true)
 
           val colorGray = UIUtil.getColor(context!!, R.color.gray)
-          val isItemEnabled = fromAddrs!!.isEnabled(spinnerFrom!!.selectedItemPosition)
-          editTextFrom!!.setTextColor(if (isItemEnabled) originalColor else colorGray)
+          val selectedItemPosition = spinnerFrom?.selectedItemPosition
+          if (selectedItemPosition != null && selectedItemPosition != AdapterView.INVALID_POSITION
+              && spinnerFrom?.adapter?.count ?: 0 > selectedItemPosition) {
+            val isItemEnabled = fromAddrs?.isEnabled(selectedItemPosition) ?: true
+            editTextFrom!!.setTextColor(if (isItemEnabled) originalColor else colorGray)
+          }
         }
 
         MessageEncryptionType.STANDARD -> {
           emailMassageHint = getString(R.string.prompt_compose_standard_email)
-          pgpContactsTo!!.clear()
-          pgpContactsCc!!.clear()
-          pgpContactsBcc!!.clear()
+          pgpContactsTo?.clear()
+          pgpContactsCc?.clear()
+          pgpContactsBcc?.clear()
           isUpdateToCompleted = true
           isUpdateCcCompleted = true
           isUpdateBccCompleted = true
-          fromAddrs!!.setUseKeysInfo(false)
-          editTextFrom!!.setTextColor(originalColor)
+          fromAddrs?.setUseKeysInfo(false)
+          editTextFrom?.setTextColor(originalColor)
         }
       }
     }
-    textInputLayoutMsg!!.hint = emailMassageHint
+    textInputLayoutMsg?.hint = emailMassageHint
   }
 
   private fun attachFile() {
