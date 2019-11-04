@@ -50,7 +50,9 @@ class AccountDaoTest {
         "familyName",
         "photoUrl",
         true,
-        authCredentials)
+        authCredentials,
+        "uuid",
+        listOf(AccountDao.DomainRule.NO_PRV_BACKUP.name))
 
     val parcel = Parcel.obtain()
     original.writeToParcel(parcel, original.describeContents())

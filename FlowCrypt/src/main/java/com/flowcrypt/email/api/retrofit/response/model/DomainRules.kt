@@ -15,7 +15,7 @@ import com.google.gson.annotations.Expose
  *         Time: 11:30 AM
  *         E-mail: DenBond7@gmail.com
  */
-class DomainRules constructor(@Expose val flags: List<String>?) : Parcelable {
+data class DomainRules constructor(@Expose val flags: List<String>?) : Parcelable {
   constructor(parcel: Parcel) : this(parcel.createStringArrayList())
 
   override fun writeToParcel(parcel: Parcel, flags: Int) {

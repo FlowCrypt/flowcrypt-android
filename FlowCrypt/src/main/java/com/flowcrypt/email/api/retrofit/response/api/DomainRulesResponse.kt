@@ -21,9 +21,9 @@ import com.google.gson.annotations.SerializedName
  *         Time: 11:25 AM
  *         E-mail: DenBond7@gmail.com
  */
-class DomainRulesResponse constructor(@SerializedName("error")
+data class DomainRulesResponse constructor(@SerializedName("error")
                                       @Expose override val apiError: ApiError?,
-                                      @SerializedName("domain_org_rules")
+                                           @SerializedName("domain_org_rules")
                                       @Expose val domainRules: DomainRules?) : ApiResponse {
   constructor(parcel: Parcel) : this(
       parcel.readParcelable(ApiError::class.java.classLoader),
@@ -40,12 +40,12 @@ class DomainRulesResponse constructor(@SerializedName("error")
     return 0
   }
 
-  companion object CREATOR : Parcelable.Creator<LoginResponse> {
-    override fun createFromParcel(parcel: Parcel): LoginResponse {
-      return LoginResponse(parcel)
+  companion object CREATOR : Parcelable.Creator<DomainRulesResponse> {
+    override fun createFromParcel(parcel: Parcel): DomainRulesResponse {
+      return DomainRulesResponse(parcel)
     }
 
-    override fun newArray(size: Int): Array<LoginResponse?> {
+    override fun newArray(size: Int): Array<DomainRulesResponse?> {
       return arrayOfNulls(size)
     }
   }
