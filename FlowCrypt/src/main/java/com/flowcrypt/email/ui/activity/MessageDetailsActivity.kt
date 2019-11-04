@@ -13,7 +13,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
@@ -80,7 +80,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    viewModel = ViewModelProviders.of(this).get(DecryptMessageViewModel::class.java)
+    viewModel = ViewModelProvider(this).get(DecryptMessageViewModel::class.java)
     viewModel.init(NodeRepository())
     viewModel.responsesLiveData.observe(this, this)
 

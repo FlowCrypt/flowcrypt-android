@@ -25,7 +25,7 @@ import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.Status
@@ -108,7 +108,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     idlingForPassphraseChecking = SingleIdlingResources()
     timer = Timer()
 
-    viewModel = ViewModelProviders.of(this).get(PasswordStrengthViewModel::class.java)
+    viewModel = ViewModelProvider(this).get(PasswordStrengthViewModel::class.java)
     viewModel.init(NodeRepository())
     viewModel.responsesLiveData.observe(this, this)
   }
