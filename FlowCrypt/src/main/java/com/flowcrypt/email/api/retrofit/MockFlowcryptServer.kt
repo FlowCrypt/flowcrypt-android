@@ -47,7 +47,7 @@ object MockFlowcryptServer {
 
   private suspend fun runServer() {
     withContext(Dispatchers.Default) {
-      server.start()
+      server.start(1212)
       server.setDispatcher(dispatcher)
     }
   }
