@@ -24,7 +24,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.Status
@@ -136,9 +136,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     super.onActivityResult(requestCode, resultCode, data)
     when (requestCode) {
       REQUEST_CODE_GET_URI_FOR_SAVING_KEY -> when (resultCode) {
-        Activity.RESULT_OK -> if (data?.data != null) {
-          saveKey(data)
-        }
+        Activity.RESULT_OK -> saveKey(data)
       }
     }
   }
@@ -171,9 +169,12 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     }
   }
 
-  private fun saveKey(data: Intent) {
+  private fun saveKey(data: Intent?) {
     try {
-      GeneralUtil.writeFileFromStringToUri(context!!, data.data!!, details!!.publicKey!!)
+      val context = this.context ?: return
+      val uri = data?.data ?: return
+      val pubKey = details?.publicKey ?: return
+      GeneralUtil.writeFileFromStringToUri(context, uri, pubKey)
       Toast.makeText(context, getString(R.string.saved), Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
       e.printStackTrace()
@@ -185,7 +186,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
           showInfoSnackbar(view!!, error, Snackbar.LENGTH_LONG)
 
           try {
-            context?.let { DocumentsContract.deleteDocument(it.contentResolver, data.data) }
+            context?.let { DocumentsContract.deleteDocument(it.contentResolver, data?.data) }
           } catch (fileNotFound: FileNotFoundException) {
             fileNotFound.printStackTrace()
           }
@@ -237,9 +238,9 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
   }
 
   private fun fetchKeyDetails() {
-    val viewModel = ViewModelProviders.of(this).get(ParseKeysViewModel::class.java)
+    val viewModel = ViewModelProvider(this).get(ParseKeysViewModel::class.java)
     viewModel.init(NodeRepository())
-    viewModel.responsesLiveData.observe(this, this)
+    viewModel.responsesLiveData.observe(viewLifecycleOwner, this)
     viewModel.fetchKeys(publicKey)
   }
 

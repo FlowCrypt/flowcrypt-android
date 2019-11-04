@@ -14,7 +14,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -131,9 +131,9 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
   }
 
   fun fetchKeys() {
-    val viewModel = ViewModelProviders.of(this).get(PrivateKeysViewModel::class.java)
+    val viewModel = ViewModelProvider(this).get(PrivateKeysViewModel::class.java)
     viewModel.init(NodeRepository())
-    viewModel.responsesLiveData.observe(this, this)
+    viewModel.responsesLiveData.observe(viewLifecycleOwner, this)
   }
 
   private fun runCreateOrImportKeyActivity() {
