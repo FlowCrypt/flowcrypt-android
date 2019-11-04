@@ -8,7 +8,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <fragment
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/emailListFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.preferences.MainDevPreferencesFragment"
         android:layout_width="0dp"
