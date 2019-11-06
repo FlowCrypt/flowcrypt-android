@@ -12,8 +12,6 @@ import android.view.View
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.flowcrypt.email.FlavourSettings
-import com.flowcrypt.email.FlavourSettingsImpl
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
@@ -123,14 +121,10 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
       if (task.isSuccessful) {
         googleSignInAccount = task.getResult(ApiException::class.java)
 
-        if (FlavourSettingsImpl.buildType == FlavourSettings.BuildType.ENTERPRISE) {
-          val account = googleSignInAccount?.account?.name ?: return
-          val idToken = googleSignInAccount?.idToken ?: return
-          uuid = SecurityUtils.generateRandomUUID()
-          uuid?.let { enterpriseDomainRulesViewModel.getDomainRules(account, it, idToken) }
-        } else {
-          onSignSuccess(googleSignInAccount)
-        }
+        val account = googleSignInAccount?.account?.name ?: return
+        val idToken = googleSignInAccount?.idToken ?: return
+        uuid = SecurityUtils.generateRandomUUID()
+        uuid?.let { enterpriseDomainRulesViewModel.getDomainRules(account, it, idToken) }
       } else {
         val error = task.exception
 

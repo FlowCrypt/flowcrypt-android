@@ -12,8 +12,6 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.BaseColumns
 import android.text.TextUtils
-import com.flowcrypt.email.FlavourSettings
-import com.flowcrypt.email.FlavourSettingsImpl
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
@@ -51,14 +49,12 @@ class AccountDaoSource : BaseDaoSource() {
     if (googleSignInAccount != null && contentResolver != null) {
       val contentValues = genContentValues(googleSignInAccount) ?: return null
 
-      if (FlavourSettingsImpl.buildType == FlavourSettings.BuildType.ENTERPRISE) {
-        uuid?.let {
-          val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-          contentValues.put(COL_UUID, keyStoreCryptoManager.encryptWithRSAOrAES(it))
-        }
-
-        domainRules?.let { contentValues.put(COL_DOMAIN_RULES, it.joinToString()) }
+      uuid?.let {
+        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
+        contentValues.put(COL_UUID, keyStoreCryptoManager.encryptWithRSAOrAES(it))
       }
+
+      domainRules?.let { contentValues.put(COL_DOMAIN_RULES, it.joinToString()) }
 
       return contentResolver.insert(baseContentUri, contentValues)
     } else
@@ -90,14 +86,12 @@ class AccountDaoSource : BaseDaoSource() {
         authCredentialsValues?.let { contentValues.putAll(it) }
       }
 
-      if (FlavourSettingsImpl.buildType == FlavourSettings.BuildType.ENTERPRISE) {
-        accountDao.uuid?.let {
-          val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-          contentValues.put(COL_UUID, keyStoreCryptoManager.encryptWithRSAOrAES(it))
-        }
-
-        accountDao.domainRules?.let { contentValues.put(COL_DOMAIN_RULES, it.joinToString()) }
+      accountDao.uuid?.let {
+        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
+        contentValues.put(COL_UUID, keyStoreCryptoManager.encryptWithRSAOrAES(it))
       }
+
+      accountDao.domainRules?.let { contentValues.put(COL_DOMAIN_RULES, it.joinToString()) }
 
       context.contentResolver?.insert(baseContentUri, contentValues)
     } else

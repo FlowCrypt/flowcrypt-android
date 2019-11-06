@@ -7,7 +7,6 @@ package com.flowcrypt.email.util.google
 
 import android.view.View
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.FlavourSettingsImpl
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -28,16 +27,15 @@ import com.google.android.material.snackbar.Snackbar
 class GoogleApiClientHelper {
 
   companion object {
+    private const val SERVER_CLIENT_ID = "374364070962-n83b6asllhfkhij6slijr61576lqqi3v.apps.googleusercontent.com"
+
     @JvmStatic
     fun generateGoogleSignInOptions(): GoogleSignInOptions {
       val builder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
 
       builder.requestScopes(Scope(Constants.SCOPE_MAIL_GOOGLE_COM))
       builder.requestEmail()
-
-      if (FlavourSettingsImpl.isIdTokenNeeded) {
-        builder.requestIdToken(FlavourSettingsImpl.serverClientId)
-      }
+      builder.requestIdToken(SERVER_CLIENT_ID)
 
       return builder.build()
     }
