@@ -158,7 +158,8 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
         val keyDetailsList = loaderResult.result as ArrayList<NodeKeyDetails>?
         if (CollectionUtils.isEmpty(keyDetailsList)) {
           if (googleSignInAccount != null) {
-            val intent = CreateOrImportKeyActivity.newIntent(this, AccountDao(googleSignInAccount!!), true)
+            val intent = CreateOrImportKeyActivity.newIntent(this, AccountDao
+            (googleSignInAccount!!, uuid, domainRules), true)
             startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
           }
         } else if (isStartCheckKeysActivityEnabled) {

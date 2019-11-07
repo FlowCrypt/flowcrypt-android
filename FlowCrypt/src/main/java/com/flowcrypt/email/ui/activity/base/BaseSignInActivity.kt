@@ -155,7 +155,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
 
           ApiResult.Status.SUCCESS -> {
             val result = it.data as? DomainRulesResponse
-            domainRules = result?.domainRules?.flags
+            domainRules = result?.domainRules?.flags ?: emptyList()
             onSignSuccess(googleSignInAccount)
           }
 

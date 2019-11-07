@@ -43,13 +43,15 @@ data class AccountDao constructor(val email: String,
 
   val account: Account? = Account(this.email, accountType)
 
-  constructor(googleSignInAccount: GoogleSignInAccount) : this(
+  constructor(googleSignInAccount: GoogleSignInAccount, uuid: String?, domainRules: List<String>?) : this(
       email = googleSignInAccount.email!!,
       displayName = googleSignInAccount.displayName,
       accountType = googleSignInAccount.account?.type?.toLowerCase(Locale.getDefault()),
       givenName = googleSignInAccount.givenName,
       familyName = googleSignInAccount.familyName,
-      photoUrl = googleSignInAccount.photoUrl?.toString())
+      photoUrl = googleSignInAccount.photoUrl?.toString(),
+      uuid = uuid,
+      domainRules = domainRules)
 
   constructor(source: Parcel) : this(
       source.readString()!!,
