@@ -65,10 +65,6 @@ data class AccountDao constructor(val email: String,
       source.readString(),
       mutableListOf<String>().apply { source.readStringList(this) })
 
-  constructor(email: String, accountTypeGoogle: String) : this(
-      email = email,
-      accountType = accountTypeGoogle)
-
   override fun describeContents(): Int {
     return 0
   }

@@ -139,12 +139,9 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
       R.id.loader_id_load_private_key_backups_from_email -> {
         isStartCheckKeysActivityEnabled = true
 
-        var account: AccountDao? = null
         UIUtil.exchangeViewVisibility(this, true, progressView, rootView)
-        if (googleSignInAccount != null) {
-          account = AccountDao(googleSignInAccount!!.email!!, AccountDao.ACCOUNT_TYPE_GOOGLE)
-        }
-        LoadPrivateKeysFromMailAsyncTaskLoader(this, account!!)
+        val account = AccountDao(googleSignInAccount!!, uuid, domainRules)
+        LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
       }
 
       else -> Loader(this)

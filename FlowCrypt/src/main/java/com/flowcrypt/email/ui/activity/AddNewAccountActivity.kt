@@ -105,7 +105,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
     return when (id) {
       R.id.loader_id_load_private_key_backups_from_email -> {
         UIUtil.exchangeViewVisibility(this, true, progressView, rootView)
-        val account = AccountDao(googleSignInAccount!!.email!!, AccountDao.ACCOUNT_TYPE_GOOGLE)
+        val account = AccountDao(googleSignInAccount!!, uuid, domainRules)
         LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
       }
 
@@ -129,7 +129,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
       R.id.loader_id_load_private_key_backups_from_email -> {
         val keyDetailsList = result as ArrayList<NodeKeyDetails>?
         if (CollectionUtils.isEmpty(keyDetailsList)) {
-          val account = AccountDao(googleSignInAccount!!.email!!, AccountDao.ACCOUNT_TYPE_GOOGLE)
+          val account = AccountDao(googleSignInAccount!!, uuid, domainRules)
           startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
               REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL)
           UIUtil.exchangeViewVisibility(this, false, progressView, rootView)

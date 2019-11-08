@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.model.KeyImportModel
@@ -113,11 +112,15 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
     }
 
     val buttonSkipSetup = findViewById<View>(R.id.buttonSkipSetup)
-    if (SecurityUtils.hasBackup(this)) {
-      buttonSkipSetup?.visibility = View.VISIBLE
-      buttonSkipSetup?.setOnClickListener(this)
+    if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_CREATE) == true) {
+      buttonSkipSetup.visibility = View.GONE
     } else {
-      buttonSkipSetup?.visibility = View.GONE
+      if (SecurityUtils.hasBackup(this)) {
+        buttonSkipSetup?.visibility = View.VISIBLE
+        buttonSkipSetup?.setOnClickListener(this)
+      } else {
+        buttonSkipSetup?.visibility = View.GONE
+      }
     }
   }
 
