@@ -155,6 +155,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
         val keyDetailsList = loaderResult.result as ArrayList<NodeKeyDetails>?
         if (CollectionUtils.isEmpty(keyDetailsList)) {
           if (googleSignInAccount != null) {
+            startService(Intent(this, CheckClipboardToFindKeyService::class.java))
             val intent = CreateOrImportKeyActivity.newIntent(this, AccountDao
             (googleSignInAccount!!, uuid, domainRules), true)
             startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
@@ -190,8 +191,16 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
   }
 
   override fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?) {
-    startService(Intent(this, CheckClipboardToFindKeyService::class.java))
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
+    if (domainRules?.contains(AccountDao.DomainRule.NO_PRV_BACKUP.name) == true) {
+      if (googleSignInAccount != null) {
+        startService(Intent(this, CheckClipboardToFindKeyService::class.java))
+        val intent = CreateOrImportKeyActivity.newIntent(this,
+            AccountDao(googleSignInAccount, uuid, domainRules), true)
+        startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
+      }
+    } else {
+      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
+    }
   }
 
   private fun addNewAccount(authCreds: AuthCredentials) {

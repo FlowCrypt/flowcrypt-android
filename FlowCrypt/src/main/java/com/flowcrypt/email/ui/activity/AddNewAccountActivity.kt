@@ -163,8 +163,15 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
 
   override fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?) {
     if (AccountDaoSource().getAccountInformation(this, this.googleSignInAccount!!.email!!) == null) {
-      LoaderManager.getInstance(this)
-          .restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
+      if (domainRules?.contains(AccountDao.DomainRule.NO_PRV_BACKUP.name) == true) {
+        val account = AccountDao(googleSignInAccount!!, uuid, domainRules)
+        startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
+            REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL)
+        UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+      } else {
+        LoaderManager.getInstance(this)
+            .restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
+      }
     } else {
       showInfoSnackbar(rootView, getString(R.string.template_email_alredy_added,
           this.googleSignInAccount!!.email), Snackbar.LENGTH_LONG)
