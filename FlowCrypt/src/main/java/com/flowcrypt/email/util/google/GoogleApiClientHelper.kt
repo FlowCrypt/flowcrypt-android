@@ -27,12 +27,17 @@ import com.google.android.material.snackbar.Snackbar
 class GoogleApiClientHelper {
 
   companion object {
+    private const val SERVER_CLIENT_ID = "374364070962-n83b6asllhfkhij6slijr61576lqqi3v.apps.googleusercontent.com"
+
     @JvmStatic
     fun generateGoogleSignInOptions(): GoogleSignInOptions {
-      return GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-          .requestScopes(Scope(Constants.SCOPE_MAIL_GOOGLE_COM))
-          .requestEmail()
-          .build()
+      val builder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+
+      builder.requestScopes(Scope(Constants.SCOPE_MAIL_GOOGLE_COM))
+      builder.requestEmail()
+      builder.requestIdToken(SERVER_CLIENT_ID)
+
+      return builder.build()
     }
 
     /**

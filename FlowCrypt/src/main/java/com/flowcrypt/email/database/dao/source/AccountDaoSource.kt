@@ -43,14 +43,59 @@ class AccountDaoSource : BaseDaoSource() {
    * @param googleSignInAccount Reflecting the user's sign in information.
    * @return The created [Uri] or null;
    */
-  fun addRow(context: Context, googleSignInAccount: GoogleSignInAccount?): Uri? {
+  fun addRow(context: Context, googleSignInAccount: GoogleSignInAccount?, uuid: String? = null,
+             domainRules: List<String>? = null): Uri? {
     val contentResolver = context.contentResolver
     if (googleSignInAccount != null && contentResolver != null) {
       val contentValues = genContentValues(googleSignInAccount) ?: return null
 
+      uuid?.let {
+        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
+        contentValues.put(COL_UUID, keyStoreCryptoManager.encryptWithRSAOrAES(it))
+      }
+
+      domainRules?.let { contentValues.put(COL_DOMAIN_RULES, it.joinToString()) }
+
       return contentResolver.insert(baseContentUri, contentValues)
     } else
       return null
+  }
+
+  /**
+   * Save information about an account using the [AccountDao];
+   *
+   * @param context    Interface to global information about an application environment;
+   * @param accountDao An instance of [AccountDao].
+   * @return The created [Uri] or null;
+   * @throws Exception An exception maybe occurred when encrypt the user password.
+   */
+  fun addRow(context: Context, accountDao: AccountDao?): Uri? {
+    return if (accountDao != null) {
+      val contentValues = ContentValues()
+
+      contentValues.put(COL_DISPLAY_NAME, accountDao.displayName)
+      contentValues.put(COL_USERNAME, accountDao.email)
+      contentValues.put(COL_GIVEN_NAME, accountDao.givenName)
+      contentValues.put(COL_FAMILY_NAME, accountDao.familyName)
+      contentValues.put(COL_PHOTO_URL, accountDao.photoUrl)
+      contentValues.put(COL_IS_CONTACTS_LOADED, accountDao.areContactsLoaded)
+      contentValues.put(COL_ACCOUNT_TYPE, accountDao.accountType)
+
+      if (accountDao.authCreds != null) {
+        val authCredentialsValues = genContentValues(context, accountDao.authCreds)
+        authCredentialsValues?.let { contentValues.putAll(it) }
+      }
+
+      accountDao.uuid?.let {
+        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
+        contentValues.put(COL_UUID, keyStoreCryptoManager.encryptWithRSAOrAES(it))
+      }
+
+      accountDao.domainRules?.let { contentValues.put(COL_DOMAIN_RULES, it.joinToString()) }
+
+      context.contentResolver?.insert(baseContentUri, contentValues)
+    } else
+      null
   }
 
   /**
@@ -321,9 +366,7 @@ class AccountDaoSource : BaseDaoSource() {
 
     val account = googleSign.account
 
-    if (account?.type != null) {
-      contentValues.put(COL_ACCOUNT_TYPE, account.type.toLowerCase(Locale.getDefault()))
-    }
+    account?.type?.let { contentValues.put(COL_ACCOUNT_TYPE, it.toLowerCase(Locale.getDefault())) }
 
     contentValues.put(COL_DISPLAY_NAME, googleSign.displayName)
     contentValues.put(COL_USERNAME, googleSign.email)
@@ -339,9 +382,9 @@ class AccountDaoSource : BaseDaoSource() {
     contentValues.put(COL_GIVEN_NAME, googleSign.givenName)
     contentValues.put(COL_FAMILY_NAME, googleSign.familyName)
     contentValues.put(COL_IS_ACTIVE, true)
-    if (googleSign.photoUrl != null) {
-      contentValues.put(COL_PHOTO_URL, googleSign.photoUrl!!.toString())
-    }
+
+    googleSign.photoUrl?.let { contentValues.put(COL_PHOTO_URL, it.toString()) }
+
     return contentValues
   }
 
@@ -411,6 +454,8 @@ class AccountDaoSource : BaseDaoSource() {
     const val COL_SMTP_PASSWORD = "smtp_password"
     const val COL_IS_CONTACTS_LOADED = "ic_contacts_loaded"
     const val COL_IS_SHOW_ONLY_ENCRYPTED = "is_show_only_encrypted"
+    const val COL_UUID = "uuid"
+    const val COL_DOMAIN_RULES = "domain_rules"
 
     const val ACCOUNTS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
         TABLE_NAME_ACCOUNTS + " (" +
@@ -439,7 +484,9 @@ class AccountDaoSource : BaseDaoSource() {
         COL_SMTP_USERNAME + " TEXT DEFAULT NULL, " +
         COL_SMTP_PASSWORD + " TEXT DEFAULT NULL, " +
         COL_IS_CONTACTS_LOADED + " INTEGER DEFAULT 0, " +
-        COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0 " + ");"
+        COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0, " +
+        COL_UUID + " TEXT DEFAULT NULL, " +
+        COL_DOMAIN_RULES + " TEXT DEFAULT NULL " + ");"
 
     const val CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS = (UNIQUE_INDEX_PREFIX
         + COL_EMAIL + "_" + COL_ACCOUNT_TYPE + "_in_" + TABLE_NAME_ACCOUNTS + " ON " + TABLE_NAME_ACCOUNTS +
@@ -455,12 +502,24 @@ class AccountDaoSource : BaseDaoSource() {
     @JvmStatic
     fun getCurrentAccountDao(context: Context, cursor: Cursor): AccountDao {
       var authCreds: AuthCredentials? = null
+      var uuid: String? = null
       try {
         val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
         authCreds = getCurrentAuthCredsFromCursor(context, keyStoreCryptoManager, cursor)
+        val encryptedUuid = cursor.getString(cursor.getColumnIndex(COL_UUID))
+        if (!encryptedUuid.isNullOrEmpty()) {
+          uuid = keyStoreCryptoManager.decryptWithRSAOrAES(context, encryptedUuid)
+        }
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
+      }
+
+      val domainRulesString = cursor.getString(cursor.getColumnIndex(COL_DOMAIN_RULES))
+      val domainRules = if (domainRulesString.isNullOrEmpty()) {
+        emptyList()
+      } else {
+        domainRulesString.split(",").map { it.trim() }
       }
 
       return AccountDao(
@@ -471,7 +530,9 @@ class AccountDaoSource : BaseDaoSource() {
           cursor.getString(cursor.getColumnIndex(COL_FAMILY_NAME)),
           cursor.getString(cursor.getColumnIndex(COL_PHOTO_URL)),
           cursor.getInt(cursor.getColumnIndex(COL_IS_CONTACTS_LOADED)) == 1,
-          authCreds)
+          authCreds,
+          uuid,
+          domainRules)
     }
 
     /**

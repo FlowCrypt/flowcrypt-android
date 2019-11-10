@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.retrofit.okhttp.ApiVersionInterceptor
 import com.flowcrypt.email.api.retrofit.okhttp.LoggingInFileInterceptor
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -34,6 +35,7 @@ import java.util.concurrent.TimeUnit
 class ApiHelper private constructor(context: Context) {
   private val okHttpClient: OkHttpClient
   val retrofit: Retrofit
+  val gson: Gson
 
   init {
     val okHttpClientBuilder = OkHttpClient.Builder()
@@ -71,15 +73,15 @@ class ApiHelper private constructor(context: Context) {
     }
 
     okHttpClient = okHttpClientBuilder.build()
+    gson = GsonBuilder()
+        .excludeFieldsWithoutExposeAnnotation()
+        .serializeNulls()
+        .create()
 
     val retrofitBuilder = Retrofit.Builder()
-        .baseUrl(Constants.ATTESTER_URL)
+        .baseUrl(BuildConfig.ATTESTER_URL)
         .addConverterFactory(ScalarsConverterFactory.create())
-        .addConverterFactory(GsonConverterFactory
-            .create(GsonBuilder()
-                .excludeFieldsWithoutExposeAnnotation()
-                .serializeNulls()
-                .create()))
+        .addConverterFactory(GsonConverterFactory.create(gson))
         .client(okHttpClient)
 
     retrofit = retrofitBuilder.build()

@@ -8,7 +8,6 @@ package com.flowcrypt.email
 import android.app.Application
 import android.app.job.JobScheduler
 import android.content.Context
-import androidx.fragment.app.FragmentManager
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.jobscheduler.JobIdManager
@@ -70,7 +69,6 @@ class FlowCryptApplication : Application() {
     NotificationChannelManager.registerNotificationChannels(this)
 
     initLeakCanary()
-    FragmentManager.enableDebugLogging(GeneralUtil.isDebugBuild())
 
     val scheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
     scheduler.cancel(JobIdManager.JOB_TYPE_SYNC)

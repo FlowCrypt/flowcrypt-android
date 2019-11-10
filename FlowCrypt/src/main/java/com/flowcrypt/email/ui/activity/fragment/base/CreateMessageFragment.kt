@@ -707,30 +707,34 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       when (messageEncryptionType) {
         MessageEncryptionType.ENCRYPTED -> {
           emailMassageHint = getString(R.string.prompt_compose_security_email)
-          recipientsTo!!.onFocusChangeListener.onFocusChange(recipientsTo, false)
-          recipientsCc!!.onFocusChangeListener.onFocusChange(recipientsCc, false)
-          recipientsBcc!!.onFocusChangeListener.onFocusChange(recipientsBcc, false)
-          fromAddrs!!.setUseKeysInfo(true)
+          recipientsTo?.onFocusChangeListener?.onFocusChange(recipientsTo, false)
+          recipientsCc?.onFocusChangeListener?.onFocusChange(recipientsCc, false)
+          recipientsBcc?.onFocusChangeListener?.onFocusChange(recipientsBcc, false)
+          fromAddrs?.setUseKeysInfo(true)
 
           val colorGray = UIUtil.getColor(context!!, R.color.gray)
-          val isItemEnabled = fromAddrs!!.isEnabled(spinnerFrom!!.selectedItemPosition)
-          editTextFrom!!.setTextColor(if (isItemEnabled) originalColor else colorGray)
+          val selectedItemPosition = spinnerFrom?.selectedItemPosition
+          if (selectedItemPosition != null && selectedItemPosition != AdapterView.INVALID_POSITION
+              && spinnerFrom?.adapter?.count ?: 0 > selectedItemPosition) {
+            val isItemEnabled = fromAddrs?.isEnabled(selectedItemPosition) ?: true
+            editTextFrom!!.setTextColor(if (isItemEnabled) originalColor else colorGray)
+          }
         }
 
         MessageEncryptionType.STANDARD -> {
           emailMassageHint = getString(R.string.prompt_compose_standard_email)
-          pgpContactsTo!!.clear()
-          pgpContactsCc!!.clear()
-          pgpContactsBcc!!.clear()
+          pgpContactsTo?.clear()
+          pgpContactsCc?.clear()
+          pgpContactsBcc?.clear()
           isUpdateToCompleted = true
           isUpdateCcCompleted = true
           isUpdateBccCompleted = true
-          fromAddrs!!.setUseKeysInfo(false)
-          editTextFrom!!.setTextColor(originalColor)
+          fromAddrs?.setUseKeysInfo(false)
+          editTextFrom?.setTextColor(originalColor)
         }
       }
     }
-    textInputLayoutMsg!!.hint = emailMassageHint
+    textInputLayoutMsg?.hint = emailMassageHint
   }
 
   private fun attachFile() {
@@ -1413,7 +1417,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private fun showNoPgpFoundDialog(pgpContact: PgpContact, isRemoveActionEnabled: Boolean) {
     val dialogFragment = NoPgpFoundDialogFragment.newInstance(pgpContact, isRemoveActionEnabled)
     dialogFragment.setTargetFragment(this, REQUEST_CODE_NO_PGP_FOUND_DIALOG)
-    dialogFragment.show(fragmentManager!!, NoPgpFoundDialogFragment::class.java.simpleName)
+    dialogFragment.show(parentFragmentManager, NoPgpFoundDialogFragment::class.java.simpleName)
   }
 
   /**
@@ -1481,7 +1485,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       val fragment = ChoosePublicKeyDialogFragment.newInstance(
           account?.email!!, ListView.CHOICE_MODE_SINGLE, R.plurals.choose_pub_key, true)
       fragment.setTargetFragment(this@CreateMessageFragment, REQUEST_CODE_SHOW_PUB_KEY_DIALOG)
-      fragment.show(fragmentManager!!, ChoosePublicKeyDialogFragment::class.java.simpleName)
+      fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
     }
   }
 

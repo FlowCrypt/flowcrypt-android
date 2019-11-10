@@ -109,7 +109,7 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
                 null
               }, 100)
 
-          val nonNullAccount = account ?: AccountDao(editTextUserEmail.text.toString(), "")
+          val nonNullAccount = account ?: AccountDao(email = editTextUserEmail.text.toString())
 
           FeedbackJobIntentService.enqueueWork(this, nonNullAccount,
               editTextUserMsg.text.toString(), screenShotBytes)

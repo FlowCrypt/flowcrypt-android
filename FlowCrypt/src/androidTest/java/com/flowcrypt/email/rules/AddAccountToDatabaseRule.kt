@@ -32,7 +32,7 @@ class AddAccountToDatabaseRule(val account: AccountDao) : BaseRule() {
 
   private fun saveAccountToDatabase() {
     val accountDaoSource = AccountDaoSource()
-    accountDaoSource.addRow(targetContext, account.authCreds)
+    accountDaoSource.addRow(targetContext, account)
     accountDaoSource.setActiveAccount(targetContext, account.email)
   }
 }

@@ -20,6 +20,8 @@ import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.nulabinc.zxcvbn.Zxcvbn
+import org.apache.commons.codec.binary.Hex
+import org.apache.commons.codec.digest.DigestUtils
 import java.util.*
 
 /**
@@ -228,6 +230,14 @@ class SecurityUtils {
       }
 
       throw IllegalArgumentException("Internal error: PgpKeyInfo is null!")
+    }
+
+    /**
+     * Generate uuid which is 40 characters long, containing only lowercase hex
+     * characters 0-9a-f. Example: 8d43af.................................93. It uses [UUID] to generate these.
+     */
+    fun generateRandomUUID(): String {
+      return String(Hex.encodeHex(DigestUtils.sha1(UUID.randomUUID().toString())))
     }
   }
 }

@@ -54,7 +54,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
     }
 
     if (details == null) {
-      fragmentManager?.popBackStack()
+      parentFragmentManager.popBackStack()
     }
   }
 
@@ -87,7 +87,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
     when (v.id) {
       R.id.btnShowPubKey -> {
         val dialogFragment = InfoDialogFragment.newInstance("", details!!.publicKey!!)
-        dialogFragment.show(fragmentManager!!, InfoDialogFragment::class.java.simpleName)
+        dialogFragment.show(parentFragmentManager, InfoDialogFragment::class.java.simpleName)
       }
 
       R.id.btnCopyToClipboard -> {

@@ -8,6 +8,7 @@
     <string name="preferences_key_messages_notification_filter">preferences_key_messages_notification_filter</string>
     <string name="preferences_key_manage_notifications">preferences_key_manage_notifications</string>
     <string name="preferences_key_security_change_pass_phrase">preferences_key_security_change_pass_phrase</string>
+    <string name="pref_key_backups">pref_key_backups</string>
 
     <string name="pref_title_allow_anonymous_crash_reports">Allow anonymous crash reports</string>
 </resources>

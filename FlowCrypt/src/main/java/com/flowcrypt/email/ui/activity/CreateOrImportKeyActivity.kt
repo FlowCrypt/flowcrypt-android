@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.model.KeyImportModel
@@ -96,30 +95,31 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
   }
 
   private fun initViews() {
-    if (findViewById<View>(R.id.buttonCreateNewKey) != null) {
-      findViewById<View>(R.id.buttonCreateNewKey).setOnClickListener(this)
+    findViewById<View>(R.id.buttonImportMyKey)?.setOnClickListener(this)
+
+    if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_CREATE) == true) {
+      findViewById<View>(R.id.buttonCreateNewKey)?.visibility = View.GONE
+    } else {
+      findViewById<View>(R.id.buttonCreateNewKey)?.setOnClickListener(this)
     }
 
-    if (findViewById<View>(R.id.buttonImportMyKey) != null) {
-      findViewById<View>(R.id.buttonImportMyKey).setOnClickListener(this)
+    val buttonSelectAnotherAccount = findViewById<View>(R.id.buttonSelectAnotherAccount)
+    if (isShowAnotherAccountBtnEnabled) {
+      buttonSelectAnotherAccount?.visibility = View.VISIBLE
+      buttonSelectAnotherAccount?.setOnClickListener(this)
+    } else {
+      buttonSelectAnotherAccount?.visibility = View.GONE
     }
 
-    if (findViewById<View>(R.id.buttonSelectAnotherAccount) != null) {
-      if (isShowAnotherAccountBtnEnabled) {
-        findViewById<View>(R.id.buttonSelectAnotherAccount).visibility = View.VISIBLE
-        findViewById<View>(R.id.buttonSelectAnotherAccount).setOnClickListener(this)
-      } else {
-        findViewById<View>(R.id.buttonSelectAnotherAccount).visibility = View.GONE
-      }
-    }
-
-    if (findViewById<View>(R.id.buttonSkipSetup) != null) {
-      val buttonSkipSetup = findViewById<View>(R.id.buttonSkipSetup)
+    val buttonSkipSetup = findViewById<View>(R.id.buttonSkipSetup)
+    if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_CREATE) == true) {
+      buttonSkipSetup.visibility = View.GONE
+    } else {
       if (SecurityUtils.hasBackup(this)) {
-        buttonSkipSetup.visibility = View.VISIBLE
-        buttonSkipSetup.setOnClickListener(this)
+        buttonSkipSetup?.visibility = View.VISIBLE
+        buttonSkipSetup?.setOnClickListener(this)
       } else {
-        buttonSkipSetup.visibility = View.GONE
+        buttonSkipSetup?.visibility = View.GONE
       }
     }
   }

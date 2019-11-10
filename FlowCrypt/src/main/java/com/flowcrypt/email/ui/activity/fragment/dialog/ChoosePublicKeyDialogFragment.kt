@@ -16,7 +16,7 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -171,7 +171,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   }
 
   private fun fetchKeys() {
-    val viewModel = ViewModelProviders.of(this).get(PrivateKeysViewModel::class.java)
+    val viewModel = ViewModelProvider(this).get(PrivateKeysViewModel::class.java)
     viewModel.init(NodeRepository())
     viewModel.responsesLiveData.observe(this, this)
   }

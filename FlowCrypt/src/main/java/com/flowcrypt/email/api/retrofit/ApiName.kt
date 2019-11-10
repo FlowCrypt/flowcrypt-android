@@ -24,5 +24,7 @@ enum class ApiName {
   /*flowcrypt.com/api*/
   POST_HELP_FEEDBACK,
   POST_LINK_MESSAGE,
-  POST_MESSAGE_REPLY
+  POST_MESSAGE_REPLY,
+  POST_LOGIN,
+  POST_GET_DOMAIN_RULES
 }

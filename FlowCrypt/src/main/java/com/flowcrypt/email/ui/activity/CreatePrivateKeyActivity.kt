@@ -22,6 +22,8 @@ import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.loader.CreatePrivateKeyAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.ApiException
+import com.google.android.material.snackbar.Snackbar
 
 /**
  * @author Denis Bondarenko
@@ -128,9 +130,19 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
     when (loaderId) {
       R.id.loader_id_create_private_key -> {
         isBackEnabled = true
-        editTextKeyPasswordSecond.text = null
         UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
-        showInfoSnackbar(rootView, e!!.message)
+
+        e?.let {
+          if (it is ApiException) {
+            showSnackbar(rootView, it.apiError.msg ?: getString(R.string.unknown_error),
+                getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener {
+              onConfirmPassPhraseSuccess()
+            })
+          } else {
+            editTextKeyPasswordSecond.text = null
+            showInfoSnackbar(rootView, e.message)
+          }
+        }
       }
 
       else -> super.onError(loaderId, e)

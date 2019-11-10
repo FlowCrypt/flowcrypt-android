@@ -121,7 +121,14 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
     when (loaderId) {
       R.id.loader_id_change_pass_phrase -> {
         KeysStorageImpl.getInstance(this).refresh(this)
-        LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
+        if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP) == true) {
+          isBackEnabled = true
+          Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
+          setResult(Activity.RESULT_OK)
+          finish()
+        } else {
+          LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
+        }
       }
 
       R.id.loader_id_load_private_key_backups_from_email -> {

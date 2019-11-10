@@ -5,20 +5,25 @@
 
 package com.flowcrypt.email.api.retrofit
 
-import com.flowcrypt.email.Constants
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
+import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
+import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
+import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 
@@ -74,7 +79,7 @@ interface ApiService {
    * @param body POJO model for requests
    * @return [<]
    */
-  @POST(Constants.FLOWCRYPT_API_URL + "/help/feedback")
+  @POST(BuildConfig.API_URL + "help/feedback")
   fun postHelpFeedback(@Body body: PostHelpFeedbackModel): Call<PostHelpFeedbackResponse>
 
   /**
@@ -84,4 +89,21 @@ interface ApiService {
    */
   @GET("pub/{keyIdOrEmail}")
   fun getPub(@Path("keyIdOrEmail") keyIdOrEmail: String): Call<String>
+
+  /**
+   * This method calls the API "https://flowcrypt.com/api/account/login"
+   *
+   * @param body POJO model for requests
+   */
+  @POST(BuildConfig.API_URL + "account/login")
+  suspend fun postLogin(@Body body: LoginModel, @Header("Authorization") tokenId: String):
+      Response<LoginResponse>
+
+  /**
+   * This method calls the API "https://flowcrypt.com/api/account/get"
+   *
+   * @param body POJO model for requests
+   */
+  @POST(BuildConfig.API_URL + "account/get")
+  suspend fun getDomainRules(@Body body: LoginModel): Response<DomainRulesResponse>
 }

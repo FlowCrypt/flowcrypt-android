@@ -417,7 +417,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     val fragment = ChoosePublicKeyDialogFragment.newInstance(details!!.email,
         ListView.CHOICE_MODE_SINGLE, R.plurals.tell_sender_to_update_their_settings)
     fragment.setTargetFragment(this@MessageDetailsFragment, REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION)
-    fragment.show(fragmentManager!!, ChoosePublicKeyDialogFragment::class.java.simpleName)
+    fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
   }
 
   /**

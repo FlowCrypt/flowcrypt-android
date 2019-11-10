@@ -29,7 +29,9 @@ data class AccountDao constructor(val email: String,
                                   val familyName: String? = null,
                                   val photoUrl: String? = null,
                                   val areContactsLoaded: Boolean = false,
-                                  val authCreds: AuthCredentials? = null) : Parcelable {
+                                  val authCreds: AuthCredentials? = null,
+                                  val uuid: String? = null,
+                                  val domainRules: List<String>? = null) : Parcelable {
 
   init {
     if (TextUtils.isEmpty(accountType)) {
@@ -41,13 +43,15 @@ data class AccountDao constructor(val email: String,
 
   val account: Account? = Account(this.email, accountType)
 
-  constructor(googleSignInAccount: GoogleSignInAccount) : this(
+  constructor(googleSignInAccount: GoogleSignInAccount, uuid: String?, domainRules: List<String>?) : this(
       email = googleSignInAccount.email!!,
       displayName = googleSignInAccount.displayName,
       accountType = googleSignInAccount.account?.type?.toLowerCase(Locale.getDefault()),
       givenName = googleSignInAccount.givenName,
       familyName = googleSignInAccount.familyName,
-      photoUrl = googleSignInAccount.photoUrl?.toString())
+      photoUrl = googleSignInAccount.photoUrl?.toString(),
+      uuid = uuid,
+      domainRules = domainRules)
 
   constructor(source: Parcel) : this(
       source.readString()!!,
@@ -57,11 +61,9 @@ data class AccountDao constructor(val email: String,
       source.readString(),
       source.readString(),
       1 == source.readInt(),
-      source.readParcelable(AuthCredentials::class.java.classLoader))
-
-  constructor(email: String, accountTypeGoogle: String) : this(
-      email = email,
-      accountType = accountTypeGoogle)
+      source.readParcelable(AuthCredentials::class.java.classLoader),
+      source.readString(),
+      mutableListOf<String>().apply { source.readStringList(this) })
 
   override fun describeContents(): Int {
     return 0
@@ -77,7 +79,19 @@ data class AccountDao constructor(val email: String,
       writeString(photoUrl)
       writeInt((if (areContactsLoaded) 1 else 0))
       writeParcelable(authCreds, flags)
+      writeString(uuid)
+      writeStringList(domainRules)
     }
+  }
+
+  fun isRuleExist(domainRule: DomainRule): Boolean {
+    return domainRule.name in domainRules ?: emptyList()
+  }
+
+  enum class DomainRule {
+    NO_PRV_CREATE,
+    NO_PRV_BACKUP,
+    ENFORCE_ATTESTER_SUBMIT
   }
 
   companion object {
