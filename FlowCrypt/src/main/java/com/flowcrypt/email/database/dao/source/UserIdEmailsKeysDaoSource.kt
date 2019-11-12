@@ -5,12 +5,15 @@
 
 package com.flowcrypt.email.database.dao.source
 
+import android.content.ContentProviderOperation
+import android.content.ContentProviderResult
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.provider.BaseColumns
 import android.text.TextUtils
 import android.util.Pair
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.google.android.gms.common.util.CollectionUtils
 import java.util.*
 
@@ -115,6 +118,35 @@ class UserIdEmailsKeysDaoSource : BaseDaoSource() {
     }
 
     return longIdsList
+  }
+
+  /**
+   * Remove pairs for the given keys
+   *
+   * @param context         Interface to global information about an application environment
+   * @param keys            A list of keys
+   * @return the [ContentProviderResult] array.
+   */
+  fun removePairs(context: Context, keys: List<NodeKeyDetails>): Array<ContentProviderResult> {
+    val contentProviderOperations = ArrayList<ContentProviderOperation>()
+
+    for (key in keys) {
+      val pairs = ArrayList<Pair<String, String>>()
+      for (pgpContact in key.pgpContacts) {
+        pairs.add(Pair.create(key.longId, pgpContact.email.toLowerCase(Locale.getDefault())))
+      }
+
+      for (pair in pairs) {
+        contentProviderOperations.add(ContentProviderOperation.newDelete(baseContentUri)
+            .withSelection("$COL_LONG_ID = ? AND $COL_USER_ID_EMAIL = ? ",
+                arrayOf(pair.first, pair.second))
+            .withYieldAllowed(true)
+            .build())
+      }
+    }
+
+    return context.contentResolver.applyBatch(baseContentUri.authority
+        ?: "", contentProviderOperations)
   }
 
   companion object {

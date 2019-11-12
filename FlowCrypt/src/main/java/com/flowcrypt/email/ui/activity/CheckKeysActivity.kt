@@ -201,7 +201,9 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
           val map = prepareMapFromKeyDetailsList(savedKeyDetailsList)
           keyDetailsList!!.removeAll(generateMatchedKeyDetailsList(map))
           if (keyDetailsList!!.isEmpty()) {
-            setResult(Activity.RESULT_OK)
+            val intent = Intent()
+            intent.putExtra(KEY_EXTRA_SAVED_PRIVATE_KEYS, savedKeyDetailsList)
+            setResult(Activity.RESULT_OK, intent)
             finish()
           } else {
             initButton(R.id.buttonNeutralAction, View.VISIBLE, getString(R.string.skip_remaining_backups))
@@ -374,6 +376,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEGATIVE_BUTTON_TITLE", CheckKeysActivity::class.java)
     val KEY_EXTRA_IS_EXTRA_IMPORT_OPTION =
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_EXTRA_IMPORT_OPTION", CheckKeysActivity::class.java)
+    val KEY_EXTRA_SAVED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_SAVED_PRIVATE_KEYS", CheckKeysActivity::class.java)
 
     fun newIntent(context: Context, privateKeys: ArrayList<NodeKeyDetails>, type: KeyDetails.Type?,
                   bottomTitle: String?, positiveBtnTitle: String?, negativeBtnTitle: String?): Intent {

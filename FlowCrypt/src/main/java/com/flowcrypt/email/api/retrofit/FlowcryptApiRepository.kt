@@ -8,8 +8,10 @@ package com.flowcrypt.email.api.retrofit
 import android.content.Context
 import com.flowcrypt.email.api.retrofit.request.api.DomainRulesRequest
 import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
+import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
+import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResult
@@ -39,6 +41,12 @@ class FlowcryptApiRepository : ApiRepository {
         getResult { apiService.getDomainRules(request.requestModel) }
       }
 
+  override suspend fun submitPubKey(context: Context, model: InitialLegacySubmitModel): ApiResult<InitialLegacySubmitResponse> =
+      withContext(Dispatchers.IO) {
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        getResult { apiService.submitPubKey(model) }
+      }
+
   /**
    * Base implementation for the API calls
    */
@@ -48,9 +56,8 @@ class FlowcryptApiRepository : ApiRepository {
       if (response.isSuccessful) {
         val body = response.body()
         if (body != null) {
-          val apiResponse = body
-          if (apiResponse is ApiResponse) {
-            if (apiResponse.apiError != null) {
+          if (body is ApiResponse) {
+            return if (body.apiError != null) {
               ApiResult.error(body)
             } else {
               ApiResult.success(body)

@@ -11,17 +11,22 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.Toast
 import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
+import com.flowcrypt.email.api.retrofit.response.base.ApiResult
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.gms.common.util.CollectionUtils
-import java.util.*
 
 /**
  * This activity describes a logic of import private keys.
@@ -37,13 +42,13 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
   var countingIdlingResource: CountingIdlingResource? = null
     private set
   private var privateKeys: ArrayList<NodeKeyDetails>? = null
+  private lateinit var submitPubKeyViewModel: SubmitPubKeyViewModel
 
-  private var progressBar: View? = null
-  private var layoutContent: View? = null
   private var layoutSyncStatus: View? = null
   private var buttonImportBackup: Button? = null
 
   private var isLoadPrivateKeysRequestSent: Boolean = false
+  private var importedKeys: List<NodeKeyDetails>? = null
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_import_private_key
@@ -54,20 +59,20 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     if (isSyncEnabled && GeneralUtil.isConnected(this)) {
-      UIUtil.exchangeViewVisibility(this, true, progressBar!!, layoutContent!!)
+      textViewProgressText.setText(R.string.loading_backups)
+      UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView)
       countingIdlingResource = CountingIdlingResource(
           GeneralUtil.genIdlingResourcesName(ImportPrivateKeyActivity::class.java), GeneralUtil.isDebugBuild())
     } else {
       hideImportButton()
-      UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutContent!!)
+      UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
     }
+
+    setupSubmitPubKeyViewModel()
   }
 
   override fun initViews() {
     super.initViews()
-
-    this.progressBar = findViewById(R.id.progressBarLoadingBackups)
-    this.layoutContent = findViewById(R.id.layoutContent)
     this.layoutSyncStatus = findViewById(R.id.layoutSyncStatus)
     this.buttonImportBackup = findViewById(R.id.buttonImportBackup)
     this.buttonImportBackup!!.setOnClickListener(this)
@@ -110,7 +115,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
           } else {
             hideImportButton()
           }
-          UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutContent!!)
+          UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
         }
         if (!countingIdlingResource!!.isIdleNow) {
           countingIdlingResource!!.decrement()
@@ -123,12 +128,12 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
     when (requestCode) {
       R.id.syns_load_private_keys -> {
         hideImportButton()
-        UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutSyncStatus!!)
+        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutSyncStatus)
         UIUtil.showSnackbar(rootView, getString(R.string.error_occurred_while_receiving_private_keys),
             getString(android.R.string.ok), View.OnClickListener {
-          layoutSyncStatus!!.visibility = View.GONE
+          layoutSyncStatus?.visibility = View.GONE
           UIUtil.exchangeViewVisibility(this@ImportPrivateKeyActivity,
-              false, progressBar!!, layoutContent!!)
+              false, layoutProgress, layoutContentView)
         })
         if (!countingIdlingResource!!.isIdleNow) {
           countingIdlingResource!!.decrement()
@@ -155,8 +160,12 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
 
         when (resultCode) {
           Activity.RESULT_OK -> {
-            setResult(Activity.RESULT_OK)
-            finish()
+            importedKeys = data?.getParcelableArrayListExtra<NodeKeyDetails>(
+                CheckKeysActivity.KEY_EXTRA_SAVED_PRIVATE_KEYS)
+
+            importedKeys?.let {
+              submitPubKeyViewModel.submitPubKey(it)
+            }
           }
         }
       }
@@ -214,6 +223,39 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
       }
     }
     return uniqueKeysLongIds
+  }
+
+  private fun setupSubmitPubKeyViewModel() {
+    submitPubKeyViewModel = ViewModelProvider(this).get(SubmitPubKeyViewModel::class.java)
+    val observer = Observer<ApiResult<ApiResponse>?> {
+      it?.let {
+        when (it.status) {
+          ApiResult.Status.LOADING -> {
+            textViewProgressText.setText(R.string.submitting_pub_key)
+            UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView)
+          }
+
+          ApiResult.Status.SUCCESS -> {
+            setResult(Activity.RESULT_OK)
+            finish()
+          }
+
+          ApiResult.Status.ERROR -> {
+            UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
+            Toast.makeText(this, it.data?.apiError?.msg
+                ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
+          }
+
+          ApiResult.Status.EXCEPTION -> {
+            UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
+            Toast.makeText(this, it.exception?.message
+                ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
+          }
+        }
+      }
+    }
+
+    submitPubKeyViewModel.submitPubKeyLiveData.observe(this, observer)
   }
 
   companion object {

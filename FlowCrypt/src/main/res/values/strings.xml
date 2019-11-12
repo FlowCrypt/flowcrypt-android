@@ -416,4 +416,5 @@
     <string name="mark_unread">Mark unread</string>
     <string name="user_not_verified">User not verified</string>
     <string name="user_not_registered_not_verified">User not registered and not verified</string>
+    <string name="submitting_pub_key">Submitting the pub key</string>
 </resources>
