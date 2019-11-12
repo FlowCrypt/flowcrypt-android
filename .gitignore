@@ -1,7 +1,6 @@
 # Generated files
 bin/
 gen/
-out/
 
 # Gradle files
 .gradle/
@@ -32,6 +31,8 @@ captures/
 .idea/workspace.xml
 .idea/libraries
 .idea/misc.xml
+.idea/caches/*
+.idea/codeStyles/codeStyleConfig.xml
 
 # Keystore files
 *.jks
@@ -39,9 +40,6 @@ captures/
 # keystore info
 FlowCrypt/keystore.properties
 
-.idea/misc.xml
-.idea/caches/*
-.idea/caches/build_file_checksums.ser
 FlowCrypt/src/main/assets/.idea/vcs.xml
 FlowCrypt/src/main/assets/.idea/workspace.xml
 
