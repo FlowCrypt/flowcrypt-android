@@ -22,10 +22,11 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
-import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.ui.activity.base.BaseCheckKeysActivityTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.not
@@ -43,7 +44,8 @@ import org.junit.runner.RunWith
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
+@DoesNotNeedMailserver
+class CheckKeysActivityWithoutExistingKeysTest : BaseCheckKeysActivityTest() {
   override val activityTestRule: ActivityTestRule<*>? =
       object : ActivityTestRule<CheckKeysActivity>(CheckKeysActivity::class.java) {
         override fun getActivityIntent(): Intent {

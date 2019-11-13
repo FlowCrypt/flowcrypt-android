@@ -21,12 +21,13 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.ui.activity.base.BaseCheckKeysActivityTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Rule
@@ -43,7 +44,8 @@ import org.junit.runner.RunWith
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-class CheckKeysActivityTestMultiBackups : BaseTest() {
+@DoesNotNeedMailserver
+class CheckKeysActivityTestMultiBackups : BaseCheckKeysActivityTest() {
   override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(CheckKeysActivity::class.java, false, false)
 
   @get:Rule
@@ -55,7 +57,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * There are two keys (all keys are different and have different pass phrases). Only one key from two keys is using.
    */
   @Test
-  fun testTwoKeysFirstCombination() {
+  fun testUseTwoKeysFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
         "node/key_testing@denbond7.com_keyB_default.json")
@@ -71,7 +73,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * There are two keys (all keys are different and have different pass phrases). All keys are checking in the queue.
    */
   @Test
-  fun testTwoKeysSecondCombination() {
+  fun testUseTwoKeysSecondCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
         "node/key_testing@denbond7.com_keyB_default.json")
@@ -88,7 +90,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * There are two keys with the same pass phrase. All keys will be imported per one transaction.
    */
   @Test
-  fun testTwoKeysWithSamePasswordThirdCombination() {
+  fun testUseTwoKeysWithSamePasswordThirdCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
         "node/key_testing@denbond7.com_keyC_strong.json")
@@ -303,6 +305,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
   private fun launchActivity(keysPaths: Array<String>) {
     activityTestRule?.launchActivity(getStartCheckKeysActivityIntent(keysPaths))
     IdlingRegistry.getInstance().register((activityTestRule?.activity as BaseActivity).nodeIdlingResource)
+    IdlingRegistry.getInstance().register((activityTestRule.activity as CheckKeysActivity).idlingForKeyChecking)
   }
 
   private fun checkSkipRemainingBackupsButton() {
