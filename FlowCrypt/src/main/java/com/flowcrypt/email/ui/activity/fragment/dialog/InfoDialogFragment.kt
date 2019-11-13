@@ -111,7 +111,7 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
 
     @JvmOverloads
     @JvmStatic
-    fun newInstance(dialogTitle: String?, dialogMsg: String?,
+    fun newInstance(dialogTitle: String? = null, dialogMsg: String? = null,
                     buttonTitle: String? = null, isPopBackStack: Boolean = false,
                     isCancelable: Boolean = false, hasHtml: Boolean = false): InfoDialogFragment {
       val infoDialogFragment = InfoDialogFragment()

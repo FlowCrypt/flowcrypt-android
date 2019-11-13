@@ -12,13 +12,9 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
-import com.flowcrypt.email.api.retrofit.response.base.ApiError
-import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
-import com.flowcrypt.email.api.retrofit.response.base.ApiResult
-import com.flowcrypt.email.util.exception.ApiException
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import retrofit2.Response
 
 /**
  * Implementation of Flowcrypt API
@@ -29,51 +25,21 @@ import retrofit2.Response
  *         E-mail: DenBond7@gmail.com
  */
 class FlowcryptApiRepository : ApiRepository {
-  override suspend fun login(context: Context, request: LoginRequest): ApiResult<LoginResponse> =
+  override suspend fun login(context: Context, request: LoginRequest): Result<LoginResponse> =
       withContext(Dispatchers.IO) {
         val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
         getResult { apiService.postLogin(request.requestModel, "Bearer ${request.tokenId}") }
       }
 
-  override suspend fun getDomainRules(context: Context, request: DomainRulesRequest): ApiResult<DomainRulesResponse> =
+  override suspend fun getDomainRules(context: Context, request: DomainRulesRequest): Result<DomainRulesResponse> =
       withContext(Dispatchers.IO) {
         val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
         getResult { apiService.getDomainRules(request.requestModel) }
       }
 
-  override suspend fun submitPubKey(context: Context, model: InitialLegacySubmitModel): ApiResult<InitialLegacySubmitResponse> =
+  override suspend fun submitPubKey(context: Context, model: InitialLegacySubmitModel): Result<InitialLegacySubmitResponse> =
       withContext(Dispatchers.IO) {
         val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
         getResult { apiService.submitPubKey(model) }
       }
-
-  /**
-   * Base implementation for the API calls
-   */
-  private suspend fun <T> getResult(call: suspend () -> Response<T>): ApiResult<T> {
-    return try {
-      val response = call()
-      if (response.isSuccessful) {
-        val body = response.body()
-        if (body != null) {
-          if (body is ApiResponse) {
-            return if (body.apiError != null) {
-              ApiResult.error(body)
-            } else {
-              ApiResult.success(body)
-            }
-          } else {
-            ApiResult.success(body)
-          }
-        } else {
-          ApiResult.exception(ApiException(ApiError(response.code(), response.message())))
-        }
-      } else {
-        ApiResult.exception(ApiException(ApiError(response.code(), response.message())))
-      }
-    } catch (e: Exception) {
-      e.printStackTrace()
-      ApiResult.exception(e)
-    }
-  }
 }

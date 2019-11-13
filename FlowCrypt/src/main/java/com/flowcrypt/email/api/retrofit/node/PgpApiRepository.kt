@@ -5,10 +5,14 @@
 
 package com.flowcrypt.email.api.retrofit.node
 
+import android.content.Context
 import androidx.lifecycle.MutableLiveData
+import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 
 /**
@@ -19,7 +23,7 @@ import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
  * Time: 10:25 AM
  * E-mail: DenBond7@gmail.com
  */
-interface PgpApiRepository {
+interface PgpApiRepository : BaseApiRepository {
   /**
    * Parse the given raw string and fetch a list of [NodeKeyDetails].
    *
@@ -49,4 +53,7 @@ interface PgpApiRepository {
    */
   fun checkPassphraseStrength(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>,
                               request: ZxcvbnStrengthBarRequest)
+
+  suspend fun decryptKey(context: Context, armoredKey: String, passphrases: List<String>):
+      Result<DecryptKeyResult>
 }

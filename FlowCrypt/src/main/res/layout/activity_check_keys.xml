@@ -29,10 +29,10 @@
             android:layout_gravity="center"
             android:layout_marginTop="@dimen/margin_top_found_backup"
             android:orientation="horizontal"
+            app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/textViewTitle"
-            app:layout_constraintWidth_default="wrap">
+            app:layout_constraintTop_toBottomOf="@+id/textViewTitle">
 
             <TextView
                 android:id="@+id/textViewSubTitle"

@@ -13,7 +13,7 @@ import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
-import com.flowcrypt.email.api.retrofit.response.base.ApiResult
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import kotlinx.coroutines.launch
 
@@ -25,10 +25,10 @@ import kotlinx.coroutines.launch
  */
 class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val repository: ApiRepository = FlowcryptApiRepository()
-  val submitPubKeyLiveData: MutableLiveData<ApiResult<ApiResponse>?> = MutableLiveData()
+  val submitPubKeyLiveData: MutableLiveData<Result<ApiResponse>?> = MutableLiveData()
 
   fun submitPubKey(keys: List<NodeKeyDetails>) {
-    submitPubKeyLiveData.value = ApiResult.loading(null)
+    submitPubKeyLiveData.value = Result.loading(null)
     val context: Context = getApplication()
 
     val keyDetails = keys.firstOrNull()

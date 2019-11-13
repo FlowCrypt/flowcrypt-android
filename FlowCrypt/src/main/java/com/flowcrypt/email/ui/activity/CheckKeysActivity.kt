@@ -15,29 +15,27 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.Loader
+import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.model.results.LoaderResult
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
-import com.flowcrypt.email.ui.loader.EncryptAndSavePrivateKeysAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
-import com.google.android.gms.common.util.CollectionUtils
+import com.flowcrypt.email.util.idling.SingleIdlingResources
 import org.apache.commons.io.IOUtils
 import java.io.IOException
 import java.nio.charset.StandardCharsets
-import java.util.*
 
 /**
- * This class describes checking the received private keys. Here we validate and save encrypted
- * via [KeyStoreCryptoManager] keys to the database. If one of received private keys is
- * valid, we will return [Activity.RESULT_OK].
+ * This class describes checking the incoming private keys. As a result will be returned encrypted
+ * keys.
  *
  * @author Denis Bondarenko
  * Date: 21.07.2017
@@ -45,10 +43,14 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManager.LoaderCallbacks<LoaderResult> {
-
-  private var keyDetailsList: ArrayList<NodeKeyDetails>? = null
+class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
+  private var originalKeys: List<NodeKeyDetails>? = null
+  private val decryptedKeys: ArrayList<NodeKeyDetails> = ArrayList()
+  private val remainingKeys: ArrayList<NodeKeyDetails> = ArrayList()
   private var keyDetailsAndLongIdsMap: MutableMap<NodeKeyDetails, String>? = null
+  private lateinit var checkPrivateKeysViewModel: CheckPrivateKeysViewModel
+  @VisibleForTesting
+  val idlingForKeyChecking: SingleIdlingResources = SingleIdlingResources()
 
   private var editTextKeyPassword: EditText? = null
   private var textViewSubTitle: TextView? = null
@@ -75,20 +77,20 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
     if (intent != null) {
       getExtras()
 
-      if (keyDetailsList != null) {
-        this.keyDetailsAndLongIdsMap = prepareMapFromKeyDetailsList(keyDetailsList!!)
-        this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap!!)
+      if (originalKeys != null) {
+        this.keyDetailsAndLongIdsMap = prepareMapFromKeyDetailsList(originalKeys)
+        this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
 
         if (!intent.getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
           removeAlreadyImportedKeys()
 
-          if (keyDetailsList!!.size != keyDetailsAndLongIdsMap!!.size && uniqueKeysCount > 1) {
-            this.keyDetailsList = ArrayList(keyDetailsAndLongIdsMap!!.keys)
-            if (keyDetailsList!!.isEmpty()) {
+          if (originalKeys?.size != keyDetailsAndLongIdsMap?.size && uniqueKeysCount > 1) {
+            this.originalKeys = ArrayList(keyDetailsAndLongIdsMap?.keys ?: emptyList())
+            if (originalKeys?.isEmpty() == true) {
               setResult(Activity.RESULT_OK)
               finish()
             } else {
-              val map = prepareMapFromKeyDetailsList(keyDetailsList!!)
+              val map = prepareMapFromKeyDetailsList(originalKeys)
               val remainingKeyCount = getUniqueKeysLongIdsCount(map)
 
               this.subTitle = resources.getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
@@ -99,6 +101,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
                 R.plurals.found_backup_of_your_account_key, uniqueKeysCount, uniqueKeysCount)
           }
         }
+
+        originalKeys?.let { remainingKeys.addAll(it) }
       } else {
         setResult(Activity.RESULT_CANCELED)
         finish()
@@ -107,8 +111,9 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
       finish()
     }
 
-    if (keyDetailsList?.isNotEmpty() == true) {
+    if (originalKeys?.isNotEmpty() == true) {
       initViews()
+      setupCheckPrivateKeysViewModel()
     }
   }
 
@@ -116,17 +121,11 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
     when (v.id) {
       R.id.buttonPositiveAction -> {
         UIUtil.hideSoftInput(this, editTextKeyPassword)
-        if (!CollectionUtils.isEmpty(keyDetailsList)) {
-          if (TextUtils.isEmpty(editTextKeyPassword!!.text.toString())) {
-            showInfoSnackbar(editTextKeyPassword!!, getString(R.string.passphrase_must_be_non_empty))
-          } else {
-            if (snackBar != null) {
-              snackBar!!.dismiss()
-            }
-
-            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_encrypt_and_save_private_keys_infos, null,
-                this)
-          }
+        if (TextUtils.isEmpty(editTextKeyPassword?.text.toString())) {
+          showInfoSnackbar(editTextKeyPassword, getString(R.string.passphrase_must_be_non_empty))
+        } else {
+          snackBar?.dismiss()
+          checkPrivateKeysViewModel.checkKeys(remainingKeys, listOf(editTextKeyPassword?.text.toString()))
         }
       }
 
@@ -141,8 +140,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
       }
 
       R.id.imageButtonHint -> {
-        val infoDialogFragment = InfoDialogFragment.newInstance("",
-            getString(R.string.hint_when_found_keys_in_email))
+        val infoDialogFragment = InfoDialogFragment.newInstance(dialogMsg =
+        getString(R.string.hint_when_found_keys_in_email))
         infoDialogFragment.show(supportFragmentManager, InfoDialogFragment::class.java.simpleName)
       }
 
@@ -153,78 +152,11 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
       } catch (e: IOException) {
         e.printStackTrace()
       }
-
-    }
-  }
-
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
-    return when (id) {
-      R.id.loader_id_encrypt_and_save_private_keys_infos -> {
-        progressBar!!.visibility = View.VISIBLE
-        val passphrase = editTextKeyPassword!!.text.toString()
-        EncryptAndSavePrivateKeysAsyncTaskLoader(this, keyDetailsList!!, type!!, passphrase)
-      }
-
-      else -> Loader(this)
-    }
-  }
-
-  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
-    handleLoaderResult(loader, loaderResult)
-  }
-
-  override fun onLoaderReset(loader: Loader<LoaderResult>) {
-
-  }
-
-  override fun onError(loaderId: Int, e: Exception?) {
-    when (loaderId) {
-      R.id.loader_id_encrypt_and_save_private_keys_infos -> {
-        progressBar!!.visibility = View.GONE
-        showInfoSnackbar(rootView, if (TextUtils.isEmpty(e!!.message))
-          getString(R.string.can_not_read_this_private_key)
-        else
-          e.message)
-      }
-    }
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  override fun onSuccess(loaderId: Int, result: Any?) {
-    when (loaderId) {
-      R.id.loader_id_encrypt_and_save_private_keys_infos -> {
-        progressBar!!.visibility = View.GONE
-        val savedKeyDetailsList = result as ArrayList<NodeKeyDetails>?
-        if (savedKeyDetailsList != null && savedKeyDetailsList.isNotEmpty()) {
-          KeysStorageImpl.getInstance(this).refresh(this)
-
-          val map = prepareMapFromKeyDetailsList(savedKeyDetailsList)
-          keyDetailsList!!.removeAll(generateMatchedKeyDetailsList(map))
-          if (keyDetailsList!!.isEmpty()) {
-            val intent = Intent()
-            intent.putExtra(KEY_EXTRA_SAVED_PRIVATE_KEYS, savedKeyDetailsList)
-            setResult(Activity.RESULT_OK, intent)
-            finish()
-          } else {
-            initButton(R.id.buttonNeutralAction, View.VISIBLE, getString(R.string.skip_remaining_backups))
-            editTextKeyPassword!!.text = null
-            val mapOfRemainingBackups = prepareMapFromKeyDetailsList(keyDetailsList!!)
-            val remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups)
-
-            textViewSubTitle!!.text = resources.getQuantityString(
-                R.plurals.not_recovered_all_keys, remainingKeyCount,
-                uniqueKeysCount - remainingKeyCount,
-                uniqueKeysCount, remainingKeyCount)
-          }
-        } else {
-          showInfoSnackbar(rootView, getString(R.string.password_is_incorrect))
-        }
-      }
     }
   }
 
   private fun getExtras() {
-    this.keyDetailsList = intent.getParcelableArrayListExtra(KEY_EXTRA_PRIVATE_KEYS)
+    this.originalKeys = intent.getParcelableArrayListExtra(KEY_EXTRA_PRIVATE_KEYS)
     this.type = intent.getParcelableExtra(KEY_EXTRA_TYPE)
     this.subTitle = intent.getStringExtra(KEY_EXTRA_SUB_TITLE)
     this.positiveBtnTitle = intent.getStringExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE)
@@ -233,36 +165,25 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
   }
 
   private fun initViews() {
-    if (findViewById<View>(R.id.buttonPositiveAction) != null) {
-      initButton(R.id.buttonPositiveAction, View.VISIBLE, positiveBtnTitle)
-    }
+    initButton(R.id.buttonPositiveAction, View.VISIBLE, positiveBtnTitle)
+    initButton(R.id.buttonNegativeAction, View.VISIBLE, negativeBtnTitle)
 
-    if (!TextUtils.isEmpty(neutralBtnTitle) && findViewById<View>(R.id.buttonNeutralAction) != null) {
+    if (!TextUtils.isEmpty(neutralBtnTitle)) {
       initButton(R.id.buttonNeutralAction, View.VISIBLE, neutralBtnTitle)
     }
 
-    if (findViewById<View>(R.id.buttonNegativeAction) != null) {
-      initButton(R.id.buttonNegativeAction, View.VISIBLE, negativeBtnTitle)
+    val imageButtonHint = findViewById<View>(R.id.imageButtonHint)
+    if (originalKeys?.isNotEmpty() == true && type === KeyDetails.Type.EMAIL) {
+      imageButtonHint?.visibility = View.VISIBLE
+      imageButtonHint?.setOnClickListener(this)
+    } else {
+      imageButtonHint?.visibility = View.GONE
     }
 
-    if (findViewById<View>(R.id.imageButtonHint) != null) {
-      val imageButtonHint = findViewById<View>(R.id.imageButtonHint)
-      if (keyDetailsList != null && keyDetailsList!!.isNotEmpty() && type === KeyDetails.Type.EMAIL) {
-        imageButtonHint.visibility = View.VISIBLE
-        imageButtonHint.setOnClickListener(this)
-      } else {
-        imageButtonHint.visibility = View.GONE
-      }
-    }
-
-    if (findViewById<View>(R.id.imageButtonPasswordHint) != null) {
-      findViewById<View>(R.id.imageButtonPasswordHint).setOnClickListener(this)
-    }
+    findViewById<View>(R.id.imageButtonPasswordHint)?.setOnClickListener(this)
 
     textViewSubTitle = findViewById(R.id.textViewSubTitle)
-    if (textViewSubTitle != null) {
-      textViewSubTitle!!.text = subTitle
-    }
+    textViewSubTitle?.text = subTitle
 
     editTextKeyPassword = findViewById(R.id.editTextKeyPassword)
     progressBar = findViewById(R.id.progressBar)
@@ -275,9 +196,72 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
 
   private fun initButton(buttonViewId: Int, visibility: Int, text: String?) {
     val buttonNeutralAction = findViewById<Button>(buttonViewId)
-    buttonNeutralAction.visibility = visibility
-    buttonNeutralAction.text = text
-    buttonNeutralAction.setOnClickListener(this)
+    buttonNeutralAction?.visibility = visibility
+    buttonNeutralAction?.text = text
+    buttonNeutralAction?.setOnClickListener(this)
+  }
+
+  private fun setupCheckPrivateKeysViewModel() {
+    checkPrivateKeysViewModel = ViewModelProvider(this).get(CheckPrivateKeysViewModel::class.java)
+    val observer = Observer<Result<List<NodeKeyDetails>>> {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            idlingForKeyChecking.setIdleState(false)
+            progressBar?.visibility = View.VISIBLE
+          }
+
+          else -> {
+            idlingForKeyChecking.setIdleState(true)
+            progressBar?.visibility = View.GONE
+            when (it.status) {
+              Result.Status.SUCCESS -> {
+                val resultKeys = it.data ?: emptyList()
+                val sessionDecryptedKeys = resultKeys.filter { keyDetails -> keyDetails.passphrase?.isNotEmpty() == true }
+                if (sessionDecryptedKeys.isNotEmpty()) {
+                  decryptedKeys.addAll(sessionDecryptedKeys)
+
+                  for (key in sessionDecryptedKeys) {
+                    remainingKeys.removeAll(remainingKeys.filter { details ->
+                      (details.longId == key.longId)
+                    })
+                  }
+
+                  if (remainingKeys.isNotEmpty()) {
+                    val map = prepareMapFromKeyDetailsList(remainingKeys)
+                    initButton(R.id.buttonNeutralAction, View.VISIBLE, getString(R.string.skip_remaining_backups))
+                    editTextKeyPassword!!.text = null
+                    val mapOfRemainingBackups = prepareMapFromKeyDetailsList(remainingKeys)
+                    val remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups)
+
+                    textViewSubTitle!!.text = resources.getQuantityString(
+                        R.plurals.not_recovered_all_keys, remainingKeyCount,
+                        uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
+                  } else {
+                    val intent = Intent()
+                    intent.putExtra(KEY_EXTRA_SAVED_PRIVATE_KEYS, decryptedKeys)
+                    setResult(Activity.RESULT_OK, intent)
+                    finish()
+                  }
+
+                } else {
+                  showInfoSnackbar(rootView, getString(R.string.password_is_incorrect))
+                }
+              }
+
+              Result.Status.ERROR -> {
+                showInfoSnackbar(rootView, getString(R.string.unknown_error))
+              }
+
+              else -> {
+              }
+            }
+          }
+        }
+      }
+    }
+
+    checkPrivateKeysViewModel.liveData.observe(this, observer)
   }
 
   /**
@@ -306,8 +290,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
    * @param mapOfKeyDetailsAndLongIds An input map of [NodeKeyDetails].
    * @return A count of unique longIds.
    */
-  private fun getUniqueKeysLongIdsCount(mapOfKeyDetailsAndLongIds: Map<NodeKeyDetails, String>): Int {
-    return HashSet(mapOfKeyDetailsAndLongIds.values).size
+  private fun getUniqueKeysLongIdsCount(mapOfKeyDetailsAndLongIds: Map<NodeKeyDetails, String>?): Int {
+    return HashSet(mapOfKeyDetailsAndLongIds?.values ?: emptyList()).size
   }
 
   /**
@@ -324,37 +308,18 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, LoaderManage
    * Generate a map of incoming list of [NodeKeyDetails] objects where values will be a [NodeKeyDetails]
    * longId.
    *
-   * @param privateKeyDetailsList An incoming list of [NodeKeyDetails] objects.
+   * @param keys An incoming list of [NodeKeyDetails] objects.
    * @return A generated map.
    */
-  private fun prepareMapFromKeyDetailsList(privateKeyDetailsList:
-                                           ArrayList<NodeKeyDetails>): MutableMap<NodeKeyDetails, String> {
-    val keyDetailsStringMap = HashMap<NodeKeyDetails, String>()
+  private fun prepareMapFromKeyDetailsList(keys: List<NodeKeyDetails>?): MutableMap<NodeKeyDetails, String> {
+    val map = HashMap<NodeKeyDetails, String>()
 
-    for (keyDetails in privateKeyDetailsList) {
-      keyDetailsStringMap[keyDetails] = keyDetails.longId!!
-    }
-    return keyDetailsStringMap
-  }
-
-  /**
-   * Generate a matched list of the existing keys. It will contain all [NodeKeyDetails] which has a right longId.
-   *
-   * @param mapOfSavedKeyDetailsAndLongIds An incoming map of [NodeKeyDetails] objects.
-   * @return A matched list.
-   */
-  private fun generateMatchedKeyDetailsList(mapOfSavedKeyDetailsAndLongIds: Map<NodeKeyDetails, String>):
-      ArrayList<NodeKeyDetails> {
-    val matchedKeyDetails = ArrayList<NodeKeyDetails>()
-    for ((_, value) in mapOfSavedKeyDetailsAndLongIds) {
-      for ((key, value1) in keyDetailsAndLongIdsMap!!) {
-        if (value1 == value) {
-          matchedKeyDetails.add(key)
-        }
+    keys?.let {
+      for (keyDetails in it) {
+        map[keyDetails] = keyDetails.longId ?: ""
       }
     }
-
-    return matchedKeyDetails
+    return map
   }
 
   companion object {

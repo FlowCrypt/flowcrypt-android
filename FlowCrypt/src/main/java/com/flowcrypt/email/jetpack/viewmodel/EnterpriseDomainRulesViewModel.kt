@@ -19,7 +19,7 @@ import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
-import com.flowcrypt.email.api.retrofit.response.base.ApiResult
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import kotlinx.coroutines.launch
 
 /**
@@ -32,10 +32,10 @@ import kotlinx.coroutines.launch
  */
 class EnterpriseDomainRulesViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val repository: ApiRepository = FlowcryptApiRepository()
-  val domainRulesLiveData: MutableLiveData<ApiResult<ApiResponse>?> = MutableLiveData()
+  val domainRulesLiveData: MutableLiveData<Result<ApiResponse>?> = MutableLiveData()
 
   fun getDomainRules(account: String, uuid: String, tokenId: String) {
-    domainRulesLiveData.value = ApiResult.loading(null)
+    domainRulesLiveData.value = Result.loading(null)
     val context: Context = getApplication()
 
     viewModelScope.launch {
@@ -43,29 +43,29 @@ class EnterpriseDomainRulesViewModel(application: Application) : BaseAndroidView
           LoginRequest(ApiName.POST_LOGIN, LoginModel(account, uuid), tokenId))
 
       when (loginResult.status) {
-        ApiResult.Status.ERROR, ApiResult.Status.EXCEPTION -> {
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
           domainRulesLiveData.value = loginResult
           return@launch
         }
 
-        ApiResult.Status.SUCCESS -> {
+        Result.Status.SUCCESS -> {
           if (loginResult.data?.isRegistered == true && loginResult.data.isVerified == true) {
             val domainRulesResult = repository.getDomainRules(context,
                 DomainRulesRequest(ApiName.POST_GET_DOMAIN_RULES, LoginModel(account, uuid)))
             domainRulesLiveData.value = domainRulesResult
           } else when {
             loginResult.data?.isRegistered == false && loginResult.data.isVerified == false ->
-              domainRulesLiveData.value = ApiResult.error(LoginResponse(ApiError(-1,
+              domainRulesLiveData.value = Result.error(LoginResponse(ApiError(-1,
                   context.getString(R.string.user_not_registered_not_verified)), false, false))
 
             loginResult.data?.isVerified == false ->
-              domainRulesLiveData.value = ApiResult.error(LoginResponse(ApiError(-1,
+              domainRulesLiveData.value = Result.error(LoginResponse(ApiError(-1,
                   context.getString(R.string.user_not_verified)), true, false))
           }
         }
 
         else -> {
-          domainRulesLiveData.value = ApiResult.exception(IllegalStateException("Unhandled error"))
+          domainRulesLiveData.value = Result.exception(IllegalStateException("Unhandled error"))
         }
       }
     }

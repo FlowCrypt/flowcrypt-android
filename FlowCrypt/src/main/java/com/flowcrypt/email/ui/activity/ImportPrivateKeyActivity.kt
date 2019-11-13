@@ -18,7 +18,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
-import com.flowcrypt.email.api.retrofit.response.base.ApiResult
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
@@ -227,26 +227,26 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
 
   private fun setupSubmitPubKeyViewModel() {
     submitPubKeyViewModel = ViewModelProvider(this).get(SubmitPubKeyViewModel::class.java)
-    val observer = Observer<ApiResult<ApiResponse>?> {
+    val observer = Observer<Result<ApiResponse>?> {
       it?.let {
         when (it.status) {
-          ApiResult.Status.LOADING -> {
+          Result.Status.LOADING -> {
             textViewProgressText.setText(R.string.submitting_pub_key)
             UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView)
           }
 
-          ApiResult.Status.SUCCESS -> {
+          Result.Status.SUCCESS -> {
             setResult(Activity.RESULT_OK)
             finish()
           }
 
-          ApiResult.Status.ERROR -> {
+          Result.Status.ERROR -> {
             UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
             Toast.makeText(this, it.data?.apiError?.msg
                 ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
           }
 
-          ApiResult.Status.EXCEPTION -> {
+          Result.Status.EXCEPTION -> {
             UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
             Toast.makeText(this, it.exception?.message
                 ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
