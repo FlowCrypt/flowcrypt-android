@@ -12,7 +12,6 @@ import android.util.Pair
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -185,7 +184,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
             keys?.let {
               unlockedKeys.clear()
               unlockedKeys.addAll(it)
-              submitPubKeyViewModel.submitPubKey(unlockedKeys)
+              account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
             }
           }
         }
@@ -290,14 +289,20 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
 
           Result.Status.ERROR -> {
             UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
-            Toast.makeText(this, it.data?.apiError?.msg
-                ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
+            showSnackbar(rootView, it.data?.apiError?.msg
+                ?: getString(R.string.unknown_error), getString(R.string.retry),
+                Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
+              account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
+            })
           }
 
           Result.Status.EXCEPTION -> {
             UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
-            Toast.makeText(this, it.exception?.message
-                ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
+            showSnackbar(rootView, it.exception?.message
+                ?: getString(R.string.unknown_error), getString(R.string.retry),
+                Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
+              account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
+            })
           }
         }
       }

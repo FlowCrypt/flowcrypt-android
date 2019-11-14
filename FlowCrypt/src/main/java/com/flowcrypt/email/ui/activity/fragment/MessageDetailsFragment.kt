@@ -921,8 +921,12 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
     val buttonImportPrivateKey = viewGroup.findViewById<Button>(R.id.buttonImportPrivateKey)
     buttonImportPrivateKey.setOnClickListener {
+      val account = AccountDaoSource().getActiveAccountInformation(context)
+          ?: return@setOnClickListener
       startActivityForResult(BaseImportKeyActivity.newIntent(
-          context!!, getString(R.string.import_private_key), true, ImportPrivateKeyActivity::class.java),
+          context = context!!, accountDao = account,
+          title = getString(R.string.import_private_key),
+          throwErrorIfDuplicateFoundEnabled = true, cls = ImportPrivateKeyActivity::class.java),
           REQUEST_CODE_START_IMPORT_KEY_ACTIVITY)
     }
 

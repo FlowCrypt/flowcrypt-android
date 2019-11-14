@@ -11,6 +11,7 @@ import android.content.Intent
 import android.os.Bundle
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.PgpContact
@@ -77,8 +78,9 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
     val KEY_EXTRA_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT",
         ImportPublicKeyActivity::class.java)
 
-    fun newIntent(context: Context?, title: String, pgpContact: PgpContact): Intent {
-      val intent = newIntent(context, title, false, ImportPublicKeyActivity::class.java)
+    fun newIntent(context: Context?, accountDao: AccountDao, title: String, pgpContact: PgpContact): Intent {
+      val intent = newIntent(context = context, accountDao = accountDao, title = title,
+          throwErrorIfDuplicateFoundEnabled = false, cls = ImportPublicKeyActivity::class.java)
       intent.putExtra(KEY_EXTRA_PGP_CONTACT, pgpContact)
       return intent
     }

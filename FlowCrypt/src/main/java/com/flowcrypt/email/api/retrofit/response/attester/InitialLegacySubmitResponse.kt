@@ -29,7 +29,8 @@ import com.google.gson.annotations.SerializedName
  * E-mail: DenBond7@gmail.com
  */
 
-data class InitialLegacySubmitResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
+data class InitialLegacySubmitResponse constructor(@SerializedName("error") @Expose override val
+                                                   apiError: ApiError? = null,
                                                    @Expose val isSaved: Boolean) : ApiResponse {
   constructor(source: Parcel) : this(
       source.readParcelable<ApiError>(ApiError::class.java.classLoader),

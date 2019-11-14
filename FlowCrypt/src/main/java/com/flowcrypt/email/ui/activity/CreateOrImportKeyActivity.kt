@@ -28,7 +28,7 @@ import com.flowcrypt.email.util.GeneralUtil
  */
 class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.OnClickListener {
   private var isShowAnotherAccountBtnEnabled = true
-  private var account: AccountDao? = null
+  private lateinit var account: AccountDao
 
   override val rootView: View
     get() = findViewById(R.id.layoutContent)
@@ -44,10 +44,9 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    if (intent != null) {
-      this.isShowAnotherAccountBtnEnabled = intent.getBooleanExtra(KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, true)
-      this.account = intent.getParcelableExtra(EXTRA_KEY_ACCOUNT_DAO)
-    }
+    this.isShowAnotherAccountBtnEnabled =
+        intent?.getBooleanExtra(KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, true) ?: true
+    this.account = intent.getParcelableExtra(EXTRA_KEY_ACCOUNT_DAO)
 
     initViews()
   }
@@ -63,8 +62,9 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
           keyImportModel = service.keyImportModel
         }
 
-        startActivityForResult(BaseImportKeyActivity.newIntent(this, false, getString(R.string.import_private_key),
-            keyImportModel, true, ImportPrivateKeyActivity::class.java), REQUEST_CODE_IMPORT_ACTIVITY)
+        startActivityForResult(BaseImportKeyActivity.newIntent(this, account, false,
+            getString(R.string.import_private_key), keyImportModel, true,
+            ImportPrivateKeyActivity::class.java), REQUEST_CODE_IMPORT_ACTIVITY)
       }
 
       R.id.buttonSelectAnotherAccount -> {
@@ -97,7 +97,7 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
   private fun initViews() {
     findViewById<View>(R.id.buttonImportMyKey)?.setOnClickListener(this)
 
-    if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_CREATE) == true) {
+    if (account.isRuleExist(AccountDao.DomainRule.NO_PRV_CREATE)) {
       findViewById<View>(R.id.buttonCreateNewKey)?.visibility = View.GONE
     } else {
       findViewById<View>(R.id.buttonCreateNewKey)?.setOnClickListener(this)
@@ -112,7 +112,7 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
     }
 
     val buttonSkipSetup = findViewById<View>(R.id.buttonSkipSetup)
-    if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_CREATE) == true) {
+    if (account.isRuleExist(AccountDao.DomainRule.NO_PRV_CREATE)) {
       buttonSkipSetup.visibility = View.GONE
     } else {
       if (SecurityUtils.hasBackup(this)) {

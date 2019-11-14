@@ -12,9 +12,13 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
+import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
+import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
 import kotlinx.coroutines.launch
 
 /**
@@ -27,7 +31,7 @@ class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(app
   private val repository: ApiRepository = FlowcryptApiRepository()
   val submitPubKeyLiveData: MutableLiveData<Result<ApiResponse>?> = MutableLiveData()
 
-  fun submitPubKey(keys: List<NodeKeyDetails>) {
+  fun submitPubKey(account: AccountDao, keys: List<NodeKeyDetails>) {
     submitPubKeyLiveData.value = Result.loading(null)
     val context: Context = getApplication()
 
@@ -35,8 +39,23 @@ class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(app
 
     keyDetails?.publicKey?.let {
       viewModelScope.launch {
-        submitPubKeyLiveData.value = repository.submitPubKey(context, InitialLegacySubmitModel
-        (keyDetails.primaryPgpContact.email, it))
+        val result = repository.submitPubKey(context,
+            InitialLegacySubmitModel(account.email, it))
+
+        when (result.status) {
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            if (account.isRuleExist(AccountDao.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
+              submitPubKeyLiveData.value = result
+            } else {
+              ActionQueueDaoSource().addAction(context, RegisterUserPublicKeyAction(0, account
+                  .email, 0, it))
+              submitPubKeyLiveData.value = Result.success(InitialLegacySubmitResponse(null, false))
+            }
+          }
+          else -> {
+            submitPubKeyLiveData.value = result
+          }
+        }
       }
     }
   }
