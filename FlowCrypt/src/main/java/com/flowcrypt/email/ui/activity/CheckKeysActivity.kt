@@ -130,8 +130,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
       }
 
       R.id.buttonNeutralAction -> {
-        setResult(RESULT_NEUTRAL)
-        finish()
+        returnDecryptedKeys(RESULT_NEUTRAL)
       }
 
       R.id.buttonNegativeAction -> {
@@ -195,10 +194,10 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
   }
 
   private fun initButton(buttonViewId: Int, visibility: Int, text: String?) {
-    val buttonNeutralAction = findViewById<Button>(buttonViewId)
-    buttonNeutralAction?.visibility = visibility
-    buttonNeutralAction?.text = text
-    buttonNeutralAction?.setOnClickListener(this)
+    val button = findViewById<Button>(buttonViewId)
+    button?.visibility = visibility
+    button?.text = text
+    button?.setOnClickListener(this)
   }
 
   private fun setupCheckPrivateKeysViewModel() {
@@ -238,10 +237,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
                         R.plurals.not_recovered_all_keys, remainingKeyCount,
                         uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
                   } else {
-                    val intent = Intent()
-                    intent.putExtra(KEY_EXTRA_SAVED_PRIVATE_KEYS, decryptedKeys)
-                    setResult(Activity.RESULT_OK, intent)
-                    finish()
+                    returnDecryptedKeys(Activity.RESULT_OK)
                   }
 
                 } else {
@@ -262,6 +258,13 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
     }
 
     checkPrivateKeysViewModel.liveData.observe(this, observer)
+  }
+
+  private fun returnDecryptedKeys(resultCode: Int) {
+    val intent = Intent()
+    intent.putExtra(KEY_EXTRA_SAVED_PRIVATE_KEYS, decryptedKeys)
+    setResult(resultCode, intent)
+    finish()
   }
 
   /**
