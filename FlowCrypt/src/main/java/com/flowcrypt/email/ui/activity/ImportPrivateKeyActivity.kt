@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Pair
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -20,13 +21,20 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.KeysDao
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.dao.source.KeysDaoSource
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.gms.common.util.CollectionUtils
+import com.google.android.material.snackbar.Snackbar
 
 /**
  * This activity describes a logic of import private keys.
@@ -41,14 +49,16 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
   @get:VisibleForTesting
   var countingIdlingResource: CountingIdlingResource? = null
     private set
-  private var privateKeys: ArrayList<NodeKeyDetails>? = null
+  private var privateKeysFromEmailBackups: ArrayList<NodeKeyDetails>? = null
   private lateinit var submitPubKeyViewModel: SubmitPubKeyViewModel
+  private val unlockedKeys: MutableList<NodeKeyDetails> = ArrayList()
+  private val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(this)
+  private var keyDetailsType: KeyDetails.Type = KeyDetails.Type.EMAIL
 
   private var layoutSyncStatus: View? = null
   private var buttonImportBackup: Button? = null
 
   private var isLoadPrivateKeysRequestSent: Boolean = false
-  private var importedKeys: List<NodeKeyDetails>? = null
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_import_private_key
@@ -93,15 +103,15 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
       R.id.syns_load_private_keys -> {
-        if (privateKeys == null) {
+        if (privateKeysFromEmailBackups == null) {
           val keys = obj as ArrayList<NodeKeyDetails>?
           if (keys != null) {
             if (keys.isNotEmpty()) {
-              this.privateKeys = keys
+              this.privateKeysFromEmailBackups = keys
 
               val uniqueKeysLongIds = filterKeys()
 
-              if (this.privateKeys!!.isEmpty()) {
+              if (this.privateKeysFromEmailBackups!!.isEmpty()) {
                 hideImportButton()
               } else {
                 buttonImportBackup!!.text = resources.getQuantityString(
@@ -144,12 +154,21 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.buttonImportBackup -> if (!CollectionUtils.isEmpty(privateKeys)) {
-        startActivityForResult(CheckKeysActivity.newIntent(this, privateKeys!!, KeyDetails.Type.EMAIL, null,
-            getString(R.string.continue_), getString(R.string.choose_another_key)), REQUEST_CODE_CHECK_PRIVATE_KEYS)
+      R.id.buttonImportBackup -> {
+        unlockedKeys.clear()
+        if (!CollectionUtils.isEmpty(privateKeysFromEmailBackups)) {
+          keyDetailsType = KeyDetails.Type.EMAIL
+          startActivityForResult(CheckKeysActivity.newIntent(this, privateKeysFromEmailBackups!!, KeyDetails.Type.EMAIL, null,
+              getString(R.string.continue_), getString(R.string.choose_another_key)), REQUEST_CODE_CHECK_PRIVATE_KEYS)
+        }
       }
 
-      else -> super.onClick(v)
+      else -> {
+        when (v.id) {
+          R.id.buttonLoadFromFile, R.id.buttonLoadFromClipboard -> unlockedKeys.clear()
+        }
+        super.onClick(v)
+      }
     }
   }
 
@@ -160,11 +179,13 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
 
         when (resultCode) {
           Activity.RESULT_OK -> {
-            importedKeys = data?.getParcelableArrayListExtra<NodeKeyDetails>(
-                CheckKeysActivity.KEY_EXTRA_SAVED_PRIVATE_KEYS)
+            val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
+                CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
 
-            importedKeys?.let {
-              submitPubKeyViewModel.submitPubKey(it)
+            keys?.let {
+              unlockedKeys.clear()
+              unlockedKeys.addAll(it)
+              submitPubKeyViewModel.submitPubKey(unlockedKeys)
             }
           }
         }
@@ -174,21 +195,49 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
   }
 
   override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>) {
+    val keysDaoSource = KeysDaoSource()
+    var areFreshKeysExisted = false
+    var arePrivateKeysExisted = false
+
+    for (key in keyDetailsList) {
+      if (key.isPrivate) {
+        arePrivateKeysExisted = true
+      }
+
+      val longId = key.longId ?: continue
+      if (!keysDaoSource.hasKey(this, longId)) {
+        areFreshKeysExisted = true
+      }
+    }
+
+    if (!arePrivateKeysExisted) {
+      showInfoSnackbar(rootView, getString(R.string.file_has_wrong_pgp_structure, getString(R
+          .string.private_)), Snackbar.LENGTH_LONG)
+      return
+    }
+
+    if (!areFreshKeysExisted) {
+      showInfoSnackbar(rootView, getString(R.string.the_key_already_added), Snackbar.LENGTH_LONG)
+      return
+    }
+
     when (type) {
       KeyDetails.Type.FILE -> {
+        keyDetailsType = KeyDetails.Type.FILE
         val fileName = GeneralUtil.getFileNameFromUri(this, keyImportModel!!.fileUri)
         val bottomTitle = resources.getQuantityString(R.plurals.file_contains_some_amount_of_keys,
             keyDetailsList.size, fileName, keyDetailsList.size)
         val posBtnTitle = getString(R.string.continue_)
-        val intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.FILE,
+        val intent = CheckKeysActivity.newIntent(this, keyDetailsList, keyDetailsType,
             bottomTitle, posBtnTitle, null, getString(R.string.choose_another_key), true)
         startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS)
       }
 
       KeyDetails.Type.CLIPBOARD -> {
+        keyDetailsType = KeyDetails.Type.CLIPBOARD
         val title = resources.getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
             keyDetailsList.size, keyDetailsList.size)
-        val clipboardIntent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.CLIPBOARD, title,
+        val clipboardIntent = CheckKeysActivity.newIntent(this, keyDetailsList, keyDetailsType, title,
             getString(R.string.continue_), null, getString(R.string.choose_another_key), true)
         startActivityForResult(clipboardIntent,
             REQUEST_CODE_CHECK_PRIVATE_KEYS)
@@ -211,7 +260,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
   private fun filterKeys(): Set<String> {
     val connector = KeysStorageImpl.getInstance(this)
 
-    val iterator = privateKeys!!.iterator()
+    val iterator = privateKeysFromEmailBackups!!.iterator()
     val uniqueKeysLongIds = HashSet<String>()
 
     while (iterator.hasNext()) {
@@ -236,8 +285,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
           }
 
           Result.Status.SUCCESS -> {
-            setResult(Activity.RESULT_OK)
-            finish()
+            handleSuccessSubmit()
           }
 
           Result.Status.ERROR -> {
@@ -256,6 +304,64 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
     }
 
     submitPubKeyViewModel.submitPubKeyLiveData.observe(this, observer)
+  }
+
+  private fun handleSuccessSubmit() {
+    try {
+      textViewProgressText.setText(R.string.saving_prv_keys)
+      encryptAndSaveKeysToDatabase()
+    } catch (e: Exception) {
+      UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
+      showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+          getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
+        handleSuccessSubmit()
+      })
+    }
+  }
+
+  private fun encryptAndSaveKeysToDatabase() {
+    //maybe it'd be better to move some logic to a new ViewModel
+    val keysDaoSource = KeysDaoSource()
+    val userIdEmailsKeysDaoSource = UserIdEmailsKeysDaoSource()
+
+    for (keyDetails in unlockedKeys) {
+      if (!keysDaoSource.hasKey(this, keyDetails.longId!!)) {
+        val passphrase = if (keyDetails.isDecrypted == true) "" else keyDetails.passphrase!!
+        val keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetailsType,
+            keyDetails, passphrase)
+        val uri = keysDaoSource.addRow(this, keysDao)
+
+        uri?.let {
+          val contactsDaoSource = ContactsDaoSource()
+          val pairs: List<Pair<String, String>> = genPairs(keyDetails, keyDetails.pgpContacts, contactsDaoSource)
+
+          for (pair in pairs) {
+            userIdEmailsKeysDaoSource.addRow(this, pair.first, pair.second)
+          }
+        }
+      }
+    }
+
+    setResult(Activity.RESULT_OK)
+    finish()
+  }
+
+  private fun genPairs(keyDetails: NodeKeyDetails, contacts: List<PgpContact>,
+                       daoSource: ContactsDaoSource): List<Pair<String, String>> {
+    val pairs = java.util.ArrayList<Pair<String, String>>()
+    for (pgpContact in contacts) {
+      pgpContact.pubkey = keyDetails.publicKey
+      val temp = daoSource.getPgpContact(this, pgpContact.email)
+      if (GeneralUtil.isEmailValid(pgpContact.email) && temp == null) {
+        ContactsDaoSource().addRow(this, pgpContact)
+        //todo-DenBond7 Need to resolve a situation with different public keys.
+        //For example we can have a situation when we have to different public
+        // keys with the same email
+      }
+
+      pairs.add(Pair.create(keyDetails.longId, pgpContact.email))
+    }
+    return pairs
   }
 
   companion object {

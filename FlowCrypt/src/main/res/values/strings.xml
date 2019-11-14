@@ -65,7 +65,7 @@
     <string name="licence">Licence</string>
     <string name="sources">Sources</string>
     <string name="the_contact_was_deleted">Contact \"%1$s\" deleted</string>
-    <string name="the_key_already_added">Key already added, skipping</string>
+    <string name="the_key_already_added">Key already added</string>
     <string name="help_feedback_or_question">Help, feedback, question</string>
     <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Thank you for trying FlowCrypt! We\'re here to help.</string>
     <string name="your_message">Your message</string>
@@ -417,4 +417,6 @@
     <string name="user_not_verified">User not verified</string>
     <string name="user_not_registered_not_verified">User not registered and not verified</string>
     <string name="submitting_pub_key">Submitting the pub key</string>
+    <string name="error_occurred_while_saving_key">Error occurred while saving the key(%1$s)</string>
+    <string name="saving_prv_keys">Saving the private key(s)</string>
 </resources>

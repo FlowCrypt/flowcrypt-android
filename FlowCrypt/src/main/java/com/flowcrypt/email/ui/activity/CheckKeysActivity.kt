@@ -45,7 +45,7 @@ import java.nio.charset.StandardCharsets
 
 class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
   private var originalKeys: List<NodeKeyDetails>? = null
-  private val decryptedKeys: ArrayList<NodeKeyDetails> = ArrayList()
+  private val unlockedKeys: ArrayList<NodeKeyDetails> = ArrayList()
   private val remainingKeys: ArrayList<NodeKeyDetails> = ArrayList()
   private var keyDetailsAndLongIdsMap: MutableMap<NodeKeyDetails, String>? = null
   private lateinit var checkPrivateKeysViewModel: CheckPrivateKeysViewModel
@@ -130,7 +130,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
       }
 
       R.id.buttonNeutralAction -> {
-        returnDecryptedKeys(RESULT_NEUTRAL)
+        returnUnlockedKeys(RESULT_NEUTRAL)
       }
 
       R.id.buttonNegativeAction -> {
@@ -216,18 +216,17 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
             when (it.status) {
               Result.Status.SUCCESS -> {
                 val resultKeys = it.data ?: emptyList()
-                val sessionDecryptedKeys = resultKeys.filter { keyDetails -> keyDetails.passphrase?.isNotEmpty() == true }
-                if (sessionDecryptedKeys.isNotEmpty()) {
-                  decryptedKeys.addAll(sessionDecryptedKeys)
+                val sessionUnlockedKeys = resultKeys.filter { keyDetails -> keyDetails.passphrase?.isNotEmpty() == true }
+                if (sessionUnlockedKeys.isNotEmpty()) {
+                  unlockedKeys.addAll(sessionUnlockedKeys)
 
-                  for (key in sessionDecryptedKeys) {
+                  for (key in sessionUnlockedKeys) {
                     remainingKeys.removeAll(remainingKeys.filter { details ->
                       (details.longId == key.longId)
                     })
                   }
 
                   if (remainingKeys.isNotEmpty()) {
-                    val map = prepareMapFromKeyDetailsList(remainingKeys)
                     initButton(R.id.buttonNeutralAction, View.VISIBLE, getString(R.string.skip_remaining_backups))
                     editTextKeyPassword!!.text = null
                     val mapOfRemainingBackups = prepareMapFromKeyDetailsList(remainingKeys)
@@ -237,11 +236,15 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
                         R.plurals.not_recovered_all_keys, remainingKeyCount,
                         uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
                   } else {
-                    returnDecryptedKeys(Activity.RESULT_OK)
+                    returnUnlockedKeys(Activity.RESULT_OK)
                   }
 
                 } else {
-                  showInfoSnackbar(rootView, getString(R.string.password_is_incorrect))
+                  if (resultKeys.size == 1) {
+                    showInfoSnackbar(rootView, resultKeys.first().errorMsg)
+                  } else {
+                    showInfoSnackbar(rootView, getString(R.string.password_is_incorrect))
+                  }
                 }
               }
 
@@ -260,9 +263,9 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
     checkPrivateKeysViewModel.liveData.observe(this, observer)
   }
 
-  private fun returnDecryptedKeys(resultCode: Int) {
+  private fun returnUnlockedKeys(resultCode: Int) {
     val intent = Intent()
-    intent.putExtra(KEY_EXTRA_SAVED_PRIVATE_KEYS, decryptedKeys)
+    intent.putExtra(KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, unlockedKeys)
     setResult(resultCode, intent)
     finish()
   }
@@ -344,8 +347,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEGATIVE_BUTTON_TITLE", CheckKeysActivity::class.java)
     val KEY_EXTRA_IS_EXTRA_IMPORT_OPTION =
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_EXTRA_IMPORT_OPTION", CheckKeysActivity::class.java)
-    val KEY_EXTRA_SAVED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_SAVED_PRIVATE_KEYS", CheckKeysActivity::class.java)
+    val KEY_EXTRA_UNLOCKED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_UNLOCKED_PRIVATE_KEYS", CheckKeysActivity::class.java)
 
     fun newIntent(context: Context, privateKeys: ArrayList<NodeKeyDetails>, type: KeyDetails.Type?,
                   bottomTitle: String?, positiveBtnTitle: String?, negativeBtnTitle: String?): Intent {
