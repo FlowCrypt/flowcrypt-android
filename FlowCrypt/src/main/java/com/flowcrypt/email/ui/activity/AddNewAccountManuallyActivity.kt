@@ -226,7 +226,16 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       }
 
       REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL -> when (resultCode) {
-        Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> returnOkResult()
+        Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> {
+          val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
+              CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
+
+          if (keys.isNullOrEmpty()) {
+            showInfoSnackbar(rootView, getString(R.string.unknown_error))
+          } else {
+            saveKeysAndReturnOkResult(keys)
+          }
+        }
 
         Activity.RESULT_CANCELED -> UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
 
@@ -237,6 +246,18 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
+    }
+  }
+
+  private fun saveKeysAndReturnOkResult(keys: List<NodeKeyDetails>) {
+    try {
+      SecurityUtils.encryptAndSaveKeysToDatabase(this, keys, KeyDetails.Type.EMAIL)
+      returnOkResult()
+    } catch (e: java.lang.Exception) {
+      showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+          getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
+        saveKeysAndReturnOkResult(keys)
+      })
     }
   }
 
