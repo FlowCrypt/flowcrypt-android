@@ -81,7 +81,16 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
       }
 
       REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL -> when (resultCode) {
-        Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> returnResultOk()
+        Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> {
+          val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
+              CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
+
+          if (keys.isNullOrEmpty()) {
+            showInfoSnackbar(rootView, getString(R.string.unknown_error))
+          } else {
+            saveKeysAndReturnOkResult(keys)
+          }
+        }
 
         Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
           UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
@@ -193,6 +202,18 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
     accountDaoSource.addRow(this, googleSignInAccount, uuid, domainRules)
     accountDaoSource.setActiveAccount(this, googleSignInAccount!!.email)
     return accountDaoSource
+  }
+
+  private fun saveKeysAndReturnOkResult(keys: List<NodeKeyDetails>) {
+    try {
+      SecurityUtils.encryptAndSaveKeysToDatabase(this, keys, KeyDetails.Type.EMAIL)
+      returnResultOk()
+    } catch (e: java.lang.Exception) {
+      showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+          getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
+        saveKeysAndReturnOkResult(keys)
+      })
+    }
   }
 
   companion object {
