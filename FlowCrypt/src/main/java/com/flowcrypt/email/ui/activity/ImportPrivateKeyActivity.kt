@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.util.Pair
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -20,15 +19,12 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.KeysDao
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -314,7 +310,9 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
   private fun handleSuccessSubmit() {
     try {
       textViewProgressText.setText(R.string.saving_prv_keys)
-      encryptAndSaveKeysToDatabase()
+      SecurityUtils.encryptAndSaveKeysToDatabase(this, unlockedKeys, keyDetailsType)
+      setResult(Activity.RESULT_OK)
+      finish()
     } catch (e: Exception) {
       UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
       showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
@@ -322,51 +320,6 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
         handleSuccessSubmit()
       })
     }
-  }
-
-  private fun encryptAndSaveKeysToDatabase() {
-    //maybe it'd be better to move some logic to a new ViewModel
-    val keysDaoSource = KeysDaoSource()
-    val userIdEmailsKeysDaoSource = UserIdEmailsKeysDaoSource()
-
-    for (keyDetails in unlockedKeys) {
-      if (!keysDaoSource.hasKey(this, keyDetails.longId!!)) {
-        val passphrase = if (keyDetails.isDecrypted == true) "" else keyDetails.passphrase!!
-        val keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, keyDetailsType,
-            keyDetails, passphrase)
-        val uri = keysDaoSource.addRow(this, keysDao)
-
-        uri?.let {
-          val contactsDaoSource = ContactsDaoSource()
-          val pairs: List<Pair<String, String>> = genPairs(keyDetails, keyDetails.pgpContacts, contactsDaoSource)
-
-          for (pair in pairs) {
-            userIdEmailsKeysDaoSource.addRow(this, pair.first, pair.second)
-          }
-        }
-      }
-    }
-
-    setResult(Activity.RESULT_OK)
-    finish()
-  }
-
-  private fun genPairs(keyDetails: NodeKeyDetails, contacts: List<PgpContact>,
-                       daoSource: ContactsDaoSource): List<Pair<String, String>> {
-    val pairs = java.util.ArrayList<Pair<String, String>>()
-    for (pgpContact in contacts) {
-      pgpContact.pubkey = keyDetails.publicKey
-      val temp = daoSource.getPgpContact(this, pgpContact.email)
-      if (GeneralUtil.isEmailValid(pgpContact.email) && temp == null) {
-        ContactsDaoSource().addRow(this, pgpContact)
-        //todo-DenBond7 Need to resolve a situation with different public keys.
-        //For example we can have a situation when we have to different public
-        // keys with the same email
-      }
-
-      pairs.add(Pair.create(keyDetails.longId, pgpContact.email))
-    }
-    return pairs
   }
 
   companion object {

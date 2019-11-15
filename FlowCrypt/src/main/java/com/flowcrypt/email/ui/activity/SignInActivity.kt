@@ -33,6 +33,7 @@ import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.util.CollectionUtils
+import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import java.util.*
 
@@ -71,7 +72,16 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
         isStartCheckKeysActivityEnabled = false
 
         when (resultCode) {
-          Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> runEmailManagerActivity()
+          Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> {
+            val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
+                CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
+
+            if (keys.isNullOrEmpty()) {
+              showInfoSnackbar(rootView, getString(R.string.unknown_error))
+            } else {
+              saveKeysAndOpenMainScreen(keys)
+            }
+          }
 
           Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
             this.googleSignInAccount = null
@@ -115,6 +125,18 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
+    }
+  }
+
+  private fun saveKeysAndOpenMainScreen(keys: List<NodeKeyDetails>) {
+    try {
+      SecurityUtils.encryptAndSaveKeysToDatabase(this, keys, KeyDetails.Type.EMAIL)
+      runEmailManagerActivity()
+    } catch (e: java.lang.Exception) {
+      showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+          getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
+        saveKeysAndOpenMainScreen(keys)
+      })
     }
   }
 

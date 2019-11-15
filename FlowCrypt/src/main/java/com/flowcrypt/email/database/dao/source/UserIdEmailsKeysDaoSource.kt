@@ -14,6 +14,8 @@ import android.provider.BaseColumns
 import android.text.TextUtils
 import android.util.Pair
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.util.GeneralUtil
 import com.google.android.gms.common.util.CollectionUtils
 import java.util.*
 
@@ -164,5 +166,23 @@ class UserIdEmailsKeysDaoSource : BaseDaoSource() {
     const val INDEX_LONG_ID_USER_ID_EMAIL = (UNIQUE_INDEX_PREFIX + COL_LONG_ID + "_" +
         COL_USER_ID_EMAIL + "_in_" + TABLE_NAME_USER_ID_EMAILS_AND_KEYS + " ON " + TABLE_NAME_USER_ID_EMAILS_AND_KEYS
         + " (" + COL_LONG_ID + ", " + COL_USER_ID_EMAIL + ")")
+
+    fun genPairs(context: Context, keyDetails: NodeKeyDetails, contacts: List<PgpContact>,
+                 daoSource: ContactsDaoSource): List<Pair<String, String>> {
+      val pairs = mutableListOf<Pair<String, String>>()
+      for (pgpContact in contacts) {
+        pgpContact.pubkey = keyDetails.publicKey
+        val temp = daoSource.getPgpContact(context, pgpContact.email)
+        if (GeneralUtil.isEmailValid(pgpContact.email) && temp == null) {
+          ContactsDaoSource().addRow(context, pgpContact)
+          //todo-DenBond7 Need to resolve a situation with different public keys.
+          //For example we can have a situation when we have to different public
+          // keys with the same email
+        }
+
+        pairs.add(Pair.create(keyDetails.longId, pgpContact.email))
+      }
+      return pairs
+    }
   }
 }
