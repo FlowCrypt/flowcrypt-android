@@ -185,7 +185,11 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
             keys?.let {
               unlockedKeys.clear()
               unlockedKeys.addAll(it)
-              account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
+              if (intent?.getBooleanExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, true) == true) {
+                account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
+              } else {
+                handleSuccessSubmit()
+              }
             }
           }
         }
@@ -318,6 +322,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
 
   private fun handleSuccessSubmit() {
     try {
+      UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView)
       textViewProgressText.setText(R.string.saving_prv_keys)
       SecurityUtils.encryptAndSaveKeysToDatabase(this, unlockedKeys, keyDetailsType)
       setResult(Activity.RESULT_OK)
@@ -335,13 +340,17 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS = 100
     val KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED", ImportPrivateKeyActivity::class.java)
+    val KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED", ImportPrivateKeyActivity::class.java)
 
     fun getIntent(context: Context?, accountDao: AccountDao, isSyncEnabled: Boolean = false,
                   title: String, model: KeyImportModel? = null,
                   throwErrorIfDuplicateFoundEnabled: Boolean = false, cls: Class<*>,
-                  isUseExistingKeysEnabled: Boolean = true): Intent {
+                  isUseExistingKeysEnabled: Boolean = true,
+                  isSubmittingPubKeysEnabled: Boolean = true): Intent {
       val intent = newIntent(context, accountDao, isSyncEnabled, title, model, throwErrorIfDuplicateFoundEnabled, cls)
       intent.putExtra(KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, isUseExistingKeysEnabled)
+      intent.putExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, isSubmittingPubKeysEnabled)
       return intent
     }
   }
