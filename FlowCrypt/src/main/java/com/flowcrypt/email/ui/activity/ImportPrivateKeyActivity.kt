@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -19,9 +20,11 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
@@ -154,7 +157,9 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
         if (!CollectionUtils.isEmpty(privateKeysFromEmailBackups)) {
           keyDetailsType = KeyDetails.Type.EMAIL
           startActivityForResult(CheckKeysActivity.newIntent(this, privateKeys = privateKeysFromEmailBackups!!, type = KeyDetails.Type.EMAIL,
-              positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R.string.choose_another_key)), REQUEST_CODE_CHECK_PRIVATE_KEYS)
+              positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R
+              .string.choose_another_key), isUseExistingKeysEnabled = intent?.getBooleanExtra
+          (KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, true) == true), REQUEST_CODE_CHECK_PRIVATE_KEYS)
         }
       }
 
@@ -224,7 +229,9 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
             keyDetailsList.size, fileName, keyDetailsList.size)
         val posBtnTitle = getString(R.string.continue_)
         val intent = CheckKeysActivity.newIntent(this, privateKeys = keyDetailsList, type = keyDetailsType,
-            subTitle = bottomTitle, positiveBtnTitle = posBtnTitle, negativeBtnTitle = getString(R.string.choose_another_key), isExtraImportOpt = true)
+            subTitle = bottomTitle, positiveBtnTitle = posBtnTitle, negativeBtnTitle = getString
+        (R.string.choose_another_key), isExtraImportOpt = true, isUseExistingKeysEnabled = intent?.getBooleanExtra
+        (KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, true) == true)
         startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS)
       }
 
@@ -233,7 +240,9 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
         val title = resources.getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
             keyDetailsList.size, keyDetailsList.size)
         val clipboardIntent = CheckKeysActivity.newIntent(this, keyDetailsList, type = keyDetailsType, subTitle = title,
-            positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R.string.choose_another_key), isExtraImportOpt = true)
+            positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R
+            .string.choose_another_key), isExtraImportOpt = true, isUseExistingKeysEnabled = intent?.getBooleanExtra
+        (KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, true) == true)
         startActivityForResult(clipboardIntent,
             REQUEST_CODE_CHECK_PRIVATE_KEYS)
       }
@@ -324,5 +333,16 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
 
   companion object {
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS = 100
+    val KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED", ImportPrivateKeyActivity::class.java)
+
+    fun getIntent(context: Context?, accountDao: AccountDao, isSyncEnabled: Boolean = false,
+                  title: String, model: KeyImportModel? = null,
+                  throwErrorIfDuplicateFoundEnabled: Boolean = false, cls: Class<*>,
+                  isUseExistingKeysEnabled: Boolean = true): Intent {
+      val intent = newIntent(context, accountDao, isSyncEnabled, title, model, throwErrorIfDuplicateFoundEnabled, cls)
+      intent.putExtra(KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, isUseExistingKeysEnabled)
+      return intent
+    }
   }
 }
