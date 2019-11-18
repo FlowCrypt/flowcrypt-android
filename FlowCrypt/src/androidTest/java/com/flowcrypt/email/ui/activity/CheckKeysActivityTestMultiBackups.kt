@@ -57,6 +57,7 @@ class CheckKeysActivityTestMultiBackups : BaseCheckKeysActivityTest() {
    * There are two keys (all keys are different and have different pass phrases). Only one key from two keys is using.
    */
   @Test
+
   fun testUseTwoKeysFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -138,6 +139,7 @@ class CheckKeysActivityTestMultiBackups : BaseCheckKeysActivityTest() {
    * key with a unique pass phrase.
    */
   @Test
+
   fun testUseThreeFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -156,6 +158,7 @@ class CheckKeysActivityTestMultiBackups : BaseCheckKeysActivityTest() {
    * with the same pass phrase.
    */
   @Test
+
   fun testUseThreeKeysSecondCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -212,6 +215,7 @@ class CheckKeysActivityTestMultiBackups : BaseCheckKeysActivityTest() {
    * pass phrase). Will be used one of the identical keys with a unique pass phrase.
    */
   @Test
+
   fun testUseThreeKeysFifthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyB_default.json",
@@ -267,6 +271,7 @@ class CheckKeysActivityTestMultiBackups : BaseCheckKeysActivityTest() {
    * two keys with the same pass phrase.
    */
   @Test
+
   fun testUseFourKeysFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -309,9 +314,9 @@ class CheckKeysActivityTestMultiBackups : BaseCheckKeysActivityTest() {
   }
 
   private fun checkSkipRemainingBackupsButton() {
-    onView(withId(R.id.buttonUseExistingKeys)).check(matches(isDisplayed())).perform(click())
+    onView(withId(R.id.buttonSkipRemainingBackups)).check(matches(isDisplayed())).perform(click())
     assertThat<Instrumentation.ActivityResult>(activityTestRule?.activityResult,
-        hasResultCode(CheckKeysActivity.RESULT_USE_EXISTING_KEYS))
+        hasResultCode(CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS))
   }
 
   /**
