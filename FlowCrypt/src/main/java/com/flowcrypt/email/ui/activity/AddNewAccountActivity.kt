@@ -96,6 +96,12 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
           returnResultOk()
         }
 
+        CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
+          Toast.makeText(this, getString(R.string.key_already_imported_finishing_setup), Toast
+              .LENGTH_SHORT).show()
+          returnResultOk()
+        }
+
         Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
           UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
           LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email)

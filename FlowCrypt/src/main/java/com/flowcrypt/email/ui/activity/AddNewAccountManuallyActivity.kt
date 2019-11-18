@@ -18,6 +18,7 @@ import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.Spinner
+import android.widget.Toast
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import androidx.preference.PreferenceManager
@@ -238,6 +239,12 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
         }
 
         CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
+          returnOkResult()
+        }
+
+        CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
+          Toast.makeText(this, getString(R.string.key_already_imported_finishing_setup), Toast
+              .LENGTH_SHORT).show()
           returnOkResult()
         }
 

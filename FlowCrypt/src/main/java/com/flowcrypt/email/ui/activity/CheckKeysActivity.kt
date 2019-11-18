@@ -83,22 +83,32 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
 
         if (!intent.getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
           removeAlreadyImportedKeys()
+          this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
+          this.originalKeys = ArrayList(keyDetailsAndLongIdsMap?.keys ?: emptyList())
 
-          if (originalKeys?.size != keyDetailsAndLongIdsMap?.size && uniqueKeysCount > 1) {
-            this.originalKeys = ArrayList(keyDetailsAndLongIdsMap?.keys ?: emptyList())
-            if (originalKeys?.isEmpty() == true) {
-              setResult(Activity.RESULT_OK)
+          when (uniqueKeysCount) {
+            0 -> {
+              setResult(RESULT_NO_NEW_KEYS)
               finish()
-            } else {
-              val map = prepareMapFromKeyDetailsList(originalKeys)
-              val remainingKeyCount = getUniqueKeysLongIdsCount(map)
-
-              this.subTitle = resources.getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
-                  uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
             }
-          } else {
-            this.subTitle = resources.getQuantityString(
-                R.plurals.found_backup_of_your_account_key, uniqueKeysCount, uniqueKeysCount)
+
+            1 -> {
+              this.subTitle = resources.getQuantityString(
+                  R.plurals.found_backup_of_your_account_key, uniqueKeysCount, uniqueKeysCount)
+            }
+
+            else -> {
+              if (originalKeys?.size != keyDetailsAndLongIdsMap?.size) {
+                val map = prepareMapFromKeyDetailsList(originalKeys)
+                val remainingKeyCount = getUniqueKeysLongIdsCount(map)
+
+                this.subTitle = resources.getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
+                    uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
+              } else {
+                this.subTitle = resources.getQuantityString(
+                    R.plurals.found_backup_of_your_account_key, uniqueKeysCount, uniqueKeysCount)
+              }
+            }
           }
         }
 
@@ -339,6 +349,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
     const val RESULT_NEGATIVE = 10
     const val RESULT_SKIP_REMAINING_KEYS = 11
     const val RESULT_USE_EXISTING_KEYS = 12
+    const val RESULT_NO_NEW_KEYS = 13
 
     val KEY_EXTRA_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_PRIVATE_KEYS", CheckKeysActivity::class.java)

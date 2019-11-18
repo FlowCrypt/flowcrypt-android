@@ -419,4 +419,5 @@
     <string name="submitting_pub_key">Submitting the pub key</string>
     <string name="error_occurred_while_saving_key">Error occurred while saving the key(%1$s)</string>
     <string name="saving_prv_keys">Saving the private key(s)</string>
+    <string name="key_already_imported_finishing_setup">Key already imported, finishing setup.</string>
 </resources>

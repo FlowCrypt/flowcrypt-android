@@ -87,6 +87,12 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
             runEmailManagerActivity()
           }
 
+          CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
+            Toast.makeText(this, getString(R.string.key_already_imported_finishing_setup), Toast
+                .LENGTH_SHORT).show()
+            runEmailManagerActivity()
+          }
+
           Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
             this.googleSignInAccount = null
             UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
