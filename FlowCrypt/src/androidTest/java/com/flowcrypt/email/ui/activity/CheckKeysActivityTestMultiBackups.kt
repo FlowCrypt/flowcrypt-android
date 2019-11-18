@@ -309,9 +309,9 @@ class CheckKeysActivityTestMultiBackups : BaseCheckKeysActivityTest() {
   }
 
   private fun checkSkipRemainingBackupsButton() {
-    onView(withId(R.id.buttonNeutralAction)).check(matches(isDisplayed())).perform(click())
+    onView(withId(R.id.buttonUseExistingKeys)).check(matches(isDisplayed())).perform(click())
     assertThat<Instrumentation.ActivityResult>(activityTestRule?.activityResult,
-        hasResultCode(CheckKeysActivity.RESULT_NEUTRAL))
+        hasResultCode(CheckKeysActivity.RESULT_USE_EXISTING_KEYS))
   }
 
   /**

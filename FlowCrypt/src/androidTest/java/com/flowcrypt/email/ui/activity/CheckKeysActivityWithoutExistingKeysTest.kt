@@ -100,7 +100,7 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseCheckKeysActivityTest() {
   @Test
   fun testCheckClickButtonNeutral() {
     Espresso.closeSoftKeyboard()
-    onView(withId(R.id.buttonNeutralAction))
+    onView(withId(R.id.buttonUseExistingKeys))
         .check(matches(not<View>(isDisplayed())))
   }
 

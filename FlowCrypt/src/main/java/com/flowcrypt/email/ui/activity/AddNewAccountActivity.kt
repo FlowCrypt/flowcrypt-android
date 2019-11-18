@@ -81,7 +81,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
       }
 
       REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL -> when (resultCode) {
-        Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> {
+        Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
           val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
               CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
 
@@ -90,6 +90,10 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
           } else {
             saveKeysAndReturnOkResult(keys)
           }
+        }
+
+        CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
+          returnResultOk()
         }
 
         Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
@@ -143,11 +147,10 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
               REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL)
           UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
         } else {
-          val bottomTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
+          val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList!!.size, keyDetailsList.size)
-          val neutralBtnTitle = if (SecurityUtils.hasBackup(this)) getString(R.string.use_existing_keys) else null
-          val intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.EMAIL, bottomTitle,
-              getString(R.string.continue_), neutralBtnTitle, getString(R.string.use_another_account))
+          val intent = CheckKeysActivity.newIntent(this, privateKeys = keyDetailsList, type = KeyDetails.Type.EMAIL, subTitle = subTitle,
+              positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R.string.use_another_account))
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
         }
       }

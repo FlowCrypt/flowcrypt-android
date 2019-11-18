@@ -153,8 +153,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
         unlockedKeys.clear()
         if (!CollectionUtils.isEmpty(privateKeysFromEmailBackups)) {
           keyDetailsType = KeyDetails.Type.EMAIL
-          startActivityForResult(CheckKeysActivity.newIntent(this, privateKeysFromEmailBackups!!, KeyDetails.Type.EMAIL, null,
-              getString(R.string.continue_), getString(R.string.choose_another_key)), REQUEST_CODE_CHECK_PRIVATE_KEYS)
+          startActivityForResult(CheckKeysActivity.newIntent(this, privateKeys = privateKeysFromEmailBackups!!, type = KeyDetails.Type.EMAIL,
+              positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R.string.choose_another_key)), REQUEST_CODE_CHECK_PRIVATE_KEYS)
         }
       }
 
@@ -223,8 +223,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
         val bottomTitle = resources.getQuantityString(R.plurals.file_contains_some_amount_of_keys,
             keyDetailsList.size, fileName, keyDetailsList.size)
         val posBtnTitle = getString(R.string.continue_)
-        val intent = CheckKeysActivity.newIntent(this, keyDetailsList, keyDetailsType,
-            bottomTitle, posBtnTitle, null, getString(R.string.choose_another_key), true)
+        val intent = CheckKeysActivity.newIntent(this, privateKeys = keyDetailsList, type = keyDetailsType,
+            subTitle = bottomTitle, positiveBtnTitle = posBtnTitle, negativeBtnTitle = getString(R.string.choose_another_key), isExtraImportOpt = true)
         startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS)
       }
 
@@ -232,8 +232,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
         keyDetailsType = KeyDetails.Type.CLIPBOARD
         val title = resources.getQuantityString(R.plurals.loaded_private_keys_from_clipboard,
             keyDetailsList.size, keyDetailsList.size)
-        val clipboardIntent = CheckKeysActivity.newIntent(this, keyDetailsList, keyDetailsType, title,
-            getString(R.string.continue_), null, getString(R.string.choose_another_key), true)
+        val clipboardIntent = CheckKeysActivity.newIntent(this, keyDetailsList, type = keyDetailsType, subTitle = title,
+            positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R.string.choose_another_key), isExtraImportOpt = true)
         startActivityForResult(clipboardIntent,
             REQUEST_CODE_CHECK_PRIVATE_KEYS)
       }

@@ -226,7 +226,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       }
 
       REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL -> when (resultCode) {
-        Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> {
+        Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
           val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
               CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
 
@@ -235,6 +235,10 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
           } else {
             saveKeysAndReturnOkResult(keys)
           }
+        }
+
+        CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
+          returnOkResult()
         }
 
         Activity.RESULT_CANCELED -> UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
@@ -377,11 +381,10 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
               REQUEST_CODE_ADD_NEW_ACCOUNT)
           UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
         } else {
-          val bottomTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
+          val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList!!.size, keyDetailsList.size)
-          val neutralBtnTitle = if (SecurityUtils.hasBackup(this)) getString(R.string.use_existing_keys) else null
-          val intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.EMAIL, bottomTitle,
-              getString(R.string.continue_), neutralBtnTitle, getString(R.string.use_another_account))
+          val intent = CheckKeysActivity.newIntent(this, privateKeys = keyDetailsList, type = KeyDetails.Type.EMAIL, subTitle = subTitle,
+              positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R.string.use_another_account))
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL)
         }
 

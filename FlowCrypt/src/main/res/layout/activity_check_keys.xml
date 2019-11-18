@@ -132,17 +132,30 @@
             tools:text="@string/load_account" />
 
         <Button
-            android:id="@+id/buttonNeutralAction"
+            android:id="@+id/buttonSkipRemainingBackups"
             style="@style/AppWidget.Button"
             android:layout_width="0dp"
             android:layout_marginTop="@dimen/margin_top_load_account"
+            android:text="@string/skip_remaining_backups"
+            android:theme="@style/AppWidget.Button.Green"
+            android:visibility="gone"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/buttonPositiveAction" />
+
+        <Button
+            android:id="@+id/buttonUseExistingKeys"
+            style="@style/AppWidget.Button"
+            android:layout_width="0dp"
+            android:layout_marginTop="@dimen/margin_top_load_account"
+            android:text="@string/use_existing_keys"
             android:theme="@style/AppWidget.Button.White"
             android:visibility="gone"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/buttonPositiveAction"
-            tools:text="@string/use_existing_keys" />
+            app:layout_constraintTop_toBottomOf="@+id/buttonSkipRemainingBackups" />
 
         <Button
             android:id="@+id/buttonNegativeAction"
@@ -154,7 +167,7 @@
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
-            app:layout_constraintTop_toBottomOf="@+id/buttonNeutralAction"
+            app:layout_constraintTop_toBottomOf="@+id/buttonUseExistingKeys"
             tools:text="@string/use_another_account" />
 
         <androidx.constraintlayout.widget.Guideline

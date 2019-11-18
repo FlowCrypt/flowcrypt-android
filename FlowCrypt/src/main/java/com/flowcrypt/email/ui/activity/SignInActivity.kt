@@ -72,7 +72,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
         isStartCheckKeysActivityEnabled = false
 
         when (resultCode) {
-          Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> {
+          Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
             val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
                 CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
 
@@ -81,6 +81,10 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
             } else {
               saveKeysAndOpenMainScreen(keys)
             }
+          }
+
+          CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
+            runEmailManagerActivity()
           }
 
           Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
@@ -183,16 +187,12 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
             startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
           }
         } else if (isStartCheckKeysActivityEnabled) {
-          val bottomTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
+          val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList!!.size, keyDetailsList.size)
           val positiveBtnTitle = getString(R.string.continue_)
-          val neutralBtnTitle = if (SecurityUtils.hasBackup(this))
-            getString(R.string.use_existing_keys)
-          else
-            null
           val negativeBtnTitle = getString(R.string.use_another_account)
-          val intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.EMAIL, bottomTitle,
-              positiveBtnTitle, neutralBtnTitle, negativeBtnTitle)
+          val intent = CheckKeysActivity.newIntent(context = this, privateKeys = keyDetailsList, type = KeyDetails.Type.EMAIL, subTitle = subTitle,
+              positiveBtnTitle = positiveBtnTitle, negativeBtnTitle = negativeBtnTitle)
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
         }
       } else if (loaderResult.exception != null) {

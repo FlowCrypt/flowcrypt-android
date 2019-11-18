@@ -24,6 +24,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -58,7 +59,6 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
 
   private var subTitle: String? = null
   private var positiveBtnTitle: String? = null
-  private var neutralBtnTitle: String? = null
   private var negativeBtnTitle: String? = null
   private var uniqueKeysCount: Int = 0
   private var type: KeyDetails.Type? = null
@@ -129,8 +129,13 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
         }
       }
 
-      R.id.buttonNeutralAction -> {
-        returnUnlockedKeys(RESULT_NEUTRAL)
+      R.id.buttonSkipRemainingBackups -> {
+        returnUnlockedKeys(RESULT_SKIP_REMAINING_KEYS)
+      }
+
+      R.id.buttonUseExistingKeys -> {
+        setResult(RESULT_USE_EXISTING_KEYS)
+        finish()
       }
 
       R.id.buttonNegativeAction -> {
@@ -159,7 +164,6 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
     this.type = intent.getParcelableExtra(KEY_EXTRA_TYPE)
     this.subTitle = intent.getStringExtra(KEY_EXTRA_SUB_TITLE)
     this.positiveBtnTitle = intent.getStringExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE)
-    this.neutralBtnTitle = intent.getStringExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE)
     this.negativeBtnTitle = intent.getStringExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE)
   }
 
@@ -167,8 +171,9 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
     initButton(R.id.buttonPositiveAction, View.VISIBLE, positiveBtnTitle)
     initButton(R.id.buttonNegativeAction, View.VISIBLE, negativeBtnTitle)
 
-    if (!TextUtils.isEmpty(neutralBtnTitle)) {
-      initButton(R.id.buttonNeutralAction, View.VISIBLE, neutralBtnTitle)
+    if (SecurityUtils.hasBackup(this) && intent?.getBooleanExtra
+        (KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, false) == true) {
+      initButton(R.id.buttonUseExistingKeys, View.VISIBLE, getString(R.string.use_existing_keys))
     }
 
     val imageButtonHint = findViewById<View>(R.id.imageButtonHint)
@@ -227,7 +232,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
                   }
 
                   if (remainingKeys.isNotEmpty()) {
-                    initButton(R.id.buttonNeutralAction, View.VISIBLE, getString(R.string.skip_remaining_backups))
+                    initButton(R.id.buttonSkipRemainingBackups, View.VISIBLE, getString(R.string.skip_remaining_backups))
+                    findViewById<View>(R.id.buttonUseExistingKeys)?.visibility = View.GONE
                     editTextKeyPassword!!.text = null
                     val mapOfRemainingBackups = prepareMapFromKeyDetailsList(remainingKeys)
                     val remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups)
@@ -331,7 +337,8 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
   companion object {
 
     const val RESULT_NEGATIVE = 10
-    const val RESULT_NEUTRAL = 11
+    const val RESULT_SKIP_REMAINING_KEYS = 11
+    const val RESULT_USE_EXISTING_KEYS = 12
 
     val KEY_EXTRA_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_PRIVATE_KEYS", CheckKeysActivity::class.java)
@@ -341,8 +348,6 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
         "KEY_EXTRA_SUB_TITLE", CheckKeysActivity::class.java)
     val KEY_EXTRA_POSITIVE_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_POSITIVE_BUTTON_TITLE", CheckKeysActivity::class.java)
-    val KEY_EXTRA_NEUTRAL_BUTTON_TITLE = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_NEUTRAL_BUTTON_TITLE", CheckKeysActivity::class.java)
     val KEY_EXTRA_NEGATIVE_BUTTON_TITLE =
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEGATIVE_BUTTON_TITLE", CheckKeysActivity::class.java)
     val KEY_EXTRA_IS_EXTRA_IMPORT_OPTION =
@@ -350,29 +355,21 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
     val KEY_EXTRA_UNLOCKED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_UNLOCKED_PRIVATE_KEYS", CheckKeysActivity::class.java)
 
-    fun newIntent(context: Context, privateKeys: ArrayList<NodeKeyDetails>, type: KeyDetails.Type?,
-                  bottomTitle: String?, positiveBtnTitle: String?, negativeBtnTitle: String?): Intent {
-      return newIntent(context, privateKeys, type, bottomTitle, positiveBtnTitle, null, negativeBtnTitle, false)
-    }
+    val KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED", CheckKeysActivity::class.java)
 
-    fun newIntent(context: Context, privateKeys: ArrayList<NodeKeyDetails>, type: KeyDetails.Type?,
-                  bottomTitle: String?, positiveBtnTitle: String?, neutralBtnTitle: String?,
-                  negativeBtnTitle: String?): Intent {
-      return newIntent(context, privateKeys, type, bottomTitle, positiveBtnTitle, neutralBtnTitle, negativeBtnTitle,
-          false)
-    }
-
-    fun newIntent(context: Context, privateKeys: ArrayList<NodeKeyDetails>, type: KeyDetails.Type?,
-                  subTitle: String?, positiveBtnTitle: String?, neutralBtnTitle: String?,
-                  negativeBtnTitle: String?, isExtraImportOpt: Boolean): Intent {
+    fun newIntent(context: Context, privateKeys: ArrayList<NodeKeyDetails>,
+                  type: KeyDetails.Type? = null, subTitle: String? = null, positiveBtnTitle:
+                  String? = null, negativeBtnTitle: String? = null,
+                  isExtraImportOpt: Boolean = false, isUseExistingKeysEnabled: Boolean = true): Intent {
       val intent = Intent(context, CheckKeysActivity::class.java)
       intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys)
       intent.putExtra(KEY_EXTRA_TYPE, type as Parcelable)
       intent.putExtra(KEY_EXTRA_SUB_TITLE, subTitle)
       intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveBtnTitle)
-      intent.putExtra(KEY_EXTRA_NEUTRAL_BUTTON_TITLE, neutralBtnTitle)
       intent.putExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE, negativeBtnTitle)
       intent.putExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, isExtraImportOpt)
+      intent.putExtra(KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, isUseExistingKeysEnabled)
       return intent
     }
   }

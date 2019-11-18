@@ -52,13 +52,12 @@ class CheckKeysActivityWithExistingKeysTest : BaseCheckKeysActivityTest() {
           val privateKeys =
               PrivateKeysManager.getKeysFromAssets(arrayOf("node/default@denbond7.com_fisrtKey_prv_default.json"))
           return CheckKeysActivity.newIntent(getTargetContext(),
-              privateKeys,
-              KeyDetails.Type.EMAIL,
-              getTargetContext().resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
+              privateKeys = privateKeys,
+              type = KeyDetails.Type.EMAIL,
+              subTitle = getTargetContext().resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
                   privateKeys.size, privateKeys.size),
-              getTargetContext().getString(R.string.continue_),
-              getTargetContext().getString(R.string.use_existing_keys),
-              getTargetContext().getString(R.string.use_another_account))
+              positiveBtnTitle = getTargetContext().getString(R.string.continue_),
+              negativeBtnTitle = getTargetContext().getString(R.string.use_another_account))
         }
       }
 
@@ -103,11 +102,11 @@ class CheckKeysActivityWithExistingKeysTest : BaseCheckKeysActivityTest() {
   @Test
   fun testCheckClickButtonNeutral() {
     Espresso.closeSoftKeyboard()
-    onView(withId(R.id.buttonNeutralAction))
+    onView(withId(R.id.buttonUseExistingKeys))
         .check(matches(isDisplayed()))
         .perform(scrollTo(), click())
     assertThat<Instrumentation.ActivityResult>(activityTestRule?.activityResult,
-        hasResultCode(CheckKeysActivity.RESULT_NEUTRAL))
+        hasResultCode(CheckKeysActivity.RESULT_USE_EXISTING_KEYS))
   }
 
   @Test
