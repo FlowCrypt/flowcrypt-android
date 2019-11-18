@@ -185,6 +185,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
             .restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
       }
     } else {
+      UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
       showInfoSnackbar(rootView, getString(R.string.template_email_alredy_added,
           this.googleSignInAccount!!.email), Snackbar.LENGTH_LONG)
     }
