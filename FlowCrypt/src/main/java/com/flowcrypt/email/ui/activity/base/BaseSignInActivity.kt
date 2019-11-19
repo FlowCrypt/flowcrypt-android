@@ -13,6 +13,8 @@ import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -124,7 +126,12 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
         val account = googleSignInAccount?.account?.name ?: return
         val idToken = googleSignInAccount?.idToken ?: return
         uuid = SecurityUtils.generateRandomUUID()
-        uuid?.let { enterpriseDomainRulesViewModel.getDomainRules(account, it, idToken) }
+        if (JavaEmailConstants.EMAIL_PROVIDER_GMAIL.equals(EmailUtil.getDomain(account), true)) {
+          domainRules = emptyList()
+          onSignSuccess(googleSignInAccount)
+        } else {
+          uuid?.let { enterpriseDomainRulesViewModel.getDomainRules(account, it, idToken) }
+        }
       } else {
         val error = task.exception
 
