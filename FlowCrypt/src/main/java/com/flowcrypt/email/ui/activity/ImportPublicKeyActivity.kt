@@ -11,11 +11,13 @@ import android.content.Intent
 import android.os.Bundle
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.GeneralUtil
+import com.google.android.material.snackbar.Snackbar
 import java.util.*
 
 /**
@@ -49,7 +51,15 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
   override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>) {
     if (keyDetailsList.isNotEmpty()) {
       if (keyDetailsList.size == 1) {
-        updateInformationAboutPgpContact(keyDetailsList[0])
+        val key = keyDetailsList.first()
+
+        if (key.isPrivate) {
+          showInfoSnackbar(rootView, getString(R.string.file_has_wrong_pgp_structure, getString(R
+              .string.public_)), Snackbar.LENGTH_LONG)
+          return
+        }
+
+        updateInformationAboutPgpContact(key)
         setResult(Activity.RESULT_OK)
         finish()
       } else {
@@ -77,8 +87,9 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
     val KEY_EXTRA_PGP_CONTACT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PGP_CONTACT",
         ImportPublicKeyActivity::class.java)
 
-    fun newIntent(context: Context?, title: String, pgpContact: PgpContact): Intent {
-      val intent = newIntent(context, title, false, ImportPublicKeyActivity::class.java)
+    fun newIntent(context: Context?, accountDao: AccountDao, title: String, pgpContact: PgpContact): Intent {
+      val intent = newIntent(context = context, accountDao = accountDao, title = title,
+          throwErrorIfDuplicateFoundEnabled = false, cls = ImportPublicKeyActivity::class.java)
       intent.putExtra(KEY_EXTRA_PGP_CONTACT, pgpContact)
       return intent
     }

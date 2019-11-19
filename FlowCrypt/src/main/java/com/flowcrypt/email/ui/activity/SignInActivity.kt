@@ -33,6 +33,7 @@ import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.util.CollectionUtils
+import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import java.util.*
 
@@ -71,7 +72,26 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
         isStartCheckKeysActivityEnabled = false
 
         when (resultCode) {
-          Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> runEmailManagerActivity()
+          Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
+            val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
+                CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
+
+            if (keys.isNullOrEmpty()) {
+              showInfoSnackbar(rootView, getString(R.string.unknown_error))
+            } else {
+              saveKeysAndOpenMainScreen(keys)
+            }
+          }
+
+          CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
+            runEmailManagerActivity()
+          }
+
+          CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
+            Toast.makeText(this, getString(R.string.key_already_imported_finishing_setup), Toast
+                .LENGTH_SHORT).show()
+            runEmailManagerActivity()
+          }
 
           Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
             this.googleSignInAccount = null
@@ -118,6 +138,18 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
     }
   }
 
+  private fun saveKeysAndOpenMainScreen(keys: List<NodeKeyDetails>) {
+    try {
+      SecurityUtils.encryptAndSaveKeysToDatabase(this, keys, KeyDetails.Type.EMAIL)
+      runEmailManagerActivity()
+    } catch (e: java.lang.Exception) {
+      showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+          getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
+        saveKeysAndOpenMainScreen(keys)
+      })
+    }
+  }
+
   override fun onClick(v: View) {
     when (v.id) {
       R.id.buttonPrivacy -> GeneralUtil.openCustomTab(this, Constants.FLOWCRYPT_PRIVACY_URL)
@@ -161,16 +193,12 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
             startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
           }
         } else if (isStartCheckKeysActivityEnabled) {
-          val bottomTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
+          val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList!!.size, keyDetailsList.size)
           val positiveBtnTitle = getString(R.string.continue_)
-          val neutralBtnTitle = if (SecurityUtils.hasBackup(this))
-            getString(R.string.use_existing_keys)
-          else
-            null
           val negativeBtnTitle = getString(R.string.use_another_account)
-          val intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.EMAIL, bottomTitle,
-              positiveBtnTitle, neutralBtnTitle, negativeBtnTitle)
+          val intent = CheckKeysActivity.newIntent(context = this, privateKeys = keyDetailsList, type = KeyDetails.Type.EMAIL, subTitle = subTitle,
+              positiveBtnTitle = positiveBtnTitle, negativeBtnTitle = negativeBtnTitle)
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
         }
       } else if (loaderResult.exception != null) {

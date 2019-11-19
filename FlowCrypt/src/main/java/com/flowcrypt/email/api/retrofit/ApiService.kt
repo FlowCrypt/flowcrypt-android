@@ -106,4 +106,13 @@ interface ApiService {
    */
   @POST(BuildConfig.API_URL + "account/get")
   suspend fun getDomainRules(@Body body: LoginModel): Response<DomainRulesResponse>
+
+  /**
+   * This method calls API "https://flowcrypt.com/attester/initial/legacy_submit" via coroutines
+   *
+   * @param body POJO model for requests
+   * @return [<]
+   */
+  @POST("initial/legacy_submit")
+  suspend fun submitPubKey(@Body body: InitialLegacySubmitModel): Response<InitialLegacySubmitResponse>
 }

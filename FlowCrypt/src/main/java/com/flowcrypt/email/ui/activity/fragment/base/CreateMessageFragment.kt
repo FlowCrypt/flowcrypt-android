@@ -356,8 +356,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           val pgpContact = data.getParcelableExtra<PgpContact>(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
 
           if (pgpContact != null) {
-            startActivityForResult(ImportPublicKeyActivity.newIntent(context,
-                getString(R.string.import_public_key), pgpContact), REQUEST_CODE_IMPORT_PUBLIC_KEY)
+            account?.let {
+              startActivityForResult(ImportPublicKeyActivity.newIntent(context, it,
+                  getString(R.string.import_public_key), pgpContact), REQUEST_CODE_IMPORT_PUBLIC_KEY)
+            }
           }
         }
 

@@ -89,9 +89,18 @@ class UIUtil {
      * @param show    When true we show the firstView, when false we show the secondView;
      * @param first   The first view;
      * @param second  The second view.
+     * @param useFastMode  if true we will change views visibility immediately.
      */
     @JvmStatic
-    fun exchangeViewVisibility(context: Context?, show: Boolean, first: View?, second: View?) {
+    fun exchangeViewVisibility(context: Context?, show: Boolean, first: View?, second: View?,
+                               useFastMode: Boolean = false) {
+
+      if (useFastMode) {
+        first?.visibility = if (show) View.VISIBLE else View.GONE
+        second?.visibility = if (show) View.GONE else View.VISIBLE
+        return
+      }
+
       if (context == null) {
         return
       }

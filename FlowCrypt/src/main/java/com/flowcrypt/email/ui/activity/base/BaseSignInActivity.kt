@@ -13,9 +13,11 @@ import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
-import com.flowcrypt.email.api.retrofit.response.base.ApiResult
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity
@@ -124,7 +126,12 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
         val account = googleSignInAccount?.account?.name ?: return
         val idToken = googleSignInAccount?.idToken ?: return
         uuid = SecurityUtils.generateRandomUUID()
-        uuid?.let { enterpriseDomainRulesViewModel.getDomainRules(account, it, idToken) }
+        if (JavaEmailConstants.EMAIL_PROVIDER_GMAIL.equals(EmailUtil.getDomain(account), true)) {
+          domainRules = emptyList()
+          onSignSuccess(googleSignInAccount)
+        } else {
+          uuid?.let { enterpriseDomainRulesViewModel.getDomainRules(account, it, idToken) }
+        }
       } else {
         val error = task.exception
 
@@ -146,26 +153,26 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
 
   private fun setupEnterpriseViewModel() {
     enterpriseDomainRulesViewModel = ViewModelProvider(this).get(EnterpriseDomainRulesViewModel::class.java)
-    val observer = Observer<ApiResult<ApiResponse>?> {
+    val observer = Observer<Result<ApiResponse>?> {
       it?.let {
         when (it.status) {
-          ApiResult.Status.LOADING -> {
+          Result.Status.LOADING -> {
             UIUtil.exchangeViewVisibility(this, true, progressView, rootView)
           }
 
-          ApiResult.Status.SUCCESS -> {
+          Result.Status.SUCCESS -> {
             val result = it.data as? DomainRulesResponse
             domainRules = result?.domainRules?.flags ?: emptyList()
             onSignSuccess(googleSignInAccount)
           }
 
-          ApiResult.Status.ERROR -> {
+          Result.Status.ERROR -> {
             UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
             Toast.makeText(this, it.data?.apiError?.msg
                 ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
           }
 
-          ApiResult.Status.EXCEPTION -> {
+          Result.Status.EXCEPTION -> {
             UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
             Toast.makeText(this, it.exception?.message
                 ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()

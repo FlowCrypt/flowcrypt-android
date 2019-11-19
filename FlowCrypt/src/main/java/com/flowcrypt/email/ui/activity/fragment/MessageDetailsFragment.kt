@@ -58,7 +58,6 @@ import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
-import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
@@ -921,8 +920,15 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
     val buttonImportPrivateKey = viewGroup.findViewById<Button>(R.id.buttonImportPrivateKey)
     buttonImportPrivateKey.setOnClickListener {
-      startActivityForResult(BaseImportKeyActivity.newIntent(
-          context!!, getString(R.string.import_private_key), true, ImportPrivateKeyActivity::class.java),
+      val account = AccountDaoSource().getActiveAccountInformation(context)
+          ?: return@setOnClickListener
+      startActivityForResult(ImportPrivateKeyActivity.getIntent(
+          context = context!!, accountDao = account,
+          title = getString(R.string.import_private_key),
+          throwErrorIfDuplicateFoundEnabled = true,
+          cls = ImportPrivateKeyActivity::class.java,
+          isUseExistingKeysEnabled = false,
+          isSubmittingPubKeysEnabled = false),
           REQUEST_CODE_START_IMPORT_KEY_ACTIVITY)
     }
 

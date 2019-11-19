@@ -158,9 +158,11 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
    * @param duration    How long to display the message.
    */
   @JvmOverloads
-  fun showInfoSnackbar(view: View, messageText: String?, duration: Int = Snackbar.LENGTH_INDEFINITE) {
-    snackBar = Snackbar.make(view, messageText ?: "", duration).setAction(android.R.string.ok) { }
-    snackBar!!.show()
+  fun showInfoSnackbar(view: View?, messageText: String?, duration: Int = Snackbar.LENGTH_INDEFINITE) {
+    view?.let {
+      snackBar = Snackbar.make(it, messageText ?: "", duration).setAction(android.R.string.ok) { }
+      snackBar?.show()
+    }
   }
 
   /**

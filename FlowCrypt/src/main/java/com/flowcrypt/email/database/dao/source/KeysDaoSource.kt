@@ -14,7 +14,6 @@ import android.provider.BaseColumns
 import android.text.TextUtils
 import com.flowcrypt.email.database.dao.KeysDao
 import com.google.android.gms.common.util.CollectionUtils
-import java.util.*
 
 /**
  * This class describe creating of table which has name [KeysDaoSource.TABLE_NAME_KEYS],
@@ -139,6 +138,27 @@ class KeysDaoSource : BaseDaoSource() {
     } else {
       emptyArray()
     }
+  }
+
+  /**
+   * Remove keys with the given longid(s)
+   *
+   * @param context         Interface to global information about an application environment
+   * @param longIds         A list of longid
+   * @return the [ContentProviderResult] array.
+   */
+  fun removeKeys(context: Context, longIds: List<String>): Array<ContentProviderResult> {
+    val contentProviderOperations = ArrayList<ContentProviderOperation>()
+
+    for (longId in longIds) {
+      contentProviderOperations.add(ContentProviderOperation.newDelete(baseContentUri)
+          .withSelection("$COL_LONG_ID= ?", arrayOf(longId))
+          .withYieldAllowed(true)
+          .build())
+    }
+
+    return context.contentResolver.applyBatch(baseContentUri.authority
+        ?: "", contentProviderOperations)
   }
 
   companion object {

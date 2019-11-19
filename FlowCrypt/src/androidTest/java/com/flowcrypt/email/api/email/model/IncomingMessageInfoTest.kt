@@ -115,7 +115,9 @@ class IncomingMessageInfoTest {
                 "algorithm",
                 12,
                 2048,
-                "curve")))
+                "curve"),
+            "passphrase",
+            "errorMsg"))
 
     val decryptErrorMsgBlock = DecryptErrorMsgBlock(
         "content",

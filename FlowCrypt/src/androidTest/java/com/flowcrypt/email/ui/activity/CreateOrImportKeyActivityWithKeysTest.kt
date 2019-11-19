@@ -69,4 +69,13 @@ class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest(
     assertThat(activityTestRule.activityResult, ActivityResultMatchers
         .hasResultCode(Activity.RESULT_OK))
   }
+
+  @Test
+  fun testClickOnButtonSkipSetup() {
+    onView(withId(R.id.buttonSkipSetup))
+        .check(matches(ViewMatchers.isDisplayed()))
+        .perform(click())
+    assertThat(activityTestRule.activityResult, ActivityResultMatchers
+        .hasResultCode(Activity.RESULT_OK))
+  }
 }

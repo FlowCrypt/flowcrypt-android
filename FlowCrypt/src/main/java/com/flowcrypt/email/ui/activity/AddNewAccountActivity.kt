@@ -81,7 +81,26 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
       }
 
       REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL -> when (resultCode) {
-        Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> returnResultOk()
+        Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
+          val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
+              CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
+
+          if (keys.isNullOrEmpty()) {
+            showInfoSnackbar(rootView, getString(R.string.unknown_error))
+          } else {
+            saveKeysAndReturnOkResult(keys)
+          }
+        }
+
+        CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
+          returnResultOk()
+        }
+
+        CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
+          Toast.makeText(this, getString(R.string.key_already_imported_finishing_setup), Toast
+              .LENGTH_SHORT).show()
+          returnResultOk()
+        }
 
         Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
           UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
@@ -134,11 +153,10 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
               REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL)
           UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
         } else {
-          val bottomTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
+          val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList!!.size, keyDetailsList.size)
-          val neutralBtnTitle = if (SecurityUtils.hasBackup(this)) getString(R.string.use_existing_keys) else null
-          val intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.EMAIL, bottomTitle,
-              getString(R.string.continue_), neutralBtnTitle, getString(R.string.use_another_account))
+          val intent = CheckKeysActivity.newIntent(this, privateKeys = keyDetailsList, type = KeyDetails.Type.EMAIL, subTitle = subTitle,
+              positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R.string.use_another_account))
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
         }
       }
@@ -173,6 +191,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
             .restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
       }
     } else {
+      UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
       showInfoSnackbar(rootView, getString(R.string.template_email_alredy_added,
           this.googleSignInAccount!!.email), Snackbar.LENGTH_LONG)
     }
@@ -193,6 +212,18 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
     accountDaoSource.addRow(this, googleSignInAccount, uuid, domainRules)
     accountDaoSource.setActiveAccount(this, googleSignInAccount!!.email)
     return accountDaoSource
+  }
+
+  private fun saveKeysAndReturnOkResult(keys: List<NodeKeyDetails>) {
+    try {
+      SecurityUtils.encryptAndSaveKeysToDatabase(this, keys, KeyDetails.Type.EMAIL)
+      returnResultOk()
+    } catch (e: java.lang.Exception) {
+      showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+          getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
+        saveKeysAndReturnOkResult(keys)
+      })
+    }
   }
 
   companion object {

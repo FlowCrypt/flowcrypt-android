@@ -30,7 +30,9 @@ data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
                                       @Expose val users: List<String>?,
                                       @Expose val ids: List<KeyId>?,
                                       @Expose val created: Long,
-                                      @Expose val algo: Algo?) : Parcelable {
+                                      @Expose val algo: Algo?,
+                                      var passphrase: String?,
+                                      var errorMsg: String?) : Parcelable {
 
   val primaryPgpContact: PgpContact
     get() = determinePrimaryPgpContact()
@@ -56,7 +58,9 @@ data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
       source.createStringArrayList(),
       source.createTypedArrayList(KeyId.CREATOR),
       source.readLong(),
-      source.readParcelable<Algo>(Algo::class.java.classLoader)
+      source.readParcelable<Algo>(Algo::class.java.classLoader),
+      source.readString(),
+      source.readString()
   )
 
   override fun describeContents() = 0
@@ -69,6 +73,8 @@ data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
     writeTypedList(ids)
     writeLong(created)
     writeParcelable(algo, 0)
+    writeString(passphrase)
+    writeString(errorMsg)
   }
 
   private fun determinePrimaryPgpContact(): PgpContact {

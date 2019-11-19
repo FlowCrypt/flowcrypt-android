@@ -26,6 +26,7 @@ import com.flowcrypt.email.api.retrofit.BaseResponse
 import com.flowcrypt.email.api.retrofit.request.attester.PubRequest
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
@@ -207,9 +208,9 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
   companion object {
     private const val REQUEST_CODE_RUN_PREVIEW_ACTIVITY = 100
 
-    fun newIntent(context: Context): Intent {
-      return newIntent(context, context.getString(R.string.add_public_keys_of_your_contacts),
-          false, ImportPgpContactActivity::class.java)
+    fun newIntent(context: Context, accountDao: AccountDao): Intent {
+      return newIntent(context = context, accountDao = accountDao, title = context.getString(R.string
+          .add_public_keys_of_your_contacts), throwErrorIfDuplicateFoundEnabled = false, cls = ImportPgpContactActivity::class.java)
     }
   }
 }

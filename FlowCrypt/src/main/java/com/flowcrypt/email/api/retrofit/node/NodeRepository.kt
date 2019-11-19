@@ -5,15 +5,21 @@
 
 package com.flowcrypt.email.api.retrofit.node
 
+import android.content.Context
 import android.os.AsyncTask
 import androidx.lifecycle.MutableLiveData
+import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
+import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * It's an entry point of all requests to work with Node.js server.
@@ -24,6 +30,11 @@ import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
  * E-mail: DenBond7@gmail.com
  */
 class NodeRepository : PgpApiRepository {
+  override suspend fun decryptKey(context: Context, armoredKey: String, passphrases: List<String>):
+      Result<DecryptKeyResult> = withContext(Dispatchers.IO) {
+    val apiService = NodeRetrofitHelper.getRetrofit()!!.create(NodeApiService::class.java)
+    getResult { apiService.decryptKey(DecryptKeyRequest(armoredKey, passphrases)) }
+  }
 
   override fun fetchKeyDetails(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>, raw: String?) {
     load(requestCode, liveData, ParseKeysRequest(raw))

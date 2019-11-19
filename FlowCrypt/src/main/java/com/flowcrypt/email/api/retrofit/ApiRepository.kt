@@ -6,11 +6,14 @@
 package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
+import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
 import com.flowcrypt.email.api.retrofit.request.api.DomainRulesRequest
 import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
+import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
-import com.flowcrypt.email.api.retrofit.response.base.ApiResult
+import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
+import com.flowcrypt.email.api.retrofit.response.base.Result
 
 /**
  * It's a repository interface for the whole API calls over the app
@@ -20,16 +23,22 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiResult
  *         Time: 6:08 PM
  *         E-mail: DenBond7@gmail.com
  */
-interface ApiRepository {
+interface ApiRepository : BaseApiRepository {
   /**
    * @param context Interface to global information about an application environment.
    * @param request An instance of [LoginRequest].
    */
-  suspend fun login(context: Context, request: LoginRequest): ApiResult<LoginResponse>
+  suspend fun login(context: Context, request: LoginRequest): Result<LoginResponse>
 
   /**
    * @param context Interface to global information about an application environment.
    * @param request An instance of [DomainRulesRequest].
    */
-  suspend fun getDomainRules(context: Context, request: DomainRulesRequest): ApiResult<DomainRulesResponse>
+  suspend fun getDomainRules(context: Context, request: DomainRulesRequest): Result<DomainRulesResponse>
+
+  /**
+   * @param context Interface to global information about an application environment.
+   * @param model An instance of [InitialLegacySubmitModel].
+   */
+  suspend fun submitPubKey(context: Context, model: InitialLegacySubmitModel): Result<InitialLegacySubmitResponse>
 }

@@ -18,6 +18,7 @@ import android.widget.CheckBox
 import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.Spinner
+import android.widget.Toast
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import androidx.preference.PreferenceManager
@@ -226,7 +227,26 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       }
 
       REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL -> when (resultCode) {
-        Activity.RESULT_OK, CheckKeysActivity.RESULT_NEUTRAL -> returnOkResult()
+        Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
+          val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
+              CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
+
+          if (keys.isNullOrEmpty()) {
+            showInfoSnackbar(rootView, getString(R.string.unknown_error))
+          } else {
+            saveKeysAndReturnOkResult(keys)
+          }
+        }
+
+        CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
+          returnOkResult()
+        }
+
+        CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
+          Toast.makeText(this, getString(R.string.key_already_imported_finishing_setup), Toast
+              .LENGTH_SHORT).show()
+          returnOkResult()
+        }
 
         Activity.RESULT_CANCELED -> UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
 
@@ -237,6 +257,18 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
+    }
+  }
+
+  private fun saveKeysAndReturnOkResult(keys: List<NodeKeyDetails>) {
+    try {
+      SecurityUtils.encryptAndSaveKeysToDatabase(this, keys, KeyDetails.Type.EMAIL)
+      returnOkResult()
+    } catch (e: java.lang.Exception) {
+      showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+          getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
+        saveKeysAndReturnOkResult(keys)
+      })
     }
   }
 
@@ -356,11 +388,10 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
               REQUEST_CODE_ADD_NEW_ACCOUNT)
           UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
         } else {
-          val bottomTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
+          val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList!!.size, keyDetailsList.size)
-          val neutralBtnTitle = if (SecurityUtils.hasBackup(this)) getString(R.string.use_existing_keys) else null
-          val intent = CheckKeysActivity.newIntent(this, keyDetailsList, KeyDetails.Type.EMAIL, bottomTitle,
-              getString(R.string.continue_), neutralBtnTitle, getString(R.string.use_another_account))
+          val intent = CheckKeysActivity.newIntent(this, privateKeys = keyDetailsList, type = KeyDetails.Type.EMAIL, subTitle = subTitle,
+              positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R.string.use_another_account))
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL)
         }
 

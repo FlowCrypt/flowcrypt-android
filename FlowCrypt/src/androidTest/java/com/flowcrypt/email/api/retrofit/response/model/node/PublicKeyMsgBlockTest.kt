@@ -43,7 +43,9 @@ class PublicKeyMsgBlockTest {
                 "algorithm",
                 12,
                 2048,
-                "curve")))
+                "curve"),
+            "passphrase",
+            "errorMsg"))
 
     val parcel = Parcel.obtain()
     original.writeToParcel(parcel, original.describeContents())

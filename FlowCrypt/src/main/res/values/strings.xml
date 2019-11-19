@@ -65,7 +65,7 @@
     <string name="licence">Licence</string>
     <string name="sources">Sources</string>
     <string name="the_contact_was_deleted">Contact \"%1$s\" deleted</string>
-    <string name="the_key_already_added">Key already added, skipping</string>
+    <string name="the_key_already_added">Key already added</string>
     <string name="help_feedback_or_question">Help, feedback, question</string>
     <string name="i_will_usually_reply_within_an_hour_except_when_i_sleep_tom">Thank you for trying FlowCrypt! We\'re here to help.</string>
     <string name="your_message">Your message</string>
@@ -118,7 +118,6 @@
     <string name="load_from_clipboard">Load from clipboard</string>
     <string name="choose_another_key">Choose another key</string>
     <string name="continue_">Continue</string>
-    <string name="can_not_read_this_private_key">Cannot read this private key</string>
     <string name="info">Info</string>
     <string name="hint">Hint</string>
     <string name="hint_clipboard_is_empty">Your clipboard is empty. Please find your %1$s Key where you are storing it, select the text and copy it. After that, return back to %2$s.</string>
@@ -255,8 +254,8 @@
     <string name="network_error_please_retry">Network error, please retry</string>
     <string name="setup_app">Please set up the app before use this option</string>
     <plurals name="not_recovered_all_keys">
-        <item quantity="one">%1$d of %2$d keys successfully imported. There is 1 key left. Try a different pass phrase to unlock all keys.</item>
-        <item quantity="other">%1$d of %2$d keys successfully imported. There are %3$d key left. Try a different pass phrase to unlock all keys.</item>
+        <item quantity="one">%1$d of %2$d keys successfully unlocked. There is 1 key left. Try a different pass phrase to unlock all keys.</item>
+        <item quantity="other">%1$d of %2$d keys successfully unlocked. There are %3$d key left. Try a different pass phrase to unlock all keys.</item>
     </plurals>
     <string name="cannot_send_attachment_without_read_permission">Permission to read external storage is needed to send the attachment.</string>
     <string name="hint_when_found_keys_in_email">FlowCrypt found one or more backups of your account key(s).\n\nKey backups are encrypted for your protection. This makes them useless without your pass phrase.\n\nPlease enter pass phrase(s) that you used when the backup was made.</string>
@@ -416,4 +415,7 @@
     <string name="mark_unread">Mark unread</string>
     <string name="user_not_verified">User not verified</string>
     <string name="user_not_registered_not_verified">User not registered and not verified</string>
+    <string name="submitting_pub_key">Submitting the pub key</string>
+    <string name="saving_prv_keys">Saving the private key(s)</string>
+    <string name="key_already_imported_finishing_setup">Key already imported, finishing setup.</string>
 </resources>

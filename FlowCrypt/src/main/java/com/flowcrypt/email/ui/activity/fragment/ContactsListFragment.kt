@@ -19,6 +19,7 @@ import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
 import com.flowcrypt.email.R
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.ui.activity.ImportPgpContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -117,8 +118,12 @@ class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteC
   override fun onClick(v: View) {
     when (v.id) {
       R.id.floatActionButtonImportPublicKey ->
-        startActivityForResult(ImportPgpContactActivity.newIntent(context!!),
-            REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY)
+        context?.let {
+          val accountDao = AccountDaoSource().getActiveAccountInformation(it) ?: return
+          startActivityForResult(ImportPgpContactActivity.newIntent(it, accountDao),
+              REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY)
+        }
+
     }
   }
 

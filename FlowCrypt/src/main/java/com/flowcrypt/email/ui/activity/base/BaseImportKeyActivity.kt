@@ -25,6 +25,7 @@ import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.model.results.LoaderResult
@@ -54,19 +55,19 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   protected lateinit var checkClipboardToFindKeyService: CheckClipboardToFindKeyService
   protected lateinit var layoutContentView: View
   protected lateinit var layoutProgress: View
+  protected lateinit var textViewProgressText: TextView
   protected lateinit var textViewTitle: TextView
   protected lateinit var buttonLoadFromFile: View
 
-  @JvmField
   protected var keyImportModel: KeyImportModel? = null
-  @JvmField
   protected var isCheckingClipboardEnabled = true
   protected var isClipboardServiceBound: Boolean = false
+  protected var account: AccountDao? = null
 
-  private lateinit var clipboardManager: ClipboardManager
   private var isCheckingPrivateKeyNow: Boolean = false
   private var throwErrorIfDuplicateFound: Boolean = false
 
+  private lateinit var clipboardManager: ClipboardManager
   private var title: String? = null
 
   private val clipboardConn = object : ServiceConnection {
@@ -97,11 +98,11 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
 
     bindService(Intent(this, CheckClipboardToFindKeyService::class.java), clipboardConn, Context.BIND_AUTO_CREATE)
 
-    if (intent != null) {
-      this.throwErrorIfDuplicateFound = intent.getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false)
-      this.keyImportModel = intent.getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD)
-      this.title = intent.getStringExtra(KEY_EXTRA_TITLE)
-    }
+    this.account = intent?.getParcelableExtra(KEY_EXTRA_ACCOUNT)
+    this.throwErrorIfDuplicateFound =
+        intent?.getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false) ?: false
+    this.keyImportModel = intent?.getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD)
+    this.title = intent?.getStringExtra(KEY_EXTRA_TITLE)
 
     clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     initViews()
@@ -174,7 +175,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
       LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_file)
       LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_clipboard)
       isCheckingPrivateKeyNow = false
-      UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+      UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
     } else {
       super.onBackPressed()
     }
@@ -229,13 +230,15 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     return when (id) {
       R.id.loader_id_validate_key_from_file -> {
         isCheckingPrivateKeyNow = true
-        UIUtil.exchangeViewVisibility(applicationContext, true, layoutProgress, layoutContentView)
+        textViewProgressText.setText(R.string.evaluating)
+        UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView, true)
         ParseKeysFromResourceAsyncTaskLoader(applicationContext, keyImportModel, true)
       }
 
       R.id.loader_id_validate_key_from_clipboard -> {
         isCheckingPrivateKeyNow = true
-        UIUtil.exchangeViewVisibility(applicationContext, true, layoutProgress, layoutContentView)
+        textViewProgressText.setText(R.string.evaluating)
+        UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView, true)
         ParseKeysFromResourceAsyncTaskLoader(applicationContext, keyImportModel, false)
       }
 
@@ -251,7 +254,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     when (loader.id) {
       R.id.loader_id_validate_key_from_file, R.id.loader_id_validate_key_from_clipboard -> {
         isCheckingPrivateKeyNow = false
-        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
       }
     }
   }
@@ -261,7 +264,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     when (loaderId) {
       R.id.loader_id_validate_key_from_file -> {
         isCheckingPrivateKeyNow = false
-        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
         val keysFromFile = result as ArrayList<NodeKeyDetails>?
 
         if (keysFromFile!!.isNotEmpty()) {
@@ -274,7 +277,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
 
       R.id.loader_id_validate_key_from_clipboard -> {
         isCheckingPrivateKeyNow = false
-        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
         val keysFromClipboard = result as ArrayList<NodeKeyDetails>?
         if (keysFromClipboard!!.isNotEmpty()) {
           onKeyFound(KeyDetails.Type.CLIPBOARD, keysFromClipboard)
@@ -292,7 +295,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     when (loaderId) {
       R.id.loader_id_validate_key_from_file, R.id.loader_id_validate_key_from_clipboard -> {
         isCheckingPrivateKeyNow = false
-        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
 
         var errorMsg = e!!.message
 
@@ -343,6 +346,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   protected open fun initViews() {
     layoutContentView = findViewById(R.id.layoutContentView)
     layoutProgress = findViewById(R.id.layoutProgress)
+    textViewProgressText = findViewById(R.id.textViewProgressText)
 
     textViewTitle = findViewById(R.id.textViewTitle)
     textViewTitle.text = title
@@ -394,16 +398,19 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
 
   companion object {
 
+    val KEY_EXTRA_ACCOUNT =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT", BaseImportKeyActivity::class.java)
+
     val KEY_EXTRA_IS_SYNC_ENABLE =
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_SYNC_ENABLE", BaseImportKeyActivity::class.java)
 
     val KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND =
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND",
-        BaseImportKeyActivity::class.java)
+            BaseImportKeyActivity::class.java)
 
     val KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD =
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD",
-        BaseImportKeyActivity::class.java)
+            BaseImportKeyActivity::class.java)
 
     val KEY_EXTRA_TITLE =
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_TITLE", BaseImportKeyActivity::class.java)
@@ -411,31 +418,15 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     private const val REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 10
     private const val REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 11
 
-    @JvmStatic
-    fun newIntent(context: Context?, title: String, cls: Class<*>): Intent {
-      return newIntent(context, title, false, cls)
-    }
-
-    @JvmStatic
-    fun newIntent(context: Context?, title: String, isThrowErrorIfDuplicateFoundEnabled: Boolean,
-                  cls: Class<*>): Intent {
-      return newIntent(context, title, null, isThrowErrorIfDuplicateFoundEnabled, cls)
-    }
-
-    @JvmStatic
-    fun newIntent(context: Context?, title: String, model: KeyImportModel?,
-                  isThrowErrorIfDuplicateFoundEnabled: Boolean, cls: Class<*>): Intent {
-      return newIntent(context, true, title, model, isThrowErrorIfDuplicateFoundEnabled, cls)
-    }
-
-    @JvmStatic
-    fun newIntent(context: Context?, isSyncEnabled: Boolean, title: String, model: KeyImportModel?,
-                  isThrowErrorIfDuplicateFoundEnabled: Boolean, cls: Class<*>): Intent {
+    fun newIntent(context: Context?, accountDao: AccountDao, isSyncEnabled: Boolean = false,
+                  title: String, model: KeyImportModel? = null,
+                  throwErrorIfDuplicateFoundEnabled: Boolean = false, cls: Class<*>): Intent {
       val intent = Intent(context, cls)
+      intent.putExtra(KEY_EXTRA_ACCOUNT, accountDao)
       intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnabled)
       intent.putExtra(KEY_EXTRA_TITLE, title)
       intent.putExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, model)
-      intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, isThrowErrorIfDuplicateFoundEnabled)
+      intent.putExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, throwErrorIfDuplicateFoundEnabled)
       return intent
     }
   }
