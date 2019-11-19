@@ -175,11 +175,11 @@ class ImportPrivateKeyActivitySyncTest : BaseTest() {
     @JvmStatic
     fun createResources() {
       privateKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().context,
-          "pgp/" + TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "-sec.asc")
+          "pgp/" + TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER + "-sec.asc")
       fileWithPrivateKey = TestGeneralUtil.createFile(
-          TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + "_sec.asc", privateKey)
+          TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER + "_sec.asc", privateKey)
       fileWithoutPrivateKey = TestGeneralUtil.createFile(
-          TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER + ".txt", SOME_TEXT)
+          TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER + ".txt", SOME_TEXT)
     }
 
     @AfterClass
