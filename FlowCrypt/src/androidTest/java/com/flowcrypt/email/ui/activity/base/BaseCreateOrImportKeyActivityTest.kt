@@ -61,13 +61,4 @@ abstract class BaseCreateOrImportKeyActivityTest : BaseTest() {
     assertThat(activityTestRule?.activityResult,
         ActivityResultMatchers.hasResultCode(CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT))
   }
-
-  @Test
-  fun testClickOnButtonSkipSetup() {
-    onView(withId(R.id.buttonSkipSetup))
-        .check(matches(isDisplayed()))
-        .perform(click())
-    assertThat(activityTestRule?.activityResult, ActivityResultMatchers
-        .hasResultCode(Activity.RESULT_OK))
-  }
 }
