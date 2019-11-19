@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -68,12 +69,12 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
     super.onCreate(savedInstanceState)
     if (isSyncEnabled && GeneralUtil.isConnected(this)) {
       textViewProgressText.setText(R.string.loading_backups)
-      UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView)
+      UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView, true)
       countingIdlingResource = CountingIdlingResource(
           GeneralUtil.genIdlingResourcesName(ImportPrivateKeyActivity::class.java), GeneralUtil.isDebugBuild())
     } else {
       hideImportButton()
-      UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
+      UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
     }
 
     setupSubmitPubKeyViewModel()
@@ -123,7 +124,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
           } else {
             hideImportButton()
           }
-          UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
+          UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
         }
         if (!countingIdlingResource!!.isIdleNow) {
           countingIdlingResource!!.decrement()
@@ -221,7 +222,14 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
     }
 
     if (!areFreshKeysExisted) {
-      showInfoSnackbar(rootView, getString(R.string.the_key_already_added), Snackbar.LENGTH_LONG)
+      if (intent?.getBooleanExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, true) == true) {
+        unlockedKeys.addAll(keyDetailsList)
+        account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
+        Toast.makeText(this, getString(R.string.key_already_imported_finishing_setup), Toast
+            .LENGTH_SHORT).show()
+      } else {
+        showInfoSnackbar(rootView, getString(R.string.the_key_already_added), Snackbar.LENGTH_LONG)
+      }
       return
     }
 
@@ -289,7 +297,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
         when (it.status) {
           Result.Status.LOADING -> {
             textViewProgressText.setText(R.string.submitting_pub_key)
-            UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView)
+            UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView, true)
           }
 
           Result.Status.SUCCESS -> {
@@ -297,7 +305,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
           }
 
           Result.Status.ERROR -> {
-            UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
+            UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
             showSnackbar(rootView, it.data?.apiError?.msg
                 ?: getString(R.string.unknown_error), getString(R.string.retry),
                 Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
@@ -306,7 +314,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
           }
 
           Result.Status.EXCEPTION -> {
-            UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
+            UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
             showSnackbar(rootView, it.exception?.message
                 ?: getString(R.string.unknown_error), getString(R.string.retry),
                 Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
@@ -322,13 +330,13 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
 
   private fun handleSuccessSubmit() {
     try {
-      UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView)
+      UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView, true)
       textViewProgressText.setText(R.string.saving_prv_keys)
       SecurityUtils.encryptAndSaveKeysToDatabase(this, unlockedKeys, keyDetailsType)
       setResult(Activity.RESULT_OK)
       finish()
     } catch (e: Exception) {
-      UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
+      UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
       showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
           getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
         handleSuccessSubmit()
