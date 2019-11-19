@@ -99,7 +99,7 @@ class ImportPrivateKeyActivitySyncTest : BaseTest() {
   }
 
   @Test
-  @Ignore
+  @Ignore("Need to fix in 0.9.2")
   //todo-denbond7 Need to fix in 0.9.2
   fun testImportKeyFromBackup() {
     useIntentionFromRunCheckKeysActivity()
@@ -111,7 +111,7 @@ class ImportPrivateKeyActivitySyncTest : BaseTest() {
   }
 
   @Test
-  @Ignore
+  @Ignore("Need to fix in 0.9.2")
   //todo-denbond7 Need to fix in 0.9.2
   fun testImportKeyFromFile() {
     useIntentionToRunActivityToSelectFile(fileWithPrivateKey)
@@ -135,7 +135,7 @@ class ImportPrivateKeyActivitySyncTest : BaseTest() {
   }
 
   @Test
-  @Ignore
+  @Ignore("Need to fix in 0.9.2")
   //todo-denbond7 Need to fix in 0.9.2
   fun testImportKeyFromClipboard() {
     useIntentionFromRunCheckKeysActivity()

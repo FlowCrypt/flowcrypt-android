@@ -118,7 +118,6 @@
     <string name="load_from_clipboard">Load from clipboard</string>
     <string name="choose_another_key">Choose another key</string>
     <string name="continue_">Continue</string>
-    <string name="can_not_read_this_private_key">Cannot read this private key</string>
     <string name="info">Info</string>
     <string name="hint">Hint</string>
     <string name="hint_clipboard_is_empty">Your clipboard is empty. Please find your %1$s Key where you are storing it, select the text and copy it. After that, return back to %2$s.</string>
@@ -417,7 +416,6 @@
     <string name="user_not_verified">User not verified</string>
     <string name="user_not_registered_not_verified">User not registered and not verified</string>
     <string name="submitting_pub_key">Submitting the pub key</string>
-    <string name="error_occurred_while_saving_key">Error occurred while saving the key(%1$s)</string>
     <string name="saving_prv_keys">Saving the private key(s)</string>
     <string name="key_already_imported_finishing_setup">Key already imported, finishing setup.</string>
 </resources>
