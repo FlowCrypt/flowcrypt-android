@@ -37,7 +37,7 @@ object ExceptionResolver {
   /**
    * Check if need to handle a happened error with  ACRA
    *
-   * @param e A happened error
+   * @param t A happened error
    * @return true if need to handle such exception with ACRA and send logs to the backend, false - otherwise.
    */
   fun isHandlingNeeded(t: Throwable): Boolean {
@@ -71,6 +71,10 @@ object ExceptionResolver {
       //Google network errors.
       if ("NetworkError".equals(e.message, ignoreCase = true)
           || "Error on service connection.".equals(e.message, ignoreCase = true)) {
+        return false
+      }
+
+      if ("Connection dropped by server?".equals(e.message, ignoreCase = true)) {
         return false
       }
 
