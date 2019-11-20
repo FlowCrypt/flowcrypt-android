@@ -10,10 +10,13 @@ import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.Flags
 import javax.mail.Folder
+import javax.mail.FolderNotFoundException
 import javax.mail.Message
+import javax.mail.MessagingException
 import javax.mail.Session
 import javax.mail.Store
 
@@ -37,21 +40,19 @@ class ChangeMsgsReadState(ownerKey: String, requestCode: Int) : BaseSyncTask(own
 
   private fun changeMsgsReadState(context: Context, account: AccountDao,
                                   msgDaoSource: MessageDaoSource, store: Store, state: MessageState) {
-    while (true) {
-      val candidatesForMark = msgDaoSource.getMsgsWithState(context, account.email, state)
+    val candidatesForMark = msgDaoSource.getMsgsWithState(context, account.email, state)
 
-      if (candidatesForMark.isEmpty()) {
-        break
-      } else {
-        val setOfFolders = candidatesForMark.map { it.label }.toSet()
+    if (candidatesForMark.isNotEmpty()) {
+      val setOfFolders = candidatesForMark.map { it.label }.toSet()
 
-        for (folder in setOfFolders) {
-          val filteredMsgs = candidatesForMark.filter { it.label == folder }
+      for (folder in setOfFolders) {
+        val filteredMsgs = candidatesForMark.filter { it.label == folder }
 
-          if (filteredMsgs.isEmpty()) {
-            continue
-          }
+        if (filteredMsgs.isEmpty()) {
+          continue
+        }
 
+        try {
           val imapFolder = store.getFolder(folder) as IMAPFolder
           imapFolder.open(Folder.READ_WRITE)
 
@@ -71,6 +72,22 @@ class ChangeMsgsReadState(ownerKey: String, requestCode: Int) : BaseSyncTask(own
           }
 
           imapFolder.close()
+        } catch (e: Exception) {
+          e.printStackTrace()
+          when (e) {
+            is FolderNotFoundException -> {
+              //don't send ACRA reports
+            }
+
+            is MessagingException -> {
+              val msg = e.message ?: ""
+              if (!msg.equals("folder cannot contain messages", true)) {
+                ExceptionUtil.handleError(e)
+              }
+            }
+
+            else -> ExceptionUtil.handleError(e)
+          }
         }
       }
     }
