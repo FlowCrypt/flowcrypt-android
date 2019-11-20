@@ -107,6 +107,10 @@ object ExceptionResolver {
       if ("Lost folder connection to server".equals(e.message, ignoreCase = true)) {
         return false
       }
+
+      if ("* BYE System Error".equals(e.message, ignoreCase = true)) {
+        return false
+      }
     }
 
     if (e is GoogleAuthException) {
