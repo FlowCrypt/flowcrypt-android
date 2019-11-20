@@ -40,7 +40,14 @@ object ExceptionResolver {
    * @param e A happened error
    * @return true if need to handle such exception with ACRA and send logs to the backend, false - otherwise.
    */
-  fun isHandlingNeeded(e: Throwable): Boolean {
+  fun isHandlingNeeded(t: Throwable): Boolean {
+    val e =
+        if (t is ManualHandledException) {
+          t.cause ?: t
+        } else {
+          t
+        }
+
     if (e is UserRecoverableAuthException) {
       if ("BadAuthentication" == e.message) {
         ExceptionUtil.handleError(e)
