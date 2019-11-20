@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.util
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
@@ -85,51 +83,14 @@ class UIUtil {
     /**
      * This method can be used to exchange views visibility for some interactions.
      *
-     * @param context Interface to global information about an application environment.
      * @param show    When true we show the firstView, when false we show the secondView;
      * @param first   The first view;
      * @param second  The second view.
-     * @param useFastMode  if true we will change views visibility immediately.
      */
     @JvmStatic
-    fun exchangeViewVisibility(context: Context?, show: Boolean, first: View?, second: View?,
-                               useFastMode: Boolean = false) {
-
-      if (useFastMode) {
-        first?.visibility = if (show) View.VISIBLE else View.GONE
-        second?.visibility = if (show) View.GONE else View.VISIBLE
-        return
-      }
-
-      if (context == null) {
-        return
-      }
-
-      if (show && first?.visibility == View.VISIBLE && second?.visibility == View.GONE) {
-        return
-      }
-
-      if (!show && second?.visibility == View.VISIBLE && first?.visibility == View.GONE) {
-        return
-      }
-
-      val shortAnimTime = context.resources.getInteger(android.R.integer.config_shortAnimTime)
-
-      second?.visibility = if (show) View.GONE else View.VISIBLE
-      second?.animate()?.setDuration(shortAnimTime.toLong())?.alpha((if (show) 0 else 1).toFloat())
-          ?.setListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator) {
-              second.visibility = if (show) View.GONE else View.VISIBLE
-            }
-          })
-
+    fun exchangeViewVisibility(show: Boolean, first: View?, second: View?) {
       first?.visibility = if (show) View.VISIBLE else View.GONE
-      first?.animate()?.setDuration(shortAnimTime.toLong())?.alpha((if (show) 1 else 0).toFloat())
-          ?.setListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator) {
-              first.visibility = if (show) View.VISIBLE else View.GONE
-            }
-          })
+      second?.visibility = if (show) View.GONE else View.VISIBLE
     }
 
     /**

@@ -146,7 +146,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       REQUEST_CODE_START_IMPORT_KEY_ACTIVITY -> when (resultCode) {
         Activity.RESULT_OK -> {
           Toast.makeText(context, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show()
-          UIUtil.exchangeViewVisibility(context, true, progressView!!, contentView!!)
+          UIUtil.exchangeViewVisibility(true, progressView!!, contentView!!)
 
           val activity = baseActivity as MessageDetailsActivity
           activity.decryptMsg()
@@ -311,7 +311,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   override fun onErrorOccurred(requestCode: Int, errorType: Int, e: Exception?) {
     super.onErrorOccurred(requestCode, errorType, e)
     isAdditionalActionEnabled = true
-    UIUtil.exchangeViewVisibility(context, false, progressBarActionRunning!!, layoutContent!!)
+    UIUtil.exchangeViewVisibility(false, progressBarActionRunning!!, layoutContent!!)
     if (activity != null) {
       activity!!.invalidateOptionsMenu()
     }
@@ -358,7 +358,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     }
     msgInfo.localFolder = localFolder
     updateMsgBody()
-    UIUtil.exchangeViewVisibility(context, false, progressView!!, contentView!!)
+    UIUtil.exchangeViewVisibility(false, progressView!!, contentView!!)
   }
 
   /**
@@ -371,7 +371,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       else -> textViewStatusInfo!!.setText(R.string.unknown_error)
     }
 
-    UIUtil.exchangeViewVisibility(context, false, progressView!!, statusView!!)
+    UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
   }
 
   /**
@@ -398,7 +398,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private fun showConnLostHint() {
     showSnackbar(view!!, getString(R.string.failed_load_message_from_email_server),
         getString(R.string.retry), View.OnClickListener {
-      UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+      UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
       (baseActivity as MessageDetailsActivity).loadMsgDetails()
     })
   }

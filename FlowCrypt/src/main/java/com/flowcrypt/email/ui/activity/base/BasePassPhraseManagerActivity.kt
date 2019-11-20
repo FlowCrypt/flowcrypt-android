@@ -130,7 +130,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
               infoDialogFragment.show(supportFragmentManager, InfoDialogFragment::class.java.simpleName)
             }
 
-            else -> UIUtil.exchangeViewVisibility(this, true, layoutSecondPasswordCheck, layoutFirstPasswordCheck)
+            else -> UIUtil.exchangeViewVisibility(true, layoutSecondPasswordCheck, layoutFirstPasswordCheck)
           }
         }
       }
@@ -157,7 +157,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
 
         editTextKeyPasswordSecond.text = null
         editTextKeyPassword.text = null
-        UIUtil.exchangeViewVisibility(this, false, layoutSecondPasswordCheck, layoutFirstPasswordCheck)
+        UIUtil.exchangeViewVisibility(false, layoutSecondPasswordCheck, layoutFirstPasswordCheck)
       }
 
       R.id.buttonConfirmPassPhrases -> if (TextUtils.isEmpty(editTextKeyPasswordSecond.text.toString())) {

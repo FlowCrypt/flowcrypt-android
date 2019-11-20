@@ -61,13 +61,13 @@ class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteC
     override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
       when (loader.id) {
         R.id.loader_id_load_contacts_with_pgp -> {
-          UIUtil.exchangeViewVisibility(context!!, false, progressBar, listView)
+          UIUtil.exchangeViewVisibility(false, progressBar, listView)
 
           if (data != null && data.count > 0) {
             adapter!!.swapCursor(data)
-            UIUtil.exchangeViewVisibility(context!!, false, emptyView, listView)
+            UIUtil.exchangeViewVisibility(false, emptyView, listView)
           } else {
-            UIUtil.exchangeViewVisibility(context!!, true, emptyView, listView)
+            UIUtil.exchangeViewVisibility(true, emptyView, listView)
           }
         }
       }

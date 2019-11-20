@@ -145,7 +145,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     when (nodeResponseWrapper.requestCode) {
       R.id.live_data_id_fetch_keys -> when (nodeResponseWrapper.status) {
         Status.LOADING -> {
-          UIUtil.exchangeViewVisibility(context, true, progressBar, content)
+          UIUtil.exchangeViewVisibility(true, progressBar, content)
         }
 
         Status.SUCCESS -> {
@@ -157,7 +157,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
           } else {
             details = nodeKeyDetailsList.first()
             updateViews()
-            UIUtil.exchangeViewVisibility(context, false, progressBar, content)
+            UIUtil.exchangeViewVisibility(false, progressBar, content)
           }
         }
 

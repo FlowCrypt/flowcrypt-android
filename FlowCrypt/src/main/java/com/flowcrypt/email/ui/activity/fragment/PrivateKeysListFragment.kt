@@ -107,7 +107,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
       R.id.live_data_id_fetch_keys -> when (nodeResponseWrapper.status) {
         Status.LOADING -> {
           emptyView!!.visibility = View.GONE
-          UIUtil.exchangeViewVisibility(context, true, progressBar!!, content!!)
+          UIUtil.exchangeViewVisibility(true, progressBar!!, content!!)
         }
 
         Status.SUCCESS -> {
@@ -115,10 +115,10 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
           val nodeKeyDetailsList = parseKeysResult!!.nodeKeyDetails
           if (CollectionUtils.isEmpty(nodeKeyDetailsList)) {
             recyclerViewAdapter!!.swap(emptyList())
-            UIUtil.exchangeViewVisibility(context, true, emptyView!!, content!!)
+            UIUtil.exchangeViewVisibility(true, emptyView!!, content!!)
           } else {
             recyclerViewAdapter!!.swap(nodeKeyDetailsList)
-            UIUtil.exchangeViewVisibility(context, false, progressBar!!, content!!)
+            UIUtil.exchangeViewVisibility(false, progressBar!!, content!!)
           }
         }
 

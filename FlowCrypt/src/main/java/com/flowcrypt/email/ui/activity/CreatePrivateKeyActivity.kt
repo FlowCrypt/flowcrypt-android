@@ -91,7 +91,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
     return when (id) {
       R.id.loader_id_create_private_key -> if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
         isBackEnabled = false
-        UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
         CreatePrivateKeyAsyncTaskLoader(this, account!!, editTextKeyPassword.text.toString())
       } else {
         Loader(this)
@@ -118,7 +118,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
         createdPrivateKeyLongId = result as String?
         layoutSecondPasswordCheck.visibility = View.GONE
         layoutSuccess.visibility = View.VISIBLE
-        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
         KeysStorageImpl.getInstance(this).refresh(this)
       }
 
@@ -130,7 +130,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
     when (loaderId) {
       R.id.loader_id_create_private_key -> {
         isBackEnabled = true
-        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
 
         e?.let {
           if (it is ApiException) {

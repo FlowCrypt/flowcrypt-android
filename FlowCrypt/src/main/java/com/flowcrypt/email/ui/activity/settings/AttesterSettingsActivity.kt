@@ -49,7 +49,7 @@ class AttesterSettingsActivity : BaseBackStackActivity(), LoaderManager.LoaderCa
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
     return when (id) {
       R.id.loader_id_load_keys_info_from_attester -> {
-        UIUtil.exchangeViewVisibility(this, true, progressBar!!, layoutContent!!)
+        UIUtil.exchangeViewVisibility(true, progressBar!!, layoutContent!!)
         LoadAccountKeysInfo(this,
             AccountDaoSource().getActiveAccountInformation(this))
       }
@@ -62,19 +62,19 @@ class AttesterSettingsActivity : BaseBackStackActivity(), LoaderManager.LoaderCa
   }
 
   override fun onLoaderReset(loader: Loader<LoaderResult>) {
-    UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutContent!!)
+    UIUtil.exchangeViewVisibility(false, progressBar!!, layoutContent!!)
   }
 
   @Suppress("UNCHECKED_CAST")
   override fun onSuccess(loaderId: Int, result: Any?) {
     when (loaderId) {
       R.id.loader_id_load_keys_info_from_attester -> {
-        UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutContent!!)
+        UIUtil.exchangeViewVisibility(false, progressBar!!, layoutContent!!)
         val responses = result as List<LookUpEmailResponse>?
         if (responses != null && responses.isNotEmpty()) {
           listViewKeys!!.adapter = AttesterKeyAdapter(this, responses)
         } else {
-          UIUtil.exchangeViewVisibility(this, true, emptyView!!, layoutContent!!)
+          UIUtil.exchangeViewVisibility(true, emptyView!!, layoutContent!!)
         }
       }
 
@@ -85,7 +85,7 @@ class AttesterSettingsActivity : BaseBackStackActivity(), LoaderManager.LoaderCa
   override fun onError(loaderId: Int, e: Exception?) {
     when (loaderId) {
       R.id.loader_id_load_keys_info_from_attester -> {
-        UIUtil.exchangeViewVisibility(this, false, progressBar!!, layoutContent!!)
+        UIUtil.exchangeViewVisibility(false, progressBar!!, layoutContent!!)
         showInfoSnackbar(rootView, e!!.message)
       }
 

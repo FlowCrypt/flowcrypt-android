@@ -70,7 +70,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
     if (isSearchingActiveNow) {
       this.isSearchingActiveNow = false
       LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_search_public_key)
-      UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+      UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
     } else {
       super.onBackPressed()
     }
@@ -78,7 +78,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
-      REQUEST_CODE_RUN_PREVIEW_ACTIVITY -> UIUtil.exchangeViewVisibility(applicationContext, false,
+      REQUEST_CODE_RUN_PREVIEW_ACTIVITY -> UIUtil.exchangeViewVisibility(false,
           layoutProgress, layoutContentView)
 
       else -> super.onActivityResult(requestCode, resultCode, data)
@@ -99,18 +99,18 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
   override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>) {
     if (type == KeyDetails.Type.CLIPBOARD) {
       if (keyDetailsList.isNotEmpty()) {
-        UIUtil.exchangeViewVisibility(applicationContext, true, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
         startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, keyImportModel!!
             .keyString), REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
       } else {
-        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
         Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show()
       }
     }
   }
 
   override fun handleSelectedFile(uri: Uri) {
-    UIUtil.exchangeViewVisibility(applicationContext, true, layoutProgress, layoutContentView)
+    UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
     startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, uri), REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
   }
 
@@ -118,7 +118,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
     return when (id) {
       R.id.loader_id_search_public_key -> {
         this.isSearchingActiveNow = true
-        UIUtil.exchangeViewVisibility(applicationContext, true, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
         val lookUpRequest = PubRequest(ApiName.GET_PUB, editTextEmailOrId!!.text.toString())
         ApiServiceAsyncTaskLoader(applicationContext, lookUpRequest)
       }
@@ -136,11 +136,11 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
             val pubResponse = baseResponse.responseModel as PubResponse?
             handlePubResponse(pubResponse!!)
           } else {
-            UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+            UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
             UIUtil.showInfoSnackbar(rootView, getString(R.string.api_error))
           }
         } else {
-          UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+          UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
           UIUtil.showInfoSnackbar(rootView, getString(R.string.internal_error))
         }
       }
@@ -174,7 +174,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
   override fun onError(loaderId: Int, e: Exception?) {
     when (loaderId) {
       R.id.loader_id_search_public_key -> {
-        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
         Toast.makeText(this, if (TextUtils.isEmpty(e!!.message)) getString(R.string.unknown_error) else e.message,
             Toast.LENGTH_SHORT).show()
       }
@@ -191,7 +191,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
 
   private fun handlePubResponse(pubResponse: PubResponse) {
     if (pubResponse.apiError != null) {
-      UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+      UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
       UIUtil.showInfoSnackbar(rootView, pubResponse.apiError.msg!!)
     } else {
       val pubkey = pubResponse.pubkey
@@ -199,7 +199,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
         startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, pubkey),
             REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
       } else {
-        UIUtil.exchangeViewVisibility(applicationContext, false, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
         Toast.makeText(this, R.string.no_public_key_found, Toast.LENGTH_SHORT).show()
       }
     }

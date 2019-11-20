@@ -92,7 +92,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
     return when (id) {
       R.id.loader_id_change_pass_phrase -> {
         isBackEnabled = false
-        UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
         ChangePassPhraseAsyncTaskLoader(this, account!!, editTextKeyPassword.text.toString())
       }
 
@@ -156,7 +156,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
       R.id.loader_id_change_pass_phrase -> {
         isBackEnabled = true
         editTextKeyPasswordSecond.text = null
-        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView)
+        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
         showInfoSnackbar(rootView, e!!.message)
       }
 

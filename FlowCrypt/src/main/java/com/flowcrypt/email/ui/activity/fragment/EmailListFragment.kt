@@ -225,7 +225,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
           swipeRefreshLayout!!.isRefreshing = false
 
           if (adapter!!.count == 0) {
-            UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+            UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
           }
 
           loadNextMsgs(-1)
@@ -235,7 +235,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
 
         if (adapter!!.count == 0) {
           textViewStatusInfo!!.setText(R.string.no_connection)
-          UIUtil.exchangeViewVisibility(context, false, progressView!!, statusView!!)
+          UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
         }
 
         showInfoSnackbar(view!!, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
@@ -452,7 +452,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
       updateList(false, false)
     } else if (adapter!!.count == 0) {
       emptyView!!.setText(if (isEncryptedModeEnabled) R.string.no_encrypted_messages else R.string.no_results)
-      UIUtil.exchangeViewVisibility(context, false, progressView!!, emptyView!!)
+      UIUtil.exchangeViewVisibility(false, progressView!!, emptyView!!)
     }
 
     areNewMsgsLoadingNow = false
@@ -488,7 +488,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
   fun reloadMsgs() {
     LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache)
     DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao?.email, listener!!.currentFolder!!.fullName)
-    UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+    UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
     loadNextMsgs(0)
   }
 
@@ -534,7 +534,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
   private fun showConnLostHint() {
     showSnackbar(view!!, getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
-      UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+      UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
       loadNextMsgs(-1)
     })
   }
@@ -543,7 +543,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     showSnackbar(view!!, getString(R.string.failed_load_labels_from_email_server), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
       setSupportActionBarTitle(getString(R.string.loading))
-      UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+      UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
       (activity as BaseSyncActivity).updateLabels(R.id.syns_request_code_update_label_active)
     })
   }
@@ -583,7 +583,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     statusView!!.visibility = View.GONE
 
     if (!isFetchMesgsNeeded || adapter!!.count == 0) {
-      UIUtil.exchangeViewVisibility(context, true, progressView!!, listView!!)
+      UIUtil.exchangeViewVisibility(true, progressView!!, listView!!)
     }
 
     if (supportActionBar != null) {
@@ -603,7 +603,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
         lastFirstVisiblePos = 0
       }
 
-      UIUtil.exchangeViewVisibility(context, false, progressView!!, listView!!)
+      UIUtil.exchangeViewVisibility(false, progressView!!, listView!!)
     } else {
       if (JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)) {
         isFetchMesgsNeeded = true
@@ -619,7 +619,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
           }
         } else {
           textViewStatusInfo!!.setText(R.string.no_connection)
-          UIUtil.exchangeViewVisibility(context, false, progressView!!, statusView!!)
+          UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
           showRetrySnackBar()
         }
       } else {
@@ -628,7 +628,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
         } else {
           R.string.no_results
         })
-        UIUtil.exchangeViewVisibility(context, false, progressView!!, emptyView!!)
+        UIUtil.exchangeViewVisibility(false, progressView!!, emptyView!!)
       }
     }
   }
@@ -714,7 +714,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     showSnackbar(view!!, getString(R.string.no_connection), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
       if (GeneralUtil.isConnected(context!!)) {
-        UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+        UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
         loadNextMsgs(-1)
       } else {
         showRetrySnackBar()

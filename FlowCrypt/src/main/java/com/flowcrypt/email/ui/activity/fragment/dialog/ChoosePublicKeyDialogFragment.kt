@@ -107,7 +107,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
       R.id.live_data_id_fetch_keys -> when (nodeResponseWrapper.status) {
         Status.LOADING -> {
           buttonOk?.visibility = View.GONE
-          UIUtil.exchangeViewVisibility(context, true, progressBar!!, listViewKeys!!)
+          UIUtil.exchangeViewVisibility(true, progressBar!!, listViewKeys!!)
         }
 
         Status.SUCCESS -> {
@@ -117,7 +117,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
             textViewMsg?.text = getString(R.string.no_pub_keys)
           } else {
             buttonOk?.visibility = View.VISIBLE
-            UIUtil.exchangeViewVisibility(context, false, progressBar!!, listViewKeys!!)
+            UIUtil.exchangeViewVisibility(false, progressBar!!, listViewKeys!!)
 
             val matchedKeys = getMatchedKeys(nodeKeyDetailsList)
             if (CollectionUtils.isEmpty(matchedKeys)) {
@@ -158,12 +158,12 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
         }
 
         Status.ERROR -> {
-          UIUtil.exchangeViewVisibility(context, false, progressBar!!, textViewMsg!!)
+          UIUtil.exchangeViewVisibility(false, progressBar!!, textViewMsg!!)
           textViewMsg?.text = nodeResponseWrapper.result!!.error!!.toString()
         }
 
         Status.EXCEPTION -> {
-          UIUtil.exchangeViewVisibility(context, false, progressBar!!, textViewMsg!!)
+          UIUtil.exchangeViewVisibility(false, progressBar!!, textViewMsg!!)
           textViewMsg?.text = nodeResponseWrapper.exception!!.message
         }
       }

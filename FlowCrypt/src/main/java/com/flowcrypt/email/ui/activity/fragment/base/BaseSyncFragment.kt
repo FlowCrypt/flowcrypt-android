@@ -81,7 +81,7 @@ abstract class BaseSyncFragment : BaseFragment() {
       }
     }
 
-    UIUtil.exchangeViewVisibility(context, false, progressView!!, statusView!!)
+    UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
     if (snackBar != null) {
       snackBar!!.dismiss()
     }

@@ -95,7 +95,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
           Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
             this.googleSignInAccount = null
-            UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+            UIUtil.exchangeViewVisibility(false, progressView, rootView)
           }
         }
       }
@@ -105,7 +105,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
         Activity.RESULT_CANCELED, CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
           this.googleSignInAccount = null
-          UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+          UIUtil.exchangeViewVisibility(false, progressView, rootView)
         }
       }
 
@@ -171,7 +171,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
       R.id.loader_id_load_private_key_backups_from_email -> {
         isStartCheckKeysActivityEnabled = true
 
-        UIUtil.exchangeViewVisibility(this, true, progressView, rootView)
+        UIUtil.exchangeViewVisibility(true, progressView, rootView)
         val account = AccountDao(googleSignInAccount!!, uuid, domainRules)
         LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
       }
@@ -202,7 +202,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
         }
       } else if (loaderResult.exception != null) {
-        UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+        UIUtil.exchangeViewVisibility(false, progressView, rootView)
 
         if (loaderResult.exception is UserRecoverableAuthIOException) {
           startActivityForResult((loaderResult.exception as UserRecoverableAuthIOException).intent,
