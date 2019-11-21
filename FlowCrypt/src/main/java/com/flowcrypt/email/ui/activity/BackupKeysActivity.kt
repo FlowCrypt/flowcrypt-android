@@ -79,8 +79,8 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     when (requestCode) {
       R.id.syns_send_backup_with_private_key_to_key_owner -> {
         isPrivateKeySendingNow = false
-        if (!countingIdlingResource!!.isIdleNow) {
-          countingIdlingResource!!.decrement()
+        if (countingIdlingResource?.isIdleNow == false) {
+          countingIdlingResource?.decrement()
         }
         setResult(Activity.RESULT_OK)
         finish()
@@ -92,8 +92,8 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     when (requestCode) {
       R.id.syns_send_backup_with_private_key_to_key_owner -> {
         isPrivateKeySendingNow = false
-        if (!countingIdlingResource!!.isIdleNow) {
-          countingIdlingResource!!.decrement()
+        if (countingIdlingResource?.isIdleNow == false) {
+          countingIdlingResource?.decrement()
         }
 
         when (e) {
@@ -133,7 +133,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
             R.id.radioButtonEmail -> {
               dismissSnackBar()
               if (GeneralUtil.isConnected(this)) {
-                countingIdlingResource!!.increment()
+                countingIdlingResource?.increment()
                 isPrivateKeySendingNow = true
                 UIUtil.exchangeViewVisibility(true, progressBar!!, rootView)
                 sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner)

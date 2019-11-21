@@ -92,9 +92,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
       isLoadPrivateKeysRequestSent = true
       loadPrivateKeys(R.id.syns_load_private_keys)
 
-      if (countingIdlingResource != null) {
-        countingIdlingResource!!.increment()
-      }
+      countingIdlingResource?.increment()
     }
   }
 
@@ -126,8 +124,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
           }
           UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
         }
-        if (!countingIdlingResource!!.isIdleNow) {
-          countingIdlingResource!!.decrement()
+        if (countingIdlingResource?.isIdleNow == false) {
+          countingIdlingResource?.decrement()
         }
       }
     }
@@ -144,8 +142,9 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
           UIUtil.exchangeViewVisibility(
               false, layoutProgress, layoutContentView)
         })
-        if (!countingIdlingResource!!.isIdleNow) {
-          countingIdlingResource!!.decrement()
+
+        if (countingIdlingResource?.isIdleNow == false) {
+          countingIdlingResource?.decrement()
         }
       }
     }
