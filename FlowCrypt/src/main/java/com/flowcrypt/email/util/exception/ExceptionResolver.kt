@@ -92,7 +92,8 @@ object ExceptionResolver {
             || e.message!!.contains("Failure in SSL library, usually a protocol error")
             || e.message!!.contains("Handshake failed")
             || e.message!!.contains("Exception reading response")
-            || e.message!!.contains("connection failure")) {
+            || e.message!!.contains("connection failure")
+            || e.message!!.contains("Connection reset;")) {
           return false
         }
       }
