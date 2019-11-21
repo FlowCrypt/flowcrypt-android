@@ -130,6 +130,12 @@ object ExceptionResolver {
       return !errorMsg.equals(e.message, ignoreCase = true)
     }
 
+    if (e is IllegalStateException) {
+      if ("This operation is not allowed on a closed folder".equals(e.message, ignoreCase = true)) {
+        return false
+      }
+    }
+
     return true
   }
 }
