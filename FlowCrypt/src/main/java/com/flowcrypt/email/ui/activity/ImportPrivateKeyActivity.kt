@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
+import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
@@ -30,6 +31,7 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.gms.common.util.CollectionUtils
@@ -44,7 +46,7 @@ import com.google.android.material.snackbar.Snackbar
  * E-mail: DenBond7@gmail.com
  */
 
-class ImportPrivateKeyActivity : BaseImportKeyActivity() {
+class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.OnTwoWayDialogListener {
   @get:VisibleForTesting
   var countingIdlingResource: CountingIdlingResource? = null
     private set
@@ -263,6 +265,22 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
     }
   }
 
+  override fun onDialogButtonClick(requestCode: Int, result: Int) {
+    when (requestCode) {
+      REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG -> {
+        when (result) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
+          }
+
+          TwoWayDialogFragment.RESULT_CANCELED -> {
+            unlockedKeys.clear()
+          }
+        }
+      }
+    }
+  }
+
   private fun hideImportButton() {
     buttonImportBackup!!.visibility = View.GONE
     val marginLayoutParams = buttonLoadFromFile
@@ -303,22 +321,26 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
             handleSuccessSubmit()
           }
 
-          Result.Status.ERROR -> {
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-            showSnackbar(rootView, it.data?.apiError?.msg
-                ?: getString(R.string.unknown_error), getString(R.string.retry),
-                Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
-              account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
-            })
-          }
+            val msg = when (it.status) {
+              Result.Status.ERROR -> {
+                it.data?.apiError?.msg ?: getString(R.string.unknown_error)
+              }
 
-          Result.Status.EXCEPTION -> {
-            UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-            showSnackbar(rootView, it.exception?.message
-                ?: getString(R.string.unknown_error), getString(R.string.retry),
-                Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
-              account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
-            })
+              Result.Status.SUCCESS -> {
+                it.exception?.message ?: getString(R.string.unknown_error)
+              }
+
+              else -> getString(R.string.unknown_error)
+            }
+
+            showDialogFragment(TwoWayDialogFragment.newInstance(requestCode = REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG,
+                dialogTitle = "",
+                dialogMsg = msg,
+                positiveButtonTitle = getString(R.string.retry),
+                negativeButtonTitle = getString(R.string.cancel),
+                isCancelable = false))
           }
         }
       }
@@ -345,6 +367,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
 
   companion object {
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS = 100
+    private const val REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG = 101
+
     val KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED", ImportPrivateKeyActivity::class.java)
     val KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(

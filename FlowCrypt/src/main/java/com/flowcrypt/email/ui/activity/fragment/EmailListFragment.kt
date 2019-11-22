@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.database.Cursor
@@ -182,11 +181,11 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
       }
 
       REQUEST_CODE_DELETE_MESSAGES -> when (resultCode) {
-        Activity.RESULT_OK -> deleteSelectedMsgs()
+        TwoWayDialogFragment.RESULT_OK -> deleteSelectedMsgs()
       }
 
       REQUEST_CODE_RETRY_TO_SEND_MESSAGES -> when (resultCode) {
-        Activity.RESULT_OK -> if (activeMsgDetails != null) {
+        TwoWayDialogFragment.RESULT_OK -> if (activeMsgDetails != null) {
           MessageDaoSource().updateMsgState(context!!,
               activeMsgDetails!!.email, activeMsgDetails!!.label,
               activeMsgDetails!!.uid.toLong(), MessageState.QUEUED)
@@ -347,9 +346,13 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
       R.id.menuActionDeleteMessage -> {
         val checkedItemPositions = listView!!.checkedItemPositions
 
-        val twoWayDialogFragment = TwoWayDialogFragment.newInstance("",
-            resources.getQuantityString(R.plurals.delete_messages, checkedItemPositions.size(),
-                checkedItemPositions.size()), getString(android.R.string.ok), getString(R.string.cancel), true)
+        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(
+            dialogTitle = "",
+            dialogMsg = resources.getQuantityString(R.plurals.delete_messages, checkedItemPositions.size(),
+                checkedItemPositions.size()),
+            positiveButtonTitle = getString(android.R.string.ok),
+            negativeButtonTitle = getString(R.string.cancel),
+            isCancelable = true)
         twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_DELETE_MESSAGES)
         twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
 
@@ -675,8 +678,11 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
       }
 
       MessageState.ERROR_SENDING_FAILED -> {
-        val twoWayDialogFragment = TwoWayDialogFragment.newInstance("",
-            getString(R.string.message_failed_to_send), getString(R.string.retry), getString(R.string.cancel), true)
+        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(dialogTitle = "",
+            dialogMsg = getString(R.string.message_failed_to_send),
+            positiveButtonTitle = getString(R.string.retry),
+            negativeButtonTitle = getString(R.string.cancel),
+            isCancelable = true)
         twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_RETRY_TO_SEND_MESSAGES)
         twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
         return

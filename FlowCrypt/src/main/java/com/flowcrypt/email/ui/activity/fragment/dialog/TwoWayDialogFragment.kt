@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
 
-import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
@@ -29,6 +28,7 @@ class TwoWayDialogFragment : DialogFragment() {
   private var positiveBtnTitle: String? = null
   private var negativeBtnTitle: String? = null
   private var listener: OnTwoWayDialogListener? = null
+  private var requestCode: Int = 0
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
@@ -40,43 +40,30 @@ class TwoWayDialogFragment : DialogFragment() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val args = arguments
-
-    if (args != null) {
-      dialogTitle = args.getString(KEY_DIALOG_TITLE)
-      dialogMsg = args.getString(KEY_DIALOG_MESSAGE)
-      positiveBtnTitle = args.getString(KEY_POSITIVE_BUTTON_TITLE, getString(R.string.yes))
-      negativeBtnTitle = args.getString(KEY_NEGATIVE_BUTTON_TITLE, getString(R.string.no))
-      isCancelable = args.getBoolean(KEY_IS_CANCELABLE, false)
-    }
+    dialogTitle = arguments?.getString(KEY_DIALOG_TITLE, getString(R.string.info))
+    dialogMsg = arguments?.getString(KEY_DIALOG_MESSAGE)
+    positiveBtnTitle = arguments?.getString(KEY_POSITIVE_BUTTON_TITLE, getString(R.string.yes))
+    negativeBtnTitle = arguments?.getString(KEY_NEGATIVE_BUTTON_TITLE, getString(R.string.no))
+    isCancelable = arguments?.getBoolean(KEY_IS_CANCELABLE, false) ?: false
+    requestCode = arguments?.getInt(KEY_REQUEST_CODE, 0) ?: 0
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val dialogBuilder = AlertDialog.Builder(context!!)
 
-    if (dialogTitle != null) {
-      dialogBuilder.setTitle(dialogTitle)
-    } else {
-      dialogBuilder.setTitle(R.string.info)
-    }
+    dialogBuilder.setTitle(dialogTitle)
     dialogBuilder.setMessage(dialogMsg)
 
     dialogBuilder.setPositiveButton(positiveBtnTitle
     ) { _, _ ->
-      sendResult(Activity.RESULT_OK)
-
-      if (listener != null) {
-        listener!!.onClick(Activity.RESULT_OK)
-      }
+      sendResult(RESULT_OK)
+      listener?.onDialogButtonClick(requestCode, RESULT_OK)
     }
 
     dialogBuilder.setNegativeButton(negativeBtnTitle
     ) { _, _ ->
-      sendResult(Activity.RESULT_CANCELED)
-
-      if (listener != null) {
-        listener!!.onClick(Activity.RESULT_CANCELED)
-      }
+      sendResult(RESULT_CANCELED)
+      listener?.onDialogButtonClick(requestCode, RESULT_CANCELED)
     }
 
     return dialogBuilder.create()
@@ -86,7 +73,7 @@ class TwoWayDialogFragment : DialogFragment() {
     if (targetFragment == null) {
       return
     }
-    targetFragment!!.onActivityResult(targetRequestCode, result, null)
+    targetFragment?.onActivityResult(targetRequestCode, result, null)
   }
 
   /**
@@ -94,13 +81,20 @@ class TwoWayDialogFragment : DialogFragment() {
    */
   interface OnTwoWayDialogListener {
     /**
-     * @param result Can be [Activity.RESULT_OK] if the user clicks the positive button, or
-     * [Activity.RESULT_CANCELED] if the user clicks the negative button.
+     * @param result Can be [RESULT_OK] if the user clicks the positive button, or
+     * [RESULT_CANCELED] if the user clicks the negative button.
      */
-    fun onClick(result: Int)
+    fun onDialogButtonClick(requestCode: Int, result: Int)
   }
 
   companion object {
+    /** Standard activity result: operation canceled.  */
+    const val RESULT_CANCELED = 0
+    /** Standard activity result: operation succeeded. */
+    const val RESULT_OK = 1
+
+    private val KEY_REQUEST_CODE =
+        GeneralUtil.generateUniqueExtraKey("KEY_REQUEST_CODE", TwoWayDialogFragment::class.java)
     private val KEY_DIALOG_TITLE =
         GeneralUtil.generateUniqueExtraKey("KEY_DIALOG_TITLE", TwoWayDialogFragment::class.java)
     private val KEY_DIALOG_MESSAGE =
@@ -112,16 +106,15 @@ class TwoWayDialogFragment : DialogFragment() {
     private val KEY_IS_CANCELABLE =
         GeneralUtil.generateUniqueExtraKey("KEY_IS_CANCELABLE", TwoWayDialogFragment::class.java)
 
-    @JvmOverloads
     @JvmStatic
-    fun newInstance(dialogTitle: String, dialogMsg: String, isCancelable: Boolean = false): TwoWayDialogFragment {
-      return newInstance(dialogTitle, dialogMsg, null, null, isCancelable)
-    }
-
-    @JvmStatic
-    fun newInstance(dialogTitle: String, dialogMsg: String, positiveButtonTitle: String?,
-                    negativeButtonTitle: String?, isCancelable: Boolean): TwoWayDialogFragment {
+    fun newInstance(requestCode: Int = 0, dialogTitle: String? = null,
+                    dialogMsg: String? = null,
+                    positiveButtonTitle: String? = null,
+                    negativeButtonTitle: String? = null,
+                    isCancelable: Boolean = true): TwoWayDialogFragment {
       val args = Bundle()
+      args.putInt(KEY_REQUEST_CODE, requestCode)
+      args.putString(KEY_DIALOG_TITLE, dialogTitle)
       args.putString(KEY_DIALOG_TITLE, dialogTitle)
       args.putString(KEY_DIALOG_MESSAGE, dialogMsg)
       args.putString(KEY_POSITIVE_BUTTON_TITLE, positiveButtonTitle)
