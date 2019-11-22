@@ -19,12 +19,14 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.provider.FlowcryptContract
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
@@ -251,6 +253,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
     val account = addGmailAccount(googleSignInAccount)
     if (account != null) {
+      ActionQueueDaoSource().addAction(this, LoadGmailAliasesAction(email = account.email))
       EmailManagerActivity.runEmailManagerActivity(this)
       finish()
     } else {
