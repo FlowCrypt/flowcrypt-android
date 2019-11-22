@@ -49,6 +49,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
@@ -451,11 +452,12 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
    */
   private fun updateActionsVisibility(localFolder: LocalFolder?) {
     folderType = FoldersManager.getFolderType(localFolder)
+    val account = AccountDaoSource().getActiveAccountInformation(context)
 
     if (folderType != null) {
       when (folderType) {
         FoldersManager.FolderType.INBOX -> {
-          if (JavaEmailConstants.EMAIL_PROVIDER_GMAIL.equals(EmailUtil.getDomain(details!!.email), ignoreCase = true)) {
+          if (AccountDao.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
             isArchiveActionEnabled = true
           }
           isDeleteActionEnabled = true
@@ -486,7 +488,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       isDeleteActionEnabled = true
     }
 
-    val account = AccountDaoSource().getActiveAccountInformation(context!!)
     if (account != null) {
       val foldersManager = FoldersManager.fromDatabase(context!!, account.email)
       if (foldersManager.folderAll == null) {
