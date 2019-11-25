@@ -62,7 +62,7 @@
     <item name="progress_id_thread_is_cancelled" type="id" />
     <item name="progress_id_connecting" type="id" />
     <item name="progress_id_fetching_message" type="id" />
-    <item name="progress_id_decrypting" type="id" />
+    <item name="progress_id_processing" type="id" />
     <item name="progress_id_rendering" type="id" />
 
 

@@ -5,13 +5,15 @@
 
 package com.flowcrypt.email.api.retrofit.response.node
 
+import com.flowcrypt.email.api.retrofit.LoadingState
 import com.flowcrypt.email.api.retrofit.Status
 
 /**
  * @author DenBond7
  */
 class NodeResponseWrapper<T : BaseNodeResponse>(val requestCode: Int, val status: Status, val result: T?,
-                                                val exception: Throwable?, val executionTime: Long) {
+                                                val exception: Throwable?, val executionTime:
+                                                Long, val loadingState: LoadingState? = null) {
   companion object {
     fun <T : BaseNodeResponse> success(requestCode: Int, data: T?, executionTime: Long): NodeResponseWrapper<T> {
       return NodeResponseWrapper(requestCode, Status.SUCCESS, data, null, executionTime)
@@ -21,8 +23,10 @@ class NodeResponseWrapper<T : BaseNodeResponse>(val requestCode: Int, val status
       return NodeResponseWrapper(requestCode, Status.ERROR, data, null, executionTime)
     }
 
-    fun <T : BaseNodeResponse> loading(requestCode: Int, data: T?, executionTime: Long): NodeResponseWrapper<T> {
-      return NodeResponseWrapper(requestCode, Status.LOADING, data, null, executionTime)
+    fun <T : BaseNodeResponse> loading(requestCode: Int, data: T? = null, executionTime: Long = 0,
+                                       loadingState: LoadingState):
+        NodeResponseWrapper<T> {
+      return NodeResponseWrapper(requestCode, Status.LOADING, data, null, executionTime, loadingState)
     }
 
     fun <T : BaseNodeResponse> exception(requestCode: Int, throwable: Throwable, data: T?, executionTime: Long):

@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.retrofit.node
 import android.content.Context
 import android.os.AsyncTask
 import androidx.lifecycle.MutableLiveData
+import com.flowcrypt.email.api.retrofit.LoadingState
 import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
@@ -58,7 +59,7 @@ class NodeRepository : PgpApiRepository {
    * @param nodeRequest An instance of [NodeRequest]
    */
   private fun load(requestCode: Int, data: MutableLiveData<NodeResponseWrapper<*>>, nodeRequest: NodeRequest) {
-    data.value = NodeResponseWrapper.loading(requestCode, null, 0)
+    data.value = NodeResponseWrapper.loading(requestCode = requestCode, data = null, loadingState = LoadingState.PREPARE_REQUEST)
     Worker(data).execute(NodeRequestWrapper(requestCode, nodeRequest))
   }
 
@@ -66,15 +67,21 @@ class NodeRepository : PgpApiRepository {
    * Here we describe a logic of making requests to Node.js using [retrofit2.Retrofit]
    */
   private class Worker internal constructor(private val liveData: MutableLiveData<NodeResponseWrapper<*>>)
-    : AsyncTask<NodeRequestWrapper<*>, Void, NodeResponseWrapper<*>>() {
+    : AsyncTask<NodeRequestWrapper<*>, NodeResponseWrapper<*>, NodeResponseWrapper<*>>() {
 
     override fun doInBackground(vararg nodeRequestWrappers: NodeRequestWrapper<*>): NodeResponseWrapper<*> {
       val nodeRequestWrapper = nodeRequestWrappers[0]
       val baseNodeResult: BaseNodeResponse
 
+      publishProgress(NodeResponseWrapper.loading(requestCode = nodeRequestWrapper.requestCode, data = null,
+          loadingState = LoadingState.PREPARE_SERVICE))
       val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       try {
+        publishProgress(NodeResponseWrapper.loading(requestCode = nodeRequestWrapper.requestCode, data = null,
+            loadingState = LoadingState.RUN_REQUEST))
         val response = nodeRequestWrapper.request.getResponse(nodeService)
+        publishProgress(NodeResponseWrapper.loading(requestCode = nodeRequestWrapper.requestCode, data = null,
+            loadingState = LoadingState.RESPONSE_RECEIVED))
         val time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis()
         if (response.body() != null) {
           baseNodeResult = response.body() as BaseNodeResponse
@@ -97,6 +104,11 @@ class NodeRepository : PgpApiRepository {
     override fun onPostExecute(nodeResponseWrapper: NodeResponseWrapper<*>) {
       super.onPostExecute(nodeResponseWrapper)
       liveData.value = nodeResponseWrapper
+    }
+
+    override fun onProgressUpdate(vararg values: NodeResponseWrapper<*>?) {
+      super.onProgressUpdate(*values)
+      liveData.value = values[0]
     }
   }
 }

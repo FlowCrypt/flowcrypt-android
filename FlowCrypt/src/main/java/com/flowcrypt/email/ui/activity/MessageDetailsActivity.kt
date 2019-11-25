@@ -27,8 +27,8 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
+import com.flowcrypt.email.api.retrofit.LoadingState
 import com.flowcrypt.email.api.retrofit.Status
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
@@ -81,7 +81,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     viewModel = ViewModelProvider(this).get(DecryptMessageViewModel::class.java)
-    viewModel.init(NodeRepository())
     viewModel.responsesLiveData.observe(this, this)
 
     if (intent != null) {
@@ -266,7 +265,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
           R.id.progress_id_fetching_message -> updateActionProgressState(value, "Fetching message")
 
-          R.id.progress_id_decrypting -> updateActionProgressState(value, "Decrypting")
+          R.id.progress_id_processing -> updateActionProgressState(value, "Processing")
 
           R.id.progress_id_rendering -> updateActionProgressState(value, "Rendering")
         }
@@ -279,9 +278,33 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {
     when (nodeResponseWrapper.requestCode) {
       R.id.live_data_id_parse_and_decrypt_msg -> when (nodeResponseWrapper.status) {
+        Status.LOADING -> {
+          nodeResponseWrapper.loadingState?.let {
+            when (it) {
+              LoadingState.PREPARE_REQUEST -> {
+                onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
+                    .progress_id_processing, 75)
+              }
+
+              LoadingState.PREPARE_SERVICE -> {
+                onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
+                    .progress_id_processing, 80)
+              }
+
+              LoadingState.RUN_REQUEST -> {
+                onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
+                    .progress_id_processing, 85)
+              }
+
+              else -> {
+              }
+            }
+          }
+        }
+
         Status.SUCCESS -> {
           onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
-              .progress_id_decrypting, 90)
+              .progress_id_processing, 90)
           val result = nodeResponseWrapper.result as ParseDecryptedMsgResult?
           if (result == null) {
             Toast.makeText(this, getString(R.string.unknown_error), Toast.LENGTH_LONG).show()
@@ -307,6 +330,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
         Status.ERROR -> {
           idlingForWebView.setIdleState(true)
+          updateActionProgressState(100, null)
           showErrorInfo(nodeResponseWrapper.result?.error, null)
           if (!idlingForDecryption!!.isIdleNow) {
             idlingForDecryption!!.decrement()
@@ -315,14 +339,13 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         }
 
         Status.EXCEPTION -> {
+          idlingForWebView.setIdleState(true)
+          updateActionProgressState(100, null)
           showErrorInfo(null, nodeResponseWrapper.exception)
           if (!idlingForDecryption!!.isIdleNow) {
             idlingForDecryption!!.decrement()
           }
           ExceptionUtil.handleError(nodeResponseWrapper.exception!!)
-        }
-
-        else -> {
         }
       }
     }
@@ -332,10 +355,10 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     if (rawMimeBytes?.isNotEmpty() == true) {
       idlingForDecryption!!.increment()
       onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
-          .progress_id_decrypting, 65)
+          .progress_id_processing, 65)
       viewModel.decryptMessage(rawMimeBytes!!)
       onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
-          .progress_id_decrypting, 70)
+          .progress_id_processing, 70)
     }
   }
 

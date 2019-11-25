@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -22,24 +23,22 @@ import com.flowcrypt.email.security.KeysStorageImpl
  */
 class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(application),
     KeysStorageImpl.OnRefreshListener {
-  private var keysStorage: KeysStorageImpl? = null
-  private var apiRepository: PgpApiRepository? = null
+  private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(application)
+  private val apiRepository: PgpApiRepository = NodeRepository()
   private var rawMimeBytes: ByteArray? = null
 
-  override fun onRefresh() {}
-
-  fun init(apiRepository: PgpApiRepository) {
-    this.apiRepository = apiRepository
-    this.keysStorage = KeysStorageImpl.getInstance(getApplication())
-    this.keysStorage!!.attachOnRefreshListener(this)
+  init {
+    this.keysStorage.attachOnRefreshListener(this)
   }
+
+  override fun onRefresh() {}
 
   fun decryptMessage(rawMimeBytes: ByteArray) {
     this.rawMimeBytes = rawMimeBytes
 
-    val pgpKeyInfoList = keysStorage!!.getAllPgpPrivateKeys()
+    val pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys()
 
-    apiRepository!!.parseDecryptMsg(R.id.live_data_id_parse_and_decrypt_msg, responsesLiveData,
+    apiRepository.parseDecryptMsg(R.id.live_data_id_parse_and_decrypt_msg, responsesLiveData,
         ParseDecryptMsgRequest(rawMimeBytes, pgpKeyInfoList, true))
   }
 }
