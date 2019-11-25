@@ -26,15 +26,15 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
+import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
@@ -45,7 +45,6 @@ import org.junit.After
 import org.junit.AfterClass
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -61,24 +60,26 @@ import java.io.File
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-class ImportPrivateKeyActivitySyncTest : BaseTest() {
+class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
+  val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
   override val activityTestRule: ActivityTestRule<*>? =
       object : IntentsTestRule<ImportPrivateKeyActivity>(ImportPrivateKeyActivity::class.java) {
         override fun getActivityIntent(): Intent {
-          val result = Intent(getTargetContext(), ImportPrivateKeyActivity::class.java)
-          result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE, true)
-          result.putExtra(BaseImportKeyActivity.KEY_EXTRA_TITLE,
-              getTargetContext().getString(R.string.import_private_key))
-          result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, true)
-          return result
+          return ImportPrivateKeyActivity.getIntent(context = getTargetContext(),
+              accountDao = addAccountToDatabaseRule.account,
+              isSyncEnabled = true,
+              title = getTargetContext().getString(R.string.import_private_key),
+              throwErrorIfDuplicateFoundEnabled = true,
+              isSubmittingPubKeysEnabled = false,
+              cls = ImportPrivateKeyActivity::class.java)
         }
       }
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
+      .around(addAccountToDatabaseRule)
       .around(GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE))
       .around(activityTestRule)
 
@@ -99,8 +100,6 @@ class ImportPrivateKeyActivitySyncTest : BaseTest() {
   }
 
   @Test
-  @Ignore("Need to fix in 0.9.2")
-  //todo-denbond7 Need to fix in 0.9.2
   fun testImportKeyFromBackup() {
     useIntentionFromRunCheckKeysActivity()
 
@@ -111,8 +110,6 @@ class ImportPrivateKeyActivitySyncTest : BaseTest() {
   }
 
   @Test
-  @Ignore("Need to fix in 0.9.2")
-  //todo-denbond7 Need to fix in 0.9.2
   fun testImportKeyFromFile() {
     useIntentionToRunActivityToSelectFile(fileWithPrivateKey)
     useIntentionFromRunCheckKeysActivity()
@@ -135,8 +132,6 @@ class ImportPrivateKeyActivitySyncTest : BaseTest() {
   }
 
   @Test
-  @Ignore("Need to fix in 0.9.2")
-  //todo-denbond7 Need to fix in 0.9.2
   fun testImportKeyFromClipboard() {
     useIntentionFromRunCheckKeysActivity()
 
@@ -167,8 +162,13 @@ class ImportPrivateKeyActivitySyncTest : BaseTest() {
 
 
   private fun useIntentionFromRunCheckKeysActivity() {
+    val intent = Intent()
+    val list: ArrayList<NodeKeyDetails> = ArrayList()
+    list.add(keyDetails)
+    intent.putExtra(CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS, list)
+
     intending(hasComponent(ComponentName(getTargetContext(), CheckKeysActivity::class.java)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
   }
 
   companion object {
@@ -177,12 +177,15 @@ class ImportPrivateKeyActivitySyncTest : BaseTest() {
     private lateinit var fileWithPrivateKey: File
     private lateinit var fileWithoutPrivateKey: File
     private lateinit var privateKey: String
+    private var keyDetails =
+        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/attested_user@denbond7.com_prv_default_strong.json")
+
 
     @BeforeClass
     @JvmStatic
     fun createResources() {
-      privateKey = TestGeneralUtil.readFileFromAssetsAsString(InstrumentationRegistry.getInstrumentation().context,
-          "pgp/" + TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER + "-sec.asc")
+      keyDetails.passphrase = TestConstants.DEFAULT_STRONG_PASSWORD
+      privateKey = keyDetails.privateKey!!
       fileWithPrivateKey = TestGeneralUtil.createFile(
           TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER + "_sec.asc", privateKey)
       fileWithoutPrivateKey = TestGeneralUtil.createFile(
