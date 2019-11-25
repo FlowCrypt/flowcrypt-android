@@ -290,9 +290,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
       R.id.syns_request_code_force_load_new_messages -> {
         onForceLoadNewMsgsCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE)
-        if (!msgsIdlingResource.isIdleNow) {
-          msgsIdlingResource.decrement()
-        }
+        msgsIdlingResource.setIdleState(true)
       }
 
       R.id.syns_request_code_load_next_messages -> {
@@ -307,9 +305,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
       R.id.syns_request_code_force_load_new_messages -> {
-        if (!msgsIdlingResource.isIdleNow) {
-          msgsIdlingResource.decrement()
-        }
+        msgsIdlingResource.setIdleState(true)
         onErrorOccurred(requestCode, errorType, e)
       }
 

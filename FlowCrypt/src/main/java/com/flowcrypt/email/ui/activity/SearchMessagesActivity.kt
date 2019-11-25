@@ -92,10 +92,8 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
       R.id.sync_request_code_search_messages -> {
-        if (!msgsIdlingResource.isIdleNow) {
-          msgsIdlingResource.decrement()
-        }
         onErrorOccurred(requestCode, errorType, e)
+        msgsIdlingResource.setIdleState(true)
       }
     }
   }

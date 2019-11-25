@@ -27,7 +27,6 @@ import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
@@ -50,6 +49,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
+import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
@@ -733,7 +733,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
    */
   private fun refreshMsgs() {
     areNewMsgsLoadingNow = false
-    listener!!.msgsCountingIdlingResource.increment()
+    listener?.msgsLoadingIdlingResource?.setIdleState(false)
     baseSyncActivity!!.refreshMsgs(R.id.syns_request_code_force_load_new_messages, listener!!.currentFolder!!)
   }
 
@@ -746,7 +746,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     if (GeneralUtil.isConnected(context!!)) {
       footerProgressView!!.visibility = View.VISIBLE
       areNewMsgsLoadingNow = true
-      listener!!.msgsCountingIdlingResource.increment()
+      listener?.msgsLoadingIdlingResource?.setIdleState(false)
       val localFolder = listener!!.currentFolder
       if (TextUtils.isEmpty(localFolder!!.searchQuery)) {
         baseSyncActivity!!.loadNextMsgs(R.id.syns_request_code_load_next_messages, localFolder, totalItemsCount)
@@ -787,7 +787,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
 
     val currentFolder: LocalFolder?
 
-    val msgsCountingIdlingResource: CountingIdlingResource
+    val msgsLoadingIdlingResource: SingleIdlingResources
     fun hasMoreMsgs(): Boolean
 
     fun onRetryGoogleAuth()
