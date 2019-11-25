@@ -33,7 +33,7 @@ import javax.net.ssl.HostnameVerifier
  * E-mail: DenBond7@gmail.com
  */
 object NodeRetrofitHelper {
-  private const val TIMEOUT = 300
+  private const val TIMEOUT = 60
   private var okHttpClient: OkHttpClient? = null
   @Volatile
   private var retrofit: Retrofit? = null
