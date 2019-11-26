@@ -14,7 +14,6 @@ import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.util.LogsUtil
 import com.google.android.gms.auth.GoogleAuthUtil
-import com.google.api.services.gmail.GmailScopes
 import com.sun.mail.gimap.GmailSSLStore
 import javax.mail.AuthenticationFailedException
 import javax.mail.Session
@@ -62,16 +61,17 @@ class OpenStoreHelper {
     @JvmStatic
     fun openAndConnectToGimapsStore(context: Context, session: Session, accountDao: AccountDao?,
                                     isResetTokenNeeded: Boolean): GmailSSLStore {
-      val account: Account? = accountDao?.account ?: throw NullPointerException("Account can't be a null!")
+      val account: Account? = accountDao?.account
+          ?: throw NullPointerException("Account can't be a null!")
       val gmailSSLStore: GmailSSLStore = session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
 
       try {
-        var token = GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
+        var token = EmailUtil.getGmailAccountToken(context, account)
 
         if (isResetTokenNeeded) {
           LogsUtil.d(TAG, "Refresh Gmail token")
           GoogleAuthUtil.clearToken(context, token)
-          token = GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
+          token = EmailUtil.getGmailAccountToken(context, account)
         }
 
         gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountDao.email, token)
@@ -166,7 +166,8 @@ class OpenStoreHelper {
           AccountDao.ACCOUNT_TYPE_GOOGLE -> openAndConnectToGimapsStore(context, session, account, false)
 
           else -> {
-            val authCreds = account.authCreds ?: throw java.lang.NullPointerException("Credentials are null!")
+            val authCreds = account.authCreds
+                ?: throw java.lang.NullPointerException("Credentials are null!")
             val store = when {
               authCreds.imapOpt === SecurityType.Option.NONE -> session.getStore(JavaEmailConstants.PROTOCOL_IMAP)
               else -> session.getStore(JavaEmailConstants.PROTOCOL_IMAPS)

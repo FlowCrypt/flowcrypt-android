@@ -418,4 +418,7 @@
     <string name="submitting_pub_key">Submitting the pub key</string>
     <string name="saving_prv_keys">Saving the private key(s)</string>
     <string name="key_already_imported_finishing_setup">Key already imported, finishing setup.</string>
+    <string name="reconnect_your_account_or_logout">Please reconnect your account to use the app or logout to use another account</string>
+    <string name="reconnect">Reconnect</string>
+    <string name="access_was_not_granted">Access was not granted</string>
 </resources>

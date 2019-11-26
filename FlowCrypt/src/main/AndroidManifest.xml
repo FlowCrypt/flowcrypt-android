@@ -229,6 +229,10 @@
             android:name=".ui.activity.NodeRunnerActivity"
             android:theme="@style/AppTheme.NoActionBar.Launcher" />
 
+        <activity
+            android:name=".ui.activity.UserRecoverableAuthExceptionActivity"
+            android:launchMode="singleTop" />
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"
@@ -306,6 +310,8 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <receiver android:name=".broadcastreceivers.UserRecoverableAuthExceptionBroadcastReceiver" />
     </application>
 
 </manifest>

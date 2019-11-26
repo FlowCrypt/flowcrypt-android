@@ -28,6 +28,7 @@ import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.broadcastreceivers.UserRecoverableAuthExceptionBroadcastReceiver
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -37,7 +38,9 @@ import com.flowcrypt.email.util.exception.NodeEncryptException
 import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.GoogleAuthUtil
+import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.services.gmail.GmailScopes
 import com.sun.mail.gimap.GmailRawSearchTerm
 import com.sun.mail.iap.Argument
@@ -266,8 +269,13 @@ class EmailUtil {
      * result from client errors (e.g. providing an invalid scope).
      */
     @JvmStatic
-    fun getGmailAccountToken(context: Context, account: Account): String {
-      return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
+    fun getGmailAccountToken(context: Context, account: Account?): String {
+      try {
+        return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
+      } catch (e: UserRecoverableAuthException) {
+        context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
+        throw e
+      }
     }
 
     /**
@@ -296,62 +304,70 @@ class EmailUtil {
     @JvmStatic
     fun getPrivateKeyBackupsViaGmailAPI(context: Context, account: AccountDao, sess: Session):
         Collection<NodeKeyDetails> {
-      val list = mutableListOf<NodeKeyDetails>()
+      try {
+        val list = mutableListOf<NodeKeyDetails>()
 
-      val searchQuery = NodeCallsExecutor.getGmailBackupSearch(account.email)
-      val gmailApiService = GmailApiHelper.generateGmailApiService(context, account)
+        val searchQuery = NodeCallsExecutor.getGmailBackupSearch(account.email)
+        val gmailApiService = GmailApiHelper.generateGmailApiService(context, account)
 
-      var response = gmailApiService
-          .users()
-          .messages()
-          .list(GmailApiHelper.DEFAULT_USER_ID)
-          .setQ(searchQuery)
-          .execute()
-
-      val msgs = mutableListOf<com.google.api.services.gmail.model.Message>()
-
-      //Try to load all backups
-      while (response.messages != null) {
-        msgs.addAll(response.messages)
-        if (response.nextPageToken != null) {
-          response = gmailApiService
-              .users()
-              .messages()
-              .list(GmailApiHelper.DEFAULT_USER_ID)
-              .setQ(searchQuery)
-              .setPageToken(response.nextPageToken)
-              .execute()
-        } else {
-          break
-        }
-      }
-
-      for (origMsg in msgs) {
-        val message = gmailApiService
+        var response = gmailApiService
             .users()
             .messages()
-            .get(GmailApiHelper.DEFAULT_USER_ID, origMsg.id)
-            .setFormat(GmailApiHelper.MESSAGE_RESPONSE_FORMAT_RAW)
+            .list(GmailApiHelper.DEFAULT_USER_ID)
+            .setQ(searchQuery)
             .execute()
 
-        val stream = ByteArrayInputStream(Base64.decode(message.raw, Base64.URL_SAFE))
-        val msg = MimeMessage(sess, stream)
-        val backup = getKeyFromMimeMsg(msg)
+        val msgs = mutableListOf<com.google.api.services.gmail.model.Message>()
 
-        if (TextUtils.isEmpty(backup)) {
-          continue
+        //Try to load all backups
+        while (response.messages != null) {
+          msgs.addAll(response.messages)
+          if (response.nextPageToken != null) {
+            response = gmailApiService
+                .users()
+                .messages()
+                .list(GmailApiHelper.DEFAULT_USER_ID)
+                .setQ(searchQuery)
+                .setPageToken(response.nextPageToken)
+                .execute()
+          } else {
+            break
+          }
         }
 
-        try {
-          list.addAll(NodeCallsExecutor.parseKeys(backup))
-        } catch (e: NodeException) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
+        for (origMsg in msgs) {
+          val message = gmailApiService
+              .users()
+              .messages()
+              .get(GmailApiHelper.DEFAULT_USER_ID, origMsg.id)
+              .setFormat(GmailApiHelper.MESSAGE_RESPONSE_FORMAT_RAW)
+              .execute()
+
+          val stream = ByteArrayInputStream(Base64.decode(message.raw, Base64.URL_SAFE))
+          val msg = MimeMessage(sess, stream)
+          val backup = getKeyFromMimeMsg(msg)
+
+          if (TextUtils.isEmpty(backup)) {
+            continue
+          }
+
+          try {
+            list.addAll(NodeCallsExecutor.parseKeys(backup))
+          } catch (e: NodeException) {
+            e.printStackTrace()
+            ExceptionUtil.handleError(e)
+          }
+
         }
 
+        return list
+      } catch (e: UserRecoverableAuthIOException) {
+        context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
+        throw e
+      } catch (e: UserRecoverableAuthException) {
+        context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
+        throw e
       }
-
-      return list
     }
 
     /**
