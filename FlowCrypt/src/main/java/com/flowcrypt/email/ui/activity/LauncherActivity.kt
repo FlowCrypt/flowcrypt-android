@@ -14,7 +14,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.broadcastreceivers.UserRecoverableAuthExceptionBroadcastReceiver
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
@@ -85,7 +84,9 @@ class LauncherActivity : BaseActivity() {
     checkGmailTokenViewModel = ViewModelProvider(this).get(CheckGmailTokenViewModel::class.java)
     checkGmailTokenViewModel.tokenLiveData.observe(this, Observer {
       if (it != null) {
-        sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(this, it))
+        if (UserRecoverableAuthExceptionActivity.isRunEnabled()) {
+          startActivity(UserRecoverableAuthExceptionActivity.newIntent(this, it))
+        }
       } else {
         showEmailManagerActivity()
       }

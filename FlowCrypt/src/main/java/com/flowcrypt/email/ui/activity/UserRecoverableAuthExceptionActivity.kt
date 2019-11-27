@@ -36,10 +36,21 @@ class UserRecoverableAuthExceptionActivity : AppCompatActivity(), View.OnClickLi
   private val account: AccountDao? by lazy { AccountDaoSource().getActiveAccountInformation(this) }
   private val recoverableIntent: Intent? by lazy { intent.getParcelableExtra<Intent>(EXTRA_KEY_RECOVERABLE_INTENT) }
 
+  init {
+    lastCallTime = System.currentTimeMillis()
+    isRunEnabled = false
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_user_recoverable_auth_exception)
     initViews()
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    lastCallTime = 0
+    isRunEnabled = true
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -119,9 +130,16 @@ class UserRecoverableAuthExceptionActivity : AppCompatActivity(), View.OnClickLi
   }
 
   companion object {
+    private var lastCallTime = 0L
+    private var isRunEnabled = true
+
     private val EXTRA_KEY_RECOVERABLE_INTENT = GeneralUtil.generateUniqueExtraKey(
         "EXTRA_KEY_RECOVERABLE_INTENT", UserRecoverableAuthExceptionActivity::class.java)
     private const val REQUEST_CODE_RUN_RECOVERABLE_INTENT = 101
+
+    fun isRunEnabled(): Boolean {
+      return isRunEnabled || System.currentTimeMillis() - lastCallTime > 5000
+    }
 
     fun newIntent(context: Context, incomingIntent: Intent): Intent {
       val intent = Intent(context, UserRecoverableAuthExceptionActivity::class.java)

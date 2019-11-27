@@ -231,7 +231,7 @@
 
         <activity
             android:name=".ui.activity.UserRecoverableAuthExceptionActivity"
-            android:launchMode="singleTop" />
+            android:launchMode="singleTask" />
 
         <!-- Providers -->
         <provider
