@@ -9,12 +9,16 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.broadcastreceivers.UserRecoverableAuthExceptionBroadcastReceiver
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
+import com.flowcrypt.email.jetpack.viewmodel.CheckGmailTokenViewModel
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.security.SecurityUtils
@@ -34,6 +38,7 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
  */
 class LauncherActivity : BaseActivity() {
   private var account: AccountDao? = null
+  private lateinit var checkGmailTokenViewModel: CheckGmailTokenViewModel
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = false
@@ -51,21 +56,41 @@ class LauncherActivity : BaseActivity() {
     MessagesSenderJobService.schedule(applicationContext)
     FeedbackJobIntentService.enqueueWork(this)
 
+    setupCheckGmailTokenViewModel()
+
     account = AccountDaoSource().getActiveAccountInformation(this)
     if (account != null && isNodeReady) {
-      showEmailManagerActivity()
+      if (AccountDao.ACCOUNT_TYPE_GOOGLE == account?.accountType && account?.isRestoreAccessRequired == true) {
+        account?.let { checkGmailTokenViewModel.checkToken(it) }
+      } else {
+        showEmailManagerActivity()
+      }
     }
   }
 
   override fun onNodeStateChanged(isReady: Boolean) {
     super.onNodeStateChanged(isReady)
     if (account != null) {
-      showEmailManagerActivity()
+      if (AccountDao.ACCOUNT_TYPE_GOOGLE == account?.accountType && account?.isRestoreAccessRequired == true) {
+        account?.let { checkGmailTokenViewModel.checkToken(it) }
+      } else {
+        showEmailManagerActivity()
+      }
     } else {
       showSignInActivity()
     }
   }
 
+  private fun setupCheckGmailTokenViewModel() {
+    checkGmailTokenViewModel = ViewModelProvider(this).get(CheckGmailTokenViewModel::class.java)
+    checkGmailTokenViewModel.tokenLiveData.observe(this, Observer {
+      if (it != null) {
+        sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(this, it))
+      } else {
+        showEmailManagerActivity()
+      }
+    })
+  }
 
   private fun showSignInActivity() {
     startActivity(Intent(this, SignInActivity::class.java))

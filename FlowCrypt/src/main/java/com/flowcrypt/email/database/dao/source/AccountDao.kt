@@ -31,7 +31,8 @@ data class AccountDao constructor(val email: String,
                                   val areContactsLoaded: Boolean = false,
                                   val authCreds: AuthCredentials? = null,
                                   val uuid: String? = null,
-                                  val domainRules: List<String>? = null) : Parcelable {
+                                  val domainRules: List<String>? = null,
+                                  val isRestoreAccessRequired: Boolean = false) : Parcelable {
 
   init {
     if (TextUtils.isEmpty(accountType)) {
@@ -43,7 +44,8 @@ data class AccountDao constructor(val email: String,
 
   val account: Account? = Account(this.email, accountType)
 
-  constructor(googleSignInAccount: GoogleSignInAccount, uuid: String?, domainRules: List<String>?) : this(
+  constructor(googleSignInAccount: GoogleSignInAccount, uuid: String? = null, domainRules:
+  List<String>? = null) : this(
       email = googleSignInAccount.email!!,
       displayName = googleSignInAccount.displayName,
       accountType = googleSignInAccount.account?.type?.toLowerCase(Locale.getDefault()),
@@ -63,7 +65,8 @@ data class AccountDao constructor(val email: String,
       1 == source.readInt(),
       source.readParcelable(AuthCredentials::class.java.classLoader),
       source.readString(),
-      mutableListOf<String>().apply { source.readStringList(this) })
+      mutableListOf<String>().apply { source.readStringList(this) },
+      1 == source.readInt())
 
   override fun describeContents(): Int {
     return 0
@@ -81,6 +84,7 @@ data class AccountDao constructor(val email: String,
       writeParcelable(authCreds, flags)
       writeString(uuid)
       writeStringList(domainRules)
+      writeInt((if (isRestoreAccessRequired) 1 else 0))
     }
   }
 

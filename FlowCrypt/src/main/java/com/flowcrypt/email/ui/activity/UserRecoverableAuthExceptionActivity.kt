@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity
 
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -18,6 +19,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.provider.FlowcryptContract
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -45,7 +47,11 @@ class UserRecoverableAuthExceptionActivity : AppCompatActivity(), View.OnClickLi
       REQUEST_CODE_RUN_RECOVERABLE_INTENT -> {
         when (resultCode) {
           Activity.RESULT_OK -> {
+            AccountDaoSource().updateAccountInformation(this, account, ContentValues()
+                .apply { put(AccountDaoSource.COL_IS_RESTORE_ACCESS_REQUIRED, false) })
+            MessagesSenderJobService.schedule(applicationContext)
             EmailManagerActivity.runEmailManagerActivity(this)
+            finish()
           }
 
           Activity.RESULT_CANCELED -> {

@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.api.email.protocol
 
-import android.accounts.Account
 import android.content.Context
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -61,20 +60,18 @@ class OpenStoreHelper {
     @JvmStatic
     fun openAndConnectToGimapsStore(context: Context, session: Session, accountDao: AccountDao?,
                                     isResetTokenNeeded: Boolean): GmailSSLStore {
-      val account: Account? = accountDao?.account
-          ?: throw NullPointerException("Account can't be a null!")
       val gmailSSLStore: GmailSSLStore = session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
 
       try {
-        var token = EmailUtil.getGmailAccountToken(context, account)
+        var token = EmailUtil.getGmailAccountToken(context, accountDao)
 
         if (isResetTokenNeeded) {
           LogsUtil.d(TAG, "Refresh Gmail token")
           GoogleAuthUtil.clearToken(context, token)
-          token = EmailUtil.getGmailAccountToken(context, account)
+          token = EmailUtil.getGmailAccountToken(context, accountDao)
         }
 
-        gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountDao.email, token)
+        gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountDao?.email, token)
       } catch (e: AuthenticationFailedException) {
         e.printStackTrace()
         return if (!isResetTokenNeeded) {

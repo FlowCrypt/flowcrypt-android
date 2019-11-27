@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email
 import android.accounts.Account
 import android.annotation.SuppressLint
 import android.content.ContentResolver
+import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -30,6 +31,7 @@ import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.broadcastreceivers.UserRecoverableAuthExceptionBroadcastReceiver
 import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -269,10 +271,14 @@ class EmailUtil {
      * result from client errors (e.g. providing an invalid scope).
      */
     @JvmStatic
-    fun getGmailAccountToken(context: Context, account: Account?): String {
+    fun getGmailAccountToken(context: Context, accountDao: AccountDao?): String {
       try {
+        val account: Account? = accountDao?.account
+            ?: throw NullPointerException("Account can't be a null!")
+
         return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
       } catch (e: UserRecoverableAuthException) {
+        AccountDaoSource().updateAccountInformation(context, accountDao, ContentValues().apply { put(AccountDaoSource.COL_IS_RESTORE_ACCESS_REQUIRED, true) })
         context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
         throw e
       }
@@ -362,9 +368,11 @@ class EmailUtil {
 
         return list
       } catch (e: UserRecoverableAuthIOException) {
+        AccountDaoSource().updateAccountInformation(context, account, ContentValues().apply { put(AccountDaoSource.COL_IS_RESTORE_ACCESS_REQUIRED, true) })
         context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
         throw e
       } catch (e: UserRecoverableAuthException) {
+        AccountDaoSource().updateAccountInformation(context, account, ContentValues().apply { put(AccountDaoSource.COL_IS_RESTORE_ACCESS_REQUIRED, true) })
         context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
         throw e
       }

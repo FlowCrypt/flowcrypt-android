@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.api.email.protocol
 
-import android.accounts.Account
 import android.content.Context
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -43,17 +42,17 @@ class SmtpProtocolUtil {
     @JvmStatic
     fun prepareSmtpTransport(context: Context, session: Session, accountDao: AccountDao?): Transport {
       val transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP)
-      val account: Account = accountDao?.account ?: throw NullPointerException("An account can't be a null!")
 
-      when (accountDao.accountType) {
+      when (accountDao?.accountType) {
         AccountDao.ACCOUNT_TYPE_GOOGLE -> {
           val userName = accountDao.email
-          val password = EmailUtil.getGmailAccountToken(context, account)
+          val password = EmailUtil.getGmailAccountToken(context, accountDao)
           transport.connect(GmailConstants.GMAIL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_PORT, userName, password)
         }
 
         else -> {
-          val authCreds = accountDao.authCreds ?: throw NullPointerException("The AuthCredentials can't be a null!")
+          val authCreds = accountDao?.authCreds
+              ?: throw NullPointerException("The AuthCredentials can't be a null!")
           val userName: String?
           val password: String?
 

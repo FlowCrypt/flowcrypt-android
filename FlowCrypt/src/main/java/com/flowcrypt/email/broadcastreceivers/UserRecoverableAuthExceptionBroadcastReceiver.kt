@@ -23,7 +23,7 @@ import com.flowcrypt.email.util.GeneralUtil
 class UserRecoverableAuthExceptionBroadcastReceiver : BroadcastReceiver() {
 
   override fun onReceive(context: Context, intent: Intent) {
-    if (GeneralUtil.isAppForegrounded() && System.currentTimeMillis() - lastCallTime > 3000) {
+    if (GeneralUtil.isAppForegrounded() && System.currentTimeMillis() - lastCallTime > 1500) {
       val incomingIntent = intent.getParcelableExtra<Intent>(EXTRA_KEY_RECOVERABLE_INTENT)
       incomingIntent?.let {
         context.startActivity(UserRecoverableAuthExceptionActivity.newIntent(context, it))
