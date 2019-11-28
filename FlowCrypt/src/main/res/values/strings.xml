@@ -421,4 +421,5 @@
     <string name="reconnect_your_account_or_logout">Please reconnect your account to use the app or logout to use another account</string>
     <string name="reconnect">Reconnect</string>
     <string name="access_was_not_granted">Access was not granted</string>
+    <string name="can_not_send_due_to_auth_failure">Can\'t send message: auth failure</string>
 </resources>

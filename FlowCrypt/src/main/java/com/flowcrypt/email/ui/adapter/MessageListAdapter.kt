@@ -307,7 +307,8 @@ class MessageListAdapter(context: Context, c: Cursor?) : CursorAdapter(context, 
       MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
       MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
       MessageState.ERROR_SENDING_FAILED,
-      MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> {
+      MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
+      MessageState.AUTH_FAILURE -> {
         stateTextColor = ContextCompat.getColor(context, R.color.red)
 
         when (messageState) {
@@ -324,6 +325,9 @@ class MessageListAdapter(context: Context, c: Cursor?) : CursorAdapter(context, 
 
           MessageState.ERROR_PRIVATE_KEY_NOT_FOUND ->
             state = context.getString(R.string.could_not_create_no_key_available)
+
+          MessageState.AUTH_FAILURE ->
+            state = context.getString(R.string.can_not_send_due_to_auth_failure)
 
           else -> {
           }
