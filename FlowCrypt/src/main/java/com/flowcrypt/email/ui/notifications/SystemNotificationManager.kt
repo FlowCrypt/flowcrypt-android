@@ -61,7 +61,7 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
         .setDefaults(Notification.DEFAULT_ALL)
         .addAction(NotificationCompat.Action.Builder(0, context.getString(R.string.change_pass_phrase), pendingIntent).build())
 
-    notificationManagerCompat.notify(NOTIFICATION_ID_PASSPHRASE_TOO_WEAK, builder.build())
+    notificationManagerCompat.notify(groupName, groupId, builder.build())
   }
 
   companion object {
