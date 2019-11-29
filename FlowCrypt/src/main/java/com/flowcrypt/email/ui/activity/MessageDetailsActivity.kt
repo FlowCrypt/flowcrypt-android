@@ -133,7 +133,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     val msgDaoSource = MessageDaoSource()
 
     when (loader.id) {
-      R.id.loader_id_load_raw_mime_msg_from_db -> if (cursor != null && cursor.moveToFirst()) {
+      R.id.loader_id_load_raw_mime_msg_from_db -> if (cursor?.moveToFirst() == true) {
         this.rawMimeBytes = if (JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)) {
           cursor.getBlob(cursor.getColumnIndex(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS))
         } else {
@@ -166,6 +166,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             isReceiveMsgBodyNeeded = true
           }
         }
+      } else {
+        messageNotAvailableInFolder()
       }
 
       R.id.loader_id_subscribe_to_message_changes -> if (cursor != null && cursor.moveToFirst()) {
