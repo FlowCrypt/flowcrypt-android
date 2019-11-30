@@ -12,6 +12,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.flowcrypt.email.Constants
@@ -38,6 +39,7 @@ import com.flowcrypt.email.util.GeneralUtil
 class UserRecoverableAuthExceptionActivity : AppCompatActivity(), View.OnClickListener {
   private val account: AccountDao? by lazy { AccountDaoSource().getActiveAccountInformation(this) }
   private val recoverableIntent: Intent? by lazy { intent.getParcelableExtra<Intent>(EXTRA_KEY_RECOVERABLE_INTENT) }
+  private lateinit var textViewExplanation: TextView
 
   init {
     lastCallTime = System.currentTimeMillis()
@@ -102,6 +104,9 @@ class UserRecoverableAuthExceptionActivity : AppCompatActivity(), View.OnClickLi
   }
 
   private fun initViews() {
+    textViewExplanation = findViewById(R.id.textViewExplanation)
+    textViewExplanation.text = getString(R.string.reconnect_your_account, getString(R.string
+        .app_name), account?.email ?: "")
     findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener(this)
     findViewById<View>(R.id.buttonLogout)?.setOnClickListener(this)
     findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener(this)

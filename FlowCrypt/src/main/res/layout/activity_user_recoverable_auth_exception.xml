@@ -64,14 +64,14 @@
         android:layout_marginEnd="16dp"
         android:gravity="center"
         android:lineSpacingExtra="@dimen/default_margin_small"
-        android:text="@string/reconnect_your_account_or_logout"
         android:textColor="@android:color/black"
         android:textSize="@dimen/default_text_size_big"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageViewLogo"
-        app:layout_constraintVertical_bias="0.150" />
+        app:layout_constraintVertical_bias="0.150"
+        tools:text="Please reconnect your account to continue using FlowCrypt with email@domain.com" />
 
     <Button
         android:id="@+id/buttonSignInWithGmail"
