@@ -66,7 +66,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(activityTestRule)
 
-  private val authCreds: AuthCredentials = AuthCredentialsManager.getDefaultWithBackupAuthCreds()
+  private val authCreds: AuthCredentials = AuthCredentialsManager.getLocalWithOneBackupAuthCreds()
 
   @Before
   fun setUp() {
