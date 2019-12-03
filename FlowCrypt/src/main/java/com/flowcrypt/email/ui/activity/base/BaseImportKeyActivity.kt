@@ -175,7 +175,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
       LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_file)
       LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_clipboard)
       isCheckingPrivateKeyNow = false
-      UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
+      UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
     } else {
       super.onBackPressed()
     }
@@ -231,14 +231,14 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
       R.id.loader_id_validate_key_from_file -> {
         isCheckingPrivateKeyNow = true
         textViewProgressText.setText(R.string.evaluating)
-        UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView, true)
+        UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
         ParseKeysFromResourceAsyncTaskLoader(applicationContext, keyImportModel, true)
       }
 
       R.id.loader_id_validate_key_from_clipboard -> {
         isCheckingPrivateKeyNow = true
         textViewProgressText.setText(R.string.evaluating)
-        UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView, true)
+        UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
         ParseKeysFromResourceAsyncTaskLoader(applicationContext, keyImportModel, false)
       }
 
@@ -254,7 +254,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     when (loader.id) {
       R.id.loader_id_validate_key_from_file, R.id.loader_id_validate_key_from_clipboard -> {
         isCheckingPrivateKeyNow = false
-        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
+        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
       }
     }
   }
@@ -264,7 +264,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     when (loaderId) {
       R.id.loader_id_validate_key_from_file -> {
         isCheckingPrivateKeyNow = false
-        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
+        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
         val keysFromFile = result as ArrayList<NodeKeyDetails>?
 
         if (keysFromFile!!.isNotEmpty()) {
@@ -277,7 +277,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
 
       R.id.loader_id_validate_key_from_clipboard -> {
         isCheckingPrivateKeyNow = false
-        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
+        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
         val keysFromClipboard = result as ArrayList<NodeKeyDetails>?
         if (keysFromClipboard!!.isNotEmpty()) {
           onKeyFound(KeyDetails.Type.CLIPBOARD, keysFromClipboard)
@@ -295,7 +295,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     when (loaderId) {
       R.id.loader_id_validate_key_from_file, R.id.loader_id_validate_key_from_clipboard -> {
         isCheckingPrivateKeyNow = false
-        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
+        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
 
         var errorMsg = e!!.message
 

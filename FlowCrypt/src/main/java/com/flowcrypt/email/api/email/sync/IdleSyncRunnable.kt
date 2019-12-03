@@ -93,7 +93,11 @@ class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListen
     LogsUtil.d(tag, "interruptIdle")
     Thread(Runnable {
       Thread.currentThread().name = "IdleStopper"
-      remoteFolder?.search(SubjectTerm("HelloWorld"))
+      try {
+        remoteFolder?.search(SubjectTerm("HelloWorld"))
+      } catch (e: Exception) {
+        //we don't need to store exception details to logs in this case. It's Ok if it will fail
+      }
     }).start()
   }
 

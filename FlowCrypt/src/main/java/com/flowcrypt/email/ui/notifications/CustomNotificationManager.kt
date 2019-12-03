@@ -36,7 +36,7 @@ abstract class CustomNotificationManager(protected var context: Context) {
    * @param notificationId the ID of the notification
    */
   fun cancel(notificationId: Int) {
-    cancel(null, notificationId)
+    cancel(groupName, notificationId)
   }
 
   /**
@@ -58,7 +58,7 @@ abstract class CustomNotificationManager(protected var context: Context) {
       }
 
       if (messageCount == 1) {
-        notificationManager.cancel(groupId)
+        notificationManager.cancel(groupName, groupId)
       }
     }
   }

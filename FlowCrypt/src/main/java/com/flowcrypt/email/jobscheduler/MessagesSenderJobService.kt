@@ -34,6 +34,7 @@ import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.api.services.gmail.Gmail
 import com.sun.mail.imap.IMAPFolder
@@ -143,6 +144,15 @@ class MessagesSenderJobService : JobService() {
         }
 
         publishProgress(false)
+      } catch (e: UserRecoverableAuthException) {
+        val context = weakRef.get()?.applicationContext
+        context?.let {
+          val account = AccountDaoSource().getActiveAccountInformation(context)
+          MessageDaoSource().changeMsgsState(context, account?.email, JavaEmailConstants
+              .FOLDER_OUTBOX, MessageState.QUEUED, MessageState.AUTH_FAILURE)
+        }
+        e.printStackTrace()
+        publishProgress(true)
       } catch (e: Exception) {
         e.printStackTrace()
         publishProgress(true)

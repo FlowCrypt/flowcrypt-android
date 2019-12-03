@@ -278,7 +278,7 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
         .setDefaults(Notification.DEFAULT_ALL)
         .setAutoCancel(true)
         .setGroupSummary(true)
-    notificationManagerCompat.notify(NOTIFICATIONS_GROUP_ATTACHMENTS, groupBuilder.build())
+    notificationManagerCompat.notify(groupName, groupId, groupBuilder.build())
   }
 
   companion object {

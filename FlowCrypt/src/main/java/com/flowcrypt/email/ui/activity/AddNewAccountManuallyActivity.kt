@@ -248,7 +248,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
           returnOkResult()
         }
 
-        Activity.RESULT_CANCELED -> UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
+        Activity.RESULT_CANCELED -> UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
 
         CheckKeysActivity.RESULT_NEGATIVE -> {
           setResult(CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT, data)
@@ -341,14 +341,14 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
     when (id) {
       R.id.loader_id_check_email_settings -> {
-        UIUtil.exchangeViewVisibility(this, true, progressView!!, rootView)
+        UIUtil.exchangeViewVisibility(true, progressView!!, rootView)
 
         authCreds = generateAuthCreds()
         return CheckEmailSettingsAsyncTaskLoader(this, authCreds!!)
       }
 
       R.id.loader_id_load_private_key_backups_from_email -> {
-        UIUtil.exchangeViewVisibility(this, true, progressView!!, rootView)
+        UIUtil.exchangeViewVisibility(true, progressView!!, rootView)
         val account = AccountDao(authCreds!!.email, null, authCreds!!.username, null, null, null,
             false, authCreds)
         return LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
@@ -374,7 +374,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
         if (isCorrect) {
           LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
         } else {
-          UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
+          UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
           showInfoSnackbar(rootView, getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG)
         }
       }
@@ -386,7 +386,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
               false, authCreds)
           startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
               REQUEST_CODE_ADD_NEW_ACCOUNT)
-          UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
+          UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
         } else {
           val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList!!.size, keyDetailsList.size)
@@ -405,7 +405,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   override fun onError(loaderId: Int, e: Exception?) {
     when (loaderId) {
       R.id.loader_id_check_email_settings -> {
-        UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
+        UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
         val original = e?.cause
         if (original != null) {
           if (original is AuthenticationFailedException) {
@@ -434,7 +434,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       }
 
       R.id.loader_id_load_private_key_backups_from_email -> {
-        UIUtil.exchangeViewVisibility(this, false, progressView!!, rootView)
+        UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
         showInfoSnackbar(rootView, if (e != null && !TextUtils.isEmpty(e.message))
           e.message
         else

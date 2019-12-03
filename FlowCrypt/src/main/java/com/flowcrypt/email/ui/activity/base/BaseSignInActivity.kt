@@ -157,7 +157,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            UIUtil.exchangeViewVisibility(this, true, progressView, rootView)
+            UIUtil.exchangeViewVisibility(true, progressView, rootView)
           }
 
           Result.Status.SUCCESS -> {
@@ -167,13 +167,13 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
           }
 
           Result.Status.ERROR -> {
-            UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+            UIUtil.exchangeViewVisibility(false, progressView, rootView)
             Toast.makeText(this, it.data?.apiError?.msg
                 ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
           }
 
           Result.Status.EXCEPTION -> {
-            UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+            UIUtil.exchangeViewVisibility(false, progressView, rootView)
             Toast.makeText(this, it.exception?.message
                 ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
           }

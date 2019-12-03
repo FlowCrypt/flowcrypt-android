@@ -84,7 +84,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   }
 
   fun cancelAll(context: Context, account: AccountDao) {
-    notificationManagerCompat.cancel(NOTIFICATIONS_GROUP_MESSAGES)
+    cancel(NOTIFICATIONS_GROUP_MESSAGES)
 
     val foldersManager = FoldersManager.fromDatabase(context, account.email)
     val localFolder = foldersManager.findInboxFolder()
@@ -163,7 +163,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
           .setSmallIcon(R.drawable.ic_email_encrypted)
     }
 
-    notificationManagerCompat.notify(NOTIFICATIONS_GROUP_MESSAGES, builder.build())
+    notificationManagerCompat.notify(groupName, NOTIFICATIONS_GROUP_MESSAGES, builder.build())
   }
 
   private fun notifyWithGroupSupport(context: Context, account: AccountDao,
@@ -205,7 +205,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
           .setDefaults(Notification.DEFAULT_ALL)
           .setSubText(account.email)
 
-      notificationManagerCompat.notify(generalMsgDetails.uid, builder.build())
+      notificationManagerCompat.notify(groupName, generalMsgDetails.uid, builder.build())
     }
   }
 
@@ -218,8 +218,8 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
 
     if (isEncryptedModeEnabled) {
       var isEncryptedMsgFound = false
-      for ((_, _, _, _, _, _, _, _, _, _, _, _, isEncrypted) in generalMsgDetailsList) {
-        if (isEncrypted) {
+      for (msg in generalMsgDetailsList) {
+        if (msg.isEncrypted) {
           isEncryptedMsgFound = true
           break
         }
@@ -256,7 +256,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
         .setDefaults(Notification.DEFAULT_ALL)
         .setAutoCancel(true)
         .setGroupSummary(true)
-    notificationManager.notify(NOTIFICATIONS_GROUP_MESSAGES, groupBuilder.build())
+    notificationManager.notify(groupName, groupId, groupBuilder.build())
   }
 
   private fun getInboxPendingIntent(context: Context): PendingIntent {

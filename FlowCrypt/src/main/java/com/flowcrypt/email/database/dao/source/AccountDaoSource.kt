@@ -170,7 +170,7 @@ class AccountDaoSource : BaseDaoSource() {
    */
   fun updateAccountInformation(context: Context, googleSign: GoogleSignInAccount?): Int {
     return if (googleSign != null) {
-      updateAccountInformation(context, googleSign.account, genContentValues(googleSign))
+      updateAccountInformation(context, AccountDao(googleSign), genContentValues(googleSign))
     } else
       -1
   }
@@ -184,26 +184,20 @@ class AccountDaoSource : BaseDaoSource() {
    * @return The count of updated rows. Will be 1 if information about [AccountDao] was
    * updated or -1 otherwise.
    */
-  fun updateAccountInformation(context: Context, account: Account?, contentValues: ContentValues?): Int {
+  fun updateAccountInformation(context: Context, account: AccountDao?, contentValues:
+  ContentValues?): Int {
     if (account != null) {
-      var email: String? = account.name
+      var email: String? = account.email
       if (email == null) {
         return -1
       } else {
         email = email.toLowerCase(Locale.getDefault())
       }
 
-      var type: String? = account.type
-      if (type == null) {
-        return -1
-      } else {
-        type = type.toLowerCase(Locale.getDefault())
-      }
-
       val contentResolver = context.contentResolver
       return if (contentResolver != null) {
-        val selection = "$COL_EMAIL = ? AND $COL_ACCOUNT_TYPE = ?"
-        contentResolver.update(baseContentUri, contentValues, selection, arrayOf(email, type))
+        val selection = "$COL_EMAIL = ?"
+        contentResolver.update(baseContentUri, contentValues, selection, arrayOf(email))
       } else
         -1
     } else
@@ -456,6 +450,7 @@ class AccountDaoSource : BaseDaoSource() {
     const val COL_IS_SHOW_ONLY_ENCRYPTED = "is_show_only_encrypted"
     const val COL_UUID = "uuid"
     const val COL_DOMAIN_RULES = "domain_rules"
+    const val COL_IS_RESTORE_ACCESS_REQUIRED = "is_restore_access_required"
 
     const val ACCOUNTS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
         TABLE_NAME_ACCOUNTS + " (" +
@@ -486,7 +481,8 @@ class AccountDaoSource : BaseDaoSource() {
         COL_IS_CONTACTS_LOADED + " INTEGER DEFAULT 0, " +
         COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0, " +
         COL_UUID + " TEXT DEFAULT NULL, " +
-        COL_DOMAIN_RULES + " TEXT DEFAULT NULL " + ");"
+        COL_DOMAIN_RULES + " TEXT DEFAULT NULL, " +
+        COL_IS_RESTORE_ACCESS_REQUIRED + " INTEGER DEFAULT 0 " + ");"
 
     const val CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS = (UNIQUE_INDEX_PREFIX
         + COL_EMAIL + "_" + COL_ACCOUNT_TYPE + "_in_" + TABLE_NAME_ACCOUNTS + " ON " + TABLE_NAME_ACCOUNTS +
@@ -532,7 +528,8 @@ class AccountDaoSource : BaseDaoSource() {
           cursor.getInt(cursor.getColumnIndex(COL_IS_CONTACTS_LOADED)) == 1,
           authCreds,
           uuid,
-          domainRules)
+          domainRules,
+          cursor.getInt(cursor.getColumnIndex(COL_IS_RESTORE_ACCESS_REQUIRED)) == 1)
     }
 
     /**

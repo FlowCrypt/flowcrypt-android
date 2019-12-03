@@ -79,8 +79,8 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     when (requestCode) {
       R.id.syns_send_backup_with_private_key_to_key_owner -> {
         isPrivateKeySendingNow = false
-        if (!countingIdlingResource!!.isIdleNow) {
-          countingIdlingResource!!.decrement()
+        if (countingIdlingResource?.isIdleNow == false) {
+          countingIdlingResource?.decrement()
         }
         setResult(Activity.RESULT_OK)
         finish()
@@ -92,28 +92,28 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     when (requestCode) {
       R.id.syns_send_backup_with_private_key_to_key_owner -> {
         isPrivateKeySendingNow = false
-        if (!countingIdlingResource!!.isIdleNow) {
-          countingIdlingResource!!.decrement()
+        if (countingIdlingResource?.isIdleNow == false) {
+          countingIdlingResource?.decrement()
         }
 
         when (e) {
           is PrivateKeyStrengthException -> {
-            UIUtil.exchangeViewVisibility(this@BackupKeysActivity, false, progressBar!!, rootView)
+            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
             showPassWeakHint()
           }
 
           is DifferentPassPhrasesException -> {
-            UIUtil.exchangeViewVisibility(this@BackupKeysActivity, false, progressBar!!, rootView)
+            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
             showDifferentPassHint()
           }
 
           is NoPrivateKeysAvailableException -> {
-            UIUtil.exchangeViewVisibility(this@BackupKeysActivity, false, progressBar!!, rootView)
+            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
             showInfoSnackbar(rootView, e.message, Snackbar.LENGTH_LONG)
           }
 
           else -> {
-            UIUtil.exchangeViewVisibility(this@BackupKeysActivity, false, progressBar!!, rootView)
+            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
             showBackupingErrorHint()
           }
         }
@@ -133,9 +133,9 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
             R.id.radioButtonEmail -> {
               dismissSnackBar()
               if (GeneralUtil.isConnected(this)) {
-                countingIdlingResource!!.increment()
+                countingIdlingResource?.increment()
                 isPrivateKeySendingNow = true
-                UIUtil.exchangeViewVisibility(this, true, progressBar!!, rootView)
+                UIUtil.exchangeViewVisibility(true, progressBar!!, rootView)
                 sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner)
               } else {
                 UIUtil.showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
@@ -159,17 +159,17 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
         isPrivateKeySavingNow = false
         when (e) {
           is PrivateKeyStrengthException -> {
-            UIUtil.exchangeViewVisibility(this@BackupKeysActivity, false, progressBar!!, rootView)
+            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
             showPassWeakHint()
           }
 
           is DifferentPassPhrasesException -> {
-            UIUtil.exchangeViewVisibility(this@BackupKeysActivity, false, progressBar!!, rootView)
+            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
             showDifferentPassHint()
           }
 
           else -> {
-            UIUtil.exchangeViewVisibility(this@BackupKeysActivity, false, progressBar!!, rootView)
+            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
             showInfoSnackbar(rootView, e!!.message)
           }
         }
@@ -184,7 +184,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
       isPrivateKeySavingNow -> {
         LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_file)
         isPrivateKeySavingNow = false
-        UIUtil.exchangeViewVisibility(this, false, progressBar!!, rootView)
+        UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
       }
 
       isPrivateKeySendingNow -> Toast.makeText(this, R.string.please_wait_while_message_will_be_sent,
@@ -229,7 +229,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
 
       REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY -> {
         layoutSyncStatus!!.visibility = View.GONE
-        UIUtil.exchangeViewVisibility(this@BackupKeysActivity, false, progressBar!!, rootView)
+        UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
       }
     }
   }
@@ -238,7 +238,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     return when (id) {
       R.id.loader_id_save_private_key_as_file -> {
         isPrivateKeySavingNow = true
-        UIUtil.exchangeViewVisibility(this, true, progressBar!!, rootView)
+        UIUtil.exchangeViewVisibility(true, progressBar!!, rootView)
         SavePrivateKeyAsFileAsyncTaskLoader(applicationContext, account!!, destinationUri!!)
       }
 
@@ -254,7 +254,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     when (loader.id) {
       R.id.loader_id_save_private_key_as_file -> {
         isPrivateKeySavingNow = false
-        UIUtil.exchangeViewVisibility(this, false, progressBar!!, rootView)
+        UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
       }
     }
   }
@@ -267,7 +267,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
           setResult(Activity.RESULT_OK)
           finish()
         } else {
-          UIUtil.exchangeViewVisibility(this, false, progressBar!!, rootView)
+          UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
           showInfoSnackbar(rootView, getString(R.string.error_occurred_please_try_again))
         }
       }
@@ -280,7 +280,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     showSnackbar(rootView, getString(R.string.backup_was_not_sent), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
       layoutSyncStatus!!.visibility = View.GONE
-      UIUtil.exchangeViewVisibility(this@BackupKeysActivity, true, progressBar!!, rootView)
+      UIUtil.exchangeViewVisibility(true, progressBar!!, rootView)
       sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner)
     })
   }

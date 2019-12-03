@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
+import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
@@ -30,6 +31,7 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.google.android.gms.common.util.CollectionUtils
@@ -44,7 +46,7 @@ import com.google.android.material.snackbar.Snackbar
  * E-mail: DenBond7@gmail.com
  */
 
-class ImportPrivateKeyActivity : BaseImportKeyActivity() {
+class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.OnTwoWayDialogListener {
   @get:VisibleForTesting
   var countingIdlingResource: CountingIdlingResource? = null
     private set
@@ -69,12 +71,12 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
     super.onCreate(savedInstanceState)
     if (isSyncEnabled && GeneralUtil.isConnected(this)) {
       textViewProgressText.setText(R.string.loading_backups)
-      UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView, true)
+      UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
       countingIdlingResource = CountingIdlingResource(
           GeneralUtil.genIdlingResourcesName(ImportPrivateKeyActivity::class.java), GeneralUtil.isDebugBuild())
     } else {
       hideImportButton()
-      UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
+      UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
     }
 
     setupSubmitPubKeyViewModel()
@@ -92,9 +94,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
       isLoadPrivateKeysRequestSent = true
       loadPrivateKeys(R.id.syns_load_private_keys)
 
-      if (countingIdlingResource != null) {
-        countingIdlingResource!!.increment()
-      }
+      countingIdlingResource?.increment()
     }
   }
 
@@ -124,10 +124,10 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
           } else {
             hideImportButton()
           }
-          UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
+          UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
         }
-        if (!countingIdlingResource!!.isIdleNow) {
-          countingIdlingResource!!.decrement()
+        if (countingIdlingResource?.isIdleNow == false) {
+          countingIdlingResource?.decrement()
         }
       }
     }
@@ -137,15 +137,16 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
     when (requestCode) {
       R.id.syns_load_private_keys -> {
         hideImportButton()
-        UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutSyncStatus)
+        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutSyncStatus)
         UIUtil.showSnackbar(rootView, getString(R.string.error_occurred_while_receiving_private_keys),
             getString(android.R.string.ok), View.OnClickListener {
           layoutSyncStatus?.visibility = View.GONE
-          UIUtil.exchangeViewVisibility(this@ImportPrivateKeyActivity,
+          UIUtil.exchangeViewVisibility(
               false, layoutProgress, layoutContentView)
         })
-        if (!countingIdlingResource!!.isIdleNow) {
-          countingIdlingResource!!.decrement()
+
+        if (countingIdlingResource?.isIdleNow == false) {
+          countingIdlingResource?.decrement()
         }
       }
     }
@@ -264,6 +265,22 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
     }
   }
 
+  override fun onDialogButtonClick(requestCode: Int, result: Int) {
+    when (requestCode) {
+      REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG -> {
+        when (result) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
+          }
+
+          TwoWayDialogFragment.RESULT_CANCELED -> {
+            unlockedKeys.clear()
+          }
+        }
+      }
+    }
+  }
+
   private fun hideImportButton() {
     buttonImportBackup!!.visibility = View.GONE
     val marginLayoutParams = buttonLoadFromFile
@@ -297,29 +314,33 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
         when (it.status) {
           Result.Status.LOADING -> {
             textViewProgressText.setText(R.string.submitting_pub_key)
-            UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView, true)
+            UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
           }
 
           Result.Status.SUCCESS -> {
             handleSuccessSubmit()
           }
 
-          Result.Status.ERROR -> {
-            UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
-            showSnackbar(rootView, it.data?.apiError?.msg
-                ?: getString(R.string.unknown_error), getString(R.string.retry),
-                Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
-              account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
-            })
-          }
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+            val msg = when (it.status) {
+              Result.Status.ERROR -> {
+                it.data?.apiError?.msg ?: getString(R.string.unknown_error)
+              }
 
-          Result.Status.EXCEPTION -> {
-            UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
-            showSnackbar(rootView, it.exception?.message
-                ?: getString(R.string.unknown_error), getString(R.string.retry),
-                Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
-              account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
-            })
+              Result.Status.SUCCESS -> {
+                it.exception?.message ?: getString(R.string.unknown_error)
+              }
+
+              else -> getString(R.string.unknown_error)
+            }
+
+            showDialogFragment(TwoWayDialogFragment.newInstance(requestCode = REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG,
+                dialogTitle = "",
+                dialogMsg = msg,
+                positiveButtonTitle = getString(R.string.retry),
+                negativeButtonTitle = getString(R.string.cancel),
+                isCancelable = false))
           }
         }
       }
@@ -330,13 +351,13 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
 
   private fun handleSuccessSubmit() {
     try {
-      UIUtil.exchangeViewVisibility(this, true, layoutProgress, layoutContentView, true)
+      UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
       textViewProgressText.setText(R.string.saving_prv_keys)
       SecurityUtils.encryptAndSaveKeysToDatabase(this, unlockedKeys, keyDetailsType)
       setResult(Activity.RESULT_OK)
       finish()
     } catch (e: Exception) {
-      UIUtil.exchangeViewVisibility(this, false, layoutProgress, layoutContentView, true)
+      UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
       showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
           getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
         handleSuccessSubmit()
@@ -346,6 +367,8 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity() {
 
   companion object {
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS = 100
+    private const val REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG = 101
+
     val KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED", ImportPrivateKeyActivity::class.java)
     val KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(

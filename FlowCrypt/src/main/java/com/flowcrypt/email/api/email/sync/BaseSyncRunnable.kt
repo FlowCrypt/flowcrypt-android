@@ -40,7 +40,7 @@ abstract class BaseSyncRunnable constructor(val account: AccountDao, val syncLis
    * @return trus if connected, false otherwise.
    */
   internal val isConnected: Boolean
-    get() = store != null && store!!.isConnected
+    get() = store?.isConnected == true
 
   internal fun resetConnIfNeeded(task: SyncTask?) {
     val activeStore = store ?: return

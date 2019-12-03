@@ -418,4 +418,8 @@
     <string name="submitting_pub_key">Submitting the pub key</string>
     <string name="saving_prv_keys">Saving the private key(s)</string>
     <string name="key_already_imported_finishing_setup">Key already imported, finishing setup.</string>
+    <string name="reconnect_your_account">Please reconnect your account to continue using %1$s with %2$s</string>
+    <string name="reconnect">Reconnect</string>
+    <string name="access_was_not_granted">Access was not granted</string>
+    <string name="can_not_send_due_to_auth_failure">Can\'t send message: auth failure</string>
 </resources>

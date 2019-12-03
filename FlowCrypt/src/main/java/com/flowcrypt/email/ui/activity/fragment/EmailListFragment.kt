@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.database.Cursor
@@ -28,7 +27,6 @@ import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
@@ -51,6 +49,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
+import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
@@ -182,11 +181,11 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
       }
 
       REQUEST_CODE_DELETE_MESSAGES -> when (resultCode) {
-        Activity.RESULT_OK -> deleteSelectedMsgs()
+        TwoWayDialogFragment.RESULT_OK -> deleteSelectedMsgs()
       }
 
       REQUEST_CODE_RETRY_TO_SEND_MESSAGES -> when (resultCode) {
-        Activity.RESULT_OK -> if (activeMsgDetails != null) {
+        TwoWayDialogFragment.RESULT_OK -> if (activeMsgDetails != null) {
           MessageDaoSource().updateMsgState(context!!,
               activeMsgDetails!!.email, activeMsgDetails!!.label,
               activeMsgDetails!!.uid.toLong(), MessageState.QUEUED)
@@ -225,7 +224,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
           swipeRefreshLayout!!.isRefreshing = false
 
           if (adapter!!.count == 0) {
-            UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+            UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
           }
 
           loadNextMsgs(-1)
@@ -235,7 +234,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
 
         if (adapter!!.count == 0) {
           textViewStatusInfo!!.setText(R.string.no_connection)
-          UIUtil.exchangeViewVisibility(context, false, progressView!!, statusView!!)
+          UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
         }
 
         showInfoSnackbar(view!!, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
@@ -347,9 +346,13 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
       R.id.menuActionDeleteMessage -> {
         val checkedItemPositions = listView!!.checkedItemPositions
 
-        val twoWayDialogFragment = TwoWayDialogFragment.newInstance("",
-            resources.getQuantityString(R.plurals.delete_messages, checkedItemPositions.size(),
-                checkedItemPositions.size()), getString(android.R.string.ok), getString(R.string.cancel), true)
+        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(
+            dialogTitle = "",
+            dialogMsg = resources.getQuantityString(R.plurals.delete_messages, checkedItemPositions.size(),
+                checkedItemPositions.size()),
+            positiveButtonTitle = getString(android.R.string.ok),
+            negativeButtonTitle = getString(R.string.cancel),
+            isCancelable = true)
         twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_DELETE_MESSAGES)
         twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
 
@@ -452,7 +455,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
       updateList(false, false)
     } else if (adapter!!.count == 0) {
       emptyView!!.setText(if (isEncryptedModeEnabled) R.string.no_encrypted_messages else R.string.no_results)
-      UIUtil.exchangeViewVisibility(context, false, progressView!!, emptyView!!)
+      UIUtil.exchangeViewVisibility(false, progressView!!, emptyView!!)
     }
 
     areNewMsgsLoadingNow = false
@@ -488,7 +491,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
   fun reloadMsgs() {
     LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache)
     DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao?.email, listener!!.currentFolder!!.fullName)
-    UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+    UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
     loadNextMsgs(0)
   }
 
@@ -534,7 +537,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
   private fun showConnLostHint() {
     showSnackbar(view!!, getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
-      UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+      UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
       loadNextMsgs(-1)
     })
   }
@@ -543,7 +546,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     showSnackbar(view!!, getString(R.string.failed_load_labels_from_email_server), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
       setSupportActionBarTitle(getString(R.string.loading))
-      UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+      UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
       (activity as BaseSyncActivity).updateLabels(R.id.syns_request_code_update_label_active)
     })
   }
@@ -583,7 +586,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     statusView!!.visibility = View.GONE
 
     if (!isFetchMesgsNeeded || adapter!!.count == 0) {
-      UIUtil.exchangeViewVisibility(context, true, progressView!!, listView!!)
+      UIUtil.exchangeViewVisibility(true, progressView!!, listView!!)
     }
 
     if (supportActionBar != null) {
@@ -603,7 +606,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
         lastFirstVisiblePos = 0
       }
 
-      UIUtil.exchangeViewVisibility(context, false, progressView!!, listView!!)
+      UIUtil.exchangeViewVisibility(false, progressView!!, listView!!)
     } else {
       if (JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)) {
         isFetchMesgsNeeded = true
@@ -619,7 +622,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
           }
         } else {
           textViewStatusInfo!!.setText(R.string.no_connection)
-          UIUtil.exchangeViewVisibility(context, false, progressView!!, statusView!!)
+          UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
           showRetrySnackBar()
         }
       } else {
@@ -628,7 +631,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
         } else {
           R.string.no_results
         })
-        UIUtil.exchangeViewVisibility(context, false, progressView!!, emptyView!!)
+        UIUtil.exchangeViewVisibility(false, progressView!!, emptyView!!)
       }
     }
   }
@@ -675,8 +678,11 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
       }
 
       MessageState.ERROR_SENDING_FAILED -> {
-        val twoWayDialogFragment = TwoWayDialogFragment.newInstance("",
-            getString(R.string.message_failed_to_send), getString(R.string.retry), getString(R.string.cancel), true)
+        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(dialogTitle = "",
+            dialogMsg = getString(R.string.message_failed_to_send),
+            positiveButtonTitle = getString(R.string.retry),
+            negativeButtonTitle = getString(R.string.cancel),
+            isCancelable = true)
         twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_RETRY_TO_SEND_MESSAGES)
         twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
         return
@@ -714,7 +720,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     showSnackbar(view!!, getString(R.string.no_connection), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
       if (GeneralUtil.isConnected(context!!)) {
-        UIUtil.exchangeViewVisibility(context, true, progressView!!, statusView!!)
+        UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
         loadNextMsgs(-1)
       } else {
         showRetrySnackBar()
@@ -727,7 +733,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
    */
   private fun refreshMsgs() {
     areNewMsgsLoadingNow = false
-    listener!!.msgsCountingIdlingResource.increment()
+    listener?.msgsLoadingIdlingResource?.setIdleState(false)
     baseSyncActivity!!.refreshMsgs(R.id.syns_request_code_force_load_new_messages, listener!!.currentFolder!!)
   }
 
@@ -740,7 +746,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     if (GeneralUtil.isConnected(context!!)) {
       footerProgressView!!.visibility = View.VISIBLE
       areNewMsgsLoadingNow = true
-      listener!!.msgsCountingIdlingResource.increment()
+      listener?.msgsLoadingIdlingResource?.setIdleState(false)
       val localFolder = listener!!.currentFolder
       if (TextUtils.isEmpty(localFolder!!.searchQuery)) {
         baseSyncActivity!!.loadNextMsgs(R.id.syns_request_code_load_next_messages, localFolder, totalItemsCount)
@@ -781,7 +787,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
 
     val currentFolder: LocalFolder?
 
-    val msgsCountingIdlingResource: CountingIdlingResource
+    val msgsLoadingIdlingResource: SingleIdlingResources
     fun hasMoreMsgs(): Boolean
 
     fun onRetryGoogleAuth()

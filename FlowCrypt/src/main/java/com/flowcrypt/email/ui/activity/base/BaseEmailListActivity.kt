@@ -6,16 +6,14 @@
 package com.flowcrypt.email.ui.activity.base
 
 import androidx.annotation.VisibleForTesting
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.service.EmailSyncService
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
-import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.idling.SingleIdlingResources
 
 /**
  * The base [android.app.Activity] for displaying messages.
@@ -28,15 +26,13 @@ import com.flowcrypt.email.util.GeneralUtil
 abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnManageEmailsListener {
   @JvmField
   @VisibleForTesting
-  val msgsIdlingResource: CountingIdlingResource =
-      CountingIdlingResource(GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java),
-          GeneralUtil.isDebugBuild())
+  val msgsIdlingResource = SingleIdlingResources()
   private var hasMoreMsgs = true
 
   abstract fun refreshFoldersFromCache()
 
   @VisibleForTesting
-  override val msgsCountingIdlingResource: CountingIdlingResource
+  override val msgsLoadingIdlingResource: SingleIdlingResources
     get() = msgsIdlingResource
 
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
@@ -55,9 +51,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
           }
         }
 
-        if (!msgsIdlingResource.isIdleNow) {
-          msgsIdlingResource.decrement()
-        }
+        msgsIdlingResource.setIdleState(true)
       }
     }
   }
@@ -65,10 +59,8 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
       R.id.syns_request_code_load_next_messages -> {
-        if (!msgsIdlingResource.isIdleNow) {
-          msgsIdlingResource.decrement()
-        }
         onErrorOccurred(requestCode, errorType, e)
+        msgsIdlingResource.setIdleState(true)
       }
     }
   }

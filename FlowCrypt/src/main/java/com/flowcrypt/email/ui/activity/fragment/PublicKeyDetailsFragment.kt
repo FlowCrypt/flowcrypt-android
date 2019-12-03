@@ -27,6 +27,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.LoadingState
 import com.flowcrypt.email.api.retrofit.Status
 import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
@@ -145,7 +146,11 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     when (nodeResponseWrapper.requestCode) {
       R.id.live_data_id_fetch_keys -> when (nodeResponseWrapper.status) {
         Status.LOADING -> {
-          UIUtil.exchangeViewVisibility(context, true, progressBar, content)
+          nodeResponseWrapper.loadingState?.let {
+            if (LoadingState.PREPARE_REQUEST == it) {
+              UIUtil.exchangeViewVisibility(true, progressBar, content)
+            }
+          }
         }
 
         Status.SUCCESS -> {
@@ -157,7 +162,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
           } else {
             details = nodeKeyDetailsList.first()
             updateViews()
-            UIUtil.exchangeViewVisibility(context, false, progressBar, content)
+            UIUtil.exchangeViewVisibility(false, progressBar, content)
           }
         }
 

@@ -19,12 +19,14 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.provider.FlowcryptContract
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
@@ -95,7 +97,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
           Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
             this.googleSignInAccount = null
-            UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+            UIUtil.exchangeViewVisibility(false, progressView, rootView)
           }
         }
       }
@@ -105,7 +107,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
         Activity.RESULT_CANCELED, CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
           this.googleSignInAccount = null
-          UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+          UIUtil.exchangeViewVisibility(false, progressView, rootView)
         }
       }
 
@@ -171,7 +173,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
       R.id.loader_id_load_private_key_backups_from_email -> {
         isStartCheckKeysActivityEnabled = true
 
-        UIUtil.exchangeViewVisibility(this, true, progressView, rootView)
+        UIUtil.exchangeViewVisibility(true, progressView, rootView)
         val account = AccountDao(googleSignInAccount!!, uuid, domainRules)
         LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
       }
@@ -202,7 +204,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
           startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
         }
       } else if (loaderResult.exception != null) {
-        UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+        UIUtil.exchangeViewVisibility(false, progressView, rootView)
 
         if (loaderResult.exception is UserRecoverableAuthIOException) {
           startActivityForResult((loaderResult.exception as UserRecoverableAuthIOException).intent,
@@ -251,6 +253,7 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
     val account = addGmailAccount(googleSignInAccount)
     if (account != null) {
+      ActionQueueDaoSource().addAction(this, LoadGmailAliasesAction(email = account.email))
       EmailManagerActivity.runEmailManagerActivity(this)
       finish()
     } else {

@@ -34,7 +34,8 @@ interface Action : Parcelable {
     REGISTER_USER_PUBLIC_KEY("register_user_public_key"),
     SEND_WELCOME_TEST_EMAIL("send_welcome_test_email"),
     FILL_USER_ID_EMAILS_KEYS_TABLE("fill_user_id_emails_keys_table"),
-    ENCRYPT_PRIVATE_KEYS("encrypt_private_keys");
+    ENCRYPT_PRIVATE_KEYS("encrypt_private_keys"),
+    LOAD_GMAIL_ALIASES("load_gmail_aliases");
 
     override fun describeContents(): Int {
       return 0

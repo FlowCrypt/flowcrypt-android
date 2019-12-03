@@ -32,6 +32,6 @@ class UpdateAccountRule(private val account: AccountDao, private val contentValu
   }
 
   private fun updateAccount() {
-    AccountDaoSource().updateAccountInformation(targetContext, account.account, contentValues)
+    AccountDaoSource().updateAccountInformation(targetContext, account, contentValues)
   }
 }

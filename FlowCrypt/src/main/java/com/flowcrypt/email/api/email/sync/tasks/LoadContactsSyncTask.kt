@@ -52,7 +52,7 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
       val contentValues = ContentValues()
       contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true)
 
-      AccountDaoSource().updateAccountInformation(listener.context, account.account, contentValues)
+      AccountDaoSource().updateAccountInformation(listener.context, account, contentValues)
     }
 
     imapFolder.close(false)

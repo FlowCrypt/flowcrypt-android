@@ -120,13 +120,13 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
   override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
     when (loader.id) {
       R.id.loader_id_load_contacts_with_pgp -> {
-        UIUtil.exchangeViewVisibility(this, false, progressBar, listView)
+        UIUtil.exchangeViewVisibility(false, progressBar, listView)
 
         if (data != null && data.count > 0) {
           emptyView?.visibility = View.GONE
           adapter?.swapCursor(data)
         } else {
-          UIUtil.exchangeViewVisibility(this, true, emptyView, listView)
+          UIUtil.exchangeViewVisibility(true, emptyView, listView)
         }
       }
     }

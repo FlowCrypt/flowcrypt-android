@@ -58,7 +58,7 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
     initViews()
 
     if (GeneralUtil.isConnected(this)) {
-      UIUtil.exchangeViewVisibility(this, true, progressBar, rootView)
+      UIUtil.exchangeViewVisibility(true, progressBar, rootView)
     } else {
       Toast.makeText(this, R.string.internet_connection_is_not_available, Toast.LENGTH_SHORT).show()
       finish()
@@ -85,7 +85,7 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
     when (requestCode) {
       R.id.syns_load_private_keys -> {
         if (privateKeys == null) {
-          UIUtil.exchangeViewVisibility(this, false, progressBar, rootView)
+          UIUtil.exchangeViewVisibility(false, progressBar, rootView)
           val keys = obj as ArrayList<NodeKeyDetails>?
           if (CollectionUtils.isEmpty(keys)) {
             showNoBackupFoundView()
@@ -104,14 +104,14 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
       R.id.syns_load_private_keys -> {
-        UIUtil.exchangeViewVisibility(this, false, progressBar, layoutSyncStatus)
+        UIUtil.exchangeViewVisibility(false, progressBar, layoutSyncStatus)
         if (!countingIdlingResource.isIdleNow) {
           countingIdlingResource.decrement()
         }
         UIUtil.showSnackbar(rootView, getString(R.string.error_occurred_while_receiving_private_keys),
             getString(R.string.retry), View.OnClickListener {
           layoutSyncStatus.visibility = View.GONE
-          UIUtil.exchangeViewVisibility(this@SearchBackupsInEmailActivity, true, progressBar, rootView)
+          UIUtil.exchangeViewVisibility(true, progressBar, rootView)
           loadPrivateKeys(R.id.syns_load_private_keys)
         })
       }

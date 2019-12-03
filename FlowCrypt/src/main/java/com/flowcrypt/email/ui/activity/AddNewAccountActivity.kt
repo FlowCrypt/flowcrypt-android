@@ -18,9 +18,11 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
@@ -103,7 +105,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
         }
 
         Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
-          UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+          UIUtil.exchangeViewVisibility(false, progressView, rootView)
           LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email)
         }
       }
@@ -123,7 +125,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
     return when (id) {
       R.id.loader_id_load_private_key_backups_from_email -> {
-        UIUtil.exchangeViewVisibility(this, true, progressView, rootView)
+        UIUtil.exchangeViewVisibility(true, progressView, rootView)
         val account = AccountDao(googleSignInAccount!!, uuid, domainRules)
         LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
       }
@@ -151,7 +153,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
           val account = AccountDao(googleSignInAccount!!, uuid, domainRules)
           startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
               REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL)
-          UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+          UIUtil.exchangeViewVisibility(false, progressView, rootView)
         } else {
           val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
               keyDetailsList!!.size, keyDetailsList.size)
@@ -168,7 +170,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
   override fun onError(loaderId: Int, e: Exception?) {
     when (loaderId) {
       R.id.loader_id_load_private_key_backups_from_email -> {
-        UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+        UIUtil.exchangeViewVisibility(false, progressView, rootView)
         showInfoSnackbar(rootView, if (e != null && !TextUtils.isEmpty(e.message))
           e.message
         else
@@ -185,13 +187,13 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
         val account = AccountDao(googleSignInAccount!!, uuid, domainRules)
         startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
             REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL)
-        UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+        UIUtil.exchangeViewVisibility(false, progressView, rootView)
       } else {
         LoaderManager.getInstance(this)
             .restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
       }
     } else {
-      UIUtil.exchangeViewVisibility(this, false, progressView, rootView)
+      UIUtil.exchangeViewVisibility(false, progressView, rootView)
       showInfoSnackbar(rootView, getString(R.string.template_email_alredy_added,
           this.googleSignInAccount!!.email), Snackbar.LENGTH_LONG)
     }
@@ -199,9 +201,11 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
 
   private fun returnResultOk() {
     val accountDaoSource = saveGmailAccount()
+    val account = accountDaoSource.getActiveAccountInformation(this)
+    ActionQueueDaoSource().addAction(this, LoadGmailAliasesAction(email = account?.email))
 
     val intent = Intent()
-    intent.putExtra(KEY_EXTRA_NEW_ACCOUNT, accountDaoSource.getActiveAccountInformation(this))
+    intent.putExtra(KEY_EXTRA_NEW_ACCOUNT, account)
 
     setResult(Activity.RESULT_OK, intent)
     finish()

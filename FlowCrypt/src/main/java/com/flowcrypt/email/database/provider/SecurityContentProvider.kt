@@ -188,6 +188,8 @@ class SecurityContentProvider : ContentProvider() {
             MessageDaoSource.COL_EMAIL + " = ?", selectionArgs)
         rowsCount += sqLiteDatabase.delete(AttachmentDaoSource().tableName,
             AttachmentDaoSource.COL_EMAIL + " = ?", selectionArgs)
+        rowsCount += sqLiteDatabase.delete(AccountAliasesDaoSource().tableName,
+            AccountAliasesDaoSource.COL_EMAIL + " = ?", selectionArgs)
       }
 
       MATCHED_CODE_KEY_ERASE_DATABASE -> {

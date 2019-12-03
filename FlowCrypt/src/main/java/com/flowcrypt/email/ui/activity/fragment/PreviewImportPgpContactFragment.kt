@@ -110,11 +110,11 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
       R.id.loader_id_parse_public_keys -> {
         publicKeyInfoList = result as List<PublicKeyInfo>?
         if (publicKeyInfoList!!.isNotEmpty()) {
-          UIUtil.exchangeViewVisibility(context, false, layoutProgress!!, layoutContentView!!)
+          UIUtil.exchangeViewVisibility(false, layoutProgress!!, layoutContentView!!)
           recyclerView!!.adapter = ImportPgpContactsRecyclerViewAdapter(publicKeyInfoList!!)
           btnImportAll!!.visibility = if (publicKeyInfoList!!.size > 1) View.VISIBLE else View.GONE
         } else {
-          UIUtil.exchangeViewVisibility(context, false, layoutProgress!!, emptyView!!)
+          UIUtil.exchangeViewVisibility(false, layoutProgress!!, emptyView!!)
         }
       }
 
@@ -159,7 +159,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
           activity!!.finish()
         }
       } else {
-        UIUtil.exchangeViewVisibility(context, false, layoutProgress!!, layoutContentView!!)
+        UIUtil.exchangeViewVisibility(false, layoutProgress!!, layoutContentView!!)
         Toast.makeText(context, R.string.unknown_error, Toast.LENGTH_SHORT).show()
       }
     }
@@ -397,7 +397,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
       if (weakRef.get() != null) {
         weakRef.get()?.progressBar!!.isIndeterminate = true
         weakRef.get()?.textViewProgressTitle!!.setText(progressTitleResourcesId)
-        UIUtil.exchangeViewVisibility(weakRef.get()?.context, true,
+        UIUtil.exchangeViewVisibility(true,
             weakRef.get()?.layoutProgress!!, weakRef.get()?.layoutContentView!!)
       }
     }

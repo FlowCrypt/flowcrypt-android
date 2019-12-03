@@ -37,10 +37,17 @@ object ExceptionResolver {
   /**
    * Check if need to handle a happened error with  ACRA
    *
-   * @param e A happened error
+   * @param t A happened error
    * @return true if need to handle such exception with ACRA and send logs to the backend, false - otherwise.
    */
-  fun isHandlingNeeded(e: Throwable): Boolean {
+  fun isHandlingNeeded(t: Throwable): Boolean {
+    val e =
+        if (t is ManualHandledException) {
+          t.cause ?: t
+        } else {
+          t
+        }
+
     if (e is UserRecoverableAuthException) {
       if ("BadAuthentication" == e.message) {
         ExceptionUtil.handleError(e)
@@ -67,6 +74,10 @@ object ExceptionResolver {
         return false
       }
 
+      if ("Connection dropped by server?".equals(e.message, ignoreCase = true)) {
+        return false
+      }
+
       if (e is GoogleJsonResponseException) {
         return false
       }
@@ -81,7 +92,8 @@ object ExceptionResolver {
             || e.message!!.contains("Failure in SSL library, usually a protocol error")
             || e.message!!.contains("Handshake failed")
             || e.message!!.contains("Exception reading response")
-            || e.message!!.contains("connection failure")) {
+            || e.message!!.contains("connection failure")
+            || e.message!!.contains("Connection reset;")) {
           return false
         }
       }
@@ -94,6 +106,10 @@ object ExceptionResolver {
       }
 
       if ("Lost folder connection to server".equals(e.message, ignoreCase = true)) {
+        return false
+      }
+
+      if ("* BYE System Error".equals(e.message, ignoreCase = true)) {
         return false
       }
     }
@@ -113,6 +129,16 @@ object ExceptionResolver {
     if (e is BadPaddingException) {
       val errorMsg = "error:0407109F:rsa routines:RSA_padding_check_PKCS1_type_2:pkcs decoding error"
       return !errorMsg.equals(e.message, ignoreCase = true)
+    }
+
+    if (e is IllegalStateException) {
+      if ("This operation is not allowed on a closed folder".equals(e.message, ignoreCase = true)) {
+        return false
+      }
+
+      if ("Not connected".equals(e.message, ignoreCase = true)) {
+        return false
+      }
     }
 
     return true

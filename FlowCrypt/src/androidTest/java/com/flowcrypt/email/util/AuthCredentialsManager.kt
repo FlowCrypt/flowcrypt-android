@@ -21,11 +21,6 @@ class AuthCredentialsManager {
     fun getLocalWithOneBackupAuthCreds(): AuthCredentials {
       return TestGeneralUtil.readObjectFromResources("user_with_one_backup.json", AuthCredentials::class.java)
     }
-
-    @JvmStatic
-    fun getDefaultWithBackupAuthCreds(): AuthCredentials {
-      return TestGeneralUtil.readObjectFromResources("default.json", AuthCredentials::class.java)
-    }
   }
 }
 
