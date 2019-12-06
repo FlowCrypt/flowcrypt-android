@@ -35,14 +35,22 @@ android {
         versionName rootProject.ext.appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+
         externalNativeBuild {
             cmake {
                 cppFlags ""
                 arguments "-DANDROID_STL=c++_shared"
             }
         }
+
         ndk {
             abiFilters "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
+        }
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
         }
     }
 
