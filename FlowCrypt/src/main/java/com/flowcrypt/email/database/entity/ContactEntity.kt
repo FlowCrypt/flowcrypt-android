@@ -27,7 +27,7 @@ import androidx.room.PrimaryKey
     ]
 )
 data class ContactEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long,
     val email: String,
     @ColumnInfo(defaultValue = "NULL") val name: String?,
     @ColumnInfo(name = "public_key", defaultValue = "NULL") val publicKey: ByteArray?,
@@ -37,8 +37,9 @@ data class ContactEntity(
     @ColumnInfo(defaultValue = "NULL") val fingerprint: String?,
     @ColumnInfo(name = "long_id", defaultValue = "NULL") val longId: String?,
     @ColumnInfo(defaultValue = "NULL") val keywords: String?,
-    @ColumnInfo(name = "last_use", defaultValue = "0") val lastUse: Int?
+    @ColumnInfo(name = "last_use", defaultValue = "0") val lastUse: Long
 ) {
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
@@ -64,7 +65,7 @@ data class ContactEntity(
   }
 
   override fun hashCode(): Int {
-    var result = id?.hashCode() ?: 0
+    var result = id.hashCode()
     result = 31 * result + email.hashCode()
     result = 31 * result + (name?.hashCode() ?: 0)
     result = 31 * result + (publicKey?.contentHashCode() ?: 0)
@@ -74,7 +75,7 @@ data class ContactEntity(
     result = 31 * result + (fingerprint?.hashCode() ?: 0)
     result = 31 * result + (longId?.hashCode() ?: 0)
     result = 31 * result + (keywords?.hashCode() ?: 0)
-    result = 31 * result + (lastUse ?: 0)
+    result = 31 * result + lastUse.hashCode()
     return result
   }
 }

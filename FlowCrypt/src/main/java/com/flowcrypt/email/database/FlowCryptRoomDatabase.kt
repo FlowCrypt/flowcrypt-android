@@ -334,12 +334,26 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
-    /**
-     * We’ll still need to implement an empty migration to tell Room to keep the existing data.
-     */
     private val MIGRATION_19_20 = object : Migration(19, DB_VERSION) {
       override fun migrate(database: SupportSQLiteDatabase) {
-        //An empty migration for moving from the regular db to Room
+        //recreate 'contacts' table because of wrong column type BOOLEAN
+        database.beginTransaction()
+        try {
+          database.execSQL("CREATE TEMP TABLE IF NOT EXISTS contacts_temp AS SELECT * FROM contacts;")
+          database.execSQL("DROP TABLE IF EXISTS contacts;")
+          database.execSQL("CREATE TABLE IF NOT EXISTS contacts (_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, name TEXT DEFAULT NULL, public_key BLOB DEFAULT NULL, has_pgp INTEGER NOT NULL, client TEXT DEFAULT NULL, attested INTEGER DEFAULT NULL, fingerprint TEXT DEFAULT NULL, long_id TEXT DEFAULT NULL, keywords TEXT DEFAULT NULL, last_use INTEGER DEFAULT 0 NOT NULL);")
+          database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS email_in_contacts ON contacts (email);")
+          database.execSQL("CREATE INDEX IF NOT EXISTS name_in_contacts ON contacts (name);")
+          database.execSQL("CREATE INDEX IF NOT EXISTS has_pgp_in_contacts ON contacts (has_pgp);")
+          database.execSQL("CREATE INDEX IF NOT EXISTS long_id_in_contacts ON contacts (long_id);")
+          database.execSQL("CREATE INDEX IF NOT EXISTS last_use_in_contacts ON contacts (last_use);")
+          database.execSQL("INSERT INTO contacts SELECT * FROM contacts_temp;")
+          database.execSQL("DROP TABLE IF EXISTS contacts_temp;")
+
+          database.setTransactionSuccessful()
+        } finally {
+          database.endTransaction()
+        }
       }
     }
 

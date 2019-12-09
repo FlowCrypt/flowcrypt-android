@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 20,
-    "identityHash": "30c2e07b776337e4bad244848967ec8e",
+    "identityHash": "142525ec1065962bd52b6c45a0e7a640",
     "entities": [
       {
         "tableName": "accounts_aliases",
@@ -432,13 +432,13 @@
       },
       {
         "tableName": "contacts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `name` TEXT DEFAULT NULL, `public_key` BLOB DEFAULT NULL, `has_pgp` INTEGER NOT NULL, `client` TEXT DEFAULT NULL, `attested` INTEGER DEFAULT NULL, `fingerprint` TEXT DEFAULT NULL, `long_id` TEXT DEFAULT NULL, `keywords` TEXT DEFAULT NULL, `last_use` INTEGER DEFAULT 0)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `email` TEXT NOT NULL, `name` TEXT DEFAULT NULL, `public_key` BLOB DEFAULT NULL, `has_pgp` INTEGER NOT NULL, `client` TEXT DEFAULT NULL, `attested` INTEGER DEFAULT NULL, `fingerprint` TEXT DEFAULT NULL, `long_id` TEXT DEFAULT NULL, `keywords` TEXT DEFAULT NULL, `last_use` INTEGER NOT NULL DEFAULT 0)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "_id",
             "affinity": "INTEGER",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "email",
@@ -505,7 +505,7 @@
             "fieldPath": "lastUse",
             "columnName": "last_use",
             "affinity": "INTEGER",
-            "notNull": false,
+            "notNull": true,
             "defaultValue": "0"
           }
         ],
@@ -892,7 +892,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '30c2e07b776337e4bad244848967ec8e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '142525ec1065962bd52b6c45a0e7a640')"
     ]
   }
 }
