@@ -26,7 +26,7 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
-import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.BaseDaoSource
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
@@ -952,14 +952,14 @@ class MessageDaoSource : BaseDaoSource() {
   fun getLabelMsgsCount(context: Context, email: String, label: String): Int {
     val contentResolver = context.contentResolver
 
-    val projection = arrayOf(FlowCryptSQLiteOpenHelper.COLUMN_NAME_COUNT)
+    val projection = arrayOf(FlowCryptRoomDatabase.COLUMN_NAME_COUNT)
     val selection = "$COL_EMAIL = ? AND $COL_FOLDER = ?"
     val selectionArgs = arrayOf(email, label)
 
     val cursor = contentResolver.query(baseContentUri, projection, selection, selectionArgs, null)
 
     if (cursor != null && cursor.moveToFirst()) {
-      val uid = cursor.getInt(cursor.getColumnIndex(FlowCryptSQLiteOpenHelper
+      val uid = cursor.getInt(cursor.getColumnIndex(FlowCryptRoomDatabase
           .COLUMN_NAME_COUNT))
       cursor.close()
       return uid

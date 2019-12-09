@@ -31,7 +31,7 @@ import com.flowcrypt.email.util.LogsUtil
  * Time: 12:20
  * E-mail: DenBond7@gmail.com
  */
-class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VERSION) {
+class FlowCryptRoomDatabase(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, DB_VERSION) {
 
   override fun onCreate(sqLiteDatabase: SQLiteDatabase) {
     sqLiteDatabase.execSQL(KeysDaoSource.KEYS_TABLE_SQL_CREATE)
@@ -565,7 +565,7 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
     const val DB_NAME = "flowcrypt.db"
     const val DB_VERSION = 19
 
-    private val TAG = FlowCryptSQLiteOpenHelper::class.java.simpleName
+    private val TAG = FlowCryptRoomDatabase::class.java.simpleName
     private const val DROP_TABLE = "DROP TABLE IF EXISTS "
     private const val CREATE_TABLE_IF_NOT_EXISTS = "CREATE TABLE IF NOT EXISTS "
     private const val CREATE_TEMP_TABLE_IF_NOT_EXISTS = "CREATE TEMP TABLE IF NOT EXISTS "
@@ -576,12 +576,12 @@ class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, DB
     }
 
     @Volatile
-    private var INSTANCE: FlowCryptSQLiteOpenHelper? = null
+    private var INSTANCE: FlowCryptRoomDatabase? = null
 
     @JvmStatic
-    fun getInstance(context: Context): FlowCryptSQLiteOpenHelper {
+    fun getInstance(context: Context): FlowCryptRoomDatabase {
       return INSTANCE ?: synchronized(this) {
-        INSTANCE ?: FlowCryptSQLiteOpenHelper(context).also { INSTANCE = it }
+        INSTANCE ?: FlowCryptRoomDatabase(context).also { INSTANCE = it }
       }
     }
   }
