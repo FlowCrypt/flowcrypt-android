@@ -19,7 +19,7 @@ import android.provider.BaseColumns
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
-import com.flowcrypt.email.database.FlowCryptRoomDatabaseTemp
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
@@ -50,7 +50,7 @@ class SecurityContentProvider : ContentProvider() {
 
   override fun onCreate(): Boolean {
     appContext = context!!.applicationContext
-    dbHelper = FlowCryptRoomDatabaseTemp.getDatabase(appContext).openHelper
+    dbHelper = FlowCryptRoomDatabase.getDatabase(appContext).openHelper
     return true
   }
 
