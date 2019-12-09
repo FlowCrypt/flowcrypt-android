@@ -261,7 +261,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
           database.execSQL(DROP_TABLE + AttachmentDaoSource.TABLE_NAME_ATTACHMENT)
           database.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE)
-          database.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_ATTACHMENT_IN_ATTACHMENT)
+          database.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_PATH_IN_ATTACHMENT)
 
           database.execSQL("INSERT INTO " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT
               + " SELECT *, 0 FROM " + tempTableName)
