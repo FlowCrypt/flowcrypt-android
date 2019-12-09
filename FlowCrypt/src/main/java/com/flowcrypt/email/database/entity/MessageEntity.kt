@@ -24,7 +24,7 @@ import androidx.room.PrimaryKey
     ]
 )
 data class MessageEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
     val email: String,
     val folder: String,
     val uid: Long,

@@ -21,7 +21,7 @@ import androidx.room.PrimaryKey
     indices = [Index(name = "long_id_in_keys", value = ["long_id"], unique = true)]
 )
 data class KeyEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
     @ColumnInfo(name = "long_id") val longId: String,
     val source: String,
     @ColumnInfo(name = "public_key") val publicKey: ByteArray,

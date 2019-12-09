@@ -2,17 +2,17 @@
   "formatVersion": 1,
   "database": {
     "version": 20,
-    "identityHash": "29ee7afed221f20cdca2b99cbf32d79b",
+    "identityHash": "30c2e07b776337e4bad244848967ec8e",
     "entities": [
       {
         "tableName": "accounts_aliases",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `email` TEXT NOT NULL, `account_type` TEXT NOT NULL, `send_as_email` TEXT NOT NULL, `display_name` TEXT DEFAULT NULL, `is_default` INTEGER DEFAULT 0, `verification_status` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT NOT NULL, `send_as_email` TEXT NOT NULL, `display_name` TEXT DEFAULT NULL, `is_default` INTEGER DEFAULT 0, `verification_status` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "_id",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "email",
@@ -75,13 +75,13 @@
       },
       {
         "tableName": "accounts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `display_name` TEXT DEFAULT NULL, `given_name` TEXT DEFAULT NULL, `family_name` TEXT DEFAULT NULL, `photo_url` TEXT DEFAULT NULL, `is_enable` INTEGER NOT NULL DEFAULT 1, `is_active` INTEGER NOT NULL DEFAULT 0, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `imap_server` TEXT NOT NULL, `imap_port` INTEGER NOT NULL DEFAULT 143, `imap_is_use_ssl_tls` INTEGER NOT NULL DEFAULT 0, `imap_is_use_starttls` INTEGER NOT NULL DEFAULT 0, `imap_auth_mechanisms` TEXT, `smtp_server` TEXT NOT NULL, `smtp_port` INTEGER NOT NULL DEFAULT 25, `smtp_is_use_ssl_tls` INTEGER NOT NULL DEFAULT 0, `smtp_is_use_starttls` INTEGER NOT NULL DEFAULT 0, `smtp_auth_mechanisms` TEXT, `smtp_is_use_custom_sign` INTEGER NOT NULL DEFAULT 0, `smtp_username` TEXT DEFAULT NULL, `smtp_password` TEXT DEFAULT NULL, `ic_contacts_loaded` INTEGER NOT NULL DEFAULT 0, `is_show_only_encrypted` INTEGER NOT NULL DEFAULT 0, `uuid` TEXT DEFAULT NULL, `domain_rules` TEXT DEFAULT NULL, `is_restore_access_required` INTEGER NOT NULL DEFAULT 0)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `display_name` TEXT DEFAULT NULL, `given_name` TEXT DEFAULT NULL, `family_name` TEXT DEFAULT NULL, `photo_url` TEXT DEFAULT NULL, `is_enable` INTEGER DEFAULT 1, `is_active` INTEGER DEFAULT 0, `username` TEXT NOT NULL, `password` TEXT NOT NULL, `imap_server` TEXT NOT NULL, `imap_port` INTEGER DEFAULT 143, `imap_is_use_ssl_tls` INTEGER DEFAULT 0, `imap_is_use_starttls` INTEGER DEFAULT 0, `imap_auth_mechanisms` TEXT, `smtp_server` TEXT NOT NULL, `smtp_port` INTEGER DEFAULT 25, `smtp_is_use_ssl_tls` INTEGER DEFAULT 0, `smtp_is_use_starttls` INTEGER DEFAULT 0, `smtp_auth_mechanisms` TEXT, `smtp_is_use_custom_sign` INTEGER DEFAULT 0, `smtp_username` TEXT DEFAULT NULL, `smtp_password` TEXT DEFAULT NULL, `ic_contacts_loaded` INTEGER DEFAULT 0, `is_show_only_encrypted` INTEGER DEFAULT 0, `uuid` TEXT DEFAULT NULL, `domain_rules` TEXT DEFAULT NULL, `is_restore_access_required` INTEGER DEFAULT 0)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "_id",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "email",
@@ -128,14 +128,14 @@
             "fieldPath": "isEnabled",
             "columnName": "is_enable",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "1"
           },
           {
             "fieldPath": "isActive",
             "columnName": "is_active",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           },
           {
@@ -160,21 +160,21 @@
             "fieldPath": "imapPort",
             "columnName": "imap_port",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "143"
           },
           {
             "fieldPath": "imapIsUseSslTls",
             "columnName": "imap_is_use_ssl_tls",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           },
           {
             "fieldPath": "imapIsUseStarttls",
             "columnName": "imap_is_use_starttls",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           },
           {
@@ -193,21 +193,21 @@
             "fieldPath": "smtpPort",
             "columnName": "smtp_port",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "25"
           },
           {
             "fieldPath": "smtpIsUseSslTls",
             "columnName": "smtp_is_use_ssl_tls",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           },
           {
             "fieldPath": "smtpIsUseStarttls",
             "columnName": "smtp_is_use_starttls",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           },
           {
@@ -220,7 +220,7 @@
             "fieldPath": "smtpIsUseCustomSign",
             "columnName": "smtp_is_use_custom_sign",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           },
           {
@@ -241,14 +241,14 @@
             "fieldPath": "areContactsLoaded",
             "columnName": "ic_contacts_loaded",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           },
           {
             "fieldPath": "isShowOnlyEncrypted",
             "columnName": "is_show_only_encrypted",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           },
           {
@@ -269,7 +269,7 @@
             "fieldPath": "isRestoreAccessRequired",
             "columnName": "is_restore_access_required",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           }
         ],
@@ -294,13 +294,13 @@
       },
       {
         "tableName": "action_queue",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `email` TEXT NOT NULL, `action_type` TEXT NOT NULL, `action_json` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `action_type` TEXT NOT NULL, `action_json` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "_id",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "email",
@@ -332,13 +332,13 @@
       },
       {
         "tableName": "attachment",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `email` TEXT NOT NULL, `folder` TEXT NOT NULL, `uid` INTEGER NOT NULL, `name` TEXT NOT NULL, `encodedSize` INTEGER NOT NULL DEFAULT 0, `type` TEXT NOT NULL, `attachment_id` TEXT, `file_uri` TEXT, `forwarded_folder` TEXT, `forwarded_uid` INTEGER DEFAULT -1, `path` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `folder` TEXT NOT NULL, `uid` INTEGER NOT NULL, `name` TEXT NOT NULL, `encodedSize` INTEGER DEFAULT 0, `type` TEXT NOT NULL, `attachment_id` TEXT, `file_uri` TEXT, `forwarded_folder` TEXT, `forwarded_uid` INTEGER DEFAULT -1, `path` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "_id",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "email",
@@ -368,7 +368,7 @@
             "fieldPath": "encodedSize",
             "columnName": "encodedSize",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           },
           {
@@ -432,13 +432,13 @@
       },
       {
         "tableName": "contacts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `email` TEXT NOT NULL, `name` TEXT DEFAULT NULL, `public_key` TEXT DEFAULT NULL, `has_pgp` INTEGER NOT NULL, `client` TEXT DEFAULT NULL, `attested` INTEGER DEFAULT NULL, `fingerprint` TEXT DEFAULT NULL, `long_id` TEXT DEFAULT NULL, `keywords` TEXT DEFAULT NULL, `last_use` INTEGER NOT NULL DEFAULT 0)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `name` TEXT DEFAULT NULL, `public_key` BLOB DEFAULT NULL, `has_pgp` INTEGER NOT NULL, `client` TEXT DEFAULT NULL, `attested` INTEGER DEFAULT NULL, `fingerprint` TEXT DEFAULT NULL, `long_id` TEXT DEFAULT NULL, `keywords` TEXT DEFAULT NULL, `last_use` INTEGER DEFAULT 0)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "_id",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "email",
@@ -456,7 +456,7 @@
           {
             "fieldPath": "publicKey",
             "columnName": "public_key",
-            "affinity": "TEXT",
+            "affinity": "BLOB",
             "notNull": false,
             "defaultValue": "NULL"
           },
@@ -505,7 +505,7 @@
             "fieldPath": "lastUse",
             "columnName": "last_use",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           }
         ],
@@ -517,12 +517,12 @@
         },
         "indices": [
           {
-            "name": "email_in_contacts",
-            "unique": true,
+            "name": "has_pgp_in_contacts",
+            "unique": false,
             "columnNames": [
-              "email"
+              "has_pgp"
             ],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `email_in_contacts` ON `${TABLE_NAME}` (`email`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `has_pgp_in_contacts` ON `${TABLE_NAME}` (`has_pgp`)"
           },
           {
             "name": "name_in_contacts",
@@ -531,14 +531,6 @@
               "name"
             ],
             "createSql": "CREATE INDEX IF NOT EXISTS `name_in_contacts` ON `${TABLE_NAME}` (`name`)"
-          },
-          {
-            "name": "has_pgp_in_contacts",
-            "unique": false,
-            "columnNames": [
-              "has_pgp"
-            ],
-            "createSql": "CREATE INDEX IF NOT EXISTS `has_pgp_in_contacts` ON `${TABLE_NAME}` (`has_pgp`)"
           },
           {
             "name": "long_id_in_contacts",
@@ -555,19 +547,27 @@
               "last_use"
             ],
             "createSql": "CREATE INDEX IF NOT EXISTS `last_use_in_contacts` ON `${TABLE_NAME}` (`last_use`)"
+          },
+          {
+            "name": "email_in_contacts",
+            "unique": true,
+            "columnNames": [
+              "email"
+            ],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `email_in_contacts` ON `${TABLE_NAME}` (`email`)"
           }
         ],
         "foreignKeys": []
       },
       {
         "tableName": "keys",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `long_id` TEXT NOT NULL, `source` TEXT NOT NULL, `public_key` BLOB NOT NULL, `private_key` BLOB NOT NULL, `passphrase` TEXT DEFAULT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `long_id` TEXT NOT NULL, `source` TEXT NOT NULL, `public_key` BLOB NOT NULL, `private_key` BLOB NOT NULL, `passphrase` TEXT DEFAULT NULL)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "_id",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "longId",
@@ -621,13 +621,13 @@
       },
       {
         "tableName": "imap_labels",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `email` TEXT NOT NULL, `folder_name` TEXT NOT NULL, `is_custom_label` INTEGER NOT NULL DEFAULT 0, `folder_alias` TEXT DEFAULT NULL, `message_count` INTEGER NOT NULL DEFAULT 0, `folder_attributes` TEXT NOT NULL, `folder_message_count` INTEGER NOT NULL DEFAULT 0)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `folder_name` TEXT NOT NULL, `is_custom_label` INTEGER DEFAULT 0, `folder_alias` TEXT DEFAULT NULL, `message_count` INTEGER DEFAULT 0, `folder_attributes` TEXT NOT NULL, `folder_message_count` INTEGER DEFAULT 0)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "_id",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "email",
@@ -645,7 +645,7 @@
             "fieldPath": "isCustomLabel",
             "columnName": "is_custom_label",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           },
           {
@@ -659,7 +659,7 @@
             "fieldPath": "messageCount",
             "columnName": "message_count",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           },
           {
@@ -672,7 +672,7 @@
             "fieldPath": "folderMessageCount",
             "columnName": "folder_message_count",
             "affinity": "INTEGER",
-            "notNull": true,
+            "notNull": false,
             "defaultValue": "0"
           }
         ],
@@ -687,13 +687,13 @@
       },
       {
         "tableName": "messages",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `email` TEXT NOT NULL, `folder` TEXT NOT NULL, `uid` INTEGER NOT NULL, `received_date` INTEGER DEFAULT NULL, `sent_date` INTEGER DEFAULT NULL, `from_address` TEXT DEFAULT NULL, `to_address` TEXT DEFAULT NULL, `cc_address` TEXT DEFAULT NULL, `subject` TEXT DEFAULT NULL, `flags` TEXT DEFAULT NULL, `raw_message_without_attachments` TEXT DEFAULT NULL, `is_message_has_attachments` INTEGER DEFAULT 0, `is_encrypted` INTEGER DEFAULT -1, `is_new` INTEGER DEFAULT -1, `state` INTEGER DEFAULT -1, `attachments_directory` TEXT, `error_msg` TEXT DEFAULT NULL, `reply_to` TEXT DEFAULT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `folder` TEXT NOT NULL, `uid` INTEGER NOT NULL, `received_date` INTEGER DEFAULT NULL, `sent_date` INTEGER DEFAULT NULL, `from_address` TEXT DEFAULT NULL, `to_address` TEXT DEFAULT NULL, `cc_address` TEXT DEFAULT NULL, `subject` TEXT DEFAULT NULL, `flags` TEXT DEFAULT NULL, `raw_message_without_attachments` TEXT DEFAULT NULL, `is_message_has_attachments` INTEGER DEFAULT 0, `is_encrypted` INTEGER DEFAULT -1, `is_new` INTEGER DEFAULT -1, `state` INTEGER DEFAULT -1, `attachments_directory` TEXT, `error_msg` TEXT DEFAULT NULL, `reply_to` TEXT DEFAULT NULL)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "_id",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "email",
@@ -848,13 +848,13 @@
       },
       {
         "tableName": "user_id_emails_and_keys",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `long_id` TEXT NOT NULL, `user_id_email` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `long_id` TEXT NOT NULL, `user_id_email` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "_id",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": false
           },
           {
             "fieldPath": "longId",
@@ -892,7 +892,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '29ee7afed221f20cdca2b99cbf32d79b')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '30c2e07b776337e4bad244848967ec8e')"
     ]
   }
 }

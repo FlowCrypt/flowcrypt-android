@@ -23,12 +23,12 @@ import androidx.room.PrimaryKey
     ]
 )
 data class AttachmentEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
     val email: String,
     val folder: String,
     val uid: Int,
     val name: String,
-    @ColumnInfo(name = "encodedSize", defaultValue = "0") val encodedSize: Int,
+    @ColumnInfo(name = "encodedSize", defaultValue = "0") val encodedSize: Int?,
     val type: String,
     @ColumnInfo(name = "attachment_id") val attachmentId: String?,
     @ColumnInfo(name = "file_uri") val fileUri: String?,

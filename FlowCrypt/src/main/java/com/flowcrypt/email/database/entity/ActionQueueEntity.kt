@@ -18,7 +18,7 @@ import androidx.room.PrimaryKey
  */
 @Entity(tableName = "action_queue")
 data class ActionQueueEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
     val email: String,
     @ColumnInfo(name = "action_type") val actionType: String,
     @ColumnInfo(name = "action_json") val actionJson: String)

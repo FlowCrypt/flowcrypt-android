@@ -18,11 +18,11 @@ import androidx.room.PrimaryKey
  */
 @Entity(tableName = "imap_labels")
 data class LabelsEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
     val email: String,
     @ColumnInfo(name = "folder_name") val folderName: String,
-    @ColumnInfo(name = "is_custom_label", defaultValue = "0") val isCustomLabel: Boolean,
+    @ColumnInfo(name = "is_custom_label", defaultValue = "0") val isCustomLabel: Boolean?,
     @ColumnInfo(name = "folder_alias", defaultValue = "NULL") val folderAlias: String?,
-    @ColumnInfo(name = "message_count", defaultValue = "0") val messageCount: Int,
+    @ColumnInfo(name = "message_count", defaultValue = "0") val messageCount: Int?,
     @ColumnInfo(name = "folder_attributes") val folderAttributes: String,
-    @ColumnInfo(name = "folder_message_count", defaultValue = "0") val folderMessageCount: Int)
+    @ColumnInfo(name = "folder_message_count", defaultValue = "0") val folderMessageCount: Int?)
