@@ -14,7 +14,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.database.FlowCryptRoomDatabase.Companion.DB_VERSION
+import com.flowcrypt.email.database.FlowCryptRoomDatabaseTemp.Companion.DB_VERSION
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
@@ -53,7 +53,7 @@ import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTable
   UserIdEmailsKeysEntity::class
 ],
     version = DB_VERSION)
-abstract class FlowCryptRoomDatabase : RoomDatabase() {
+abstract class FlowCryptRoomDatabaseTemp : RoomDatabase() {
   companion object {
     private const val DB_NAME = "flowcrypt.db"
     private const val DROP_TABLE = "DROP TABLE IF EXISTS "
@@ -359,9 +359,9 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
-    private var INSTANCE: FlowCryptRoomDatabase? = null
+    private var INSTANCE: FlowCryptRoomDatabaseTemp? = null
 
-    fun getDatabase(context: Context): FlowCryptRoomDatabase {
+    fun getDatabase(context: Context): FlowCryptRoomDatabaseTemp {
       val tempInstance = INSTANCE
       if (tempInstance != null) {
         return tempInstance
@@ -370,7 +370,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       synchronized(this) {
         val instance = Room.databaseBuilder(
             context.applicationContext,
-            FlowCryptRoomDatabase::class.java,
+            FlowCryptRoomDatabaseTemp::class.java,
             DB_NAME)
             .addMigrations(
                 MIGRATION_1_3,
