@@ -529,7 +529,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     val fragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    fragment?.onForceLoadNewMsgsCompleted(refreshListNeeded)
+    //fragment?.onForceLoadNewMsgsCompleted(refreshListNeeded)
   }
 
   /**

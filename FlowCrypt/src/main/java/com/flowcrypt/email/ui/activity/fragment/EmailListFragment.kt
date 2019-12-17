@@ -13,19 +13,20 @@ import android.text.TextUtils
 import android.util.SparseBooleanArray
 import android.view.ActionMode
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AbsListView
 import android.widget.AdapterView
-import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -37,6 +38,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
@@ -44,7 +46,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
-import com.flowcrypt.email.ui.adapter.MessageListAdapter
+import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -53,7 +55,6 @@ import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
-import java.util.*
 import javax.mail.AuthenticationFailedException
 
 /**
@@ -66,17 +67,17 @@ import javax.mail.AuthenticationFailedException
  * E-mail: DenBond7@gmail.com
  */
 
-class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
-    SwipeRefreshLayout.OnRefreshListener, AbsListView.MultiChoiceModeListener {
+class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListener {
 
-  private var listView: ListView? = null
+  private var recyclerViewMsgs: RecyclerView? = null
   private var emptyView: TextView? = null
   private var footerProgressView: View? = null
   private var swipeRefreshLayout: SwipeRefreshLayout? = null
   private var textViewActionProgress: TextView? = null
   private var progressBarActionProgress: ProgressBar? = null
 
-  private var adapter: MessageListAdapter? = null
+  private lateinit var adapter: MsgsPagedListAdapter
+  private lateinit var messagesViewModel: MessagesViewModel
   private var listener: OnManageEmailsListener? = null
   private var baseSyncActivity: BaseSyncActivity? = null
   private var actionMode: ActionMode? = null
@@ -88,37 +89,11 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
   private var forceFirstLoadNeeded: Boolean = false
   private var isEncryptedModeEnabled: Boolean = false
   private var isSaveChoicesNeeded: Boolean = false
-  private var timeOfLastRequestEnd: Long = 0
   private var lastFirstVisiblePos: Int = 0
   private var originalStatusBarColor: Int = 0
 
-  private val callbacks = object : LoaderManager.LoaderCallbacks<Cursor> {
-    override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
-      return when (id) {
-        R.id.loader_id_load_messages_from_cache -> {
-          changeViewsVisibility()
-          prepareCursorLoader()
-        }
-
-        else -> Loader(context!!)
-      }
-    }
-
-    override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor) {
-      when (loader.id) {
-        R.id.loader_id_load_messages_from_cache -> handleCursor(data)
-      }
-    }
-
-    override fun onLoaderReset(loader: Loader<Cursor>) {
-      when (loader.id) {
-        R.id.loader_id_load_messages_from_cache -> adapter!!.swapCursor(null)
-      }
-    }
-  }
-
   override val contentView: View?
-    get() = listView
+    get() = recyclerViewMsgs
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
@@ -140,7 +115,8 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    this.adapter = MessageListAdapter(context!!, null)
+    adapter = MsgsPagedListAdapter()
+    messagesViewModel = ViewModelProvider(this).get(MessagesViewModel::class.java)
 
     val accountDaoSource = AccountDaoSource()
     val account = accountDaoSource.getActiveAccountInformation(context!!)
@@ -154,24 +130,26 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
+
+    messagesViewModel.concertList.observe(viewLifecycleOwner, Observer {
+      adapter.submitList(it)
+    })
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-    if (listener!!.currentFolder != null) {
+    if (listener?.currentFolder != null) {
       if (!TextUtils.isEmpty(listener!!.currentFolder!!.searchQuery)) {
-        swipeRefreshLayout!!.isEnabled = false
+        swipeRefreshLayout?.isEnabled = false
       }
 
-      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache, null, callbacks)
+      //LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache,            null, callbacks)
     }
   }
 
   override fun onPause() {
     super.onPause()
-    if (snackBar != null) {
-      snackBar!!.dismiss()
-    }
+    snackBar?.dismiss()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -198,9 +176,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
   }
 
   override fun onRefresh() {
-    if (snackBar != null) {
-      snackBar!!.dismiss()
-    }
+    snackBar?.dismiss()
 
     val localFolder = listener!!.currentFolder
 
@@ -216,8 +192,8 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     } else {
       emptyView!!.visibility = View.GONE
 
-      if (GeneralUtil.isConnected(context!!)) {
-        if (adapter!!.count > 0) {
+      /*if (GeneralUtil.isConnected(context!!)) {
+        if (adapter?.count > 0) {
           swipeRefreshLayout!!.isRefreshing = true
           refreshMsgs()
         } else {
@@ -238,33 +214,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
         }
 
         showInfoSnackbar(view!!, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
-      }
-    }
-  }
-
-  override fun onScrollStateChanged(view: AbsListView, scrollState: Int) {
-
-  }
-
-  /**
-   * This method will be used to try to load more messages if it available.
-   *
-   * @param view             The view whose scroll state is being reported
-   * @param firstVisibleItem the index of the first visible cell (ignore if
-   * visibleItemCount == 0)
-   * @param visibleItemCount the number of visible cells
-   * @param totalCount       the number of items in the list adaptor
-   */
-  override fun onScroll(view: AbsListView, firstVisibleItem: Int, visibleItemCount: Int, totalCount: Int) {
-    if (listener!!.currentFolder != null && !(firstVisibleItem == 0 && visibleItemCount == 1 && totalCount == 1)) {
-      val hasMoreMsgs = listener!!.hasMoreMsgs()
-      if (!areNewMsgsLoadingNow
-          && System.currentTimeMillis() - timeOfLastRequestEnd > TIMEOUT_BETWEEN_REQUESTS
-          && hasMoreMsgs
-          && firstVisibleItem + visibleItemCount >= totalCount - LOADING_SHIFT_IN_ITEMS
-          && !JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)) {
-        loadNextMsgs(adapter!!.count)
-      }
+      }*/
     }
   }
 
@@ -284,7 +234,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
           super.onErrorOccurred(requestCode, errorType, e)
         }
 
-        footerProgressView!!.visibility = View.GONE
+        footerProgressView?.visibility = View.GONE
         emptyView!!.visibility = View.GONE
 
         LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache)
@@ -328,7 +278,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     }
   }
 
-  override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+/*  override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
     swipeRefreshLayout!!.isEnabled = false
     val inflater = mode.menuInflater
     inflater.inflate(R.menu.message_list_context_menu, menu)
@@ -380,7 +330,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
   override fun onItemCheckedStateChanged(mode: ActionMode, position: Int, id: Long, checked: Boolean) {
     adapter!!.updateItemState(position, checked)
     mode.title = if (listView!!.checkedItemCount > 0) listView!!.checkedItemCount.toString() else null
-  }
+  }*/
 
   /**
    * Update a current messages list.
@@ -393,7 +343,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     if (listener!!.currentFolder != null) {
       isFetchMesgsNeeded = !isFolderChanged
 
-      if (isFolderChanged) {
+      /*if (isFolderChanged) {
         adapter!!.clearSelection()
         if (JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)) {
           listView!!.choiceMode = ListView.CHOICE_MODE_MULTIPLE_MODAL
@@ -426,19 +376,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
 
       if (adapter!!.count == 0) {
         LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache, null, callbacks)
-      }
-    }
-  }
-
-  /**
-   * Handle a result from the load new messages action.
-   *
-   * @param isRefreshListNeeded true if we must refresh the emails list.
-   */
-  fun onForceLoadNewMsgsCompleted(isRefreshListNeeded: Boolean) {
-    swipeRefreshLayout!!.isRefreshing = false
-    if (isRefreshListNeeded || adapter!!.count == 0) {
-      updateList(false, false)
+      }*/
     }
   }
 
@@ -448,18 +386,17 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
    * @param isUpdateListNeeded true if we must reload the emails list.
    */
   fun onNextMsgsLoaded(isUpdateListNeeded: Boolean) {
-    footerProgressView!!.visibility = View.GONE
+    footerProgressView?.visibility = View.GONE
     progressView!!.visibility = View.GONE
 
-    if (isUpdateListNeeded || adapter!!.count == 0) {
+    /*if (isUpdateListNeeded || adapter!!.count == 0) {
       updateList(false, false)
     } else if (adapter!!.count == 0) {
       emptyView!!.setText(if (isEncryptedModeEnabled) R.string.no_encrypted_messages else R.string.no_results)
       UIUtil.exchangeViewVisibility(false, progressView!!, emptyView!!)
-    }
+    }*/
 
     areNewMsgsLoadingNow = false
-    timeOfLastRequestEnd = System.currentTimeMillis()
   }
 
   /**
@@ -506,7 +443,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     this.isEncryptedModeEnabled = isEncryptedModeEnabled
 
     if (isEncryptedModeEnabled) {
-      lastFirstVisiblePos = listView!!.firstVisiblePosition
+      //lastFirstVisiblePos = listView!!.firstVisiblePosition
     }
 
     updateList(true, true)
@@ -523,7 +460,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
         for (i in 0 until checkedItemPositions!!.size()) {
           val key = checkedItemPositions!!.keyAt(i)
           val value = checkedItemPositions!!.valueAt(i)
-          listView!!.setItemChecked(key, value)
+          //listView!!.setItemChecked(key, value)
         }
       }
     }
@@ -552,7 +489,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
   }
 
   private fun deleteSelectedMsgs() {
-    val checkedItemPositions = listView!!.checkedItemPositions
+    /*val checkedItemPositions = listView!!.checkedItemPositions
 
     if (checkedItemPositions != null && checkedItemPositions.size() > 0) {
       val detailsList = ArrayList<GeneralMessageDetails>()
@@ -578,16 +515,16 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
       }
 
       actionMode!!.finish()
-    }
+    }*/
   }
 
   private fun changeViewsVisibility() {
     emptyView!!.visibility = View.GONE
     statusView!!.visibility = View.GONE
 
-    if (!isFetchMesgsNeeded || adapter!!.count == 0) {
+    /*if (!isFetchMesgsNeeded || adapter!!.count == 0) {
       UIUtil.exchangeViewVisibility(true, progressView!!, listView!!)
-    }
+    }*/
 
     if (supportActionBar != null) {
       supportActionBar!!.title = listener!!.currentFolder!!.folderAlias
@@ -595,7 +532,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
   }
 
   private fun handleCursor(data: Cursor?) {
-    adapter!!.localFolder = listener!!.currentFolder
+    /*adapter!!.localFolder = listener!!.currentFolder
     adapter!!.swapCursor(data)
     if (data != null && data.count != 0) {
       emptyView!!.visibility = View.GONE
@@ -633,7 +570,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
         })
         UIUtil.exchangeViewVisibility(false, progressView!!, emptyView!!)
       }
-    }
+    }*/
   }
 
   private fun prepareCursorLoader(): Loader<Cursor> {
@@ -744,7 +681,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
    */
   private fun loadNextMsgs(totalItemsCount: Int) {
     if (GeneralUtil.isConnected(context!!)) {
-      footerProgressView!!.visibility = View.VISIBLE
+      footerProgressView?.visibility = View.VISIBLE
       areNewMsgsLoadingNow = true
       listener?.msgsLoadingIdlingResource?.setIdleState(false)
       val localFolder = listener!!.currentFolder
@@ -754,7 +691,7 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
         baseSyncActivity!!.searchNextMsgs(R.id.sync_request_code_search_messages, localFolder, totalItemsCount)
       }
     } else {
-      footerProgressView!!.visibility = View.GONE
+      footerProgressView?.visibility = View.GONE
       showSnackbar(view!!, getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
           Snackbar.LENGTH_LONG, View.OnClickListener { loadNextMsgs(totalItemsCount) })
     }
@@ -764,16 +701,14 @@ class EmailListFragment : BaseSyncFragment(), AbsListView.OnScrollListener,
     textViewActionProgress = view.findViewById(R.id.textViewActionProgress)
     progressBarActionProgress = view.findViewById(R.id.progressBarActionProgress)
 
-    listView = view.findViewById(R.id.listViewMessages)
-    listView!!.onItemClickListener = CustomOnItemClickListener()
-    listView!!.setMultiChoiceModeListener(this)
+    recyclerViewMsgs = view.findViewById(R.id.recyclerViewMsgs)
+    val layoutManager = LinearLayoutManager(context)
+    recyclerViewMsgs?.layoutManager = layoutManager
+    recyclerViewMsgs?.addItemDecoration(DividerItemDecoration(context, layoutManager.orientation))
+    recyclerViewMsgs?.adapter = adapter
 
-    footerProgressView = LayoutInflater.from(context).inflate(R.layout.list_view_progress_footer, listView, false)
-    footerProgressView!!.visibility = View.GONE
-
-    listView!!.addFooterView(footerProgressView)
-    listView!!.adapter = adapter
-    listView!!.setOnScrollListener(this)
+    /*footerProgressView = LayoutInflater.from(context).inflate(R.layout.list_view_progress_footer, listView, false)
+    footerProgressView?.visibility = View.GONE*/
 
     emptyView = view.findViewById(R.id.emptyView)
     swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
