@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
@@ -38,7 +39,9 @@ class PagingFragment : BaseFragment() {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerViewMsgs)
-    recyclerView.layoutManager = LinearLayoutManager(context)
+    val layoutManager = LinearLayoutManager(context)
+    recyclerView.layoutManager = layoutManager
+    recyclerView.addItemDecoration(DividerItemDecoration(context, layoutManager.orientation))
     val adapter = MsgsPagedListAdapter()
     recyclerView.adapter = adapter
     viewModel.concertList.observe(viewLifecycleOwner, Observer {
