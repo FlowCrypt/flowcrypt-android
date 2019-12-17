@@ -358,6 +358,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:${rootProject.ext.lifecycleVersion}"
     implementation "androidx.room:room-runtime:$roomVersion"
     implementation "androidx.room:room-ktx:$roomVersion"
+    implementation "androidx.paging:paging-runtime-ktx:$pagingVersion"
 
     //https://developers.google.com/android/guides/setup
     implementation 'com.google.android.gms:play-services-base:17.1.0'

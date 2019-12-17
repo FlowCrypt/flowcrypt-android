@@ -14,6 +14,8 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.database.dao.AccountDao
+import com.flowcrypt.email.database.dao.MessagesDao
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
@@ -55,6 +57,10 @@ import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTable
 ],
     version = FlowCryptRoomDatabase.DB_VERSION)
 abstract class FlowCryptRoomDatabase : RoomDatabase() {
+  abstract fun msgDao(): MessagesDao
+
+  abstract fun accountDao(): AccountDao
+
   companion object {
     const val COLUMN_NAME_COUNT = "COUNT(*)"
     private const val DB_NAME = "flowcrypt.db"

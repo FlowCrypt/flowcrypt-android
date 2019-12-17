@@ -735,7 +735,7 @@
             "defaultValue": "NULL"
           },
           {
-            "fieldPath": "to_address",
+            "fieldPath": "toAddress",
             "columnName": "to_address",
             "affinity": "TEXT",
             "notNull": false,

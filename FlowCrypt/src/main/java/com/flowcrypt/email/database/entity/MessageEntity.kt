@@ -8,8 +8,12 @@ package com.flowcrypt.email.database.entity
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.flowcrypt.email.api.email.model.MessageFlag
+import com.flowcrypt.email.database.MessageState
+import javax.mail.internet.InternetAddress
 
 /**
  * @author Denis Bondarenko
@@ -31,7 +35,7 @@ data class MessageEntity(
     @ColumnInfo(name = "received_date", defaultValue = "NULL") val receivedDate: Long?,
     @ColumnInfo(name = "sent_date", defaultValue = "NULL") val sentDate: Long?,
     @ColumnInfo(name = "from_address", defaultValue = "NULL") val fromAddress: String?,
-    @ColumnInfo(name = "to_address", defaultValue = "NULL") val to_address: String?,
+    @ColumnInfo(name = "to_address", defaultValue = "NULL") val toAddress: String?,
     @ColumnInfo(name = "cc_address", defaultValue = "NULL") val ccAddress: String?,
     @ColumnInfo(defaultValue = "NULL") val subject: String?,
     @ColumnInfo(defaultValue = "NULL") val flags: String?,
@@ -43,4 +47,18 @@ data class MessageEntity(
     @ColumnInfo(name = "attachments_directory") val attachmentsDirectory: String?,
     @ColumnInfo(name = "error_msg", defaultValue = "NULL") val errorMsg: String?,
     @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String?
-)
+) {
+
+  @Ignore
+  val from: List<InternetAddress> = listOf(*InternetAddress.parse(fromAddress ?: ""))
+  @Ignore
+  val replyToAddress: List<InternetAddress> = listOf(*InternetAddress.parse(replyTo ?: ""))
+  @Ignore
+  val to: List<InternetAddress> = listOf(*InternetAddress.parse(toAddress ?: ""))
+  @Ignore
+  val cc: List<InternetAddress> = listOf(*InternetAddress.parse(ccAddress ?: ""))
+  @Ignore
+  val msgState: MessageState = MessageState.generate(state ?: MessageState.NONE.value)
+  @Ignore
+  val isSeen: Boolean = flags?.contains(MessageFlag.SEEN.value) ?: false
+}

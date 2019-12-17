@@ -233,6 +233,9 @@
             android:name=".ui.activity.UserRecoverableAuthExceptionActivity"
             android:launchMode="singleTask" />
 
+        <activity android:name=".ui.activity.ui.paging.PagingActivity" />
+
+
         <!-- Providers -->
         <provider
             android:name=".database.provider.SecurityContentProvider"
