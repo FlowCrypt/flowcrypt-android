@@ -24,6 +24,9 @@ interface MessagesDao {
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
   fun getMessages(account: String, folder: String): LiveData<MessageEntity>
 
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
+  fun getMessagesDataSourceFactory(account: String, folder: String): DataSource.Factory<Int, MessageEntity>
+
   @Query("SELECT * FROM messages")
   fun msgs(): DataSource.Factory<Int, MessageEntity>
 }

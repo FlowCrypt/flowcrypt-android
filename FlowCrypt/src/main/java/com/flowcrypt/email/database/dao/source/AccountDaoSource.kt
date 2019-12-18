@@ -272,12 +272,12 @@ class AccountDaoSource : BaseDaoSource() {
    * @param email   An email of the active account.
    * @return true if need to show only encrypted messages
    */
-  fun isEncryptedModeEnabled(context: Context, email: String): Boolean {
-    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email.toLowerCase(Locale.getDefault())
+  fun isEncryptedModeEnabled(context: Context?, email: String?): Boolean {
+    val emailInLowerCase = if (TextUtils.isEmpty(email)) email else email?.toLowerCase(Locale.getDefault())
 
     val selection = "$COL_EMAIL = ?"
     val selectionArgs = arrayOf(emailInLowerCase)
-    val cursor = context.contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
+    val cursor = context?.contentResolver?.query(baseContentUri, null, selection, selectionArgs, null)
 
     var isEncryptedModeEnabled = false
 

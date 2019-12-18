@@ -29,10 +29,12 @@ class DatabaseUtil {
      * @param folder  A folder in a local database.
      */
     @JvmStatic
-    fun cleanFolderCache(context: Context, email: String?, folder: String) {
+    fun cleanFolderCache(context: Context?, email: String?, folder: String?) {
       if (!JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)) {
-        MessageDaoSource().deleteCachedMsgs(context, email, folder)
-        AttachmentDaoSource().deleteCachedAttInfo(context, email, folder)
+        context?.let {
+          MessageDaoSource().deleteCachedMsgs(it, email, folder)
+          AttachmentDaoSource().deleteCachedAttInfo(it, email, folder)
+        }
       }
     }
   }

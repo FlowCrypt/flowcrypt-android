@@ -33,6 +33,12 @@ abstract class BaseSyncFragment : BaseFragment() {
   @JvmField
   protected var textViewStatusInfo: TextView? = null
 
+  protected val baseSyncActivity: BaseSyncActivity
+    get() {
+      return activity as? BaseSyncActivity ?: throw IllegalArgumentException(
+          "Can't use outside ${BaseSyncActivity::class.java}")
+    }
+
   /**
    * Get a content view which contains a UI.
    *
@@ -48,7 +54,8 @@ abstract class BaseSyncFragment : BaseFragment() {
   val isSyncServiceConnected: Boolean
     get() {
       val baseSyncActivity = activity as BaseSyncActivity?
-      return baseSyncActivity?.isSyncServiceBound ?: throw NullPointerException("BaseSyncActivity is null!")
+      return baseSyncActivity?.isSyncServiceBound
+          ?: throw NullPointerException("BaseSyncActivity is null!")
     }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

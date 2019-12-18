@@ -139,9 +139,11 @@ class FoldersManager {
    * @param folderAlias The folder alias name.
    * @return [LocalFolder].
    */
-  fun getFolderByAlias(folderAlias: String): LocalFolder? {
+  fun getFolderByAlias(folderAlias: String?): LocalFolder? {
+    folderAlias ?: return null
+
     for ((_, value) in folders) {
-      if (value.folderAlias == folderAlias) {
+      if (value.folderAlias?.equals(folderAlias) == true) {
         return value
       }
     }

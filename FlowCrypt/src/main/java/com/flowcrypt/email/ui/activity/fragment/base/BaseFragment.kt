@@ -98,8 +98,8 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
    * @param duration How long to display the message.
    */
   @JvmOverloads
-  fun showInfoSnackbar(view: View, msgText: String, duration: Int = Snackbar.LENGTH_INDEFINITE) {
-    Snackbar.make(view, msgText, duration).setAction(android.R.string.ok) {}.show()
+  fun showInfoSnackbar(view: View?, msgText: String, duration: Int = Snackbar.LENGTH_INDEFINITE) {
+    view?.let { Snackbar.make(it, msgText, duration).setAction(android.R.string.ok) {}.show() }
   }
 
   /**

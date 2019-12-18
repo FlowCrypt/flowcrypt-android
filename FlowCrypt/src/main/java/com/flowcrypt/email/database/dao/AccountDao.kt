@@ -21,5 +21,5 @@ import com.flowcrypt.email.database.entity.AccountEntity
 interface AccountDao {
 
   @Query("SELECT * FROM accounts WHERE is_active = 1")
-  suspend fun getActiveAccount(): AccountEntity
+  suspend fun getActiveAccount(): AccountEntity?
 }

@@ -7,11 +7,8 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
 import android.os.Bundle
 import android.text.TextUtils
-import android.util.SparseBooleanArray
-import android.view.ActionMode
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,8 +19,7 @@ import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.loader.app.LoaderManager
-import androidx.loader.content.CursorLoader
-import androidx.loader.content.Loader
+import androidx.paging.PagedList
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -36,10 +32,9 @@ import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.database.DatabaseUtil
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
@@ -66,7 +61,6 @@ import javax.mail.AuthenticationFailedException
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-
 class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListener {
 
   private var recyclerViewMsgs: RecyclerView? = null
@@ -79,18 +73,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private lateinit var adapter: MsgsPagedListAdapter
   private lateinit var messagesViewModel: MessagesViewModel
   private var listener: OnManageEmailsListener? = null
-  private var baseSyncActivity: BaseSyncActivity? = null
-  private var actionMode: ActionMode? = null
-  private var checkedItemPositions: SparseBooleanArray? = null
-  private var activeMsgDetails: GeneralMessageDetails? = null
-
-  private var isFetchMesgsNeeded: Boolean = false
-  private var areNewMsgsLoadingNow: Boolean = false
-  private var forceFirstLoadNeeded: Boolean = false
-  private var isEncryptedModeEnabled: Boolean = false
-  private var isSaveChoicesNeeded: Boolean = false
-  private var lastFirstVisiblePos: Int = 0
-  private var originalStatusBarColor: Int = 0
+  private val msgsObserver = Observer<PagedList<MessageEntity>> { adapter.submitList(it) }
 
   override val contentView: View?
     get() = recyclerViewMsgs
@@ -103,24 +86,12 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     } else
       throw IllegalArgumentException(context.toString() + " must implement " +
           OnManageEmailsListener::class.java.simpleName)
-
-    if (context is BaseSyncActivity) {
-      this.baseSyncActivity = context
-    } else
-      throw IllegalArgumentException(context.toString() + " must implement " +
-          BaseSyncActivity::class.java.simpleName)
-
-    this.originalStatusBarColor = activity!!.window.statusBarColor
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     adapter = MsgsPagedListAdapter()
     messagesViewModel = ViewModelProvider(this).get(MessagesViewModel::class.java)
-
-    val accountDaoSource = AccountDaoSource()
-    val account = accountDaoSource.getActiveAccountInformation(context!!)
-    this.isEncryptedModeEnabled = accountDaoSource.isEncryptedModeEnabled(context!!, account!!.email)
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -130,21 +101,15 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
-
-    messagesViewModel.concertList.observe(viewLifecycleOwner, Observer {
-      adapter.submitList(it)
-    })
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-    if (listener?.currentFolder != null) {
-      if (!TextUtils.isEmpty(listener!!.currentFolder!!.searchQuery)) {
-        swipeRefreshLayout?.isEnabled = false
-      }
-
-      //LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache,            null, callbacks)
+    if (listener?.currentFolder?.searchQuery?.isNotEmpty() == true) {
+      swipeRefreshLayout?.isEnabled = false
     }
+
+    messagesViewModel.loadMsgs(this, listener?.currentFolder, msgsObserver)
   }
 
   override fun onPause() {
@@ -159,16 +124,17 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
 
       REQUEST_CODE_DELETE_MESSAGES -> when (resultCode) {
-        TwoWayDialogFragment.RESULT_OK -> deleteSelectedMsgs()
+        TwoWayDialogFragment.RESULT_OK -> {
+        }//deleteSelectedMsgs()
       }
 
       REQUEST_CODE_RETRY_TO_SEND_MESSAGES -> when (resultCode) {
-        TwoWayDialogFragment.RESULT_OK -> if (activeMsgDetails != null) {
+        /*TwoWayDialogFragment.RESULT_OK -> if (activeMsgDetails != null) {
           MessageDaoSource().updateMsgState(context!!,
               activeMsgDetails!!.email, activeMsgDetails!!.label,
               activeMsgDetails!!.uid.toLong(), MessageState.QUEUED)
           MessagesSenderJobService.schedule(context!!)
-        }
+        }*/
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
@@ -188,40 +154,39 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     val isEmpty = TextUtils.isEmpty(localFolder.fullName)
     val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)
     if (isEmpty || isOutbox) {
-      swipeRefreshLayout!!.isRefreshing = false
+      swipeRefreshLayout?.isRefreshing = false
     } else {
-      emptyView!!.visibility = View.GONE
+      emptyView?.visibility = View.GONE
 
-      /*if (GeneralUtil.isConnected(context!!)) {
-        if (adapter?.count > 0) {
-          swipeRefreshLayout!!.isRefreshing = true
+      if (GeneralUtil.isConnected(context)) {
+        if (adapter.itemCount > 0) {
+          swipeRefreshLayout?.isRefreshing = true
           refreshMsgs()
         } else {
-          swipeRefreshLayout!!.isRefreshing = false
+          swipeRefreshLayout?.isRefreshing = false
 
-          if (adapter!!.count == 0) {
+          if (adapter.itemCount == 0) {
             UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
           }
 
           loadNextMsgs(-1)
         }
       } else {
-        swipeRefreshLayout!!.isRefreshing = false
+        swipeRefreshLayout?.isRefreshing = false
 
-        if (adapter!!.count == 0) {
+        if (adapter.itemCount == 0) {
           textViewStatusInfo!!.setText(R.string.no_connection)
           UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
         }
 
-        showInfoSnackbar(view!!, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
-      }*/
+        showInfoSnackbar(view, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
+      }
     }
   }
 
   override fun onErrorOccurred(requestCode: Int, errorType: Int, e: Exception?) {
     when (requestCode) {
       R.id.syns_request_code_load_next_messages -> {
-        areNewMsgsLoadingNow = false
         if (e is UserRecoverableAuthException) {
           super.onErrorOccurred(requestCode, errorType,
               Exception(getString(R.string.gmail_user_recoverable_auth_exception)))
@@ -247,7 +212,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
 
       R.id.syns_request_code_force_load_new_messages -> {
-        areNewMsgsLoadingNow = false
         swipeRefreshLayout!!.isRefreshing = false
         when (errorType) {
           SyncErrorTypes.ACTION_FAILED_SHOW_TOAST -> Toast.makeText(context,
@@ -272,65 +236,10 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         }
 
       R.id.sync_request_code_search_messages -> {
-        areNewMsgsLoadingNow = false
         super.onErrorOccurred(requestCode, errorType, e)
       }
     }
   }
-
-/*  override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
-    swipeRefreshLayout!!.isEnabled = false
-    val inflater = mode.menuInflater
-    inflater.inflate(R.menu.message_list_context_menu, menu)
-    return true
-  }
-
-  override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
-    this.actionMode = mode
-    activity!!.window.statusBarColor = UIUtil.getColor(context!!, R.color.dark)
-    return false
-  }
-
-  override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
-    return when (item.itemId) {
-      R.id.menuActionDeleteMessage -> {
-        val checkedItemPositions = listView!!.checkedItemPositions
-
-        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(
-            dialogTitle = "",
-            dialogMsg = resources.getQuantityString(R.plurals.delete_messages, checkedItemPositions.size(),
-                checkedItemPositions.size()),
-            positiveButtonTitle = getString(android.R.string.ok),
-            negativeButtonTitle = getString(R.string.cancel),
-            isCancelable = true)
-        twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_DELETE_MESSAGES)
-        twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
-
-        false
-      }
-      else -> false
-    }
-  }
-
-  override fun onDestroyActionMode(mode: ActionMode) {
-    activity!!.window.statusBarColor = originalStatusBarColor
-
-    actionMode = null
-    adapter!!.clearSelection()
-    swipeRefreshLayout!!.isEnabled = true
-    if (isSaveChoicesNeeded) {
-      checkedItemPositions = listView!!.checkedItemPositions.clone()
-    } else {
-      if (checkedItemPositions != null) {
-        checkedItemPositions!!.clear()
-      }
-    }
-  }
-
-  override fun onItemCheckedStateChanged(mode: ActionMode, position: Int, id: Long, checked: Boolean) {
-    adapter!!.updateItemState(position, checked)
-    mode.title = if (listView!!.checkedItemCount > 0) listView!!.checkedItemCount.toString() else null
-  }*/
 
   /**
    * Update a current messages list.
@@ -341,10 +250,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
    */
   fun updateList(isFolderChanged: Boolean, isForceClearCacheNeeded: Boolean) {
     if (listener!!.currentFolder != null) {
-      isFetchMesgsNeeded = !isFolderChanged
 
-      /*if (isFolderChanged) {
-        adapter!!.clearSelection()
+      if (isFolderChanged) {
+        /*adapter!!.clearSelection()
         if (JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)) {
           listView!!.choiceMode = ListView.CHOICE_MODE_MULTIPLE_MODAL
         } else {
@@ -352,16 +260,14 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
           if (checkedItemPositions != null) {
             checkedItemPositions!!.clear()
           }
-        }
+        }*/
 
-        if (snackBar != null) {
-          snackBar!!.dismiss()
-        }
+        snackBar?.dismiss()
 
         LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache)
         val isFolderNameEmpty = TextUtils.isEmpty(listener!!.currentFolder!!.fullName)
         if ((!isFolderNameEmpty && !isItSyncOrOutboxFolder(listener!!.currentFolder!!)) || isForceClearCacheNeeded) {
-          val folder = listener!!.currentFolder
+          val folder = listener?.currentFolder
 
           val folderName = if (folder?.searchQuery.isNullOrEmpty())
             folder?.fullName
@@ -369,34 +275,23 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
             SearchMessagesActivity.SEARCH_FOLDER_NAME
 
           folderName?.let {
-            DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao?.email, it)
+            DatabaseUtil.cleanFolderCache(context, listener?.currentAccountDao?.email, it)
           }
         }
       }
 
-      if (adapter!!.count == 0) {
-        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_messages_from_cache, null, callbacks)
-      }*/
+      messagesViewModel.loadMsgs(this, listener?.currentFolder, msgsObserver)
     }
   }
 
-  /**
-   * Handle a result from the load next messages action.
-   *
-   * @param isUpdateListNeeded true if we must reload the emails list.
-   */
-  fun onNextMsgsLoaded(isUpdateListNeeded: Boolean) {
+  fun onNextMsgsLoaded() {
     footerProgressView?.visibility = View.GONE
-    progressView!!.visibility = View.GONE
+    progressView?.visibility = View.GONE
 
-    /*if (isUpdateListNeeded || adapter!!.count == 0) {
-      updateList(false, false)
-    } else if (adapter!!.count == 0) {
-      emptyView!!.setText(if (isEncryptedModeEnabled) R.string.no_encrypted_messages else R.string.no_results)
-      UIUtil.exchangeViewVisibility(false, progressView!!, emptyView!!)
-    }*/
-
-    areNewMsgsLoadingNow = false
+    if (adapter.itemCount == 0) {
+      emptyView?.setText(R.string.no_results)
+      UIUtil.exchangeViewVisibility(false, progressView, emptyView)
+    }
   }
 
   /**
@@ -426,44 +321,27 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
    * Reload the folder messages.
    */
   fun reloadMsgs() {
-    LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_messages_from_cache)
-    DatabaseUtil.cleanFolderCache(context!!, listener!!.currentAccountDao?.email, listener!!.currentFolder!!.fullName)
-    UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
+    DatabaseUtil.cleanFolderCache(context, listener?.currentAccountDao?.email, listener?.currentFolder?.fullName)
+    UIUtil.exchangeViewVisibility(true, progressView, statusView)
     loadNextMsgs(0)
   }
 
   fun onSyncServiceConnected() {
-    if (forceFirstLoadNeeded) {
-      loadNextMsgs(0)
-      forceFirstLoadNeeded = false
-    }
+
   }
 
   fun onFilterMsgs(isEncryptedModeEnabled: Boolean) {
-    this.isEncryptedModeEnabled = isEncryptedModeEnabled
+    /*this.isEncryptedModeEnabled = isEncryptedModeEnabled
 
     if (isEncryptedModeEnabled) {
       //lastFirstVisiblePos = listView!!.firstVisiblePosition
-    }
+    }*/
 
     updateList(true, true)
   }
 
   fun onDrawerStateChanged(isOpen: Boolean) {
-    isSaveChoicesNeeded = isOpen
-    if (isOpen) {
-      if (actionMode != null) {
-        actionMode!!.finish()
-      }
-    } else {
-      if (checkedItemPositions != null && checkedItemPositions!!.size() > 0) {
-        for (i in 0 until checkedItemPositions!!.size()) {
-          val key = checkedItemPositions!!.keyAt(i)
-          val value = checkedItemPositions!!.valueAt(i)
-          //listView!!.setItemChecked(key, value)
-        }
-      }
-    }
+
   }
 
   private fun showConnProblemHint() {
@@ -488,36 +366,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     })
   }
 
-  private fun deleteSelectedMsgs() {
-    /*val checkedItemPositions = listView!!.checkedItemPositions
-
-    if (checkedItemPositions != null && checkedItemPositions.size() > 0) {
-      val detailsList = ArrayList<GeneralMessageDetails>()
-      for (i in 0 until checkedItemPositions.size()) {
-        val key = checkedItemPositions.keyAt(i)
-        val details = adapter!!.getItem(key)
-        if (details != null) {
-          detailsList.add(details)
-        }
-      }
-
-      val msgDaoSource = MessageDaoSource()
-      var countOfDelMsgs = 0
-      for (generalMsgDetails in detailsList) {
-        if (msgDaoSource.deleteOutgoingMsg(context!!, generalMsgDetails) > 0) {
-          countOfDelMsgs++
-        }
-      }
-
-      if (countOfDelMsgs > 0) {
-        Toast.makeText(context, resources.getQuantityString(R.plurals.messages_deleted,
-            countOfDelMsgs, countOfDelMsgs), Toast.LENGTH_LONG).show()
-      }
-
-      actionMode!!.finish()
-    }*/
-  }
-
   private fun changeViewsVisibility() {
     emptyView!!.visibility = View.GONE
     statusView!!.visibility = View.GONE
@@ -529,67 +377,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     if (supportActionBar != null) {
       supportActionBar!!.title = listener!!.currentFolder!!.folderAlias
     }
-  }
-
-  private fun handleCursor(data: Cursor?) {
-    /*adapter!!.localFolder = listener!!.currentFolder
-    adapter!!.swapCursor(data)
-    if (data != null && data.count != 0) {
-      emptyView!!.visibility = View.GONE
-      statusView!!.visibility = View.GONE
-
-      if (!isEncryptedModeEnabled && lastFirstVisiblePos != 0) {
-        listView!!.setSelection(lastFirstVisiblePos)
-        lastFirstVisiblePos = 0
-      }
-
-      UIUtil.exchangeViewVisibility(false, progressView!!, listView!!)
-    } else {
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)) {
-        isFetchMesgsNeeded = true
-      }
-
-      if (!isFetchMesgsNeeded) {
-        isFetchMesgsNeeded = true
-        if (GeneralUtil.isConnected(context!!)) {
-          if (isSyncServiceConnected) {
-            loadNextMsgs(0)
-          } else {
-            forceFirstLoadNeeded = true
-          }
-        } else {
-          textViewStatusInfo!!.setText(R.string.no_connection)
-          UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
-          showRetrySnackBar()
-        }
-      } else {
-        emptyView!!.setText(if (isEncryptedModeEnabled) {
-          R.string.no_encrypted_messages
-        } else {
-          R.string.no_results
-        })
-        UIUtil.exchangeViewVisibility(false, progressView!!, emptyView!!)
-      }
-    }*/
-  }
-
-  private fun prepareCursorLoader(): Loader<Cursor> {
-    var selection = (MessageDaoSource.COL_EMAIL + " = ? AND " + MessageDaoSource.COL_FOLDER + " = ?"
-        + if (isEncryptedModeEnabled) " AND " + MessageDaoSource.COL_IS_ENCRYPTED + " = 1" else "")
-
-    if (JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)) {
-      selection += (" AND " + MessageDaoSource.COL_STATE + " NOT IN (" + MessageState.SENT.value
-          + ", " + MessageState.SENT_WITHOUT_LOCAL_COPY.value + ")")
-    }
-
-    val label = if (listener!!.currentFolder!!.searchQuery.isNullOrEmpty()) {
-      listener!!.currentFolder!!.fullName
-    } else {
-      SearchMessagesActivity.SEARCH_FOLDER_NAME
-    }
-
-    return CursorLoader(context!!, MessageDaoSource().baseContentUri, null, selection,
-        arrayOf(listener!!.currentAccountDao?.email, label), MessageDaoSource.COL_RECEIVED_DATE + " DESC")
   }
 
   private fun handleOutgoingMsgWhichHasSomeError(details: GeneralMessageDetails) {
@@ -669,9 +456,8 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
    * Try to load a new messages from an IMAP server.
    */
   private fun refreshMsgs() {
-    areNewMsgsLoadingNow = false
     listener?.msgsLoadingIdlingResource?.setIdleState(false)
-    baseSyncActivity!!.refreshMsgs(R.id.syns_request_code_force_load_new_messages, listener!!.currentFolder!!)
+    baseSyncActivity.refreshMsgs(R.id.syns_request_code_force_load_new_messages, listener!!.currentFolder!!)
   }
 
   /**
@@ -682,13 +468,12 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private fun loadNextMsgs(totalItemsCount: Int) {
     if (GeneralUtil.isConnected(context!!)) {
       footerProgressView?.visibility = View.VISIBLE
-      areNewMsgsLoadingNow = true
       listener?.msgsLoadingIdlingResource?.setIdleState(false)
       val localFolder = listener!!.currentFolder
       if (TextUtils.isEmpty(localFolder!!.searchQuery)) {
-        baseSyncActivity!!.loadNextMsgs(R.id.syns_request_code_load_next_messages, localFolder, totalItemsCount)
+        baseSyncActivity.loadNextMsgs(R.id.syns_request_code_load_next_messages, localFolder, totalItemsCount)
       } else {
-        baseSyncActivity!!.searchNextMsgs(R.id.sync_request_code_search_messages, localFolder, totalItemsCount)
+        baseSyncActivity.searchNextMsgs(R.id.sync_request_code_search_messages, localFolder, totalItemsCount)
       }
     } else {
       footerProgressView?.visibility = View.GONE
@@ -737,7 +522,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         return
       }
 
-      activeMsgDetails = parent?.adapter?.getItem(position) as? GeneralMessageDetails ?: return
+      /*activeMsgDetails = parent?.adapter?.getItem(position) as? GeneralMessageDetails ?: return
 
       val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(listener!!.currentFolder!!.fullName, ignoreCase = true)
       if (isOutbox || activeMsgDetails!!.isRawMsgAvailable || GeneralUtil.isConnected(context!!)) {
@@ -753,7 +538,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         }
       } else {
         showInfoSnackbar(getView()!!, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
-      }
+      }*/
 
       lastClickTime = System.currentTimeMillis()
     }

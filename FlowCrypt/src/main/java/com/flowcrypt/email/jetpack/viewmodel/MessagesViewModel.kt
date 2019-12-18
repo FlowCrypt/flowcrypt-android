@@ -6,11 +6,18 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
+import androidx.lifecycle.Transformations
+import androidx.lifecycle.liveData
 import androidx.paging.PagedList
 import androidx.paging.toLiveData
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+
 
 /**
  * @author Denis Bondarenko
@@ -19,6 +26,29 @@ import com.flowcrypt.email.database.entity.MessageEntity
  *         E-mail: DenBond7@gmail.com
  */
 class MessagesViewModel(application: Application) : BaseAndroidViewModel(application) {
+  private var currentLocalFolder: LocalFolder? = null
   private val roomDatabase = FlowCryptRoomDatabase.getDatabase(application)
-  val concertList: LiveData<PagedList<MessageEntity>> = roomDatabase.msgDao().msgs().toLiveData(pageSize = 20)
+
+  val accountLiveData: LiveData<AccountEntity?> = liveData {
+    val accountEntity = roomDatabase.accountDao().getActiveAccount()
+    emit(accountEntity)
+  }
+
+  var msgsLiveData: LiveData<PagedList<MessageEntity>>? = null
+
+  fun loadMsgs(lifecycleOwner: LifecycleOwner, localFolder: LocalFolder?, observer: Observer<PagedList<MessageEntity>>) {
+    this.currentLocalFolder = localFolder
+    msgsLiveData?.removeObserver(observer)
+    msgsLiveData = Transformations.switchMap(accountLiveData) {
+      val account = it?.email ?: ""
+      val label = currentLocalFolder?.fullName ?: ""
+      roomDatabase.msgDao().getMessagesDataSourceFactory(account, label).toLiveData(pageSize = 20)
+    }
+
+    msgsLiveData?.observe(lifecycleOwner, observer)
+  }
+
+  fun getActiveAccount(): AccountEntity? {
+    return accountLiveData.value
+  }
 }

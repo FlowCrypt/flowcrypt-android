@@ -42,12 +42,12 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
         when (resultCode) {
           EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE -> {
             hasMoreMsgs = true
-            onNextMsgsLoaded(true)
+            onNextMsgsLoaded()
           }
 
           else -> {
             hasMoreMsgs = false
-            onNextMsgsLoaded(false)
+            onNextMsgsLoaded()
           }
         }
 
@@ -136,13 +136,13 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
    * Update the list of emails after changing the folder.
    */
   protected fun onFolderChanged(isForceClearCacheNeeded: Boolean) {
+    toolbar?.title = currentFolder?.folderAlias
+
     val emailListFragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    if (emailListFragment != null) {
-      emailListFragment.updateList(isFolderChanged = true, isForceClearCacheNeeded = isForceClearCacheNeeded)
-      updateActionProgressState(100, null)
-    }
+    emailListFragment?.updateList(true, isForceClearCacheNeeded)
+    updateActionProgressState(100, null)
 
     if (currentFolder != null) {
       val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder!!.fullName, ignoreCase = true)
@@ -174,15 +174,13 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
 
   /**
    * Handle a result from the load next messages action.
-   *
-   * @param needToRefreshList true if we must reload the emails list.
    */
-  protected fun onNextMsgsLoaded(needToRefreshList: Boolean) {
+  protected fun onNextMsgsLoaded() {
     val emailListFragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
     if (emailListFragment != null) {
-      emailListFragment.onNextMsgsLoaded(needToRefreshList)
+      emailListFragment.onNextMsgsLoaded()
       emailListFragment.setActionProgress(100, null)
     }
   }

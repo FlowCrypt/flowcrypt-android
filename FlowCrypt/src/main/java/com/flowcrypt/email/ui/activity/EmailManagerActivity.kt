@@ -403,17 +403,14 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         }
 
         if (currentFolder == null) {
-          currentFolder = foldersManager!!.folderInbox
+          currentFolder = foldersManager?.folderInbox
           if (currentFolder == null) {
-            currentFolder = foldersManager!!.findInboxFolder()
+            currentFolder = foldersManager?.findInboxFolder()
           }
 
           onFolderChanged(false)
         } else {
-          val newestLocalFolderInfo = foldersManager!!.getFolderByAlias(currentFolder!!.folderAlias!!)
-          if (newestLocalFolderInfo != null) {
-            currentFolder = newestLocalFolderInfo
-          }
+          foldersManager?.getFolderByAlias(currentFolder?.folderAlias)?.let { currentFolder = it }
         }
       }
     }
