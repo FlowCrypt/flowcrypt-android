@@ -12,10 +12,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.OperationApplicationException
 import android.database.Cursor
-import android.net.Uri
 import android.os.Build
 import android.os.RemoteException
-import android.preference.PreferenceManager
 import android.provider.BaseColumns
 import android.text.TextUtils
 import android.util.LongSparseArray
@@ -29,9 +27,7 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.BaseDaoSource
-import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.util.FileAndDirectoryUtils
-import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
 import java.io.File
@@ -39,7 +35,6 @@ import java.io.IOException
 import java.util.*
 import javax.mail.Flags
 import javax.mail.Message
-import javax.mail.MessageRemovedException
 import javax.mail.MessagingException
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
@@ -56,150 +51,6 @@ import javax.mail.internet.InternetAddress
 class MessageDaoSource : BaseDaoSource() {
 
   override val tableName: String = TABLE_NAME_MESSAGES
-
-  /**
-   * Add a new message details to the database. This method must be called in the non-UI thread.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The email that the message linked.
-   * @param label   The folder label.
-   * @param uid     The message UID.
-   * @param message The message which will be added to the database.
-   * @param isNew   true if need to mark a given message as new.
-   * @return A [Uri] of the created row.
-   */
-  fun addRow(context: Context, email: String, label: String?, uid: Long, message: Message?, isNew: Boolean): Uri? {
-    val contentResolver = context.contentResolver
-    return if (message != null && label != null && contentResolver != null) {
-      val contentValues = prepareContentValues(email, label, message, uid, isNew)
-      contentResolver.insert(baseContentUri, contentValues)
-    } else
-      null
-  }
-
-  /**
-   * Add a new message details to the database.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param details The message details
-   * @return A [Uri] of the created row.
-   */
-  fun addRow(context: Context, details: GeneralMessageDetails): Uri? {
-    val contentResolver = context.contentResolver
-    return if (contentResolver != null) {
-      val contentValues = ContentValues()
-      with(details) {
-        contentValues.put(COL_EMAIL, email)
-        contentValues.put(COL_FOLDER, label)
-        contentValues.put(COL_UID, uid)
-        contentValues.put(COL_RECEIVED_DATE, receivedDate)
-        contentValues.put(COL_SENT_DATE, sentDate)
-        contentValues.put(COL_FROM_ADDRESSES, InternetAddress.toString(from?.toTypedArray()))
-        contentValues.put(COL_TO_ADDRESSES, InternetAddress.toString(to?.toTypedArray()))
-        contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(cc?.toTypedArray()))
-        contentValues.put(COL_SUBJECT, subject)
-        contentValues.put(COL_FLAGS, msgFlags.toString().toUpperCase(Locale.getDefault()))
-        contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, hasAtts)
-      }
-
-      contentResolver.insert(baseContentUri, contentValues)
-    } else
-      null
-  }
-
-  /**
-   * Add a new message details to the database.
-   *
-   * @param context       Interface to global information about an application environment.
-   * @param contentValues [ContentValues] which contains information about a new message.
-   * @return A [Uri] of the created row.
-   */
-  fun addRow(context: Context, contentValues: ContentValues?): Uri? {
-    val contentResolver = context.contentResolver
-    return if (contentValues != null && contentResolver != null) {
-      contentResolver.insert(baseContentUri, contentValues)
-    } else
-      null
-  }
-
-  /**
-   * This method add rows per single transaction. This method must be called in the non-UI thread.
-   *
-   * @param context     Interface to global information about an application environment.
-   * @param email       The email that the message linked.
-   * @param label       The folder label.
-   * @param folder      The [IMAPFolder] object which contains information about a remote folder.
-   * @param msgs        The messages array.
-   * @param isNew       true if need to mark messages as new.
-   * @param isEncrypted true if the given messages are encrypted.
-   * @return the number of newly created rows.
-   * @throws MessagingException This exception may be occured when we call `mapFolder.getUID(message)`
-   */
-  fun addRows(context: Context, email: String, label: String, folder: IMAPFolder, msgs: Array<Message>,
-              isNew: Boolean, isEncrypted: Boolean): Int {
-    return addRows(context, email, label, folder, msgs, LongSparseArray(), isNew, isEncrypted)
-  }
-
-  /**
-   * This method add rows per single transaction. This method must be called in the non-UI thread.
-   *
-   * @param context              Interface to global information about an application environment.
-   * @param email                The email that the message linked.
-   * @param label                The folder label.
-   * @param folder               The [IMAPFolder] object which contains information about a remote folder.
-   * @param msgs                 The messages array.
-   * @param msgsEncryptionStates An array which contains info about a message encryption state
-   * @param areAllMsgsEncrypted  true if the given messages are encrypted.
-   * @return the number of newly created rows.
-   * @throws MessagingException This exception may be occured when we call `mapFolder.getUID(message)`
-   */
-  fun addRows(context: Context, email: String, label: String, folder: IMAPFolder, msgs: Array<Message>?,
-              msgsEncryptionStates: LongSparseArray<Boolean>, isNew: Boolean, areAllMsgsEncrypted: Boolean): Int {
-    if (msgs != null) {
-      val contentResolver = context.contentResolver
-      val contentValuesList = ArrayList<ContentValues>()
-
-      val isNotificationDisabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_NEVER ==
-          SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
-
-      val onlyEncryptedMsgs = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
-          SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-              Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
-
-      for (msg in msgs) {
-        try {
-          val contentValues = prepareContentValues(email, label, msg, folder.getUID(msg), isNew)
-
-          if (isNotificationDisabled) {
-            contentValues.put(COL_IS_NEW, false)
-          }
-
-          val isMsgEncrypted: Boolean? = if (areAllMsgsEncrypted) {
-            true
-          } else {
-            msgsEncryptionStates.get(folder.getUID(msg))
-          }
-
-          isMsgEncrypted?.let {
-            contentValues.put(COL_IS_ENCRYPTED, isMsgEncrypted)
-
-            if (onlyEncryptedMsgs && !isMsgEncrypted) {
-              contentValues.put(COL_IS_NEW, false)
-            }
-          }
-
-          contentValuesList.add(contentValues)
-        } catch (e: MessageRemovedException) {
-          e.printStackTrace()
-        }
-
-      }
-
-      return contentResolver.bulkInsert(baseContentUri, contentValuesList.toTypedArray())
-    } else
-      return 0
-  }
 
   /**
    * This method delete cached messages.

@@ -26,7 +26,8 @@
             app:layout_constraintBottom_toTopOf="@+id/progressBarActionProgress"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            tools:text="5% Connecting to mail server" />
+            tools:text="5% Connecting to mail server"
+            tools:visibility="visible" />
 
         <ProgressBar
             android:id="@+id/progressBarActionProgress"
@@ -41,7 +42,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            tools:progress="45" />
+            tools:progress="45"
+            tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -73,9 +75,9 @@
         android:id="@id/viewIdProgressView"
         style="?android:attr/progressBarStyle"
         android:layout_width="wrap_content"
-        android:visibility="gone"
         android:layout_height="wrap_content"
-        android:layout_gravity="center" />
+        android:layout_gravity="center"
+        android:visibility="gone" />
 
     <include
         android:id="@+id/viewIdStatusView"

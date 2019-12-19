@@ -17,7 +17,7 @@ package com.flowcrypt.email.api.email
 class JavaEmailConstants {
   companion object {
 
-    const val COUNT_OF_LOADED_EMAILS_BY_STEP = 20
+    const val COUNT_OF_LOADED_EMAILS_BY_STEP = 45
 
     /*IMAP*/
     const val PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE = "mail.imap.ssl.enable"

@@ -264,7 +264,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
             val fragment = supportFragmentManager
                 .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-            fragment?.reloadMsgs()
+            //fragment?.reloadMsgs()
           } else {
             if (!TextUtils.isEmpty(signInResult.status.statusMessage)) {
               UIUtil.showInfoSnackbar(rootView, signInResult.status.statusMessage!!)
@@ -289,12 +289,13 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       }
 
       R.id.syns_request_code_force_load_new_messages -> {
-        onForceLoadNewMsgsCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE)
+        onFetchMsgsCompleted()
         msgsIdlingResource.setIdleState(true)
       }
 
       R.id.syns_request_code_load_next_messages -> {
         switchView?.isEnabled = true
+        onFetchMsgsCompleted()
         super.onReplyReceived(requestCode, resultCode, obj)
       }
 
@@ -307,6 +308,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       R.id.syns_request_code_force_load_new_messages -> {
         msgsIdlingResource.setIdleState(true)
         onErrorOccurred(requestCode, errorType, e)
+        onFetchMsgsCompleted()
       }
 
       R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> {
@@ -318,6 +320,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
       R.id.syns_request_code_load_next_messages -> {
         switchView?.isEnabled = true
+        onFetchMsgsCompleted()
         super.onErrorHappened(requestCode, errorType, e)
       }
 
@@ -351,7 +354,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         if (newLocalFolder != null) {
           if (currentFolder == null || currentFolder!!.fullName != newLocalFolder.fullName) {
             this.currentFolder = newLocalFolder
-            onFolderChanged(false)
+            onFolderChanged()
             invalidateOptionsMenu()
           }
         }
@@ -408,7 +411,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
             currentFolder = foldersManager?.findInboxFolder()
           }
 
-          onFolderChanged(false)
+          onFolderChanged()
         } else {
           foldersManager?.getFolderByAlias(currentFolder?.folderAlias)?.let { currentFolder = it }
         }
@@ -518,18 +521,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   /**
-   * Handle a result from the load new messages action.
-   *
-   * @param refreshListNeeded true if we must reload the emails list.
-   */
-  private fun onForceLoadNewMsgsCompleted(refreshListNeeded: Boolean) {
-    val fragment = supportFragmentManager
-        .findFragmentById(R.id.emailListFragment) as EmailListFragment?
-
-    //fragment?.onForceLoadNewMsgsCompleted(refreshListNeeded)
-  }
-
-  /**
    * Change messages displaying.
    *
    * @param onlyEncrypted true if we want ot show only encrypted messages, false if we want to show
@@ -550,7 +541,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       }
     }
 
-    fragment?.onFilterMsgs(onlyEncrypted)
+    //fragment?.onFilterMsgs(onlyEncrypted)
   }
 
   /**
@@ -562,7 +553,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     val fragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    fragment?.onDrawerStateChanged(isOpen)
+    //fragment?.onDrawerStateChanged(isOpen)
   }
 
   private fun initViews() {
@@ -701,6 +692,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     }
 
     return view
+  }
+
+  private fun onFetchMsgsCompleted() {
+    (supportFragmentManager.findFragmentById(R.id.emailListFragment) as? EmailListFragment?)?.onFetchMsgsCompleted()
   }
 
   /**

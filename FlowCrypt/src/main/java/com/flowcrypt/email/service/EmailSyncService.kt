@@ -30,11 +30,13 @@ import com.flowcrypt.email.api.email.sync.EmailSyncManager
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -239,9 +241,17 @@ class EmailSyncService : BaseService(), SyncListener {
       val folder = localFolder.fullName
 
       val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(this, email)
+      val msgEntities = MessageEntity.genMessageEntities(
+          context = this,
+          email = email,
+          label = folder,
+          folder = remoteFolder,
+          msgs = msgs,
+          isNew = false,
+          areAllMsgsEncrypted = isEncryptedModeEnabled
+      )
 
-      val messageDaoSource = MessageDaoSource()
-      messageDaoSource.addRows(this, email, folder, remoteFolder, msgs, false, isEncryptedModeEnabled)
+      FlowCryptRoomDatabase.getDatabase(this@EmailSyncService).msgDao().insert(msgEntities)
 
       if (!isEncryptedModeEnabled) {
         emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)
@@ -281,7 +291,19 @@ class EmailSyncService : BaseService(), SyncListener {
       val msgDaoSource = MessageDaoSource()
       val folderType = FoldersManager.getFolderType(localFolder)
       val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
-      msgDaoSource.addRows(this, email, folderName, remoteFolder, newMsgs, msgsEncryptionStates, isNew, false)
+
+      val msgEntities = MessageEntity.genMessageEntities(
+          context = this,
+          email = email,
+          label = folderName,
+          folder = remoteFolder,
+          msgs = newMsgs,
+          msgsEncryptionStates = msgsEncryptionStates,
+          isNew = isNew,
+          areAllMsgsEncrypted = false
+      )
+
+      FlowCryptRoomDatabase.getDatabase(context).msgDao().insert(msgEntities)
 
       if (newMsgs.isNotEmpty()) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE)
@@ -311,10 +333,19 @@ class EmailSyncService : BaseService(), SyncListener {
     val email = account.email
     try {
       val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(this, email)
-
-      val msgDaoSource = MessageDaoSource()
       val searchLabel = SearchMessagesActivity.SEARCH_FOLDER_NAME
-      msgDaoSource.addRows(this, email, searchLabel, remoteFolder, msgs, false, isEncryptedModeEnabled)
+
+      val msgEntities = MessageEntity.genMessageEntities(
+          context = this,
+          email = email,
+          label = searchLabel,
+          folder = remoteFolder,
+          msgs = msgs,
+          isNew = false,
+          areAllMsgsEncrypted = isEncryptedModeEnabled
+      )
+
+      FlowCryptRoomDatabase.getDatabase(context).msgDao().insert(msgEntities)
 
       if (!isEncryptedModeEnabled) {
         emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)
@@ -373,7 +404,17 @@ class EmailSyncService : BaseService(), SyncListener {
       val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(this, email)
       val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
 
-      msgsDaoSource.addRows(this, email, folderName, remoteFolder, newCandidates, isNew, isEncryptedModeEnabled)
+      val msgEntities = MessageEntity.genMessageEntities(
+          context = this,
+          email = email,
+          label = folderName,
+          folder = remoteFolder,
+          msgs = newCandidates,
+          isNew = isNew,
+          areAllMsgsEncrypted = isEncryptedModeEnabled
+      )
+
+      FlowCryptRoomDatabase.getDatabase(context).msgDao().insert(msgEntities)
 
       if (!isEncryptedModeEnabled) {
         emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)

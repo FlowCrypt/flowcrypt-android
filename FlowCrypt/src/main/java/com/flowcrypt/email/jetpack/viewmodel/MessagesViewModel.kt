@@ -13,6 +13,7 @@ import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
 import androidx.paging.PagedList
 import androidx.paging.toLiveData
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -36,16 +37,21 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
 
   var msgsLiveData: LiveData<PagedList<MessageEntity>>? = null
 
-  fun loadMsgs(lifecycleOwner: LifecycleOwner, localFolder: LocalFolder?, observer: Observer<PagedList<MessageEntity>>) {
-    this.currentLocalFolder = localFolder
-    msgsLiveData?.removeObserver(observer)
-    msgsLiveData = Transformations.switchMap(accountLiveData) {
-      val account = it?.email ?: ""
-      val label = currentLocalFolder?.fullName ?: ""
-      roomDatabase.msgDao().getMessagesDataSourceFactory(account, label).toLiveData(pageSize = 20)
-    }
+  fun loadMsgs(lifecycleOwner: LifecycleOwner, localFolder: LocalFolder?, observer:
+  Observer<PagedList<MessageEntity>>, boundaryCallback: PagedList.BoundaryCallback<MessageEntity>) {
+    if ((this.currentLocalFolder?.fullName == localFolder?.fullName).not()) {
+      this.currentLocalFolder = localFolder
+      msgsLiveData?.removeObserver(observer)
+      msgsLiveData = Transformations.switchMap(accountLiveData) {
+        val account = it?.email ?: ""
+        val label = currentLocalFolder?.fullName ?: ""
+        roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
+            .toLiveData(pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3,
+                boundaryCallback = boundaryCallback)
+      }
 
-    msgsLiveData?.observe(lifecycleOwner, observer)
+      msgsLiveData?.observe(lifecycleOwner, observer)
+    }
   }
 
   fun getActiveAccount(): AccountEntity? {

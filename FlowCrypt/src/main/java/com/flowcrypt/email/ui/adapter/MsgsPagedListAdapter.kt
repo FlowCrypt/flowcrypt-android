@@ -111,7 +111,8 @@ class MsgsPagedListAdapter : PagedListAdapter<MessageEntity, MsgsPagedListAdapte
         viewHolder.textViewDate!!.setTextColor(UIUtil.getColor(context, android.R.color.black))
       }
 
-      viewHolder.imageViewAtts!!.visibility = if (messageEntity.isMessageHasAttachments == true) View.VISIBLE else View.GONE
+      viewHolder.imageViewAtts!!.visibility = if (messageEntity.hasAttachments == true) View
+          .VISIBLE else View.GONE
       viewHolder.viewIsEncrypted!!.visibility = if (messageEntity.isEncrypted == true) View.VISIBLE else View.GONE
 
       when (messageEntity.msgState) {

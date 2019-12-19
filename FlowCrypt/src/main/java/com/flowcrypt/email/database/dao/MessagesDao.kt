@@ -20,11 +20,11 @@ import com.flowcrypt.email.database.entity.MessageEntity
  *         E-mail: DenBond7@gmail.com
  */
 @Dao
-interface MessagesDao {
+interface MessagesDao : BaseDao<MessageEntity> {
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
   fun getMessages(account: String, folder: String): LiveData<MessageEntity>
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY received_date DESC")
   fun getMessagesDataSourceFactory(account: String, folder: String): DataSource.Factory<Int, MessageEntity>
 
   @Query("SELECT * FROM messages")

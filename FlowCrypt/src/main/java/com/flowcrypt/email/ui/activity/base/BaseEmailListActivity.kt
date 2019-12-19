@@ -112,7 +112,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
     val emailListFragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    emailListFragment?.onSyncServiceConnected()
+    //emailListFragment?.onSyncServiceConnected()
   }
 
   /**
@@ -135,13 +135,13 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
   /**
    * Update the list of emails after changing the folder.
    */
-  protected fun onFolderChanged(isForceClearCacheNeeded: Boolean) {
+  protected fun onFolderChanged() {
     toolbar?.title = currentFolder?.folderAlias
 
     val emailListFragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    emailListFragment?.updateList(true, isForceClearCacheNeeded)
+    emailListFragment?.onFolderChanged()
     updateActionProgressState(100, null)
 
     if (currentFolder != null) {
@@ -180,7 +180,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
     if (emailListFragment != null) {
-      emailListFragment.onNextMsgsLoaded()
+      emailListFragment.onFetchMsgsCompleted()
       emailListFragment.setActionProgress(100, null)
     }
   }

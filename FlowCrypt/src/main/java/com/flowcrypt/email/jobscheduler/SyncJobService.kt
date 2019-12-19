@@ -24,9 +24,11 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.api.email.sync.tasks.SyncFolderSyncTask
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -202,11 +204,21 @@ class SyncJobService : JobService(), SyncListener {
 
       val newCandidates = EmailUtil.genNewCandidates(uids, remoteFolder, newMsgs)
 
-      msgDaoSource.addRows(context, account.email, folderName, remoteFolder, newCandidates,
-          msgsEncryptionStates, !GeneralUtil.isAppForegrounded(), isEncryptedModeEnabled)
+      val msgEntities = MessageEntity.genMessageEntities(
+          context = context,
+          email = account.email,
+          label = folderName,
+          folder = remoteFolder,
+          msgs = newCandidates,
+          msgsEncryptionStates = msgsEncryptionStates,
+          isNew = !GeneralUtil.isAppForegrounded(),
+          areAllMsgsEncrypted = isEncryptedModeEnabled
+      )
+
+      FlowCryptRoomDatabase.getDatabase(context).msgDao().insert(msgEntities)
 
       if (!GeneralUtil.isAppForegrounded()) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && newCandidates.size == 0) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && newCandidates.isEmpty()) {
           return
         }
 
@@ -214,7 +226,8 @@ class SyncJobService : JobService(), SyncListener {
             account.email, folderName)
         val unseenUIDs = msgDaoSource.getUIDOfUnseenMsgs(this, account.email, folderName)
 
-        messagesNotificationManager!!.notify(this, account, localFolder, newMsgsList, unseenUIDs, false)
+        messagesNotificationManager?.notify(this, account, localFolder, newMsgsList, unseenUIDs,
+            false)
       }
     } catch (e: MessagingException) {
       e.printStackTrace()

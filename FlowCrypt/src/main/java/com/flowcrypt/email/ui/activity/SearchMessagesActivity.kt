@@ -129,7 +129,7 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
     }
 
     currentFolder!!.searchQuery = initQuery
-    onFolderChanged(true)
+    onFolderChanged()
     return false
   }
 
