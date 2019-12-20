@@ -287,8 +287,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         }
       }
 
-      R.id.syns_request_code_force_load_new_messages -> {
-        onFetchMsgsCompleted()
+      R.id.syns_request_code_refresh_msgs -> {
+        onRefreshMsgsCompleted()
         msgsIdlingResource.setIdleState(true)
       }
 
@@ -304,10 +304,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
-      R.id.syns_request_code_force_load_new_messages -> {
-        msgsIdlingResource.setIdleState(true)
+      R.id.syns_request_code_refresh_msgs -> {
         onErrorOccurred(requestCode, errorType, e)
-        onFetchMsgsCompleted()
+        onRefreshMsgsCompleted()
+        msgsIdlingResource.setIdleState(true)
       }
 
       R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> {
@@ -694,6 +694,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   private fun onFetchMsgsCompleted() {
     (supportFragmentManager.findFragmentById(R.id.emailListFragment) as? EmailListFragment?)?.onFetchMsgsCompleted()
+  }
+
+  private fun onRefreshMsgsCompleted() {
+    (supportFragmentManager.findFragmentById(R.id.emailListFragment) as? EmailListFragment?)?.onRefreshMsgsCompleted()
   }
 
   /**

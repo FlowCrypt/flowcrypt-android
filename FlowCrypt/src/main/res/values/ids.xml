@@ -31,7 +31,7 @@
     <item name="syns_request_code_update_label_passive" type="id" />
     <item name="syns_request_code_update_label_active" type="id" />
     <item name="syns_request_code_load_next_messages" type="id" />
-    <item name="syns_request_code_force_load_new_messages" type="id" />
+    <item name="syns_request_code_refresh_msgs" type="id" />
     <item name="syns_request_code_load_raw_mime_msg" type="id" />
     <item name="sync_request_code_search_messages" type="id" />
     <item name="syns_request_code_load_atts_info" type="id" />

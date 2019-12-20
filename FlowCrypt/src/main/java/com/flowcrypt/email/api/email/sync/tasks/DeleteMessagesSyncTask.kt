@@ -8,6 +8,7 @@ package com.flowcrypt.email.api.email.sync.tasks
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
@@ -61,7 +62,7 @@ class DeleteMessagesSyncTask(ownerKey: String,
 
           if (msgs.isNotEmpty()) {
             remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-            msgDaoSource.deleteMsgsByUID(context, account.email, folder, uidList)
+            FlowCryptRoomDatabase.getDatabase(context).msgDao().deleteByUIDs(account.email, folder, uidList)
           }
 
           remoteSrcFolder.close()

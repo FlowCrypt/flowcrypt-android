@@ -50,66 +50,6 @@ class MessageDaoSource : BaseDaoSource() {
   override val tableName: String = TABLE_NAME_MESSAGES
 
   /**
-   * This method delete cached messages.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The email that the message linked.
-   * @param label   The folder label.
-   * @param msgsUID The list of messages UID.
-   */
-  fun deleteMsgsByUID(context: Context, email: String?, label: String?, msgsUID: Collection<Long>) {
-    val contentResolver = context.contentResolver
-    if (email != null && label != null && contentResolver != null) {
-      val step = 50
-
-      val selectionArgs = LinkedList<String>()
-      selectionArgs.add(email)
-      selectionArgs.add(label)
-
-      val list = ArrayList(msgsUID)
-
-      if (msgsUID.size <= step) {
-        for (uid in msgsUID) {
-          selectionArgs.add(uid.toString())
-        }
-
-        val where = COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID + " IN (" +
-            prepareSelectionArgsString(msgsUID.toTypedArray()) + ");"
-
-        contentResolver.delete(baseContentUri, where, selectionArgs.toTypedArray())
-      } else {
-        val ops = ArrayList<ContentProviderOperation>()
-
-        var i = 0
-        while (i < list.size) {
-          val stepUIDs = if (list.size - i > step) {
-            list.subList(i, i + step)
-          } else {
-            list.subList(i, list.size)
-          }
-
-          val selectionArgsForStep = LinkedList(selectionArgs)
-
-          for (uid in stepUIDs) {
-            selectionArgsForStep.add(uid.toString())
-          }
-
-          val selection = (COL_EMAIL + "= ? AND " + COL_FOLDER + " = ? AND " + COL_UID
-              + " IN (" + prepareSelectionArgsString(stepUIDs.toTypedArray()) + ");")
-
-          ops.add(ContentProviderOperation.newDelete(baseContentUri)
-              .withSelection(selection, selectionArgsForStep.toTypedArray())
-              .withYieldAllowed(true)
-              .build())
-          i += step
-        }
-
-        contentResolver.applyBatch(baseContentUri.authority!!, ops)
-      }
-    }
-  }
-
-  /**
    * This method update cached messages.
    *
    * @param context Interface to global information about an application environment.

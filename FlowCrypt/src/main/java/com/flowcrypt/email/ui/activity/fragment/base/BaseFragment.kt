@@ -123,8 +123,9 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
    * @param duration        How long to display the message.
    * @param onClickListener The Snackbar button click listener.
    */
-  fun showSnackbar(view: View, msgText: String, btnName: String, duration: Int, onClickListener: View.OnClickListener) {
-    Snackbar.make(view, msgText, duration).setAction(btnName, onClickListener).show()
+  fun showSnackbar(view: View?, msgText: String, btnName: String, duration: Int, onClickListener:
+  View.OnClickListener) {
+    view?.let { Snackbar.make(view, msgText, duration).setAction(btnName, onClickListener).show() }
   }
 
   fun dismissCurrentSnackBar() {

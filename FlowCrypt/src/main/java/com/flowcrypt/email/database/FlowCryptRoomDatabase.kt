@@ -360,6 +360,19 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           database.execSQL("INSERT INTO contacts SELECT * FROM contacts_temp;")
           database.execSQL("DROP TABLE IF EXISTS contacts_temp;")
 
+          //Recreate 'attachment' table to use an ability of foreign keys
+          //delete non-OUTBOX attachments
+          database.delete("attachment", "folder NOT IN (?)", arrayOf(JavaEmailConstants.FOLDER_OUTBOX))
+          val tempTableName = "attachment_temp"
+
+          database.execSQL("CREATE TEMP TABLE IF NOT EXISTS $tempTableName AS SELECT * FROM attachment;")
+          database.execSQL("DROP TABLE IF EXISTS attachment;")
+          database.execSQL("CREATE TABLE `attachment` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `folder` TEXT NOT NULL, `uid` INTEGER NOT NULL, `name` TEXT NOT NULL, `encodedSize` INTEGER DEFAULT 0, `type` TEXT NOT NULL, `attachment_id` TEXT, `file_uri` TEXT, `forwarded_folder` TEXT, `forwarded_uid` INTEGER DEFAULT -1, `path` TEXT NOT NULL, FOREIGN KEY(`email`, `folder`, `uid`) REFERENCES `messages`(`email`, `folder`, `uid`) ON UPDATE NO ACTION ON DELETE CASCADE );")
+          database.execSQL("CREATE UNIQUE INDEX `email_uid_folder_path_in_attachment` ON `attachment` (`email`, `uid`, `folder`, `path`);")
+          database.execSQL("CREATE INDEX `email_folder_uid_in_attachment` ON `attachment` (`email`, `folder`, `uid`);")
+          database.execSQL("INSERT INTO attachment SELECT * FROM $tempTableName;")
+          database.execSQL("DROP TABLE IF EXISTS $tempTableName;")
+
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()

@@ -150,10 +150,10 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   override fun onRefresh() {
     snackBar?.dismiss()
 
-    val localFolder = listener!!.currentFolder
+    val localFolder = listener?.currentFolder
 
     if (localFolder == null) {
-      swipeRefreshLayout!!.isRefreshing = false
+      swipeRefreshLayout?.isRefreshing = false
       return
     }
 
@@ -215,8 +215,8 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         }
       }
 
-      R.id.syns_request_code_force_load_new_messages -> {
-        swipeRefreshLayout!!.isRefreshing = false
+      R.id.syns_request_code_refresh_msgs -> {
+        swipeRefreshLayout?.isRefreshing = false
         when (errorType) {
           SyncErrorTypes.ACTION_FAILED_SHOW_TOAST -> Toast.makeText(context,
               R.string.failed_please_try_again_later, Toast.LENGTH_SHORT).show()
@@ -291,6 +291,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     msgsObserver.onChanged(messagesViewModel.msgsLiveData?.value)
   }
 
+  fun onRefreshMsgsCompleted() {
+    swipeRefreshLayout?.isRefreshing = false
+  }
 
   private fun showConnProblemHint() {
     showSnackbar(view!!, getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
@@ -392,7 +395,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
    */
   private fun refreshMsgs() {
     listener?.msgsLoadingIdlingResource?.setIdleState(false)
-    baseSyncActivity.refreshMsgs(R.id.syns_request_code_force_load_new_messages, listener!!.currentFolder!!)
+    listener?.currentFolder?.let {
+      baseSyncActivity.refreshMsgs(R.id.syns_request_code_refresh_msgs, it)
+    }
   }
 
   /**
@@ -401,7 +406,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
    * @param totalItemsCount The count of already loaded messages.
    */
   private fun loadNextMsgs(totalItemsCount: Int) {
-    if (GeneralUtil.isConnected(context!!)) {
+    if (GeneralUtil.isConnected(context)) {
       if (totalItemsCount == 0) {
         contentView?.visibility = View.GONE
         statusView?.visibility = View.GONE
@@ -411,7 +416,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
       footerProgressView?.visibility = View.VISIBLE
       listener?.msgsLoadingIdlingResource?.setIdleState(false)
-      val localFolder = listener!!.currentFolder
+      val localFolder = listener?.currentFolder
       if (TextUtils.isEmpty(localFolder!!.searchQuery)) {
         baseSyncActivity.loadNextMsgs(R.id.syns_request_code_load_next_messages, localFolder, totalItemsCount)
       } else {
@@ -419,7 +424,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
     } else {
       footerProgressView?.visibility = View.GONE
-      showSnackbar(view!!, getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
+      showSnackbar(view, getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
           Snackbar.LENGTH_LONG, View.OnClickListener { loadNextMsgs(totalItemsCount) })
     }
   }

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 20,
-    "identityHash": "142525ec1065962bd52b6c45a0e7a640",
+    "identityHash": "b34e1ed31528ece202469e8317791361",
     "entities": [
       {
         "tableName": "accounts_aliases",
@@ -332,7 +332,7 @@
       },
       {
         "tableName": "attachment",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `folder` TEXT NOT NULL, `uid` INTEGER NOT NULL, `name` TEXT NOT NULL, `encodedSize` INTEGER DEFAULT 0, `type` TEXT NOT NULL, `attachment_id` TEXT, `file_uri` TEXT, `forwarded_folder` TEXT, `forwarded_uid` INTEGER DEFAULT -1, `path` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `folder` TEXT NOT NULL, `uid` INTEGER NOT NULL, `name` TEXT NOT NULL, `encodedSize` INTEGER DEFAULT 0, `type` TEXT NOT NULL, `attachment_id` TEXT, `file_uri` TEXT, `forwarded_folder` TEXT, `forwarded_uid` INTEGER DEFAULT -1, `path` TEXT NOT NULL, FOREIGN KEY(`email`, `folder`, `uid`) REFERENCES `messages`(`email`, `folder`, `uid`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -426,9 +426,35 @@
               "path"
             ],
             "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `email_uid_folder_path_in_attachment` ON `${TABLE_NAME}` (`email`, `uid`, `folder`, `path`)"
+          },
+          {
+            "name": "email_folder_uid_in_attachment",
+            "unique": false,
+            "columnNames": [
+              "email",
+              "folder",
+              "uid"
+            ],
+            "createSql": "CREATE INDEX IF NOT EXISTS `email_folder_uid_in_attachment` ON `${TABLE_NAME}` (`email`, `folder`, `uid`)"
           }
         ],
-        "foreignKeys": []
+        "foreignKeys": [
+          {
+            "table": "messages",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "email",
+              "folder",
+              "uid"
+            ],
+            "referencedColumns": [
+              "email",
+              "folder",
+              "uid"
+            ]
+          }
+        ]
       },
       {
         "tableName": "contacts",
@@ -770,7 +796,7 @@
             "defaultValue": "NULL"
           },
           {
-            "fieldPath": "isMessageHasAttachments",
+            "fieldPath": "hasAttachments",
             "columnName": "is_message_has_attachments",
             "affinity": "INTEGER",
             "notNull": false,
@@ -892,7 +918,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '142525ec1065962bd52b6c45a0e7a640')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b34e1ed31528ece202469e8317791361')"
     ]
   }
 }

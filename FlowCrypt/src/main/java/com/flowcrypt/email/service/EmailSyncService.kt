@@ -384,7 +384,7 @@ class EmailSyncService : BaseService(), SyncListener {
       val msgsUIDs = HashSet(mapOfUIDAndMsgFlags.keys)
       val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(msgsUIDs, remoteFolder, updateMsgs)
 
-      msgsDaoSource.deleteMsgsByUID(this, email, folderName, deleteCandidatesUIDs)
+      FlowCryptRoomDatabase.getDatabase(context).msgDao().deleteByUIDs(account.email, folderName, deleteCandidatesUIDs)
 
       val folderType = FoldersManager.getFolderType(localFolder)
       if (!GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX) {

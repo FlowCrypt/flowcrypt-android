@@ -8,6 +8,7 @@ package com.flowcrypt.email.database.entity
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -19,7 +20,12 @@ import androidx.room.PrimaryKey
  */
 @Entity(tableName = "attachment",
     indices = [
-      Index(name = "email_uid_folder_path_in_attachment", value = ["email", "uid", "folder", "path"], unique = true)
+      Index(name = "email_uid_folder_path_in_attachment", value = ["email", "uid", "folder", "path"], unique = true),
+      Index(name = "email_folder_uid_in_attachment", value = ["email", "folder", "uid"])
+    ],
+    foreignKeys = [
+      ForeignKey(entity = MessageEntity::class, parentColumns = ["email", "folder", "uid"],
+          childColumns = ["email", "folder", "uid"], onDelete = ForeignKey.CASCADE)
     ]
 )
 data class AttachmentEntity(

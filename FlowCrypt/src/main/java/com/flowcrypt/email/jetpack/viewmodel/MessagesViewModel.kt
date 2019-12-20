@@ -62,7 +62,6 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
 
   fun cleanFolderCache(folderName: String?) {
     viewModelScope.launch {
-      val t = roomDatabase.attachmentDao().delete(accountLiveData.value?.email, folderName)
       roomDatabase.msgDao().delete(accountLiveData.value?.email, folderName)
     }
   }

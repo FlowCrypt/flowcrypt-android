@@ -9,7 +9,9 @@ import androidx.lifecycle.LiveData
 import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import com.flowcrypt.email.database.entity.MessageEntity
+import java.util.*
 
 /**
  * This class describes available methods for [MessageEntity]
@@ -20,16 +22,41 @@ import com.flowcrypt.email.database.entity.MessageEntity
  *         E-mail: DenBond7@gmail.com
  */
 @Dao
-interface MessagesDao : BaseDao<MessageEntity> {
+abstract class MessagesDao : BaseDao<MessageEntity> {
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
-  fun getMessages(account: String, folder: String): LiveData<MessageEntity>
+  abstract fun getMessages(account: String, folder: String): LiveData<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY received_date DESC")
-  fun getMessagesDataSourceFactory(account: String, folder: String): DataSource.Factory<Int, MessageEntity>
+  abstract fun getMessagesDataSourceFactory(account: String, folder: String): DataSource
+  .Factory<Int, MessageEntity>
 
   @Query("SELECT * FROM messages")
-  fun msgs(): DataSource.Factory<Int, MessageEntity>
+  abstract fun msgs(): DataSource.Factory<Int, MessageEntity>
 
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label")
-  suspend fun delete(email: String?, label: String?): Int
+  abstract suspend fun delete(email: String?, label: String?): Int
+
+  @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid IN (:msgsUID)")
+  abstract fun delete(email: String?, label: String?, msgsUID: Collection<Long>): Int
+
+  @Transaction
+  open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {
+    val step = 50
+    val list = ArrayList(msgsUID)
+
+    if (msgsUID.size <= step) {
+      delete(email, label, msgsUID)
+    } else {
+      var i = 0
+      while (i < list.size) {
+        val stepUIDs = if (list.size - i > step) {
+          list.subList(i, i + step)
+        } else {
+          list.subList(i, list.size)
+        }
+        delete(email, label, stepUIDs)
+        i += step
+      }
+    }
+  }
 }
