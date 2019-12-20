@@ -99,7 +99,11 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
     override fun onItemAtEndLoaded(itemAtEnd: MessageEntity) {
       super.onItemAtEndLoaded(itemAtEnd)
-      adapter.currentList?.size?.let { loadNextMsgs(it) }
+      adapter.currentList?.size?.let {
+        if (it > 0) {
+          loadNextMsgs(it)
+        }
+      }
     }
   }
 
