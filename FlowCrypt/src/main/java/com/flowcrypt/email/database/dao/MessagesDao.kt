@@ -29,4 +29,7 @@ interface MessagesDao : BaseDao<MessageEntity> {
 
   @Query("SELECT * FROM messages")
   fun msgs(): DataSource.Factory<Int, MessageEntity>
+
+  @Query("DELETE FROM messages WHERE email = :email AND folder = :label")
+  suspend fun delete(email: String?, label: String?): Int
 }

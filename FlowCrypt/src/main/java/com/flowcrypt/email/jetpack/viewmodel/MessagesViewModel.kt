@@ -11,6 +11,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
+import androidx.lifecycle.viewModelScope
 import androidx.paging.PagedList
 import androidx.paging.toLiveData
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -18,6 +19,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import kotlinx.coroutines.launch
 
 
 /**
@@ -56,5 +58,12 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
 
   fun getActiveAccount(): AccountEntity? {
     return accountLiveData.value
+  }
+
+  fun cleanFolderCache(folderName: String?) {
+    viewModelScope.launch {
+      val t = roomDatabase.attachmentDao().delete(accountLiveData.value?.email, folderName)
+      roomDatabase.msgDao().delete(accountLiveData.value?.email, folderName)
+    }
   }
 }

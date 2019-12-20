@@ -26,12 +26,12 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
-import com.flowcrypt.email.database.DatabaseUtil
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
+import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
@@ -204,8 +204,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         footerProgressView?.visibility = View.GONE
         emptyView?.visibility = View.GONE
 
-        DatabaseUtil.cleanFolderCache(context, listener?.currentAccountDao?.email,
-            listener?.currentFolder?.fullName)
+        messagesViewModel.cleanFolderCache(listener?.currentFolder?.fullName)
 
         when (errorType) {
           SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> showConnLostHint()
@@ -245,6 +244,23 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   fun onFolderChanged() {
     isEmptyViewAvailable = false
     adapter.submitList(null)
+
+    val isFolderNameEmpty = listener?.currentFolder?.fullName?.isEmpty()
+    val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(listener?.currentFolder)
+    if (isFolderNameEmpty?.not() == true && isItSyncOrOutboxFolder.not()) {
+      val folder = listener?.currentFolder
+
+      val folderName = if (folder?.searchQuery.isNullOrEmpty()) {
+        folder?.fullName
+      } else {
+        SearchMessagesActivity.SEARCH_FOLDER_NAME
+      }
+
+      folderName?.let {
+        messagesViewModel.cleanFolderCache(it)
+      }
+    }
+
     messagesViewModel.loadMsgs(this, listener?.currentFolder, msgsObserver, boundaryCallback)
   }
 
@@ -347,9 +363,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     infoDialogFragment.show(activity!!.supportFragmentManager, InfoDialogFragment::class.java.simpleName)
   }
 
-  private fun isItSyncOrOutboxFolder(localFolder: LocalFolder): Boolean {
-    return localFolder.fullName.equals(JavaEmailConstants.FOLDER_INBOX, ignoreCase = true)
-        || localFolder.fullName.equals(JavaEmailConstants.FOLDER_OUTBOX, ignoreCase = true)
+  private fun isItSyncOrOutboxFolder(localFolder: LocalFolder?): Boolean {
+    return localFolder?.fullName.equals(JavaEmailConstants.FOLDER_INBOX, ignoreCase = true)
+        || localFolder?.fullName.equals(JavaEmailConstants.FOLDER_OUTBOX, ignoreCase = true)
   }
 
   /**

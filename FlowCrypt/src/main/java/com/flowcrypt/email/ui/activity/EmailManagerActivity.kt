@@ -41,7 +41,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.database.DatabaseUtil
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
@@ -453,18 +452,17 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   override fun onQueryTextSubmit(query: String): Boolean {
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!, ignoreCase = true)
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao?.accountType, ignoreCase = true)
         && !SearchSequence.isAscii(query)) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show()
       return true
     }
 
-    menuItemSearch!!.collapseActionView()
-    DatabaseUtil.cleanFolderCache(this, currentAccountDao!!.email, SearchMessagesActivity.SEARCH_FOLDER_NAME)
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!, ignoreCase = true)) {
-      val allMail = foldersManager!!.folderAll
+    menuItemSearch?.collapseActionView()
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao?.accountType, ignoreCase = true)) {
+      val allMail = foldersManager?.folderAll
       if (allMail != null) {
-        startActivity(SearchMessagesActivity.newIntent(this, query, foldersManager!!.folderAll))
+        startActivity(SearchMessagesActivity.newIntent(this, query, allMail))
       } else {
         startActivity(SearchMessagesActivity.newIntent(this, query, currentFolder))
       }

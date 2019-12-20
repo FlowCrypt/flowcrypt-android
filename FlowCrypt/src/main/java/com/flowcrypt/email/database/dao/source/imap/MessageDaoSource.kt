@@ -18,12 +18,10 @@ import android.provider.BaseColumns
 import android.text.TextUtils
 import android.util.LongSparseArray
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
-import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.BaseDaoSource
@@ -35,7 +33,6 @@ import java.io.IOException
 import java.util.*
 import javax.mail.Flags
 import javax.mail.Message
-import javax.mail.MessagingException
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 
@@ -146,27 +143,6 @@ class MessageDaoSource : BaseDaoSource() {
       return contentResolver.applyBatch(baseContentUri.authority!!, ops)
     } else
       return emptyArray()
-  }
-
-  /**
-   * Add a new message details to the database. This method must be called in the non-UI thread.
-   *
-   * @param context     Interface to global information about an application environment.
-   * @param email       The email that the message linked.
-   * @param label       The folder label.
-   * @param uid         The message UID.
-   * @param mimeBytes   The raw mime bytes of the message which will be added to the database.
-   * @return The count of the updated row or -1 up.
-   */
-  fun updateRawMime(context: Context, email: String?, label: String?, uid: Long, mimeBytes: ByteArray): Int {
-    val resolver = context.contentResolver
-    return if (email != null && label != null && resolver != null) {
-      val where = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
-      val values = ContentValues()
-      values.put(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS, mimeBytes)
-      resolver.update(baseContentUri, values, where, arrayOf(email, label, uid.toString()))
-    } else
-      -1
   }
 
   /**
@@ -384,31 +360,6 @@ class MessageDaoSource : BaseDaoSource() {
   }
 
   /**
-   * Get all messages of some folder.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The email of the [LocalFolder].
-   * @param label   The label name.
-   * @return A  list of [GeneralMessageDetails] objects.
-   */
-  fun getMsgs(context: Context, email: String, label: String): List<GeneralMessageDetails> {
-    val contentResolver = context.contentResolver
-    val selection = "$COL_EMAIL= ? AND $COL_FOLDER = ?"
-    val cursor = contentResolver.query(baseContentUri, null, selection, arrayOf(email, label), null)
-
-    val generalMsgDetailsList = ArrayList<GeneralMessageDetails>()
-
-    if (cursor != null) {
-      while (cursor.moveToNext()) {
-        generalMsgDetailsList.add(getMsgInfo(cursor))
-      }
-      cursor.close()
-    }
-
-    return generalMsgDetailsList
-  }
-
-  /**
    * Get messages of some folder by the given state.
    *
    * @param context Interface to global information about an application environment.
@@ -578,54 +529,6 @@ class MessageDaoSource : BaseDaoSource() {
   }
 
   /**
-   * Check is the message exists in the local database.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param uid     The UID of the message.
-   * @return true if message exists in the database, false otherwise.
-   */
-  fun hasMassage(context: Context, uid: Long): Boolean {
-    val contentResolver = context.contentResolver
-    val selection = "$COL_UID = ?"
-    val selectionArgs = arrayOf(uid.toString())
-    val cursor = contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
-
-    if (cursor != null) {
-      val result = cursor.count == 1
-      cursor.close()
-      return result
-    }
-
-    return false
-  }
-
-  /**
-   * Get the minimum UID in the database for some label.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The user email.
-   * @param label   The label name.
-   * @return The minimum UID for the current label or -1 if it not exists.
-   */
-  fun getLabelMinUID(context: Context, email: String, label: String): Int {
-    val contentResolver = context.contentResolver
-
-    val projection = arrayOf("min($COL_UID)")
-    val selection = "$COL_EMAIL = ? AND $COL_FOLDER = ?"
-    val selectionArgs = arrayOf(email, label)
-
-    val cursor = contentResolver.query(baseContentUri, projection, selection, selectionArgs, null)
-
-    if (cursor != null && cursor.moveToFirst()) {
-      val uid = cursor.getInt(0)
-      cursor.close()
-      return uid
-    }
-
-    return -1
-  }
-
-  /**
    * Get the last UID of a message in the database for some label.
    *
    * @param context Interface to global information about an application environment.
@@ -675,34 +578,6 @@ class MessageDaoSource : BaseDaoSource() {
     }
 
     return -1
-  }
-
-  /**
-   * Get the list of UID of all messages in the database for some label.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The user email.
-   * @param label   The label name.
-   * @return The list of UID of all messages in the database for some label.
-   */
-  fun getUIDsOfMsgsInLabel(context: Context, email: String, label: String): List<String> {
-    val contentResolver = context.contentResolver
-    val uidList = ArrayList<String>()
-
-    val projection = arrayOf(COL_UID)
-    val selection = "$COL_EMAIL = ? AND $COL_FOLDER = ?"
-    val selectionArgs = arrayOf(email, label)
-
-    val cursor = contentResolver.query(baseContentUri, projection, selection, selectionArgs, null)
-
-    if (cursor != null) {
-      while (cursor.moveToNext()) {
-        uidList.add(cursor.getString(cursor.getColumnIndex(COL_UID)))
-      }
-      cursor.close()
-    }
-
-    return uidList
   }
 
   /**
@@ -833,24 +708,6 @@ class MessageDaoSource : BaseDaoSource() {
     return if (email != null && label != null && contentResolver != null) {
       val where = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
       val selectionArgs = arrayOf(email, label, uid.toString())
-      contentResolver.delete(baseContentUri, where, selectionArgs)
-    } else
-      -1
-  }
-
-  /**
-   * Delete cached messages.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The email that the message linked.
-   * @param label   The folder label.
-   * @return The number of rows deleted.
-   */
-  fun deleteCachedMsgs(context: Context, email: String?, label: String?): Int {
-    val contentResolver = context.contentResolver
-    return if (email != null && label != null && contentResolver != null) {
-      val where = "$COL_EMAIL= ? AND $COL_FOLDER = ?"
-      val selectionArgs = arrayOf(email, label)
       contentResolver.delete(baseContentUri, where, selectionArgs)
     } else
       -1
@@ -989,96 +846,6 @@ class MessageDaoSource : BaseDaoSource() {
     const val COL_REPLY_TO = "reply_to"
 
     const val ENCRYPTED_STATE_UNDEFINED = -1
-
-    const val IMAP_MESSAGES_INFO_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
-        TABLE_NAME_MESSAGES + " (" +
-        BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-        COL_EMAIL + " VARCHAR(100) NOT NULL, " +
-        COL_FOLDER + " TEXT NOT NULL, " +
-        COL_UID + " INTEGER NOT NULL, " +
-        COL_RECEIVED_DATE + " INTEGER DEFAULT NULL, " +
-        COL_SENT_DATE + " INTEGER DEFAULT NULL, " +
-        COL_FROM_ADDRESSES + " TEXT DEFAULT NULL, " +
-        COL_TO_ADDRESSES + " TEXT DEFAULT NULL, " +
-        COL_CC_ADDRESSES + " TEXT DEFAULT NULL, " +
-        COL_SUBJECT + " TEXT DEFAULT NULL, " +
-        COL_FLAGS + " TEXT DEFAULT NULL, " +
-        COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS + " TEXT DEFAULT NULL, " +
-        COL_IS_MESSAGE_HAS_ATTACHMENTS + " INTEGER DEFAULT 0, " +
-        COL_IS_ENCRYPTED + " INTEGER DEFAULT -1, " +
-        COL_IS_NEW + " INTEGER DEFAULT -1, " +
-        COL_STATE + " INTEGER DEFAULT -1, " +
-        COL_ATTACHMENTS_DIRECTORY + " TEXT, " +
-        COL_ERROR_MSG + " TEXT DEFAULT NULL, " +
-        COL_REPLY_TO + " TEXT DEFAULT NULL" + ");"
-
-    const val CREATE_INDEX_EMAIL_IN_MESSAGES = INDEX_PREFIX + COL_EMAIL + "_in_" + TABLE_NAME_MESSAGES +
-        " ON " + TABLE_NAME_MESSAGES + " (" + COL_EMAIL + ")"
-
-    const val CREATE_INDEX_EMAIL_UID_FOLDER_IN_MESSAGES = (
-        UNIQUE_INDEX_PREFIX + COL_EMAIL + "_" + COL_UID + "_" + COL_FOLDER
-            + "_in_" + TABLE_NAME_MESSAGES +
-            " ON " + TABLE_NAME_MESSAGES +
-            " (" + COL_EMAIL + ", " + COL_UID + ", " + COL_FOLDER + ")")
-
-    /**
-     * Prepare the content values for insert to the database. This method must be called in the
-     * non-UI thread.
-     *
-     * @param email The email that the message linked.
-     * @param label The folder label.
-     * @param msg   The message which will be added to the database.
-     * @param uid   The message UID.
-     * @param isNew true if need to mark a given message as new
-     * @return generated [ContentValues]
-     * @throws MessagingException This exception may be occured when we call methods of thr
-     * [Message] object
-     */
-    fun prepareContentValues(email: String, label: String, msg: Message, uid: Long, isNew: Boolean): ContentValues {
-      val contentValues = ContentValues()
-      contentValues.put(COL_EMAIL, email)
-      contentValues.put(COL_FOLDER, label)
-      contentValues.put(COL_UID, uid)
-      if (msg.receivedDate != null) {
-        contentValues.put(COL_RECEIVED_DATE, msg.receivedDate.time)
-      }
-      if (msg.sentDate != null) {
-        contentValues.put(COL_SENT_DATE, msg.sentDate.time)
-      }
-      contentValues.put(COL_FROM_ADDRESSES, InternetAddress.toString(msg.from))
-      contentValues.put(COL_REPLY_TO, InternetAddress.toString(msg.replyTo))
-      contentValues.put(COL_TO_ADDRESSES, InternetAddress.toString(msg.getRecipients(Message.RecipientType.TO)))
-      contentValues.put(COL_CC_ADDRESSES, InternetAddress.toString(msg.getRecipients(Message.RecipientType.CC)))
-      contentValues.put(COL_SUBJECT, msg.subject)
-      contentValues.put(COL_FLAGS, msg.flags.toString().toUpperCase(Locale.getDefault()))
-      contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, EmailUtil.hasAtt(msg))
-      if (!msg.flags.contains(Flags.Flag.SEEN)) {
-        contentValues.put(COL_IS_NEW, isNew)
-      }
-      return contentValues
-    }
-
-    /**
-     * Prepare [ContentValues] using [OutgoingMessageInfo]
-     *
-     * @param email The email that the message linked.
-     * @param label The folder label.
-     * @param uid   The message UID.
-     * @param info  The input [OutgoingMessageInfo]
-     * @return generated [ContentValues]
-     */
-    fun prepareContentValues(email: String, label: String, uid: Long, info: OutgoingMessageInfo): ContentValues {
-      val contentValues = ContentValues()
-      contentValues.put(COL_EMAIL, email)
-      contentValues.put(COL_FOLDER, label)
-      contentValues.put(COL_UID, uid)
-      contentValues.put(COL_SENT_DATE, System.currentTimeMillis())
-      contentValues.put(COL_SUBJECT, info.subject)
-      contentValues.put(COL_FLAGS, MessageFlag.SEEN.value)
-      contentValues.put(COL_IS_MESSAGE_HAS_ATTACHMENTS, !CollectionUtils.isEmpty(info.atts)
-          || !CollectionUtils.isEmpty(info.forwardedAtts))
-      return contentValues
-    }
 
     private fun parseArray(attributesAsString: String?, regex: String): Array<String> {
       return if (attributesAsString != null && attributesAsString.isNotEmpty()) {
