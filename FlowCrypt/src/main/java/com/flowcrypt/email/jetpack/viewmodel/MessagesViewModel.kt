@@ -14,12 +14,16 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagedList
 import androidx.paging.toLiveData
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.IOException
 
 
 /**
@@ -63,6 +67,36 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
   fun cleanFolderCache(folderName: String?) {
     viewModelScope.launch {
       roomDatabase.msgDao().delete(accountLiveData.value?.email, folderName)
+    }
+  }
+
+  fun deleteOutgoingMsg(messageEntity: MessageEntity) {
+    val app = getApplication<Application>()
+
+    viewModelScope.launch {
+      val isMsgDeleted = with(messageEntity) {
+        roomDatabase.msgDao().deleteOutgoingMsg(email, folder, uid) > 0
+      }
+
+      if (isMsgDeleted) {
+        val outgoingMsgCount = roomDatabase.msgDao().getOutgoingMessages(accountLiveData.value?.email).size
+        val outboxLabel = roomDatabase.labelDao().getLabelSuspend(accountLiveData.value?.email,
+            JavaEmailConstants.FOLDER_OUTBOX)
+
+        outboxLabel?.let {
+          roomDatabase.labelDao().updateSuspend(it.copy(messageCount = outgoingMsgCount))
+        }
+
+        if (messageEntity.hasAttachments == true) {
+          try {
+            val parentDirName = messageEntity.attachmentsDirectory
+            val dir = File(File(app.cacheDir, Constants.ATTACHMENTS_CACHE_DIR), parentDirName)
+            FileAndDirectoryUtils.deleteDir(dir)
+          } catch (e: IOException) {
+            e.printStackTrace()
+          }
+        }
+      }
     }
   }
 }

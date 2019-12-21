@@ -218,12 +218,13 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
             else
               R.string.can_not_delete_sending_message, Toast.LENGTH_LONG).show()
           } else {
-            val deletedRows = MessageDaoSource().deleteOutgoingMsg(context!!, details)
+            //todo-denbond7 #793
+            /*val deletedRows = MessageDaoSource().deleteOutgoingMsg(context!!, details)
             if (deletedRows > 0) {
               Toast.makeText(context!!, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
             } else {
               Toast.makeText(context!!, R.string.can_not_delete_sent_message, Toast.LENGTH_LONG).show()
-            }
+            }*/
           }
 
           activity?.setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null)

@@ -17,7 +17,6 @@ import android.os.RemoteException
 import android.provider.BaseColumns
 import android.text.TextUtils
 import android.util.LongSparseArray
-import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -25,11 +24,7 @@ import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.BaseDaoSource
-import com.flowcrypt.email.util.FileAndDirectoryUtils
-import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
-import java.io.File
-import java.io.IOException
 import java.util.*
 import javax.mail.Flags
 import javax.mail.Message
@@ -354,32 +349,6 @@ class MessageDaoSource : BaseDaoSource() {
   }
 
   /**
-   * Get all messages of the outbox folder which are not sent.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The email of the [LocalFolder].
-   * @return A  list of [GeneralMessageDetails] objects.
-   */
-  fun getOutboxMsgs(context: Context, email: String): List<GeneralMessageDetails> {
-    val contentResolver = context.contentResolver
-    val selection = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_STATE NOT IN (?, ?)"
-    val selectionArgs = arrayOf(email, JavaEmailConstants.FOLDER_OUTBOX, MessageState.SENT
-        .value.toString(), MessageState.SENT_WITHOUT_LOCAL_COPY.value.toString())
-    val cursor = contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
-
-    val generalMsgDetailsList = ArrayList<GeneralMessageDetails>()
-
-    if (cursor != null) {
-      while (cursor.moveToNext()) {
-        generalMsgDetailsList.add(getMsgInfo(cursor))
-      }
-      cursor.close()
-    }
-
-    return generalMsgDetailsList
-  }
-
-  /**
    * Get new messages.
    *
    * @param context Interface to global information about an application environment.
@@ -685,58 +654,6 @@ class MessageDaoSource : BaseDaoSource() {
       return contentResolver.applyBatch(baseContentUri.authority!!, ops)
     } else
       return emptyArray()
-  }
-
-  /**
-   * Delete an outgoing message.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param details Input details about the outgoing message.
-   * @return The number of rows deleted.
-   */
-  fun deleteOutgoingMsg(context: Context, details: GeneralMessageDetails): Int {
-    var deletedRows = -1
-    val contentResolver = context.contentResolver
-
-    if (contentResolver != null) {
-      val where = (COL_EMAIL + "= ? AND "
-          + COL_FOLDER + " = ? AND "
-          + COL_UID + " = ? AND "
-          + COL_STATE + " != " + MessageState.SENDING.value + " AND "
-          + COL_STATE + " != " + MessageState.SENT_WITHOUT_LOCAL_COPY.value)
-      val selectionArgs = arrayOf(details.email, details.label, details.uid.toString())
-      deletedRows = contentResolver.delete(baseContentUri, where, selectionArgs)
-    }
-
-    if (deletedRows > 0) {
-      ImapLabelsDaoSource().updateLabelMsgsCount(context, details.email,
-          JavaEmailConstants.FOLDER_OUTBOX, MessageDaoSource().getOutboxMsgs(context,
-          details.email).size)
-
-      if (details.hasAtts) {
-        val attDaoSource = AttachmentDaoSource()
-
-        val attachmentInfoList = attDaoSource.getAttInfoList(context, details
-            .email, JavaEmailConstants.FOLDER_OUTBOX, details.uid.toLong())
-
-        if (!CollectionUtils.isEmpty(attachmentInfoList)) {
-          attDaoSource.deleteAtts(context, details.email,
-              details.label, details.uid.toLong())
-
-          if (!TextUtils.isEmpty(details.attsDir)) {
-            try {
-              val parentDirName = details.attsDir
-              val dir = File(File(context.cacheDir, Constants.ATTACHMENTS_CACHE_DIR), parentDirName)
-              FileAndDirectoryUtils.deleteDir(dir)
-            } catch (e: IOException) {
-              e.printStackTrace()
-            }
-          }
-        }
-      }
-    }
-
-    return deletedRows
   }
 
   /**

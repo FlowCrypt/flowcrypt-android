@@ -28,7 +28,6 @@ import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
@@ -123,8 +122,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         newMsgId = FlowCryptRoomDatabase.getDatabase(applicationContext).msgDao().insert(messageEntity)
 
         if (newMsgId > 0) {
-          val msgsCount = msgDaoSource.getOutboxMsgs(this, email).size
-          ImapLabelsDaoSource().updateLabelMsgsCount(this, email, label, msgsCount)
+          updateOutgoingMsgCount(email)
 
           val hasAtts = !CollectionUtils.isEmpty(outgoingMsgInfo.atts)
               || !CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)
@@ -171,9 +169,18 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       }
 
       if (newMsgId > 0) {
-        val newMsgsCount = msgDaoSource.getOutboxMsgs(this, email).size
-        ImapLabelsDaoSource().updateLabelMsgsCount(this, email, label, newMsgsCount)
+        updateOutgoingMsgCount(email)
       }
+    }
+  }
+
+  private fun updateOutgoingMsgCount(email: String) {
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(this)
+    val outgoingMsgCount = roomDatabase.msgDao().getOutgoingMessages(email).size
+    val outboxLabel = roomDatabase.labelDao().getLabel(email, JavaEmailConstants.FOLDER_OUTBOX)
+
+    outboxLabel?.let {
+      roomDatabase.labelDao().update(it.copy(messageCount = outgoingMsgCount))
     }
   }
 

@@ -23,12 +23,10 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
@@ -39,8 +37,6 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
-import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.ManualHandledException
 import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.UserRecoverableAuthException
@@ -317,10 +313,10 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     })
   }
 
-  private fun handleOutgoingMsgWhichHasSomeError(details: GeneralMessageDetails) {
+  private fun handleOutgoingMsgWhichHasSomeError(messageEntity: MessageEntity) {
     var message: String? = null
 
-    when (details.msgState) {
+    when (messageEntity.msgState) {
       MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
       MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND -> message = getString(R.string.message_failed_to_forward)
 
@@ -330,11 +326,11 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         message = getString(R.string.error_happened_during_creation, getString(R.string.support_email))
 
       MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> {
-        val errorMsg = details.errorMsg
-        if (errorMsg!!.equals(details.email, ignoreCase = true)) {
+        val errorMsg = messageEntity.errorMsg
+        if (errorMsg!!.equals(messageEntity.email, ignoreCase = true)) {
           message = getString(R.string.no_key_available_for_your_email_account, getString(R.string.support_email))
         } else {
-          message = getString(R.string.no_key_available_for_your_emails, errorMsg, details.email,
+          message = getString(R.string.no_key_available_for_your_emails, errorMsg, messageEntity.email,
               getString(R.string.support_email))
         }
       }
@@ -357,13 +353,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     val infoDialogFragment = InfoDialogFragment.newInstance(null, message!!, null, false, true, false)
     infoDialogFragment.onInfoDialogButtonClickListener = object : InfoDialogFragment.OnInfoDialogButtonClickListener {
       override fun onInfoDialogButtonClick() {
-        val deletedRows = MessageDaoSource().deleteOutgoingMsg(context!!, details)
-        if (deletedRows > 0) {
-          Toast.makeText(context, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
-        } else {
-          ExceptionUtil.handleError(
-              ManualHandledException("Can't delete outgoing messages which have some errors."))
-        }
+        messagesViewModel.deleteOutgoingMsg(messageEntity)
       }
     }
 

@@ -16,6 +16,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.dao.AccountDao
 import com.flowcrypt.email.database.dao.AttachmentDao
+import com.flowcrypt.email.database.dao.LabelDao
 import com.flowcrypt.email.database.dao.MessagesDao
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
@@ -29,7 +30,7 @@ import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.KeyEntity
-import com.flowcrypt.email.database.entity.LabelsEntity
+import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTableAction
@@ -52,7 +53,7 @@ import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTable
   AttachmentEntity::class,
   ContactEntity::class,
   KeyEntity::class,
-  LabelsEntity::class,
+  LabelEntity::class,
   MessageEntity::class,
   UserIdEmailsKeysEntity::class
 ],
@@ -63,6 +64,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun accountDao(): AccountDao
 
   abstract fun attachmentDao(): AttachmentDao
+
+  abstract fun labelDao(): LabelDao
 
   companion object {
     const val COLUMN_NAME_COUNT = "COUNT(*)"

@@ -10,6 +10,8 @@ import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
 import java.util.*
 
@@ -38,6 +40,18 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
 
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid IN (:msgsUID)")
   abstract fun delete(email: String?, label: String?, msgsUID: Collection<Long>): Int
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state NOT IN (:msgStates)")
+  abstract fun getOutgoingMessages(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
+                                   msgStates: Collection<Int> = listOf(
+                                       MessageState.SENDING.value,
+                                       MessageState.SENT_WITHOUT_LOCAL_COPY.value)): List<MessageEntity>
+
+  @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid = :uid AND state NOT IN (:msgStates)")
+  abstract suspend fun deleteOutgoingMsg(email: String?, label: String?, uid: Long?,
+                                         msgStates: Collection<Int> = listOf(
+                                             MessageState.SENDING.value,
+                                             MessageState.SENT_WITHOUT_LOCAL_COPY.value)): Int
 
   @Transaction
   open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {

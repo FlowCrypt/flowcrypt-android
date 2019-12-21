@@ -17,7 +17,7 @@ import androidx.room.PrimaryKey
  *         E-mail: DenBond7@gmail.com
  */
 @Entity(tableName = "imap_labels")
-data class LabelsEntity(
+data class LabelEntity(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
     val email: String,
     @ColumnInfo(name = "folder_name") val folderName: String,

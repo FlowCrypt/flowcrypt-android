@@ -28,8 +28,14 @@ interface BaseDao<T> {
   fun insert(entities: Collection<T>)
 
   @Update
-  fun update(entity: T)
+  fun update(entity: T): Int
+
+  @Update
+  suspend fun updateSuspend(entity: T): Int
 
   @Delete
-  fun delete(entity: T)
+  fun delete(entity: T): Int
+
+  @Delete
+  suspend fun deleteSuspend(entity: T): Int
 }

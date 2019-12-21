@@ -24,11 +24,11 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -112,7 +112,6 @@ class MessagesSenderJobService : JobService() {
           val context = weakRef.get()!!.applicationContext
           val account = AccountDaoSource().getActiveAccountInformation(context)
           val msgDaoSource = MessageDaoSource()
-          val imapLabelsDaoSource = ImapLabelsDaoSource()
 
           val attsCacheDir = File(context.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
 
@@ -130,7 +129,7 @@ class MessagesSenderJobService : JobService() {
             }
 
             if (!CollectionUtils.isEmpty(queuedMsgs)) {
-              sendQueuedMsgs(context, account, msgDaoSource, imapLabelsDaoSource, attsCacheDir)
+              sendQueuedMsgs(context, account, msgDaoSource, attsCacheDir)
             }
 
             if (!CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
@@ -176,8 +175,8 @@ class MessagesSenderJobService : JobService() {
       isFailed = values[0]!!
     }
 
-    private fun sendQueuedMsgs(context: Context, account: AccountDao, msgDaoSource: MessageDaoSource,
-                               imapLabelsDaoSource: ImapLabelsDaoSource, attsCacheDir: File) {
+    private fun sendQueuedMsgs(context: Context, account: AccountDao,
+                               msgDaoSource: MessageDaoSource, attsCacheDir: File) {
       var list: List<GeneralMessageDetails>
       var lastMsgUID = 0
       val email = account.email
@@ -230,8 +229,13 @@ class MessagesSenderJobService : JobService() {
               deleteMsgAtts(context, account, attsCacheDir, msgDetails, attsDaoSource)
             }
 
-            val msgsCount = msgDaoSource.getOutboxMsgs(context, msgEmail).size
-            imapLabelsDaoSource.updateLabelMsgsCount(context, email, JavaEmailConstants.FOLDER_OUTBOX, msgsCount)
+            val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+            val outgoingMsgCount = roomDatabase.msgDao().getOutgoingMessages(email).size
+            val outboxLabel = roomDatabase.labelDao().getLabel(email, JavaEmailConstants.FOLDER_OUTBOX)
+
+            outboxLabel?.let {
+              roomDatabase.labelDao().update(it.copy(messageCount = outgoingMsgCount))
+            }
           }
         } catch (e: Exception) {
           e.printStackTrace()
