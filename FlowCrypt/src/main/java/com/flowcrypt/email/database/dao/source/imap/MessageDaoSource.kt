@@ -511,25 +511,6 @@ class MessageDaoSource : BaseDaoSource() {
   }
 
   /**
-   * Delete a message from a some folder in the local database.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The email that the message linked.
-   * @param label   The folder label.
-   * @param uid     The message UID.
-   * @return The number of rows deleted.
-   */
-  fun deleteMsg(context: Context, email: String?, label: String?, uid: Long): Int {
-    val contentResolver = context.contentResolver
-    return if (email != null && label != null && contentResolver != null) {
-      val where = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
-      val selectionArgs = arrayOf(email, label, uid.toString())
-      contentResolver.delete(baseContentUri, where, selectionArgs)
-    } else
-      -1
-  }
-
-  /**
    * @param context              Interface to global information about an application environment.
    * @param email                The email that the message linked.
    * @param label                The folder label.

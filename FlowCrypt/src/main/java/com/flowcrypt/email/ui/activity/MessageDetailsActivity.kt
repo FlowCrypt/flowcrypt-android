@@ -384,11 +384,12 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   private fun messageNotAvailableInFolder() {
-    MessageDaoSource().deleteMsg(this, details!!.email, label, details!!.uid.toLong())
+    //todo-denbond7 #793
+    /*MessageDaoSource().deleteMsg(this, details!!.email, label, details!!.uid.toLong())
     AttachmentDaoSource().deleteAtts(this, details!!.email, label, details!!.uid.toLong())
     setResult(RESULT_CODE_UPDATE_LIST, null)
     Toast.makeText(this, R.string.email_does_not_available_in_this_folder, Toast.LENGTH_LONG).show()
-    finish()
+    finish()*/
   }
 
   /**

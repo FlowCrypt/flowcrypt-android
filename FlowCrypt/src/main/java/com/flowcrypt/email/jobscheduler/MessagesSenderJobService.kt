@@ -193,24 +193,24 @@ class MessagesSenderJobService : JobService() {
         }
 
         val iterator = list.iterator()
-        var msgDetails: MessageEntity? = null
+        var msgEntity: MessageEntity? = null
 
         while (iterator.hasNext()) {
           val tempMsgDetails = iterator.next()
           if (tempMsgDetails.uid > lastMsgUID) {
-            msgDetails = tempMsgDetails
+            msgEntity = tempMsgDetails
             break
           }
         }
 
-        if (msgDetails == null) {
-          msgDetails = list[0]
+        if (msgEntity == null) {
+          msgEntity = list[0]
         }
 
-        lastMsgUID = msgDetails.uid
-        val msgUid = msgDetails.uid
-        val msgEmail = msgDetails.email
-        val msgLabel = msgDetails.folder
+        lastMsgUID = msgEntity.uid
+        val msgUid = msgEntity.uid
+        val msgEmail = msgEntity.email
+        val msgLabel = msgEntity.folder
 
         try {
           msgDaoSource.resetMsgsWithSendingState(context, email)
@@ -221,19 +221,19 @@ class MessagesSenderJobService : JobService() {
           val attInfoList = attsDaoSource.getAttInfoList(context, email,
               JavaEmailConstants.FOLDER_OUTBOX, msgUid)
 
-          val isMsgSent = sendMsg(context, account, msgDaoSource, msgDetails, attInfoList)
+          val isMsgSent = sendMsg(context, account, msgDaoSource, msgEntity, attInfoList)
 
           if (!isMsgSent) {
             continue
           }
 
-          msgDetails = roomDatabase.msgDao().getMessage(email, JavaEmailConstants.FOLDER_OUTBOX, msgUid)
+          msgEntity = roomDatabase.msgDao().getMessage(email, JavaEmailConstants.FOLDER_OUTBOX, msgUid)
 
-          if (msgDetails != null && msgDetails.msgState === MessageState.SENT) {
-            msgDaoSource.deleteMsg(context, email, JavaEmailConstants.FOLDER_OUTBOX, msgUid)
+          if (msgEntity != null && msgEntity.msgState === MessageState.SENT) {
+            roomDatabase.msgDao().delete(msgEntity)
 
             if (!CollectionUtils.isEmpty(attInfoList)) {
-              deleteMsgAtts(context, account, attsCacheDir, msgDetails, attsDaoSource)
+              deleteMsgAtts(context, account, attsCacheDir, msgEntity, attsDaoSource)
             }
 
             val outgoingMsgCount = roomDatabase.msgDao().getOutboxMessages(email).size
@@ -248,7 +248,7 @@ class MessagesSenderJobService : JobService() {
           ExceptionUtil.handleError(e)
 
           if (!GeneralUtil.isConnected(context)) {
-            if (msgDetails.msgState !== MessageState.SENT) {
+            if (msgEntity.msgState !== MessageState.SENT) {
               msgDaoSource.updateMsgState(context, msgEmail, msgLabel, msgUid, MessageState.QUEUED)
             }
 
@@ -294,30 +294,30 @@ class MessagesSenderJobService : JobService() {
         if (CollectionUtils.isEmpty(list)) {
           break
         }
-        val details = list.first()
+        val msgEntity = list.first()
         try {
           val attDaoSource = AttachmentDaoSource()
           val atts = attDaoSource.getAttInfoList(context, email,
-              JavaEmailConstants.FOLDER_OUTBOX, details.uid)
+              JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
 
-          val mimeMsg = createMimeMsg(context, sess, details, atts)
+          val mimeMsg = createMimeMsg(context, sess, msgEntity, atts)
           val isMsgSaved = saveCopyOfSentMsg(account, store, context, mimeMsg)
 
           if (!isMsgSaved) {
             continue
           }
 
-          msgDaoSource.deleteMsg(context, email, JavaEmailConstants.FOLDER_OUTBOX, details.uid)
+          roomDatabase.msgDao().delete(msgEntity)
 
           if (!CollectionUtils.isEmpty(atts)) {
-            deleteMsgAtts(context, account, attsCacheDir, details, attDaoSource)
+            deleteMsgAtts(context, account, attsCacheDir, msgEntity, attDaoSource)
           }
         } catch (e: Exception) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
 
           if (!GeneralUtil.isConnected(context)) {
-            msgDaoSource.updateMsgState(context, details.email, details.folder, details.uid,
+            msgDaoSource.updateMsgState(context, msgEntity.email, msgEntity.folder, msgEntity.uid,
                 MessageState.SENT_WITHOUT_LOCAL_COPY)
             publishProgress(true)
             break
@@ -325,13 +325,13 @@ class MessagesSenderJobService : JobService() {
 
           if (e.cause != null) {
             if (e.cause is FileNotFoundException) {
-              msgDaoSource.deleteMsg(context, email, JavaEmailConstants.FOLDER_OUTBOX, details.uid)
+              roomDatabase.msgDao().delete(msgEntity)
             } else {
-              msgDaoSource.updateMsgState(context, details.email, details.folder,
-                  details.uid, MessageState.SENT_WITHOUT_LOCAL_COPY)
+              msgDaoSource.updateMsgState(context, msgEntity.email, msgEntity.folder,
+                  msgEntity.uid, MessageState.SENT_WITHOUT_LOCAL_COPY)
             }
           } else {
-            msgDaoSource.deleteMsg(context, email, JavaEmailConstants.FOLDER_OUTBOX, details.uid)
+            roomDatabase.msgDao().delete(msgEntity)
           }
         }
       }
