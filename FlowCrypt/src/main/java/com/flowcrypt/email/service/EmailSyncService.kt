@@ -379,12 +379,13 @@ class EmailSyncService : BaseService(), SyncListener {
 
     try {
       val msgsDaoSource = MessageDaoSource()
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
       val mapOfUIDAndMsgFlags = msgsDaoSource.getMapOfUIDAndMsgFlags(this, email, folderName)
       val msgsUIDs = HashSet(mapOfUIDAndMsgFlags.keys)
       val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(msgsUIDs, remoteFolder, updateMsgs)
 
-      FlowCryptRoomDatabase.getDatabase(context).msgDao().deleteByUIDs(account.email, folderName, deleteCandidatesUIDs)
+      roomDatabase.msgDao().deleteByUIDs(account.email, folderName, deleteCandidatesUIDs)
 
       val folderType = FoldersManager.getFolderType(localFolder)
       if (!GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX) {
@@ -414,14 +415,15 @@ class EmailSyncService : BaseService(), SyncListener {
           areAllMsgsEncrypted = isEncryptedModeEnabled
       )
 
-      FlowCryptRoomDatabase.getDatabase(context).msgDao().insert(msgEntities)
+      roomDatabase.msgDao().insert(msgEntities)
 
       if (!isEncryptedModeEnabled) {
         emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)
       }
 
-      val msgs = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, updateMsgs)
-      msgsDaoSource.updateMsgsByUID(this, email, folderName, remoteFolder, msgs)
+      val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, updateMsgs)
+          .map { remoteFolder.getUID(it) to it.flags }.toMap()
+      roomDatabase.msgDao().updateFlags(account.email, folderName, updateCandidates)
 
       if (newMsgs.isNotEmpty() || updateMsgs.isNotEmpty()) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE)

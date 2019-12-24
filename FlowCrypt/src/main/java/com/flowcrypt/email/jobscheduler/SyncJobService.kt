@@ -127,11 +127,12 @@ class SyncJobService : JobService(), SyncListener {
       val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(uidSet, remoteFolder, updateMsgs)
 
       val generalMsgDetailsBeforeUpdate = msgDaoSource.getNewMsgs(applicationContext, account.email, folderName)
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+      roomDatabase.msgDao().deleteByUIDs(account.email, folderName, deleteCandidatesUIDs)
 
-      FlowCryptRoomDatabase.getDatabase(applicationContext).msgDao().deleteByUIDs(account.email, folderName, deleteCandidatesUIDs)
-
-      msgDaoSource.updateMsgsByUID(applicationContext, account.email, folderName, remoteFolder,
-          EmailUtil.genUpdateCandidates(mapOfUIDsAndMsgsFlags, remoteFolder, updateMsgs))
+      val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDsAndMsgsFlags, remoteFolder,
+          updateMsgs).map { remoteFolder.getUID(it) to it.flags }.toMap()
+      roomDatabase.msgDao().updateFlags(account.email, folderName, updateCandidates)
 
       val detailsAfterUpdate = msgDaoSource.getNewMsgs(applicationContext,
           account.email, folderName)

@@ -14,6 +14,8 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
 import java.util.*
+import javax.mail.Flags
+import kotlin.collections.ArrayList
 
 /**
  * This class describes available methods for [MessageEntity]
@@ -31,6 +33,9 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getMessages(account: String, folder: String): LiveData<MessageEntity>
 
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid IN (:msgsUID)")
+  abstract fun getMsgsByUids(account: String?, folder: String?, msgsUID: Collection<Long>?): List<MessageEntity>
+
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY received_date DESC")
   abstract fun getMessagesDataSourceFactory(account: String, folder: String): DataSource
   .Factory<Int, MessageEntity>
@@ -44,8 +49,8 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state NOT IN (:msgStates)")
   abstract fun getOutboxMessages(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
                                  msgStates: Collection<Int> = listOf(
-                                       MessageState.SENDING.value,
-                                       MessageState.SENT_WITHOUT_LOCAL_COPY.value)): List<MessageEntity>
+                                     MessageState.SENDING.value,
+                                     MessageState.SENT_WITHOUT_LOCAL_COPY.value)): List<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state NOT IN (:msgStateValue)")
   abstract fun getOutboxMessages(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
@@ -76,5 +81,26 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
         i += step
       }
     }
+  }
+
+  @Transaction
+  open fun updateFlags(email: String?, label: String?, flagsMap: Map<Long, Flags>) {
+    val msgEntities = getMsgsByUids(account = email, folder = label, msgsUID = flagsMap.keys)
+    val modifiedMsgEntities = ArrayList<MessageEntity>()
+
+    for (msgEntity in msgEntities) {
+      val flags = flagsMap[msgEntity.uid]
+      flags?.let {
+        val modifiedMsgEntity = if (it.contains(Flags.Flag.SEEN)) {
+          msgEntity.copy(flags = it.toString().toUpperCase(Locale
+              .getDefault()), isNew = false)
+        } else {
+          msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()))
+        }
+        modifiedMsgEntities.add(modifiedMsgEntity)
+      }
+    }
+
+    update(modifiedMsgEntities)
   }
 }

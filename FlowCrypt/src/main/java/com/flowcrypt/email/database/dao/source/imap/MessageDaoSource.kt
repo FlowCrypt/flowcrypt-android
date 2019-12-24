@@ -24,10 +24,8 @@ import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.BaseDaoSource
-import com.sun.mail.imap.IMAPFolder
 import java.util.*
 import javax.mail.Flags
-import javax.mail.Message
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 
@@ -43,42 +41,6 @@ import javax.mail.internet.InternetAddress
 class MessageDaoSource : BaseDaoSource() {
 
   override val tableName: String = TABLE_NAME_MESSAGES
-
-  /**
-   * This method update cached messages.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The email that the message linked.
-   * @param label   The folder label.
-   * @param folder  The [IMAPFolder] object which contains information about a
-   * remote folder.
-   * @param msgs    The messages array.
-   * @return the [ContentProviderResult] array.
-   */
-  fun updateMsgsByUID(context: Context, email: String?, label: String?,
-                      folder: IMAPFolder, msgs: Array<Message>?): Array<ContentProviderResult> {
-    val contentResolver = context.contentResolver
-    if (email != null && label != null && contentResolver != null && msgs != null && msgs.isNotEmpty()) {
-
-      val ops = ArrayList<ContentProviderOperation>()
-      for (message in msgs) {
-        val selection = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
-
-        val builder = ContentProviderOperation.newUpdate(baseContentUri)
-            .withValue(COL_FLAGS, message.flags.toString().toUpperCase(Locale.getDefault()))
-            .withSelection(selection, arrayOf(email, label, folder.getUID(message).toString()))
-            .withYieldAllowed(true)
-
-        if (message.flags.contains(Flags.Flag.SEEN)) {
-          builder.withValue(COL_IS_NEW, false)
-        }
-
-        ops.add(builder.build())
-      }
-      return contentResolver.applyBatch(baseContentUri.authority!!, ops)
-    } else
-      return emptyArray()
-  }
 
   /**
    * Update some message by the given parameters.
@@ -380,34 +342,6 @@ class MessageDaoSource : BaseDaoSource() {
     }
 
     return details
-  }
-
-  /**
-   * Get the raw MIME content of some message.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The user email.
-   * @param label   The label name.
-   * @param uid     The uid of the message.
-   * @return the raw MIME message
-   */
-  fun getRawMIME(context: Context, email: String, label: String, uid: Long): String? {
-    val contentResolver = context.contentResolver
-    val selection = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
-    val selectionArgs = arrayOf(email, label, uid.toString())
-    val cursor = contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
-
-    var rawMimeMsg: String? = null
-
-    if (cursor != null) {
-      if (cursor.moveToFirst()) {
-        rawMimeMsg = cursor.getString(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS))
-
-      }
-      cursor.close()
-    }
-
-    return rawMimeMsg
   }
 
   /**
