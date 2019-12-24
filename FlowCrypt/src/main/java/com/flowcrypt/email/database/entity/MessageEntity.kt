@@ -79,6 +79,26 @@ data class MessageEntity(
   @Ignore
   val isSeen: Boolean = flags?.contains(MessageFlag.SEEN.value) ?: false
 
+  /**
+   * Generate a list of the all recipients.
+   *
+   * @return A list of the all recipients
+   */
+  val allRecipients: List<String>
+    get() {
+      val emails = ArrayList<String>()
+
+      for (internetAddress in to) {
+        emails.add(internetAddress.address)
+      }
+
+      for (internetAddress in cc) {
+        emails.add(internetAddress.address)
+      }
+
+      return emails
+    }
+
   companion object {
     fun genMessageEntities(context: Context, email: String, label: String, folder: IMAPFolder,
                            msgs: Array<Message>?,

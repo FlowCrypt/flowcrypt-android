@@ -25,15 +25,15 @@ import java.util.*
  */
 @Dao
 abstract class MessagesDao : BaseDao<MessageEntity> {
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid = :uid")
+  abstract fun getMessage(account: String, folder: String, uid: Long): MessageEntity?
+
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getMessages(account: String, folder: String): LiveData<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY received_date DESC")
   abstract fun getMessagesDataSourceFactory(account: String, folder: String): DataSource
   .Factory<Int, MessageEntity>
-
-  @Query("SELECT * FROM messages")
-  abstract fun msgs(): DataSource.Factory<Int, MessageEntity>
 
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label")
   abstract suspend fun delete(email: String?, label: String?): Int
@@ -42,10 +42,14 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
   abstract fun delete(email: String?, label: String?, msgsUID: Collection<Long>): Int
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state NOT IN (:msgStates)")
-  abstract fun getOutgoingMessages(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
-                                   msgStates: Collection<Int> = listOf(
+  abstract fun getOutboxMessages(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
+                                 msgStates: Collection<Int> = listOf(
                                        MessageState.SENDING.value,
                                        MessageState.SENT_WITHOUT_LOCAL_COPY.value)): List<MessageEntity>
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state NOT IN (:msgStateValue)")
+  abstract fun getOutboxMessages(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
+                                 msgStateValue: Int): List<MessageEntity>
 
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid = :uid AND state NOT IN (:msgStates)")
   abstract suspend fun deleteOutgoingMsg(email: String?, label: String?, uid: Long?,

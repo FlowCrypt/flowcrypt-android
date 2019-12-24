@@ -322,33 +322,6 @@ class MessageDaoSource : BaseDaoSource() {
   }
 
   /**
-   * Get all messages of the outbox folder.
-   *
-   * @param context  Interface to global information about an application environment.
-   * @param email    The email of the [LocalFolder].
-   * @param msgState The message state which will be used for filter results.
-   * @return A  list of [GeneralMessageDetails] objects.
-   */
-  fun getOutboxMsgs(context: Context, email: String, msgState: MessageState): List<GeneralMessageDetails> {
-    val contentResolver = context.contentResolver
-    val selection = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_STATE = ?"
-    val folder = JavaEmailConstants.FOLDER_OUTBOX
-    val selectionArgs = arrayOf(email, folder, msgState.value.toString())
-    val cursor = contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
-
-    val generalMsgDetailsList = ArrayList<GeneralMessageDetails>()
-
-    if (cursor != null) {
-      while (cursor.moveToNext()) {
-        generalMsgDetailsList.add(getMsgInfo(cursor))
-      }
-      cursor.close()
-    }
-
-    return generalMsgDetailsList
-  }
-
-  /**
    * Get new messages.
    *
    * @param context Interface to global information about an application environment.
@@ -418,7 +391,7 @@ class MessageDaoSource : BaseDaoSource() {
    * @param uid     The uid of the message.
    * @return the raw MIME message
    */
-  fun getRawMIME(context: Context, email: String, label: String, uid: Int): String? {
+  fun getRawMIME(context: Context, email: String, label: String, uid: Long): String? {
     val contentResolver = context.contentResolver
     val selection = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
     val selectionArgs = arrayOf(email, label, uid.toString())

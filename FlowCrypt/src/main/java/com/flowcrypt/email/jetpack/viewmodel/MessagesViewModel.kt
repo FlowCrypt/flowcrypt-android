@@ -79,7 +79,7 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
       }
 
       if (isMsgDeleted) {
-        val outgoingMsgCount = roomDatabase.msgDao().getOutgoingMessages(accountLiveData.value?.email).size
+        val outgoingMsgCount = roomDatabase.msgDao().getOutboxMessages(accountLiveData.value?.email).size
         val outboxLabel = roomDatabase.labelDao().getLabelSuspend(accountLiveData.value?.email,
             JavaEmailConstants.FOLDER_OUTBOX)
 
