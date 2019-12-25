@@ -28,7 +28,7 @@ import javax.mail.Store
  *         Time: 12:31 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ChangeMsgsReadState(ownerKey: String, requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
+class ChangeMsgsReadStateSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
 
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
