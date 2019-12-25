@@ -482,7 +482,8 @@ class EmailUtil {
      * @return An array of the messages which are candidates for updating iin the local database.
      */
     @JvmStatic
-    fun genUpdateCandidates(map: Map<Long, String>, folder: IMAPFolder, msgs: Array<Message>): Array<Message> {
+    fun genUpdateCandidates(map: Map<Long, String?>, folder: IMAPFolder, msgs: Array<Message>):
+        Array<Message> {
       val updateCandidates = mutableListOf<Message>()
       try {
         for (msg in msgs) {

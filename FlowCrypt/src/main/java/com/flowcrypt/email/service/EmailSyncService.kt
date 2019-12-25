@@ -382,7 +382,7 @@ class EmailSyncService : BaseService(), SyncListener {
       val msgsDaoSource = MessageDaoSource()
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
-      val mapOfUIDAndMsgFlags = msgsDaoSource.getMapOfUIDAndMsgFlags(this, email, folderName)
+      val mapOfUIDAndMsgFlags = roomDatabase.msgDao().getMapOfUIDAndMsgFlags(email, folderName)
       val msgsUIDs = HashSet(mapOfUIDAndMsgFlags.keys)
       val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(msgsUIDs, remoteFolder, updateMsgs)
 

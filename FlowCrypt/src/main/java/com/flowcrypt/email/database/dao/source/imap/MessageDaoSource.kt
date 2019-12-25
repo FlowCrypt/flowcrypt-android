@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.database.dao.source.imap
 
-import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
@@ -287,34 +286,6 @@ class MessageDaoSource : BaseDaoSource() {
     }
 
     return details
-  }
-
-  /**
-   * Get a map of UID and flags of all messages in the database for some label.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The user email.
-   * @param label   The label name.
-   * @return The map of UID and flags of all messages in the database for some label.
-   */
-  @SuppressLint("UseSparseArrays")
-  fun getMapOfUIDAndMsgFlags(context: Context, email: String, label: String): Map<Long, String> {
-    val contentResolver = context.contentResolver
-    val uidList = HashMap<Long, String>()
-    val projection = arrayOf(COL_UID, COL_FLAGS)
-    val selection = "$COL_EMAIL = ? AND $COL_FOLDER = ?"
-    val selectionArgs = arrayOf(email, label)
-
-    val cursor = contentResolver.query(baseContentUri, projection, selection, selectionArgs, null)
-
-    if (cursor != null) {
-      while (cursor.moveToNext()) {
-        uidList[cursor.getLong(cursor.getColumnIndex(COL_UID))] = cursor.getString(cursor.getColumnIndex(COL_FLAGS))
-      }
-      cursor.close()
-    }
-
-    return uidList
   }
 
   /**

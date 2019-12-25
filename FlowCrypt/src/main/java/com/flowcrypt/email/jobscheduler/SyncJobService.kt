@@ -120,13 +120,14 @@ class SyncJobService : JobService(), SyncListener {
                                      updateMsgs: Array<Message>, ownerKey: String, requestCode: Int) {
     try {
       val msgDaoSource = MessageDaoSource()
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+
       val folderName = localFolder.fullName
-      val mapOfUIDsAndMsgsFlags = msgDaoSource.getMapOfUIDAndMsgFlags(applicationContext, account.email, folderName)
+      val mapOfUIDsAndMsgsFlags = roomDatabase.msgDao().getMapOfUIDAndMsgFlags(account.email, folderName)
       val uidSet = HashSet(mapOfUIDsAndMsgsFlags.keys)
       val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(uidSet, remoteFolder, updateMsgs)
 
       val generalMsgDetailsBeforeUpdate = msgDaoSource.getNewMsgs(applicationContext, account.email, folderName)
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
       roomDatabase.msgDao().deleteByUIDs(account.email, folderName, deleteCandidatesUIDs)
 
       val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDsAndMsgsFlags, remoteFolder,
@@ -198,8 +199,10 @@ class SyncJobService : JobService(), SyncListener {
       val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
 
       val msgDaoSource = MessageDaoSource()
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+
       val folderName = localFolder.fullName
-      val mapOfUIDAndMsgFlags = msgDaoSource.getMapOfUIDAndMsgFlags(context, account.email, folderName)
+      val mapOfUIDAndMsgFlags = roomDatabase.msgDao().getMapOfUIDAndMsgFlags(account.email, folderName)
 
       val uids = HashSet(mapOfUIDAndMsgFlags.keys)
 
@@ -216,7 +219,6 @@ class SyncJobService : JobService(), SyncListener {
           areAllMsgsEncrypted = isEncryptedModeEnabled
       )
 
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
       roomDatabase.msgDao().insert(msgEntities)
 
       if (!GeneralUtil.isAppForegrounded()) {

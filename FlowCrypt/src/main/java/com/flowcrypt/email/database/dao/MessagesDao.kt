@@ -95,14 +95,17 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
   /**
    * Switch [MessageState] for messages of the given folder of the given account
    *
-   * @param email      The email that the message linked.
+   * @param account      The email that the message linked.
    * @param label      The folder label.
    * @param oldValue   The old value.
    * @param newValues  The new value.
    * @return The count of the changed rows or -1 up.
    */
-  @Query("UPDATE messages SET state=:newValues WHERE state = :oldValue")
-  abstract fun changeMsgsState(email: String?, label: String?, oldValue: Int, newValues: Int): Int
+  @Query("UPDATE messages SET state=:newValues WHERE email = :account AND folder = :label AND state = :oldValue")
+  abstract fun changeMsgsState(account: String?, label: String?, oldValue: Int, newValues: Int): Int
+
+  @Query("SELECT uid, flags FROM messages WHERE email = :account AND folder = :label")
+  abstract fun getUIDAndFlagsPairs(account: String?, label: String): List<UidFlagsPair>
 
   @Transaction
   open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {
@@ -181,4 +184,18 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
 
     update(modifiedMsgEntities)
   }
+
+  /**
+   * Get a map of UID and flags of all messages in the database for some label.
+   *
+   * @param email   The user email.
+   * @param label   The label name.
+   * @return The map of UID and flags of all messages in the database for some label.
+   */
+  @Transaction
+  open fun getMapOfUIDAndMsgFlags(email: String, label: String): Map<Long, String?> {
+    return getUIDAndFlagsPairs(email, label).map { it.uid to it.flags }.toMap()
+  }
+
+  data class UidFlagsPair(val uid: Long, val flags: String? = null)
 }
