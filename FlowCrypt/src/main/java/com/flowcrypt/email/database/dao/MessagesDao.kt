@@ -92,6 +92,18 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
   @Query("SELECT uid FROM messages WHERE email = :account AND folder = :label AND flags NOT LIKE '%\\SEEN'")
   abstract fun getUIDOfUnseenMsgs(account: String?, label: String): List<Long>
 
+  /**
+   * Switch [MessageState] for messages of the given folder of the given account
+   *
+   * @param email      The email that the message linked.
+   * @param label      The folder label.
+   * @param oldValue   The old value.
+   * @param newValues  The new value.
+   * @return The count of the changed rows or -1 up.
+   */
+  @Query("UPDATE messages SET state=:newValues WHERE state = :oldValue")
+  abstract fun changeMsgsState(email: String?, label: String?, oldValue: Int, newValues: Int): LiveData<MessageEntity>
+
   @Transaction
   open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {
     val step = 50

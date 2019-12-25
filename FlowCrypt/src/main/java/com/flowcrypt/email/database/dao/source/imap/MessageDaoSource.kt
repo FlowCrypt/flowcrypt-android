@@ -56,30 +56,6 @@ class MessageDaoSource : BaseDaoSource() {
   }
 
   /**
-   * Switch [MessageState] for messages of the given folder of the given account
-   *
-   * @param context    Interface to global information about an application environment.
-   * @param email      The email that the message linked.
-   * @param label      The folder label.
-   * @param oldValue   The old value.
-   * @param newValues  The new value.
-   * @return The count of the changed rows or -1 up.
-   */
-  fun changeMsgsState(context: Context, email: String?, label: String?, oldValue: MessageState,
-                      newValues: MessageState): Int {
-    val resolver = context.contentResolver
-
-    val values = ContentValues()
-    values.put(COL_STATE, newValues.value)
-
-    return if (email != null && label != null && resolver != null) {
-      val where = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_STATE = ? "
-      resolver.update(baseContentUri, values, where, arrayOf(email, label, oldValue.value.toString()))
-    } else
-      -1
-  }
-
-  /**
    * Update a state of some message.
    *
    * @param context      Interface to global information about an application environment

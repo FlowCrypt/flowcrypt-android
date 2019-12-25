@@ -150,8 +150,9 @@ class MessagesSenderJobService : JobService() {
         val context = weakRef.get()?.applicationContext
         context?.let {
           val account = AccountDaoSource().getActiveAccountInformation(context)
-          MessageDaoSource().changeMsgsState(context, account?.email, JavaEmailConstants
-              .FOLDER_OUTBOX, MessageState.QUEUED, MessageState.AUTH_FAILURE)
+          val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+          roomDatabase.msgDao().changeMsgsState(account?.email, JavaEmailConstants
+              .FOLDER_OUTBOX, MessageState.QUEUED.value, MessageState.AUTH_FAILURE.value)
         }
         e.printStackTrace()
         publishProgress(true)
