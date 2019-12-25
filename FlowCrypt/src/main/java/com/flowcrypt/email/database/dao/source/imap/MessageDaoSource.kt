@@ -11,7 +11,6 @@ import android.database.Cursor
 import android.os.Build
 import android.provider.BaseColumns
 import android.text.TextUtils
-import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
@@ -286,26 +285,6 @@ class MessageDaoSource : BaseDaoSource() {
     }
 
     return details
-  }
-
-  /**
-   * Add the messages which have a current state equal [MessageState.SENDING] to the sending queue again.
-   *
-   * @param context Interface to global information about an application environment
-   * @param email   The email that the message linked
-   * @return The count of the updated row or -1 up.
-   */
-  fun resetMsgsWithSendingState(context: Context, email: String?): Int {
-    val contentValues = ContentValues()
-    contentValues.put(COL_STATE, MessageState.QUEUED.value)
-
-    val contentResolver = context.contentResolver
-    return if (email != null && contentResolver != null) {
-      val selection = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_STATE = ? "
-      val selectionArgs = arrayOf(email, JavaEmailConstants.FOLDER_OUTBOX, MessageState.SENDING.value.toString())
-      contentResolver.update(baseContentUri, contentValues, selection, selectionArgs)
-    } else
-      -1
   }
 
   private fun parseFlags(string: String): Array<String> {

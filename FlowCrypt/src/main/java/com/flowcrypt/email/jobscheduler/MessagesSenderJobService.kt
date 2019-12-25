@@ -118,7 +118,7 @@ class MessagesSenderJobService : JobService() {
           val attsCacheDir = File(context.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
 
           if (account != null) {
-            msgDaoSource.resetMsgsWithSendingState(context, account.email)
+            roomDatabase.msgDao().resetMsgsWithSendingState(account.email)
 
             val queuedMsgs = roomDatabase.msgDao().getOutboxMessages(account = account.email,
                 msgStateValue = MessageState.QUEUED.value)
@@ -214,7 +214,7 @@ class MessagesSenderJobService : JobService() {
         val msgLabel = msgEntity.folder
 
         try {
-          msgDaoSource.resetMsgsWithSendingState(context, email)
+          roomDatabase.msgDao().resetMsgsWithSendingState(account.email)
           msgDaoSource.updateMsgState(context, msgEmail, msgLabel, msgUid, MessageState.SENDING)
           Thread.sleep(2000)
 

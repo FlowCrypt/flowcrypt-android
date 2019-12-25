@@ -104,6 +104,16 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
   @Query("UPDATE messages SET state=:newValues WHERE email = :account AND folder = :label AND state = :oldValue")
   abstract fun changeMsgsState(account: String?, label: String?, oldValue: Int, newValues: Int): Int
 
+  /**
+   * Add the messages which have a current state equal [MessageState.SENDING] to the sending queue again.
+   *
+   * @param account   The email that the message linked
+   */
+  @Query("UPDATE messages SET state=2 WHERE email = :account AND folder = :label AND state =:oldValue")
+  abstract fun resetMsgsWithSendingState(account: String?,
+                                         label: String = JavaEmailConstants.FOLDER_OUTBOX,
+                                         oldValue: Int = MessageState.SENDING.value): Int
+
   @Query("SELECT uid, flags FROM messages WHERE email = :account AND folder = :label")
   abstract fun getUIDAndFlagsPairs(account: String?, label: String): List<UidFlagsPair>
 
