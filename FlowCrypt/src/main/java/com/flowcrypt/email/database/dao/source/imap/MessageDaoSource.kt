@@ -19,7 +19,6 @@ import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.BaseDaoSource
 import java.util.*
-import javax.mail.Flags
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 
@@ -142,30 +141,6 @@ class MessageDaoSource : BaseDaoSource() {
           Collections.nCopies(uidList.size, "?")) + ")"
 
       contentResolver.update(baseContentUri, contentValues, where, args.toTypedArray())
-    } else
-      -1
-  }
-
-  /**
-   * Update the message flags in the local database.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The email that the message linked.
-   * @param label   The folder label.
-   * @param uid     The message UID.
-   * @param flags   The message flags.
-   * @return The count of the updated row or -1 up.
-   */
-  fun updateLocalMsgFlags(context: Context, email: String?, label: String?, uid: Long, flags: Flags): Int {
-    val resolver = context.contentResolver
-    return if (email != null && label != null && resolver != null) {
-      val values = ContentValues()
-      values.put(COL_FLAGS, flags.toString().toUpperCase(Locale.getDefault()))
-      if (flags.contains(Flags.Flag.SEEN)) {
-        values.put(COL_IS_NEW, false)
-      }
-      val where = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
-      resolver.update(baseContentUri, values, where, arrayOf(email, label, uid.toString()))
     } else
       -1
   }

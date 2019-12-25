@@ -29,7 +29,7 @@ import kotlin.collections.ArrayList
 @Dao
 abstract class MessagesDao : BaseDao<MessageEntity> {
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid = :uid")
-  abstract fun getMessage(account: String, folder: String, uid: Long): MessageEntity?
+  abstract fun getMsg(account: String?, folder: String?, uid: Long): MessageEntity?
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getMessages(account: String, folder: String): LiveData<MessageEntity>
@@ -102,7 +102,7 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
    * @return The count of the changed rows or -1 up.
    */
   @Query("UPDATE messages SET state=:newValues WHERE state = :oldValue")
-  abstract fun changeMsgsState(email: String?, label: String?, oldValue: Int, newValues: Int): LiveData<MessageEntity>
+  abstract fun changeMsgsState(email: String?, label: String?, oldValue: Int, newValues: Int): Int
 
   @Transaction
   open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {
@@ -134,8 +134,7 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
       val flags = flagsMap[msgEntity.uid]
       flags?.let {
         val modifiedMsgEntity = if (it.contains(Flags.Flag.SEEN)) {
-          msgEntity.copy(flags = it.toString().toUpperCase(Locale
-              .getDefault()), isNew = false)
+          msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()), isNew = false)
         } else {
           msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()))
         }
@@ -144,6 +143,28 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
     }
 
     update(modifiedMsgEntities)
+  }
+
+  /**
+   * Update the message flags in the local database.
+   *
+   * @param email   The email that the message linked.
+   * @param label   The folder label.
+   * @param uid     The message UID.
+   * @param flags   The message flags.
+   */
+  @Transaction
+  open fun updateLocalMsgFlags(email: String?, label: String?, uid: Long, flags: Flags) {
+    val msgEntity = getMsg(account = email, folder = label, uid = uid)
+    val modifiedMsgEntity = if (flags.contains(Flags.Flag.SEEN)) {
+      msgEntity?.copy(flags = flags.toString().toUpperCase(Locale.getDefault()), isNew = false)
+    } else {
+      msgEntity?.copy(flags = flags.toString().toUpperCase(Locale.getDefault()))
+    }
+
+    modifiedMsgEntity?.let {
+      update(it)
+    }
   }
 
   @Transaction

@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.sync
 
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.util.GeneralUtil
@@ -77,8 +78,8 @@ class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListen
     val msg = e.message
     if (msg != null && e.messageChangeType == MessageChangedEvent.FLAGS_CHANGED) {
       try {
-        msgDaoSource.updateLocalMsgFlags(syncListener.context, account.email, local.fullName,
-            remote.getUID(msg), msg.flags)
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(syncListener.context)
+        roomDatabase.msgDao().updateLocalMsgFlags(account.email, local.fullName, remote.getUID(msg), msg.flags)
         syncListener.onMsgChanged(account, local, remote, msg, "", 0)
       } catch (msgException: MessagingException) {
         msgException.printStackTrace()

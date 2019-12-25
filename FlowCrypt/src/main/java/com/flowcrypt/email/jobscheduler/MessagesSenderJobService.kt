@@ -228,7 +228,7 @@ class MessagesSenderJobService : JobService() {
             continue
           }
 
-          msgEntity = roomDatabase.msgDao().getMessage(email, JavaEmailConstants.FOLDER_OUTBOX, msgUid)
+          msgEntity = roomDatabase.msgDao().getMsg(email, JavaEmailConstants.FOLDER_OUTBOX, msgUid)
 
           if (msgEntity != null && msgEntity.msgState === MessageState.SENT) {
             roomDatabase.msgDao().delete(msgEntity)
