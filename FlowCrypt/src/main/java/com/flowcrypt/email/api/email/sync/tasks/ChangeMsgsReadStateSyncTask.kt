@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.sync.tasks
 
 import android.content.Context
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
@@ -40,13 +41,14 @@ class ChangeMsgsReadStateSyncTask(ownerKey: String, requestCode: Int) : BaseSync
 
   private fun changeMsgsReadState(context: Context, account: AccountDao,
                                   msgDaoSource: MessageDaoSource, store: Store, state: MessageState) {
-    val candidatesForMark = msgDaoSource.getMsgsWithState(context, account.email, state)
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+    val candidatesForMark = roomDatabase.msgDao().getMsgsWithState(account.email, state.value)
 
     if (candidatesForMark.isNotEmpty()) {
-      val setOfFolders = candidatesForMark.map { it.label }.toSet()
+      val setOfFolders = candidatesForMark.map { it.folder }.toSet()
 
       for (folder in setOfFolders) {
-        val filteredMsgs = candidatesForMark.filter { it.label == folder }
+        val filteredMsgs = candidatesForMark.filter { it.folder == folder }
 
         if (filteredMsgs.isEmpty()) {
           continue

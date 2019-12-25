@@ -117,6 +117,9 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
   @Query("SELECT uid, flags FROM messages WHERE email = :account AND folder = :label")
   abstract fun getUIDAndFlagsPairs(account: String?, label: String): List<UidFlagsPair>
 
+  @Query("SELECT * FROM messages WHERE email = :account AND state =:stateValue")
+  abstract fun getMsgsWithState(account: String?, stateValue: Int): List<MessageEntity>
+
   @Transaction
   open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {
     val step = 50

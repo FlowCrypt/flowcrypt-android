@@ -11,7 +11,6 @@ import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.Folder
 import javax.mail.Message
@@ -32,19 +31,19 @@ class MovingToInboxSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(o
     val context = listener.context
     val foldersManager = FoldersManager.fromDatabase(context, account.email)
     val inboxFolder = foldersManager.findInboxFolder() ?: return
-    val msgDaoSource = MessageDaoSource()
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
     while (true) {
-      val candidatesForMovingToInbox = msgDaoSource.getMsgsWithState(context, account.email,
-          MessageState.PENDING_MOVE_TO_INBOX)
+      val candidatesForMovingToInbox = roomDatabase.msgDao().getMsgsWithState(account.email,
+          MessageState.PENDING_MOVE_TO_INBOX.value)
 
       if (candidatesForMovingToInbox.isEmpty()) {
         break
       } else {
-        val setOfFolders = candidatesForMovingToInbox.map { it.label }.toSet()
+        val setOfFolders = candidatesForMovingToInbox.map { it.folder }.toSet()
 
         for (folder in setOfFolders) {
-          val filteredMsgs = candidatesForMovingToInbox.filter { it.label == folder }
+          val filteredMsgs = candidatesForMovingToInbox.filter { it.folder == folder }
 
           if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)) {
             continue
@@ -59,7 +58,7 @@ class MovingToInboxSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(o
 
           if (msgs.isNotEmpty()) {
             remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-            FlowCryptRoomDatabase.getDatabase(context).msgDao().deleteByUIDs(account.email, inboxFolder.fullName, uidList)
+            roomDatabase.msgDao().deleteByUIDs(account.email, inboxFolder.fullName, uidList)
           }
 
           remoteSrcFolder.close(false)
