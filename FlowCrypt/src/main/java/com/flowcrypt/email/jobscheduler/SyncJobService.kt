@@ -147,8 +147,9 @@ class SyncJobService : JobService(), SyncListener {
           }
         } else {
           if (!detailsDeleteCandidates.isEmpty()) {
-            val unseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, account.email, folderName)
-            messagesNotificationManager!!.notify(this, account, localFolder, detailsAfterUpdate, unseenMsgs, true)
+            val unseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(account.email, folderName)
+            messagesNotificationManager?.notify(this, account, localFolder, detailsAfterUpdate,
+                unseenMsgs, true)
           }
         }
       }
@@ -215,7 +216,8 @@ class SyncJobService : JobService(), SyncListener {
           areAllMsgsEncrypted = isEncryptedModeEnabled
       )
 
-      FlowCryptRoomDatabase.getDatabase(context).msgDao().insert(msgEntities)
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+      roomDatabase.msgDao().insert(msgEntities)
 
       if (!GeneralUtil.isAppForegrounded()) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && newCandidates.isEmpty()) {
@@ -224,7 +226,7 @@ class SyncJobService : JobService(), SyncListener {
 
         val newMsgsList = msgDaoSource.getNewMsgs(applicationContext,
             account.email, folderName)
-        val unseenUIDs = msgDaoSource.getUIDOfUnseenMsgs(this, account.email, folderName)
+        val unseenUIDs = roomDatabase.msgDao().getUIDOfUnseenMsgs(account.email, folderName)
 
         messagesNotificationManager?.notify(this, account, localFolder, newMsgsList, unseenUIDs,
             false)

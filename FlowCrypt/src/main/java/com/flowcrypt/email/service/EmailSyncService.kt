@@ -303,7 +303,8 @@ class EmailSyncService : BaseService(), SyncListener {
           areAllMsgsEncrypted = false
       )
 
-      FlowCryptRoomDatabase.getDatabase(context).msgDao().insert(msgEntities)
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+      roomDatabase.msgDao().insert(msgEntities)
 
       if (newMsgs.isNotEmpty()) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE)
@@ -313,7 +314,7 @@ class EmailSyncService : BaseService(), SyncListener {
 
       if (!GeneralUtil.isAppForegrounded()) {
         val detailsList = msgDaoSource.getNewMsgs(this, email, folderName)
-        val uidListOfUnseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, email, folderName)
+        val uidListOfUnseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(email, folderName)
         notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, false)
       }
     } catch (e: MessagingException) {
@@ -395,7 +396,7 @@ class EmailSyncService : BaseService(), SyncListener {
           }
         } else {
           val detailsList = msgsDaoSource.getNewMsgs(this, email, folderName)
-          val uidListOfUnseenMsgs = msgsDaoSource.getUIDOfUnseenMsgs(this, email, folderName)
+          val uidListOfUnseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(email, folderName)
           notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, false)
         }
       }
@@ -541,8 +542,9 @@ class EmailSyncService : BaseService(), SyncListener {
 
       } else {
         val msgDaoSource = MessageDaoSource()
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
         val detailsList = msgDaoSource.getNewMsgs(this, email, folderName)
-        val uidListOfUnseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, email, folderName)
+        val uidListOfUnseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(email, folderName)
         notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, true)
       }
     }
@@ -556,9 +558,10 @@ class EmailSyncService : BaseService(), SyncListener {
 
     if (folderType === FoldersManager.FolderType.INBOX && !GeneralUtil.isAppForegrounded()) {
       val msgDaoSource = MessageDaoSource()
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
       val detailsList = msgDaoSource.getNewMsgs(this, email, folderName)
-      val uidListOfUnseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, email, folderName)
+      val uidListOfUnseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(email, folderName)
 
       notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, false)
     }

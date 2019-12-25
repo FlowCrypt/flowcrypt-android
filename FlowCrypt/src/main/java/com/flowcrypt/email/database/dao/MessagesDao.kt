@@ -82,6 +82,16 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
   @Query("SELECT uid FROM messages WHERE email = :account AND folder = :label AND is_encrypted = -1")
   abstract fun getNotCheckedUIDs(account: String?, label: String): List<Long>
 
+  /**
+   * Get a list of UID and flags of all unseen messages in the database for some label.
+   *
+   * @param account   The user email.
+   * @param label     The label name.
+   * @return The list of UID and flags of all unseen messages in the database for some label.
+   */
+  @Query("SELECT uid FROM messages WHERE email = :account AND folder = :label AND flags NOT LIKE '%\\SEEN'")
+  abstract fun getUIDOfUnseenMsgs(account: String?, label: String): List<Long>
+
   @Transaction
   open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {
     val step = 50

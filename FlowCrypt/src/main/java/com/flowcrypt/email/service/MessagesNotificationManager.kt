@@ -61,7 +61,8 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
    * @param isSilent              true if we don't need sound and vibration for Android 7.0 and below.
    */
   fun notify(context: Context, account: AccountDao?, localFolder: LocalFolder,
-             generalMsgDetailsList: List<GeneralMessageDetails>?, uidListOfUnseenMsgs: List<Int>, isSilent: Boolean) {
+             generalMsgDetailsList: List<GeneralMessageDetails>?, uidListOfUnseenMsgs: List<Long>,
+             isSilent: Boolean) {
 
     if (account == null || generalMsgDetailsList == null || generalMsgDetailsList.isEmpty()) {
       notificationManagerCompat.cancel(NOTIFICATIONS_GROUP_MESSAGES)
@@ -96,7 +97,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
 
   private fun notifyWithSingleNotification(context: Context, account: AccountDao,
                                            folder: LocalFolder, details: List<GeneralMessageDetails>,
-                                           uidOfUnseenMsgs: List<Int>, isSilent: Boolean) {
+                                           uidOfUnseenMsgs: List<Long>, isSilent: Boolean) {
     val onlyEncrypted = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
         SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
             Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")

@@ -367,36 +367,6 @@ class MessageDaoSource : BaseDaoSource() {
   }
 
   /**
-   * Get a list of UID and flags of all unseen messages in the database for some label.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The user email.
-   * @param label   The label name.
-   * @return The list of UID and flags of all unseen messages in the database for some label.
-   */
-  @SuppressLint("UseSparseArrays")
-  fun getUIDOfUnseenMsgs(context: Context, email: String, label: String): List<Int> {
-    val contentResolver = context.contentResolver
-
-    val projection = arrayOf(COL_UID)
-    val selection = (COL_EMAIL + " = ? AND " + COL_FOLDER + " = ? AND " + COL_FLAGS + " NOT LIKE '%"
-        + MessageFlag.SEEN.value + "%'")
-    val selectionArgs = arrayOf(email, label)
-
-    val cursor = contentResolver.query(baseContentUri, projection, selection, selectionArgs, null)
-
-    val uidList = ArrayList<Int>()
-    if (cursor != null) {
-      while (cursor.moveToNext()) {
-        uidList.add(cursor.getInt(cursor.getColumnIndex(COL_UID)))
-      }
-      cursor.close()
-    }
-
-    return uidList
-  }
-
-  /**
    * Add the messages which have a current state equal [MessageState.SENDING] to the sending queue again.
    *
    * @param context Interface to global information about an application environment
