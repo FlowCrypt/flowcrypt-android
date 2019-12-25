@@ -8,8 +8,8 @@ package com.flowcrypt.email.api.email.sync.tasks
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.Folder
 import javax.mail.Session
@@ -34,9 +34,9 @@ class CheckIsLoadedMessagesEncryptedSyncTask(ownerKey: String,
     val context = listener.context
     val folder = localFolder.fullName
 
-    val msgDaoSource = MessageDaoSource()
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
-    val uidList = msgDaoSource.getNotCheckedUIDs(context, account.email, folder)
+    val uidList = roomDatabase.msgDao().getNotCheckedUIDs(account.email, folder)
 
     if (uidList.isEmpty()) {
       return
@@ -45,10 +45,9 @@ class CheckIsLoadedMessagesEncryptedSyncTask(ownerKey: String,
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
     imapFolder.open(Folder.READ_ONLY)
 
-    val booleanLongSparseArray = EmailUtil.getMsgsEncryptionStates(imapFolder, uidList)
-
-    if (booleanLongSparseArray.size() > 0) {
-      msgDaoSource.updateEncryptionStates(context, account.email, folder, booleanLongSparseArray)
+    val encryptionStates = EmailUtil.getMsgsEncryptionStates(imapFolder, uidList)
+    if (encryptionStates.isNotEmpty()) {
+      roomDatabase.msgDao().updateEncryptionStates(account.email, folder, encryptionStates)
     }
 
     listener.onIdentificationToEncryptionCompleted(account, localFolder, imapFolder, ownerKey, requestCode)

@@ -8,9 +8,9 @@ package com.flowcrypt.email.api.email.sync.tasks
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.FetchProfile
 import javax.mail.Message
@@ -38,11 +38,11 @@ class SyncFolderSyncTask(ownerKey: String,
     val folder = store.getFolder(folderName) as IMAPFolder
     folder.open(javax.mail.Folder.READ_ONLY)
 
-    val messageDaoSource = MessageDaoSource()
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
     val nextUID = folder.uidNext
-    val newestCachedUID = messageDaoSource.getLastUIDOfMsgInLabel(context, account.email, folderName)
-    val loadedMsgsCount = messageDaoSource.getLabelMsgsCount(context, account.email, folderName)
+    val newestCachedUID = roomDatabase.msgDao().getLastUIDOfMsgForLabel(account.email, folderName)
+    val loadedMsgsCount = roomDatabase.msgDao().count(account.email, folderName)
 
     var newMsgs = emptyArray<Message>()
 
@@ -71,11 +71,11 @@ class SyncFolderSyncTask(ownerKey: String,
     }
 
     val updatedMsgs: Array<Message>
-    if (isEncryptedModeEnabled) {
-      val oldestCachedUID = messageDaoSource.getOldestUIDOfMsgInLabel(context, account.email, folderName)
-      updatedMsgs = EmailUtil.getUpdatedMsgsByUID(folder, oldestCachedUID.toLong(), newestCachedUID.toLong())
+    updatedMsgs = if (isEncryptedModeEnabled) {
+      val oldestCachedUID = roomDatabase.msgDao().getOldestUIDOfMsgForLabel(account.email, folderName)
+      EmailUtil.getUpdatedMsgsByUID(folder, oldestCachedUID.toLong(), newestCachedUID.toLong())
     } else {
-      updatedMsgs = EmailUtil.getUpdatedMsgs(folder, loadedMsgsCount, newMsgs.size)
+      EmailUtil.getUpdatedMsgs(folder, loadedMsgsCount, newMsgs.size)
     }
 
     listener.onRefreshMsgsReceived(account, localFolder, folder, newMsgs, updatedMsgs, ownerKey, requestCode)

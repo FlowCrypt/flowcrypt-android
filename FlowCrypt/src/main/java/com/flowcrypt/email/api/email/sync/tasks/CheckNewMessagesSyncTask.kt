@@ -8,9 +8,9 @@ package com.flowcrypt.email.api.email.sync.tasks
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.FetchProfile
 import javax.mail.Folder
@@ -41,7 +41,7 @@ class CheckNewMessagesSyncTask(ownerKey: String,
     folder.open(Folder.READ_ONLY)
 
     val nextUID = folder.uidNext
-    val newestCachedUID = MessageDaoSource().getLastUIDOfMsgInLabel(context, email, folderName)
+    val newestCachedUID = FlowCryptRoomDatabase.getDatabase(context).msgDao().getLastUIDOfMsgForLabel(email, folderName)
     var newMsgs: Array<Message> = emptyArray()
 
     if (newestCachedUID < nextUID - 1) {

@@ -6,22 +6,16 @@
 package com.flowcrypt.email.database.dao.source.imap
 
 import android.annotation.SuppressLint
-import android.content.ContentProviderOperation
-import android.content.ContentProviderResult
 import android.content.ContentValues
 import android.content.Context
-import android.content.OperationApplicationException
 import android.database.Cursor
 import android.os.Build
-import android.os.RemoteException
 import android.provider.BaseColumns
 import android.text.TextUtils
-import android.util.LongSparseArray
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.BaseDaoSource
 import java.util.*
@@ -345,87 +339,6 @@ class MessageDaoSource : BaseDaoSource() {
   }
 
   /**
-   * Get the last UID of a message in the database for some label.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The user email.
-   * @param label   The label name.
-   * @return The last UID for the current label or -1 if it not exists.
-   */
-  fun getLastUIDOfMsgInLabel(context: Context, email: String, label: String): Int {
-    val contentResolver = context.contentResolver
-
-    val projection = arrayOf("max($COL_UID)")
-    val selection = "$COL_EMAIL = ? AND $COL_FOLDER = ?"
-    val selectionArgs = arrayOf(email, label)
-
-    val cursor = contentResolver.query(baseContentUri, projection, selection, selectionArgs, null)
-
-    if (cursor != null && cursor.moveToFirst()) {
-      val uid = cursor.getInt(0)
-      cursor.close()
-      return uid
-    }
-
-    return -1
-  }
-
-  /**
-   * Get the oldest UID of a message in the database for some label.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The user email.
-   * @param label   The label name.
-   * @return The last UID for the current label or -1 if it not exists.
-   */
-  fun getOldestUIDOfMsgInLabel(context: Context, email: String, label: String): Int {
-    val contentResolver = context.contentResolver
-
-    val projection = arrayOf("min($COL_UID)")
-    val selection = "$COL_EMAIL = ? AND $COL_FOLDER = ?"
-    val selectionArgs = arrayOf(email, label)
-
-    val cursor = contentResolver.query(baseContentUri, projection, selection, selectionArgs, null)
-
-    if (cursor != null && cursor.moveToFirst()) {
-      val uid = cursor.getInt(0)
-      cursor.close()
-      return uid
-    }
-
-    return -1
-  }
-
-  /**
-   * Get the list of UID of all messages in the database which were not checked to encryption.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The user email.
-   * @param label   The label name.
-   * @return The list of UID of selected messages in the database for some label.
-   */
-  fun getNotCheckedUIDs(context: Context, email: String, label: String): List<Long> {
-    val contentResolver = context.contentResolver
-    val uidList = ArrayList<Long>()
-
-    val projection = arrayOf(COL_UID)
-    val selection = COL_EMAIL + " = ? AND " + COL_FOLDER + " = ?" + " AND " + COL_IS_ENCRYPTED + " = " +
-        ENCRYPTED_STATE_UNDEFINED
-    val selectionArgs = arrayOf(email, label)
-
-    val cursor = contentResolver.query(baseContentUri, projection, selection, selectionArgs, null)
-
-    if (cursor != null) {
-      while (cursor.moveToNext()) {
-        uidList.add(cursor.getLong(cursor.getColumnIndex(COL_UID)))
-      }
-      cursor.close()
-    }
-
-    return uidList
-  }
-
-  /**
    * Get a map of UID and flags of all messages in the database for some label.
    *
    * @param context Interface to global information about an application environment.
@@ -481,67 +394,6 @@ class MessageDaoSource : BaseDaoSource() {
     }
 
     return uidList
-  }
-
-  /**
-   * Get the count of messages in the database for some label.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The user email.
-   * @param label   The label name.
-   * @return The count of messages for the current label.
-   */
-  fun getLabelMsgsCount(context: Context, email: String, label: String): Int {
-    val contentResolver = context.contentResolver
-
-    val projection = arrayOf(FlowCryptRoomDatabase.COLUMN_NAME_COUNT)
-    val selection = "$COL_EMAIL = ? AND $COL_FOLDER = ?"
-    val selectionArgs = arrayOf(email, label)
-
-    val cursor = contentResolver.query(baseContentUri, projection, selection, selectionArgs, null)
-
-    if (cursor != null && cursor.moveToFirst()) {
-      val uid = cursor.getInt(cursor.getColumnIndex(FlowCryptRoomDatabase
-          .COLUMN_NAME_COUNT))
-      cursor.close()
-      return uid
-    }
-
-    return 0
-  }
-
-  /**
-   * @param context              Interface to global information about an application environment.
-   * @param email                The email that the message linked.
-   * @param label                The folder label.
-   * @param msgsEncryptionStates The array which contains information about an encrypted state of some messages
-   * @return the [ContentProviderResult] array.
-   * @throws RemoteException
-   * @throws OperationApplicationException
-   */
-  fun updateEncryptionStates(context: Context, email: String, label: String,
-                             msgsEncryptionStates: LongSparseArray<Boolean>?): Array<ContentProviderResult> {
-    val contentResolver = context.contentResolver
-
-    if (msgsEncryptionStates != null && msgsEncryptionStates.size() > 0) {
-      val ops = ArrayList<ContentProviderOperation>()
-      var i = 0
-      val arraySize = msgsEncryptionStates.size()
-      while (i < arraySize) {
-        val uid = msgsEncryptionStates.keyAt(i)
-        val b = msgsEncryptionStates.get(uid)
-        val selection = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
-
-        ops.add(ContentProviderOperation.newUpdate(baseContentUri)
-            .withValue(COL_IS_ENCRYPTED, b)
-            .withSelection(selection, arrayOf(email, label, uid.toString()))
-            .withYieldAllowed(true)
-            .build())
-        i++
-      }
-      return contentResolver.applyBatch(baseContentUri.authority!!, ops)
-    } else
-      return emptyArray()
   }
 
   /**

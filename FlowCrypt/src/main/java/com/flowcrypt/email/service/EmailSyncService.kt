@@ -18,7 +18,6 @@ import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
 import android.util.Log
-import android.util.LongSparseArray
 import androidx.core.app.NotificationManagerCompat
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -282,7 +281,8 @@ class EmailSyncService : BaseService(), SyncListener {
 
   override fun onNewMsgsReceived(account: AccountDao, localFolder: LocalFolder,
                                  remoteFolder: IMAPFolder, newMsgs: Array<javax.mail.Message>,
-                                 msgsEncryptionStates: LongSparseArray<Boolean>, ownerKey: String, requestCode: Int) {
+                                 msgsEncryptionStates: Map<Long, Boolean>, ownerKey: String,
+                                 requestCode: Int) {
     LogsUtil.d(TAG, "onMessagesReceived:message count: " + newMsgs.size)
     try {
       val email = account.email

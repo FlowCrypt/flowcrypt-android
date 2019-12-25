@@ -25,7 +25,7 @@ interface BaseDao<T> {
   fun insert(vararg entities: T)
 
   @Insert
-  fun insert(entities: Collection<T>)
+  fun insert(entities: Iterable<T>)
 
   @Update
   fun update(entity: T): Int
@@ -34,10 +34,10 @@ interface BaseDao<T> {
   suspend fun updateSuspend(entity: T): Int
 
   @Update
-  fun update(entities: Collection<T>): Int
+  fun update(entities: Iterable<T>): Int
 
   @Update
-  suspend fun updateSuspend(entities: Collection<T>): Int
+  suspend fun updateSuspend(entities: Iterable<T>): Int
 
   @Delete
   fun delete(entity: T): Int

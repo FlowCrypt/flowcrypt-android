@@ -8,7 +8,6 @@ package com.flowcrypt.email.database.entity
 import android.content.ContentValues
 import android.content.Context
 import android.provider.BaseColumns
-import android.util.LongSparseArray
 import androidx.preference.PreferenceManager
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -31,6 +30,7 @@ import javax.mail.Message
 import javax.mail.MessageRemovedException
 import javax.mail.MessagingException
 import javax.mail.internet.InternetAddress
+import kotlin.collections.HashMap
 
 /**
  * @author Denis Bondarenko
@@ -102,7 +102,7 @@ data class MessageEntity(
   companion object {
     fun genMessageEntities(context: Context, email: String, label: String, folder: IMAPFolder,
                            msgs: Array<Message>?,
-                           msgsEncryptionStates: LongSparseArray<Boolean> = LongSparseArray(),
+                           msgsEncryptionStates: Map<Long, Boolean> = HashMap(),
                            isNew: Boolean, areAllMsgsEncrypted: Boolean): List<MessageEntity> {
       val messageEntities = mutableListOf<MessageEntity>()
       msgs?.let { msgsList ->

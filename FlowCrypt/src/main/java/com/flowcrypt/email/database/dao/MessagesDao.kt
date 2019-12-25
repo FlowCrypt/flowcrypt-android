@@ -17,6 +17,7 @@ import java.util.*
 import javax.mail.Flags
 import kotlin.collections.ArrayList
 
+
 /**
  * This class describes available methods for [MessageEntity]
  *
@@ -62,6 +63,25 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
                                              MessageState.SENDING.value,
                                              MessageState.SENT_WITHOUT_LOCAL_COPY.value)): Int
 
+  @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :folder")
+  abstract fun count(account: String?, folder: String?): Int
+
+  @Query("SELECT max(uid) FROM messages WHERE email = :account AND folder = :folder")
+  abstract fun getLastUIDOfMsgForLabel(account: String?, folder: String?): Int
+
+  @Query("SELECT min(uid) FROM messages WHERE email = :account AND folder = :folder")
+  abstract fun getOldestUIDOfMsgForLabel(account: String?, folder: String?): Int
+
+  /**
+   * Get the list of UID of all messages in the database which were not checked to encryption.
+   *
+   * @param account   The user email.
+   * @param label     The label name.
+   * @return The list of UID of selected messages in the database for some label.
+   */
+  @Query("SELECT uid FROM messages WHERE email = :account AND folder = :label AND is_encrypted = -1")
+  abstract fun getNotCheckedUIDs(account: String?, label: String): List<Long>
+
   @Transaction
   open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {
     val step = 50
@@ -98,6 +118,21 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
           msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()))
         }
         modifiedMsgEntities.add(modifiedMsgEntity)
+      }
+    }
+
+    update(modifiedMsgEntities)
+  }
+
+  @Transaction
+  open fun updateEncryptionStates(email: String?, label: String?, flagsMap: Map<Long, Boolean>) {
+    val msgEntities = getMsgsByUids(account = email, folder = label, msgsUID = flagsMap.keys)
+    val modifiedMsgEntities = ArrayList<MessageEntity>()
+
+    for (msgEntity in msgEntities) {
+      val isEncrypted = flagsMap[msgEntity.uid]
+      isEncrypted?.let {
+        modifiedMsgEntities.add(msgEntity.copy(isEncrypted = isEncrypted))
       }
     }
 

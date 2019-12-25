@@ -16,7 +16,6 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.RemoteException
 import android.util.Log
-import android.util.LongSparseArray
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -191,7 +190,7 @@ class SyncJobService : JobService(), SyncListener {
   }
 
   override fun onNewMsgsReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
-                                 newMsgs: Array<Message>, msgsEncryptionStates: LongSparseArray<Boolean>,
+                                 newMsgs: Array<Message>, msgsEncryptionStates: Map<Long, Boolean>,
                                  ownerKey: String, requestCode: Int) {
     try {
       val context = applicationContext
