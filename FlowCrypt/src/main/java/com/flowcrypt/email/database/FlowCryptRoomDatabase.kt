@@ -17,7 +17,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.dao.AccountDao
 import com.flowcrypt.email.database.dao.AttachmentDao
 import com.flowcrypt.email.database.dao.LabelDao
-import com.flowcrypt.email.database.dao.MessagesDao
+import com.flowcrypt.email.database.dao.MessageDao
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
@@ -58,7 +58,7 @@ import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTable
 ],
     version = FlowCryptRoomDatabase.DB_VERSION)
 abstract class FlowCryptRoomDatabase : RoomDatabase() {
-  abstract fun msgDao(): MessagesDao
+  abstract fun msgDao(): MessageDao
 
   abstract fun accountDao(): AccountDao
 
