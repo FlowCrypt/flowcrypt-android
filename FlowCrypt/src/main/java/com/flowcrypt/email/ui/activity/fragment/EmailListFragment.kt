@@ -29,6 +29,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
+import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
@@ -52,7 +53,8 @@ import javax.mail.AuthenticationFailedException
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListener {
+class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListener,
+    MsgsPagedListAdapter.OnMessageClickListener {
 
   private var recyclerViewMsgs: RecyclerView? = null
   private var emptyView: TextView? = null
@@ -118,7 +120,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    adapter = MsgsPagedListAdapter()
+    adapter = MsgsPagedListAdapter(this)
     messagesViewModel = ViewModelProvider(this).get(MessagesViewModel::class.java)
   }
 
@@ -289,6 +291,11 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
   fun onRefreshMsgsCompleted() {
     swipeRefreshLayout?.isRefreshing = false
+  }
+
+  override fun onMsgClick(msgEntity: MessageEntity) {
+    startActivityForResult(MessageDetailsActivity.getIntent(context,
+        listener?.currentFolder, msgEntity), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
   }
 
   private fun showConnProblemHint() {

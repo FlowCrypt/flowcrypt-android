@@ -40,7 +40,8 @@ import javax.mail.internet.InternetAddress
  *         Time: 4:48 PM
  *         E-mail: DenBond7@gmail.com
  */
-class MsgsPagedListAdapter : PagedListAdapter<MessageEntity, MsgsPagedListAdapter.MessageViewHolder>(DIFF_CALLBACK) {
+class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickListener? = null) :
+    PagedListAdapter<MessageEntity, MsgsPagedListAdapter.MessageViewHolder>(DIFF_CALLBACK) {
   private val senderNamePattern: Pattern
 
   init {
@@ -53,7 +54,11 @@ class MsgsPagedListAdapter : PagedListAdapter<MessageEntity, MsgsPagedListAdapte
   }
 
   override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
-    updateItem(getItem(position), holder)
+    val msgEntity = getItem(position)
+    updateItem(msgEntity, holder)
+    holder.itemView.setOnClickListener {
+      msgEntity?.let { onMessageClickListener?.onMsgClick(it) }
+    }
   }
 
   private fun updateItem(messageEntity: MessageEntity?, viewHolder: MessageViewHolder) {
@@ -314,6 +319,10 @@ class MsgsPagedListAdapter : PagedListAdapter<MessageEntity, MsgsPagedListAdapte
     var imageViewAtts: ImageView? = itemView.findViewById(R.id.imageViewAtts)
     var imageViewStatus: ImageView? = itemView.findViewById(R.id.imageViewStatus)
     var viewIsEncrypted: View? = itemView.findViewById(R.id.viewIsEncrypted)
+  }
+
+  interface OnMessageClickListener {
+    fun onMsgClick(msgEntity: MessageEntity)
   }
 
   companion object {

@@ -175,7 +175,7 @@ abstract class BaseTest {
 
   fun getMsgInfo(path: String, mimeMsgPath: String): IncomingMessageInfo? {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
-    incomingMsgInfo?.generalMsgDetails?.let {
+    incomingMsgInfo?.msgEntity?.let {
       val uri = MessageDao().addRow(getTargetContext(), it) ?: throw IllegalStateException()
       MsgsCacheManager.addMsg(uri.lastPathSegment
           ?: throw IllegalStateException(), getContext().assets.open(mimeMsgPath))

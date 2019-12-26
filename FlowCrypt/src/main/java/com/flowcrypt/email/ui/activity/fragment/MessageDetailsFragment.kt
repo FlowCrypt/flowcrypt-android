@@ -52,6 +52,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
@@ -73,7 +74,7 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 
 /**
- * This fragment describe details of some message.
+ * This fragment describe msgEntity of some message.
  *
  * @author DenBond7
  * Date: 03.05.2017
@@ -103,7 +104,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
   private var dateFormat: java.text.DateFormat? = null
   private var msgInfo: IncomingMessageInfo? = null
-  private var details: GeneralMessageDetails? = null
+  private var msgEntity: MessageEntity? = null
   private var localFolder: LocalFolder? = null
   private var folderType: FoldersManager.FolderType? = null
 
@@ -123,7 +124,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     val activityIntent = activity!!.intent
 
     if (activityIntent != null) {
-      this.details = activityIntent.getParcelableExtra(MessageDetailsActivity.EXTRA_KEY_GENERAL_MESSAGE_DETAILS)
+      this.msgEntity = activityIntent.getParcelableExtra(MessageDetailsActivity.EXTRA_KEY_MSG)
       this.localFolder = activityIntent.getParcelableExtra(MessageDetailsActivity.EXTRA_KEY_FOLDER)
     }
 
@@ -186,7 +187,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     menuItemArchiveMsg?.isVisible = isArchiveActionEnabled
     menuItemDeleteMsg?.isVisible = isDeleteActionEnabled
     menuActionMoveToInbox?.isVisible = isMoveToInboxActionEnabled
-    menuActionMarkUnread?.isVisible = !JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)
+    menuActionMarkUnread?.isVisible = !JavaEmailConstants.FOLDER_OUTBOX.equals(msgEntity?.folder,
+        ignoreCase = true)
 
     menuItemArchiveMsg?.isEnabled = isAdditionalActionEnabled
     menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
@@ -198,28 +200,28 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     return when (item.itemId) {
       R.id.menuActionArchiveMessage -> {
         //todo-denbond7 #793
-        /*msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
-            details?.uid?.toLong() ?: 0, MessageState.PENDING_ARCHIVING)*/
+        /*msgDaoSource.updateMsgState(context!!, msgEntity?.email ?: "", msgEntity?.label ?: "",
+            msgEntity?.uid?.toLong() ?: 0, MessageState.PENDING_ARCHIVING)*/
         (activity as? BaseSyncActivity)?.archiveMsgs()
         activity?.finish()
         true
       }
 
       R.id.menuActionDeleteMessage -> {
-        if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
+        if (JavaEmailConstants.FOLDER_OUTBOX.equals(msgEntity!!.folder, ignoreCase = true)) {
           //todo-denbond7 #793
-          val details: GeneralMessageDetails? = null/*msgDaoSource.getMsg(context!!, this
-          .details!!.email,
-              this.details!!.label, this.details!!.uid.toLong())*/
+          val msgEntity: GeneralMessageDetails? = null/*msgDaoSource.getMsg(context!!, this
+          .msgEntity!!.email,
+              this.msgEntity!!.label, this.msgEntity!!.uid.toLong())*/
 
-          if (details == null || details.msgState === MessageState.SENDING) {
-            Toast.makeText(context!!, if (details == null)
+          if (msgEntity == null || msgEntity.msgState === MessageState.SENDING) {
+            Toast.makeText(context!!, if (msgEntity == null)
               R.string.can_not_delete_sent_message
             else
               R.string.can_not_delete_sending_message, Toast.LENGTH_LONG).show()
           } else {
             //todo-denbond7 #793
-            /*val deletedRows = MessageDaoSource().deleteOutgoingMsg(context!!, details)
+            /*val deletedRows = MessageDaoSource().deleteOutgoingMsg(context!!, msgEntity)
             if (deletedRows > 0) {
               Toast.makeText(context!!, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
             } else {
@@ -230,8 +232,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           activity?.setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null)
         } else {
           //todo-denbond7 #793
-          /*msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
-              details?.uid?.toLong() ?: 0, MessageState.PENDING_DELETING)*/
+          /*msgDaoSource.updateMsgState(context!!, msgEntity?.email ?: "", msgEntity?.label ?: "",
+              msgEntity?.uid?.toLong() ?: 0, MessageState.PENDING_DELETING)*/
           (activity as? BaseSyncActivity)?.deleteMsgs()
         }
         activity?.finish()
@@ -240,8 +242,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
       R.id.menuActionMoveToInbox -> {
         //todo-denbond7 #793
-        /*msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
-            details?.uid?.toLong() ?: 0, MessageState.PENDING_MOVE_TO_INBOX)*/
+        /*msgDaoSource.updateMsgState(context!!, msgEntity?.email ?: "", msgEntity?.label ?: "",
+            msgEntity?.uid?.toLong() ?: 0, MessageState.PENDING_MOVE_TO_INBOX)*/
         (activity as? BaseSyncActivity)?.moveMsgsToINBOX()
         activity?.finish()
         true
@@ -249,10 +251,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
       R.id.menuActionMarkUnread -> {
         //todo-denbond7 #793
-        /*msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
-            details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_UNREAD)*/
+        /*msgDaoSource.updateMsgState(context!!, msgEntity?.email ?: "", msgEntity?.label ?: "",
+            msgEntity?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_UNREAD)*/
         //todo-denbond7 #793
-        //msgDaoSource.setSeenStatus(context!!, details?.email, details?.label, details?.uid? .toLong() ?: 0L, false)
+        //msgDaoSource.setSeenStatus(context!!, msgEntity?.email, msgEntity?.label, msgEntity?.uid? .toLong() ?: 0L, false)
         (activity as? BaseSyncActivity)?.changeMsgsReadState()
         activity?.finish()
         true
@@ -380,12 +382,12 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   }
 
   /**
-   * Update message details.
+   * Update message msgEntity.
    *
-   * @param details This object contains general message details.
+   * @param msgEntity This object contains general message msgEntity.
    */
-  fun updateMsgDetails(details: GeneralMessageDetails) {
-    this.details = details
+  fun updateMsgDetails(msgEntity: MessageEntity) {
+    this.msgEntity = msgEntity
   }
 
   fun updateAttInfos(attInfoList: ArrayList<AttachmentInfo>) {
@@ -418,7 +420,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
    * Show a dialog where the user can select some public key which will be attached to a message.
    */
   private fun showSendersPublicKeyDialog() {
-    val fragment = ChoosePublicKeyDialogFragment.newInstance(details!!.email,
+    val fragment = ChoosePublicKeyDialogFragment.newInstance(msgEntity!!.email,
         ListView.CHOICE_MODE_SINGLE, R.plurals.tell_sender_to_update_their_settings)
     fragment.setTargetFragment(this@MessageDetailsFragment, REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION)
     fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
@@ -503,7 +505,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       }
     }
 
-    when (details?.msgState) {
+    when (msgEntity?.msgState) {
       MessageState.PENDING_ARCHIVING -> isArchiveActionEnabled = false
       else -> {
       }
@@ -535,19 +537,19 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   }
 
   private fun updateViews() {
-    if (details != null) {
-      val subject = if (TextUtils.isEmpty(details!!.subject)) getString(R.string.no_subject) else details!!.subject
+    if (msgEntity != null) {
+      val subject = if (TextUtils.isEmpty(msgEntity!!.subject)) getString(R.string.no_subject) else msgEntity!!.subject
 
       if (folderType === FoldersManager.FolderType.SENT) {
-        textViewSenderAddress!!.text = EmailUtil.getFirstAddressString(details!!.to)
+        textViewSenderAddress!!.text = EmailUtil.getFirstAddressString(msgEntity!!.to)
       } else {
-        textViewSenderAddress!!.text = EmailUtil.getFirstAddressString(details!!.from)
+        textViewSenderAddress!!.text = EmailUtil.getFirstAddressString(msgEntity!!.from)
       }
       textViewSubject!!.text = subject
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)) {
-        textViewDate?.text = DateTimeUtil.formatSameDayTime(context!!, details?.sentDate ?: 0)
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(msgEntity?.folder, ignoreCase = true)) {
+        textViewDate?.text = DateTimeUtil.formatSameDayTime(context!!, msgEntity?.sentDate ?: 0)
       } else {
-        textViewDate?.text = DateTimeUtil.formatSameDayTime(context!!, details?.receivedDate ?: 0)
+        textViewDate?.text = DateTimeUtil.formatSameDayTime(context!!, msgEntity?.receivedDate ?: 0)
       }
     }
 
@@ -555,7 +557,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   }
 
   private fun showAttsIfTheyExist() {
-    if (details != null && details!!.hasAtts) {
+    if (msgEntity != null && msgEntity?.hasAttachments == true) {
       val layoutInflater = LayoutInflater.from(context)
 
       for (att in atts) {
@@ -674,7 +676,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     }
 
     if (atts.size > 0) {
-      details?.hasAtts = true
+      //todo-denbond7 #793
+      //msgEntity?.hasAttachments = true
     }
   }
 
@@ -744,7 +747,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   }
 
   /**
-   * Generate the public key block. There we can see the public key details and save/update the
+   * Generate the public key block. There we can see the public key msgEntity and save/update the
    * key owner information to the local database.
    *
    * @param block    The [PublicKeyMsgBlock] object which contains information about a public key and his owner.
@@ -763,8 +766,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       buttonView.setText(if (isChecked) R.string.hide_the_public_key else R.string.show_the_public_key)
     }
 
-    val details = block.keyDetails
-    val (email) = details!!.primaryPgpContact
+    val msgEntity = block.keyDetails
+    val (email) = msgEntity!!.primaryPgpContact
 
     if (!TextUtils.isEmpty(email)) {
       val keyOwner = pubKeyView.findViewById<TextView>(R.id.textViewKeyOwnerTemplate)
@@ -773,11 +776,11 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
     val keyWords = pubKeyView.findViewById<TextView>(R.id.textViewKeyWordsTemplate)
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_key_words,
-        details.keywords), keyWords)
+        msgEntity.keywords), keyWords)
 
     val fingerprint = pubKeyView.findViewById<TextView>(R.id.textViewFingerprintTemplate)
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_fingerprint,
-        GeneralUtil.doSectionsInText(" ", details.fingerprint, 4)), fingerprint)
+        GeneralUtil.doSectionsInText(" ", msgEntity.fingerprint, 4)), fingerprint)
 
     textViewPgpPublicKey.text = block.content
 
@@ -787,7 +790,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       if (existingPgpContact == null) {
         initSaveContactButton(block, button)
       } else if (TextUtils.isEmpty(existingPgpContact.longid)
-          || details.longId!!.equals(existingPgpContact.longid!!, ignoreCase = true)) {
+          || msgEntity.longId!!.equals(existingPgpContact.longid!!, ignoreCase = true)) {
         initUpdateContactButton(block, button)
       } else {
         initReplaceContactButton(block, button)

@@ -7,6 +7,8 @@ package com.flowcrypt.email.database.entity
 
 import android.content.ContentValues
 import android.content.Context
+import android.os.Parcel
+import android.os.Parcelable
 import android.provider.BaseColumns
 import androidx.preference.PreferenceManager
 import androidx.room.ColumnInfo
@@ -16,7 +18,6 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
@@ -64,7 +65,7 @@ data class MessageEntity(
     @ColumnInfo(name = "attachments_directory") val attachmentsDirectory: String? = null,
     @ColumnInfo(name = "error_msg", defaultValue = "NULL") val errorMsg: String? = null,
     @ColumnInfo(name = "reply_to", defaultValue = "NULL") val replyTo: String? = null
-) {
+) : Parcelable {
 
   @Ignore
   val from: List<InternetAddress> = listOf(*InternetAddress.parse(fromAddress ?: ""))
@@ -99,7 +100,62 @@ data class MessageEntity(
       return emails
     }
 
-  companion object {
+  constructor(parcel: Parcel) : this(
+      parcel.readValue(Long::class.java.classLoader) as? Long,
+      parcel.readString() ?: "",
+      parcel.readString() ?: "",
+      parcel.readLong(),
+      parcel.readValue(Long::class.java.classLoader) as? Long,
+      parcel.readValue(Long::class.java.classLoader) as? Long,
+      parcel.readString(),
+      parcel.readString(),
+      parcel.readString(),
+      parcel.readString(),
+      parcel.readString(),
+      parcel.readString(),
+      parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
+      parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
+      parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
+      parcel.readValue(Int::class.java.classLoader) as? Int,
+      parcel.readString(),
+      parcel.readString(),
+      parcel.readString())
+
+  override fun writeToParcel(parcel: Parcel, flags: Int) {
+    parcel.writeValue(id)
+    parcel.writeString(email)
+    parcel.writeString(folder)
+    parcel.writeLong(uid)
+    parcel.writeValue(receivedDate)
+    parcel.writeValue(sentDate)
+    parcel.writeString(fromAddress)
+    parcel.writeString(toAddress)
+    parcel.writeString(ccAddress)
+    parcel.writeString(subject)
+    parcel.writeString(this.flags)
+    parcel.writeString(rawMessageWithoutAttachments)
+    parcel.writeValue(hasAttachments)
+    parcel.writeValue(isEncrypted)
+    parcel.writeValue(isNew)
+    parcel.writeValue(state)
+    parcel.writeString(attachmentsDirectory)
+    parcel.writeString(errorMsg)
+    parcel.writeString(replyTo)
+  }
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  companion object CREATOR : Parcelable.Creator<MessageEntity> {
+    override fun createFromParcel(parcel: Parcel): MessageEntity {
+      return MessageEntity(parcel)
+    }
+
+    override fun newArray(size: Int): Array<MessageEntity?> {
+      return arrayOfNulls(size)
+    }
+
     fun genMessageEntities(context: Context, email: String, label: String, folder: IMAPFolder,
                            msgs: Array<Message>?,
                            msgsEncryptionStates: Map<Long, Boolean> = HashMap(),
@@ -180,21 +236,6 @@ data class MessageEntity(
             null
           },
           isEncrypted = isEncrypted
-      )
-    }
-
-    fun genMsgEntity(details: GeneralMessageDetails): MessageEntity {
-      return MessageEntity(email = details.email,
-          folder = details.label,
-          uid = details.uid.toLong(),
-          receivedDate = details.receivedDate,
-          sentDate = details.sentDate,
-          fromAddress = InternetAddress.toString(details.from?.toTypedArray()),
-          toAddress = InternetAddress.toString(details.to?.toTypedArray()),
-          ccAddress = InternetAddress.toString(details.cc?.toTypedArray()),
-          subject = details.subject,
-          flags = details.msgFlags.toString().toUpperCase(Locale.getDefault()),
-          hasAttachments = details.hasAtts
       )
     }
 

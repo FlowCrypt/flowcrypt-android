@@ -222,7 +222,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
     assertThat(msgInfo, notNullValue())
 
-    val details = msgInfo!!.generalMsgDetails
+    val details = msgInfo!!.msgEntity
 
     launchActivity(details)
     matchHeader(details)
@@ -347,7 +347,7 @@ class MessageDetailsActivityTest : BaseTest() {
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {
     assertThat(incomingMsgInfo, notNullValue())
 
-    val details = incomingMsgInfo!!.generalMsgDetails
+    val details = incomingMsgInfo!!.msgEntity
 
     launchActivity(details)
     matchHeader(details)
@@ -382,7 +382,7 @@ class MessageDetailsActivityTest : BaseTest() {
   private fun baseCheck(incomingMsgInfo: IncomingMessageInfo?) {
     assertThat(incomingMsgInfo, notNullValue())
 
-    val details = incomingMsgInfo!!.generalMsgDetails
+    val details = incomingMsgInfo!!.msgEntity
     launchActivity(details)
     matchHeader(details)
 
@@ -396,7 +396,7 @@ class MessageDetailsActivityTest : BaseTest() {
   private fun baseCheckWithAtt(incomingMsgInfo: IncomingMessageInfo?, rule: AddAttachmentToDatabaseRule) {
     assertThat(incomingMsgInfo, notNullValue())
 
-    val details = incomingMsgInfo!!.generalMsgDetails
+    val details = incomingMsgInfo!!.msgEntity
     launchActivity(details)
     matchHeader(details)
 
