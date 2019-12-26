@@ -16,4 +16,4 @@ import com.flowcrypt.email.api.email.model.GeneralMessageDetails
  * E-mail: DenBond7@gmail.com
  */
 
-class MessageDaoSource
+class MessageDao

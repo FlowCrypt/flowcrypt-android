@@ -8,7 +8,7 @@ package com.flowcrypt.email.rules
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.database.dao.source.imap.MessageDao
 import com.google.android.gms.auth.GoogleAuthException
 import com.sun.mail.imap.IMAPFolder
 import org.junit.runner.Description
@@ -66,6 +66,6 @@ class AddMessageToDatabaseRule(val account: AccountDao, val localFolder: LocalFo
   }
 
   private fun saveMsgToDatabase() {
-    MessageDaoSource().addRow(targetContext, account.email, localFolder.fullName, 0, message, false)
+    MessageDao().addRow(targetContext, account.email, localFolder.fullName, 0, message, false)
   }
 }

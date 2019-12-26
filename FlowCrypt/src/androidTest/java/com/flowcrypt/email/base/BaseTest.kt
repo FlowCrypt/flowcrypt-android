@@ -28,7 +28,7 @@ import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.database.dao.source.imap.MessageDao
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
@@ -176,7 +176,7 @@ abstract class BaseTest {
   fun getMsgInfo(path: String, mimeMsgPath: String): IncomingMessageInfo? {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
     incomingMsgInfo?.generalMsgDetails?.let {
-      val uri = MessageDaoSource().addRow(getTargetContext(), it) ?: throw IllegalStateException()
+      val uri = MessageDao().addRow(getTargetContext(), it) ?: throw IllegalStateException()
       MsgsCacheManager.addMsg(uri.lastPathSegment
           ?: throw IllegalStateException(), getContext().assets.open(mimeMsgPath))
     }
