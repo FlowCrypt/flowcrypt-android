@@ -29,7 +29,6 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -119,7 +118,6 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
           }
 
           val account = AccountDaoSource().getActiveAccountInformation(context)
-          val msgDaoSource = MessageDaoSource()
 
           if (account != null) {
             val newMsgs = roomDatabase.msgDao().getOutboxMessages(account = account.email,
@@ -128,7 +126,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
             if (!CollectionUtils.isEmpty(newMsgs)) {
               sess = OpenStoreHelper.getAccountSess(context, account)
               store = OpenStoreHelper.openStore(context, account, sess!!)
-              downloadForwardedAtts(context, account, msgDaoSource)
+              downloadForwardedAtts(context, account)
             }
 
             if (store?.isConnected == true) {
@@ -164,7 +162,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
       isFailed = values[0]!!
     }
 
-    private fun downloadForwardedAtts(context: Context, account: AccountDao, daoSource: MessageDaoSource) {
+    private fun downloadForwardedAtts(context: Context, account: AccountDao) {
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       val attDaoSource = AttachmentDaoSource()
 
@@ -177,8 +175,6 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
         }
 
         val msgEntity = detailsList[0]
-        val detEmail = msgEntity.email
-        val detLabel = msgEntity.folder
         val msgAttsDir = File(attCacheDir, msgEntity.attachmentsDirectory)
         try {
           var pubKeys: List<String>? = null
@@ -192,13 +188,13 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
               JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
 
           if (CollectionUtils.isEmpty(atts)) {
-            daoSource.updateMsgState(context, detEmail, detLabel, msgEntity.uid, MessageState.QUEUED)
+            roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.QUEUED.value))
             continue
           }
 
           val msgState = getNewMsgState(context, attDaoSource, msgEntity, msgAttsDir, pubKeys, atts)
 
-          val updateResult = daoSource.updateMsgState(context, detEmail, detLabel, msgEntity.uid, msgState)
+          val updateResult = roomDatabase.msgDao().update(msgEntity.copy(state = msgState.value))
           if (updateResult > 0) {
             MessagesSenderJobService.schedule(context)
           }

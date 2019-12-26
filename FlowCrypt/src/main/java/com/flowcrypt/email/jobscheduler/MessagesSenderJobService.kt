@@ -29,7 +29,6 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -113,7 +112,6 @@ class MessagesSenderJobService : JobService() {
           val context = weakRef.get()!!.applicationContext
           val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
           val account = AccountDaoSource().getActiveAccountInformation(context)
-          val msgDaoSource = MessageDaoSource()
 
           val attsCacheDir = File(context.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
 
@@ -132,11 +130,11 @@ class MessagesSenderJobService : JobService() {
             }
 
             if (!CollectionUtils.isEmpty(queuedMsgs)) {
-              sendQueuedMsgs(context, account, msgDaoSource, attsCacheDir)
+              sendQueuedMsgs(context, account, attsCacheDir)
             }
 
             if (!CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
-              saveCopyOfAlreadySentMsgs(context, account, msgDaoSource, attsCacheDir)
+              saveCopyOfAlreadySentMsgs(context, account, attsCacheDir)
             }
 
             if (store != null && store!!.isConnected) {
@@ -179,8 +177,7 @@ class MessagesSenderJobService : JobService() {
       isFailed = values[0]!!
     }
 
-    private fun sendQueuedMsgs(context: Context, account: AccountDao,
-                               msgDaoSource: MessageDaoSource, attsCacheDir: File) {
+    private fun sendQueuedMsgs(context: Context, account: AccountDao, attsCacheDir: File) {
       var list: List<MessageEntity>
       var lastMsgUID = 0L
       val email = account.email
@@ -209,26 +206,23 @@ class MessagesSenderJobService : JobService() {
         }
 
         lastMsgUID = msgEntity.uid
-        val msgUid = msgEntity.uid
-        val msgEmail = msgEntity.email
-        val msgLabel = msgEntity.folder
 
         try {
           roomDatabase.msgDao().resetMsgsWithSendingState(account.email)
-          msgDaoSource.updateMsgState(context, msgEmail, msgLabel, msgUid, MessageState.SENDING)
+          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENDING.value))
           Thread.sleep(2000)
 
           val attsDaoSource = AttachmentDaoSource()
           val attInfoList = attsDaoSource.getAttInfoList(context, email,
-              JavaEmailConstants.FOLDER_OUTBOX, msgUid)
+              JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
 
-          val isMsgSent = sendMsg(context, account, msgDaoSource, msgEntity, attInfoList)
+          val isMsgSent = sendMsg(context, account, msgEntity, attInfoList)
 
           if (!isMsgSent) {
             continue
           }
 
-          msgEntity = roomDatabase.msgDao().getMsg(email, JavaEmailConstants.FOLDER_OUTBOX, msgUid)
+          msgEntity = roomDatabase.msgDao().getMsg(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
 
           if (msgEntity != null && msgEntity.msgState === MessageState.SENT) {
             roomDatabase.msgDao().delete(msgEntity)
@@ -250,7 +244,7 @@ class MessagesSenderJobService : JobService() {
 
           if (!GeneralUtil.isConnected(context)) {
             if (msgEntity.msgState !== MessageState.SENT) {
-              msgDaoSource.updateMsgState(context, msgEmail, msgLabel, msgUid, MessageState.QUEUED)
+              roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.QUEUED.value))
             }
 
             publishProgress(true)
@@ -274,8 +268,7 @@ class MessagesSenderJobService : JobService() {
                 newMsgState = MessageState.ERROR_CACHE_PROBLEM
               }
             }
-
-            msgDaoSource.updateMsgState(context, msgEmail, msgLabel, msgUid, newMsgState)
+            roomDatabase.msgDao().update(msgEntity.copy(state = newMsgState.value))
           }
 
           Thread.sleep(5000)
@@ -284,8 +277,7 @@ class MessagesSenderJobService : JobService() {
       }
     }
 
-    private fun saveCopyOfAlreadySentMsgs(context: Context, account: AccountDao, msgDaoSource: MessageDaoSource,
-                                          attsCacheDir: File) {
+    private fun saveCopyOfAlreadySentMsgs(context: Context, account: AccountDao, attsCacheDir: File) {
       var list: List<MessageEntity>
       val email = account.email
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
@@ -318,8 +310,7 @@ class MessagesSenderJobService : JobService() {
           ExceptionUtil.handleError(e)
 
           if (!GeneralUtil.isConnected(context)) {
-            msgDaoSource.updateMsgState(context, msgEntity.email, msgEntity.folder, msgEntity.uid,
-                MessageState.SENT_WITHOUT_LOCAL_COPY)
+            roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT_WITHOUT_LOCAL_COPY.value))
             publishProgress(true)
             break
           }
@@ -328,8 +319,7 @@ class MessagesSenderJobService : JobService() {
             if (e.cause is FileNotFoundException) {
               roomDatabase.msgDao().delete(msgEntity)
             } else {
-              msgDaoSource.updateMsgState(context, msgEntity.email, msgEntity.folder,
-                  msgEntity.uid, MessageState.SENT_WITHOUT_LOCAL_COPY)
+              roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT_WITHOUT_LOCAL_COPY.value))
             }
           } else {
             roomDatabase.msgDao().delete(msgEntity)
@@ -347,15 +337,13 @@ class MessagesSenderJobService : JobService() {
       }
     }
 
-    private fun sendMsg(context: Context, account: AccountDao, msgDaoSource: MessageDaoSource,
-                        details: MessageEntity, atts: List<AttachmentInfo>): Boolean {
-      val mimeMsg = createMimeMsg(context, sess, details, atts)
-      val detEmail = details.email
-      val detLabel = details.folder
+    private fun sendMsg(context: Context, account: AccountDao, msgEntity: MessageEntity, atts: List<AttachmentInfo>): Boolean {
+      val mimeMsg = createMimeMsg(context, sess, msgEntity, atts)
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
       when (account.accountType) {
         AccountDao.ACCOUNT_TYPE_GOOGLE -> {
-          if (account.email.equals(details.from.firstOrNull()?.address, ignoreCase = true)) {
+          if (account.email.equals(msgEntity.from.firstOrNull()?.address, ignoreCase = true)) {
             val transport = SmtpProtocolUtil.prepareSmtpTransport(context, sess!!, account)
             transport.sendMessage(mimeMsg, mimeMsg.allRecipients)
           } else {
@@ -388,26 +376,23 @@ class MessagesSenderJobService : JobService() {
             }
           }
 
-          msgDaoSource.updateMsgState(context, detEmail, detLabel, details.uid, MessageState.SENT)
+          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT.value))
           //Gmail automatically save a copy of the sent message.
         }
 
         AccountDao.ACCOUNT_TYPE_OUTLOOK -> {
           val outlookTransport = SmtpProtocolUtil.prepareSmtpTransport(context, sess!!, account)
           outlookTransport.sendMessage(mimeMsg, mimeMsg.allRecipients)
-
-          msgDaoSource.updateMsgState(context, detEmail, detLabel, details.uid, MessageState.SENT)
+          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT.value))
         }
 
         else -> {
           val defaultTransport = SmtpProtocolUtil.prepareSmtpTransport(context, sess!!, account)
           defaultTransport.sendMessage(mimeMsg, mimeMsg.allRecipients)
-
-          msgDaoSource.updateMsgState(context, detEmail, detLabel, details.uid,
-              MessageState.SENT_WITHOUT_LOCAL_COPY)
+          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT_WITHOUT_LOCAL_COPY.value))
 
           if (saveCopyOfSentMsg(account, store, context, mimeMsg)) {
-            msgDaoSource.updateMsgState(context, detEmail, detLabel, details.uid, MessageState.SENT)
+            roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT.value))
           }
         }
       }

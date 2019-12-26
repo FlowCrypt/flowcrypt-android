@@ -150,8 +150,9 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             if (!JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)
                 && details?.isSeen() == false) {
               msgDaoSource.setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
-              msgDaoSource.updateMsgState(this, details?.email ?: "", details?.label ?: "",
-                  details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_READ)
+              //todo-denbond7 #793
+              /*msgDaoSource.updateMsgState(this, details?.email ?: "", details?.label ?: "",
+                  details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_READ)*/
               changeMsgsReadState()
               setResult(RESULT_CODE_UPDATE_LIST, null)
             }

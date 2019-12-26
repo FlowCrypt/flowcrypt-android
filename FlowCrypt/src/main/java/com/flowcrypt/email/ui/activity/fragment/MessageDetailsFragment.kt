@@ -199,8 +199,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
       R.id.menuActionArchiveMessage -> {
-        msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
-            details?.uid?.toLong() ?: 0, MessageState.PENDING_ARCHIVING)
+        //todo-denbond7 #793
+        /*msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+            details?.uid?.toLong() ?: 0, MessageState.PENDING_ARCHIVING)*/
         (activity as? BaseSyncActivity)?.archiveMsgs()
         activity?.finish()
         true
@@ -208,9 +209,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
       R.id.menuActionDeleteMessage -> {
         if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
-          val msgDaoSource = MessageDaoSource()
-          val details = msgDaoSource.getMsg(context!!, this.details!!.email,
-              this.details!!.label, this.details!!.uid.toLong())
+          //todo-denbond7 #793
+          val details: GeneralMessageDetails? = null/*msgDaoSource.getMsg(context!!, this
+          .details!!.email,
+              this.details!!.label, this.details!!.uid.toLong())*/
 
           if (details == null || details.msgState === MessageState.SENDING) {
             Toast.makeText(context!!, if (details == null)
@@ -229,8 +231,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
           activity?.setResult(MessageDetailsActivity.RESULT_CODE_UPDATE_LIST, null)
         } else {
-          msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
-              details?.uid?.toLong() ?: 0, MessageState.PENDING_DELETING)
+          //todo-denbond7 #793
+          /*msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+              details?.uid?.toLong() ?: 0, MessageState.PENDING_DELETING)*/
           (activity as? BaseSyncActivity)?.deleteMsgs()
         }
         activity?.finish()
@@ -238,16 +241,18 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       }
 
       R.id.menuActionMoveToInbox -> {
-        msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
-            details?.uid?.toLong() ?: 0, MessageState.PENDING_MOVE_TO_INBOX)
+        //todo-denbond7 #793
+        /*msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+            details?.uid?.toLong() ?: 0, MessageState.PENDING_MOVE_TO_INBOX)*/
         (activity as? BaseSyncActivity)?.moveMsgsToINBOX()
         activity?.finish()
         true
       }
 
       R.id.menuActionMarkUnread -> {
-        msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
-            details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_UNREAD)
+        //todo-denbond7 #793
+        /*msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
+            details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_UNREAD)*/
         msgDaoSource.setSeenStatus(context!!, details?.email, details?.label, details?.uid?.toLong()
             ?: 0L, false)
         (activity as? BaseSyncActivity)?.changeMsgsReadState()

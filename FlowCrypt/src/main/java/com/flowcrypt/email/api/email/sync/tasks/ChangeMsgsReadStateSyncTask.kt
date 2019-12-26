@@ -65,10 +65,10 @@ class ChangeMsgsReadStateSyncTask(ownerKey: String, requestCode: Int) : BaseSync
             val value = state == MessageState.PENDING_MARK_READ
             imapFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.SEEN), value)
             for (uid in uidList) {
-              val msg = msgDaoSource.getMsg(context, account.email, folder, uid)
+              val msgEntity = roomDatabase.msgDao().getMsg(account.email, folder, uid)
 
-              if (msg?.msgState == state) {
-                msgDaoSource.updateMsgState(context, account.email, folder, uid, MessageState.NONE)
+              if (msgEntity?.msgState == state) {
+                roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.NONE.value))
               }
             }
           }

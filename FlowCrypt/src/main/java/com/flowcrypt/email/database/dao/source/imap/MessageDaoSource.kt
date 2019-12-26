@@ -34,42 +34,6 @@ class MessageDaoSource : BaseDaoSource() {
   override val tableName: String = TABLE_NAME_MESSAGES
 
   /**
-   * Update some message by the given parameters.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The email that the message linked.
-   * @param label   The folder label.
-   * @param uid     The message UID.
-   * @param values  The [ContentValues] which contains new information.
-   * @return The count of the updated rows or -1 up.
-   */
-  fun updateMsg(context: Context, email: String?, label: String?, uid: Long, values: ContentValues): Int {
-    val resolver = context.contentResolver
-    return if (email != null && label != null && resolver != null) {
-      val where = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
-      resolver.update(baseContentUri, values, where, arrayOf(email, label, uid.toString()))
-    } else
-      -1
-  }
-
-  /**
-   * Update a state of some message.
-   *
-   * @param context      Interface to global information about an application environment
-   * @param email        The email that the message linked
-   * @param label        The folder label
-   * @param uid          The message UID
-   * @param messageState A new message state.
-   * @return The count of the updated row or -1 up.
-   */
-  fun updateMsgState(context: Context, email: String, label: String, uid: Long, messageState: MessageState): Int {
-    val contentValues = ContentValues()
-    contentValues.put(COL_STATE, messageState.value)
-
-    return updateMsg(context, email, label, uid, contentValues)
-  }
-
-  /**
    * Mark message as seen in the local database.
    *
    * @param context Interface to global information about an application environment.
@@ -231,33 +195,6 @@ class MessageDaoSource : BaseDaoSource() {
     }
 
     return detailsList
-  }
-
-  /**
-   * Get all [LocalFolder] objects from the database by an email.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The user email.
-   * @param label   The label name.
-   * @param uid     The uid of the message.
-   * @return [GeneralMessageDetails] if the information about a message is exists.
-   */
-  fun getMsg(context: Context, email: String, label: String, uid: Long): GeneralMessageDetails? {
-    val contentResolver = context.contentResolver
-    val selection = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_UID = ? "
-    val selectionArgs = arrayOf(email, label, uid.toString())
-    val cursor = contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
-
-    var details: GeneralMessageDetails? = null
-
-    if (cursor != null) {
-      if (cursor.moveToFirst()) {
-        details = getMsgInfo(cursor)
-      }
-      cursor.close()
-    }
-
-    return details
   }
 
   private fun parseFlags(string: String): Array<String> {

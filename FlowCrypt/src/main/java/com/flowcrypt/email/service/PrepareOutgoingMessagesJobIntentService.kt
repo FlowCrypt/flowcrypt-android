@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.service
 
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.text.TextUtils
@@ -28,7 +27,6 @@ import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.JobIdManager
@@ -62,7 +60,6 @@ import javax.mail.internet.MimeMessage
 
 class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
-  private val msgDaoSource: MessageDaoSource = MessageDaoSource()
   private var sess: Session? = null
   private var account: AccountDao? = null
   private var attsCacheDir: File? = null
@@ -86,18 +83,14 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
   override fun onHandleWork(intent: Intent) {
     LogsUtil.d(TAG, "onHandleWork")
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
     val accountDao = account ?: return
     if (intent.hasExtra(EXTRA_KEY_OUTGOING_MESSAGE_INFO)) {
       val outgoingMsgInfo = intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
       val uid = outgoingMsgInfo.uid
       val email = accountDao.email
       val label = JavaEmailConstants.FOLDER_OUTBOX
-
-      if (msgDaoSource.getMsg(this, email, label, uid) != null) {
-        //todo-DenBond7 need to think about resolving a situation, when a message was created but the
-        // attachments were not added.
-        return
-      }
+      val msgEntity = roomDatabase.msgDao().getMsg(email, label, uid) ?: return
 
       LogsUtil.d(TAG, "Received a new job: $outgoingMsgInfo")
       var newMsgId: Long = -1
@@ -119,10 +112,10 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         val msgAttsCacheDir = File(attsCacheDir, UUID.randomUUID().toString())
 
         val messageEntity = prepareMessageEntity(outgoingMsgInfo, uid, mimeMsg, rawMsg, msgAttsCacheDir)
-        newMsgId = FlowCryptRoomDatabase.getDatabase(applicationContext).msgDao().insert(messageEntity)
+        newMsgId = roomDatabase.msgDao().insert(messageEntity)
 
         if (newMsgId > 0) {
-          updateOutgoingMsgCount(email)
+          updateOutgoingMsgCount(email, roomDatabase)
 
           val hasAtts = !CollectionUtils.isEmpty(outgoingMsgInfo.atts)
               || !CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)
@@ -131,7 +124,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             if (!msgAttsCacheDir.exists()) {
               if (!msgAttsCacheDir.mkdir()) {
                 Log.e(TAG, "Create cache directory " + attsCacheDir!!.name + " filed!")
-                msgDaoSource.updateMsgState(this, email, label, uid, MessageState.ERROR_CACHE_PROBLEM)
+                roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.ERROR_CACHE_PROBLEM.value))
                 return
               }
             }
@@ -140,7 +133,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
           }
 
           if (CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)) {
-            msgDaoSource.updateMsgState(this, email, label, uid, MessageState.QUEUED)
+            roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.QUEUED.value))
             MessagesSenderJobService.schedule(applicationContext)
           } else {
             ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
@@ -152,30 +145,25 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
         if (newMsgId <= 0) {
           val messageEntity = MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
-          newMsgId = FlowCryptRoomDatabase.getDatabase(applicationContext).msgDao().insert(messageEntity)
+          newMsgId = roomDatabase.msgDao().insert(messageEntity)
         }
 
         if (e is NoKeyAvailableException) {
           val errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
-
-          val contentValues = ContentValues()
-          contentValues.put(MessageDaoSource.COL_STATE, MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value)
-          contentValues.put(MessageDaoSource.COL_ERROR_MSG, errorMsg)
-
-          msgDaoSource.updateMsg(this, email, label, uid, contentValues)
+          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState
+              .ERROR_PRIVATE_KEY_NOT_FOUND.value, errorMsg = errorMsg))
         } else {
-          msgDaoSource.updateMsgState(this, email, label, uid, MessageState.ERROR_DURING_CREATION)
+          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.ERROR_DURING_CREATION.value))
         }
       }
 
       if (newMsgId > 0) {
-        updateOutgoingMsgCount(email)
+        updateOutgoingMsgCount(email, roomDatabase)
       }
     }
   }
 
-  private fun updateOutgoingMsgCount(email: String) {
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(this)
+  private fun updateOutgoingMsgCount(email: String, roomDatabase: FlowCryptRoomDatabase) {
     val outgoingMsgCount = roomDatabase.msgDao().getOutboxMessages(email).size
     val outboxLabel = roomDatabase.labelDao().getLabel(email, JavaEmailConstants.FOLDER_OUTBOX)
 
