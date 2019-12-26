@@ -34,7 +34,6 @@ import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.DecryptMessageViewModel
 import com.flowcrypt.email.service.EmailSyncService
@@ -105,13 +104,13 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
     when (id) {
-      R.id.loader_id_load_raw_mime_msg_from_db, R.id.loader_id_subscribe_to_message_changes -> {
+      //todo-denbond7 #793
+      /*R.id.loader_id_load_raw_mime_msg_from_db, R.id.loader_id_subscribe_to_message_changes -> {
         val uri = MessageDaoSource().baseContentUri
-        val selection = (MessageDaoSource.COL_EMAIL + "= ? AND " + MessageDaoSource.COL_FOLDER + " = ? AND "
-            + MessageDaoSource.COL_UID + " = ? ")
+        val selection = ("email = ? AND folder = ? AND uid = ? ")
         val selectionArgs = arrayOf(details?.email ?: "", label, details?.uid?.toString() ?: "")
         return CursorLoader(this, uri, null, selection, selectionArgs, null)
-      }
+      }*/
 
       R.id.loader_id_load_attachments -> {
         val uriAtt = AttachmentDaoSource().baseContentUri
@@ -131,12 +130,10 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor?) {
-    val msgDaoSource = MessageDaoSource()
-
     when (loader.id) {
       R.id.loader_id_load_raw_mime_msg_from_db -> if (cursor?.moveToFirst() == true) {
         this.rawMimeBytes = if (JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)) {
-          cursor.getBlob(cursor.getColumnIndex(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS))
+          cursor.getBlob(cursor.getColumnIndex("raw_message_without_attachments"))
         } else {
           MsgsCacheManager.getMsgAsByteArray(details!!.id.toString())
         }
@@ -150,7 +147,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
             if (!JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)
                 && details?.isSeen() == false) {
-              msgDaoSource.setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
+              //todo-denbond7 #793
+              //msgDaoSource.setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
               //todo-denbond7 #793
               /*msgDaoSource.updateMsgState(this, details?.email ?: "", details?.label ?: "",
                   details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_READ)*/
@@ -232,7 +230,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         isRequestMsgDetailsStarted = false
         when (resultCode) {
           EmailSyncService.REPLY_RESULT_CODE_ACTION_OK -> {
-            MessageDaoSource().setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
+            //todo-denbond7 #793
+            //MessageDaoSource().setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
             setResult(RESULT_CODE_UPDATE_LIST, null)
             LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_raw_mime_msg_from_db, null, this)
           }

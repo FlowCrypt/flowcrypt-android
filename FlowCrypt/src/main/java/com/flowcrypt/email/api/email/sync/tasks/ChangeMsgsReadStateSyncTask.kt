@@ -10,7 +10,6 @@ import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.Flags
@@ -33,14 +32,12 @@ class ChangeMsgsReadStateSyncTask(ownerKey: String, requestCode: Int) : BaseSync
 
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
-    val msgDaoSource = MessageDaoSource()
 
-    changeMsgsReadState(context, account, msgDaoSource, store, MessageState.PENDING_MARK_UNREAD)
-    changeMsgsReadState(context, account, msgDaoSource, store, MessageState.PENDING_MARK_READ)
+    changeMsgsReadState(context, account, store, MessageState.PENDING_MARK_UNREAD)
+    changeMsgsReadState(context, account, store, MessageState.PENDING_MARK_READ)
   }
 
-  private fun changeMsgsReadState(context: Context, account: AccountDao,
-                                  msgDaoSource: MessageDaoSource, store: Store, state: MessageState) {
+  private fun changeMsgsReadState(context: Context, account: AccountDao, store: Store, state: MessageState) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
     val candidatesForMark = roomDatabase.msgDao().getMsgsWithState(account.email, state.value)
 

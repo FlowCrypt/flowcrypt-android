@@ -23,7 +23,6 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
@@ -79,8 +78,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
-              " ADD COLUMN " + MessageDaoSource.COL_IS_MESSAGE_HAS_ATTACHMENTS + " INTEGER DEFAULT 0;")
+          database.execSQL("ALTER TABLE messages ADD COLUMN is_message_has_attachments INTEGER DEFAULT 0;")
 
           database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
               " ADD COLUMN " + AccountDaoSource.COL_IS_ENABLE + " INTEGER DEFAULT 1;")
@@ -189,12 +187,9 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
-              " ADD COLUMN " + MessageDaoSource.COL_IS_ENCRYPTED + " INTEGER DEFAULT -1;")
-          database.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
-              " ADD COLUMN " + MessageDaoSource.COL_CC_ADDRESSES + " TEXT DEFAULT NULL;")
-          database.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
-              " ADD COLUMN " + MessageDaoSource.COL_IS_NEW + " INTEGER DEFAULT 0;")
+          database.execSQL("ALTER TABLE messages ADD COLUMN is_encrypted INTEGER DEFAULT -1;")
+          database.execSQL("ALTER TABLE messages ADD COLUMN cc_address TEXT DEFAULT NULL;")
+          database.execSQL("ALTER TABLE messages ADD COLUMN is_new INTEGER DEFAULT 0;")
 
           database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
               " ADD COLUMN " + AccountDaoSource.COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0;")
@@ -214,8 +209,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
-              " ADD COLUMN " + MessageDaoSource.COL_STATE + " INTEGER DEFAULT -1;")
+          database.execSQL("ALTER TABLE messages ADD COLUMN state INTEGER DEFAULT -1;")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -231,8 +225,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
               " ADD COLUMN " + AttachmentDaoSource.COL_FORWARDED_FOLDER + " TEXT;")
           database.execSQL("ALTER TABLE " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT +
               " ADD COLUMN " + AttachmentDaoSource.COL_FORWARDED_UID + " INTEGER DEFAULT -1;")
-          database.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
-              " ADD COLUMN " + MessageDaoSource.COL_ATTACHMENTS_DIRECTORY + " TEXT;")
+          database.execSQL("ALTER TABLE messages ADD COLUMN attachments_directory TEXT;")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -244,8 +237,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
-              " ADD COLUMN " + MessageDaoSource.COL_ERROR_MSG + " TEXT DEFAULT NULL;")
+          database.execSQL("ALTER TABLE messages ADD COLUMN error_msg TEXT DEFAULT NULL;")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -290,15 +282,13 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.delete(MessageDaoSource.TABLE_NAME_MESSAGES,
-              MessageDaoSource.COL_FOLDER + " NOT IN(?,?) ", arrayOf("INBOX", "Outbox"))
+          database.delete("messages", "folder NOT IN(?,?) ", arrayOf("INBOX", "Outbox"))
           database.delete(AttachmentDaoSource.TABLE_NAME_ATTACHMENT,
               AttachmentDaoSource.COL_FOLDER + " NOT IN(?,?) ", arrayOf("INBOX", "Outbox"))
 
           val contentValues = ContentValues()
-          contentValues.putNull(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)
-          database.update(MessageDaoSource.TABLE_NAME_MESSAGES, SQLiteDatabase.CONFLICT_NONE,
-              contentValues, MessageDaoSource.COL_FOLDER + " = ? ", arrayOf("INBOX"))
+          contentValues.putNull("raw_message_without_attachments")
+          database.update("messages", SQLiteDatabase.CONFLICT_NONE, contentValues, "folder = ? ", arrayOf("INBOX"))
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -310,8 +300,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL("ALTER TABLE " + MessageDaoSource.TABLE_NAME_MESSAGES +
-              " ADD COLUMN " + MessageDaoSource.COL_REPLY_TO + " TEXT DEFAULT NULL;")
+          database.execSQL("ALTER TABLE messages ADD COLUMN reply_to TEXT DEFAULT NULL;")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()

@@ -25,7 +25,6 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.broadcastreceivers.MarkMessagesAsOldBroadcastReceiver
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
@@ -91,7 +90,8 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     val localFolder = foldersManager.findInboxFolder()
 
     if (localFolder != null) {
-      MessageDaoSource().setOldStatus(context, account.email, localFolder.fullName)
+      //todo-denbond7 #793
+      // MessageDaoSource().setOldStatus(context, account.email, localFolder.fullName)
     }
   }
 

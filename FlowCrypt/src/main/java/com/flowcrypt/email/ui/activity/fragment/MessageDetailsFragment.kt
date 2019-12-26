@@ -52,7 +52,6 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
@@ -115,7 +114,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
   private var atts = mutableListOf<AttachmentInfo>()
-  private val msgDaoSource = MessageDaoSource()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -253,8 +251,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         //todo-denbond7 #793
         /*msgDaoSource.updateMsgState(context!!, details?.email ?: "", details?.label ?: "",
             details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_UNREAD)*/
-        msgDaoSource.setSeenStatus(context!!, details?.email, details?.label, details?.uid?.toLong()
-            ?: 0L, false)
+        //todo-denbond7 #793
+        //msgDaoSource.setSeenStatus(context!!, details?.email, details?.label, details?.uid? .toLong() ?: 0L, false)
         (activity as? BaseSyncActivity)?.changeMsgsReadState()
         activity?.finish()
         true

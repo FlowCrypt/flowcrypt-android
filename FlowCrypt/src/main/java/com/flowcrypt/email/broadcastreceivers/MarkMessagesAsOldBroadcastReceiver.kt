@@ -8,7 +8,6 @@ package com.flowcrypt.email.broadcastreceivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -36,9 +35,9 @@ class MarkMessagesAsOldBroadcastReceiver : BroadcastReceiver() {
     val step = 500
 
     if (uidList.isNotEmpty()) {
-      val daoSource = MessageDaoSource()
       if (uidList.size <= step) {
-        daoSource.setOldStatus(context, email, label, uidList)
+        //todo-denbond7 #793
+        //daoSource.setOldStatus(context, email, label, uidList)
       } else {
         var i = 0
         while (i < uidList.size) {
@@ -47,7 +46,8 @@ class MarkMessagesAsOldBroadcastReceiver : BroadcastReceiver() {
           } else {
             uidList.subList(i, uidList.size)
           }
-          daoSource.setOldStatus(context, email, label, tempList)
+          //todo-denbond7 #793
+          //daoSource.setOldStatus(context, email, label, tempList)
           i += step
         }
       }

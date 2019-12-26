@@ -9,7 +9,6 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -40,7 +39,6 @@ class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListen
     BaseSyncRunnable(account, syncListener), MessageCountListener, MessageChangedListener {
   private var localFolder: LocalFolder? = null
   private var remoteFolder: IMAPFolder? = null
-  private val msgDaoSource: MessageDaoSource = MessageDaoSource()
   /**
    * here we can have a lot of checks which help us decide can we run idling(wifi, 3G, a battery level and etc.)
    */
