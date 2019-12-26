@@ -35,6 +35,7 @@ import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
 import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.DecryptMessageViewModel
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
@@ -172,7 +173,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
       }
 
       R.id.loader_id_subscribe_to_message_changes -> if (cursor != null && cursor.moveToFirst()) {
-        details = msgDaoSource.getMsgInfo(cursor)
+        //todo-denbond7 #793
+        //details = msgDaoSource.getMsgInfo(cursor)
         updateViews()
       }
 
@@ -466,10 +468,11 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     val EXTRA_KEY_GENERAL_MESSAGE_DETAILS =
         GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_GENERAL_MESSAGE_DETAILS", MessageDetailsActivity::class.java)
 
-    fun getIntent(context: Context?, localFolder: LocalFolder?, details: GeneralMessageDetails?): Intent {
+    fun getIntent(context: Context?, localFolder: LocalFolder?, details: MessageEntity?): Intent {
       val intent = Intent(context, MessageDetailsActivity::class.java)
       intent.putExtra(EXTRA_KEY_FOLDER, localFolder)
-      intent.putExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS, details)
+      //todo-denbond7 #793
+      //intent.putExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS, details)
       return intent
     }
   }

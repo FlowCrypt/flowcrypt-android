@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.database.dao
 
+import android.os.Build
 import androidx.lifecycle.LiveData
 import androidx.paging.DataSource
 import androidx.room.Dao
@@ -32,7 +33,15 @@ abstract class MessagesDao : BaseDao<MessageEntity> {
   abstract fun getMsg(account: String?, folder: String?, uid: Long): MessageEntity?
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
-  abstract fun getMessages(account: String, folder: String): LiveData<MessageEntity>
+  abstract fun getMsgs(account: String, folder: String): LiveData<MessageEntity>
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND is_new = 1 ORDER BY :orderBy")
+  abstract fun getNewMsgs(account: String, folder: String,
+                          orderBy: String = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            "received_date ASC"
+                          } else {
+                            "received_date DESC"
+                          }): List<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid IN (:msgsUID)")
   abstract fun getMsgsByUids(account: String?, folder: String?, msgsUID: Collection<Long>?): List<MessageEntity>

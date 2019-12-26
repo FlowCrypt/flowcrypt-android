@@ -7,18 +7,11 @@ package com.flowcrypt.email.database.dao.source.imap
 
 import android.content.ContentValues
 import android.content.Context
-import android.database.Cursor
-import android.os.Build
-import android.provider.BaseColumns
 import android.text.TextUtils
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
-import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
-import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.BaseDaoSource
 import java.util.*
-import javax.mail.internet.AddressException
-import javax.mail.internet.InternetAddress
 
 /**
  * This class describes the dao source for [GeneralMessageDetails] class.
@@ -107,100 +100,6 @@ class MessageDaoSource : BaseDaoSource() {
       -1
   }
 
-  /**
-   * Generate a [LocalFolder] object from the current cursor position.
-   *
-   * @param cursor The [Cursor] which contains information about [LocalFolder].
-   * @return A generated [LocalFolder].
-   */
-  fun getMsgInfo(cursor: Cursor): GeneralMessageDetails {
-    val details = GeneralMessageDetails(
-        cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
-        cursor.getString(cursor.getColumnIndex(COL_FOLDER)),
-        cursor.getInt(cursor.getColumnIndex(COL_UID)),
-        cursor.getInt(cursor.getColumnIndex(BaseColumns._ID)),
-        cursor.getLong(cursor.getColumnIndex(COL_RECEIVED_DATE)),
-        cursor.getLong(cursor.getColumnIndex(COL_SENT_DATE)), null, null, null, null,
-        cursor.getString(cursor.getColumnIndex(COL_SUBJECT)),
-        listOf(*parseFlags(cursor.getString(cursor.getColumnIndex(COL_FLAGS)))),
-        !cursor.isNull(cursor.getColumnIndex(COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS)),
-        cursor.getInt(cursor.getColumnIndex(COL_IS_MESSAGE_HAS_ATTACHMENTS)) == 1,
-        cursor.getInt(cursor.getColumnIndex(COL_IS_ENCRYPTED)) == 1,
-        MessageState.generate(cursor.getInt(cursor.getColumnIndex(COL_STATE))),
-        cursor.getString(cursor.getColumnIndex(COL_ATTACHMENTS_DIRECTORY)),
-        cursor.getString(cursor.getColumnIndex(COL_ERROR_MSG))
-    )
-
-    try {
-      val fromAddresses = cursor.getString(cursor.getColumnIndex(COL_FROM_ADDRESSES))
-      details.from = if (TextUtils.isEmpty(fromAddresses)) null else listOf(*InternetAddress.parse(fromAddresses))
-    } catch (e: AddressException) {
-      e.printStackTrace()
-    }
-
-    try {
-      val replyToAddresses = cursor.getString(cursor.getColumnIndex(COL_REPLY_TO))
-      details.replyTo = if (TextUtils.isEmpty(replyToAddresses)) null else listOf(*InternetAddress
-          .parse(replyToAddresses))
-    } catch (e: AddressException) {
-      e.printStackTrace()
-    }
-
-    try {
-      val toAddresses = cursor.getString(cursor.getColumnIndex(COL_TO_ADDRESSES))
-      details.to = if (TextUtils.isEmpty(toAddresses)) null else listOf(*InternetAddress.parse(toAddresses))
-    } catch (e: AddressException) {
-      e.printStackTrace()
-    }
-
-    try {
-      val ccAddresses = cursor.getString(cursor.getColumnIndex(COL_CC_ADDRESSES))
-      details.cc = if (TextUtils.isEmpty(ccAddresses)) null else listOf(*InternetAddress.parse(ccAddresses))
-    } catch (e: AddressException) {
-      e.printStackTrace()
-    }
-
-    return details
-  }
-
-  /**
-   * Get new messages.
-   *
-   * @param context Interface to global information about an application environment.
-   * @param email   The user email.
-   * @param label   The label name.
-   * @return A  list of [GeneralMessageDetails] objects.
-   */
-  fun getNewMsgs(context: Context, email: String, label: String): List<GeneralMessageDetails> {
-    val contentResolver = context.contentResolver
-
-    val orderType: String = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      "ASC"
-    } else {
-      "DESC"
-    }
-
-    val selection = "$COL_EMAIL= ? AND $COL_FOLDER = ? AND $COL_IS_NEW = 1 "
-    val selectionArgs = arrayOf(email, label)
-    val cursor = contentResolver.query(baseContentUri, null, selection, selectionArgs,
-        "$COL_RECEIVED_DATE $orderType")
-
-    val detailsList = ArrayList<GeneralMessageDetails>()
-
-    if (cursor != null) {
-      while (cursor.moveToNext()) {
-        detailsList.add(getMsgInfo(cursor))
-      }
-      cursor.close()
-    }
-
-    return detailsList
-  }
-
-  private fun parseFlags(string: String): Array<String> {
-    return parseArray(string, "\\s")
-  }
-
   companion object {
     const val TABLE_NAME_MESSAGES = "messages"
 
@@ -222,15 +121,5 @@ class MessageDaoSource : BaseDaoSource() {
     const val COL_ATTACHMENTS_DIRECTORY = "attachments_directory"
     const val COL_ERROR_MSG = "error_msg"
     const val COL_REPLY_TO = "reply_to"
-
-    const val ENCRYPTED_STATE_UNDEFINED = -1
-
-    private fun parseArray(attributesAsString: String?, regex: String): Array<String> {
-      return if (attributesAsString != null && attributesAsString.isNotEmpty()) {
-        attributesAsString.split(regex.toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-      } else {
-        arrayOf()
-      }
-    }
   }
 }

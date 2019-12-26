@@ -34,7 +34,6 @@ import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
@@ -288,7 +287,6 @@ class EmailSyncService : BaseService(), SyncListener {
       val email = account.email
       val folderName = localFolder.fullName
 
-      val msgDaoSource = MessageDaoSource()
       val folderType = FoldersManager.getFolderType(localFolder)
       val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
 
@@ -313,7 +311,7 @@ class EmailSyncService : BaseService(), SyncListener {
       }
 
       if (!GeneralUtil.isAppForegrounded()) {
-        val detailsList = msgDaoSource.getNewMsgs(this, email, folderName)
+        val detailsList = roomDatabase.msgDao().getNewMsgs(email, folderName)
         val uidListOfUnseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(email, folderName)
         notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, false)
       }
@@ -379,7 +377,6 @@ class EmailSyncService : BaseService(), SyncListener {
     val folderName = localFolder.fullName
 
     try {
-      val msgsDaoSource = MessageDaoSource()
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
       val mapOfUIDAndMsgFlags = roomDatabase.msgDao().getMapOfUIDAndMsgFlags(email, folderName)
@@ -395,7 +392,7 @@ class EmailSyncService : BaseService(), SyncListener {
             notificationManager.cancel(uid.toInt())
           }
         } else {
-          val detailsList = msgsDaoSource.getNewMsgs(this, email, folderName)
+          val detailsList = roomDatabase.msgDao().getNewMsgs(email, folderName)
           val uidListOfUnseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(email, folderName)
           notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, false)
         }
@@ -455,7 +452,7 @@ class EmailSyncService : BaseService(), SyncListener {
   }
 
   override fun onFoldersInfoReceived(account: AccountDao, folders: Array<Folder>, ownerKey: String, requestCode: Int) {
-    LogsUtil.d(TAG, "onFoldersInfoReceived:" + Arrays.toString(folders))
+    LogsUtil.d(TAG, "onFoldersInfoReceived:" + folders.contentToString())
     val email = account.email
 
     val foldersManager = FoldersManager()
@@ -541,11 +538,10 @@ class EmailSyncService : BaseService(), SyncListener {
         }
 
       } else {
-        val msgDaoSource = MessageDaoSource()
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-        val detailsList = msgDaoSource.getNewMsgs(this, email, folderName)
+        val newMsgs = roomDatabase.msgDao().getNewMsgs(email, folderName)
         val uidListOfUnseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(email, folderName)
-        notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, true)
+        notificationManager.notify(this, account, localFolder, newMsgs, uidListOfUnseenMsgs, true)
       }
     }
   }
@@ -557,10 +553,9 @@ class EmailSyncService : BaseService(), SyncListener {
     val folderType = FoldersManager.getFolderType(localFolder)
 
     if (folderType === FoldersManager.FolderType.INBOX && !GeneralUtil.isAppForegrounded()) {
-      val msgDaoSource = MessageDaoSource()
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
-      val detailsList = msgDaoSource.getNewMsgs(this, email, folderName)
+      val detailsList = roomDatabase.msgDao().getNewMsgs(email, folderName)
       val uidListOfUnseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(email, folderName)
 
       notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, false)
@@ -623,7 +618,7 @@ class EmailSyncService : BaseService(), SyncListener {
    */
   private fun updateLocalContactsIfNeeded(imapFolder: IMAPFolder, messages: Array<javax.mail.Message>) {
     try {
-      val isSentFolder = Arrays.asList(*imapFolder.attributes).contains("\\Sent")
+      val isSentFolder = listOf(*imapFolder.attributes).contains("\\Sent")
 
       if (isSentFolder) {
         val emailAndNamePairs = ArrayList<EmailAndNamePair>()
