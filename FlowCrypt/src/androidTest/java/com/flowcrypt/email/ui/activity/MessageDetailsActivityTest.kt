@@ -45,7 +45,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.database.dao.source.imap.MessageDao
+import com.flowcrypt.email.database.dao.MessageDao
 import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.model.KeyDetails

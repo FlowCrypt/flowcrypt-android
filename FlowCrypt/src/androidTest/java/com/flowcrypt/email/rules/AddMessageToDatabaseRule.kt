@@ -7,8 +7,8 @@ package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
+import com.flowcrypt.email.database.dao.MessageDao
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDao
 import com.google.android.gms.auth.GoogleAuthException
 import com.sun.mail.imap.IMAPFolder
 import org.junit.runner.Description

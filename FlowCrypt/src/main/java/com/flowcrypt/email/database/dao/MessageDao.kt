@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database.dao.source.imap
+package com.flowcrypt.email.database.dao
 
 import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 
