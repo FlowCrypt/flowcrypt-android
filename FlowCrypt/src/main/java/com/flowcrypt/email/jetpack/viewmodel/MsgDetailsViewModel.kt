@@ -41,7 +41,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
     }
   }
 
-  fun updateMsgState(newMsgState: MessageState) {
+  fun changeMsgState(newMsgState: MessageState) {
     val freshMsgEntity = msgLiveData.value
     freshMsgEntity?.let { msgEntity ->
       viewModelScope.launch {

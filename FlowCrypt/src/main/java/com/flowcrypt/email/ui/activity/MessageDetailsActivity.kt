@@ -56,7 +56,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.LoaderCallbacks<Cursor>,
-    Observer<NodeResponseWrapper<*>> {
+    Observer<NodeResponseWrapper<*>>, MessageDetailsFragment.MessageDetailsListener {
 
   private lateinit var messageEntity: MessageEntity
   private lateinit var localFolder: LocalFolder
@@ -297,6 +297,12 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     }
   }
 
+  override fun getMsgDetailsViewModel(): MsgDetailsViewModel? {
+    return if (::msgDetailsViewModel.isInitialized) {
+      msgDetailsViewModel
+    } else null
+  }
+
   fun decryptMsg() {
     if (rawMimeBytes?.isNotEmpty() == true) {
       idlingForDecryption!!.increment()
@@ -343,7 +349,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
           MsgsCacheManager.getMsgAsByteArray(messageEntity.id.toString())
         }
 
-        updateMsgDetails(messageEntity)
+        onMsgDetailsUpdated()
 
         if (rawMimeBytes?.isNotEmpty() == true) {
           if (isRetrieveIncomingMsgNeeded) {
@@ -352,7 +358,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
             if (!JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true) && !messageEntity.isSeen) {
               msgDetailsViewModel.setSeenStatus(true)
-              msgDetailsViewModel.updateMsgState(MessageState.PENDING_MARK_READ)
+              msgDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_READ)
               changeMsgsReadState()
             }
 
@@ -385,11 +391,11 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     fragment?.onErrorOccurred(requestCode, errorType, e)
   }
 
-  private fun updateMsgDetails(msgEntity: MessageEntity) {
+  private fun onMsgDetailsUpdated() {
     val fragment = supportFragmentManager
         .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
 
-    fragment?.updateMsgDetails(msgEntity)
+    fragment?.onMsgDetailsUpdated()
   }
 
   private fun updateAtts(atts: ArrayList<AttachmentInfo>) {

@@ -37,7 +37,7 @@ class DateTimeUtil {
      * @return The formatted date.
      */
     @JvmStatic
-    fun formatSameDayTime(context: Context, date: Long?): String {
+    fun formatSameDayTime(context: Context?, date: Long?): String {
       val calendarOfDate = GregorianCalendar()
       calendarOfDate.timeInMillis = date ?: return ""
 
