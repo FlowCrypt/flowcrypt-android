@@ -24,6 +24,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.broadcastreceivers.MarkMessagesAsOldBroadcastReceiver
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
@@ -34,6 +35,8 @@ import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 
 /**
@@ -90,8 +93,10 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     val localFolder = foldersManager.findInboxFolder()
 
     if (localFolder != null) {
-      //todo-denbond7 #793
-      // MessageDaoSource().setOldStatus(context, account.email, localFolder.fullName)
+      GlobalScope.launch {
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+        roomDatabase.msgDao().markMsgsAsOld(account.email, localFolder.fullName)
+      }
     }
   }
 
