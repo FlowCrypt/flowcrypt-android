@@ -333,47 +333,55 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     fragment?.showErrorInfo(error, e)
   }
 
-  private fun messageNotAvailableInFolder() {
+  private fun messageNotAvailableInFolder(showToast: Boolean = true) {
     msgDetailsViewModel.deleteMsg()
-    Toast.makeText(this, R.string.email_does_not_available_in_this_folder, Toast.LENGTH_LONG).show()
+    if (showToast) {
+      Toast.makeText(this, R.string.email_does_not_available_in_this_folder, Toast.LENGTH_LONG).show()
+    }
     finish()
   }
 
   private fun genMsgObserver(): Observer<MessageEntity?> {
-    return Observer {
-      if (it != null) {
-        this.rawMimeBytes = if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder,
-                ignoreCase = true)) {
-          it.rawMessageWithoutAttachments?.toByteArray()
-        } else {
-          MsgsCacheManager.getMsgAsByteArray(messageEntity.id.toString())
-        }
+    return object : Observer<MessageEntity?> {
+      private var isFirstCall = true
 
-        onMsgDetailsUpdated()
-
-        if (rawMimeBytes?.isNotEmpty() == true) {
-          if (isRetrieveIncomingMsgNeeded) {
-            isRetrieveIncomingMsgNeeded = false
-            isReceiveMsgBodyNeeded = false
-
-            if (!JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true) && !messageEntity.isSeen) {
-              msgDetailsViewModel.setSeenStatus(true)
-              msgDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_READ)
-              changeMsgsReadState()
-            }
-
-            decryptMsg()
-          }
-        } else {
-          if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
-            this.isRequestMsgDetailsStarted = true
-            loadMsgDetails()
+      override fun onChanged(it: MessageEntity?) {
+        if (it != null) {
+          this@MessageDetailsActivity.rawMimeBytes = if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder,
+                  ignoreCase = true)) {
+            it.rawMessageWithoutAttachments?.toByteArray()
           } else {
-            isReceiveMsgBodyNeeded = true
+            MsgsCacheManager.getMsgAsByteArray(messageEntity.id.toString())
           }
+
+          onMsgDetailsUpdated()
+
+          if (rawMimeBytes?.isNotEmpty() == true) {
+            if (isRetrieveIncomingMsgNeeded) {
+              isRetrieveIncomingMsgNeeded = false
+              isReceiveMsgBodyNeeded = false
+
+              if (!JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true) && !messageEntity.isSeen) {
+                msgDetailsViewModel.setSeenStatus(true)
+                msgDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_READ)
+                changeMsgsReadState()
+              }
+
+              decryptMsg()
+            }
+          } else {
+            if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
+              this@MessageDetailsActivity.isRequestMsgDetailsStarted = true
+              loadMsgDetails()
+            } else {
+              isReceiveMsgBodyNeeded = true
+            }
+          }
+        } else {
+          messageNotAvailableInFolder(isFirstCall)
         }
-      } else {
-        messageNotAvailableInFolder()
+
+        isFirstCall = false
       }
     }
   }
