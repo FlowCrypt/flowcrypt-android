@@ -115,6 +115,10 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("UPDATE messages SET state=:newValues WHERE email = :account AND folder = :label AND state = :oldValue")
   abstract fun changeMsgsState(account: String?, label: String?, oldValue: Int, newValues: Int): Int
 
+  @Query("UPDATE messages SET state=:newValues WHERE email = :account AND folder = :label AND state = :oldValue")
+  abstract suspend fun changeMsgsStateSuspend(account: String?, label: String?, oldValue: Int,
+                                              newValues: Int): Int
+
   /**
    * Add the messages which have a current state equal [MessageState.SENDING] to the sending queue again.
    *
