@@ -8,6 +8,8 @@ package com.flowcrypt.email.broadcastreceivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.extensions.goAsync
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -31,26 +33,11 @@ class MarkMessagesAsOldBroadcastReceiver : BroadcastReceiver() {
     val email = intent.getStringExtra(EXTRA_KEY_EMAIL)
     val label = intent.getStringExtra(EXTRA_KEY_LABEL)
 
-    val uidList = intent.getStringArrayListExtra(EXTRA_KEY_UID_LIST)
-    val step = 500
+    val uidList = intent.getStringArrayListExtra(EXTRA_KEY_UID_LIST)?.map { it.toLong() } ?: return
 
-    if (uidList.isNotEmpty()) {
-      if (uidList.size <= step) {
-        //todo-denbond7 #793
-        //daoSource.setOldStatus(context, email, label, uidList)
-      } else {
-        var i = 0
-        while (i < uidList.size) {
-          val tempList = if (uidList.size - i > step) {
-            uidList.subList(i, i + step)
-          } else {
-            uidList.subList(i, uidList.size)
-          }
-          //todo-denbond7 #793
-          //daoSource.setOldStatus(context, email, label, tempList)
-          i += step
-        }
-      }
+    goAsync {
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+      roomDatabase.msgDao().setOldStatus(email, label, uidList)
     }
   }
 

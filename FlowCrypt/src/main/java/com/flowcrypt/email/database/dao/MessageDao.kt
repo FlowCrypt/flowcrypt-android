@@ -131,6 +131,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT * FROM messages WHERE email = :account AND state =:stateValue")
   abstract fun getMsgsWithState(account: String?, stateValue: Int): List<MessageEntity>
 
+  @Query("UPDATE messages SET is_new = 0 WHERE email = :account AND folder = :label AND uid IN (:uidList)")
+  abstract suspend fun markMsgsAsOld(account: String?, label: String?, uidList: Collection<Long>): Int
+
   @Transaction
   open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {
     val step = 50
@@ -219,6 +222,34 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Transaction
   open fun getMapOfUIDAndMsgFlags(email: String, label: String): Map<Long, String?> {
     return getUIDAndFlagsPairs(email, label).map { it.uid to it.flags }.toMap()
+  }
+
+  /**
+   * Mark messages as old in the local database.
+   *
+   * @param email   The email that the message linked.
+   * @param label   The folder label.
+   * @param uidList The list of the UIDs.
+   */
+  @Transaction
+  open suspend fun setOldStatus(email: String?, label: String?, uidList: List<Long>) {
+    val step = 50
+    if (uidList.isNotEmpty()) {
+      if (uidList.size <= step) {
+        markMsgsAsOld(email, label, uidList)
+      } else {
+        var i = 0
+        while (i < uidList.size) {
+          val tempList = if (uidList.size - i > step) {
+            uidList.subList(i, i + step)
+          } else {
+            uidList.subList(i, uidList.size)
+          }
+          markMsgsAsOld(email, label, tempList)
+          i += step
+        }
+      }
+    }
   }
 
   data class UidFlagsPair(val uid: Long, val flags: String? = null)
