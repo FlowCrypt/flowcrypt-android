@@ -34,8 +34,7 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
 
   fun getFrom(): List<InternetAddress>? = msgEntity.from
 
-  //todo-denbond7 #793
-  fun getReplyTo(): List<InternetAddress>? = emptyList()//msgEntity.replyTo
+  fun getReplyTo(): List<InternetAddress>? = msgEntity.replyToAddress
 
   fun getReceiveDate(): Date = Date(msgEntity.receivedDate ?: 0)
 
