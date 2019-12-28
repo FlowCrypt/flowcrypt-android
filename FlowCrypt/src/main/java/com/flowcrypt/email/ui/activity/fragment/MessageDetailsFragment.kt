@@ -547,7 +547,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   }
 
   private fun showAttsIfTheyExist() {
-    if (msgEntity != null && msgEntity?.hasAttachments == true) {
+    if (atts.size > 0) {
       val layoutInflater = LayoutInflater.from(context)
 
       for (att in atts) {
@@ -663,11 +663,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
     if (!isHtmlDisplayed) {
       updateReplyButtons()
-    }
-
-    if (atts.size > 0) {
-      //todo-denbond7 #793
-      //msgEntity?.hasAttachments = true
     }
   }
 
