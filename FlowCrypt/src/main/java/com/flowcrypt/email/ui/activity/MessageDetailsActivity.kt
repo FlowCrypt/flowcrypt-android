@@ -82,25 +82,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     get() = R.layout.activity_message_details
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    initMsgDetailsViewModel()
     super.onCreate(savedInstanceState)
-    if (intent?.extras?.containsKey(EXTRA_KEY_FOLDER) == false
-        || intent?.extras?.containsKey(EXTRA_KEY_MSG) == false) {
-      finish()
-    }
-
-    this.localFolder = intent.getParcelableExtra(EXTRA_KEY_FOLDER)
-    this.messageEntity = intent.getParcelableExtra(EXTRA_KEY_MSG)
-
-    label = if (localFolder.searchQuery.isNullOrEmpty()) {
-      localFolder.fullName
-    } else {
-      SearchMessagesActivity.SEARCH_FOLDER_NAME
-    }
-
-    msgDetailsViewModel = ViewModelProvider(this, MsgDetailsViewModelFactory(localFolder,
-        messageEntity, application)).get(MsgDetailsViewModel::class.java)
-    msgDetailsViewModel.msgLiveData.observe(this, genMsgObserver())
-
     decryptMsgViewModel = ViewModelProvider(this).get(DecryptMessageViewModel::class.java)
     decryptMsgViewModel.responsesLiveData.observe(this, this)
 
@@ -384,6 +367,26 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         isFirstCall = false
       }
     }
+  }
+
+  private fun initMsgDetailsViewModel() {
+    if (intent?.extras?.containsKey(EXTRA_KEY_FOLDER) == false
+        || intent?.extras?.containsKey(EXTRA_KEY_MSG) == false) {
+      finish()
+    }
+
+    this.localFolder = intent.getParcelableExtra(EXTRA_KEY_FOLDER)
+    this.messageEntity = intent.getParcelableExtra(EXTRA_KEY_MSG)
+
+    label = if (localFolder.searchQuery.isNullOrEmpty()) {
+      localFolder.fullName
+    } else {
+      SearchMessagesActivity.SEARCH_FOLDER_NAME
+    }
+
+    msgDetailsViewModel = ViewModelProvider(this, MsgDetailsViewModelFactory(localFolder,
+        messageEntity, application)).get(MsgDetailsViewModel::class.java)
+    msgDetailsViewModel.msgLiveData.observe(this, genMsgObserver())
   }
 
   /**
