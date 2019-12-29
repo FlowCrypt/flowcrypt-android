@@ -90,7 +90,10 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       val uid = outgoingMsgInfo.uid
       val email = accountDao.email
       val label = JavaEmailConstants.FOLDER_OUTBOX
-      val msgEntity = roomDatabase.msgDao().getMsg(email, label, uid) ?: return
+
+      if (roomDatabase.msgDao().getMsg(email, label, uid) != null) {
+        return
+      }
 
       LogsUtil.d(TAG, "Received a new job: $outgoingMsgInfo")
       var newMsgId: Long = -1
@@ -111,8 +114,8 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
         val msgAttsCacheDir = File(attsCacheDir, UUID.randomUUID().toString())
 
-        val messageEntity = prepareMessageEntity(outgoingMsgInfo, uid, mimeMsg, rawMsg, msgAttsCacheDir)
-        newMsgId = roomDatabase.msgDao().insert(messageEntity)
+        val msgEntity = prepareMessageEntity(outgoingMsgInfo, uid, mimeMsg, rawMsg, msgAttsCacheDir)
+        newMsgId = roomDatabase.msgDao().insert(msgEntity)
 
         if (newMsgId > 0) {
           updateOutgoingMsgCount(email, roomDatabase)
@@ -143,17 +146,20 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
 
+        val msgEntity = MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
+
         if (newMsgId <= 0) {
-          val messageEntity = MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
-          newMsgId = roomDatabase.msgDao().insert(messageEntity)
+          newMsgId = roomDatabase.msgDao().insert(msgEntity)
         }
 
-        if (e is NoKeyAvailableException) {
-          val errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
-          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState
-              .ERROR_PRIVATE_KEY_NOT_FOUND.value, errorMsg = errorMsg))
-        } else {
-          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.ERROR_DURING_CREATION.value))
+        if (newMsgId > 0) {
+          if (e is NoKeyAvailableException) {
+            val errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
+            roomDatabase.msgDao().update(msgEntity.copy(state = MessageState
+                .ERROR_PRIVATE_KEY_NOT_FOUND.value, errorMsg = errorMsg))
+          } else {
+            roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.ERROR_DURING_CREATION.value))
+          }
         }
       }
 

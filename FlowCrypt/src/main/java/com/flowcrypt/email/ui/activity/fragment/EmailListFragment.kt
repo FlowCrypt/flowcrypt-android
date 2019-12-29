@@ -69,9 +69,14 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private var listener: OnManageEmailsListener? = null
   private var isEmptyViewAvailable = false
 
+  private val isOutboxFolder: Boolean
+    get() {
+      return JavaEmailConstants.FOLDER_OUTBOX.equals(listener?.currentFolder?.fullName, ignoreCase = true)
+    }
+
   private val msgsObserver = Observer<PagedList<MessageEntity>> {
     if (it.size == 0) {
-      if (isEmptyViewAvailable) {
+      if (isEmptyViewAvailable || isOutboxFolder) {
         progressView?.visibility = View.GONE
         statusView?.visibility = View.GONE
         contentView?.visibility = View.GONE
@@ -156,8 +161,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
 
     val isEmpty = TextUtils.isEmpty(localFolder.fullName)
-    val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)
-    if (isEmpty || isOutbox) {
+    if (isEmpty || isOutboxFolder) {
       swipeRefreshLayout?.isRefreshing = false
     } else {
       emptyView?.visibility = View.GONE
@@ -368,8 +372,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   private fun isItSyncOrOutboxFolder(localFolder: LocalFolder?): Boolean {
-    return localFolder?.fullName.equals(JavaEmailConstants.FOLDER_INBOX, ignoreCase = true)
-        || localFolder?.fullName.equals(JavaEmailConstants.FOLDER_OUTBOX, ignoreCase = true)
+    return localFolder?.fullName.equals(JavaEmailConstants.FOLDER_INBOX, ignoreCase = true) || isOutboxFolder
   }
 
   /**
@@ -403,6 +406,12 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
    * @param totalItemsCount The count of already loaded messages.
    */
   private fun loadNextMsgs(totalItemsCount: Int) {
+    val localFolder = listener?.currentFolder
+
+    if (isOutboxFolder) {
+      return
+    }
+
     if (GeneralUtil.isConnected(context)) {
       if (totalItemsCount == 0) {
         contentView?.visibility = View.GONE
@@ -413,7 +422,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
       footerProgressView?.visibility = View.VISIBLE
       listener?.msgsLoadingIdlingResource?.setIdleState(false)
-      val localFolder = listener?.currentFolder
       if (TextUtils.isEmpty(localFolder!!.searchQuery)) {
         baseSyncActivity.loadNextMsgs(R.id.syns_request_code_load_next_messages, localFolder, totalItemsCount)
       } else {
