@@ -55,7 +55,7 @@ class ChangeMsgsReadStateSyncTask(ownerKey: String, requestCode: Int) : BaseSync
           val imapFolder = store.getFolder(folder) as IMAPFolder
           imapFolder.open(Folder.READ_WRITE)
 
-          val uidList = filteredMsgs.map { it.uid.toLong() }
+          val uidList = filteredMsgs.map { it.uid }
           val msgs: List<Message> = imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
 
           if (msgs.isNotEmpty()) {

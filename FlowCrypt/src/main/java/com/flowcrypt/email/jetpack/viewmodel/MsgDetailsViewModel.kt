@@ -33,7 +33,11 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
     freshMsgEntity?.let { msgEntity ->
       viewModelScope.launch {
         roomDatabase.msgDao().updateSuspend(msgEntity.copy(flags = if (isSeen) {
-          MessageFlag.SEEN.value
+          if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+            msgEntity.flags
+          } else {
+            msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+          }
         } else {
           msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
         }))
@@ -45,7 +49,29 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
     val freshMsgEntity = msgLiveData.value
     freshMsgEntity?.let { msgEntity ->
       viewModelScope.launch {
-        roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = newMsgState.value))
+        val candidate: MessageEntity = when (newMsgState) {
+          MessageState.PENDING_MARK_READ -> {
+            msgEntity.copy(
+                state = newMsgState.value,
+                flags = if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+                  msgEntity.flags
+                } else {
+                  msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+                })
+          }
+
+          MessageState.PENDING_MARK_UNREAD -> {
+            msgEntity.copy(
+                state = newMsgState.value,
+                flags = msgEntity.flags?.replace(MessageFlag.SEEN.value, ""))
+          }
+
+          else -> {
+            msgEntity.copy(state = newMsgState.value)
+          }
+        }
+
+        roomDatabase.msgDao().updateSuspend(candidate)
       }
     }
   }

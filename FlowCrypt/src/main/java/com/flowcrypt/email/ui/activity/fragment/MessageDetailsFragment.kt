@@ -248,7 +248,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
       R.id.menuActionMarkUnread -> {
         msgDetailsViewModel?.changeMsgState(MessageState.PENDING_MARK_UNREAD)
-        msgDetailsViewModel?.setSeenStatus(false)
         (activity as? BaseSyncActivity)?.changeMsgsReadState()
         activity?.finish()
         true

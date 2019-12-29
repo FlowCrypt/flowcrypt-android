@@ -345,7 +345,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
               isReceiveMsgBodyNeeded = false
 
               if (!JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true) && !messageEntity.isSeen) {
-                msgDetailsViewModel.setSeenStatus(true)
                 msgDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_READ)
                 changeMsgsReadState()
               }
@@ -453,8 +452,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   companion object {
-    const val RESULT_CODE_UPDATE_LIST = 100
-
     val EXTRA_KEY_FOLDER = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_FOLDER",
         MessageDetailsActivity::class.java)
     val EXTRA_KEY_MSG = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MSG",
