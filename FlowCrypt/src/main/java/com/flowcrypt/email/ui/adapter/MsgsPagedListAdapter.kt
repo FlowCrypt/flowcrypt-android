@@ -16,7 +16,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.annotation.IntDef
 import androidx.core.content.ContextCompat
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
@@ -41,24 +43,59 @@ import javax.mail.internet.InternetAddress
  *         E-mail: DenBond7@gmail.com
  */
 class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickListener? = null) :
-    PagedListAdapter<MessageEntity, MsgsPagedListAdapter.MessageViewHolder>(DIFF_CALLBACK) {
+    PagedListAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {
   private val senderNamePattern: Pattern
+  private var isFooterEnabled = false
 
   init {
     this.senderNamePattern = prepareSenderNamePattern()
   }
 
-  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
-    return MessageViewHolder(LayoutInflater.from(parent.context)
-        .inflate(R.layout.messages_list_item, parent, false))
+  override fun onCreateViewHolder(parent: ViewGroup, @ItemType viewType: Int): BaseViewHolder {
+    return when (viewType) {
+      FOOTER -> object : BaseViewHolder(LayoutInflater.from(parent.context)
+          .inflate(R.layout.list_view_progress_footer, parent, false)) {
+        override val itemType = FOOTER
+      }
+
+      MESSAGE -> MessageViewHolder(LayoutInflater.from(parent.context)
+          .inflate(R.layout.messages_list_item, parent, false))
+
+      else -> object : BaseViewHolder(ProgressBar(parent.context)) {
+        override val itemType = NONE
+      }
+    }
   }
 
-  override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
-    val msgEntity = getItem(position)
-    updateItem(msgEntity, holder)
-    holder.itemView.setOnClickListener {
-      msgEntity?.let { onMessageClickListener?.onMsgClick(it) }
+  override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
+    when (holder.itemType) {
+      MESSAGE -> {
+        val msgEntity = getItem(position)
+        updateItem(msgEntity, holder as MessageViewHolder)
+        holder.itemView.setOnClickListener {
+          msgEntity?.let { onMessageClickListener?.onMsgClick(it) }
+        }
+      }
     }
+  }
+
+  fun changeProgress(isFooterEnabled: Boolean) {
+    this.isFooterEnabled = isFooterEnabled
+
+    if (isFooterEnabled) {
+      notifyItemInserted(super.getItemCount())
+    } else {
+      notifyItemRemoved(super.getItemCount())
+    }
+  }
+
+  override fun getItemViewType(position: Int): Int {
+    return if (isFooterEnabled && position == itemCount - 1) FOOTER else MESSAGE
+  }
+
+  override fun getItemCount(): Int {
+    val currentItemCount = super.getItemCount()
+    return currentItemCount + if (isFooterEnabled && currentItemCount > 0) 1 else 0
   }
 
   private fun updateItem(messageEntity: MessageEntity?, viewHolder: MessageViewHolder) {
@@ -312,7 +349,14 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     return TextUtils.concat(spannableStringMe, " ", status)
   }
 
-  inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+  abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    @ItemType
+    abstract val itemType: Int
+  }
+
+  inner class MessageViewHolder(itemView: View) : BaseViewHolder(itemView) {
+    override val itemType = MESSAGE
+
     var textViewSenderAddress: TextView? = itemView.findViewById(R.id.textViewSenderAddress)
     var textViewDate: TextView? = itemView.findViewById(R.id.textViewDate)
     var textViewSubject: TextView? = itemView.findViewById(R.id.textViewSubject)
@@ -331,5 +375,13 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
       override fun areContentsTheSame(oldMsg: MessageEntity, newMsg: MessageEntity) = oldMsg == newMsg
     }
+
+    @IntDef(NONE, FOOTER, MESSAGE)
+    @Retention(AnnotationRetention.SOURCE)
+    annotation class ItemType
+
+    const val NONE = 0
+    const val FOOTER = 1
+    const val MESSAGE = 2
   }
 }

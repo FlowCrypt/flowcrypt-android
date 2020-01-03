@@ -279,6 +279,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     } else {
       textViewActionProgress?.text = null
       textViewActionProgress?.visibility = View.GONE
+      adapter.changeProgress(false)
     }
   }
 
@@ -416,6 +417,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       footerProgressView?.visibility = View.VISIBLE
       listener?.msgsLoadingIdlingResource?.setIdleState(false)
       localFolder?.let {
+        adapter.changeProgress(true)
         if (it.searchQuery.isNullOrEmpty()) {
           baseSyncActivity.loadNextMsgs(R.id.syns_request_code_load_next_messages, it, totalItemsCount)
         } else {
