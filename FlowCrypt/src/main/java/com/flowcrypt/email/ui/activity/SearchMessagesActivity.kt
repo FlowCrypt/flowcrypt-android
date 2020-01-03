@@ -65,6 +65,8 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
         this.currentFolder = incomingFolder.copy(folderAlias = SEARCH_FOLDER_NAME,
             searchQuery = initQuery, msgCount = 0)
       }
+
+      onFolderChanged(true)
     } else {
       finish()
     }
@@ -128,8 +130,8 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
       return true
     }
 
-    currentFolder!!.searchQuery = initQuery
-    onFolderChanged()
+    currentFolder?.searchQuery = initQuery
+    onFolderChanged(true)
     return false
   }
 

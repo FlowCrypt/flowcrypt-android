@@ -12,6 +12,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Config
 import androidx.paging.PagedList
 import androidx.paging.toLiveData
 import com.flowcrypt.email.Constants
@@ -20,6 +21,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import kotlinx.coroutines.launch
 import java.io.File
@@ -44,30 +46,49 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
   var msgsLiveData: LiveData<PagedList<MessageEntity>>? = null
 
   fun loadMsgs(lifecycleOwner: LifecycleOwner, localFolder: LocalFolder?, observer:
-  Observer<PagedList<MessageEntity>>, boundaryCallback: PagedList.BoundaryCallback<MessageEntity>) {
-    if ((this.currentLocalFolder?.fullName == localFolder?.fullName).not()) {
-      this.currentLocalFolder = localFolder
-      msgsLiveData?.removeObserver(observer)
-      msgsLiveData = Transformations.switchMap(accountLiveData) {
-        val account = it?.email ?: ""
-        val label = currentLocalFolder?.fullName ?: ""
-        roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
-            .toLiveData(pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3,
-                boundaryCallback = boundaryCallback)
+  Observer<PagedList<MessageEntity>>, boundaryCallback: PagedList
+  .BoundaryCallback<MessageEntity>, forceClearCache: Boolean = false) {
+    viewModelScope.launch {
+      val label = if (localFolder?.searchQuery.isNullOrEmpty()) {
+        localFolder?.fullName ?: ""
+      } else {
+        SearchMessagesActivity.SEARCH_FOLDER_NAME
       }
 
-      msgsLiveData?.observe(lifecycleOwner, observer)
-    }
-  }
+      if (forceClearCache) {
+        roomDatabase.msgDao().delete(getActiveAccountSuspend()?.email, label)
+      }
 
-  fun getActiveAccount(): AccountEntity? {
-    return accountLiveData.value
+      val resetObserver = {
+        val isSearchFolder = label == SearchMessagesActivity.SEARCH_FOLDER_NAME
+        (currentLocalFolder?.fullName == localFolder?.fullName).not() || isSearchFolder
+      }
+
+      if (resetObserver()) {
+        msgsLiveData?.removeObserver(observer)
+        msgsLiveData = Transformations.switchMap(accountLiveData) {
+          val account = it?.email ?: ""
+          roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
+              .toLiveData(
+                  config = Config(
+                      pageSize = JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP / 3),
+                  boundaryCallback = boundaryCallback)
+        }
+
+        msgsLiveData?.observe(lifecycleOwner, observer)
+        currentLocalFolder = localFolder
+      }
+    }
   }
 
   fun cleanFolderCache(folderName: String?) {
     viewModelScope.launch {
-      roomDatabase.msgDao().delete(accountLiveData.value?.email, folderName)
+      roomDatabase.msgDao().delete(getActiveAccountSuspend()?.email, folderName)
     }
+  }
+
+  private suspend fun getActiveAccountSuspend(): AccountEntity? {
+    return accountLiveData.value ?: return roomDatabase.accountDao().getActiveAccount()
   }
 
   fun deleteOutgoingMsg(messageEntity: MessageEntity) {
@@ -79,8 +100,9 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
       }
 
       if (isMsgDeleted) {
-        val outgoingMsgCount = roomDatabase.msgDao().getOutboxMessages(accountLiveData.value?.email).size
-        val outboxLabel = roomDatabase.labelDao().getLabelSuspend(accountLiveData.value?.email,
+        val account = getActiveAccountSuspend()
+        val outgoingMsgCount = roomDatabase.msgDao().getOutboxMessages(account?.email).size
+        val outboxLabel = roomDatabase.labelDao().getLabelSuspend(account?.email,
             JavaEmailConstants.FOLDER_OUTBOX)
 
         outboxLabel?.let {

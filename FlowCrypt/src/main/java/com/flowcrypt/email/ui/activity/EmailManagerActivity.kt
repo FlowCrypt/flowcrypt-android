@@ -193,11 +193,11 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     menuItemSearch = menu.findItem(R.id.menuSearch)
 
-    val searchView = menuItemSearch!!.actionView as SearchView
-    searchView.setOnQueryTextListener(this)
+    val searchView = menuItemSearch?.actionView as? SearchView
+    searchView?.setOnQueryTextListener(this)
 
     val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
-    searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+    searchView?.setSearchableInfo(searchManager.getSearchableInfo(componentName))
 
     val item = menu.findItem(R.id.menuSwitch)
     switchView = item.actionView.findViewById(R.id.switchShowOnlyEncryptedMessages)

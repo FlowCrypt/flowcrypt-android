@@ -30,7 +30,6 @@ import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
-import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
@@ -127,6 +126,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     super.onCreate(savedInstanceState)
     adapter = MsgsPagedListAdapter(this)
     messagesViewModel = ViewModelProvider(this).get(MessagesViewModel::class.java)
+    messagesViewModel.accountLiveData.observe(this, Observer { })
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -247,27 +247,20 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
   }
 
-  fun onFolderChanged() {
+  fun onFolderChanged(forceClearCache: Boolean = false) {
     isEmptyViewAvailable = false
     adapter.submitList(null)
 
     val isFolderNameEmpty = listener?.currentFolder?.fullName?.isEmpty()
     val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(listener?.currentFolder)
-    if (isFolderNameEmpty?.not() == true && isItSyncOrOutboxFolder.not()) {
-      val folder = listener?.currentFolder
-
-      val folderName = if (folder?.searchQuery.isNullOrEmpty()) {
-        folder?.fullName
-      } else {
-        SearchMessagesActivity.SEARCH_FOLDER_NAME
-      }
-
-      folderName?.let {
-        messagesViewModel.cleanFolderCache(it)
-      }
+    var isForceClearCacheNeeded = false
+    if ((isFolderNameEmpty?.not() == true && isItSyncOrOutboxFolder.not()) || forceClearCache) {
+      isForceClearCacheNeeded = true
     }
 
-    messagesViewModel.loadMsgs(this, listener?.currentFolder, msgsObserver, boundaryCallback)
+    messagesViewModel.loadMsgs(this, localFolder = listener?.currentFolder,
+        observer = msgsObserver, boundaryCallback = boundaryCallback,
+        forceClearCache = isForceClearCacheNeeded)
   }
 
   /**
@@ -422,10 +415,12 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
       footerProgressView?.visibility = View.VISIBLE
       listener?.msgsLoadingIdlingResource?.setIdleState(false)
-      if (TextUtils.isEmpty(localFolder!!.searchQuery)) {
-        baseSyncActivity.loadNextMsgs(R.id.syns_request_code_load_next_messages, localFolder, totalItemsCount)
-      } else {
-        baseSyncActivity.searchNextMsgs(R.id.sync_request_code_search_messages, localFolder, totalItemsCount)
+      localFolder?.let {
+        if (it.searchQuery.isNullOrEmpty()) {
+          baseSyncActivity.loadNextMsgs(R.id.syns_request_code_load_next_messages, it, totalItemsCount)
+        } else {
+          baseSyncActivity.searchNextMsgs(R.id.sync_request_code_search_messages, it, totalItemsCount)
+        }
       }
     } else {
       footerProgressView?.visibility = View.GONE
