@@ -45,9 +45,11 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
 
   var msgsLiveData: LiveData<PagedList<MessageEntity>>? = null
 
-  fun loadMsgs(lifecycleOwner: LifecycleOwner, localFolder: LocalFolder?, observer:
-  Observer<PagedList<MessageEntity>>, boundaryCallback: PagedList
-  .BoundaryCallback<MessageEntity>, forceClearCache: Boolean = false) {
+  fun loadMsgs(lifecycleOwner: LifecycleOwner, localFolder: LocalFolder?,
+               observer: Observer<PagedList<MessageEntity>>,
+               boundaryCallback: PagedList.BoundaryCallback<MessageEntity>,
+               forceClearFolderCache: Boolean = false,
+               deleteAllMsgs: Boolean = false) {
     viewModelScope.launch {
       val label = if (localFolder?.searchQuery.isNullOrEmpty()) {
         localFolder?.fullName ?: ""
@@ -55,17 +57,23 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
         SearchMessagesActivity.SEARCH_FOLDER_NAME
       }
 
-      if (forceClearCache) {
-        roomDatabase.msgDao().delete(getActiveAccountSuspend()?.email, label)
-      }
-
       val resetObserver = {
         val isSearchFolder = label == SearchMessagesActivity.SEARCH_FOLDER_NAME
-        (currentLocalFolder?.fullName == localFolder?.fullName).not() || isSearchFolder
+        (currentLocalFolder?.fullName == localFolder?.fullName).not() || isSearchFolder ||
+            deleteAllMsgs || forceClearFolderCache
       }
 
       if (resetObserver()) {
         msgsLiveData?.removeObserver(observer)
+      }
+
+      if (deleteAllMsgs) {
+        roomDatabase.msgDao().deleteAllExceptOutgoing(getActiveAccountSuspend()?.email)
+      } else if (forceClearFolderCache) {
+        roomDatabase.msgDao().delete(getActiveAccountSuspend()?.email, label)
+      }
+
+      if (resetObserver()) {
         msgsLiveData = Transformations.switchMap(accountLiveData) {
           val account = it?.email ?: ""
           roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)

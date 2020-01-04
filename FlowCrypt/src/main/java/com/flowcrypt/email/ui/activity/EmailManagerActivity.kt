@@ -202,23 +202,19 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     val item = menu.findItem(R.id.menuSwitch)
     switchView = item.actionView.findViewById(R.id.switchShowOnlyEncryptedMessages)
 
-    if (switchView != null) {
-      switchView!!.isChecked = AccountDaoSource().isEncryptedModeEnabled(this, currentAccountDao!!.email)
-
-      switchView!!.setOnCheckedChangeListener { buttonView, isChecked ->
-        if (GeneralUtil.isConnected(this@EmailManagerActivity.applicationContext)) {
-          buttonView.isEnabled = false
-        }
-
-        cancelAllSyncTasks(0)
-        AccountDaoSource().setShowOnlyEncryptedMsgs(this@EmailManagerActivity, currentAccountDao!!.email, isChecked)
-        onShowOnlyEncryptedMsgs(isChecked)
-
-        Toast.makeText(this@EmailManagerActivity, if (isChecked)
-          R.string.showing_only_encrypted_messages
-        else
-          R.string.showing_all_messages, Toast.LENGTH_SHORT).show()
+    switchView?.isChecked = AccountDaoSource().isEncryptedModeEnabled(this, currentAccountDao?.email)
+    switchView?.setOnCheckedChangeListener { buttonView, isChecked ->
+      if (GeneralUtil.isConnected(this@EmailManagerActivity.applicationContext)) {
+        buttonView.isEnabled = false
       }
+
+      AccountDaoSource().setShowOnlyEncryptedMsgs(this@EmailManagerActivity, currentAccountDao?.email, isChecked)
+      onShowOnlyEncryptedMsgs(isChecked)
+
+      Toast.makeText(this@EmailManagerActivity, if (isChecked)
+        R.string.showing_only_encrypted_messages
+      else
+        R.string.showing_all_messages, Toast.LENGTH_SHORT).show()
     }
 
     return true
@@ -539,7 +535,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       }
     }
 
-    //fragment?.onFilterMsgs(onlyEncrypted)
+    fragment?.onFilterMsgs(onlyEncrypted)
   }
 
   /**

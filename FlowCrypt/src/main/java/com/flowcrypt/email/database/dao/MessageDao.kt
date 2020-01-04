@@ -55,6 +55,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label")
   abstract suspend fun delete(email: String?, label: String?): Int
 
+  @Query("DELETE FROM messages WHERE email = :email AND folder != :label")
+  abstract suspend fun deleteAllExceptOutgoing(email: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX): Int
+
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid IN (:msgsUID)")
   abstract fun delete(email: String?, label: String?, msgsUID: Collection<Long>): Int
 

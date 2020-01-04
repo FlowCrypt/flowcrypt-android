@@ -247,7 +247,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
   }
 
-  fun onFolderChanged(forceClearCache: Boolean = false) {
+  fun onFolderChanged(forceClearCache: Boolean = false, deleteAllMsgs: Boolean = false) {
     isEmptyViewAvailable = false
     adapter.submitList(null)
 
@@ -260,7 +260,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
     messagesViewModel.loadMsgs(this, localFolder = listener?.currentFolder,
         observer = msgsObserver, boundaryCallback = boundaryCallback,
-        forceClearCache = isForceClearCacheNeeded)
+        forceClearFolderCache = isForceClearCacheNeeded, deleteAllMsgs = deleteAllMsgs)
   }
 
   /**
@@ -294,6 +294,11 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   override fun onMsgClick(msgEntity: MessageEntity) {
     startActivityForResult(MessageDetailsActivity.getIntent(context,
         listener?.currentFolder, msgEntity), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
+  }
+
+  fun onFilterMsgs(isEncryptedModeEnabled: Boolean) {
+    emptyView?.setText(if (isEncryptedModeEnabled) R.string.no_encrypted_messages else R.string.no_results)
+    onFolderChanged(deleteAllMsgs = true)
   }
 
   private fun showConnProblemHint() {
