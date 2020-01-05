@@ -274,6 +274,16 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     }
   }
 
+  override fun loadNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
+    switchView?.isEnabled = false
+    super.loadNextMsgs(requestCode, localFolder, alreadyLoadedMsgsCount)
+  }
+
+  override fun refreshMsgs(requestCode: Int, currentLocalFolder: LocalFolder) {
+    switchView?.isEnabled = false
+    super.refreshMsgs(requestCode, currentLocalFolder)
+  }
+
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
       R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> {
@@ -284,6 +294,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       }
 
       R.id.syns_request_code_refresh_msgs -> {
+        switchView?.isEnabled = true
         onRefreshMsgsCompleted()
         msgsIdlingResource.setIdleState(true)
       }
@@ -301,6 +312,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
       R.id.syns_request_code_refresh_msgs -> {
+        switchView?.isEnabled = true
         onErrorOccurred(requestCode, errorType, e)
         onRefreshMsgsCompleted()
         msgsIdlingResource.setIdleState(true)

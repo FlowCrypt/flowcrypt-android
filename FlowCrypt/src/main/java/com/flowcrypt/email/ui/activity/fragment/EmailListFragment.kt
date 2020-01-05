@@ -57,7 +57,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
   private var recyclerViewMsgs: RecyclerView? = null
   private var emptyView: TextView? = null
-  private var viewIdProgressView: View? = null
   private var footerProgressView: View? = null
   private var swipeRefreshLayout: SwipeRefreshLayout? = null
   private var textViewActionProgress: TextView? = null
