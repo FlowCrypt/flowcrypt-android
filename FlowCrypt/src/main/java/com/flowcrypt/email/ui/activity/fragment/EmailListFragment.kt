@@ -300,6 +300,13 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     onFolderChanged(deleteAllMsgs = true)
   }
 
+  /**
+   * Reload the folder messages.
+   */
+  fun reloadMsgs() {
+    onFolderChanged(deleteAllMsgs = true)
+  }
+
   private fun showConnProblemHint() {
     showSnackbar(view!!, getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener { onRefresh() })

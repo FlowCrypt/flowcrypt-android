@@ -259,7 +259,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
             val fragment = supportFragmentManager
                 .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-            //fragment?.reloadMsgs()
+            fragment?.reloadMsgs()
           } else {
             if (!TextUtils.isEmpty(signInResult.status.statusMessage)) {
               UIUtil.showInfoSnackbar(rootView, signInResult.status.statusMessage!!)
