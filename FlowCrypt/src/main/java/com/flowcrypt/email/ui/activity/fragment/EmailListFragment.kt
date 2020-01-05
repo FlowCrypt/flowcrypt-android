@@ -388,21 +388,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   /**
-   * Show a [Snackbar] with a "Retry" button when a "no connection" issue happened.
-   */
-  private fun showRetrySnackBar() {
-    showSnackbar(view!!, getString(R.string.no_connection), getString(R.string.retry),
-        Snackbar.LENGTH_LONG, View.OnClickListener {
-      if (GeneralUtil.isConnected(context!!)) {
-        UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
-        loadNextMsgs(-1)
-      } else {
-        showRetrySnackBar()
-      }
-    })
-  }
-
-  /**
    * Try to load a new messages from an IMAP server.
    */
   private fun refreshMsgs() {
