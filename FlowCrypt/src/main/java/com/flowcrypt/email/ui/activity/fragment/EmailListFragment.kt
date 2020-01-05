@@ -30,7 +30,6 @@ import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
-import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -291,8 +290,24 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   override fun onMsgClick(msgEntity: MessageEntity) {
-    startActivityForResult(MessageDetailsActivity.getIntent(context,
-        listener?.currentFolder, msgEntity), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
+    val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(listener?.currentFolder?.fullName, ignoreCase = true)
+    val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty()
+    if (isOutbox || isRawMsgAvailable == true || GeneralUtil.isConnected(context)) {
+      when (msgEntity.msgState) {
+        MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+        MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
+        MessageState.ERROR_CACHE_PROBLEM,
+        MessageState.ERROR_DURING_CREATION,
+        MessageState.ERROR_SENDING_FAILED,
+        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> handleOutgoingMsgWhichHasSomeError(msgEntity)
+        else -> {
+          startActivityForResult(MessageDetailsActivity.getIntent(context,
+              listener?.currentFolder, msgEntity), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
+        }
+      }
+    } else {
+      showInfoSnackbar(view, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
+    }
   }
 
   fun onFilterMsgs(isEncryptedModeEnabled: Boolean) {
@@ -320,15 +335,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     })
   }
 
-  private fun showFiledLoadLabelsHint() {
-    showSnackbar(view!!, getString(R.string.failed_load_labels_from_email_server), getString(R.string.retry),
-        Snackbar.LENGTH_LONG, View.OnClickListener {
-      setSupportActionBarTitle(getString(R.string.loading))
-      UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
-      (activity as BaseSyncActivity).updateLabels(R.id.syns_request_code_update_label_active)
-    })
-  }
-
   private fun handleOutgoingMsgWhichHasSomeError(messageEntity: MessageEntity) {
     var message: String? = null
 
@@ -343,10 +349,10 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
       MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> {
         val errorMsg = messageEntity.errorMsg
-        if (errorMsg!!.equals(messageEntity.email, ignoreCase = true)) {
-          message = getString(R.string.no_key_available_for_your_email_account, getString(R.string.support_email))
+        message = if (errorMsg?.equals(messageEntity.email, ignoreCase = true) == true) {
+          getString(R.string.no_key_available_for_your_email_account, getString(R.string.support_email))
         } else {
-          message = getString(R.string.no_key_available_for_your_emails, errorMsg, messageEntity.email,
+          getString(R.string.no_key_available_for_your_emails, errorMsg, messageEntity.email,
               getString(R.string.support_email))
         }
       }
@@ -366,7 +372,8 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
     }
 
-    val infoDialogFragment = InfoDialogFragment.newInstance(null, message!!, null, false, true, false)
+    val infoDialogFragment = InfoDialogFragment.newInstance(dialogTitle = null,
+        dialogMsg = message, buttonTitle = null, isPopBackStack = false, isCancelable = true, hasHtml = false)
     infoDialogFragment.onInfoDialogButtonClickListener = object : InfoDialogFragment.OnInfoDialogButtonClickListener {
       override fun onInfoDialogButtonClick() {
         messagesViewModel.deleteOutgoingMsg(messageEntity)
