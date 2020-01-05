@@ -21,6 +21,8 @@ import android.widget.TextView
 import androidx.annotation.IntDef
 import androidx.core.content.ContextCompat
 import androidx.paging.PagedListAdapter
+import androidx.recyclerview.selection.ItemDetailsLookup
+import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
@@ -46,9 +48,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     PagedListAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {
   private val senderNamePattern: Pattern
   private var isFooterEnabled = false
+  var tracker: SelectionTracker<Long>? = null
 
   init {
     this.senderNamePattern = prepareSenderNamePattern()
+    setHasStableIds(true)
   }
 
   override fun onCreateViewHolder(parent: ViewGroup, @ItemType viewType: Int): BaseViewHolder {
@@ -68,6 +72,8 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
   }
 
   override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
+    holder.setActivatedState(tracker?.isSelected(getItem(position)?.id) ?: false)
+
     when (holder.itemType) {
       MESSAGE -> {
         val msgEntity = getItem(position)
@@ -96,6 +102,10 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
   override fun getItemCount(): Int {
     val currentItemCount = super.getItemCount()
     return currentItemCount + if (isFooterEnabled && currentItemCount > 0) 1 else 0
+  }
+
+  override fun getItemId(position: Int): Long {
+    return getItem(position)?.id ?: super.getItemId(position)
   }
 
   private fun updateItem(messageEntity: MessageEntity?, viewHolder: MessageViewHolder) {
@@ -352,6 +362,15 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
   abstract inner class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     @ItemType
     abstract val itemType: Int
+
+    fun getItemDetails(): ItemDetailsLookup.ItemDetails<Long> = object : ItemDetailsLookup.ItemDetails<Long>() {
+      override fun getPosition(): Int = adapterPosition
+      override fun getSelectionKey(): Long? = itemId
+    }
+
+    fun setActivatedState(isActivated: Boolean) {
+      itemView.isActivated = isActivated
+    }
   }
 
   inner class MessageViewHolder(itemView: View) : BaseViewHolder(itemView) {

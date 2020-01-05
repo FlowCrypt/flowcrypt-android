@@ -9,14 +9,21 @@ import android.content.Context
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ActionMode
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.paging.PagedList
+import androidx.recyclerview.selection.SelectionTracker
+import androidx.recyclerview.selection.StableIdKeyProvider
+import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -34,6 +41,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
+import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.idling.SingleIdlingResources
@@ -60,6 +68,8 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private var swipeRefreshLayout: SwipeRefreshLayout? = null
   private var textViewActionProgress: TextView? = null
   private var progressBarActionProgress: ProgressBar? = null
+  private var tracker: SelectionTracker<Long>? = null
+  private var actionMode: ActionMode? = null
 
   private lateinit var adapter: MsgsPagedListAdapter
   private lateinit var messagesViewModel: MessagesViewModel
@@ -102,6 +112,26 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       adapter.currentList?.size?.let {
         if (it > 0) {
           loadNextMsgs(it)
+        }
+      }
+    }
+  }
+
+  private val selectionObserver = object : SelectionTracker.SelectionObserver<Long>() {
+    override fun onSelectionChanged() {
+      super.onSelectionChanged()
+      when {
+        tracker?.hasSelection() == true -> {
+          if (actionMode == null) {
+            actionMode = (this@EmailListFragment.activity as AppCompatActivity)
+                .startSupportActionMode(genActionModeForMsgs())
+          }
+          actionMode?.title = "${tracker?.selection?.size()}"
+        }
+
+        tracker?.hasSelection() == false -> {
+          actionMode?.finish()
+          actionMode = null
         }
       }
     }
@@ -290,6 +320,10 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   override fun onMsgClick(msgEntity: MessageEntity) {
+    if (tracker?.hasSelection() == true) {
+      return
+    }
+
     val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(listener?.currentFolder?.fullName, ignoreCase = true)
     val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty()
     if (isOutbox || isRawMsgAvailable == true || GeneralUtil.isConnected(context)) {
@@ -313,6 +347,15 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   fun onFilterMsgs(isEncryptedModeEnabled: Boolean) {
     emptyView?.setText(if (isEncryptedModeEnabled) R.string.no_encrypted_messages else R.string.no_results)
     onFolderChanged(deleteAllMsgs = true)
+  }
+
+  fun onDrawerStateChanged(isOpen: Boolean) {
+    //todo-denbond7 #793 need to fix that
+    /*if (isOpen) {
+      actionMode?.finish()
+    } else {
+      actionMode?.invalidate()
+    }*/
   }
 
   /**
@@ -439,10 +482,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     progressBarActionProgress = view.findViewById(R.id.progressBarActionProgress)
 
     recyclerViewMsgs = view.findViewById(R.id.recyclerViewMsgs)
-    val layoutManager = LinearLayoutManager(context)
-    recyclerViewMsgs?.layoutManager = layoutManager
-    recyclerViewMsgs?.addItemDecoration(DividerItemDecoration(context, layoutManager.orientation))
-    recyclerViewMsgs?.adapter = adapter
+    setupRecyclerView()
 
     footerProgressView = LayoutInflater.from(context).inflate(R.layout.list_view_progress_footer, recyclerViewMsgs, false)
     footerProgressView?.visibility = View.GONE
@@ -451,6 +491,49 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
     swipeRefreshLayout!!.setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
     swipeRefreshLayout!!.setOnRefreshListener(this)
+  }
+
+  private fun setupRecyclerView() {
+    val layoutManager = LinearLayoutManager(context)
+    recyclerViewMsgs?.layoutManager = layoutManager
+    recyclerViewMsgs?.addItemDecoration(DividerItemDecoration(context, layoutManager.orientation))
+    recyclerViewMsgs?.adapter = adapter
+
+    adapter.tracker = null
+    recyclerViewMsgs?.let {
+      tracker = SelectionTracker.Builder(
+          EmailListFragment::class.java.simpleName,
+          it,
+          StableIdKeyProvider(it),
+          MsgItemDetailsLookup(it),
+          StorageStrategy.createLongStorage()
+      ).build()
+      tracker?.addObserver(selectionObserver)
+      adapter.tracker = tracker
+    }
+  }
+
+  private fun genActionModeForMsgs(): ActionMode.Callback {
+    return object : ActionMode.Callback {
+      override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+        when (item?.itemId) {
+          else -> return false
+        }
+      }
+
+      override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+        mode?.menuInflater?.inflate(R.menu.message_list_context_menu, menu)
+        swipeRefreshLayout?.isEnabled = false
+        return true
+      }
+
+      override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean = true
+
+      override fun onDestroyActionMode(mode: ActionMode?) {
+        swipeRefreshLayout?.isEnabled = true
+        tracker?.clearSelection()
+      }
+    }
   }
 
   interface OnManageEmailsListener {

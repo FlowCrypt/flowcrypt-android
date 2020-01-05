@@ -559,7 +559,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     val fragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    //fragment?.onDrawerStateChanged(isOpen)
+    fragment?.onDrawerStateChanged(isOpen)
   }
 
   private fun initViews() {

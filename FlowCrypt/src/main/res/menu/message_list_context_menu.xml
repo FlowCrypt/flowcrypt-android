@@ -7,8 +7,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/menuActionArchiveMessage"
+        android:icon="@drawable/selector_ic_archive_white"
+        android:title="@string/archive"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/menuActionDeleteMessage"
-        android:icon="@drawable/ic_delete_white_24dp"
+        android:icon="@drawable/selector_ic_delete_white"
         android:title="@string/delete"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menuActionMarkUnread"
+        android:icon="@drawable/selector_ic_markunread_white"
+        android:title="@string/mark_unread"
+        app:showAsAction="always" />
 </menu>
