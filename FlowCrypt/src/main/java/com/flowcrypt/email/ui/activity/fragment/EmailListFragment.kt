@@ -22,7 +22,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.paging.PagedList
 import androidx.recyclerview.selection.SelectionTracker
-import androidx.recyclerview.selection.StableIdKeyProvider
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -43,6 +42,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
+import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -71,6 +71,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private var textViewActionProgress: TextView? = null
   private var progressBarActionProgress: ProgressBar? = null
   private var tracker: SelectionTracker<Long>? = null
+  private var keyProvider: CustomStableIdKeyProvider? = null
   private var actionMode: ActionMode? = null
 
   private lateinit var adapter: MsgsPagedListAdapter
@@ -101,6 +102,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
 
     adapter.submitList(it)
+    actionMode?.invalidate()
   }
 
   private val boundaryCallback = object : PagedList.BoundaryCallback<MessageEntity>() {
@@ -172,6 +174,16 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     if (listener?.currentFolder?.searchQuery?.isNotEmpty() == true) {
       swipeRefreshLayout?.isEnabled = false
     }
+  }
+
+  override fun onViewStateRestored(savedInstanceState: Bundle?) {
+    super.onViewStateRestored(savedInstanceState)
+    tracker?.onRestoreInstanceState(savedInstanceState)
+  }
+
+  override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    tracker?.onSaveInstanceState(outState)
   }
 
   override fun onPause() {
@@ -501,33 +513,39 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     recyclerViewMsgs?.adapter = adapter
 
     adapter.tracker = null
-    recyclerViewMsgs?.let {
-      tracker = SelectionTracker.Builder(
-          EmailListFragment::class.java.simpleName,
-          it,
-          StableIdKeyProvider(it),
-          MsgItemDetailsLookup(it),
-          StorageStrategy.createLongStorage()
-      ).build()
-      tracker?.addObserver(selectionObserver)
-      adapter.tracker = tracker
+    recyclerViewMsgs?.let { recyclerView ->
+      keyProvider = CustomStableIdKeyProvider(recyclerView)
+
+      keyProvider?.let {
+        tracker = SelectionTracker.Builder(
+            EmailListFragment::class.java.simpleName,
+            recyclerView,
+            it,
+            MsgItemDetailsLookup(recyclerView),
+            StorageStrategy.createLongStorage()
+        ).build()
+        tracker?.addObserver(selectionObserver)
+        adapter.tracker = tracker
+      }
     }
   }
 
   private fun genActionModeForMsgs(): ActionMode.Callback {
     return object : ActionMode.Callback {
       override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-        val ids = tracker?.selection ?: emptyList<Long>()
+        val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
         var result = false
         listener?.currentFolder?.let {
           result = when (item?.itemId) {
             R.id.menuActionArchiveMessage -> {
               messagesViewModel.changeMsgsState(ids, it, MessageState.PENDING_ARCHIVING)
+              mode?.finish()
               true
             }
 
             R.id.menuActionDeleteMessage -> {
               messagesViewModel.changeMsgsState(ids, it, MessageState.PENDING_DELETING)
+              mode?.finish()
               true
             }
 
@@ -536,10 +554,14 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
               true
             }
 
+            R.id.menuActionMarkRead -> {
+              messagesViewModel.changeMsgsState(ids, it, MessageState.PENDING_MARK_READ)
+              true
+            }
+
             else -> false
           }
         }
-        mode?.finish()
         return result
       }
 
@@ -552,6 +574,18 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
         val menuItemArchiveMsg = menu?.findItem(R.id.menuActionArchiveMessage)
         menuItemArchiveMsg?.isVisible = isArchiveActionEnabled()
+
+        if (tracker?.selection?.size() == 1) {
+          val id = tracker?.selection?.first() ?: return true
+          val msgEntity = adapter.getMsgEntity(keyProvider?.getPosition(id))
+
+          val menuActionMarkUnread = menu?.findItem(R.id.menuActionMarkUnread)
+          val menuActionMarkRead = menu?.findItem(R.id.menuActionMarkRead)
+
+          menuActionMarkUnread?.isVisible = msgEntity?.isSeen == true
+          menuActionMarkRead?.isVisible = msgEntity?.isSeen != true
+        }
+
         return true
       }
 

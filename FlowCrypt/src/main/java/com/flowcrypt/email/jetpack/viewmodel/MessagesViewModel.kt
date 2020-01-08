@@ -131,7 +131,7 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
     }
   }
 
-  fun changeMsgsState(ids: Iterable<Long>, localFolder: LocalFolder, newMsgState: MessageState) {
+  fun changeMsgsState(ids: Collection<Long>, localFolder: LocalFolder, newMsgState: MessageState) {
     viewModelScope.launch {
       val entities = roomDatabase.msgDao().getMsgsByIDSuspend(localFolder.account,
           localFolder.fullName, ids.map { it })

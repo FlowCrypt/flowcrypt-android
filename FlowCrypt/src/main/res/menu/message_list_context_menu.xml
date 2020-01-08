@@ -23,4 +23,10 @@
         android:icon="@drawable/selector_ic_markunread_white"
         android:title="@string/mark_unread"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuActionMarkRead"
+        android:icon="@drawable/selector_ic_move_to_inbox_white"
+        android:title="@string/mark_unread"
+        app:showAsAction="ifRoom" />
 </menu>

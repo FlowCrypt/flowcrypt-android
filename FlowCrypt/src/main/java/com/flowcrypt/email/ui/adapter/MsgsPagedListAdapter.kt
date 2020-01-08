@@ -84,16 +84,21 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     }
   }
 
-  fun changeProgress(isFooterEnabled: Boolean) {
-
-  }
-
   override fun getItemViewType(position: Int): Int {
     return MESSAGE
   }
 
   override fun getItemId(position: Int): Long {
     return getItem(position)?.id ?: super.getItemId(position)
+  }
+
+  fun getMsgEntity(position: Int?): MessageEntity? {
+    position ?: return null
+    return getItem(position)
+  }
+
+  fun changeProgress(isFooterEnabled: Boolean) {
+
   }
 
   private fun updateItem(messageEntity: MessageEntity?, viewHolder: MessageViewHolder) {
