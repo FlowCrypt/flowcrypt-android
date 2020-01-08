@@ -142,11 +142,11 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       }
 
       for (i in localFolders.indices) {
-        val (_, folderAlias) = localFolders[i]
+        val localFolder = localFolders[i]
         if (inbox == null) {
-          serverFolders[i] = folderAlias
+          serverFolders[i] = localFolder.folderAlias
         } else {
-          serverFolders[i + 1] = folderAlias
+          serverFolders[i + 1] = localFolder.folderAlias
         }
       }
 
@@ -407,8 +407,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
             }
           }
 
-          for ((_, folderAlias) in foldersManager!!.customLabels) {
-            mailLabels.subMenu.add(folderAlias)
+          for (localFolder in foldersManager!!.customLabels) {
+            mailLabels.subMenu.add(localFolder.folderAlias)
           }
         }
 
