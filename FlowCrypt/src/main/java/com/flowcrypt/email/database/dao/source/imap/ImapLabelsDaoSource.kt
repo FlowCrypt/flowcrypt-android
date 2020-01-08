@@ -104,6 +104,7 @@ class ImapLabelsDaoSource : BaseDaoSource() {
    */
   fun getFolder(cursor: Cursor): LocalFolder {
     return LocalFolder(
+        cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
         cursor.getString(cursor.getColumnIndex(COL_FOLDER_NAME)),
         cursor.getString(cursor.getColumnIndex(COL_FOLDER_ALIAS)),
         parseAttributes(cursor.getString(cursor.getColumnIndex(COL_FOLDER_ATTRIBUTES))),

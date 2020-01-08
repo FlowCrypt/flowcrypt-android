@@ -29,6 +29,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
@@ -37,6 +38,7 @@ import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
+import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
@@ -153,8 +155,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     adapter = MsgsPagedListAdapter(this)
-    messagesViewModel = ViewModelProvider(this).get(MessagesViewModel::class.java)
-    messagesViewModel.accountLiveData.observe(this, Observer { })
+    setupMsgsViewModel()
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -516,9 +517,30 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private fun genActionModeForMsgs(): ActionMode.Callback {
     return object : ActionMode.Callback {
       override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-        when (item?.itemId) {
-          else -> return false
+        val ids = tracker?.selection ?: emptyList<Long>()
+        var result = false
+        listener?.currentFolder?.let {
+          result = when (item?.itemId) {
+            R.id.menuActionArchiveMessage -> {
+              messagesViewModel.changeMsgsState(ids, it, MessageState.PENDING_ARCHIVING)
+              true
+            }
+
+            R.id.menuActionDeleteMessage -> {
+              messagesViewModel.changeMsgsState(ids, it, MessageState.PENDING_DELETING)
+              true
+            }
+
+            R.id.menuActionMarkUnread -> {
+              messagesViewModel.changeMsgsState(ids, it, MessageState.PENDING_MARK_UNREAD)
+              true
+            }
+
+            else -> false
+          }
         }
+        mode?.finish()
+        return result
       }
 
       override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
@@ -527,13 +549,59 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         return true
       }
 
-      override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean = true
+      override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+        val menuItemArchiveMsg = menu?.findItem(R.id.menuActionArchiveMessage)
+        menuItemArchiveMsg?.isVisible = isArchiveActionEnabled()
+        return true
+      }
 
       override fun onDestroyActionMode(mode: ActionMode?) {
         swipeRefreshLayout?.isEnabled = true
         tracker?.clearSelection()
       }
     }
+  }
+
+  private fun setupMsgsViewModel() {
+    messagesViewModel = ViewModelProvider(this).get(MessagesViewModel::class.java)
+    messagesViewModel.accountLiveData.observe(this, Observer { })
+    messagesViewModel.msgStatesLiveData.observe(this, Observer {
+      val activity = activity as? BaseSyncActivity ?: return@Observer
+      with(activity) {
+        when (it) {
+          MessageState.PENDING_ARCHIVING -> archiveMsgs()
+          MessageState.PENDING_DELETING -> deleteMsgs()
+          MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
+          MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> changeMsgsReadState()
+          else -> {
+          }
+        }
+      }
+    })
+  }
+
+  private fun isArchiveActionEnabled(): Boolean {
+    var isEnabled = false
+
+    when (FoldersManager.getFolderType(listener?.currentFolder)) {
+      FoldersManager.FolderType.INBOX -> {
+        if (AccountDao.ACCOUNT_TYPE_GOOGLE == listener?.currentAccountDao?.accountType) {
+          isEnabled = true
+        }
+      }
+
+      FoldersManager.FolderType.SENT -> isEnabled = true
+
+      FoldersManager.FolderType.DRAFTS, FoldersManager.FolderType.OUTBOX -> {
+        isEnabled = false
+      }
+
+      else -> {
+        isEnabled = false
+      }
+    }
+
+    return isEnabled
   }
 
   interface OnManageEmailsListener {
@@ -549,12 +617,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   companion object {
-
     private const val REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10
-    private const val REQUEST_CODE_DELETE_MESSAGES = 11
-    private const val REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 12
-
-    private const val TIMEOUT_BETWEEN_REQUESTS = 500
-    private const val LOADING_SHIFT_IN_ITEMS = 5
+    private const val REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 11
   }
 }

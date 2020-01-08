@@ -34,6 +34,10 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getMsgs(account: String, folder: String): LiveData<MessageEntity>
 
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND _id IN (:msgsID)")
+  abstract suspend fun getMsgsByIDSuspend(account: String, folder: String, msgsID: Collection<Long>?):
+      List<MessageEntity>
+
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND is_new = 1 ORDER BY :orderBy")
   abstract fun getNewMsgs(account: String, folder: String,
                           orderBy: String = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

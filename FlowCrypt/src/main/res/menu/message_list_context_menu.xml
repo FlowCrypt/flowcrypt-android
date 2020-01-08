@@ -22,5 +22,5 @@
         android:id="@+id/menuActionMarkUnread"
         android:icon="@drawable/selector_ic_markunread_white"
         android:title="@string/mark_unread"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 </menu>

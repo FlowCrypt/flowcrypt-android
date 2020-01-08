@@ -23,7 +23,7 @@ import javax.mail.MessagingException
  * E-mail: DenBond7@gmail.com
  */
 
-class FoldersManager {
+class FoldersManager constructor(val account: String) {
   private var folders: LinkedHashMap<String, LocalFolder> = LinkedHashMap()
 
   val folderInbox: LocalFolder?
@@ -116,7 +116,7 @@ class FoldersManager {
   fun addFolder(imapFolder: IMAPFolder?, folderAlias: String) {
     imapFolder?.let {
       if (!EmailUtil.containsNoSelectAttr(it) && !TextUtils.isEmpty(it.fullName) && !folders.containsKey(it.fullName)) {
-        this.folders[prepareFolderKey(it)] = generateFolder(it, folderAlias)
+        this.folders[prepareFolderKey(it)] = generateFolder(account, it, folderAlias)
       }
     }
   }
@@ -162,7 +162,7 @@ class FoldersManager {
   }
 
   private fun prepareFolderKey(imapFolder: IMAPFolder): String {
-    val folderType = getFolderType(generateFolder(imapFolder, null))
+    val folderType = getFolderType(generateFolder(account, imapFolder, null))
     return folderType?.value ?: imapFolder.fullName
   }
 
@@ -199,7 +199,7 @@ class FoldersManager {
      */
     @JvmStatic
     fun fromDatabase(context: Context, accountName: String): FoldersManager {
-      val foldersManager = FoldersManager()
+      val foldersManager = FoldersManager(accountName)
 
       val cursor = context.contentResolver.query(ImapLabelsDaoSource().baseContentUri,
           null, ImapLabelsDaoSource.COL_EMAIL + " = ?", arrayOf(accountName), null)
@@ -227,9 +227,9 @@ class FoldersManager {
      * @throws MessagingException
      */
     @JvmStatic
-    fun generateFolder(imapFolder: IMAPFolder, folderAlias: String?): LocalFolder {
-      return LocalFolder(imapFolder.fullName, folderAlias, Arrays.asList(*imapFolder.attributes),
-          isCustom(imapFolder), 0, "")
+    fun generateFolder(account: String, imapFolder: IMAPFolder, folderAlias: String?): LocalFolder {
+      return LocalFolder(account, imapFolder.fullName, folderAlias, Arrays.asList(*imapFolder
+          .attributes), isCustom(imapFolder), 0, "")
     }
 
     /**

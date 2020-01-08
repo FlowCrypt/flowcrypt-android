@@ -455,7 +455,7 @@ class EmailSyncService : BaseService(), SyncListener {
     LogsUtil.d(TAG, "onFoldersInfoReceived:" + folders.contentToString())
     val email = account.email
 
-    val foldersManager = FoldersManager()
+    val foldersManager = FoldersManager(account.email)
     for (folder in folders) {
       try {
         val imapFolder = folder as IMAPFolder
@@ -466,8 +466,8 @@ class EmailSyncService : BaseService(), SyncListener {
       }
     }
 
-    val localFolder = LocalFolder(JavaEmailConstants.FOLDER_OUTBOX, JavaEmailConstants.FOLDER_OUTBOX,
-        listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN), false, 0, "")
+    val localFolder = LocalFolder(account.email, JavaEmailConstants.FOLDER_OUTBOX,
+        JavaEmailConstants.FOLDER_OUTBOX, listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN), false, 0, "")
 
     foldersManager.addFolder(localFolder)
 

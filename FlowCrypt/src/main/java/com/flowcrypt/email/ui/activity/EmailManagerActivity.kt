@@ -153,25 +153,25 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       return serverFolders
     }
 
-  init {
-    this.foldersManager = FoldersManager()
-  }
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     currentAccountDao = AccountDaoSource().getActiveAccountInformation(this)
 
     if (currentAccountDao != null) {
-      client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
+      currentAccountDao?.let {
+        this.foldersManager = FoldersManager(it.email)
 
-      ActionManager(this).checkAndAddActionsToQueue(currentAccountDao!!)
-      LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this)
+        client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
-      countingIdlingResourceForLabel = CountingIdlingResource(
-          GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java), GeneralUtil.isDebugBuild())
-      countingIdlingResourceForLabel!!.increment()
+        ActionManager(this).checkAndAddActionsToQueue(it)
+        LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this)
 
-      initViews()
+        countingIdlingResourceForLabel = CountingIdlingResource(
+            GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java), GeneralUtil.isDebugBuild())
+        countingIdlingResourceForLabel!!.increment()
+
+        initViews()
+      }
     } else {
       finish()
     }

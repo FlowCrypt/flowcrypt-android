@@ -17,7 +17,8 @@ import android.os.Parcelable
  * E-mail: DenBond7@gmail.com
  */
 
-data class LocalFolder constructor(val fullName: String,
+data class LocalFolder constructor(val account: String,
+                                   val fullName: String,
                                    var folderAlias: String? = null,
                                    val attributes: List<String>? = null,
                                    val isCustom: Boolean = false,
@@ -25,6 +26,7 @@ data class LocalFolder constructor(val fullName: String,
                                    var searchQuery: String? = null) : Parcelable {
 
   constructor(source: Parcel) : this(
+      source.readString()!!,
       source.readString()!!,
       source.readString(),
       source.createStringArrayList(),
@@ -39,6 +41,7 @@ data class LocalFolder constructor(val fullName: String,
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
       with(dest) {
+        writeString(account)
         writeString(fullName)
         writeString(folderAlias)
         writeStringList(attributes)

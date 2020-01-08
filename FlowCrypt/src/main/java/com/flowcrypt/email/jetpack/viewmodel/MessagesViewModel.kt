@@ -8,6 +8,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
@@ -18,7 +19,9 @@ import androidx.paging.toLiveData
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
@@ -37,6 +40,8 @@ import java.io.IOException
 class MessagesViewModel(application: Application) : BaseAndroidViewModel(application) {
   private var currentLocalFolder: LocalFolder? = null
   private val roomDatabase = FlowCryptRoomDatabase.getDatabase(application)
+
+  val msgStatesLiveData = MutableLiveData<MessageState>()
 
   val accountLiveData: LiveData<AccountEntity?> = liveData {
     val accountEntity = roomDatabase.accountDao().getActiveAccount()
@@ -95,10 +100,6 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
     }
   }
 
-  private suspend fun getActiveAccountSuspend(): AccountEntity? {
-    return accountLiveData.value ?: return roomDatabase.accountDao().getActiveAccount()
-  }
-
   fun deleteOutgoingMsg(messageEntity: MessageEntity) {
     val app = getApplication<Application>()
 
@@ -128,5 +129,55 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
         }
       }
     }
+  }
+
+  fun changeMsgsState(ids: Iterable<Long>, localFolder: LocalFolder, newMsgState: MessageState) {
+    viewModelScope.launch {
+      val entities = roomDatabase.msgDao().getMsgsByIDSuspend(localFolder.account,
+          localFolder.fullName, ids.map { it })
+      val candidates = prepareCandidates(entities, newMsgState)
+      roomDatabase.msgDao().updateSuspend(candidates)
+      msgStatesLiveData.postValue(newMsgState)
+    }
+  }
+
+  private suspend fun getActiveAccountSuspend(): AccountEntity? {
+    return accountLiveData.value ?: return roomDatabase.accountDao().getActiveAccount()
+  }
+
+  private fun prepareCandidates(entities: Iterable<MessageEntity>, newMsgState: MessageState): Iterable<MessageEntity> {
+    val candidates = mutableListOf<MessageEntity>()
+
+    for (msgEntity in entities) {
+      if (msgEntity.msgState == MessageState.SENDING || msgEntity.msgState == MessageState.SENT_WITHOUT_LOCAL_COPY) {
+        continue
+      }
+
+      val candidate: MessageEntity = when (newMsgState) {
+        MessageState.PENDING_MARK_READ -> {
+          msgEntity.copy(
+              state = newMsgState.value,
+              flags = if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+                msgEntity.flags
+              } else {
+                msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+              })
+        }
+
+        MessageState.PENDING_MARK_UNREAD -> {
+          msgEntity.copy(
+              state = newMsgState.value,
+              flags = msgEntity.flags?.replace(MessageFlag.SEEN.value, ""))
+        }
+
+        else -> {
+          msgEntity.copy(state = newMsgState.value)
+        }
+      }
+
+      candidates.add(candidate)
+    }
+
+    return candidates
   }
 }
