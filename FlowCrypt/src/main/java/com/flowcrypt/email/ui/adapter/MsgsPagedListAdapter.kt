@@ -47,7 +47,6 @@ import javax.mail.internet.InternetAddress
 class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickListener? = null) :
     PagedListAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {
   private val senderNamePattern: Pattern
-  private var isFooterEnabled = false
   var tracker: SelectionTracker<Long>? = null
 
   init {
@@ -86,22 +85,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
   }
 
   fun changeProgress(isFooterEnabled: Boolean) {
-    this.isFooterEnabled = isFooterEnabled
 
-    if (isFooterEnabled) {
-      notifyItemInserted(super.getItemCount())
-    } else {
-      notifyItemRemoved(super.getItemCount())
-    }
   }
 
   override fun getItemViewType(position: Int): Int {
-    return if (isFooterEnabled && position == itemCount - 1) FOOTER else MESSAGE
-  }
-
-  override fun getItemCount(): Int {
-    val currentItemCount = super.getItemCount()
-    return currentItemCount + if (isFooterEnabled && currentItemCount > 0) 1 else 0
+    return MESSAGE
   }
 
   override fun getItemId(position: Int): Long {
@@ -133,39 +121,40 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
       if (folderType != null) {
         when (folderType) {
-          FoldersManager.FolderType.SENT -> viewHolder.textViewSenderAddress!!.text = generateAddresses(messageEntity.to)
+          FoldersManager.FolderType.SENT -> viewHolder.textViewSenderAddress?.text =
+              generateAddresses(messageEntity.to)
 
           FoldersManager.FolderType.OUTBOX -> {
-            val status = generateOutboxStatus(viewHolder.textViewSenderAddress!!.context, messageEntity.msgState)
-            viewHolder.textViewSenderAddress!!.text = status
+            val status = generateOutboxStatus(viewHolder.textViewSenderAddress?.context,
+                messageEntity.msgState)
+            viewHolder.textViewSenderAddress?.text = status
           }
 
-          else -> viewHolder.textViewSenderAddress!!.text = generateAddresses(messageEntity.from)
+          else -> viewHolder.textViewSenderAddress?.text = generateAddresses(messageEntity.from)
         }
       } else {
-        viewHolder.textViewSenderAddress!!.text = generateAddresses(messageEntity.from)
+        viewHolder.textViewSenderAddress?.text = generateAddresses(messageEntity.from)
       }
 
-      viewHolder.textViewSubject!!.text = subject
+      viewHolder.textViewSubject?.text = subject
       if (folderType === FoldersManager.FolderType.OUTBOX) {
-        viewHolder.textViewDate!!.text = DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate)
+        viewHolder.textViewDate?.text = DateTimeUtil.formatSameDayTime(context, messageEntity.sentDate)
       } else {
-        viewHolder.textViewDate!!.text = DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate)
+        viewHolder.textViewDate?.text = DateTimeUtil.formatSameDayTime(context, messageEntity.receivedDate)
       }
 
       if (messageEntity.isSeen) {
         changeViewsTypeface(viewHolder, Typeface.NORMAL)
-        viewHolder.textViewSenderAddress!!.setTextColor(UIUtil.getColor(context, R.color.dark))
-        viewHolder.textViewDate!!.setTextColor(UIUtil.getColor(context, R.color.gray))
+        viewHolder.textViewSenderAddress?.setTextColor(UIUtil.getColor(context, R.color.dark))
+        viewHolder.textViewDate?.setTextColor(UIUtil.getColor(context, R.color.gray))
       } else {
         changeViewsTypeface(viewHolder, Typeface.BOLD)
-        viewHolder.textViewSenderAddress!!.setTextColor(UIUtil.getColor(context, android.R.color.black))
-        viewHolder.textViewDate!!.setTextColor(UIUtil.getColor(context, android.R.color.black))
+        viewHolder.textViewSenderAddress?.setTextColor(UIUtil.getColor(context, android.R.color.black))
+        viewHolder.textViewDate?.setTextColor(UIUtil.getColor(context, android.R.color.black))
       }
 
-      viewHolder.imageViewAtts!!.visibility = if (messageEntity.hasAttachments == true) View
-          .VISIBLE else View.GONE
-      viewHolder.viewIsEncrypted!!.visibility = if (messageEntity.isEncrypted == true) View.VISIBLE else View.GONE
+      viewHolder.imageViewAtts?.visibility = if (messageEntity.hasAttachments == true) View.VISIBLE else View.GONE
+      viewHolder.viewIsEncrypted?.visibility = if (messageEntity.isEncrypted == true) View.VISIBLE else View.GONE
 
       when (messageEntity.msgState) {
         MessageState.PENDING_ARCHIVING -> {
@@ -205,8 +194,8 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
   }
 
   private fun changeViewsTypeface(viewHolder: MessageViewHolder, typeface: Int) {
-    viewHolder.textViewSenderAddress!!.setTypeface(null, typeface)
-    viewHolder.textViewDate!!.setTypeface(null, typeface)
+    viewHolder.textViewSenderAddress?.setTypeface(null, typeface)
+    viewHolder.textViewDate?.setTypeface(null, typeface)
   }
 
   /**
@@ -289,7 +278,8 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     }
   }
 
-  private fun generateOutboxStatus(context: Context, messageState: MessageState): CharSequence {
+  private fun generateOutboxStatus(context: Context?, messageState: MessageState): CharSequence {
+    context ?: return ""
     val me = context.getString(R.string.me)
     var state = ""
     var stateTextColor = ContextCompat.getColor(context, R.color.red)
