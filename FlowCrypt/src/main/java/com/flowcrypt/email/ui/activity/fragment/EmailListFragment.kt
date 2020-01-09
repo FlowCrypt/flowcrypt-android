@@ -179,6 +179,10 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   override fun onViewStateRestored(savedInstanceState: Bundle?) {
     super.onViewStateRestored(savedInstanceState)
     tracker?.onRestoreInstanceState(savedInstanceState)
+
+    if (tracker?.hasSelection() == true) {
+      selectionObserver.onSelectionChanged()
+    }
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
