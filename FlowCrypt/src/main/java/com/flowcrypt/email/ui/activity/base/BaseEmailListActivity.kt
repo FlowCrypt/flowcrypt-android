@@ -27,7 +27,6 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
   @JvmField
   @VisibleForTesting
   val msgsIdlingResource = SingleIdlingResources()
-  private var hasMoreMsgs = true
 
   abstract fun refreshFoldersFromCache()
 
@@ -41,12 +40,10 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
         refreshFoldersFromCache()
         when (resultCode) {
           EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE -> {
-            hasMoreMsgs = true
             onNextMsgsLoaded()
           }
 
           else -> {
-            hasMoreMsgs = false
             onNextMsgsLoaded()
           }
         }
@@ -95,10 +92,6 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
         R.id.progress_id_getting_list_of_emails -> updateActionProgressState(80, "Getting list of emails")
       }
     }
-  }
-
-  override fun hasMoreMsgs(): Boolean {
-    return hasMoreMsgs
   }
 
   override fun onSyncServiceConnected() {

@@ -653,13 +653,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   interface OnManageEmailsListener {
-
     val currentAccountDao: AccountDao?
-
     val currentFolder: LocalFolder?
-
     val msgsLoadingIdlingResource: SingleIdlingResources
-    fun hasMoreMsgs(): Boolean
 
     fun onRetryGoogleAuth()
   }
