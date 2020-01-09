@@ -26,7 +26,7 @@
 
     <item
         android:id="@+id/menuActionMarkRead"
-        android:icon="@drawable/selector_ic_move_to_inbox_white"
+        android:icon="@drawable/selector_ic_mark_read_white"
         android:title="@string/mark_unread"
         app:showAsAction="ifRoom" />
 </menu>
