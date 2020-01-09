@@ -78,6 +78,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private lateinit var messagesViewModel: MessagesViewModel
   private var listener: OnManageEmailsListener? = null
   private var isEmptyViewAvailable = false
+  private var keepSelectionInMemory = false
 
   private val isOutboxFolder: Boolean
     get() {
@@ -294,6 +295,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
   fun onFolderChanged(forceClearCache: Boolean = false, deleteAllMsgs: Boolean = false) {
     isEmptyViewAvailable = false
+    keepSelectionInMemory = false
+    actionMode?.finish()
+    tracker?.clearSelection()
     adapter.submitList(null)
 
     val newFolder = listener?.currentFolder
@@ -372,13 +376,19 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     onFolderChanged(deleteAllMsgs = true)
   }
 
-  fun onDrawerStateChanged(isOpen: Boolean) {
-    //todo-denbond7 #793 need to fix that
-    /*if (isOpen) {
-      actionMode?.finish()
-    } else {
-      actionMode?.invalidate()
-    }*/
+  fun onDrawerStateChanged(slideOffset: Float, isOpened: Boolean) {
+    when {
+      slideOffset > 0 -> {
+        keepSelectionInMemory = true
+        actionMode?.finish()
+        actionMode = null
+      }
+
+      slideOffset == 0f && !isOpened -> {
+        keepSelectionInMemory = false
+        selectionObserver.onSelectionChanged()
+      }
+    }
   }
 
   /**
@@ -605,7 +615,10 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         if (listener?.currentFolder?.searchQuery == null) {
           swipeRefreshLayout?.isEnabled = true
         }
-        tracker?.clearSelection()
+
+        if (!keepSelectionInMemory) {
+          tracker?.clearSelection()
+        }
       }
     }
   }
@@ -656,7 +669,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     val currentAccountDao: AccountDao?
     val currentFolder: LocalFolder?
     val msgsLoadingIdlingResource: SingleIdlingResources
-
     fun onRetryGoogleAuth()
   }
 

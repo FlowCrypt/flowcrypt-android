@@ -88,7 +88,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     private set
   private var menuItemSearch: MenuItem? = null
 
-  private lateinit var drawerLayout: DrawerLayout
+  private var drawerLayout: DrawerLayout? = null
   private var actionBarDrawerToggle: ActionBarDrawerToggle? = null
   private var accountManagementLayout: LinearLayout? = null
   private var navigationView: NavigationView? = null
@@ -99,7 +99,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     get() = true
 
   override val rootView: View
-    get() = drawerLayout
+    get() = drawerLayout ?: View(this)
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = false
@@ -184,7 +184,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onDestroy() {
     super.onDestroy()
-    drawerLayout.removeDrawerListener(actionBarDrawerToggle!!)
+    drawerLayout?.removeDrawerListener(actionBarDrawerToggle!!)
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -341,8 +341,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   override fun onBackPressed() {
-    if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-      drawerLayout.closeDrawer(GravityCompat.START)
+    if (drawerLayout?.isDrawerOpen(GravityCompat.START) == true) {
+      drawerLayout?.closeDrawer(GravityCompat.START)
     } else {
       super.onBackPressed()
     }
@@ -368,7 +368,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       }
     }
 
-    drawerLayout.closeDrawer(GravityCompat.START)
+    drawerLayout?.closeDrawer(GravityCompat.START)
     return true
   }
 
@@ -555,18 +555,18 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
    *
    * @param isOpen true if the drawer is open, otherwise false.
    */
-  private fun notifyFragmentAboutDrawerChange(isOpen: Boolean) {
+  private fun notifyFragmentAboutDrawerChange(slideOffset: Float, isOpened: Boolean) {
     val fragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    fragment?.onDrawerStateChanged(isOpen)
+    fragment?.onDrawerStateChanged(slideOffset, isOpened)
   }
 
   private fun initViews() {
     drawerLayout = findViewById(R.id.drawer_layout)
     actionBarDrawerToggle = CustomDrawerToggle(this, drawerLayout, toolbar,
         R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-    drawerLayout.addDrawerListener(actionBarDrawerToggle!!)
+    drawerLayout?.addDrawerListener(actionBarDrawerToggle!!)
     actionBarDrawerToggle!!.syncState()
 
     navigationView = findViewById(R.id.navigationView)
@@ -713,23 +713,18 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
    * update task when the drawer will be opened.
    */
   private inner class CustomDrawerToggle internal constructor(activity: Activity,
-                                                              drawerLayout: DrawerLayout,
+                                                              drawerLayout: DrawerLayout?,
                                                               toolbar: Toolbar?,
                                                               @StringRes openDrawerContentDescRes: Int,
                                                               @StringRes closeDrawerContentDescRes: Int)
     : ActionBarDrawerToggle(activity, drawerLayout, toolbar, openDrawerContentDescRes, closeDrawerContentDescRes) {
 
+    var slideOffset = 0f
+
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
       super.onDrawerSlide(drawerView, slideOffset)
-
-      if (slideOffset > 0.05) {
-        notifyFragmentAboutDrawerChange(true)
-        return
-      }
-
-      if (slideOffset <= 0.03) {
-        notifyFragmentAboutDrawerChange(false)
-      }
+      this.slideOffset = slideOffset
+      notifyFragmentAboutDrawerChange(slideOffset, true)
     }
 
     override fun onDrawerOpened(drawerView: View) {
@@ -748,6 +743,13 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       super.onDrawerClosed(drawerView)
       if (!navigationView!!.menu.getItem(0).isVisible) {
         currentAccountDetailsItem!!.performClick()
+      }
+    }
+
+    override fun onDrawerStateChanged(newState: Int) {
+      super.onDrawerStateChanged(newState)
+      if (newState == 0 && slideOffset == 0f) {
+        notifyFragmentAboutDrawerChange(slideOffset, false)
       }
     }
   }
