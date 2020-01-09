@@ -171,7 +171,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-    if (listener?.currentFolder?.searchQuery?.isNotEmpty() == true) {
+    listener?.currentFolder?.searchQuery?.let {
       swipeRefreshLayout?.isEnabled = false
     }
   }
@@ -292,14 +292,20 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     isEmptyViewAvailable = false
     adapter.submitList(null)
 
-    val isFolderNameEmpty = listener?.currentFolder?.fullName?.isEmpty()
-    val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(listener?.currentFolder)
+    val newFolder = listener?.currentFolder
+
+    newFolder?.searchQuery?.let {
+      swipeRefreshLayout?.isEnabled = false
+    }
+
+    val isFolderNameEmpty = newFolder?.fullName?.isEmpty()
+    val isItSyncOrOutboxFolder = isItSyncOrOutboxFolder(newFolder)
     var isForceClearCacheNeeded = false
     if ((isFolderNameEmpty?.not() == true && isItSyncOrOutboxFolder.not()) || forceClearCache) {
       isForceClearCacheNeeded = true
     }
 
-    messagesViewModel.loadMsgs(this, localFolder = listener?.currentFolder,
+    messagesViewModel.loadMsgs(this, localFolder = newFolder,
         observer = msgsObserver, boundaryCallback = boundaryCallback,
         forceClearFolderCache = isForceClearCacheNeeded, deleteAllMsgs = deleteAllMsgs)
   }
@@ -513,19 +519,21 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     recyclerViewMsgs?.adapter = adapter
 
     adapter.tracker = null
-    recyclerViewMsgs?.let { recyclerView ->
-      keyProvider = CustomStableIdKeyProvider(recyclerView)
+    if (listener?.currentFolder?.searchQuery == null) {
+      recyclerViewMsgs?.let { recyclerView ->
+        keyProvider = CustomStableIdKeyProvider(recyclerView)
 
-      keyProvider?.let {
-        tracker = SelectionTracker.Builder(
-            EmailListFragment::class.java.simpleName,
-            recyclerView,
-            it,
-            MsgItemDetailsLookup(recyclerView),
-            StorageStrategy.createLongStorage()
-        ).build()
-        tracker?.addObserver(selectionObserver)
-        adapter.tracker = tracker
+        keyProvider?.let {
+          tracker = SelectionTracker.Builder(
+              EmailListFragment::class.java.simpleName,
+              recyclerView,
+              it,
+              MsgItemDetailsLookup(recyclerView),
+              StorageStrategy.createLongStorage()
+          ).build()
+          tracker?.addObserver(selectionObserver)
+          adapter.tracker = tracker
+        }
       }
     }
   }
@@ -590,7 +598,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
 
       override fun onDestroyActionMode(mode: ActionMode?) {
-        swipeRefreshLayout?.isEnabled = true
+        if (listener?.currentFolder?.searchQuery == null) {
+          swipeRefreshLayout?.isEnabled = true
+        }
         tracker?.clearSelection()
       }
     }
