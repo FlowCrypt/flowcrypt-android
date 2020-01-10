@@ -206,6 +206,13 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     menuItemDeleteMsg?.isEnabled = isAdditionalActionEnabled
     menuActionMoveToInbox?.isEnabled = isAdditionalActionEnabled
     menuActionMarkUnread?.isEnabled = isAdditionalActionEnabled
+
+    localFolder?.searchQuery?.let {
+      menuItemArchiveMsg?.isVisible = false
+      menuItemDeleteMsg?.isVisible = false
+      menuActionMoveToInbox?.isVisible = false
+      menuActionMarkUnread?.isVisible = false
+    }
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
