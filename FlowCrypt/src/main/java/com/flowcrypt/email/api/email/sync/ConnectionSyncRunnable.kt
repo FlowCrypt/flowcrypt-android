@@ -221,6 +221,7 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
 
   fun searchMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
     try {
+      syncListener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_adding_task_to_queue)
       removeOldTasks(SearchMessagesSyncTask::class.java, tasksQueue)
       tasksQueue.put(SearchMessagesSyncTask(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount))
     } catch (e: InterruptedException) {

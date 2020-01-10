@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.email.sync.tasks
 
 import android.content.Context
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -46,6 +47,7 @@ class SearchMessagesSyncTask(ownerKey: String,
 
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     super.runIMAPAction(account, session, store, listener)
+    listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_opening_store)
 
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
     imapFolder.open(Folder.READ_ONLY)
@@ -65,6 +67,8 @@ class SearchMessagesSyncTask(ownerKey: String,
       startCandidate < 1 -> 1
       else -> startCandidate
     }
+
+    listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails)
 
     if (end < 1) {
       listener.onSearchMsgsReceived(account, localFolder, imapFolder, arrayOf(), ownerKey, requestCode)

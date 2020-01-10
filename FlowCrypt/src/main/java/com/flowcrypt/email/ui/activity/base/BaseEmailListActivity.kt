@@ -64,18 +64,10 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
 
   override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
-      R.id.syns_request_code_load_next_messages -> when (resultCode) {
+      R.id.syns_request_code_load_next_messages, R.id.sync_request_code_search_messages -> when (resultCode) {
         R.id.progress_id_start_of_loading_new_messages -> updateActionProgressState(0, "Starting")
 
         R.id.progress_id_adding_task_to_queue -> updateActionProgressState(10, "Queuing")
-
-        R.id.progress_id_queue_is_not_empty -> updateActionProgressState(15, "Queue is not empty")
-
-        R.id.progress_id_thread_is_cancelled_and_done -> updateActionProgressState(15, "Thread is cancelled and done")
-
-        R.id.progress_id_thread_is_done -> updateActionProgressState(15, "Thread is done")
-
-        R.id.progress_id_thread_is_cancelled -> updateActionProgressState(15, "Thread is cancelled")
 
         R.id.progress_id_running_task -> updateActionProgressState(20, "Running task")
 

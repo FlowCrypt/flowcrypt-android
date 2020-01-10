@@ -183,6 +183,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param alreadyLoadedMsgsCount The count of already loaded messages in the localFolder.
    */
   fun searchNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
+    onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, Any())
     if (checkServiceBound(isSyncServiceBound)) return
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
