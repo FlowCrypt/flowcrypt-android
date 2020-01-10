@@ -386,6 +386,25 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     msgDetailsViewModel = ViewModelProvider(this, MsgDetailsViewModelFactory(localFolder,
         messageEntity, application)).get(MsgDetailsViewModel::class.java)
     msgDetailsViewModel.msgLiveData.observe(this, genMsgObserver())
+    msgDetailsViewModel.msgStatesLiveData.observe(this, Observer {
+      var finishActivity = true
+      when (it) {
+        MessageState.PENDING_ARCHIVING -> archiveMsgs()
+        MessageState.PENDING_DELETING -> deleteMsgs()
+        MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
+        MessageState.PENDING_MARK_UNREAD -> changeMsgsReadState()
+        MessageState.PENDING_MARK_READ -> {
+          changeMsgsReadState()
+          finishActivity = false
+        }
+        else -> {
+        }
+      }
+
+      if (finishActivity) {
+        finish()
+      }
+    })
   }
 
   /**

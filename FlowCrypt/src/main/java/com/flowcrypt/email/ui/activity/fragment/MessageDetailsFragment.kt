@@ -60,7 +60,6 @@ import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
-import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.widget.EmailWebView
@@ -213,8 +212,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     return when (item.itemId) {
       R.id.menuActionArchiveMessage -> {
         msgDetailsViewModel?.changeMsgState(MessageState.PENDING_ARCHIVING)
-        (activity as? BaseSyncActivity)?.archiveMsgs()
-        activity?.finish()
         true
       }
 
@@ -233,23 +230,17 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
         } else {
           msgDetailsViewModel?.changeMsgState(MessageState.PENDING_DELETING)
-          (activity as? BaseSyncActivity)?.deleteMsgs()
         }
-        activity?.finish()
         true
       }
 
       R.id.menuActionMoveToInbox -> {
         msgDetailsViewModel?.changeMsgState(MessageState.PENDING_MOVE_TO_INBOX)
-        (activity as? BaseSyncActivity)?.moveMsgsToINBOX()
-        activity?.finish()
         true
       }
 
       R.id.menuActionMarkUnread -> {
         msgDetailsViewModel?.changeMsgState(MessageState.PENDING_MARK_UNREAD)
-        (activity as? BaseSyncActivity)?.changeMsgsReadState()
-        activity?.finish()
         true
       }
 

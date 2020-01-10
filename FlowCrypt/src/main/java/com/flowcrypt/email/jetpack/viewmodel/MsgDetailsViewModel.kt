@@ -7,6 +7,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
@@ -27,6 +28,8 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
 
   var msgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(msgEntity.email,
       msgEntity.folder, msgEntity.uid)
+
+  val msgStatesLiveData = MutableLiveData<MessageState>()
 
   fun setSeenStatus(isSeen: Boolean) {
     val freshMsgEntity = msgLiveData.value
@@ -72,6 +75,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
         }
 
         roomDatabase.msgDao().updateSuspend(candidate)
+        msgStatesLiveData.postValue(newMsgState)
       }
     }
   }
