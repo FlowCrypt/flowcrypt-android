@@ -133,7 +133,7 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
         JavaEmailConstants.FOLDER_OUTBOX)
 
     outboxLabel?.let {
-      roomDatabase.labelDao().updateSuspend(it.copy(messageCount = outgoingMsgCount))
+      roomDatabase.labelDao().updateSuspend(it.copy(msgsCount = outgoingMsgCount))
     }
   }
 

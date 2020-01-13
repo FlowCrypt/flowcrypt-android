@@ -44,4 +44,10 @@ interface BaseDao<T> {
 
   @Delete
   suspend fun deleteSuspend(entity: T): Int
+
+  @Delete
+  fun delete(entities: Iterable<T>): Int
+
+  @Delete
+  suspend fun deleteSuspend(entities: Iterable<T>): Int
 }

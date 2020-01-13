@@ -178,7 +178,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     val outboxLabel = roomDatabase.labelDao().getLabel(email, JavaEmailConstants.FOLDER_OUTBOX)
 
     outboxLabel?.let {
-      roomDatabase.labelDao().update(it.copy(messageCount = outgoingMsgCount))
+      roomDatabase.labelDao().update(it.copy(msgsCount = outgoingMsgCount))
     }
   }
 

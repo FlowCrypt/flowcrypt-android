@@ -33,7 +33,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
+import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
@@ -470,19 +470,18 @@ class EmailSyncService : BaseService(), SyncListener {
         JavaEmailConstants.FOLDER_OUTBOX, listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN), false, 0, "")
 
     foldersManager.addFolder(localFolder)
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
-    val imapLabelsDaoSource = ImapLabelsDaoSource()
-    val currentFoldersList = imapLabelsDaoSource.getFolders(this, email)
-    if (currentFoldersList.isEmpty()) {
-      imapLabelsDaoSource.addRows(this, email, foldersManager.allFolders)
+    val existedLabels = roomDatabase.labelDao().getLabels(email)
+    val freshLabels = mutableListOf<LabelEntity>()
+    for (folder in foldersManager.allFolders) {
+      freshLabels.add(LabelEntity.genLabel(email, folder))
+    }
+
+    if (existedLabels.isEmpty()) {
+      roomDatabase.labelDao().insert(freshLabels)
     } else {
-      try {
-        imapLabelsDaoSource.updateLabels(this, email, currentFoldersList, foldersManager.allFolders)
-      } catch (e: Exception) {
-        e.printStackTrace()
-        ExceptionUtil.handleError(e)
-      }
-
+      roomDatabase.labelDao().update(existedLabels, freshLabels)
     }
 
     try {
