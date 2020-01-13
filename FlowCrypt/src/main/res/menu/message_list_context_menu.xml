@@ -20,13 +20,13 @@
 
     <item
         android:id="@+id/menuActionMarkUnread"
-        android:icon="@drawable/selector_ic_markunread_white"
+        android:icon="@drawable/selector_ic_mark_unread_white"
         android:title="@string/mark_unread"
         app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/menuActionMarkRead"
         android:icon="@drawable/selector_ic_mark_read_white"
-        android:title="@string/mark_unread"
+        android:title="@string/mark_read"
         app:showAsAction="ifRoom" />
 </menu>

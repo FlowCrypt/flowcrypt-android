@@ -70,6 +70,13 @@ abstract class MessageDao : BaseDao<MessageEntity> {
                                        msgStates: Collection<Int> = listOf(MessageState.SENDING.value,
                                            MessageState.SENT_WITHOUT_LOCAL_COPY.value)): List<MessageEntity>
 
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state NOT IN (:msgStates)")
+  abstract suspend fun getOutboxMsgsExceptSentSuspend(account: String?,
+                                                      label: String = JavaEmailConstants.FOLDER_OUTBOX,
+                                                      msgStates: Collection<Int> = listOf(
+                                                          MessageState.SENDING.value,
+                                                          MessageState.SENT_WITHOUT_LOCAL_COPY.value)): List<MessageEntity>
+
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state IN (:msgStateValue)")
   abstract fun getOutboxMsgsByState(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
                                     msgStateValue: Int): List<MessageEntity>

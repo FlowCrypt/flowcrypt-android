@@ -597,12 +597,15 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         val menuItemArchiveMsg = menu?.findItem(R.id.menuActionArchiveMessage)
         menuItemArchiveMsg?.isVisible = isArchiveActionEnabled()
 
-        if (tracker?.selection?.size() == 1) {
+        val menuActionMarkRead = menu?.findItem(R.id.menuActionMarkRead)
+        menuActionMarkRead?.isVisible = isChangeSeenStateActionEnabled()
+
+        val menuActionMarkUnread = menu?.findItem(R.id.menuActionMarkUnread)
+        menuActionMarkUnread?.isVisible = isChangeSeenStateActionEnabled()
+
+        if (isChangeSeenStateActionEnabled() && tracker?.selection?.size() == 1) {
           val id = tracker?.selection?.first() ?: return true
           val msgEntity = adapter.getMsgEntity(keyProvider?.getPosition(id))
-
-          val menuActionMarkUnread = menu?.findItem(R.id.menuActionMarkUnread)
-          val menuActionMarkRead = menu?.findItem(R.id.menuActionMarkRead)
 
           menuActionMarkUnread?.isVisible = msgEntity?.isSeen == true
           menuActionMarkRead?.isVisible = msgEntity?.isSeen != true
@@ -663,6 +666,18 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
 
     return isEnabled
+  }
+
+  private fun isChangeSeenStateActionEnabled(): Boolean {
+    return when (FoldersManager.getFolderType(listener?.currentFolder)) {
+      FoldersManager.FolderType.OUTBOX -> {
+        false
+      }
+
+      else -> {
+        true
+      }
+    }
   }
 
   interface OnManageEmailsListener {

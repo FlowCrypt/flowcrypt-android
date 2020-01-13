@@ -422,4 +422,5 @@
     <string name="reconnect">Reconnect</string>
     <string name="access_was_not_granted">Access was not granted</string>
     <string name="can_not_send_due_to_auth_failure">Can\'t send message: auth failure</string>
+    <string name="mark_read">Mark read</string>
 </resources>

@@ -100,7 +100,7 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
     }
   }
 
-  fun deleteOutgoingMsg(messageEntity: MessageEntity) {
+  fun deleteOutgoingMsg(messageEntity: MessageEntity, updateOutboxMsgsCount: Boolean = false) {
     val app = getApplication<Application>()
 
     viewModelScope.launch {
@@ -109,15 +109,6 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
       }
 
       if (isMsgDeleted) {
-        val account = getActiveAccountSuspend()
-        val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsExceptSent(account?.email).size
-        val outboxLabel = roomDatabase.labelDao().getLabelSuspend(account?.email,
-            JavaEmailConstants.FOLDER_OUTBOX)
-
-        outboxLabel?.let {
-          roomDatabase.labelDao().updateSuspend(it.copy(messageCount = outgoingMsgCount))
-        }
-
         if (messageEntity.hasAttachments == true) {
           try {
             val parentDirName = messageEntity.attachmentsDirectory
@@ -127,7 +118,22 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
             e.printStackTrace()
           }
         }
+
+        if (updateOutboxMsgsCount) {
+          updateOutboxMsgsCount()
+        }
       }
+    }
+  }
+
+  private suspend fun updateOutboxMsgsCount() {
+    val account = getActiveAccountSuspend()
+    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsExceptSentSuspend(account?.email).size
+    val outboxLabel = roomDatabase.labelDao().getLabelSuspend(account?.email,
+        JavaEmailConstants.FOLDER_OUTBOX)
+
+    outboxLabel?.let {
+      roomDatabase.labelDao().updateSuspend(it.copy(messageCount = outgoingMsgCount))
     }
   }
 
@@ -135,9 +141,25 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
     viewModelScope.launch {
       val entities = roomDatabase.msgDao().getMsgsByIDSuspend(localFolder.account,
           localFolder.fullName, ids.map { it })
-      val candidates = prepareCandidates(entities, newMsgState)
-      roomDatabase.msgDao().updateSuspend(candidates)
-      msgStatesLiveData.postValue(newMsgState)
+
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
+        when (newMsgState) {
+          MessageState.PENDING_DELETING -> {
+            for (entity in entities) {
+              deleteOutgoingMsg(entity)
+            }
+
+            updateOutboxMsgsCount()
+          }
+
+          else -> {
+          }
+        }
+      } else {
+        val candidates = prepareCandidates(entities, newMsgState)
+        roomDatabase.msgDao().updateSuspend(candidates)
+        msgStatesLiveData.postValue(newMsgState)
+      }
     }
   }
 
