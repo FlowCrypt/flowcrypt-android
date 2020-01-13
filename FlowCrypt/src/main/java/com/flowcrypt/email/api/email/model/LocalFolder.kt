@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.database.entity.LabelEntity
 
 /**
  * This is a simple POJO object, which describe information about the email folder.
@@ -33,6 +34,16 @@ data class LocalFolder constructor(val account: String,
       source.readInt() == 1,
       source.readInt(),
       source.readString()
+  )
+
+  constructor(source: LabelEntity) : this(
+      source.email,
+      source.folderName,
+      source.folderAlias,
+      source.attributesList,
+      source.isCustomLabel ?: false,
+      source.msgsCount ?: 0,
+      null
   )
 
   override fun describeContents(): Int {

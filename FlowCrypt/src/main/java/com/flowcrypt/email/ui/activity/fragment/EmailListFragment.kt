@@ -457,7 +457,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         dialogMsg = message, buttonTitle = null, isPopBackStack = false, isCancelable = true, hasHtml = false)
     infoDialogFragment.onInfoDialogButtonClickListener = object : InfoDialogFragment.OnInfoDialogButtonClickListener {
       override fun onInfoDialogButtonClick() {
-        messagesViewModel.deleteOutgoingMsg(messageEntity)
+        messagesViewModel.deleteOutgoingMsgs(listOf(messageEntity))
       }
     }
 

@@ -100,28 +100,54 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
     }
   }
 
-  fun deleteOutgoingMsg(messageEntity: MessageEntity, updateOutboxMsgsCount: Boolean = false) {
+  fun deleteOutgoingMsgs(entities: Iterable<MessageEntity>) {
     val app = getApplication<Application>()
 
     viewModelScope.launch {
-      val isMsgDeleted = with(messageEntity) {
-        roomDatabase.msgDao().deleteOutgoingMsg(email, folder, uid) > 0
-      }
+      var needUpdateOutboxLabel = false
+      for (entity in entities) {
+        val isMsgDeleted = with(entity) {
+          roomDatabase.msgDao().deleteOutgoingMsg(email, folder, uid) > 0
+        }
 
-      if (isMsgDeleted) {
-        if (messageEntity.hasAttachments == true) {
-          try {
-            val parentDirName = messageEntity.attachmentsDirectory
-            val dir = File(File(app.cacheDir, Constants.ATTACHMENTS_CACHE_DIR), parentDirName)
-            FileAndDirectoryUtils.deleteDir(dir)
-          } catch (e: IOException) {
-            e.printStackTrace()
+        if (isMsgDeleted) {
+          needUpdateOutboxLabel = true
+          if (entity.hasAttachments == true) {
+            try {
+              val parentDirName = entity.attachmentsDirectory
+              val dir = File(File(app.cacheDir, Constants.ATTACHMENTS_CACHE_DIR), parentDirName)
+              FileAndDirectoryUtils.deleteDir(dir)
+            } catch (e: IOException) {
+              e.printStackTrace()
+            }
           }
         }
+      }
 
-        if (updateOutboxMsgsCount) {
-          updateOutboxMsgsCount()
+      if (needUpdateOutboxLabel) {
+        updateOutboxMsgsCount()
+      }
+    }
+  }
+
+  fun changeMsgsState(ids: Collection<Long>, localFolder: LocalFolder, newMsgState: MessageState) {
+    viewModelScope.launch {
+      val entities = roomDatabase.msgDao().getMsgsByIDSuspend(localFolder.account,
+          localFolder.fullName, ids.map { it })
+
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
+        when (newMsgState) {
+          MessageState.PENDING_DELETING -> {
+            deleteOutgoingMsgs(entities)
+          }
+
+          else -> {
+          }
         }
+      } else {
+        val candidates = prepareCandidates(entities, newMsgState)
+        roomDatabase.msgDao().updateSuspend(candidates)
+        msgStatesLiveData.postValue(newMsgState)
       }
     }
   }
@@ -134,32 +160,6 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
 
     outboxLabel?.let {
       roomDatabase.labelDao().updateSuspend(it.copy(msgsCount = outgoingMsgCount))
-    }
-  }
-
-  fun changeMsgsState(ids: Collection<Long>, localFolder: LocalFolder, newMsgState: MessageState) {
-    viewModelScope.launch {
-      val entities = roomDatabase.msgDao().getMsgsByIDSuspend(localFolder.account,
-          localFolder.fullName, ids.map { it })
-
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
-        when (newMsgState) {
-          MessageState.PENDING_DELETING -> {
-            for (entity in entities) {
-              deleteOutgoingMsg(entity)
-            }
-
-            updateOutboxMsgsCount()
-          }
-
-          else -> {
-          }
-        }
-      } else {
-        val candidates = prepareCandidates(entities, newMsgState)
-        roomDatabase.msgDao().updateSuspend(candidates)
-        msgStatesLiveData.postValue(newMsgState)
-      }
     }
   }
 

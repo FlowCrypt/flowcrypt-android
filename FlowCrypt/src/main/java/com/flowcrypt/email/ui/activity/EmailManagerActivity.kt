@@ -9,7 +9,6 @@ import android.app.Activity
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.text.TextUtils
@@ -30,9 +29,8 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.CursorLoader
-import androidx.loader.content.Loader
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.bumptech.glide.request.RequestOptions
@@ -43,8 +41,8 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
 import com.flowcrypt.email.database.provider.FlowcryptContract
+import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
@@ -77,9 +75,11 @@ import com.sun.mail.imap.protocol.SearchSequence
  * E-mail: DenBond7@gmail.com
  */
 class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigationItemSelectedListener,
-    LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener, SearchView.OnQueryTextListener {
+    View.OnClickListener, SearchView.OnQueryTextListener {
 
   private lateinit var client: GoogleSignInClient
+  private lateinit var labelsViewModel: LabelsViewModel
+
   override var currentAccountDao: AccountDao? = null
   private var foldersManager: FoldersManager? = null
   override var currentFolder: LocalFolder? = null
@@ -155,6 +155,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    setupLabelsViewModel()
+
     currentAccountDao = AccountDaoSource().getActiveAccountInformation(this)
 
     if (currentAccountDao != null) {
@@ -164,7 +166,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
         ActionManager(this).checkAndAddActionsToQueue(it)
-        LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this)
 
         countingIdlingResourceForLabel = CountingIdlingResource(
             GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java), GeneralUtil.isDebugBuild())
@@ -287,7 +288,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
       R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> {
-        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_gmail_labels, null, this)
         if (!countingIdlingResourceForLabel!!.isIdleNow) {
           countingIdlingResourceForLabel!!.decrement()
         }
@@ -370,79 +370,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     drawerLayout?.closeDrawer(GravityCompat.START)
     return true
-  }
-
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
-    return when (id) {
-      R.id.loader_id_load_gmail_labels -> {
-        val uri = ImapLabelsDaoSource().baseContentUri
-        val selection = ImapLabelsDaoSource.COL_EMAIL + " = ?"
-        CursorLoader(this, uri, null, selection, arrayOf(currentAccountDao!!.email), null)
-      }
-      else -> Loader(this.applicationContext)
-    }
-  }
-
-  override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
-    when (loader.id) {
-      R.id.loader_id_load_gmail_labels -> if (data != null) {
-        val imapLabelsDaoSource = ImapLabelsDaoSource()
-
-        if (data.count > 0) {
-          foldersManager!!.clear()
-        }
-
-        while (data.moveToNext()) {
-          foldersManager!!.addFolder(imapLabelsDaoSource.getFolder(data))
-        }
-
-        if (!foldersManager!!.allFolders.isEmpty()) {
-          val mailLabels = navigationView!!.menu.findItem(R.id.mailLabels)
-          mailLabels.subMenu.clear()
-
-          for (label in sortedServerFolders) {
-            mailLabels.subMenu.add(label)
-            if (JavaEmailConstants.FOLDER_OUTBOX == label) {
-              addOutboxLabel(mailLabels, label)
-            }
-          }
-
-          for (localFolder in foldersManager!!.customLabels) {
-            mailLabels.subMenu.add(localFolder.folderAlias)
-          }
-        }
-
-        if (currentFolder == null) {
-          currentFolder = foldersManager?.folderInbox
-          if (currentFolder == null) {
-            currentFolder = foldersManager?.findInboxFolder()
-          }
-
-          onFolderChanged()
-        } else {
-          foldersManager?.getFolderByAlias(currentFolder?.folderAlias)?.let { currentFolder = it }
-        }
-      }
-    }
-  }
-
-  private fun addOutboxLabel(mailLabels: MenuItem, label: String) {
-    val menuItem = mailLabels.subMenu.getItem(mailLabels.subMenu.size() - 1)
-
-    if (foldersManager!!.getFolderByAlias(label)!!.msgCount > 0) {
-      val view = LayoutInflater.from(this).inflate(R.layout.navigation_view_item_with_amount,
-          navigationView, false)
-      val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
-      val folder = foldersManager!!.getFolderByAlias(label)
-      textViewMsgsCount.text = folder!!.msgCount.toString()
-      menuItem.actionView = view
-    } else {
-      menuItem.actionView = null
-    }
-  }
-
-  override fun onLoaderReset(loader: Loader<Cursor>) {
-
   }
 
   override fun onClick(v: View) {
@@ -708,6 +635,63 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     (supportFragmentManager.findFragmentById(R.id.emailListFragment) as? EmailListFragment?)?.onRefreshMsgsCompleted()
   }
 
+  private fun setupLabelsViewModel() {
+    labelsViewModel = ViewModelProvider(this).get(LabelsViewModel::class.java)
+    labelsViewModel.accountLiveData.observe(this, Observer { })
+    labelsViewModel.labelsLiveData.observe(this, Observer {
+
+      if (it.isNotEmpty()) {
+        foldersManager?.clear()
+      }
+
+      for (label in it) {
+        foldersManager?.addFolder(LocalFolder(label))
+      }
+
+      if (foldersManager?.allFolders?.isNotEmpty() == true) {
+        val mailLabels = navigationView?.menu?.findItem(R.id.mailLabels)
+        mailLabels?.subMenu?.clear()
+
+        for (label in sortedServerFolders) {
+          mailLabels?.subMenu?.add(label)
+          if (JavaEmailConstants.FOLDER_OUTBOX == label) {
+            addOutboxLabel(mailLabels, label)
+          }
+        }
+
+        for (localFolder in foldersManager?.customLabels ?: emptyList()) {
+          mailLabels?.subMenu?.add(localFolder.folderAlias)
+        }
+      }
+
+      if (currentFolder == null) {
+        currentFolder = foldersManager?.folderInbox
+        if (currentFolder == null) {
+          currentFolder = foldersManager?.findInboxFolder()
+        }
+
+        onFolderChanged()
+      } else {
+        foldersManager?.getFolderByAlias(currentFolder?.folderAlias)?.let { currentFolder = it }
+      }
+    })
+  }
+
+  private fun addOutboxLabel(mailLabels: MenuItem?, label: String) {
+    val menuItem = mailLabels?.subMenu?.getItem(mailLabels.subMenu.size() - 1) ?: return
+
+    if (foldersManager?.getFolderByAlias(label)?.msgCount ?: 0 > 0) {
+      val view = LayoutInflater.from(this).inflate(R.layout.navigation_view_item_with_amount,
+          navigationView, false)
+      val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
+      val folder = foldersManager!!.getFolderByAlias(label)
+      textViewMsgsCount.text = folder!!.msgCount.toString()
+      menuItem.actionView = view
+    } else {
+      menuItem.actionView = null
+    }
+  }
+
   /**
    * The custom realization of [ActionBarDrawerToggle]. Will be used to start a labels
    * update task when the drawer will be opened.
@@ -734,9 +718,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         countingIdlingResourceForLabel!!.increment()
         updateLabels(R.id.syns_request_code_update_label_passive)
       }
-
-      LoaderManager.getInstance(this@EmailManagerActivity).restartLoader(R.id.loader_id_load_gmail_labels,
-          null, this@EmailManagerActivity)
     }
 
     override fun onDrawerClosed(drawerView: View) {

@@ -29,7 +29,7 @@ interface LabelDao : BaseDao<LabelEntity> {
   fun getLabel(account: String?, label: String): LabelEntity?
 
   @Query("SELECT * FROM imap_labels WHERE email = :account")
-  fun getLabelsLD(account: String): LiveData<LabelEntity>
+  fun getLabelsLD(account: String): LiveData<List<LabelEntity>>
 
   @Query("SELECT * FROM imap_labels WHERE email = :account")
   fun getLabels(account: String): List<LabelEntity>
