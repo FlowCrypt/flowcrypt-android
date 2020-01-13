@@ -552,7 +552,9 @@ class MessagesSenderJobService : JobService() {
     private val TAG = MessagesSenderJobService::class.java.simpleName
 
     @JvmStatic
-    fun schedule(context: Context) {
+    fun schedule(context: Context?) {
+      context ?: return
+
       val jobInfoBuilder = JobInfo.Builder(JobIdManager.JOB_TYPE_SEND_MESSAGES,
           ComponentName(context, MessagesSenderJobService::class.java))
           .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)

@@ -36,6 +36,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
@@ -209,6 +210,10 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     val isEmpty = TextUtils.isEmpty(localFolder.fullName)
     if (isEmpty || isOutboxFolder) {
       swipeRefreshLayout?.isRefreshing = false
+
+      if (isOutboxFolder) {
+        MessagesSenderJobService.schedule(context?.applicationContext)
+      }
     } else {
       emptyView?.visibility = View.GONE
 
