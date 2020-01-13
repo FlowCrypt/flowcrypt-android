@@ -223,7 +223,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       }
 
       R.id.menuActionDeleteMessage -> {
-        if (JavaEmailConstants.FOLDER_OUTBOX.equals(msgEntity!!.folder, ignoreCase = true)) {
+        if (JavaEmailConstants.FOLDER_OUTBOX.equals(msgEntity?.folder, ignoreCase = true)) {
           val msgEntity = msgDetailsViewModel?.msgLiveData?.value
 
           msgEntity?.let {
@@ -234,7 +234,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
               Toast.makeText(context, R.string.message_was_deleted, Toast.LENGTH_SHORT).show()
             }
           }
-
         } else {
           msgDetailsViewModel?.changeMsgState(MessageState.PENDING_DELETING)
         }

@@ -9,6 +9,7 @@ import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -85,6 +86,16 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
     freshMsgEntity?.let { msgEntity ->
       viewModelScope.launch {
         roomDatabase.msgDao().deleteSuspend(msgEntity)
+
+        if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
+          val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsExceptSentSuspend(msgEntity.email).size
+          val outboxLabel = roomDatabase.labelDao().getLabelSuspend(msgEntity.email,
+              JavaEmailConstants.FOLDER_OUTBOX)
+
+          outboxLabel?.let {
+            roomDatabase.labelDao().updateSuspend(it.copy(msgsCount = outgoingMsgCount))
+          }
+        }
       }
     }
   }
