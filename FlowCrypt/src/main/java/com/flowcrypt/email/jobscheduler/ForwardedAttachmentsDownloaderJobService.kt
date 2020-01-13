@@ -120,7 +120,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
           val account = AccountDaoSource().getActiveAccountInformation(context)
 
           if (account != null) {
-            val newMsgs = roomDatabase.msgDao().getOutboxMessages(account = account.email,
+            val newMsgs = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
                 msgStateValue = MessageState.NEW_FORWARDED.value)
 
             if (!CollectionUtils.isEmpty(newMsgs)) {
@@ -167,7 +167,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
       val attDaoSource = AttachmentDaoSource()
 
       while (true) {
-        val detailsList = roomDatabase.msgDao().getOutboxMessages(account = account.email,
+        val detailsList = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
             msgStateValue = MessageState.NEW_FORWARDED.value)
 
         if (CollectionUtils.isEmpty(detailsList)) {

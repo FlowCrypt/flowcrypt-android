@@ -118,10 +118,10 @@ class MessagesSenderJobService : JobService() {
           if (account != null) {
             roomDatabase.msgDao().resetMsgsWithSendingState(account.email)
 
-            val queuedMsgs = roomDatabase.msgDao().getOutboxMessages(account = account.email,
+            val queuedMsgs = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
                 msgStateValue = MessageState.QUEUED.value)
 
-            val sentButNotSavedMsgs = roomDatabase.msgDao().getOutboxMessages(account = account.email,
+            val sentButNotSavedMsgs = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
                 msgStateValue = MessageState.SENT_WITHOUT_LOCAL_COPY.value)
 
             if (!CollectionUtils.isEmpty(queuedMsgs) || !CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
@@ -183,7 +183,7 @@ class MessagesSenderJobService : JobService() {
       val email = account.email
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       while (true) {
-        list = roomDatabase.msgDao().getOutboxMessages(account = account.email,
+        list = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
             msgStateValue = MessageState.QUEUED.value)
 
         if (CollectionUtils.isEmpty(list)) {
@@ -231,7 +231,7 @@ class MessagesSenderJobService : JobService() {
               deleteMsgAtts(context, account, attsCacheDir, msgEntity, attsDaoSource)
             }
 
-            val outgoingMsgCount = roomDatabase.msgDao().getOutboxMessages(email).size
+            val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsExceptSent(email).size
             val outboxLabel = roomDatabase.labelDao().getLabel(email, JavaEmailConstants.FOLDER_OUTBOX)
 
             outboxLabel?.let {
@@ -282,7 +282,7 @@ class MessagesSenderJobService : JobService() {
       val email = account.email
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       while (true) {
-        list = roomDatabase.msgDao().getOutboxMessages(account = account.email,
+        list = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
             msgStateValue = MessageState.SENT_WITHOUT_LOCAL_COPY.value)
         if (CollectionUtils.isEmpty(list)) {
           break

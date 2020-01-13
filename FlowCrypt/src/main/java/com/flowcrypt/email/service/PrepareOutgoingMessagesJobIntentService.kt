@@ -136,8 +136,12 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
           }
 
           if (CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)) {
-            roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.QUEUED.value))
-            MessagesSenderJobService.schedule(applicationContext)
+            val insertedMsgEntity = roomDatabase.msgDao().getMsg(
+                msgEntity.email, msgEntity.folder, msgEntity.uid)
+            insertedMsgEntity?.let {
+              roomDatabase.msgDao().update(it.copy(state = MessageState.QUEUED.value))
+              MessagesSenderJobService.schedule(applicationContext)
+            }
           } else {
             ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
           }
@@ -170,7 +174,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
   }
 
   private fun updateOutgoingMsgCount(email: String, roomDatabase: FlowCryptRoomDatabase) {
-    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMessages(email).size
+    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsExceptSent(email).size
     val outboxLabel = roomDatabase.labelDao().getLabel(email, JavaEmailConstants.FOLDER_OUTBOX)
 
     outboxLabel?.let {
