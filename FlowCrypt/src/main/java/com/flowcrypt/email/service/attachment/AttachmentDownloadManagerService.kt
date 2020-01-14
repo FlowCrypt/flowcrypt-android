@@ -30,8 +30,8 @@ import com.flowcrypt.email.api.retrofit.node.NodeRetrofitHelper
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -401,6 +401,7 @@ class AttachmentDownloadManagerService : Service() {
       if (GeneralUtil.isDebugBuild()) {
         Thread.currentThread().name = AttDownloadRunnable::class.java.simpleName + "|" + att.name
       }
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
       var attFile: File = prepareAttFile()
 
@@ -416,10 +417,8 @@ class AttachmentDownloadManagerService : Service() {
             att.name = attFile.name
 
             if (!Thread.currentThread().isInterrupted) {
-              if (listener != null) {
-                val uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile)
-                listener!!.onAttDownloaded(att, uri)
-              }
+              val uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile)
+              listener?.onAttDownloaded(att, uri)
             }
 
             return
@@ -430,28 +429,21 @@ class AttachmentDownloadManagerService : Service() {
         val account = source.getAccountInformation(context, att.email!!)
 
         if (account == null) {
-          if (listener != null) {
-            listener!!.onCanceled(this.att)
-            return
-          }
+          listener?.onCanceled(this.att)
+          return
         }
 
         val session = OpenStoreHelper.getAttsSess(context, account)
         val store = OpenStoreHelper.openStore(context, account, session)
 
-        val (fullName) = ImapLabelsDaoSource().getFolder(context, att.email!!, att.folder!!)
+        val label = roomDatabase.labelDao().getLabel(att.email, att.folder!!)
             ?: if (source.getAccountInformation(context, att.email!!) == null) {
-              if (listener != null) {
-                listener!!.onCanceled(this.att)
-
-                store.close()
-              }
+              listener?.onCanceled(this.att)
+              store.close()
               return
-            } else {
-              throw ManualHandledException("Folder \"" + att.folder + "\" not found in the local cache")
-            }
+            } else throw ManualHandledException("Folder \"" + att.folder + "\" not found in the local cache")
 
-        val remoteFolder = store.getFolder(fullName) as IMAPFolder
+        val remoteFolder = store.getFolder(label.folderName) as IMAPFolder
         remoteFolder.open(Folder.READ_ONLY)
 
         val msg = remoteFolder.getMessageByUID(att.uid.toLong())
@@ -486,9 +478,7 @@ class AttachmentDownloadManagerService : Service() {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
         removeNotCompletedAtt(attFile)
-        if (listener != null) {
-          listener!!.onError(att, e)
-        }
+        listener?.onError(att, e)
       }
 
     }
@@ -506,9 +496,8 @@ class AttachmentDownloadManagerService : Service() {
           var numberOfReadBytes: Int
           var lastPercentage = 0
           var currentPercentage = 0
-          val startTime: Long
           var elapsedTime: Long
-          startTime = System.currentTimeMillis()
+          val startTime: Long = System.currentTimeMillis()
           var lastUpdateTime = startTime
           updateProgress(currentPercentage, 0)
           while (true) {
@@ -574,7 +563,7 @@ class AttachmentDownloadManagerService : Service() {
       }
 
       FileInputStream(file).use { inputStream ->
-        val (_, _, _, decryptedBytes) = getDecryptedFileResult(context, inputStream)
+        val decryptedFileResult = getDecryptedFileResult(context, inputStream)
 
         val decryptedFile = File(file.parent, file.name.substring(0, file.name.lastIndexOf(".")))
 
@@ -582,7 +571,7 @@ class AttachmentDownloadManagerService : Service() {
 
         try {
           FileUtils.openOutputStream(decryptedFile).use { outputStream ->
-            IOUtils.write(decryptedBytes, outputStream)
+            IOUtils.write(decryptedFileResult.decryptedBytes, outputStream)
             return decryptedFile
           }
         } catch (e: IOException) {
@@ -666,7 +655,6 @@ class AttachmentDownloadManagerService : Service() {
 
     private val TAG = AttachmentDownloadManagerService::class.java.simpleName
 
-    @JvmStatic
     fun newIntent(context: Context?, attInfo: AttachmentInfo?): Intent? {
       if (context == null || attInfo == null) {
         return null
