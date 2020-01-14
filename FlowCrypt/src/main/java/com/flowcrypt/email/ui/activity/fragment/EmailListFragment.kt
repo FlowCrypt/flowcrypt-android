@@ -80,6 +80,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private var listener: OnManageEmailsListener? = null
   private var isEmptyViewAvailable = false
   private var keepSelectionInMemory = false
+  private var isForceLoadNextMsgsNeeded = false
 
   private val isOutboxFolder: Boolean
     get() {
@@ -115,11 +116,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
     override fun onItemAtEndLoaded(itemAtEnd: MessageEntity) {
       super.onItemAtEndLoaded(itemAtEnd)
-      adapter.currentList?.size?.let {
-        if (it > 0) {
-          loadNextMsgs(it)
-        }
-      }
+      loadNextItemsToAdapter()
     }
   }
 
@@ -160,6 +157,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     super.onCreate(savedInstanceState)
     adapter = MsgsPagedListAdapter(this)
     setupMsgsViewModel()
+    setupConnectionNotifier()
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -260,8 +258,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
         footerProgressView?.visibility = View.GONE
         emptyView?.visibility = View.GONE
-
-        messagesViewModel.cleanFolderCache(listener?.currentFolder?.fullName)
 
         when (errorType) {
           SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> showConnLostHint()
@@ -409,10 +405,10 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   private fun showConnLostHint() {
+    isForceLoadNextMsgsNeeded = true
     showSnackbar(view!!, getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
-      UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
-      loadNextMsgs(-1)
+      loadNextItemsToAdapter()
     })
   }
 
@@ -484,6 +480,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
    * @param totalItemsCount The count of already loaded messages.
    */
   private fun loadNextMsgs(totalItemsCount: Int) {
+    isForceLoadNextMsgsNeeded = false
     val localFolder = listener?.currentFolder
 
     if (isOutboxFolder) {
@@ -496,6 +493,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         statusView?.visibility = View.GONE
         emptyView?.visibility = View.GONE
         progressView?.visibility = View.VISIBLE
+        textViewStatusInfo?.text = null
       }
 
       footerProgressView?.visibility = View.VISIBLE
@@ -510,8 +508,21 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
     } else {
       footerProgressView?.visibility = View.GONE
+      isForceLoadNextMsgsNeeded = true
+
+      if (totalItemsCount == 0) {
+        contentView?.visibility = View.GONE
+        statusView?.visibility = View.VISIBLE
+        emptyView?.visibility = View.GONE
+        progressView?.visibility = View.GONE
+
+        textViewStatusInfo?.setText(R.string.there_was_syncing_problem)
+      }
+
       showSnackbar(view, getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
-          Snackbar.LENGTH_LONG, View.OnClickListener { loadNextMsgs(totalItemsCount) })
+          Snackbar.LENGTH_LONG, View.OnClickListener {
+        loadNextMsgs(totalItemsCount)
+      })
     }
   }
 
@@ -681,6 +692,22 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
       else -> {
         true
+      }
+    }
+  }
+
+  private fun setupConnectionNotifier() {
+    connectionLifecycleObserver.connectionLiveData.observe(this, Observer {
+      if (isForceLoadNextMsgsNeeded && it) {
+        loadNextItemsToAdapter()
+      }
+    })
+  }
+
+  private fun loadNextItemsToAdapter() {
+    adapter.currentList?.size?.let {
+      if (it > 0) {
+        loadNextMsgs(it)
       }
     }
   }

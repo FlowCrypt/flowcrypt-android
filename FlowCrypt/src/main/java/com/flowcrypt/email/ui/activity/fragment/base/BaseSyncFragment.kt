@@ -79,12 +79,12 @@ abstract class BaseSyncFragment : BaseFragment() {
     contentView?.visibility = View.GONE
 
     when (errorType) {
-      SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> textViewStatusInfo!!.setText(R.string.there_was_syncing_problem)
+      SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> textViewStatusInfo?.setText(R.string.there_was_syncing_problem)
 
       else -> if (e != null && !TextUtils.isEmpty(e.message)) {
-        textViewStatusInfo!!.text = e.message
+        textViewStatusInfo?.text = e.message
       } else {
-        textViewStatusInfo!!.setText(R.string.unknown_error)
+        textViewStatusInfo?.setText(R.string.unknown_error)
       }
     }
 
