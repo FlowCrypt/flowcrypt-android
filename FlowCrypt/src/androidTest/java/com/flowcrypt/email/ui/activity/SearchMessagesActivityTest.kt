@@ -31,7 +31,7 @@ import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyListView
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withListViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -59,10 +59,13 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SearchMessagesActivityTest : BaseEmailListActivityTest() {
 
+  private val accountRule = AddAccountToDatabaseRule()
+
   override val activityTestRule: ActivityTestRule<*>? =
       object : IntentsTestRule<SearchMessagesActivity>(SearchMessagesActivity::class.java) {
         override fun getActivityIntent(): Intent {
           return SearchMessagesActivity.newIntent(getTargetContext(), DEFAULT_QUERY_TEXT, LocalFolder(
+              account = accountRule.account.email,
               fullName = FOLDER_NAME,
               folderAlias = FOLDER_NAME))
         }
@@ -71,7 +74,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
+      .around(accountRule)
       .around(UpdateAccountRule(AccountDaoManager.getDefaultAccountDao(), generateContentValues()))
       .around(activityTestRule)
 
@@ -97,13 +100,13 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
         .check(matches(isDisplayed()))
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
-    onView(withId(R.id.listViewMessages))
+    onView(withId(R.id.recyclerViewMsgs))
         .check(matches(withListViewItemCount(1))).check(matches(isDisplayed()))
   }
 
   @Test
   fun testSearchQuery() {
-    onView(withId(R.id.listViewMessages))
+    onView(withId(R.id.recyclerViewMsgs))
         .check(matches(withListViewItemCount(1))).check(matches(isDisplayed()))
 
     onView(allOf<View>(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -111,7 +114,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
         .perform(clearText(), typeText(SECOND_QUERY_TEXT), pressImeActionButton())
-    onView(withId(R.id.listViewMessages))
+    onView(withId(R.id.recyclerViewMsgs))
         .check(matches(withListViewItemCount(2))).check(matches(isDisplayed()))
   }
 
@@ -122,16 +125,16 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
         .perform(clearText(), typeText(QUERY_TEXT_FOR_SUBJECT_BODY_FROM), pressImeActionButton())
-    onView(withId(R.id.listViewMessages))
+    onView(withId(R.id.recyclerViewMsgs))
         .check(matches(withListViewItemCount(4))).check(matches(isDisplayed()))
   }
 
   @Test
   fun testShowNotEmptyList() {
-    onView(withId(R.id.listViewMessages))
+    onView(withId(R.id.recyclerViewMsgs))
         .check(matches(isDisplayed()))
-    onView(withId(R.id.listViewMessages))
-        .check(matches(not<View>(withEmptyListView())))
+    onView(withId(R.id.recyclerViewMsgs))
+        .check(matches(not<View>(withEmptyRecyclerView())))
   }
 
   @Test

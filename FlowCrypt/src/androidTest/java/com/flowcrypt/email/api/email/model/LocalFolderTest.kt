@@ -26,6 +26,7 @@ class LocalFolderTest {
   @Test
   fun testParcelable() {
     val original = LocalFolder(
+        "account",
         "fullName",
         "folderAlias",
         listOf("attribute1", "attribute2"),

@@ -34,7 +34,7 @@ import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyListView
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withToolBarText
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
@@ -113,14 +113,14 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   @Test
   fun testForceLoadMsgs() {
     onData(anything())
-        .inAdapterView(withId(R.id.listViewMessages))
+        .inAdapterView(withId(R.id.recyclerViewMsgs))
         .atPosition(0)
         .perform(scrollTo())
-    onView(withId(R.id.listViewMessages))
+    onView(withId(R.id.recyclerViewMsgs))
         .check(matches(isDisplayed()))
         .perform(swipeDown())
-    onView(withId(R.id.listViewMessages))
-        .check(matches(not<View>(withEmptyListView())))
+    onView(withId(R.id.recyclerViewMsgs))
+        .check(matches(not<View>(withEmptyRecyclerView())))
         .check(matches(isDisplayed()))
   }
 
@@ -236,7 +236,9 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   companion object {
     private val LOCAL_FOLDERS: MutableList<LocalFolder>
+    private val userWithMoreThan21LettersAccount = AccountDaoManager.getUserWitMoreThan21Letters()
     private val INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT = LocalFolder(
+        account = userWithMoreThan21LettersAccount.email,
         fullName = "INBOX",
         folderAlias = "INBOX",
         attributes = listOf("\\HasNoChildren"),
@@ -246,14 +248,17 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
       LOCAL_FOLDERS = ArrayList()
       LOCAL_FOLDERS.add(INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT)
       LOCAL_FOLDERS.add(LocalFolder(
+          account = userWithMoreThan21LettersAccount.email,
           fullName = "Drafts",
           folderAlias = "Drafts",
           attributes = listOf("\\HasNoChildren", "\\Drafts")))
       LOCAL_FOLDERS.add(LocalFolder(
+          account = userWithMoreThan21LettersAccount.email,
           fullName = "Sent",
           folderAlias = "Sent",
           attributes = listOf("\\HasNoChildren", "\\Sent")))
       LOCAL_FOLDERS.add(LocalFolder(
+          account = userWithMoreThan21LettersAccount.email,
           fullName = "Junk",
           folderAlias = "Junk",
           attributes = listOf("\\HasNoChildren", "\\Junk")))

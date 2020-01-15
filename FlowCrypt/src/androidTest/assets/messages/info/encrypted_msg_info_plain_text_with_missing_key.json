@@ -1,21 +1,44 @@
 {
-  "encryptionType": "STANDARD",
-  "generalMsgDetails": {
+  "encryptionType": "ENCRYPTED",
+  "localFolder": {
+    "account": "default@denbond7.com",
+    "attributes": [
+      "\\HasNoChildren"
+    ],
+    "folderAlias": "INBOX",
+    "fullName": "INBOX",
+    "isCustom": false,
+    "msgCount": 32
+  },
+  "msgBlocks": [
+    {
+      "complete": true,
+      "content": "\n  \u003c!DOCTYPE html\u003e\u003chtml\u003e\n    \u003chead\u003e\n      \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\" /\u003e\n      \u003cstyle\u003e\n        body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n        body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n        body pre { white-space: pre-wrap !important; }\n        body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n      \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\u003cdiv class\u003d\"MsgBlock green\" style\u003d\"background: white;padding-left: 8px;min-height: 50px;padding-top: 4px;padding-bottom: 4px;width: 100%;border: 1px solid #f0f0f0;border-left: 8px solid #31A217;border-right: none;background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFoAAABaCAMAAAAPdrEwAAAAh1BMVEXw8PD////w8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PDw8PD7MuHIAAAALXRSTlMAAAECBAcICw4QEhUZIyYqMTtGTV5kdn2Ii5mfoKOqrbG0uL6/xcnM0NTX2t1l7cN4AAAB0UlEQVR4Ae3Y3Y4SQRCG4bdHweFHRBTBH1FRFLXv//qsA8kmvbMdXhh2Q0KfknpSCQc130c67s22+e9+v/+d84fxkSPH0m/+5P9vN7vRV0vPfx7or1NB23e99KAHuoXOOc6moQsBwNN1Q9g4Wdh1uq3MA7Qn0+2ylAt7WbWpyT+Wo8roKH6v2QhZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2ghZ2gjZ2AUNOLmwgQdogEJ2dnF3UJdU3WjqO/u96aYtVd/7jqvIyu76G5se6GaY7tNNcy5d7se7eWVnDz87fMkuVuS8epF6f9NPObPY5re9y4N1/vya9Gr3se2bfvl9M0mkyZdv077p+a/3z4Meby5Br4NWiV51BaiUqfLro9I3WiR61RVcffwfXI7u5zZ20EOA82Uu8x3SlrSwXQuBSvSqK0AletUVoBK96gpIwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWctDCVnLQwlZy0MJWckIletUVIJJxITN6wtZd2EI+0NquyIJOnUpFVvRpcwmV6FVXgEr0qitAJXrVFaASveoKUIledQWoRK+6AlSiV13BP+/VVbky7Xq1AAAAAElFTkSuQmCC);\"\u003eIt\u0027s a message with a missing key.\u003c/div\u003e\u003c!-- next MsgBlock --\u003e\n\u003c/body\u003e\n  \u003c/html\u003e",
+      "type": "plainHtml"
+    }
+  ],
+  "msgEntity": {
+    "cc": [],
     "email": "default@denbond7.com",
+    "flags": "\\SEEN",
+    "folder": "INBOX",
     "from": [
       {
         "address": "denbond7@denbond7.com"
       }
     ],
-    "hasAtts": false,
-    "isEncrypted": true,
-    "isRawMsgAvailable": true,
-    "label": "INBOX",
-    "msgFlags": [
-      "\\SEEN"
-    ],
+    "fromAddress": "denbond7@denbond7.com",
+    "hasAttachments": false,
+    "id": 8,
+    "isSeen": true,
     "msgState": "NONE",
     "receivedDate": 1552823214000,
+    "replyTo": "denbond7@denbond7.com",
+    "replyToAddress": [
+      {
+        "address": "denbond7@denbond7.com"
+      }
+    ],
     "sentDate": 1552823197000,
     "subject": "encrypted message with missing key error",
     "to": [
@@ -23,41 +46,9 @@
         "address": "default@denbond7.com"
       }
     ],
+    "toAddress": "default@denbond7.com",
     "uid": 244
   },
-  "msgBlocks": [
-    {
-      "complete": true,
-      "content": "\n  \u003c!DOCTYPE html\u003e\u003chtml\u003e\n    \u003chead\u003e\n      \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\" /\u003e\n      \u003cstyle\u003e\n        body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n        body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n        body pre { white-space: pre-wrap !important; }\n        body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n      \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\u003c/body\u003e\n  \u003c/html\u003e",
-      "type": "plainHtml"
-    },
-    {
-      "complete": true,
-      "content": "-----BEGIN PGP MESSAGE-----\nVersion: FlowCrypt 0.7.3 Gmail Encryption\nComment: Seamlessly send and receive encrypted email\n\nwcBMA8iMPjccEmlgAQf9H5ZrLjIqWqYM91ND2DaEFQQC6iafE0CkdNR33Aq2\n+AESQ87kvURKcB0HEp7RhDBk+JYpFtgkikfPW508xTAfyB1s7Pj1q+LvQ70o\nGsvvpJ/6LVckoTe7pPro9NxPTO3Ya+kjUdaKOuD1IxLrDqWjt62d7gsabodv\nVwI8LzsXut2YvjXPBGOi3XUZivc6ynY+vjT+MIgu4RBVC4uLQnOJYLmKWKYm\np4A2vHH4ur/pAlqBJDMmIJPAOsiipABvVVxggtCzlRgztvjVApTYQCs5Jsy2\nh7VhBFo9cBhduIZk3zJy2MS6doXn5b1TGfDwNdl/hlaH+8nC5Y/RfFEXUOhy\nPcHATAOE5YkozqaZLwEH/3EhCKgkAg7sm9OSBmNw3B1lxF0iB1+0VK2/5xK/\nrx5OViyDWLBqd9ytg3peR3dWdTyq3gdcGh73dR/idzeysc3WHp3B56lePuag\n8KU5ScgzNh7NHLf0XcJM/CVMmi3fE4DyeC9TIlzlZZ4uP16/gE/0g30vH53Q\neF01tkPCitV4Zqer+6BfkboQXfQ1QJvsQ+KRyKeHpc9x72ORvT5dYf2a/D3z\nHWTh5PE5dURoHVeKt1NVamCxHtiaO1d0XYNLr26WopVOzL9gZCkJHR8b0urq\nNiwm6YaJdC0+LSqjueiaHDPyMcg74htXJ2FRnDELxA/zZZfXlqF9QjOijSiH\n8ozSWgHEu4LAoPxbTQtr7btPL8PSRi2o/LP9csqHJW0egI10mgP0fWhxA6k2\nawZPejby2lGEN0kJdh+8TzmB2YrMyZLNiJXqo/SjpsVfCrwX9Sh1VRd4j/oR\nAYQq+Q\u003d\u003d\n\u003doEf7\n-----END PGP MESSAGE-----",
-      "decryptErr": {
-        "error": {
-          "message": "Session key decryption failed.",
-          "type": "key_mismatch"
-        },
-        "isEncrypted": true,
-        "isSuccess": false,
-        "longids": {
-          "chosen": [
-            "F5381BE24AA8E8B2"
-          ],
-          "matching": [
-            "F5381BE24AA8E8B2"
-          ],
-          "message": [
-            "C88C3E371C126960",
-            "84E58928CEA6992F"
-          ],
-          "needPassphrase": []
-        }
-      },
-      "type": "decryptErr"
-    }
-  ],
   "origMsgHeaders": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id BA5EC20325\r\n\tfor \u003cdefault@denbond7.com\u003e; Sun, 17 Mar 2019 11:46:54 +0000 (UTC)\r\nX-Virus-Scanned: Debian amavisd-new at mail.denbond7.com\r\nReceived: from mail.denbond7.com ([127.0.0.1])\r\n\tby mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10024)\r\n\twith ESMTP id QfBqy8XfDrlt for \u003cdefault@denbond7.com\u003e;\r\n\tSun, 17 Mar 2019 11:46:40 +0000 (UTC)\r\nReceived: from localhost (WorkPC [192.168.3.7])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 7BBCF20319\r\n\tfor \u003cdefault@denbond7.com\u003e; Sun, 17 Mar 2019 11:46:40 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-15528231978580.3180550080538431\"\r\nIn-Reply-To: \u003c\u003e\r\nReferences: \u003c\u003e\r\nTo: default@denbond7.com\r\nFrom: denbond7@denbond7.com\r\nSubject: encrypted message with missing key error\r\nDate: Sun, 17 Mar 2019 11:46:37 +0000\r\nMessage-Id: \u003c1552823197874-dd5800d9-54ca1a01-c548da66@denbond7.com\u003e\r\nMIME-Version: 1.0",
-  "text": ""
+  "text": "It\u0027s a message with a missing key."
 }

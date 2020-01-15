@@ -682,7 +682,7 @@
             "defaultValue": "NULL"
           },
           {
-            "fieldPath": "messageCount",
+            "fieldPath": "msgsCount",
             "columnName": "message_count",
             "affinity": "INTEGER",
             "notNull": false,

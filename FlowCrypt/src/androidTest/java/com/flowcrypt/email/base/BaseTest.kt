@@ -28,7 +28,7 @@ import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
-import com.flowcrypt.email.database.dao.MessageDao
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
@@ -52,6 +52,7 @@ import org.junit.runner.RunWith
 abstract class BaseTest {
 
   abstract val activityTestRule: ActivityTestRule<*>?
+  val roomDatabase: FlowCryptRoomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
 
   @Before
   open fun registerNodeIdling() {
@@ -176,9 +177,8 @@ abstract class BaseTest {
   fun getMsgInfo(path: String, mimeMsgPath: String): IncomingMessageInfo? {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
     incomingMsgInfo?.msgEntity?.let {
-      val uri = MessageDao().addRow(getTargetContext(), it) ?: throw IllegalStateException()
-      MsgsCacheManager.addMsg(uri.lastPathSegment
-          ?: throw IllegalStateException(), getContext().assets.open(mimeMsgPath))
+      val uri = roomDatabase.msgDao().insert(it)
+      MsgsCacheManager.addMsg(uri.toString(), getContext().assets.open(mimeMsgPath))
     }
     return incomingMsgInfo
   }

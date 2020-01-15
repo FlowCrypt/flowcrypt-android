@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.base
 
-import android.view.View
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -17,7 +16,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withListViewItemCount
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.isEmptyString
@@ -31,17 +29,9 @@ import org.hamcrest.Matchers.not
  */
 abstract class BaseEmailListActivityTest : BaseTest() {
 
-  protected fun testDownloadAllMsgs(messageCount: Int) {
-    onView(withId(R.id.emptyView))
-        .check(matches(not<View>(isDisplayed())))
-    // size of list = number of the letters in the mail + 1 footer.
-    onView(withId(R.id.listViewMessages))
-        .check(matches(withListViewItemCount(messageCount))).check(matches(isDisplayed()))
-  }
-
   protected fun testRunMsgDetailsActivity(position: Int) {
     onData(anything())
-        .inAdapterView(withId(R.id.listViewMessages))
+        .inAdapterView(withId(R.id.recyclerViewMsgs))
         .atPosition(position)
         .perform(click())
     intended(hasComponent(MessageDetailsActivity::class.java.name))

@@ -1,21 +1,27 @@
 {
   "encryptionType": "STANDARD",
-  "generalMsgDetails": {
+  "msgEntity": {
+    "cc": [],
     "email": "default@denbond7.com",
+    "flags": "\\SEEN",
+    "folder": "INBOX",
     "from": [
       {
         "address": "denbond7@denbond7.com"
       }
     ],
-    "hasAtts": false,
-    "isEncrypted": true,
-    "isRawMsgAvailable": true,
-    "label": "INBOX",
-    "msgFlags": [
-      "\\SEEN"
-    ],
+    "fromAddress": "denbond7@denbond7.com",
+    "hasAttachments": false,
+    "id": 8,
+    "isSeen": true,
     "msgState": "NONE",
     "receivedDate": 1552823214000,
+    "replyTo": "denbond7@denbond7.com",
+    "replyToAddress": [
+      {
+        "address": "denbond7@denbond7.com"
+      }
+    ],
     "sentDate": 1552823197000,
     "subject": "encrypted message with missing key error",
     "to": [
@@ -23,6 +29,7 @@
         "address": "default@denbond7.com"
       }
     ],
+    "toAddress": "default@denbond7.com",
     "uid": 244
   },
   "msgBlocks": [

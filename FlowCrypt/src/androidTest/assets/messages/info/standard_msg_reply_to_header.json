@@ -1,38 +1,43 @@
 {
   "encryptionType": "STANDARD",
-  "generalMsgDetails": {
+  "msgEntity": {
+    "id": 42,
     "email": "default@denbond7.com",
+    "folder": "INBOX",
+    "uid": 525,
+    "receivedDate": 1569929137000,
+    "sentDate": 1569929121000,
+    "fromAddress": "denbond7@denbond7.com",
+    "toAddress": "Default <default@denbond7.com>",
+    "subject": "Honor reply-to address",
+    "flags": "\\SEEN",
+    "hasAttachments": false,
+    "isEncrypted": false,
+    "isNew": false,
+    "state": -1,
+    "replyTo": "android@denbond7.com",
     "from": [
       {
         "address": "denbond7@denbond7.com"
       }
     ],
-    "hasAtts": false,
-    "id": 42,
-    "isEncrypted": false,
-    "isRawMsgAvailable": false,
-    "label": "INBOX",
-    "msgFlags": [
-      "\\SEEN"
-    ],
-    "msgState": "NONE",
-    "receivedDate": 1569929137000,
-    "replyTo": [
+    "replyToAddress": [
       {
         "address": "android@denbond7.com"
       }
     ],
-    "sentDate": 1569929121000,
-    "subject": "Honor reply-to address",
     "to": [
       {
         "address": "default@denbond7.com",
         "encodedPersonal": "Default"
       }
     ],
-    "uid": 525
+    "cc": [],
+    "msgState": "NONE",
+    "isSeen": true
   },
   "localFolder": {
+    "account": "default@denbond7.com",
     "attributes": [
       "\\HasNoChildren"
     ],
