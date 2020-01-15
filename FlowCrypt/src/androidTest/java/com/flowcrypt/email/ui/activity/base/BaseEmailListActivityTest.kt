@@ -5,10 +5,11 @@
 
 package com.flowcrypt.email.ui.activity.base
 
-import androidx.test.espresso.Espresso.onData
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -17,7 +18,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
-import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 
@@ -30,10 +30,11 @@ import org.hamcrest.Matchers.not
 abstract class BaseEmailListActivityTest : BaseTest() {
 
   protected fun testRunMsgDetailsActivity(position: Int) {
-    onData(anything())
-        .inAdapterView(withId(R.id.recyclerViewMsgs))
-        .atPosition(position)
-        .perform(click())
+    //todo-denbond7 Use idling instead of this
+    Thread.sleep(2000)
+    onView(withId(R.id.recyclerViewMsgs))
+        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(position, click()))
+
     intended(hasComponent(MessageDetailsActivity::class.java.name))
     onView(withId(R.id.textViewSenderAddress))
         .check(matches(isDisplayed())).check(matches(withText(not(isEmptyString()))))
