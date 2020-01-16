@@ -32,7 +32,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withListViewItemCount
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.UpdateAccountRule
@@ -101,13 +101,13 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
     onView(withId(R.id.recyclerViewMsgs))
-        .check(matches(withListViewItemCount(1))).check(matches(isDisplayed()))
+        .check(matches(withRecyclerViewItemCount(1))).check(matches(isDisplayed()))
   }
 
   @Test
   fun testSearchQuery() {
     onView(withId(R.id.recyclerViewMsgs))
-        .check(matches(withListViewItemCount(1))).check(matches(isDisplayed()))
+        .check(matches(withRecyclerViewItemCount(1))).check(matches(isDisplayed()))
 
     onView(allOf<View>(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
@@ -115,7 +115,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
         .perform(clearText(), typeText(SECOND_QUERY_TEXT), pressImeActionButton())
     onView(withId(R.id.recyclerViewMsgs))
-        .check(matches(withListViewItemCount(2))).check(matches(isDisplayed()))
+        .check(matches(withRecyclerViewItemCount(2))).check(matches(isDisplayed()))
   }
 
   @Test
@@ -126,7 +126,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
         .perform(clearText(), typeText(QUERY_TEXT_FOR_SUBJECT_BODY_FROM), pressImeActionButton())
     onView(withId(R.id.recyclerViewMsgs))
-        .check(matches(withListViewItemCount(4))).check(matches(isDisplayed()))
+        .check(matches(withRecyclerViewItemCount(4))).check(matches(isDisplayed()))
   }
 
   @Test
