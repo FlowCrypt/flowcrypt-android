@@ -187,7 +187,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       }
 
       //match private keys
-      if (item.fileName?.matches("(?i)(cryptup|flowcrypt)-backup-[a-z0-9]+\\.key".toRegex()) == true) {
+      if (item.fileName?.matches("(?i)(cryptup|flowcrypt)-backup-[a-z0-9]+\\.(asc|key)".toRegex()) == true) {
         result = true
       }
 
