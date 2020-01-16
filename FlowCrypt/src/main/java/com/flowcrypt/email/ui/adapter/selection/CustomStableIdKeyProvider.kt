@@ -1,5 +1,5 @@
 /*
- * © 2016-2020 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
