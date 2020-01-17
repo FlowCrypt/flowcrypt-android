@@ -18,11 +18,11 @@ ext {
     /* https://developer.android.com/jetpack/androidx/releases/recyclerview*/
     recyclerViewVersion = '1.1.0'
     /* https://developer.android.com/jetpack/androidx/releases/lifecycle*/
-    lifecycleVersion = '2.2.0-rc01'
+    lifecycleVersion = '2.2.0-rc03'
     /* https://developer.android.com/jetpack/androidx/releases/room#declaring_dependencies*/
-    roomVersion = '2.2.2'
+    roomVersion = '2.2.3'
     /* https://developer.android.com/jetpack/androidx/releases/paging#declaring_dependencies*/
-    pagingVersion = '2.1.0'
+    pagingVersion = '2.1.1'
     /* https://mvnrepository.com/artifact/androidx.test.espresso*/
     espressoVersion = '3.2.0'
     /*https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit*/
