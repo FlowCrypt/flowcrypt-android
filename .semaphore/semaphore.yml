@@ -41,9 +41,9 @@ blocks:
             - echo -ne '\n' | ~/Android/Sdk/tools/bin/avdmanager -v create avd --name ci-test-pixel-x86-64-api28 --package "system-images;android-28;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
             - ~/Android/Sdk/emulator/emulator -list-avds # debug
             - ~/Android/Sdk/emulator/emulator-headless -avd ci-test-pixel-x86-64-api28 -no-boot-anim -no-audio & # start emulator in the background
-            - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
+            #- $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
             # - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-disable-emulator-animations.sh )
-            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
+            #- ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
 
             # store caches
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
