@@ -129,7 +129,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
             actionMode = (this@EmailListFragment.activity as AppCompatActivity)
                 .startSupportActionMode(genActionModeForMsgs())
           }
-          actionMode?.title = "${tracker?.selection?.size()}"
+          actionMode?.title = getString(R.string.selection_text, tracker?.selection?.size() ?: 0)
         }
 
         tracker?.hasSelection() == false -> {
