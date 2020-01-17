@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -8,9 +8,9 @@ package com.flowcrypt.email.api.email.sync.tasks
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.sun.mail.imap.IMAPFolder
 import java.util.*
 import javax.mail.FetchProfile
@@ -43,10 +43,10 @@ class RefreshMessagesSyncTask(ownerKey: String,
     val nextUID = imapFolder.uidNext
 
     var newMsgs: Array<Message> = emptyArray()
-    val messageDaoSource = MessageDaoSource()
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
-    val newestCachedUID = messageDaoSource.getLastUIDOfMsgInLabel(context, account.email, folderName)
-    val countOfLoadedMsgs = messageDaoSource.getLabelMsgsCount(context, account.email, folderName)
+    val newestCachedUID = roomDatabase.msgDao().getLastUIDOfMsgForLabel(account.email, folderName)
+    val countOfLoadedMsgs = roomDatabase.msgDao().count(account.email, folderName)
     val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
 
     if (newestCachedUID in (2 until nextUID - 1)) {
@@ -75,7 +75,7 @@ class RefreshMessagesSyncTask(ownerKey: String,
 
     val updatedMsgs: Array<Message>
     if (isEncryptedModeEnabled) {
-      val oldestCachedUID = messageDaoSource.getOldestUIDOfMsgInLabel(context, account.email, folderName)
+      val oldestCachedUID = roomDatabase.msgDao().getOldestUIDOfMsgForLabel(account.email, folderName)
       updatedMsgs = EmailUtil.getUpdatedMsgsByUID(imapFolder, oldestCachedUID.toLong(), newestCachedUID.toLong())
     } else {
       val countOfNewMsgs = newMsgs.size

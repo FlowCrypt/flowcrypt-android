@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -430,17 +430,17 @@ class ContactsDaoSource : BaseDaoSource() {
 
     const val CONTACTS_TABLE_SQL_CREATE = "CREATE TABLE IF NOT EXISTS " +
         TABLE_NAME_CONTACTS + " (" +
-        BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        BaseColumns._ID + " INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, " +
         COL_EMAIL + " VARCHAR(100) NOT NULL, " +
         COL_NAME + " VARCHAR(50) DEFAULT NULL, " +
         COL_PUBLIC_KEY + " BLOB DEFAULT NULL, " +
-        COL_HAS_PGP + " BOOLEAN NOT NULL, " +
+        COL_HAS_PGP + " INTEGER NOT NULL, " +
         COL_CLIENT + " VARCHAR(20) DEFAULT NULL, " +
-        COL_ATTESTED + " BOOLEAN DEFAULT NULL, " +
+        COL_ATTESTED + " INTEGER DEFAULT NULL, " +
         COL_FINGERPRINT + " VARCHAR(40) DEFAULT NULL, " +
         COL_LONG_ID + " VARCHAR(16) DEFAULT NULL, " +
         COL_KEYWORDS + " VARCHAR(100) DEFAULT NULL, " +
-        COL_LAST_USE + " INTEGER DEFAULT 0 " + ");"
+        COL_LAST_USE + " INTEGER DEFAULT 0 NOT NULL" + ");"
 
     const val CREATE_UNIQUE_INDEX_EMAIL_IN_CONTACT = UNIQUE_INDEX_PREFIX + COL_EMAIL + "_in_" +
         TABLE_NAME_CONTACTS + " ON " + TABLE_NAME_CONTACTS + " (" + COL_EMAIL + ")"

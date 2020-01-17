@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.email.sync
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.ArchiveMsgsSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.ChangeMsgsReadState
+import com.flowcrypt.email.api.email.sync.tasks.ChangeMsgsReadStateSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.DeleteMessagesSyncTask
@@ -113,8 +113,8 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
 
   fun changeMsgsReadState(ownerKey: String, requestCode: Int) {
     try {
-      removeOldTasks(ChangeMsgsReadState::class.java, tasksQueue)
-      tasksQueue.put(ChangeMsgsReadState(ownerKey, requestCode))
+      removeOldTasks(ChangeMsgsReadStateSyncTask::class.java, tasksQueue)
+      tasksQueue.put(ChangeMsgsReadStateSyncTask(ownerKey, requestCode))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }
@@ -221,6 +221,7 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
 
   fun searchMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
     try {
+      syncListener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_adding_task_to_queue)
       removeOldTasks(SearchMessagesSyncTask::class.java, tasksQueue)
       tasksQueue.put(SearchMessagesSyncTask(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount))
     } catch (e: InterruptedException) {

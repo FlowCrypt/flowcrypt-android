@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -18,15 +18,17 @@ import androidx.appcompat.app.AppCompatActivity
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.database.provider.FlowcryptContract
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 /**
  * This [Activity] helps a user recover access to Gmail account for the app
@@ -65,11 +67,14 @@ class UserRecoverableAuthExceptionActivity : AppCompatActivity(), View.OnClickLi
           Activity.RESULT_OK -> {
             AccountDaoSource().updateAccountInformation(this, account, ContentValues()
                 .apply { put(AccountDaoSource.COL_IS_RESTORE_ACCESS_REQUIRED, false) })
-            MessageDaoSource().changeMsgsState(this, account?.email, JavaEmailConstants
-                .FOLDER_OUTBOX, MessageState.AUTH_FAILURE, MessageState.QUEUED)
-            MessagesSenderJobService.schedule(applicationContext)
-            EmailManagerActivity.runEmailManagerActivity(this)
-            finish()
+            GlobalScope.launch {
+              FlowCryptRoomDatabase.getDatabase(applicationContext).msgDao().changeMsgsStateSuspend(
+                  account?.email, JavaEmailConstants.FOLDER_OUTBOX, MessageState.AUTH_FAILURE.value,
+                  MessageState.QUEUED.value)
+              MessagesSenderJobService.schedule(applicationContext)
+              EmailManagerActivity.runEmailManagerActivity(this@UserRecoverableAuthExceptionActivity)
+              finish()
+            }
           }
 
           Activity.RESULT_CANCELED -> {

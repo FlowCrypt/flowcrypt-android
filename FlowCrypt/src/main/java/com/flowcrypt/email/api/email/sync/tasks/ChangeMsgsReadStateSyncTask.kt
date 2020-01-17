@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -7,9 +7,9 @@ package com.flowcrypt.email.api.email.sync.tasks
 
 import android.content.Context
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.Flags
@@ -28,25 +28,24 @@ import javax.mail.Store
  *         Time: 12:31 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ChangeMsgsReadState(ownerKey: String, requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
+class ChangeMsgsReadStateSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
 
   override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
-    val msgDaoSource = MessageDaoSource()
 
-    changeMsgsReadState(context, account, msgDaoSource, store, MessageState.PENDING_MARK_UNREAD)
-    changeMsgsReadState(context, account, msgDaoSource, store, MessageState.PENDING_MARK_READ)
+    changeMsgsReadState(context, account, store, MessageState.PENDING_MARK_UNREAD)
+    changeMsgsReadState(context, account, store, MessageState.PENDING_MARK_READ)
   }
 
-  private fun changeMsgsReadState(context: Context, account: AccountDao,
-                                  msgDaoSource: MessageDaoSource, store: Store, state: MessageState) {
-    val candidatesForMark = msgDaoSource.getMsgsWithState(context, account.email, state)
+  private fun changeMsgsReadState(context: Context, account: AccountDao, store: Store, state: MessageState) {
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+    val candidatesForMark = roomDatabase.msgDao().getMsgsWithState(account.email, state.value)
 
     if (candidatesForMark.isNotEmpty()) {
-      val setOfFolders = candidatesForMark.map { it.label }.toSet()
+      val setOfFolders = candidatesForMark.map { it.folder }.toSet()
 
       for (folder in setOfFolders) {
-        val filteredMsgs = candidatesForMark.filter { it.label == folder }
+        val filteredMsgs = candidatesForMark.filter { it.folder == folder }
 
         if (filteredMsgs.isEmpty()) {
           continue
@@ -56,17 +55,17 @@ class ChangeMsgsReadState(ownerKey: String, requestCode: Int) : BaseSyncTask(own
           val imapFolder = store.getFolder(folder) as IMAPFolder
           imapFolder.open(Folder.READ_WRITE)
 
-          val uidList = filteredMsgs.map { it.uid.toLong() }
+          val uidList = filteredMsgs.map { it.uid }
           val msgs: List<Message> = imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
 
           if (msgs.isNotEmpty()) {
             val value = state == MessageState.PENDING_MARK_READ
             imapFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.SEEN), value)
             for (uid in uidList) {
-              val msg = msgDaoSource.getMsg(context, account.email, folder, uid)
+              val msgEntity = roomDatabase.msgDao().getMsg(account.email, folder, uid)
 
-              if (msg?.msgState == state) {
-                msgDaoSource.updateMsgState(context, account.email, folder, uid, MessageState.NONE)
+              if (msgEntity?.msgState == state) {
+                roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.NONE.value))
               }
             }
           }

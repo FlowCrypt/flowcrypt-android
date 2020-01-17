@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
@@ -7,8 +7,26 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/menuActionArchiveMessage"
+        android:icon="@drawable/selector_ic_archive_white"
+        android:title="@string/archive"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/menuActionDeleteMessage"
-        android:icon="@drawable/ic_delete_white_24dp"
+        android:icon="@drawable/selector_ic_delete_white"
         android:title="@string/delete"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menuActionMarkUnread"
+        android:icon="@drawable/selector_ic_mark_unread_white"
+        android:title="@string/mark_unread"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menuActionMarkRead"
+        android:icon="@drawable/selector_ic_mark_read_white"
+        android:title="@string/mark_read"
         app:showAsAction="ifRoom" />
 </menu>

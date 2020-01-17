@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -7,8 +7,8 @@ package com.flowcrypt.email.api.email.sync
 
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -39,7 +39,6 @@ class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListen
     BaseSyncRunnable(account, syncListener), MessageCountListener, MessageChangedListener {
   private var localFolder: LocalFolder? = null
   private var remoteFolder: IMAPFolder? = null
-  private val msgDaoSource: MessageDaoSource = MessageDaoSource()
   /**
    * here we can have a lot of checks which help us decide can we run idling(wifi, 3G, a battery level and etc.)
    */
@@ -77,8 +76,8 @@ class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListen
     val msg = e.message
     if (msg != null && e.messageChangeType == MessageChangedEvent.FLAGS_CHANGED) {
       try {
-        msgDaoSource.updateLocalMsgFlags(syncListener.context, account.email, local.fullName,
-            remote.getUID(msg), msg.flags)
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(syncListener.context)
+        roomDatabase.msgDao().updateLocalMsgFlags(account.email, local.fullName, remote.getUID(msg), msg.flags)
         syncListener.onMsgChanged(account, local, remote, msg, "", 0)
       } catch (msgException: MessagingException) {
         msgException.printStackTrace()

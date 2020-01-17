@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -65,6 +65,8 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
         this.currentFolder = incomingFolder.copy(folderAlias = SEARCH_FOLDER_NAME,
             searchQuery = initQuery, msgCount = 0)
       }
+
+      onFolderChanged(true)
     } else {
       finish()
     }
@@ -128,7 +130,7 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
       return true
     }
 
-    currentFolder!!.searchQuery = initQuery
+    currentFolder?.searchQuery = initQuery
     onFolderChanged(true)
     return false
   }

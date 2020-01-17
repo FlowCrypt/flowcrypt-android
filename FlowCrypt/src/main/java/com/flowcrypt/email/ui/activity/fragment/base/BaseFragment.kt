@@ -1,10 +1,11 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.ui.activity.fragment.base
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.ActionBar
@@ -13,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import com.flowcrypt.email.R
+import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.UIUtil
@@ -28,6 +30,8 @@ import com.google.android.material.snackbar.Snackbar
  */
 
 abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderResult> {
+
+  protected lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
 
   /**
    * This method returns information about an availability of a "back press action" at the
@@ -48,6 +52,15 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
 
   val baseActivity: BaseActivity
     get() = activity as BaseActivity
+
+  val isConnected: Boolean
+    get() = connectionLifecycleObserver.connectionLiveData.value ?: false
+
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
+    connectionLifecycleObserver = ConnectionLifecycleObserver(context)
+    lifecycle.addObserver(connectionLifecycleObserver)
+  }
 
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
     return Loader(baseActivity)
@@ -98,8 +111,8 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
    * @param duration How long to display the message.
    */
   @JvmOverloads
-  fun showInfoSnackbar(view: View, msgText: String, duration: Int = Snackbar.LENGTH_INDEFINITE) {
-    Snackbar.make(view, msgText, duration).setAction(android.R.string.ok) {}.show()
+  fun showInfoSnackbar(view: View?, msgText: String, duration: Int = Snackbar.LENGTH_INDEFINITE) {
+    view?.let { Snackbar.make(it, msgText, duration).setAction(android.R.string.ok) {}.show() }
   }
 
   /**
@@ -123,8 +136,9 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
    * @param duration        How long to display the message.
    * @param onClickListener The Snackbar button click listener.
    */
-  fun showSnackbar(view: View, msgText: String, btnName: String, duration: Int, onClickListener: View.OnClickListener) {
-    Snackbar.make(view, msgText, duration).setAction(btnName, onClickListener).show()
+  fun showSnackbar(view: View?, msgText: String, btnName: String, duration: Int, onClickListener:
+  View.OnClickListener) {
+    view?.let { Snackbar.make(view, msgText, duration).setAction(btnName, onClickListener).show() }
   }
 
   fun dismissCurrentSnackBar() {

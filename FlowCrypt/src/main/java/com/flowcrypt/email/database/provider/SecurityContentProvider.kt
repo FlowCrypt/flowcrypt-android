@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -16,7 +16,9 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.provider.BaseColumns
-import com.flowcrypt.email.database.FlowCryptSQLiteOpenHelper
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+import androidx.sqlite.db.SupportSQLiteQueryBuilder
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
@@ -25,7 +27,6 @@ import com.flowcrypt.email.database.dao.source.KeysDaoSource
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import java.util.*
@@ -42,12 +43,12 @@ import java.util.*
  */
 class SecurityContentProvider : ContentProvider() {
 
-  private lateinit var dbHelper: FlowCryptSQLiteOpenHelper
+  private lateinit var dbHelper: SupportSQLiteOpenHelper
   private lateinit var appContext: Context
 
   override fun onCreate(): Boolean {
     appContext = context!!.applicationContext
-    dbHelper = FlowCryptSQLiteOpenHelper.getInstance(appContext)
+    dbHelper = FlowCryptRoomDatabase.getDatabase(appContext).openHelper
     return true
   }
 
@@ -58,47 +59,42 @@ class SecurityContentProvider : ContentProvider() {
     val id: Long
     when (match) {
       MATCHED_CODE_KEYS_TABLE -> {
-        id = sqLiteDatabase.insert(KeysDaoSource().tableName, null, values)
+        id = sqLiteDatabase.insert(KeysDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
         result = Uri.parse(KeysDaoSource().baseContentUri.toString() + "/" + id)
       }
 
       MATCHED_CODE_CONTACTS_TABLE -> {
-        id = sqLiteDatabase.insert(ContactsDaoSource().tableName, null, values)
+        id = sqLiteDatabase.insert(ContactsDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
         result = Uri.parse(ContactsDaoSource().baseContentUri.toString() + "/" + id)
       }
 
       MATCHED_CODE_IMAP_LABELS_TABLE -> {
-        id = sqLiteDatabase.insert(ImapLabelsDaoSource().tableName, null, values)
+        id = sqLiteDatabase.insert(ImapLabelsDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
         result = Uri.parse(ImapLabelsDaoSource().baseContentUri.toString() + "/" + id)
       }
 
-      MATCHED_CODE_IMAP_MESSAGES_TABLE -> {
-        id = sqLiteDatabase.insert(MessageDaoSource().tableName, null, values)
-        result = Uri.parse(MessageDaoSource().baseContentUri.toString() + "/" + id)
-      }
-
       MATCHED_CODE_ACCOUNTS_TABLE -> {
-        id = sqLiteDatabase.insert(AccountDaoSource().tableName, null, values)
+        id = sqLiteDatabase.insert(AccountDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
         result = Uri.parse(AccountDaoSource().baseContentUri.toString() + "/" + id)
       }
 
       MATCHED_CODE_ATTACHMENT_TABLE -> {
-        id = sqLiteDatabase.insert(AttachmentDaoSource().tableName, null, values)
+        id = sqLiteDatabase.insert(AttachmentDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
         result = Uri.parse(AttachmentDaoSource().baseContentUri.toString() + "/" + id)
       }
 
       MATCHED_CODE_ACCOUNT_ALIASES_TABLE -> {
-        id = sqLiteDatabase.insert(AccountAliasesDaoSource().tableName, null, values)
+        id = sqLiteDatabase.insert(AccountAliasesDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
         result = Uri.parse(AccountAliasesDaoSource().baseContentUri.toString() + "/" + id)
       }
 
       MATCHED_CODE_ACTION_QUEUE_TABLE -> {
-        id = sqLiteDatabase.insert(ActionQueueDaoSource().tableName, null, values)
+        id = sqLiteDatabase.insert(ActionQueueDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
         result = Uri.parse(ActionQueueDaoSource().baseContentUri.toString() + "/" + id)
       }
 
       MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE -> {
-        id = sqLiteDatabase.insert(UserIdEmailsKeysDaoSource().tableName, null, values)
+        id = sqLiteDatabase.insert(UserIdEmailsKeysDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
         result = Uri.parse(UserIdEmailsKeysDaoSource().baseContentUri.toString() + "/" + id)
       }
 
@@ -122,29 +118,12 @@ class SecurityContentProvider : ContentProvider() {
     val sqLiteDatabase = dbHelper.writableDatabase
     sqLiteDatabase.beginTransaction()
     try {
-      when (URI_MATCHER.match(uri)) {
-        MATCHED_CODE_IMAP_MESSAGES_TABLE -> for (contentValues in values) {
-          var id = sqLiteDatabase.insert(MessageDaoSource().tableName, null, contentValues)
-
-          //if message not inserted, try to update message with some UID
-          if (id <= 0) {
-            id = updateMsgInfo(sqLiteDatabase, contentValues)
-          } else {
-            insertedRowsCount++
-          }
-
-          if (id <= 0) {
-            LogsUtil.d(TAG, "Failed to insert row into $uri")
-          }
-        }
-
-        else -> for (contentValues in values) {
-          val id = sqLiteDatabase.insert(getMatchedTableName(uri), null, contentValues)
-          if (id <= 0) {
-            LogsUtil.d(TAG, "Failed to insert row into $uri")
-          } else {
-            insertedRowsCount++
-          }
+      for (contentValues in values) {
+        val id = sqLiteDatabase.insert(getMatchedTableName(uri), SQLiteDatabase.CONFLICT_NONE, contentValues)
+        if (id <= 0) {
+          LogsUtil.d(TAG, "Failed to insert row into $uri")
+        } else {
+          insertedRowsCount++
         }
       }
 
@@ -165,7 +144,7 @@ class SecurityContentProvider : ContentProvider() {
 
   override fun update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<String>?): Int {
     val sqLiteDatabase = dbHelper.writableDatabase
-    val rowsCount = sqLiteDatabase.update(getMatchedTableName(uri), values, selection, selectionArgs)
+    val rowsCount = sqLiteDatabase.update(getMatchedTableName(uri), SQLiteDatabase.CONFLICT_NONE, values, selection, selectionArgs)
 
     if (rowsCount != 0) {
       appContext.contentResolver.notifyChange(uri, null, false)
@@ -184,8 +163,7 @@ class SecurityContentProvider : ContentProvider() {
             AccountDaoSource.COL_EMAIL + " = ?", selectionArgs)
         rowsCount += sqLiteDatabase.delete(ImapLabelsDaoSource().tableName,
             ImapLabelsDaoSource.COL_EMAIL + " = ?", selectionArgs)
-        rowsCount += sqLiteDatabase.delete(MessageDaoSource().tableName,
-            MessageDaoSource.COL_EMAIL + " = ?", selectionArgs)
+        rowsCount += sqLiteDatabase.delete("messages", "email = ?", selectionArgs)
         rowsCount += sqLiteDatabase.delete(AttachmentDaoSource().tableName,
             AttachmentDaoSource.COL_EMAIL + " = ?", selectionArgs)
         rowsCount += sqLiteDatabase.delete(AccountAliasesDaoSource().tableName,
@@ -196,7 +174,7 @@ class SecurityContentProvider : ContentProvider() {
         rowsCount = sqLiteDatabase.delete(AccountDaoSource().tableName, null, null)
         rowsCount += sqLiteDatabase.delete(AccountAliasesDaoSource().tableName, null, null)
         rowsCount += sqLiteDatabase.delete(ImapLabelsDaoSource().tableName, null, null)
-        rowsCount += sqLiteDatabase.delete(MessageDaoSource().tableName, null, null)
+        rowsCount += sqLiteDatabase.delete("messages", null, null)
         rowsCount += sqLiteDatabase.delete(AttachmentDaoSource().tableName, null, null)
         rowsCount += sqLiteDatabase.delete(KeysDaoSource().tableName, null, null)
         rowsCount += sqLiteDatabase.delete(UserIdEmailsKeysDaoSource().tableName, null, null)
@@ -221,7 +199,14 @@ class SecurityContentProvider : ContentProvider() {
     val sqLiteDatabase = dbHelper.readableDatabase
 
     val table = getMatchedTableName(uri)
-    val cursor = sqLiteDatabase.query(table, proj, selection, selectionArgs, null, null, sortOrder, null)
+    val supportSQLiteQuery = SupportSQLiteQueryBuilder
+        .builder(table)
+        .columns(proj)
+        .selection(selection, selectionArgs)
+        .orderBy(sortOrder)
+        .create()
+
+    val cursor = sqLiteDatabase.query(supportSQLiteQuery)
 
     cursor?.setNotificationUri(appContext.contentResolver, uri)
 
@@ -257,10 +242,6 @@ class SecurityContentProvider : ContentProvider() {
       MATCHED_CODE_IMAP_LABELS_TABLE -> return ImapLabelsDaoSource().rowsContentType
 
       MATCHED_CODE_IMAP_LABELS_SINGLE_ROW -> return ImapLabelsDaoSource().singleRowContentType
-
-      MATCHED_CODE_IMAP_MESSAGES_TABLE -> return MessageDaoSource().rowsContentType
-
-      MATCHED_CODE_IMAP_MESSAGES_SINGLE_ROW -> return MessageDaoSource().singleRowContentType
 
       MATCHED_CODE_ACCOUNTS_TABLE -> return AccountDaoSource().rowsContentType
 
@@ -300,8 +281,6 @@ class SecurityContentProvider : ContentProvider() {
 
       MATCHED_CODE_IMAP_LABELS_TABLE -> ImapLabelsDaoSource.TABLE_NAME_IMAP_LABELS
 
-      MATCHED_CODE_IMAP_MESSAGES_TABLE -> MessageDaoSource.TABLE_NAME_MESSAGES
-
       MATCHED_CODE_ACCOUNTS_TABLE -> AccountDaoSource.TABLE_NAME_ACCOUNTS
 
       MATCHED_CODE_ATTACHMENT_TABLE -> AttachmentDaoSource.TABLE_NAME_ATTACHMENT
@@ -316,26 +295,6 @@ class SecurityContentProvider : ContentProvider() {
     }
   }
 
-  /**
-   * Try to update some message.
-   *
-   * @param sqLiteDatabase The [SQLiteDatabase] which will be used to update a message.
-   * @param contentValues  The new information about some message.
-   * @return the number of rows affected
-   */
-  private fun updateMsgInfo(sqLiteDatabase: SQLiteDatabase, contentValues: ContentValues): Long {
-    val id: Long
-    val email = contentValues.getAsString(MessageDaoSource.COL_EMAIL)
-    val folder = contentValues.getAsString(MessageDaoSource.COL_FOLDER)
-    val uid = contentValues.getAsString(MessageDaoSource.COL_UID)
-
-    val selection = (MessageDaoSource.COL_EMAIL + "= ? AND " + MessageDaoSource.COL_FOLDER + " = ? AND "
-        + MessageDaoSource.COL_UID + " = ? ")
-    val selectionArgs = arrayOf(email, folder, uid)
-    id = sqLiteDatabase.update(MessageDaoSource().tableName, contentValues, selection, selectionArgs).toLong()
-    return id
-  }
-
   companion object {
     private val TAG = SecurityContentProvider::class.java.simpleName
 
@@ -346,8 +305,6 @@ class SecurityContentProvider : ContentProvider() {
     private const val MATCHED_CODE_CONTACTS_TABLE_SINGLE_ROW = 5
     private const val MATCHED_CODE_IMAP_LABELS_TABLE = 6
     private const val MATCHED_CODE_IMAP_LABELS_SINGLE_ROW = 7
-    private const val MATCHED_CODE_IMAP_MESSAGES_TABLE = 8
-    private const val MATCHED_CODE_IMAP_MESSAGES_SINGLE_ROW = 9
     private const val MATCHED_CODE_ACCOUNTS_TABLE = 10
     private const val MATCHED_CODE_ACCOUNTS_SINGLE_ROW = 11
     private const val MATCHED_CODE_ATTACHMENT_TABLE = 12
@@ -379,10 +336,6 @@ class SecurityContentProvider : ContentProvider() {
           MATCHED_CODE_IMAP_LABELS_TABLE)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ImapLabelsDaoSource.TABLE_NAME_IMAP_LABELS
           + SINGLE_APPENDED_SUFFIX, MATCHED_CODE_IMAP_LABELS_SINGLE_ROW)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, MessageDaoSource.TABLE_NAME_MESSAGES,
-          MATCHED_CODE_IMAP_MESSAGES_TABLE)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, MessageDaoSource.TABLE_NAME_MESSAGES
-          + SINGLE_APPENDED_SUFFIX, MATCHED_CODE_IMAP_MESSAGES_SINGLE_ROW)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountDaoSource.TABLE_NAME_ACCOUNTS,
           MATCHED_CODE_ACCOUNTS_TABLE)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountDaoSource.TABLE_NAME_ACCOUNTS

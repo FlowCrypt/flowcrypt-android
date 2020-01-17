@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -9,6 +9,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import java.util.*
 import javax.mail.internet.InternetAddress
@@ -22,24 +23,24 @@ import javax.mail.internet.InternetAddress
  * E-mail: DenBond7@gmail.com
  */
 
-data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessageDetails,
+data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
                                            var atts: List<AttachmentInfo>? = null,
                                            var localFolder: LocalFolder? = null,
                                            var text: String? = null,
                                            val msgBlocks: List<MsgBlock>? = null,
                                            val origMsgHeaders: String? = null,
                                            val encryptionType: MessageEncryptionType) : Parcelable {
-  fun getSubject(): String? = generalMsgDetails.subject
+  fun getSubject(): String? = msgEntity.subject
 
-  fun getFrom(): List<InternetAddress>? = generalMsgDetails.from
+  fun getFrom(): List<InternetAddress>? = msgEntity.from
 
-  fun getReplyTo(): List<InternetAddress>? = generalMsgDetails.replyTo
+  fun getReplyTo(): List<InternetAddress>? = msgEntity.replyToAddress
 
-  fun getReceiveDate(): Date = Date(generalMsgDetails.receivedDate)
+  fun getReceiveDate(): Date = Date(msgEntity.receivedDate ?: 0)
 
-  fun getTo(): List<InternetAddress>? = generalMsgDetails.to
+  fun getTo(): List<InternetAddress>? = msgEntity.to
 
-  fun getCc(): List<InternetAddress>? = generalMsgDetails.cc
+  fun getCc(): List<InternetAddress>? = msgEntity.cc
 
   fun getHtmlMsgBlock(): MsgBlock? {
     for (part in msgBlocks!!) {
@@ -51,11 +52,11 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
     return null
   }
 
-  fun getUid(): Int = generalMsgDetails.uid
+  fun getUid(): Int = msgEntity.uid.toInt()
 
-  constructor(generalMsgDetails: GeneralMessageDetails, text: String?, msgBlocks: List<MsgBlock>,
+  constructor(msgEntity: MessageEntity, text: String?, msgBlocks: List<MsgBlock>,
               origMsgHeaders: String?, encryptionType: MessageEncryptionType) : this(
-      generalMsgDetails,
+      msgEntity,
       null,
       null,
       text,
@@ -82,7 +83,7 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
   }
 
   constructor(source: Parcel) : this(
-      source.readParcelable<GeneralMessageDetails>(GeneralMessageDetails::class.java.classLoader)!!,
+      source.readParcelable<MessageEntity>(MessageEntity::class.java.classLoader)!!,
       source.createTypedArrayList(AttachmentInfo.CREATOR),
       source.readParcelable<LocalFolder>(LocalFolder::class.java.classLoader),
       source.readString(),
@@ -94,7 +95,7 @@ data class IncomingMessageInfo constructor(val generalMsgDetails: GeneralMessage
   override fun describeContents() = 0
 
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-    writeParcelable(generalMsgDetails, flags)
+    writeParcelable(msgEntity, flags)
     writeTypedList(atts)
     writeParcelable(localFolder, flags)
     writeString(text)

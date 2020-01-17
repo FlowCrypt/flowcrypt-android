@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -14,7 +14,6 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.text.TextUtils
 import android.util.Base64
-import android.util.LongSparseArray
 import android.util.SparseArray
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
@@ -76,6 +75,7 @@ import javax.mail.internet.MimeMultipart
 import javax.mail.search.BodyTerm
 import javax.mail.search.SearchTerm
 import javax.mail.util.ByteArrayDataSource
+import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
 /**
@@ -482,7 +482,8 @@ class EmailUtil {
      * @return An array of the messages which are candidates for updating iin the local database.
      */
     @JvmStatic
-    fun genUpdateCandidates(map: Map<Long, String>, folder: IMAPFolder, msgs: Array<Message>): Array<Message> {
+    fun genUpdateCandidates(map: Map<Long, String?>, folder: IMAPFolder, msgs: Array<Message>):
+        Array<Message> {
       val updateCandidates = mutableListOf<Message>()
       try {
         for (msg in msgs) {
@@ -616,9 +617,9 @@ class EmailUtil {
      */
     @JvmStatic
     @Suppress("UNCHECKED_CAST")
-    fun getMsgsEncryptionStates(folder: IMAPFolder, uidList: List<Long>): LongSparseArray<Boolean> {
+    fun getMsgsEncryptionStates(folder: IMAPFolder, uidList: List<Long>): Map<Long, Boolean> {
       if (CollectionUtils.isEmpty(uidList)) {
-        return LongSparseArray()
+        return HashMap()
       }
       val uidArray = LongArray(uidList.size)
 
@@ -629,9 +630,9 @@ class EmailUtil {
       val uidSets = UIDSet.createUIDSets(uidArray)
 
       return if (uidSets == null || uidSets.isEmpty()) {
-        LongSparseArray()
+        HashMap()
       } else folder.doCommand { imapProtocol ->
-        val booleanLongSparseArray = LongSparseArray<Boolean>()
+        val hashMap: HashMap<Long, Boolean> = HashMap()
 
         val args = Argument()
         val list = Argument()
@@ -653,7 +654,7 @@ class EmailUtil {
               val body = response.getItem(BODY::class.java)
               if (body != null && body.byteArrayInputStream != null) {
                 val rawMsg = ASCIIUtility.toString(body.byteArrayInputStream)
-                booleanLongSparseArray.put(uid.uid, rawMsg.contains("-----BEGIN PGP MESSAGE-----"))
+                hashMap[uid.uid] = rawMsg.contains("-----BEGIN PGP MESSAGE-----")
               }
             }
           }
@@ -662,8 +663,8 @@ class EmailUtil {
         imapProtocol.notifyResponseHandlers(responses)
         imapProtocol.handleResult(serverResponse)
 
-        booleanLongSparseArray
-      } as LongSparseArray<Boolean>
+        hashMap
+      } as HashMap<Long, Boolean>
     }
 
     /**
@@ -738,12 +739,14 @@ class EmailUtil {
      */
     @JvmStatic
     fun getMsgsEncryptionInfo(onlyEncrypted: Boolean, folder: IMAPFolder, newMsgs: Array<Message>):
-        LongSparseArray<Boolean> {
-      var array = LongSparseArray<Boolean>()
-      if (onlyEncrypted) {
+        Map<Long, Boolean> {
+      val array: HashMap<Long, Boolean> = HashMap()
+      return if (onlyEncrypted) {
         for (msg in newMsgs) {
-          array.put(folder.getUID(msg), true)
+          array[folder.getUID(msg)] = true
         }
+
+        array
       } else {
         val uidList = mutableListOf<Long>()
 
@@ -751,9 +754,8 @@ class EmailUtil {
           uidList.add(folder.getUID(msg))
         }
 
-        array = getMsgsEncryptionStates(folder, uidList)
+        getMsgsEncryptionStates(folder, uidList)
       }
-      return array
     }
 
     @JvmStatic

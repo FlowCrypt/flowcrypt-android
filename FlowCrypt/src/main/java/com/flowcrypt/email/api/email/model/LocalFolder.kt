@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.database.entity.LabelEntity
 
 /**
  * This is a simple POJO object, which describe information about the email folder.
@@ -17,7 +18,8 @@ import android.os.Parcelable
  * E-mail: DenBond7@gmail.com
  */
 
-data class LocalFolder constructor(val fullName: String,
+data class LocalFolder constructor(val account: String,
+                                   val fullName: String,
                                    var folderAlias: String? = null,
                                    val attributes: List<String>? = null,
                                    val isCustom: Boolean = false,
@@ -26,11 +28,22 @@ data class LocalFolder constructor(val fullName: String,
 
   constructor(source: Parcel) : this(
       source.readString()!!,
+      source.readString()!!,
       source.readString(),
       source.createStringArrayList(),
       source.readInt() == 1,
       source.readInt(),
       source.readString()
+  )
+
+  constructor(source: LabelEntity) : this(
+      source.email,
+      source.folderName,
+      source.folderAlias,
+      source.attributesList,
+      source.isCustomLabel ?: false,
+      source.msgsCount ?: 0,
+      null
   )
 
   override fun describeContents(): Int {
@@ -39,6 +52,7 @@ data class LocalFolder constructor(val fullName: String,
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
       with(dest) {
+        writeString(account)
         writeString(fullName)
         writeString(folderAlias)
         writeStringList(attributes)

@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -9,7 +9,6 @@ import android.app.Activity
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.text.TextUtils
@@ -30,9 +29,8 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.CursorLoader
-import androidx.loader.content.Loader
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.bumptech.glide.request.RequestOptions
@@ -41,11 +39,10 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.database.DatabaseUtil
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
 import com.flowcrypt.email.database.provider.FlowcryptContract
+import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
@@ -78,9 +75,11 @@ import com.sun.mail.imap.protocol.SearchSequence
  * E-mail: DenBond7@gmail.com
  */
 class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigationItemSelectedListener,
-    LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener, SearchView.OnQueryTextListener {
+    View.OnClickListener, SearchView.OnQueryTextListener {
 
   private lateinit var client: GoogleSignInClient
+  private lateinit var labelsViewModel: LabelsViewModel
+
   override var currentAccountDao: AccountDao? = null
   private var foldersManager: FoldersManager? = null
   override var currentFolder: LocalFolder? = null
@@ -89,7 +88,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     private set
   private var menuItemSearch: MenuItem? = null
 
-  private lateinit var drawerLayout: DrawerLayout
+  private var drawerLayout: DrawerLayout? = null
   private var actionBarDrawerToggle: ActionBarDrawerToggle? = null
   private var accountManagementLayout: LinearLayout? = null
   private var navigationView: NavigationView? = null
@@ -100,7 +99,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     get() = true
 
   override val rootView: View
-    get() = drawerLayout
+    get() = drawerLayout ?: View(this)
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = false
@@ -143,36 +142,37 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       }
 
       for (i in localFolders.indices) {
-        val (_, folderAlias) = localFolders[i]
+        val localFolder = localFolders[i]
         if (inbox == null) {
-          serverFolders[i] = folderAlias
+          serverFolders[i] = localFolder.folderAlias
         } else {
-          serverFolders[i + 1] = folderAlias
+          serverFolders[i + 1] = localFolder.folderAlias
         }
       }
 
       return serverFolders
     }
 
-  init {
-    this.foldersManager = FoldersManager()
-  }
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    setupLabelsViewModel()
+
     currentAccountDao = AccountDaoSource().getActiveAccountInformation(this)
 
     if (currentAccountDao != null) {
-      client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
+      currentAccountDao?.let {
+        this.foldersManager = FoldersManager(it.email)
 
-      ActionManager(this).checkAndAddActionsToQueue(currentAccountDao!!)
-      LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_gmail_labels, null, this)
+        client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
-      countingIdlingResourceForLabel = CountingIdlingResource(
-          GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java), GeneralUtil.isDebugBuild())
-      countingIdlingResourceForLabel!!.increment()
+        ActionManager(this).checkAndAddActionsToQueue(it)
 
-      initViews()
+        countingIdlingResourceForLabel = CountingIdlingResource(
+            GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java), GeneralUtil.isDebugBuild())
+        countingIdlingResourceForLabel!!.increment()
+
+        initViews()
+      }
     } else {
       finish()
     }
@@ -185,7 +185,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onDestroy() {
     super.onDestroy()
-    drawerLayout.removeDrawerListener(actionBarDrawerToggle!!)
+    drawerLayout?.removeDrawerListener(actionBarDrawerToggle!!)
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -194,32 +194,28 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     menuItemSearch = menu.findItem(R.id.menuSearch)
 
-    val searchView = menuItemSearch!!.actionView as SearchView
-    searchView.setOnQueryTextListener(this)
+    val searchView = menuItemSearch?.actionView as? SearchView
+    searchView?.setOnQueryTextListener(this)
 
     val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
-    searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+    searchView?.setSearchableInfo(searchManager.getSearchableInfo(componentName))
 
     val item = menu.findItem(R.id.menuSwitch)
     switchView = item.actionView.findViewById(R.id.switchShowOnlyEncryptedMessages)
 
-    if (switchView != null) {
-      switchView!!.isChecked = AccountDaoSource().isEncryptedModeEnabled(this, currentAccountDao!!.email)
-
-      switchView!!.setOnCheckedChangeListener { buttonView, isChecked ->
-        if (GeneralUtil.isConnected(this@EmailManagerActivity.applicationContext)) {
-          buttonView.isEnabled = false
-        }
-
-        cancelAllSyncTasks(0)
-        AccountDaoSource().setShowOnlyEncryptedMsgs(this@EmailManagerActivity, currentAccountDao!!.email, isChecked)
-        onShowOnlyEncryptedMsgs(isChecked)
-
-        Toast.makeText(this@EmailManagerActivity, if (isChecked)
-          R.string.showing_only_encrypted_messages
-        else
-          R.string.showing_all_messages, Toast.LENGTH_SHORT).show()
+    switchView?.isChecked = AccountDaoSource().isEncryptedModeEnabled(this, currentAccountDao?.email)
+    switchView?.setOnCheckedChangeListener { buttonView, isChecked ->
+      if (GeneralUtil.isConnected(this@EmailManagerActivity.applicationContext)) {
+        buttonView.isEnabled = false
       }
+
+      AccountDaoSource().setShowOnlyEncryptedMsgs(this@EmailManagerActivity, currentAccountDao?.email, isChecked)
+      onShowOnlyEncryptedMsgs(isChecked)
+
+      Toast.makeText(this@EmailManagerActivity, if (isChecked)
+        R.string.showing_only_encrypted_messages
+      else
+        R.string.showing_all_messages, Toast.LENGTH_SHORT).show()
     }
 
     return true
@@ -279,22 +275,33 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     }
   }
 
+  override fun loadNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
+    switchView?.isEnabled = false
+    super.loadNextMsgs(requestCode, localFolder, alreadyLoadedMsgsCount)
+  }
+
+  override fun refreshMsgs(requestCode: Int, currentLocalFolder: LocalFolder) {
+    switchView?.isEnabled = false
+    super.refreshMsgs(requestCode, currentLocalFolder)
+  }
+
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
       R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> {
-        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_gmail_labels, null, this)
         if (!countingIdlingResourceForLabel!!.isIdleNow) {
           countingIdlingResourceForLabel!!.decrement()
         }
       }
 
-      R.id.syns_request_code_force_load_new_messages -> {
-        onForceLoadNewMsgsCompleted(resultCode == EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE)
+      R.id.syns_request_code_refresh_msgs -> {
+        switchView?.isEnabled = true
+        onRefreshMsgsCompleted()
         msgsIdlingResource.setIdleState(true)
       }
 
       R.id.syns_request_code_load_next_messages -> {
         switchView?.isEnabled = true
+        onFetchMsgsCompleted()
         super.onReplyReceived(requestCode, resultCode, obj)
       }
 
@@ -304,9 +311,11 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
-      R.id.syns_request_code_force_load_new_messages -> {
-        msgsIdlingResource.setIdleState(true)
+      R.id.syns_request_code_refresh_msgs -> {
+        switchView?.isEnabled = true
         onErrorOccurred(requestCode, errorType, e)
+        onRefreshMsgsCompleted()
+        msgsIdlingResource.setIdleState(true)
       }
 
       R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> {
@@ -318,6 +327,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
       R.id.syns_request_code_load_next_messages -> {
         switchView?.isEnabled = true
+        onFetchMsgsCompleted()
         super.onErrorHappened(requestCode, errorType, e)
       }
 
@@ -331,8 +341,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   override fun onBackPressed() {
-    if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-      drawerLayout.closeDrawer(GravityCompat.START)
+    if (drawerLayout?.isDrawerOpen(GravityCompat.START) == true) {
+      drawerLayout?.closeDrawer(GravityCompat.START)
     } else {
       super.onBackPressed()
     }
@@ -351,91 +361,15 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         if (newLocalFolder != null) {
           if (currentFolder == null || currentFolder!!.fullName != newLocalFolder.fullName) {
             this.currentFolder = newLocalFolder
-            onFolderChanged(false)
+            onFolderChanged()
             invalidateOptionsMenu()
           }
         }
       }
     }
 
-    drawerLayout.closeDrawer(GravityCompat.START)
+    drawerLayout?.closeDrawer(GravityCompat.START)
     return true
-  }
-
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
-    return when (id) {
-      R.id.loader_id_load_gmail_labels -> {
-        val uri = ImapLabelsDaoSource().baseContentUri
-        val selection = ImapLabelsDaoSource.COL_EMAIL + " = ?"
-        CursorLoader(this, uri, null, selection, arrayOf(currentAccountDao!!.email), null)
-      }
-      else -> Loader(this.applicationContext)
-    }
-  }
-
-  override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
-    when (loader.id) {
-      R.id.loader_id_load_gmail_labels -> if (data != null) {
-        val imapLabelsDaoSource = ImapLabelsDaoSource()
-
-        if (data.count > 0) {
-          foldersManager!!.clear()
-        }
-
-        while (data.moveToNext()) {
-          foldersManager!!.addFolder(imapLabelsDaoSource.getFolder(data))
-        }
-
-        if (!foldersManager!!.allFolders.isEmpty()) {
-          val mailLabels = navigationView!!.menu.findItem(R.id.mailLabels)
-          mailLabels.subMenu.clear()
-
-          for (label in sortedServerFolders) {
-            mailLabels.subMenu.add(label)
-            if (JavaEmailConstants.FOLDER_OUTBOX == label) {
-              addOutboxLabel(mailLabels, label)
-            }
-          }
-
-          for ((_, folderAlias) in foldersManager!!.customLabels) {
-            mailLabels.subMenu.add(folderAlias)
-          }
-        }
-
-        if (currentFolder == null) {
-          currentFolder = foldersManager!!.folderInbox
-          if (currentFolder == null) {
-            currentFolder = foldersManager!!.findInboxFolder()
-          }
-
-          onFolderChanged(false)
-        } else {
-          val newestLocalFolderInfo = foldersManager!!.getFolderByAlias(currentFolder!!.folderAlias!!)
-          if (newestLocalFolderInfo != null) {
-            currentFolder = newestLocalFolderInfo
-          }
-        }
-      }
-    }
-  }
-
-  private fun addOutboxLabel(mailLabels: MenuItem, label: String) {
-    val menuItem = mailLabels.subMenu.getItem(mailLabels.subMenu.size() - 1)
-
-    if (foldersManager!!.getFolderByAlias(label)!!.msgCount > 0) {
-      val view = LayoutInflater.from(this).inflate(R.layout.navigation_view_item_with_amount,
-          navigationView, false)
-      val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
-      val folder = foldersManager!!.getFolderByAlias(label)
-      textViewMsgsCount.text = folder!!.msgCount.toString()
-      menuItem.actionView = view
-    } else {
-      menuItem.actionView = null
-    }
-  }
-
-  override fun onLoaderReset(loader: Loader<Cursor>) {
-
   }
 
   override fun onClick(v: View) {
@@ -453,18 +387,17 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   override fun onQueryTextSubmit(query: String): Boolean {
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!, ignoreCase = true)
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao?.accountType, ignoreCase = true)
         && !SearchSequence.isAscii(query)) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show()
       return true
     }
 
-    menuItemSearch!!.collapseActionView()
-    DatabaseUtil.cleanFolderCache(this, currentAccountDao!!.email, SearchMessagesActivity.SEARCH_FOLDER_NAME)
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!, ignoreCase = true)) {
-      val allMail = foldersManager!!.folderAll
+    menuItemSearch?.collapseActionView()
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao?.accountType, ignoreCase = true)) {
+      val allMail = foldersManager?.folderAll
       if (allMail != null) {
-        startActivity(SearchMessagesActivity.newIntent(this, query, foldersManager!!.folderAll))
+        startActivity(SearchMessagesActivity.newIntent(this, query, allMail))
       } else {
         startActivity(SearchMessagesActivity.newIntent(this, query, currentFolder))
       }
@@ -521,18 +454,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   /**
-   * Handle a result from the load new messages action.
-   *
-   * @param refreshListNeeded true if we must reload the emails list.
-   */
-  private fun onForceLoadNewMsgsCompleted(refreshListNeeded: Boolean) {
-    val fragment = supportFragmentManager
-        .findFragmentById(R.id.emailListFragment) as EmailListFragment?
-
-    fragment?.onForceLoadNewMsgsCompleted(refreshListNeeded)
-  }
-
-  /**
    * Change messages displaying.
    *
    * @param onlyEncrypted true if we want ot show only encrypted messages, false if we want to show
@@ -561,18 +482,18 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
    *
    * @param isOpen true if the drawer is open, otherwise false.
    */
-  private fun notifyFragmentAboutDrawerChange(isOpen: Boolean) {
+  private fun notifyFragmentAboutDrawerChange(slideOffset: Float, isOpened: Boolean) {
     val fragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    fragment?.onDrawerStateChanged(isOpen)
+    fragment?.onDrawerStateChanged(slideOffset, isOpened)
   }
 
   private fun initViews() {
     drawerLayout = findViewById(R.id.drawer_layout)
     actionBarDrawerToggle = CustomDrawerToggle(this, drawerLayout, toolbar,
         R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-    drawerLayout.addDrawerListener(actionBarDrawerToggle!!)
+    drawerLayout?.addDrawerListener(actionBarDrawerToggle!!)
     actionBarDrawerToggle!!.syncState()
 
     navigationView = findViewById(R.id.navigationView)
@@ -706,28 +627,88 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     return view
   }
 
+  private fun onFetchMsgsCompleted() {
+    (supportFragmentManager.findFragmentById(R.id.emailListFragment) as? EmailListFragment?)?.onFetchMsgsCompleted()
+  }
+
+  private fun onRefreshMsgsCompleted() {
+    (supportFragmentManager.findFragmentById(R.id.emailListFragment) as? EmailListFragment?)?.onRefreshMsgsCompleted()
+  }
+
+  private fun setupLabelsViewModel() {
+    labelsViewModel = ViewModelProvider(this).get(LabelsViewModel::class.java)
+    labelsViewModel.accountLiveData.observe(this, Observer { })
+    labelsViewModel.labelsLiveData.observe(this, Observer {
+
+      if (it.isNotEmpty()) {
+        foldersManager?.clear()
+      }
+
+      for (label in it) {
+        foldersManager?.addFolder(LocalFolder(label))
+      }
+
+      if (foldersManager?.allFolders?.isNotEmpty() == true) {
+        val mailLabels = navigationView?.menu?.findItem(R.id.mailLabels)
+        mailLabels?.subMenu?.clear()
+
+        for (label in sortedServerFolders) {
+          mailLabels?.subMenu?.add(label)
+          if (JavaEmailConstants.FOLDER_OUTBOX == label) {
+            addOutboxLabel(mailLabels, label)
+          }
+        }
+
+        for (localFolder in foldersManager?.customLabels ?: emptyList()) {
+          mailLabels?.subMenu?.add(localFolder.folderAlias)
+        }
+      }
+
+      if (currentFolder == null) {
+        currentFolder = foldersManager?.folderInbox
+        if (currentFolder == null) {
+          currentFolder = foldersManager?.findInboxFolder()
+        }
+
+        onFolderChanged()
+      } else {
+        foldersManager?.getFolderByAlias(currentFolder?.folderAlias)?.let { currentFolder = it }
+      }
+    })
+  }
+
+  private fun addOutboxLabel(mailLabels: MenuItem?, label: String) {
+    val menuItem = mailLabels?.subMenu?.getItem(mailLabels.subMenu.size() - 1) ?: return
+
+    if (foldersManager?.getFolderByAlias(label)?.msgCount ?: 0 > 0) {
+      val view = LayoutInflater.from(this).inflate(R.layout.navigation_view_item_with_amount,
+          navigationView, false)
+      val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
+      val folder = foldersManager!!.getFolderByAlias(label)
+      textViewMsgsCount.text = folder!!.msgCount.toString()
+      menuItem.actionView = view
+    } else {
+      menuItem.actionView = null
+    }
+  }
+
   /**
    * The custom realization of [ActionBarDrawerToggle]. Will be used to start a labels
    * update task when the drawer will be opened.
    */
   private inner class CustomDrawerToggle internal constructor(activity: Activity,
-                                                              drawerLayout: DrawerLayout,
+                                                              drawerLayout: DrawerLayout?,
                                                               toolbar: Toolbar?,
                                                               @StringRes openDrawerContentDescRes: Int,
                                                               @StringRes closeDrawerContentDescRes: Int)
     : ActionBarDrawerToggle(activity, drawerLayout, toolbar, openDrawerContentDescRes, closeDrawerContentDescRes) {
 
+    var slideOffset = 0f
+
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
       super.onDrawerSlide(drawerView, slideOffset)
-
-      if (slideOffset > 0.05) {
-        notifyFragmentAboutDrawerChange(true)
-        return
-      }
-
-      if (slideOffset <= 0.03) {
-        notifyFragmentAboutDrawerChange(false)
-      }
+      this.slideOffset = slideOffset
+      notifyFragmentAboutDrawerChange(slideOffset, true)
     }
 
     override fun onDrawerOpened(drawerView: View) {
@@ -737,15 +718,19 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         countingIdlingResourceForLabel!!.increment()
         updateLabels(R.id.syns_request_code_update_label_passive)
       }
-
-      LoaderManager.getInstance(this@EmailManagerActivity).restartLoader(R.id.loader_id_load_gmail_labels,
-          null, this@EmailManagerActivity)
     }
 
     override fun onDrawerClosed(drawerView: View) {
       super.onDrawerClosed(drawerView)
       if (!navigationView!!.menu.getItem(0).isVisible) {
         currentAccountDetailsItem!!.performClick()
+      }
+    }
+
+    override fun onDrawerStateChanged(newState: Int) {
+      super.onDrawerStateChanged(newState)
+      if (newState == 0 && slideOffset == 0f) {
+        notifyFragmentAboutDrawerChange(slideOffset, false)
       }
     }
   }

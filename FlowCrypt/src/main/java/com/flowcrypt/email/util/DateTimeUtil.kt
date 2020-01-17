@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -37,9 +37,9 @@ class DateTimeUtil {
      * @return The formatted date.
      */
     @JvmStatic
-    fun formatSameDayTime(context: Context, date: Long): String {
+    fun formatSameDayTime(context: Context?, date: Long?): String {
       val calendarOfDate = GregorianCalendar()
-      calendarOfDate.timeInMillis = date
+      calendarOfDate.timeInMillis = date ?: return ""
 
       val currentCalendar = Calendar.getInstance()
 

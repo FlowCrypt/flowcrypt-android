@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
@@ -19,14 +19,15 @@
             android:id="@+id/textViewActionProgress"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/default_margin_content_small"
             android:layout_marginStart="@dimen/default_margin_content_small"
+            android:layout_marginEnd="@dimen/default_margin_content_small"
             android:textSize="@dimen/default_text_size_very_small"
             android:visibility="gone"
             app:layout_constraintBottom_toTopOf="@+id/progressBarActionProgress"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            tools:text="5% Connecting to mail server" />
+            tools:text="5% Connecting to mail server"
+            tools:visibility="visible" />
 
         <ProgressBar
             android:id="@+id/progressBarActionProgress"
@@ -41,10 +42,10 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            tools:progress="45" />
+            tools:progress="45"
+            tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 
     <TextView
         android:id="@+id/emptyView"
@@ -59,12 +60,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ListView
-            android:id="@+id/listViewMessages"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:overScrollFooter="@android:color/transparent"
-            android:visibility="gone" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewMsgs"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:listitem="@layout/messages_list_item" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
@@ -73,7 +77,8 @@
         style="?android:attr/progressBarStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center" />
+        android:layout_gravity="center"
+        android:visibility="gone" />
 
     <include
         android:id="@+id/viewIdStatusView"

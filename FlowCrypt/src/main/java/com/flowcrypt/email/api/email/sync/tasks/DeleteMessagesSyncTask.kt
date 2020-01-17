@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -8,9 +8,9 @@ package com.flowcrypt.email.api.email.sync.tasks
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.Folder
 import javax.mail.Message
@@ -34,19 +34,19 @@ class DeleteMessagesSyncTask(ownerKey: String,
     val context = listener.context
     val foldersManager = FoldersManager.fromDatabase(context, account.email)
     val trash = foldersManager.folderTrash ?: return
-    val msgDaoSource = MessageDaoSource()
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
     while (true) {
-      val candidatesForDeleting = msgDaoSource.getMsgsWithState(
-          context, account.email, MessageState.PENDING_DELETING)
+      val candidatesForDeleting = roomDatabase.msgDao().getMsgsWithState(
+          account.email, MessageState.PENDING_DELETING.value)
 
       if (candidatesForDeleting.isEmpty()) {
         break
       } else {
-        val setOfFolders = candidatesForDeleting.map { it.label }.toSet()
+        val setOfFolders = candidatesForDeleting.map { it.folder }.toSet()
 
         for (folder in setOfFolders) {
-          val filteredMsgs = candidatesForDeleting.filter { it.label == folder }
+          val filteredMsgs = candidatesForDeleting.filter { it.folder == folder }
 
           if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)) {
             continue
@@ -61,7 +61,7 @@ class DeleteMessagesSyncTask(ownerKey: String,
 
           if (msgs.isNotEmpty()) {
             remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-            msgDaoSource.deleteMsgsByUID(context, account.email, folder, uidList)
+            roomDatabase.msgDao().deleteByUIDs(account.email, folder, uidList)
           }
 
           remoteSrcFolder.close()

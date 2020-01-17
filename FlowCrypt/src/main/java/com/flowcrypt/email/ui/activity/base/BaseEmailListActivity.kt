@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -27,7 +27,6 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
   @JvmField
   @VisibleForTesting
   val msgsIdlingResource = SingleIdlingResources()
-  private var hasMoreMsgs = true
 
   abstract fun refreshFoldersFromCache()
 
@@ -41,13 +40,11 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
         refreshFoldersFromCache()
         when (resultCode) {
           EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE -> {
-            hasMoreMsgs = true
-            onNextMsgsLoaded(true)
+            onNextMsgsLoaded()
           }
 
           else -> {
-            hasMoreMsgs = false
-            onNextMsgsLoaded(false)
+            onNextMsgsLoaded()
           }
         }
 
@@ -67,18 +64,10 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
 
   override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
-      R.id.syns_request_code_load_next_messages -> when (resultCode) {
+      R.id.syns_request_code_load_next_messages, R.id.sync_request_code_search_messages -> when (resultCode) {
         R.id.progress_id_start_of_loading_new_messages -> updateActionProgressState(0, "Starting")
 
         R.id.progress_id_adding_task_to_queue -> updateActionProgressState(10, "Queuing")
-
-        R.id.progress_id_queue_is_not_empty -> updateActionProgressState(15, "Queue is not empty")
-
-        R.id.progress_id_thread_is_cancelled_and_done -> updateActionProgressState(15, "Thread is cancelled and done")
-
-        R.id.progress_id_thread_is_done -> updateActionProgressState(15, "Thread is done")
-
-        R.id.progress_id_thread_is_cancelled -> updateActionProgressState(15, "Thread is cancelled")
 
         R.id.progress_id_running_task -> updateActionProgressState(20, "Running task")
 
@@ -97,10 +86,6 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
     }
   }
 
-  override fun hasMoreMsgs(): Boolean {
-    return hasMoreMsgs
-  }
-
   override fun onSyncServiceConnected() {
     syncServiceConnected()
   }
@@ -112,7 +97,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
     val emailListFragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    emailListFragment?.onSyncServiceConnected()
+    //emailListFragment?.onSyncServiceConnected()
   }
 
   /**
@@ -135,14 +120,14 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
   /**
    * Update the list of emails after changing the folder.
    */
-  protected fun onFolderChanged(isForceClearCacheNeeded: Boolean) {
+  protected fun onFolderChanged(forceClearCache: Boolean = false) {
+    toolbar?.title = currentFolder?.folderAlias
+
     val emailListFragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
-    if (emailListFragment != null) {
-      emailListFragment.updateList(isFolderChanged = true, isForceClearCacheNeeded = isForceClearCacheNeeded)
-      updateActionProgressState(100, null)
-    }
+    emailListFragment?.onFolderChanged(forceClearCache)
+    updateActionProgressState(100, null)
 
     if (currentFolder != null) {
       val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder!!.fullName, ignoreCase = true)
@@ -174,15 +159,13 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
 
   /**
    * Handle a result from the load next messages action.
-   *
-   * @param needToRefreshList true if we must reload the emails list.
    */
-  protected fun onNextMsgsLoaded(needToRefreshList: Boolean) {
+  protected fun onNextMsgsLoaded() {
     val emailListFragment = supportFragmentManager
         .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
     if (emailListFragment != null) {
-      emailListFragment.onNextMsgsLoaded(needToRefreshList)
+      emailListFragment.onFetchMsgsCompleted()
       emailListFragment.setActionProgress(100, null)
     }
   }

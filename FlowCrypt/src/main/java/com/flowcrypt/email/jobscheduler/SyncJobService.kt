@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -16,7 +16,6 @@ import android.os.AsyncTask
 import android.os.Build
 import android.os.RemoteException
 import android.util.Log
-import android.util.LongSparseArray
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -24,9 +23,10 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.api.email.sync.tasks.SyncFolderSyncTask
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -118,35 +118,36 @@ class SyncJobService : JobService(), SyncListener {
                                      remoteFolder: IMAPFolder, newMsgs: Array<Message>,
                                      updateMsgs: Array<Message>, ownerKey: String, requestCode: Int) {
     try {
-      val msgDaoSource = MessageDaoSource()
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+
       val folderName = localFolder.fullName
-      val mapOfUIDsAndMsgsFlags = msgDaoSource.getMapOfUIDAndMsgFlags(applicationContext, account.email, folderName)
+      val mapOfUIDsAndMsgsFlags = roomDatabase.msgDao().getMapOfUIDAndMsgFlags(account.email, folderName)
       val uidSet = HashSet(mapOfUIDsAndMsgsFlags.keys)
       val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(uidSet, remoteFolder, updateMsgs)
 
-      val generalMsgDetailsBeforeUpdate = msgDaoSource.getNewMsgs(applicationContext, account.email, folderName)
+      val msgsBeforeUpdate = roomDatabase.msgDao().getNewMsgs(account.email, folderName)
+      roomDatabase.msgDao().deleteByUIDs(account.email, folderName, deleteCandidatesUIDs)
 
-      msgDaoSource.deleteMsgsByUID(applicationContext, account.email, folderName, deleteCandidatesUIDs)
+      val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDsAndMsgsFlags, remoteFolder,
+          updateMsgs).map { remoteFolder.getUID(it) to it.flags }.toMap()
+      roomDatabase.msgDao().updateFlags(account.email, folderName, updateCandidates)
 
-      msgDaoSource.updateMsgsByUID(applicationContext, account.email, folderName, remoteFolder,
-          EmailUtil.genUpdateCandidates(mapOfUIDsAndMsgsFlags, remoteFolder, updateMsgs))
+      val detailsAfterUpdate = roomDatabase.msgDao().getNewMsgs(account.email, folderName)
 
-      val detailsAfterUpdate = msgDaoSource.getNewMsgs(applicationContext,
-          account.email, folderName)
-
-      val detailsDeleteCandidates = LinkedList(generalMsgDetailsBeforeUpdate)
-      detailsDeleteCandidates.removeAll(detailsAfterUpdate)
+      val msgsDeleteCandidates = LinkedList(msgsBeforeUpdate)
+      msgsDeleteCandidates.removeAll(detailsAfterUpdate)
 
       val isInbox = FoldersManager.getFolderType(localFolder) === FoldersManager.FolderType.INBOX
       if (!GeneralUtil.isAppForegrounded() && isInbox) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-          for ((_, _, uid) in detailsDeleteCandidates) {
-            messagesNotificationManager!!.cancel(uid)
+          for (msgEntity in msgsDeleteCandidates) {
+            messagesNotificationManager?.cancel(msgEntity.uid.toInt())
           }
         } else {
-          if (!detailsDeleteCandidates.isEmpty()) {
-            val unseenMsgs = msgDaoSource.getUIDOfUnseenMsgs(this, account.email, folderName)
-            messagesNotificationManager!!.notify(this, account, localFolder, detailsAfterUpdate, unseenMsgs, true)
+          if (!msgsDeleteCandidates.isEmpty()) {
+            val unseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(account.email, folderName)
+            messagesNotificationManager?.notify(this, account, localFolder, detailsAfterUpdate,
+                unseenMsgs, true)
           }
         }
       }
@@ -188,33 +189,44 @@ class SyncJobService : JobService(), SyncListener {
   }
 
   override fun onNewMsgsReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
-                                 newMsgs: Array<Message>, msgsEncryptionStates: LongSparseArray<Boolean>,
+                                 newMsgs: Array<Message>, msgsEncryptionStates: Map<Long, Boolean>,
                                  ownerKey: String, requestCode: Int) {
     try {
       val context = applicationContext
       val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
 
-      val msgDaoSource = MessageDaoSource()
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+
       val folderName = localFolder.fullName
-      val mapOfUIDAndMsgFlags = msgDaoSource.getMapOfUIDAndMsgFlags(context, account.email, folderName)
+      val mapOfUIDAndMsgFlags = roomDatabase.msgDao().getMapOfUIDAndMsgFlags(account.email, folderName)
 
       val uids = HashSet(mapOfUIDAndMsgFlags.keys)
 
       val newCandidates = EmailUtil.genNewCandidates(uids, remoteFolder, newMsgs)
 
-      msgDaoSource.addRows(context, account.email, folderName, remoteFolder, newCandidates,
-          msgsEncryptionStates, !GeneralUtil.isAppForegrounded(), isEncryptedModeEnabled)
+      val msgEntities = MessageEntity.genMessageEntities(
+          context = context,
+          email = account.email,
+          label = folderName,
+          folder = remoteFolder,
+          msgs = newCandidates,
+          msgsEncryptionStates = msgsEncryptionStates,
+          isNew = !GeneralUtil.isAppForegrounded(),
+          areAllMsgsEncrypted = isEncryptedModeEnabled
+      )
+
+      roomDatabase.msgDao().insert(msgEntities)
 
       if (!GeneralUtil.isAppForegrounded()) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && newCandidates.size == 0) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && newCandidates.isEmpty()) {
           return
         }
 
-        val newMsgsList = msgDaoSource.getNewMsgs(applicationContext,
-            account.email, folderName)
-        val unseenUIDs = msgDaoSource.getUIDOfUnseenMsgs(this, account.email, folderName)
+        val newMsgsList = roomDatabase.msgDao().getNewMsgs(account.email, folderName)
+        val unseenUIDs = roomDatabase.msgDao().getUIDOfUnseenMsgs(account.email, folderName)
 
-        messagesNotificationManager!!.notify(this, account, localFolder, newMsgsList, unseenUIDs, false)
+        messagesNotificationManager?.notify(this, account, localFolder, newMsgsList, unseenUIDs,
+            false)
       }
     } catch (e: MessagingException) {
       e.printStackTrace()

@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -7,9 +7,9 @@ package com.flowcrypt.email.api.email.sync.tasks
 
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.Folder
 import javax.mail.Message
@@ -31,11 +31,11 @@ class ArchiveMsgsSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(own
     val foldersManager = FoldersManager.fromDatabase(context, account.email)
     val inboxFolder = foldersManager.findInboxFolder() ?: return
     val allMailFolder = foldersManager.folderAll ?: return
-    val msgDaoSource = MessageDaoSource()
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
     while (true) {
-      val candidatesForArchiving = msgDaoSource.getMsgsWithState(context, account.email,
-          MessageState.PENDING_ARCHIVING)
+      val candidatesForArchiving = roomDatabase.msgDao().getMsgsWithState(account.email,
+          MessageState.PENDING_ARCHIVING.value)
 
       if (candidatesForArchiving.isEmpty()) {
         break
@@ -48,7 +48,7 @@ class ArchiveMsgsSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(own
 
         if (msgs.isNotEmpty()) {
           remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-          msgDaoSource.deleteMsgsByUID(context, account.email, inboxFolder.fullName, uidList)
+          roomDatabase.msgDao().deleteByUIDs(account.email, inboxFolder.fullName, uidList)
         }
 
         remoteSrcFolder.close()

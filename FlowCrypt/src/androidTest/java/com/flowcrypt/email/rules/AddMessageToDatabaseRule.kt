@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -7,8 +7,9 @@ package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.google.android.gms.auth.GoogleAuthException
 import com.sun.mail.imap.IMAPFolder
 import org.junit.runner.Description
@@ -66,6 +67,16 @@ class AddMessageToDatabaseRule(val account: AccountDao, val localFolder: LocalFo
   }
 
   private fun saveMsgToDatabase() {
-    MessageDaoSource().addRow(targetContext, account.email, localFolder.fullName, 0, message, false)
+    message?.let {
+      val msgEntity = MessageEntity.genMsgEntity(
+          email = account.email,
+          label = localFolder.fullName,
+          msg = it,
+          uid = 0,
+          isNew = false
+      )
+
+      FlowCryptRoomDatabase.getDatabase(targetContext).msgDao().insert(msgEntity)
+    }
   }
 }

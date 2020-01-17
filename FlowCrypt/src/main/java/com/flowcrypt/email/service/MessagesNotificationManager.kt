@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -22,11 +22,11 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.broadcastreceivers.MarkMessagesAsOldBroadcastReceiver
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
@@ -35,6 +35,8 @@ import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.android.gms.common.util.CollectionUtils
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 
 /**
@@ -56,14 +58,15 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
    * @param context               Interface to global information about an application environment.
    * @param account               An [AccountDao] object which contains information about an email account.
    * @param localFolder           A local implementation of a remote folder.
-   * @param generalMsgDetailsList A list of models which consists information about some messages.
+   * @param msgs                  A list of models which consists information about some messages.
    * @param uidListOfUnseenMsgs   A list of UID of unseen messages.
    * @param isSilent              true if we don't need sound and vibration for Android 7.0 and below.
    */
   fun notify(context: Context, account: AccountDao?, localFolder: LocalFolder,
-             generalMsgDetailsList: List<GeneralMessageDetails>?, uidListOfUnseenMsgs: List<Int>, isSilent: Boolean) {
+             msgs: List<MessageEntity>?, uidListOfUnseenMsgs: List<Long>,
+             isSilent: Boolean) {
 
-    if (account == null || generalMsgDetailsList == null || generalMsgDetailsList.isEmpty()) {
+    if (account == null || msgs == null || msgs.isEmpty()) {
       notificationManagerCompat.cancel(NOTIFICATIONS_GROUP_MESSAGES)
       return
     }
@@ -77,9 +80,9 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      notifyWithGroupSupport(context, account, localFolder, generalMsgDetailsList)
+      notifyWithGroupSupport(context, account, localFolder, msgs)
     } else {
-      notifyWithSingleNotification(context, account, localFolder, generalMsgDetailsList, uidListOfUnseenMsgs, isSilent)
+      notifyWithSingleNotification(context, account, localFolder, msgs, uidListOfUnseenMsgs, isSilent)
     }
   }
 
@@ -90,13 +93,16 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     val localFolder = foldersManager.findInboxFolder()
 
     if (localFolder != null) {
-      MessageDaoSource().setOldStatus(context, account.email, localFolder.fullName)
+      GlobalScope.launch {
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+        roomDatabase.msgDao().markMsgsAsOld(account.email, localFolder.fullName)
+      }
     }
   }
 
   private fun notifyWithSingleNotification(context: Context, account: AccountDao,
-                                           folder: LocalFolder, details: List<GeneralMessageDetails>,
-                                           uidOfUnseenMsgs: List<Int>, isSilent: Boolean) {
+                                           folder: LocalFolder, msgs: List<MessageEntity>,
+                                           uidOfUnseenMsgs: List<Long>, isSilent: Boolean) {
     val onlyEncrypted = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
         SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
             Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
@@ -119,17 +125,18 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
       builder.setNumber(uidOfUnseenMsgs.size)
     }
 
-    if (details.size > 1) {
+    if (msgs.size > 1) {
       var hasAllowedNotifications = false
 
       val inboxStyle = NotificationCompat.InboxStyle()
-      for ((_, _, _, _, _, _, from, _, _, _, subject, _, _, _, isEncrypted) in details) {
-        if (onlyEncrypted && !isEncrypted) {
+      for (msgEntity in msgs) {
+        if (onlyEncrypted && msgEntity.isEncrypted == false) {
           continue
         }
 
         hasAllowedNotifications = true
-        inboxStyle.addLine(formatInboxStyleLine(context, EmailUtil.getFirstAddressString(from), subject))
+        inboxStyle.addLine(formatInboxStyleLine(context, EmailUtil.getFirstAddressString
+        (msgEntity.from), msgEntity.subject))
       }
 
       if (!hasAllowedNotifications) {
@@ -139,12 +146,12 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
       builder.setStyle(inboxStyle)
           .setSmallIcon(R.drawable.ic_email_multiply_encrypted)
           .setContentIntent(getInboxPendingIntent(context))
-          .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, account, folder, details))
-          .setContentTitle(context.getString(R.string.incoming_message, details.size))
+          .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, account, folder, msgs))
+          .setContentTitle(context.getString(R.string.incoming_message, msgs.size))
     } else {
-      val msgDetails = details[0]
+      val msgDetails = msgs[0]
 
-      if (onlyEncrypted && !msgDetails.isEncrypted) {
+      if (onlyEncrypted && msgDetails.isEncrypted == false) {
         return
       }
 
@@ -158,8 +165,9 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
           .setContentIntent(getMsgDetailsPendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, folder, msgDetails))
           .setContentTitle(EmailUtil.getFirstAddressString(msgDetails.from))
           .setStyle(style)
-          .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, account, folder, details))
-          .setColor(ContextCompat.getColor(context, if (msgDetails.isEncrypted) R.color.colorPrimary else R.color.red))
+          .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, account, folder, msgs))
+          .setColor(ContextCompat.getColor(context, if (msgDetails.isEncrypted == true)
+            R.color.colorPrimary else R.color.red))
           .setSmallIcon(R.drawable.ic_email_encrypted)
     }
 
@@ -167,7 +175,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   }
 
   private fun notifyWithGroupSupport(context: Context, account: AccountDao,
-                                     localFolder: LocalFolder, detailsList: List<GeneralMessageDetails>) {
+                                     localFolder: LocalFolder, msgs: List<MessageEntity>) {
 
     val isEncryptedModeEnabled =
         NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
@@ -175,10 +183,10 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
                 Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
     val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    prepareAndShowMsgGroup(context, account, localFolder, manager, detailsList)
+    prepareAndShowMsgGroup(context, account, localFolder, manager, msgs)
 
-    for (generalMsgDetails in detailsList) {
-      if (isEncryptedModeEnabled && !generalMsgDetails.isEncrypted) {
+    for (msg in msgs) {
+      if (isEncryptedModeEnabled && msg.isEncrypted == false) {
         continue
       }
 
@@ -189,37 +197,36 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
           .setCategory(NotificationCompat.CATEGORY_EMAIL)
           .setSmallIcon(R.drawable.ic_email_encrypted)
           .setLargeIcon(generateLargeIcon(context))
-          .setColor(ContextCompat.getColor(context, if (generalMsgDetails.isEncrypted)
+          .setColor(ContextCompat.getColor(context, if (msg.isEncrypted == true)
             R.color.colorPrimary
           else
             R.color.red))
-          .setDeleteIntent(genDeletePendingIntent(context,
-              generalMsgDetails.uid, account, localFolder, generalMsgDetails))
+          .setDeleteIntent(genDeletePendingIntent(context, msg.uid.toInt(), account, localFolder, msg))
           .setAutoCancel(true)
-          .setContentTitle(EmailUtil.getFirstAddressString(generalMsgDetails.from))
-          .setStyle(NotificationCompat.BigTextStyle().bigText(generalMsgDetails.subject))
+          .setContentTitle(EmailUtil.getFirstAddressString(msg.from))
+          .setStyle(NotificationCompat.BigTextStyle().bigText(msg.subject))
           .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
-          .setContentText(generalMsgDetails.subject)
-          .setContentIntent(getMsgDetailsPendingIntent(context, generalMsgDetails.uid,
-              localFolder, generalMsgDetails))
+          .setContentText(msg.subject)
+          .setContentIntent(getMsgDetailsPendingIntent(context, msg.uid.toInt(),
+              localFolder, msg))
           .setDefaults(Notification.DEFAULT_ALL)
           .setSubText(account.email)
 
-      notificationManagerCompat.notify(groupName, generalMsgDetails.uid, builder.build())
+      notificationManagerCompat.notify(groupName, msg.uid.toInt(), builder.build())
     }
   }
 
   private fun prepareAndShowMsgGroup(context: Context, account: AccountDao, localFolder: LocalFolder,
                                      notificationManager: NotificationManager,
-                                     generalMsgDetailsList: List<GeneralMessageDetails>) {
+                                     msgs: List<MessageEntity>) {
     val isEncryptedModeEnabled = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
         SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
             Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
     if (isEncryptedModeEnabled) {
       var isEncryptedMsgFound = false
-      for (msg in generalMsgDetailsList) {
-        if (msg.isEncrypted) {
+      for (msg in msgs) {
+        if (msg.isEncrypted == true) {
           isEncryptedMsgFound = true
           break
         }
@@ -232,7 +239,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
 
     var groupResourceId = R.drawable.ic_email_encrypted
 
-    if (generalMsgDetailsList.size > 1) {
+    if (msgs.size > 1) {
       groupResourceId = R.drawable.ic_email_multiply_encrypted
     } else {
       for (statusBarNotification in notificationManager.activeNotifications) {
@@ -252,7 +259,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
         .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
         .setContentIntent(getInboxPendingIntent(context))
         .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES,
-            account, localFolder, generalMsgDetailsList))
+            account, localFolder, msgs))
         .setDefaults(Notification.DEFAULT_ALL)
         .setAutoCancel(true)
         .setGroupSummary(true)
@@ -267,24 +274,24 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
 
   private fun genDeletePendingIntent(context: Context, requestCode: Int,
                                      account: AccountDao, localFolder: LocalFolder,
-                                     generalMsgDetails: GeneralMessageDetails): PendingIntent {
-    val generalMsgDetailsList = ArrayList<GeneralMessageDetails>()
-    generalMsgDetailsList.add(generalMsgDetails)
-    return genDeletePendingIntent(context, requestCode, account, localFolder, generalMsgDetailsList)
+                                     messageEntity: MessageEntity): PendingIntent {
+    val msgs = ArrayList<MessageEntity>()
+    msgs.add(messageEntity)
+    return genDeletePendingIntent(context, requestCode, account, localFolder, msgs)
   }
 
   private fun genDeletePendingIntent(context: Context, requestCode: Int,
                                      account: AccountDao, localFolder: LocalFolder,
-                                     generalMsgDetailsList: List<GeneralMessageDetails>): PendingIntent {
+                                     msgs: List<MessageEntity>): PendingIntent {
     val intent = Intent(context, MarkMessagesAsOldBroadcastReceiver::class.java)
     intent.action = MarkMessagesAsOldBroadcastReceiver.ACTION_MARK_MESSAGES_AS_OLD
     intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_EMAIL, account.email)
     intent.putExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_LABEL, localFolder.fullName)
 
-    if (!CollectionUtils.isEmpty(generalMsgDetailsList)) {
+    if (!CollectionUtils.isEmpty(msgs)) {
       val uidList = ArrayList<String>()
-      for ((_, _, uid) in generalMsgDetailsList) {
-        uidList.add(uid.toString())
+      for (msg in msgs) {
+        uidList.add(msg.uid.toString())
       }
       intent.putStringArrayListExtra(MarkMessagesAsOldBroadcastReceiver.EXTRA_KEY_UID_LIST, uidList)
     }
@@ -297,8 +304,8 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   }
 
   private fun getMsgDetailsPendingIntent(context: Context, requestCode: Int, localFolder: LocalFolder,
-                                         generalMsgDetails: GeneralMessageDetails): PendingIntent {
-    val intent = MessageDetailsActivity.getIntent(context, localFolder, generalMsgDetails)
+                                         msg: MessageEntity): PendingIntent {
+    val intent = MessageDetailsActivity.getIntent(context, localFolder, msg)
 
     val stackBuilder = TaskStackBuilder.create(context)
     stackBuilder.addParentStack(MessageDetailsActivity::class.java)

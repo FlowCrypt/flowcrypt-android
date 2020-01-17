@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -23,7 +23,6 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.api.email.model.GeneralMessageDetails
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
@@ -34,8 +33,10 @@ import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
-import com.flowcrypt.email.database.dao.source.imap.MessageDaoSource
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.DecryptMessageViewModel
+import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
@@ -55,10 +56,13 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.LoaderCallbacks<Cursor>,
-    Observer<NodeResponseWrapper<*>> {
+    Observer<NodeResponseWrapper<*>>, MessageDetailsFragment.MessageDetailsListener {
 
-  private var details: GeneralMessageDetails? = null
-  private var localFolder: LocalFolder? = null
+  private lateinit var messageEntity: MessageEntity
+  private lateinit var localFolder: LocalFolder
+  private lateinit var msgDetailsViewModel: MsgDetailsViewModel
+  private lateinit var decryptMsgViewModel: DecryptMessageViewModel
+
   @get:VisibleForTesting
   var idlingForDecryption: CountingIdlingResource? = null
     private set
@@ -67,7 +71,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   private var isReceiveMsgBodyNeeded: Boolean = false
   private var isRequestMsgDetailsStarted: Boolean = false
   private var isRetrieveIncomingMsgNeeded = true
-  private lateinit var viewModel: DecryptMessageViewModel
   private var rawMimeBytes: ByteArray? = null
   private lateinit var label: String
   private val uniqueId = UUID.randomUUID().toString()
@@ -79,48 +82,28 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     get() = R.layout.activity_message_details
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    initMsgDetailsViewModel()
     super.onCreate(savedInstanceState)
-    viewModel = ViewModelProvider(this).get(DecryptMessageViewModel::class.java)
-    viewModel.responsesLiveData.observe(this, this)
-
-    if (intent != null) {
-      this.localFolder = intent.getParcelableExtra(EXTRA_KEY_FOLDER)
-      this.details = intent.getParcelableExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS)
-
-      label = if (localFolder?.searchQuery.isNullOrEmpty()) {
-        localFolder?.fullName ?: ""
-      } else {
-        SearchMessagesActivity.SEARCH_FOLDER_NAME
-      }
-    }
+    decryptMsgViewModel = ViewModelProvider(this).get(DecryptMessageViewModel::class.java)
+    decryptMsgViewModel.responsesLiveData.observe(this, this)
 
     idlingForDecryption = CountingIdlingResource(
         GeneralUtil.genIdlingResourcesName(MessageDetailsActivity::class.java), GeneralUtil.isDebugBuild())
 
     updateViews()
-
-    LoaderManager.getInstance(this).initLoader(R.id.loader_id_subscribe_to_message_changes, null, this)
   }
 
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
-    when (id) {
-      R.id.loader_id_load_raw_mime_msg_from_db, R.id.loader_id_subscribe_to_message_changes -> {
-        val uri = MessageDaoSource().baseContentUri
-        val selection = (MessageDaoSource.COL_EMAIL + "= ? AND " + MessageDaoSource.COL_FOLDER + " = ? AND "
-            + MessageDaoSource.COL_UID + " = ? ")
-        val selectionArgs = arrayOf(details?.email ?: "", label, details?.uid?.toString() ?: "")
-        return CursorLoader(this, uri, null, selection, selectionArgs, null)
-      }
-
+    return when (id) {
       R.id.loader_id_load_attachments -> {
         val uriAtt = AttachmentDaoSource().baseContentUri
         val selectionAtt = (AttachmentDaoSource.COL_EMAIL + " = ?" + " AND "
             + AttachmentDaoSource.COL_FOLDER + " = ? AND " + AttachmentDaoSource.COL_UID + " = ?")
-        val selectionArgsAtt = arrayOf(details!!.email, label, details!!.uid.toString())
-        return CursorLoader(this, uriAtt, null, selectionAtt, selectionArgsAtt, null)
+        val selectionArgsAtt = arrayOf(messageEntity.email, label, messageEntity.uid.toString())
+        CursorLoader(this, uriAtt, null, selectionAtt, selectionArgsAtt, null)
       }
 
-      else -> return Loader(this)
+      else -> Loader(this)
     }
   }
 
@@ -130,51 +113,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor?) {
-    val msgDaoSource = MessageDaoSource()
-
     when (loader.id) {
-      R.id.loader_id_load_raw_mime_msg_from_db -> if (cursor?.moveToFirst() == true) {
-        this.rawMimeBytes = if (JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)) {
-          cursor.getBlob(cursor.getColumnIndex(MessageDaoSource.COL_RAW_MESSAGE_WITHOUT_ATTACHMENTS))
-        } else {
-          MsgsCacheManager.getMsgAsByteArray(details!!.id.toString())
-        }
-
-        updateMsgDetails(details!!)
-
-        if (rawMimeBytes?.isNotEmpty() == true) {
-          if (isRetrieveIncomingMsgNeeded) {
-            isRetrieveIncomingMsgNeeded = false
-            isReceiveMsgBodyNeeded = false
-
-            if (!JavaEmailConstants.FOLDER_OUTBOX.equals(details?.label, ignoreCase = true)
-                && details?.isSeen() == false) {
-              msgDaoSource.setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
-              msgDaoSource.updateMsgState(this, details?.email ?: "", details?.label ?: "",
-                  details?.uid?.toLong() ?: 0, MessageState.PENDING_MARK_READ)
-              changeMsgsReadState()
-              setResult(RESULT_CODE_UPDATE_LIST, null)
-            }
-
-            decryptMsg()
-          }
-        } else {
-          if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
-            this.isRequestMsgDetailsStarted = true
-            loadMsgDetails()
-          } else {
-            isReceiveMsgBodyNeeded = true
-          }
-        }
-      } else {
-        messageNotAvailableInFolder()
-      }
-
-      R.id.loader_id_subscribe_to_message_changes -> if (cursor != null && cursor.moveToFirst()) {
-        details = msgDaoSource.getMsgInfo(cursor)
-        updateViews()
-      }
-
       R.id.loader_id_load_attachments -> if (cursor != null) {
         val atts = ArrayList<AttachmentInfo>()
         while (cursor.moveToNext()) {
@@ -184,8 +123,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         if (atts.isNotEmpty()) {
           updateAtts(atts)
           LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_attachments)
-        } else if (details?.hasAtts == true) {
-          loadAttsInfo(R.id.syns_request_code_load_atts_info, localFolder!!, details!!.uid)
+        } else if (messageEntity.hasAttachments == true) {
+          loadAttsInfo(R.id.syns_request_code_load_atts_info, localFolder, messageEntity.uid.toInt())
         }
       }
     }
@@ -193,14 +132,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
   override fun onLoaderReset(loader: Loader<Cursor>) {
     when (loader.id) {
-      R.id.loader_id_load_raw_mime_msg_from_db -> {
-      }
-
-      R.id.loader_id_subscribe_to_message_changes -> {
-        details = null
-        updateViews()
-      }
-
       R.id.loader_id_load_attachments -> updateAtts(ArrayList())
     }
   }
@@ -210,8 +141,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     if (isReady) {
       if (rawMimeBytes?.isNotEmpty() == true) {
         decryptMsg()
-      } else {
-        LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_raw_mime_msg_from_db, null, this)
       }
     }
   }
@@ -229,9 +158,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
         isRequestMsgDetailsStarted = false
         when (resultCode) {
           EmailSyncService.REPLY_RESULT_CODE_ACTION_OK -> {
-            MessageDaoSource().setSeenStatus(this, details!!.email, label, details!!.uid.toLong())
-            setResult(RESULT_CODE_UPDATE_LIST, null)
-            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_raw_mime_msg_from_db, null, this)
+            msgDetailsViewModel.setSeenStatus(true)
           }
 
           EmailSyncService.REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND -> messageNotAvailableInFolder()
@@ -315,7 +242,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             }
             return
           } else {
-            val msgInfo = IncomingMessageInfo(details!!, result.text, result.msgBlocks!!,
+            val msgInfo = IncomingMessageInfo(messageEntity, result.text, result.msgBlocks!!,
                 EmailUtil.getHeadersFromRawMIME(ASCIIUtility.toString(rawMimeBytes)), result.getMsgEncryptionType())
             val fragment = supportFragmentManager
                 .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
@@ -353,20 +280,26 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     }
   }
 
+  override fun getMsgDetailsViewModel(): MsgDetailsViewModel? {
+    return if (::msgDetailsViewModel.isInitialized) {
+      msgDetailsViewModel
+    } else null
+  }
+
   fun decryptMsg() {
     if (rawMimeBytes?.isNotEmpty() == true) {
       idlingForDecryption!!.increment()
       onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
           .progress_id_processing, 65)
-      viewModel.decryptMessage(rawMimeBytes!!)
+      decryptMsgViewModel.decryptMessage(rawMimeBytes!!)
       onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
           .progress_id_processing, 70)
     }
   }
 
   fun loadMsgDetails() {
-    loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, uniqueId, localFolder!!,
-        details!!.uid, details!!.id)
+    loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, uniqueId, localFolder, messageEntity
+        .uid.toInt(), messageEntity.id?.toInt() ?: -1)
   }
 
   private fun updateActionProgressState(progress: Int, message: String?) {
@@ -383,12 +316,95 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     fragment?.showErrorInfo(error, e)
   }
 
-  private fun messageNotAvailableInFolder() {
-    MessageDaoSource().deleteMsg(this, details!!.email, label, details!!.uid.toLong())
-    AttachmentDaoSource().deleteAtts(this, details!!.email, label, details!!.uid.toLong())
-    setResult(RESULT_CODE_UPDATE_LIST, null)
-    Toast.makeText(this, R.string.email_does_not_available_in_this_folder, Toast.LENGTH_LONG).show()
+  private fun messageNotAvailableInFolder(showToast: Boolean = true) {
+    msgDetailsViewModel.deleteMsg()
+    if (showToast) {
+      Toast.makeText(this, R.string.email_does_not_available_in_this_folder, Toast.LENGTH_LONG).show()
+    }
     finish()
+  }
+
+  private fun genMsgObserver(): Observer<MessageEntity?> {
+    return object : Observer<MessageEntity?> {
+      private var isFirstCall = true
+
+      override fun onChanged(it: MessageEntity?) {
+        if (it != null) {
+          this@MessageDetailsActivity.rawMimeBytes = if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder,
+                  ignoreCase = true)) {
+            it.rawMessageWithoutAttachments?.toByteArray()
+          } else {
+            MsgsCacheManager.getMsgAsByteArray(messageEntity.id.toString())
+          }
+
+          onMsgDetailsUpdated()
+
+          if (rawMimeBytes?.isNotEmpty() == true) {
+            if (isRetrieveIncomingMsgNeeded) {
+              isRetrieveIncomingMsgNeeded = false
+              isReceiveMsgBodyNeeded = false
+
+              if (!JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true) && !messageEntity.isSeen) {
+                msgDetailsViewModel.changeMsgState(MessageState.PENDING_MARK_READ)
+                changeMsgsReadState()
+              }
+
+              decryptMsg()
+            }
+          } else {
+            if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
+              this@MessageDetailsActivity.isRequestMsgDetailsStarted = true
+              loadMsgDetails()
+            } else {
+              isReceiveMsgBodyNeeded = true
+            }
+          }
+        } else {
+          messageNotAvailableInFolder(isFirstCall)
+        }
+
+        isFirstCall = false
+      }
+    }
+  }
+
+  private fun initMsgDetailsViewModel() {
+    if (intent?.extras?.containsKey(EXTRA_KEY_FOLDER) == false
+        || intent?.extras?.containsKey(EXTRA_KEY_MSG) == false) {
+      finish()
+    }
+
+    this.localFolder = intent.getParcelableExtra(EXTRA_KEY_FOLDER)
+    this.messageEntity = intent.getParcelableExtra(EXTRA_KEY_MSG)
+
+    label = if (localFolder.searchQuery.isNullOrEmpty()) {
+      localFolder.fullName
+    } else {
+      SearchMessagesActivity.SEARCH_FOLDER_NAME
+    }
+
+    msgDetailsViewModel = ViewModelProvider(this, MsgDetailsViewModelFactory(localFolder,
+        messageEntity, application)).get(MsgDetailsViewModel::class.java)
+    msgDetailsViewModel.msgLiveData.observe(this, genMsgObserver())
+    msgDetailsViewModel.msgStatesLiveData.observe(this, Observer {
+      var finishActivity = true
+      when (it) {
+        MessageState.PENDING_ARCHIVING -> archiveMsgs()
+        MessageState.PENDING_DELETING -> deleteMsgs()
+        MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
+        MessageState.PENDING_MARK_UNREAD -> changeMsgsReadState()
+        MessageState.PENDING_MARK_READ -> {
+          changeMsgsReadState()
+          finishActivity = false
+        }
+        else -> {
+        }
+      }
+
+      if (finishActivity) {
+        finish()
+      }
+    })
   }
 
   /**
@@ -404,11 +420,11 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     fragment?.onErrorOccurred(requestCode, errorType, e)
   }
 
-  private fun updateMsgDetails(generalMsgDetails: GeneralMessageDetails) {
+  private fun onMsgDetailsUpdated() {
     val fragment = supportFragmentManager
         .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
 
-    fragment?.updateMsgDetails(generalMsgDetails)
+    fragment?.onMsgDetailsUpdated()
   }
 
   private fun updateAtts(atts: ArrayList<AttachmentInfo>) {
@@ -422,33 +438,31 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     var actionBarTitle: String? = null
     var actionBarSubTitle: String? = null
 
-    if (details != null) {
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(details!!.label, ignoreCase = true)) {
-        actionBarTitle = getString(R.string.outgoing)
+    if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
+      actionBarTitle = getString(R.string.outgoing)
 
-        when (details!!.msgState) {
-          MessageState.NEW, MessageState.NEW_FORWARDED -> actionBarSubTitle = getString(R.string.preparing)
+      when (messageEntity.msgState) {
+        MessageState.NEW, MessageState.NEW_FORWARDED -> actionBarSubTitle = getString(R.string.preparing)
 
-          MessageState.QUEUED -> actionBarSubTitle = getString(R.string.queued)
+        MessageState.QUEUED -> actionBarSubTitle = getString(R.string.queued)
 
-          MessageState.SENDING -> actionBarSubTitle = getString(R.string.sending)
+        MessageState.SENDING -> actionBarSubTitle = getString(R.string.sending)
 
-          MessageState.SENT, MessageState.SENT_WITHOUT_LOCAL_COPY -> actionBarSubTitle = getString(R.string.sent)
+        MessageState.SENT, MessageState.SENT_WITHOUT_LOCAL_COPY -> actionBarSubTitle = getString(R.string.sent)
 
-          MessageState.ERROR_CACHE_PROBLEM,
-          MessageState.ERROR_DURING_CREATION,
-          MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
-          MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
-          MessageState.ERROR_SENDING_FAILED,
-          MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> actionBarSubTitle = getString(R.string.an_error_has_occurred)
+        MessageState.ERROR_CACHE_PROBLEM,
+        MessageState.ERROR_DURING_CREATION,
+        MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+        MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
+        MessageState.ERROR_SENDING_FAILED,
+        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> actionBarSubTitle = getString(R.string.an_error_has_occurred)
 
-          else -> {
-          }
-        }
-      } else when (details?.msgState) {
-        MessageState.PENDING_ARCHIVING -> actionBarTitle = getString(R.string.pending)
         else -> {
         }
+      }
+    } else when (messageEntity.msgState) {
+      MessageState.PENDING_ARCHIVING -> actionBarTitle = getString(R.string.pending)
+      else -> {
       }
     }
 
@@ -457,17 +471,15 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   companion object {
-    const val RESULT_CODE_UPDATE_LIST = 100
-
     val EXTRA_KEY_FOLDER = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_FOLDER",
         MessageDetailsActivity::class.java)
-    val EXTRA_KEY_GENERAL_MESSAGE_DETAILS =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_GENERAL_MESSAGE_DETAILS", MessageDetailsActivity::class.java)
+    val EXTRA_KEY_MSG = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_MSG",
+        MessageDetailsActivity::class.java)
 
-    fun getIntent(context: Context?, localFolder: LocalFolder?, details: GeneralMessageDetails?): Intent {
+    fun getIntent(context: Context?, localFolder: LocalFolder?, msgEntity: MessageEntity?): Intent {
       val intent = Intent(context, MessageDetailsActivity::class.java)
       intent.putExtra(EXTRA_KEY_FOLDER, localFolder)
-      intent.putExtra(EXTRA_KEY_GENERAL_MESSAGE_DETAILS, details)
+      intent.putExtra(EXTRA_KEY_MSG, msgEntity)
       return intent
     }
   }

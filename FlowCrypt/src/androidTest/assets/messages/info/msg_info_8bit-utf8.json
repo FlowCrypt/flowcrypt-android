@@ -1,20 +1,21 @@
 {
   "encryptionType": "STANDARD",
-  "generalMsgDetails": {
+  "msgEntity": {
+    "cc": [],
     "email": "flowcrypt.compatibility@gmail.com",
+    "flags": "\\SEEN",
+    "folder": "INBOX",
     "from": [
       {
         "address": "noreply@olx.ua",
         "encodedPersonal": "OLX.ua"
       }
     ],
-    "hasAtts": false,
+    "fromAddress": "OLX.ua <noreply@olx.ua>",
+    "hasAttachments": false,
     "isEncrypted": false,
-    "isRawMsgAvailable": true,
-    "label": "INBOX",
-    "msgFlags": [
-      "\\SEEN"
-    ],
+    "id": 12,
+    "isSeen": true,
     "msgState": "NONE",
     "receivedDate": 1564500133000,
     "sentDate": 1564383645000,
@@ -24,6 +25,7 @@
         "address": "7bitencoding@domain.com"
       }
     ],
+    "toAddress": "7bitencoding@domain.com",
     "uid": 37
   },
   "msgBlocks": [

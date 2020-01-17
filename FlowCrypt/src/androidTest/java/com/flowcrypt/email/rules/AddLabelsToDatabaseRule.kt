@@ -1,13 +1,14 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
+import com.flowcrypt.email.database.entity.LabelEntity
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
@@ -29,7 +30,12 @@ class AddLabelsToDatabaseRule(private val account: AccountDao, private val folde
   }
 
   private fun saveLabelsToDatabase() {
-    ImapLabelsDaoSource().addRows(targetContext, account.email, folders)
+    val labels = mutableListOf<LabelEntity>()
+    for (folder in folders) {
+      labels.add(LabelEntity.genLabel(account.email, folder))
+    }
+
+    FlowCryptRoomDatabase.getDatabase(targetContext).labelDao().insert(labels)
   }
 }
 

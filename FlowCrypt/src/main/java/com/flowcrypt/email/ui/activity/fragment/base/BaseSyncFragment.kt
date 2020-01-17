@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -33,6 +33,12 @@ abstract class BaseSyncFragment : BaseFragment() {
   @JvmField
   protected var textViewStatusInfo: TextView? = null
 
+  protected val baseSyncActivity: BaseSyncActivity
+    get() {
+      return activity as? BaseSyncActivity ?: throw IllegalArgumentException(
+          "Can't use outside ${BaseSyncActivity::class.java}")
+    }
+
   /**
    * Get a content view which contains a UI.
    *
@@ -48,7 +54,8 @@ abstract class BaseSyncFragment : BaseFragment() {
   val isSyncServiceConnected: Boolean
     get() {
       val baseSyncActivity = activity as BaseSyncActivity?
-      return baseSyncActivity?.isSyncServiceBound ?: throw NullPointerException("BaseSyncActivity is null!")
+      return baseSyncActivity?.isSyncServiceBound
+          ?: throw NullPointerException("BaseSyncActivity is null!")
     }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -72,12 +79,12 @@ abstract class BaseSyncFragment : BaseFragment() {
     contentView?.visibility = View.GONE
 
     when (errorType) {
-      SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> textViewStatusInfo!!.setText(R.string.there_was_syncing_problem)
+      SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> textViewStatusInfo?.setText(R.string.there_was_syncing_problem)
 
       else -> if (e != null && !TextUtils.isEmpty(e.message)) {
-        textViewStatusInfo!!.text = e.message
+        textViewStatusInfo?.text = e.message
       } else {
-        textViewStatusInfo!!.setText(R.string.unknown_error)
+        textViewStatusInfo?.setText(R.string.unknown_error)
       }
     }
 

@@ -1,19 +1,16 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
 package com.flowcrypt.email.api.email.sync
 
 import android.content.Context
-import android.util.LongSparseArray
-
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.sun.mail.imap.IMAPFolder
-
 import javax.mail.Folder
 import javax.mail.Message
 
@@ -204,7 +201,7 @@ interface SyncListener {
       localFolder: LocalFolder,
       remoteFolder: IMAPFolder,
       newMsgs: Array<Message>,
-      msgsEncryptionStates: LongSparseArray<Boolean>,
+      msgsEncryptionStates: Map<Long, Boolean>,
       ownerKey: String,
       requestCode: Int
   )

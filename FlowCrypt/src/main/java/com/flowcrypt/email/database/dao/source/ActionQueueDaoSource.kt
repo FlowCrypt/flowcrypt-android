@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -11,6 +11,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import android.provider.BaseColumns
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flowcrypt.email.service.actionqueue.actions.Action
 import com.flowcrypt.email.service.actionqueue.actions.Action.Type
 import com.flowcrypt.email.util.google.gson.ActionJsonDeserializer
@@ -62,6 +63,22 @@ class ActionQueueDaoSource : BaseDaoSource() {
       val contentValues = generateContentValues(action) ?: return -1
 
       return sqLiteDatabase.insert(TABLE_NAME_ACTION_QUEUE, null, contentValues)
+    } else
+      return -1
+  }
+
+  /**
+   * Save information about an [Action] to the database;
+   *
+   * @param sqLiteDatabase An instance of the local database;
+   * @param action         An input [Action].
+   * @return the row ID of the newly inserted row, or -1 if an error occurred;
+   */
+  fun addAction(sqLiteDatabase: SupportSQLiteDatabase?, action: Action?): Long {
+    if (action != null && sqLiteDatabase != null) {
+      val contentValues = generateContentValues(action) ?: return -1
+
+      return sqLiteDatabase.insert(TABLE_NAME_ACTION_QUEUE, SQLiteDatabase.CONFLICT_NONE, contentValues)
     } else
       return -1
   }

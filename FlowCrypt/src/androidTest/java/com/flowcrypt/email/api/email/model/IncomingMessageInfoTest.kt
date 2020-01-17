@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -23,12 +23,11 @@ import com.flowcrypt.email.api.retrofit.response.model.node.Longids
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
-import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
-import javax.mail.internet.InternetAddress
 
 /**
  * @author Denis Bondarenko
@@ -77,25 +76,26 @@ class IncomingMessageInfoTest {
         isEncryptionAllowed = true,
         orderNumber = 12)
 
-    val details = GeneralMessageDetails(
-        "email",
-        "label",
-        456,
-        11,
+    val msgEntity = MessageEntity(
+        1212121,
+        "mail",
+        "folder",
+        122321321,
         1557815912496,
         1557815912496,
-        listOf(InternetAddress("hello@example.com"), InternetAddress("test@example.com")),
-        listOf(InternetAddress("hello0@example.com"), InternetAddress("test0@example.com")),
-        listOf(InternetAddress("hello1@example.com"), InternetAddress("test1@example.com")),
-        listOf(InternetAddress("hello2@example.com"), InternetAddress("test2@example.com")),
+        "from_address",
+        "to_address",
+        "cc_address",
         "subject",
-        listOf("\\NoFlag", "\\SomeFlag"),
-        isRawMsgAvailable = true,
-        hasAtts = false,
-        isEncrypted = true,
-        msgState = MessageState.ERROR_CACHE_PROBLEM,
-        attsDir = "attsDir",
-        errorMsg = "errorMsg")
+        "flags",
+        "raw_message_without_attachments",
+        true,
+        true,
+        false,
+        -1,
+        "attachments_directory",
+        "error_msg",
+        "reply_to")
 
     val publicKeyMsgBlock = PublicKeyMsgBlock(
         "content",
@@ -151,9 +151,10 @@ class IncomingMessageInfoTest {
             true))
 
     val original = IncomingMessageInfo(
-        details,
+        msgEntity,
         listOf(att1, att2),
-        LocalFolder("fullName",
+        LocalFolder("account",
+            "fullName",
             "folderAlias",
             listOf("attributes"),
             true,

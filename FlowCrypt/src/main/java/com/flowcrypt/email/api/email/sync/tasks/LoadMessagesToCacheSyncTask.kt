@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -10,9 +10,9 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
 import com.sun.mail.imap.IMAPFolder
 import java.util.*
 import javax.mail.FetchProfile
@@ -69,7 +69,12 @@ class LoadMessagesToCacheSyncTask(ownerKey: String,
           else -> startCandidate
         }
     val folderName = imapFolder.fullName
-    ImapLabelsDaoSource().updateLabelMsgsCount(context, account.email, folderName, msgsCount)
+
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+    val label = roomDatabase.labelDao().getLabel(account.email, folderName)
+    label?.let {
+      roomDatabase.labelDao().update(it.copy(msgsCount = msgsCount))
+    }
 
     listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_getting_list_of_emails)
     if (end < 1) {

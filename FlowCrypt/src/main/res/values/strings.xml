@@ -1,5 +1,5 @@
 <!--
-  ~ © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
   ~ Contributors: DenBond7
   -->
 
@@ -317,7 +317,6 @@
     <string name="select_only_one_key">Select a source that stores only one key</string>
     <string name="yes">yes</string>
     <string name="no">no</string>
-    <string name="can_not_delete_sent_message">Cannot delete sent message</string>
     <string name="no_conn_msg_sent_later">Offline. The message will be sent later</string>
     <string name="me">me</string>
     <string name="sending">Sending&#8230;</string>
@@ -341,14 +340,6 @@
     <string name="sent">Sent</string>
     <string name="an_error_has_occurred">An error has occurred</string>
     <string name="outgoing">Outgoing</string>
-    <plurals name="messages_deleted">
-        <item quantity="one">The message was deleted</item>
-        <item quantity="other">%1$d messages were deleted</item>
-    </plurals>
-    <plurals name="delete_messages">
-        <item quantity="one">Delete this message?</item>
-        <item quantity="other">Delete these %1$d messages?</item>
-    </plurals>
     <string name="cannot_send_message_unknown_error">Can\'t send message: unknown error</string>
     <string name="message_failed_to_send">Message failed to send: unknown error</string>
     <string name="my_public_key">My Public Key</string>
@@ -422,4 +413,6 @@
     <string name="reconnect">Reconnect</string>
     <string name="access_was_not_granted">Access was not granted</string>
     <string name="can_not_send_due_to_auth_failure">Can\'t send message: auth failure</string>
+    <string name="mark_read">Mark read</string>
+    <string name="selection_text">Selected: %1$d</string>
 </resources>

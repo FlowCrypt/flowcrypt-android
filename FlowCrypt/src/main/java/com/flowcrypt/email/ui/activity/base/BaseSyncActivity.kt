@@ -1,5 +1,5 @@
 /*
- * © 2016-2019 FlowCrypt Limited. Limitations apply. Contact human@flowcrypt.com
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
  * Contributors: DenBond7
  */
 
@@ -159,7 +159,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param localFolder            [LocalFolder] object.
    * @param alreadyLoadedMsgsCount The count of already loaded messages in the localFolder.
    */
-  fun loadNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
+  open fun loadNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
     if (checkServiceBound(isSyncServiceBound)) return
     onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, Any())
 
@@ -183,6 +183,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param alreadyLoadedMsgsCount The count of already loaded messages in the localFolder.
    */
   fun searchNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
+    onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, Any())
     if (checkServiceBound(isSyncServiceBound)) return
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
@@ -303,7 +304,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param requestCode        The unique request code for identify the current action.
    * @param currentLocalFolder [LocalFolder] object.
    */
-  fun refreshMsgs(requestCode: Int, currentLocalFolder: LocalFolder) {
+  open fun refreshMsgs(requestCode: Int, currentLocalFolder: LocalFolder) {
     if (checkServiceBound(isSyncServiceBound)) return
 
     val action = BaseService.Action(replyMessengerName, requestCode, currentLocalFolder)
