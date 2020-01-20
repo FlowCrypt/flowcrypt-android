@@ -27,7 +27,6 @@ import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
@@ -53,7 +52,6 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   private var privateKeysFromEmailBackups: ArrayList<NodeKeyDetails>? = null
   private lateinit var submitPubKeyViewModel: SubmitPubKeyViewModel
   private val unlockedKeys: MutableList<NodeKeyDetails> = ArrayList()
-  private val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(this)
   private var keyDetailsType: KeyDetails.Type = KeyDetails.Type.EMAIL
 
   private var layoutSyncStatus: View? = null

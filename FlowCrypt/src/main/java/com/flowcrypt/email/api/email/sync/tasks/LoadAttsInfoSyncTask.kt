@@ -46,7 +46,9 @@ class LoadAttsInfoSyncTask(ownerKey: String,
     fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
     imapFolder.fetch(arrayOf(msg), fetchProfile)
 
+    AttachmentDaoSource().deleteAtts(listener.context, account.email, localFolder.fullName, uid)
     AttachmentDaoSource().updateAttsTable(listener.context, account.email, localFolder.fullName, uid, msg)
+
     listener.onAttsInfoReceived(account, localFolder, imapFolder, uid, ownerKey, requestCode)
 
     imapFolder.close(false)

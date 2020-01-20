@@ -249,7 +249,7 @@ class EmailSyncService : BaseService(), SyncListener {
           areAllMsgsEncrypted = isEncryptedModeEnabled
       )
 
-      FlowCryptRoomDatabase.getDatabase(this@EmailSyncService).msgDao().insert(msgEntities)
+      FlowCryptRoomDatabase.getDatabase(this@EmailSyncService).msgDao().insertWithReplace(msgEntities)
 
       if (!isEncryptedModeEnabled) {
         emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)
@@ -413,7 +413,7 @@ class EmailSyncService : BaseService(), SyncListener {
           areAllMsgsEncrypted = isEncryptedModeEnabled
       )
 
-      roomDatabase.msgDao().insert(msgEntities)
+      roomDatabase.msgDao().insertWithReplace(msgEntities)
 
       if (!isEncryptedModeEnabled) {
         emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)

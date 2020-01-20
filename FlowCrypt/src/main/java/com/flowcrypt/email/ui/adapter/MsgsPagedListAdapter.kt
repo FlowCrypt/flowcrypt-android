@@ -27,7 +27,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.util.DateTimeUtil
@@ -48,6 +48,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
     PagedListAdapter<MessageEntity, MsgsPagedListAdapter.BaseViewHolder>(DIFF_CALLBACK) {
   private val senderNamePattern: Pattern
   var tracker: SelectionTracker<Long>? = null
+  var currentFolder: LocalFolder? = null
 
   init {
     this.senderNamePattern = prepareSenderNamePattern()
@@ -110,20 +111,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         messageEntity.subject
       }
 
-      val folderType = when {
-        JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true) -> {
-          FoldersManager.FolderType.OUTBOX
-        }
-
-        messageEntity.sentDate?.let { it > 0 } ?: false -> {
-          FoldersManager.FolderType.SENT
-        }
-
-        else -> {
-          null
-        }
-      }
-
+      val folderType = FoldersManager.getFolderType(currentFolder)
       if (folderType != null) {
         when (folderType) {
           FoldersManager.FolderType.SENT -> viewHolder.textViewSenderAddress?.text =

@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.database.dao
 
+import android.database.sqlite.SQLiteDatabase
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Update
@@ -26,6 +27,12 @@ interface BaseDao<T> {
 
   @Insert
   fun insert(entities: Iterable<T>)
+
+  @Insert(onConflict = SQLiteDatabase.CONFLICT_REPLACE)
+  fun insertWithReplace(vararg entities: T)
+
+  @Insert(onConflict = SQLiteDatabase.CONFLICT_REPLACE)
+  fun insertWithReplace(entities: Iterable<T>)
 
   @Update
   fun update(entity: T): Int

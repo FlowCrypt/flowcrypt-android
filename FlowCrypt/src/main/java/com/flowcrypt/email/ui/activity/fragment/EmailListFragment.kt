@@ -299,9 +299,10 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     keepSelectionInMemory = false
     actionMode?.finish()
     tracker?.clearSelection()
-    adapter.submitList(null)
 
     val newFolder = listener?.currentFolder
+    adapter.currentFolder = newFolder
+    adapter.submitList(null)
 
     newFolder?.searchQuery?.let {
       swipeRefreshLayout?.isEnabled = false
