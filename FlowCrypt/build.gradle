@@ -349,7 +349,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation "androidx.legacy:legacy-preference-v14:${rootProject.ext.androidxBaseVersion}"
     implementation "androidx.cardview:cardview:${rootProject.ext.androidxBaseVersion}"
-    implementation 'androidx.browser:browser:1.2.0'
+    implementation 'androidx.browser:browser:1.0.0'
     implementation "androidx.recyclerview:recyclerview:${rootProject.ext.recyclerViewVersion}"
     implementation "androidx.recyclerview:recyclerview-selection:${rootProject.ext.recyclerViewVersion}-beta01"
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
