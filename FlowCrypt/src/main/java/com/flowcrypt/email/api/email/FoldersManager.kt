@@ -68,9 +68,9 @@ class FoldersManager constructor(val account: String) {
     get() {
       val customLocalFolders = LinkedList<LocalFolder>()
 
-      for ((_, value) in folders) {
-        if (value.isCustom) {
-          customLocalFolders.add(value)
+      for (folder in folders) {
+        if (folder.value.isCustom) {
+          customLocalFolders.add(folder.value)
         }
       }
 
@@ -86,9 +86,9 @@ class FoldersManager constructor(val account: String) {
     get() {
       val serverLocalFolders = LinkedList<LocalFolder>()
 
-      for ((_, value) in folders) {
-        if (!value.isCustom) {
-          serverLocalFolders.add(value)
+      for (folder in folders) {
+        if (!folder.value.isCustom) {
+          serverLocalFolders.add(folder.value)
         }
       }
 
@@ -142,9 +142,9 @@ class FoldersManager constructor(val account: String) {
   fun getFolderByAlias(folderAlias: String?): LocalFolder? {
     folderAlias ?: return null
 
-    for ((_, value) in folders) {
-      if (value.folderAlias?.equals(folderAlias) == true) {
-        return value
+    for (folder in folders) {
+      if (folder.value.folderAlias?.equals(folderAlias) == true) {
+        return folder.value
       }
     }
 

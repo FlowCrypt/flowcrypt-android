@@ -43,7 +43,9 @@ class NodeCallsExecutor {
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
     @JvmStatic
-    fun parseKeys(key: String): List<NodeKeyDetails> {
+    fun parseKeys(key: String?): List<NodeKeyDetails> {
+      key ?: return emptyList()
+
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = ParseKeysRequest(key)
 

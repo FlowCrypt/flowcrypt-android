@@ -336,10 +336,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   override fun onDestroy() {
     super.onDestroy()
     if (!isMsgSentToQueue) {
-      for ((_, _, _, _, _, _, _, _, _, _, _, uri) in atts!!) {
-        if (uri != null) {
-          if (Constants.FILE_PROVIDER_AUTHORITY.equals(uri.authority!!, ignoreCase = true)) {
-            context!!.contentResolver.delete(uri, null, null)
+      for (att in atts!!) {
+        att.uri?.let {
+          if (Constants.FILE_PROVIDER_AUTHORITY.equals(it.authority, ignoreCase = true)) {
+            context?.contentResolver?.delete(it, null, null)
           }
         }
       }
@@ -569,8 +569,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         val aliases = ArrayList<String>()
         aliases.add(account!!.email)
 
-        for ((_, _, sendAsEmail) in accountAliasesDaoList!!) {
-          sendAsEmail?.let { aliases.add(it) }
+        for (accountAlias in accountAliasesDaoList!!) {
+          accountAlias.sendAsEmail?.let { aliases.add(it) }
         }
 
         fromAddrs!!.clear()
@@ -1036,8 +1036,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   private fun hasExternalStorageUris(attachmentInfoList: List<AttachmentInfo>): Boolean {
-    for ((_, _, _, _, _, _, _, _, _, _, _, uri) in attachmentInfoList) {
-      if (uri != null && ContentResolver.SCHEME_FILE.equals(uri.scheme!!, ignoreCase = true)) {
+    for (att in attachmentInfoList) {
+      if (ContentResolver.SCHEME_FILE.equals(att.uri?.scheme, ignoreCase = true)) {
         return true
       }
     }
@@ -1246,11 +1246,11 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
         if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account!!.accountType!!, ignoreCase = true)) {
           val accountAliases = AccountAliasesDaoSource().getAliases(context!!, account)
-          for ((_, _, sendAsEmail) in accountAliases) {
+          for (alias in accountAliases) {
             val iterator = ccSet.iterator()
 
             while (iterator.hasNext()) {
-              if (sendAsEmail!!.equals(iterator.next().address, ignoreCase = true)) {
+              if (iterator.next().address.equals(alias.sendAsEmail, ignoreCase = true)) {
                 iterator.remove()
               }
             }

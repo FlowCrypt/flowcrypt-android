@@ -44,8 +44,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     val pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys()
     if (!CollectionUtils.isEmpty(pgpKeyInfoList)) {
       val builder = StringBuilder()
-      for ((_, private) in pgpKeyInfoList) {
-        builder.append(private).append("\n")
+      for (keyInfo in pgpKeyInfoList) {
+        builder.append(keyInfo.private).append("\n")
       }
 
       fetchKeys(builder.toString())

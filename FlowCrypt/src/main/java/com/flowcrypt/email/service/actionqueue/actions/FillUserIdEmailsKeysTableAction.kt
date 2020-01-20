@@ -37,8 +37,8 @@ data class FillUserIdEmailsKeysTableAction @JvmOverloads constructor(override va
     val pairs = ArrayList<Pair<String, String>>()
 
     val pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys()
-    for ((_, private) in pgpKeyInfoList) {
-      val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(private!!)
+    for (key in pgpKeyInfoList) {
+      val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(key.private)
 
       if (!CollectionUtils.isEmpty(nodeKeyDetailsList)) {
         for (nodeKeyDetails in nodeKeyDetailsList) {
