@@ -215,7 +215,7 @@ class SyncJobService : JobService(), SyncListener {
           areAllMsgsEncrypted = isEncryptedModeEnabled
       )
 
-      roomDatabase.msgDao().insert(msgEntities)
+      roomDatabase.msgDao().insertWithReplace(msgEntities)
 
       if (!GeneralUtil.isAppForegrounded()) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && newCandidates.isEmpty()) {
