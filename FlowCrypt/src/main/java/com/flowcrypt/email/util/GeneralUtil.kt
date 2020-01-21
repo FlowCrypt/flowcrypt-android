@@ -287,7 +287,7 @@ class GeneralUtil {
     @JvmStatic
     fun clearClipboard(context: Context) {
       val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-      clipboard.primaryClip = ClipData.newPlainText(null, "")
+      clipboard.setPrimaryClip(ClipData.newPlainText(null, ""))
     }
 
     /**

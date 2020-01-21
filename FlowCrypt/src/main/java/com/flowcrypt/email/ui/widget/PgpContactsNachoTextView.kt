@@ -104,7 +104,7 @@ class PgpContactsNachoTextView(context: Context, attrs: AttributeSet) : NachoTex
 
         val emails = chipValues
         if (emails.contains(stringBuilder.toString())) {
-          clipboardManager.primaryClip = ClipData.newPlainText(null, " ")
+          clipboardManager.setPrimaryClip(ClipData.newPlainText(null, " "))
         }
 
         return super.onTextContextMenuItem(id)
@@ -120,7 +120,7 @@ class PgpContactsNachoTextView(context: Context, attrs: AttributeSet) : NachoTex
 
   private fun setClipboardData(clip: ClipData) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    clipboard.primaryClip = clip
+    clipboard.setPrimaryClip(clip)
   }
 
   /**

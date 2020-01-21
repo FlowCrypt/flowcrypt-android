@@ -92,7 +92,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
 
       R.id.btnCopyToClipboard -> {
         val clipboard = context!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.primaryClip = ClipData.newPlainText("pubKey", details!!.publicKey)
+        clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", details?.publicKey))
         Toast.makeText(context, getString(R.string.copied), Toast.LENGTH_SHORT).show()
       }
 
