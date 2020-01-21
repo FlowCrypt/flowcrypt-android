@@ -82,7 +82,7 @@ class NodeRepository : PgpApiRepository {
         val response = nodeRequestWrapper.request.getResponse(nodeService)
         publishProgress(NodeResponseWrapper.loading(requestCode = nodeRequestWrapper.requestCode, data = null,
             loadingState = LoadingState.RESPONSE_RECEIVED))
-        val time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis()
+        val time = response.raw().receivedResponseAtMillis - response.raw().sentRequestAtMillis
         if (response.body() != null) {
           baseNodeResult = response.body() as BaseNodeResponse
 

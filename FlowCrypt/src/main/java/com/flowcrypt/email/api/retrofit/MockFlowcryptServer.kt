@@ -26,14 +26,14 @@ import okhttp3.mockwebserver.RecordedRequest
 object MockFlowcryptServer {
   private val server = MockWebServer()
   private val dispatcher = object : Dispatcher() {
-    override fun dispatch(request: RecordedRequest?): MockResponse {
+    override fun dispatch(request: RecordedRequest): MockResponse {
       println(request)
-      if (request?.path.equals("/account/login")) {
+      if (request.path.equals("/account/login")) {
         return MockResponse().setResponseCode(200)
             .setBody("{\"registered\":true,\"verified\":true}")
       }
 
-      if (request?.path.equals("/account/get")) {
+      if (request.path.equals("/account/get")) {
         return MockResponse().setResponseCode(200)
             .setBody("{\"account\":{\"email\":\"user@all-restrictions.denbond7.com\",\"alias\":null,\"name\":null,\"photo\":null,\"photo_circle\":true,\"web\":null,\"phone\":null,\"intro\":null,\"default_message_expire\":3,\"token\":null},\"domain_org_rules\":{\"flags\":[\"NO_PRV_CREATE\",\"NO_PRV_BACKUP\",\"ENFORCE_ATTESTER_SUBMIT\"]}}")
       }
@@ -46,9 +46,9 @@ object MockFlowcryptServer {
   }
 
   private suspend fun runServer() {
-    withContext(Dispatchers.Default) {
+    withContext(Dispatchers.IO) {
       server.start(1212)
-      server.setDispatcher(dispatcher)
+      server.dispatcher = dispatcher
     }
   }
 }

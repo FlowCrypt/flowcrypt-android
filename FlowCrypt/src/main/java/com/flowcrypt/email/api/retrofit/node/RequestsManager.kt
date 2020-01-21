@@ -73,7 +73,7 @@ object RequestsManager {
       var time = 0L
       try {
         val response = nodeRequestWrapper.request.getResponse(nodeService)
-        time = response.raw().receivedResponseAtMillis() - response.raw().sentRequestAtMillis()
+        time = response.raw().receivedResponseAtMillis - response.raw().sentRequestAtMillis
         if (response.body() != null) {
           baseNodeResult = response.body() as BaseNodeResponse
         } else {

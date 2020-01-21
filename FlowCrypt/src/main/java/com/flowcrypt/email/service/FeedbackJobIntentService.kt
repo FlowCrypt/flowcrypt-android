@@ -15,10 +15,10 @@ import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.cache.DiskLruCache
 import com.google.gson.GsonBuilder
-import okhttp3.internal.cache.DiskLruCache
 import okhttp3.internal.io.FileSystem
-import okio.Okio
+import okio.buffer
 import java.io.File
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
@@ -42,8 +42,7 @@ class FeedbackJobIntentService : JobIntentService() {
   }
 
   private fun initFeedbackCache(context: Context) {
-    diskLruCache = DiskLruCache.create(FileSystem.SYSTEM, File(context.cacheDir, CACHE_DIR_NAME),
-        CACHE_VERSION, 1, CACHE_SIZE)
+    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.cacheDir, CACHE_DIR_NAME), CACHE_VERSION, 1, CACHE_SIZE)
   }
 
   override fun onHandleWork(intent: Intent) {
@@ -69,7 +68,7 @@ class FeedbackJobIntentService : JobIntentService() {
   private fun addFeedbackToCache(key: String, feedBackItem: FeedBackItem) {
     val editor = diskLruCache.edit(key) ?: return
 
-    val bufferedSink = Okio.buffer(editor.newSink(0))
+    val bufferedSink = editor.newSink(0).buffer()
     bufferedSink.writeString(gson.toJson(feedBackItem), StandardCharsets.UTF_8)
     bufferedSink.flush()
     editor.commit()
@@ -82,7 +81,7 @@ class FeedbackJobIntentService : JobIntentService() {
 
     while (itemsIterator.hasNext()) {
       val item = itemsIterator.next()
-      val bufferedSource = Okio.buffer(item.getSource(0))
+      val bufferedSource = item.getSource(0).buffer()
       val inputStreamReader = InputStreamReader(bufferedSource.inputStream())
       val feedBackItem = gson.fromJson<FeedBackItem>(inputStreamReader, FeedBackItem::class.java)
       bufferedSource.close()
