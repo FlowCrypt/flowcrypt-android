@@ -95,6 +95,11 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
   fun getMsgEntity(position: Int?): MessageEntity? {
     position ?: return null
+
+    if (position == RecyclerView.NO_POSITION) {
+      return null
+    }
+
     return getItem(position)
   }
 
