@@ -331,7 +331,6 @@ easylauncher {
 
 dependencies {
     debugImplementation "com.squareup.leakcanary:leakcanary-android:${rootProject.ext.leakcanaryVersion}"
-    releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
 
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:${rootProject.ext.espressoVersion}"
@@ -339,7 +338,6 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-web:${rootProject.ext.espressoVersion}"
     androidTestImplementation "androidx.test.ext:junit:1.1.1"
 
-    testImplementation "com.squareup.leakcanary:leakcanary-android-no-op:${rootProject.ext.leakcanaryVersion}"
     testImplementation "junit:junit:${rootProject.ext.junitVersion}"
     testImplementation "androidx.room:room-testing:$roomVersion"
 
