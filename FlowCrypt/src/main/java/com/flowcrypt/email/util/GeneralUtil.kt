@@ -323,7 +323,9 @@ class GeneralUtil {
       val intent = Intent(Intent.ACTION_VIEW)
       intent.data = Uri.parse(url)
       if (intent.resolveActivity(context.packageManager) != null) {
-        customTabsIntent.launchUrl(context, intent.data)
+        intent.data?.let {
+          customTabsIntent.launchUrl(context, it)
+        }
       }
     }
 
