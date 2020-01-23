@@ -98,12 +98,12 @@ class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
     @get:ClassRule
     @JvmStatic
     val mockWebServerRule = FlowCryptMockWebServerRule(1212, object : Dispatcher() {
-      override fun dispatch(request: RecordedRequest?): MockResponse {
+      override fun dispatch(request: RecordedRequest): MockResponse {
         val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-        val model = gson.fromJson<InitialLegacySubmitModel>(InputStreamReader(request?.body?.inputStream()),
+        val model = gson.fromJson<InitialLegacySubmitModel>(InputStreamReader(request.body.inputStream()),
             InitialLegacySubmitModel::class.java)
 
-        if (request?.path.equals("/initial/legacy_submit")) {
+        if (request.path.equals("/initial/legacy_submit")) {
           when (model.email) {
             EMAIL_ENFORCE_ATTESTER_SUBMIT -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(SUBMIT_API_ERROR_RESPONSE))

@@ -78,19 +78,19 @@ class AddNewAccountActivityEnterpriseTest : BaseSignActivityTest() {
     @get:ClassRule
     @JvmStatic
     val mockWebServerRule = FlowCryptMockWebServerRule(1212, object : Dispatcher() {
-      override fun dispatch(request: RecordedRequest?): MockResponse {
+      override fun dispatch(request: RecordedRequest): MockResponse {
         val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-        val model = gson.fromJson<LoginModel>(InputStreamReader(request?.body?.inputStream()),
+        val model = gson.fromJson<LoginModel>(InputStreamReader(request.body.inputStream()),
             LoginModel::class.java)
 
-        if (request?.path.equals("/account/login")) {
+        if (request.path.equals("/account/login")) {
           when (model.account) {
             EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(LoginResponse(null, isRegistered = true, isVerified = true)))
           }
         }
 
-        if (request?.path.equals("/account/get")) {
+        if (request.path.equals("/account/get")) {
           when (model.account) {
             EMAIL_WITH_NO_PRV_CREATE_RULE -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(DomainRulesResponse(null, DomainRules(listOf
