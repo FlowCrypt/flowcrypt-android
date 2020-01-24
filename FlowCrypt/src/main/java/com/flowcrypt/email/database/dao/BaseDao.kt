@@ -57,4 +57,47 @@ interface BaseDao<T> {
 
   @Delete
   suspend fun deleteSuspend(entities: Iterable<T>): Int
+
+
+  companion object {
+    fun <M> doOperationViaSteps(stepValue: Int = 50, list: List<M>,
+                                block: (list: Collection<M>) -> Int) {
+      if (list.isNotEmpty()) {
+        if (list.size <= stepValue) {
+          block(list)
+        } else {
+          var i = 0
+          while (i < list.size) {
+            val tempList = if (list.size - i > stepValue) {
+              list.subList(i, i + stepValue)
+            } else {
+              list.subList(i, list.size)
+            }
+            block(tempList)
+            i += stepValue
+          }
+        }
+      }
+    }
+
+    suspend fun <M> doOperationViaStepsSuspend(stepValue: Int = 50, list: List<M>,
+                                               block: suspend (list: Collection<M>) -> Int) {
+      if (list.isNotEmpty()) {
+        if (list.size <= stepValue) {
+          block(list)
+        } else {
+          var i = 0
+          while (i < list.size) {
+            val tempList = if (list.size - i > stepValue) {
+              list.subList(i, i + stepValue)
+            } else {
+              list.subList(i, list.size)
+            }
+            block(tempList)
+            i += stepValue
+          }
+        }
+      }
+    }
+  }
 }
