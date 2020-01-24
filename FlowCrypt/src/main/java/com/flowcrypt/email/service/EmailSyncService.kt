@@ -261,12 +261,18 @@ class EmailSyncService : BaseService(), SyncListener {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, localFolder)
       }
 
-      val attDaoSource = AttachmentDaoSource()
-      for (msg in msgs) {
-        attDaoSource.updateAttsTable(this, account.email, localFolder.fullName, remoteFolder.getUID(msg), msg)
-      }
+      try {
+        //we should handle any exceptions here to prevent showing messages
+        val attDaoSource = AttachmentDaoSource()
+        for (msg in msgs) {
+          attDaoSource.updateAttsTable(this, account.email, localFolder.fullName, remoteFolder.getUID(msg), msg)
+        }
 
-      updateLocalContactsIfNeeded(remoteFolder, msgs)
+        updateLocalContactsIfNeeded(remoteFolder, msgs)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+      }
     } catch (e: MessagingException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
