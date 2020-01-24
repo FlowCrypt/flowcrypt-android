@@ -1223,7 +1223,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       }
     }
 
-    editTextEmailMsg?.setText(getString(R.string.forward_template, originalMsgInfo.getFrom()!!.first().address,
+    editTextEmailMsg?.setText(getString(R.string.forward_template,
+        originalMsgInfo.getFrom()?.first()?.address ?: "",
         EmailUtil.genForwardedMsgDate(originalMsgInfo.getReceiveDate()), originalMsgInfo.getSubject(),
         prepareRecipientsLineForForwarding(originalMsgInfo.getTo())))
 
@@ -1238,7 +1239,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   private fun updateViewsIfReplyAllMode() {
     if (folderType === FoldersManager.FolderType.SENT || folderType === FoldersManager.FolderType.OUTBOX) {
-      recipientsTo?.setText(prepareRecipients(msgInfo!!.getTo()))
+      recipientsTo?.setText(prepareRecipients(msgInfo?.getTo()))
 
       if (msgInfo?.getCc()?.isNotEmpty() == true) {
         layoutCc?.visibility = View.VISIBLE

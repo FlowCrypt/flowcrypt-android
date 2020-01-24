@@ -257,11 +257,13 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   override fun onClick(v: View) {
     when (v.id) {
       R.id.layoutReplyButton -> {
-        startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY, msgEncryptType))
+        startActivity(CreateMessageActivity.generateIntent(context, prepareMsgInfoForReply(), MessageType.REPLY,
+            msgEncryptType))
       }
 
       R.id.imageButtonReplyAll, R.id.layoutReplyAllButton -> {
-        startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY_ALL, msgEncryptType))
+        startActivity(CreateMessageActivity.generateIntent(context, prepareMsgInfoForReply(), MessageType.REPLY_ALL,
+            msgEncryptType))
       }
 
       R.id.imageButtonMoreOptions -> {
@@ -300,7 +302,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           msgInfo!!.atts = atts
         }
 
-        startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.FORWARD, msgEncryptType))
+        startActivity(CreateMessageActivity.generateIntent(context, prepareMsgInfoForReply(), MessageType.FORWARD,
+            msgEncryptType))
       }
     }
   }
@@ -424,7 +427,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       atts.add(att)
     }
 
-    startActivity(CreateMessageActivity.generateIntent(context, msgInfo, MessageType.REPLY,
+    startActivity(CreateMessageActivity.generateIntent(context, prepareMsgInfoForReply(), MessageType.REPLY,
         MessageEncryptionType.STANDARD,
         ServiceInfo(isToFieldEditable = false,
             isFromFieldEditable = false,
@@ -665,14 +668,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private fun setupWebView(block: MsgBlock) {
     emailWebView?.configure()
 
-    var text = block.content
-
-    text?.let {
-      if (it.length > CONTENT_MAX_ALLOWED_LENGTH) {
-        text = it.take(CONTENT_MAX_ALLOWED_LENGTH) +
-            "\n\n" + getString(R.string.clipped_message_too_large)
-      }
-    }
+    val text = clipLargeText(block.content)
 
     emailWebView?.loadDataWithBaseURL(null, text, "text/html", StandardCharsets.UTF_8.displayName(), null)
     emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
@@ -682,6 +678,17 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         (activity as? MessageDetailsActivity)?.idlingForWebView?.setIdleState(true)
       }
     })
+  }
+
+  private fun clipLargeText(text: String?): String? {
+    text?.let {
+      return if (it.length > CONTENT_MAX_ALLOWED_LENGTH) {
+        it.take(CONTENT_MAX_ALLOWED_LENGTH) +
+            "\n\n" + getString(R.string.clipped_message_too_large)
+      } else text
+    }
+
+    return text
   }
 
   /**
@@ -951,6 +958,13 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       buttonView.setText(if (isChecked) R.string.hide_original_message else R.string.show_original_message)
     }
     return viewGroup
+  }
+
+  /**
+   * To prevent TransactionTooLargeException we have to remove large objects from [IncomingMessageInfo]
+   */
+  private fun prepareMsgInfoForReply(): IncomingMessageInfo? {
+    return msgInfo?.copy(msgBlocks = emptyList(), text = clipLargeText(msgInfo?.text))
   }
 
   fun setActionProgress(progress: Int, message: String?) {
