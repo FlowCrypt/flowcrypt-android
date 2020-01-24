@@ -231,8 +231,8 @@ class ContactsDaoSource : BaseDaoSource() {
    * @return The count of updated rows. Will be 1 if information about [PgpContact] was
    * updated or -1 otherwise.
    */
-  fun updatePgpContact(context: Context, pgpContact: PgpContact?): Int {
-    val contentResolver = context.contentResolver
+  fun updatePgpContact(context: Context?, pgpContact: PgpContact?): Int {
+    val contentResolver = context?.contentResolver
     return if (pgpContact != null && contentResolver != null) {
       val contentValues = ContentValues()
       contentValues.put(COL_NAME, pgpContact.name)

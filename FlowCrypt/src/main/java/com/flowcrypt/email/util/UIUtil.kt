@@ -73,10 +73,11 @@ class UIUtil {
      * @param view
      */
     @JvmStatic
-    fun hideSoftInput(context: Context, view: View?) {
-      val inputMethodManager = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+    fun hideSoftInput(context: Context?, view: View?) {
+      val inputMethodManager = context?.getSystemService(Activity.INPUT_METHOD_SERVICE) as?
+          InputMethodManager
       if (view != null) {
-        inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+        inputMethodManager?.hideSoftInputFromWindow(view.windowToken, 0)
       }
     }
 
@@ -146,7 +147,7 @@ class UIUtil {
      * @return an array of bytes of a compressed screenshot.
      */
     fun getScreenShotByteArray(activity: Activity): ByteArray? {
-      val view = activity.window.decorView ?: return null
+      val view = activity.window.decorView
       val width = view.width
       val height = view.height
       val bitmap = Bitmap.createBitmap(if (width > 0) width else 640,
