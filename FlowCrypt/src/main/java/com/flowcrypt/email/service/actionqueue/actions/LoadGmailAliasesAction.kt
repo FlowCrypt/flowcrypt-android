@@ -9,10 +9,10 @@ import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
-import com.flowcrypt.email.database.dao.source.AccountAliases
-import com.flowcrypt.email.database.dao.source.AccountAliasesDao
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.annotations.SerializedName
 import java.util.*
@@ -48,21 +48,21 @@ data class LoadGmailAliasesAction(override var id: Long = 0,
 
       val gmailService = GmailApiHelper.generateGmailApiService(context, account)
       val response = gmailService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
-      val aliases = ArrayList<AccountAliases>()
+      val aliases = ArrayList<AccountAliasesEntity>()
       for (alias in response.sendAs) {
         if (alias.verificationStatus != null) {
-          val accountAliasesDao = AccountAliases()
-          accountAliasesDao.email = account.email
-          accountAliasesDao.accountType = account.accountType
-          accountAliasesDao.sendAsEmail = alias.sendAsEmail
-          accountAliasesDao.displayName = alias.displayName
-          accountAliasesDao.isDefault = alias.isDefault != null && alias.isDefault!!
-          accountAliasesDao.verificationStatus = alias.verificationStatus
+          val accountAliasesDao = AccountAliasesEntity(
+              email = account.email.toLowerCase(Locale.getDefault()),
+              accountType = account.accountType ?: AccountDao.ACCOUNT_TYPE_GOOGLE,
+              sendAsEmail = alias.sendAsEmail.toLowerCase(Locale.getDefault()),
+              displayName = alias.displayName,
+              isDefault = alias.isDefault,
+              verificationStatus = alias.verificationStatus)
           aliases.add(accountAliasesDao)
         }
       }
 
-      AccountAliasesDao().addRows(context, aliases)
+      FlowCryptRoomDatabase.getDatabase(context).accountAliasesDao().insertWithReplace(aliases)
     } catch (e: Exception) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)

@@ -66,6 +66,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   abstract fun labelDao(): LabelDao
 
+  abstract fun accountAliasesDao(): AccountAliasesDao
+
   companion object {
     const val COLUMN_NAME_COUNT = "COUNT(*)"
     private const val DB_NAME = "flowcrypt.db"
@@ -136,8 +138,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL(AccountAliasesDao.ACCOUNTS_ALIASES_TABLE_SQL_CREATE)
-          database.execSQL(AccountAliasesDao.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES)
+          database.execSQL("CREATE TABLE `accounts_aliases` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT NOT NULL, `send_as_email` TEXT NOT NULL, `display_name` TEXT DEFAULT NULL, `is_default` INTEGER DEFAULT 0, `verification_status` TEXT NOT NULL)")
+          database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS`email_account_type_send_as_email_in_accounts_aliases` ON `accounts_aliases` (`email`, `account_type`, `send_as_email`)")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -150,7 +152,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         database.beginTransaction()
         try {
           database.execSQL("DROP INDEX IF EXISTS email_account_type_in_accounts_aliases")
-          database.execSQL(AccountAliasesDao.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES)
+          database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS`email_account_type_send_as_email_in_accounts_aliases` ON `accounts_aliases` (`email`, `account_type`, `send_as_email`)")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()

@@ -21,10 +21,10 @@ import androidx.room.PrimaryKey
     indices = [Index(name = "email_account_type_send_as_email_in_accounts_aliases",
         value = ["email", "account_type", "send_as_email"], unique = true)])
 data class AccountAliasesEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
     val email: String,
     @ColumnInfo(name = "account_type") val accountType: String,
     @ColumnInfo(name = "send_as_email") val sendAsEmail: String,
-    @ColumnInfo(name = "display_name", defaultValue = "NULL") val displayName: String?,
-    @ColumnInfo(name = "is_default", defaultValue = "0") val isDefault: Int?,
+    @ColumnInfo(name = "display_name", defaultValue = "NULL") val displayName: String? = null,
+    @ColumnInfo(name = "is_default", defaultValue = "0") val isDefault: Boolean? = null,
     @ColumnInfo(name = "verification_status") val verificationStatus: String)
