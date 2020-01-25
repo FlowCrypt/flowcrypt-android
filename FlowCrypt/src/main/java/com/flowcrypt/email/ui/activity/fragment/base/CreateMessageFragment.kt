@@ -52,7 +52,7 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.database.dao.source.AccountAliases
-import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
+import com.flowcrypt.email.database.dao.source.AccountAliasesDao
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
@@ -611,7 +611,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           }
         }
 
-        AccountAliasesDaoSource().updateAliases(context!!, account!!, accountAliasesDaoList)
+        AccountAliasesDao().updateAliases(context!!, account!!, accountAliasesDaoList)
       }
 
       else -> super.onSuccess(loaderId, result)
@@ -1263,7 +1263,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         }
 
         if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account?.accountType, ignoreCase = true)) {
-          val accountAliases = AccountAliasesDaoSource().getAliases(context!!, account)
+          val accountAliases = AccountAliasesDao().getAliases(context!!, account)
           for (alias in accountAliases) {
             val iterator = ccSet.iterator()
 

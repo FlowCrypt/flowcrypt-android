@@ -21,7 +21,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-class AccountAliasesDaoSource : BaseDaoSource() {
+class AccountAliasesDao : BaseDaoSource() {
 
   override val tableName: String = TABLE_NAME_ACCOUNTS_ALIASES
 

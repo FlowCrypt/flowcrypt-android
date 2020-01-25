@@ -19,7 +19,7 @@ import android.provider.BaseColumns
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
+import com.flowcrypt.email.database.dao.source.AccountAliasesDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
@@ -84,8 +84,8 @@ class SecurityContentProvider : ContentProvider() {
       }
 
       MATCHED_CODE_ACCOUNT_ALIASES_TABLE -> {
-        id = sqLiteDatabase.insert(AccountAliasesDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
-        result = Uri.parse(AccountAliasesDaoSource().baseContentUri.toString() + "/" + id)
+        id = sqLiteDatabase.insert(AccountAliasesDao().tableName, SQLiteDatabase.CONFLICT_NONE, values)
+        result = Uri.parse(AccountAliasesDao().baseContentUri.toString() + "/" + id)
       }
 
       MATCHED_CODE_ACTION_QUEUE_TABLE -> {
@@ -166,13 +166,13 @@ class SecurityContentProvider : ContentProvider() {
         rowsCount += sqLiteDatabase.delete("messages", "email = ?", selectionArgs)
         rowsCount += sqLiteDatabase.delete(AttachmentDaoSource().tableName,
             AttachmentDaoSource.COL_EMAIL + " = ?", selectionArgs)
-        rowsCount += sqLiteDatabase.delete(AccountAliasesDaoSource().tableName,
-            AccountAliasesDaoSource.COL_EMAIL + " = ?", selectionArgs)
+        rowsCount += sqLiteDatabase.delete(AccountAliasesDao().tableName,
+            AccountAliasesDao.COL_EMAIL + " = ?", selectionArgs)
       }
 
       MATCHED_CODE_KEY_ERASE_DATABASE -> {
         rowsCount = sqLiteDatabase.delete(AccountDaoSource().tableName, null, null)
-        rowsCount += sqLiteDatabase.delete(AccountAliasesDaoSource().tableName, null, null)
+        rowsCount += sqLiteDatabase.delete(AccountAliasesDao().tableName, null, null)
         rowsCount += sqLiteDatabase.delete(ImapLabelsDaoSource().tableName, null, null)
         rowsCount += sqLiteDatabase.delete("messages", null, null)
         rowsCount += sqLiteDatabase.delete(AttachmentDaoSource().tableName, null, null)
@@ -285,7 +285,7 @@ class SecurityContentProvider : ContentProvider() {
 
       MATCHED_CODE_ATTACHMENT_TABLE -> AttachmentDaoSource.TABLE_NAME_ATTACHMENT
 
-      MATCHED_CODE_ACCOUNT_ALIASES_TABLE -> AccountAliasesDaoSource.TABLE_NAME_ACCOUNTS_ALIASES
+      MATCHED_CODE_ACCOUNT_ALIASES_TABLE -> AccountAliasesDao.TABLE_NAME_ACCOUNTS_ALIASES
 
       MATCHED_CODE_ACTION_QUEUE_TABLE -> ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE
 
@@ -344,9 +344,9 @@ class SecurityContentProvider : ContentProvider() {
           MATCHED_CODE_ATTACHMENT_TABLE)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AttachmentDaoSource.TABLE_NAME_ATTACHMENT
           + SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ATTACHMENT_SINGLE_ROW)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountAliasesDaoSource.TABLE_NAME_ACCOUNTS_ALIASES,
+      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountAliasesDao.TABLE_NAME_ACCOUNTS_ALIASES,
           MATCHED_CODE_ACCOUNT_ALIASES_TABLE)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountAliasesDaoSource.TABLE_NAME_ACCOUNTS_ALIASES
+      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountAliasesDao.TABLE_NAME_ACCOUNTS_ALIASES
           + SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ACCOUNT_ALIASES_ROW)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE
           + SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ACTION_QUEUE_ROW)

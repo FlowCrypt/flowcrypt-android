@@ -18,7 +18,7 @@ import com.flowcrypt.email.database.dao.AccountDao
 import com.flowcrypt.email.database.dao.AttachmentDao
 import com.flowcrypt.email.database.dao.LabelDao
 import com.flowcrypt.email.database.dao.MessageDao
-import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
+import com.flowcrypt.email.database.dao.source.AccountAliasesDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
@@ -136,8 +136,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL(AccountAliasesDaoSource.ACCOUNTS_ALIASES_TABLE_SQL_CREATE)
-          database.execSQL(AccountAliasesDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES)
+          database.execSQL(AccountAliasesDao.ACCOUNTS_ALIASES_TABLE_SQL_CREATE)
+          database.execSQL(AccountAliasesDao.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES)
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -150,7 +150,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         database.beginTransaction()
         try {
           database.execSQL("DROP INDEX IF EXISTS email_account_type_in_accounts_aliases")
-          database.execSQL(AccountAliasesDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES)
+          database.execSQL(AccountAliasesDao.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES)
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()

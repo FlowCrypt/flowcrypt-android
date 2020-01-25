@@ -10,7 +10,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.dao.source.AccountAliases
-import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
+import com.flowcrypt.email.database.dao.source.AccountAliasesDao
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -62,7 +62,7 @@ data class LoadGmailAliasesAction(override var id: Long = 0,
         }
       }
 
-      AccountAliasesDaoSource().addRows(context, aliases)
+      AccountAliasesDao().addRows(context, aliases)
     } catch (e: Exception) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
