@@ -8,6 +8,7 @@ package com.flowcrypt.email.database.entity
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -19,7 +20,11 @@ import androidx.room.PrimaryKey
  */
 @Entity(tableName = "accounts_aliases",
     indices = [Index(name = "email_account_type_send_as_email_in_accounts_aliases",
-        value = ["email", "account_type", "send_as_email"], unique = true)])
+        value = ["email", "account_type", "send_as_email"], unique = true)],
+    foreignKeys = [
+      ForeignKey(entity = AccountEntity::class, parentColumns = ["email", "account_type"],
+          childColumns = ["email", "account_type"], onDelete = ForeignKey.CASCADE)
+    ])
 data class AccountAliasesEntity(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
     val email: String,
