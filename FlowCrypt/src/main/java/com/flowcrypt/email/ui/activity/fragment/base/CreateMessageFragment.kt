@@ -51,7 +51,7 @@ import com.flowcrypt.email.api.email.model.ExtraActionInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
-import com.flowcrypt.email.database.dao.source.AccountAliasesDao
+import com.flowcrypt.email.database.dao.source.AccountAliases
 import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
@@ -575,7 +575,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       }
 
       R.id.loader_id_load_email_aliases -> {
-        val accountAliasesDaoList = result as List<AccountAliasesDao>?
+        val accountAliasesDaoList = result as List<AccountAliases>?
         val aliases = ArrayList<String>()
         account?.let {
           aliases.add(it.email)

@@ -13,7 +13,7 @@ import android.provider.BaseColumns
 import java.util.*
 
 /**
- * This object describes a logic of work with [AccountAliasesDao].
+ * This object describes a logic of work with [AccountAliases].
  *
  * @author Denis Bondarenko
  * Date: 26.10.2017
@@ -26,13 +26,13 @@ class AccountAliasesDaoSource : BaseDaoSource() {
   override val tableName: String = TABLE_NAME_ACCOUNTS_ALIASES
 
   /**
-   * Save information about an account alias using the [AccountAliasesDao];
+   * Save information about an account alias using the [AccountAliases];
    *
    * @param context Interface to global information about an application environment;
    * @param dao     The user's alias information.
    * @return The created [Uri] or null;
    */
-  fun addRow(context: Context, dao: AccountAliasesDao?): Uri? {
+  fun addRow(context: Context, dao: AccountAliases?): Uri? {
     val contentResolver = context.contentResolver
     if (dao != null && contentResolver != null) {
       val contentValues = generateContentValues(dao) ?: return null
@@ -48,7 +48,7 @@ class AccountAliasesDaoSource : BaseDaoSource() {
    * @param context Interface to global information about an application environment.
    * @param list    The list of an account aliases.
    */
-  fun addRows(context: Context, list: List<AccountAliasesDao>?): Int {
+  fun addRows(context: Context, list: List<AccountAliases>?): Int {
     return if (list != null && list.isNotEmpty()) {
       val contentResolver = context.contentResolver
       val contentValuesArray = arrayOfNulls<ContentValues>(list.size)
@@ -64,14 +64,14 @@ class AccountAliasesDaoSource : BaseDaoSource() {
   }
 
   /**
-   * Get the list of [AccountAliasesDao] object from the local database for some email.
+   * Get the list of [AccountAliases] object from the local database for some email.
    *
    * @param context Interface to global information about an application environment.
    * @param account An account information.
-   * @return The list of [AccountAliasesDao];
+   * @return The list of [AccountAliases];
    */
-  fun getAliases(context: Context, account: AccountDao?): List<AccountAliasesDao> {
-    val accountAliasesDaoList = ArrayList<AccountAliasesDao>()
+  fun getAliases(context: Context, account: AccountDao?): List<AccountAliases> {
+    val accountAliasesDaoList = ArrayList<AccountAliases>()
     if (account != null) {
       val selection = AccountDaoSource.COL_EMAIL + " = ? AND " + AccountDaoSource.COL_ACCOUNT_TYPE + " = ?"
       val selectionArgs = arrayOf(account.email, account.accountType!!)
@@ -98,7 +98,7 @@ class AccountAliasesDaoSource : BaseDaoSource() {
    * @return The count of updated rows. Will be 1 if information about [AccountDao] was
    * updated or -1 otherwise.
    */
-  fun updateAliases(context: Context, account: AccountDao, list: List<AccountAliasesDao>): Int {
+  fun updateAliases(context: Context, account: AccountDao, list: List<AccountAliases>): Int {
     deleteAccountAliases(context, account)
     return addRows(context, list)
   }
@@ -134,25 +134,25 @@ class AccountAliasesDaoSource : BaseDaoSource() {
   }
 
   /**
-   * Generate a [ContentValues] using [AccountAliasesDao].
+   * Generate a [ContentValues] using [AccountAliases].
    *
-   * @param accountAliasesDao The [AccountAliasesDao] object;
+   * @param accountAliases The [AccountAliases] object;
    * @return The generated [ContentValues].
    */
-  private fun generateContentValues(accountAliasesDao: AccountAliasesDao): ContentValues? {
+  private fun generateContentValues(accountAliases: AccountAliases): ContentValues? {
     val contentValues = ContentValues()
-    if (accountAliasesDao.email != null) {
-      contentValues.put(COL_EMAIL, accountAliasesDao.email!!.toLowerCase(Locale.getDefault()))
+    if (accountAliases.email != null) {
+      contentValues.put(COL_EMAIL, accountAliases.email!!.toLowerCase(Locale.getDefault()))
     } else {
       return null
     }
 
-    contentValues.put(COL_ACCOUNT_TYPE, accountAliasesDao.accountType)
-    contentValues.put(COL_DISPLAY_NAME, accountAliasesDao.displayName)
-    contentValues.put(COL_SEND_AS_EMAIL, accountAliasesDao.sendAsEmail!!.toLowerCase(Locale.getDefault()))
-    contentValues.put(COL_SEND_AS_EMAIL, accountAliasesDao.sendAsEmail!!.toLowerCase(Locale.getDefault()))
-    contentValues.put(COL_IS_DEFAULT, accountAliasesDao.isDefault)
-    contentValues.put(COL_VERIFICATION_STATUS, accountAliasesDao.verificationStatus)
+    contentValues.put(COL_ACCOUNT_TYPE, accountAliases.accountType)
+    contentValues.put(COL_DISPLAY_NAME, accountAliases.displayName)
+    contentValues.put(COL_SEND_AS_EMAIL, accountAliases.sendAsEmail!!.toLowerCase(Locale.getDefault()))
+    contentValues.put(COL_SEND_AS_EMAIL, accountAliases.sendAsEmail!!.toLowerCase(Locale.getDefault()))
+    contentValues.put(COL_IS_DEFAULT, accountAliases.isDefault)
+    contentValues.put(COL_VERIFICATION_STATUS, accountAliases.verificationStatus)
     return contentValues
   }
 
@@ -184,14 +184,14 @@ class AccountAliasesDaoSource : BaseDaoSource() {
         COL_SEND_AS_EMAIL + ")")
 
     /**
-     * Generate the [AccountAliasesDao] from the current cursor position;
+     * Generate the [AccountAliases] from the current cursor position;
      *
      * @param cursor The cursor from which to get the data.
-     * @return [AccountAliasesDao].
+     * @return [AccountAliases].
      */
     @JvmStatic
-    fun getCurrent(cursor: Cursor): AccountAliasesDao {
-      val dao = AccountAliasesDao()
+    fun getCurrent(cursor: Cursor): AccountAliases {
+      val dao = AccountAliases()
       val accountEmail = cursor.getString(cursor.getColumnIndex(COL_EMAIL))
       dao.email = accountEmail?.toLowerCase(Locale.getDefault())
       dao.accountType = cursor.getString(cursor.getColumnIndex(COL_ACCOUNT_TYPE))

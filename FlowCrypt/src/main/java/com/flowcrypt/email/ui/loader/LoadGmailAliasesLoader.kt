@@ -8,7 +8,7 @@ package com.flowcrypt.email.ui.loader
 import android.content.Context
 import androidx.loader.content.AsyncTaskLoader
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
-import com.flowcrypt.email.database.dao.source.AccountAliasesDao
+import com.flowcrypt.email.database.dao.source.AccountAliases
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -40,10 +40,10 @@ class LoadGmailAliasesLoader(context: Context,
     try {
       val mService = GmailApiHelper.generateGmailApiService(context, account)
       val aliases = mService.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
-      val accountAliases = ArrayList<AccountAliasesDao>()
+      val accountAliases = ArrayList<AccountAliases>()
       for (alias in aliases.sendAs) {
         if (alias.verificationStatus != null) {
-          val accountAliasesDao = AccountAliasesDao()
+          val accountAliasesDao = AccountAliases()
           accountAliasesDao.email = account.email
           accountAliasesDao.accountType = account.accountType
           accountAliasesDao.sendAsEmail = alias.sendAsEmail
