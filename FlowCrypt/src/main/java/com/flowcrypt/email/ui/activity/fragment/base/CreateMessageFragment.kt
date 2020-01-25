@@ -40,6 +40,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import com.flowcrypt.email.Constants
@@ -51,11 +53,11 @@ import com.flowcrypt.email.api.email.model.ExtraActionInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
-import com.flowcrypt.email.database.dao.source.AccountAliases
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
+import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
@@ -69,7 +71,6 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter
-import com.flowcrypt.email.ui.loader.LoadGmailAliasesLoader
 import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan
@@ -88,10 +89,8 @@ import com.hootsuite.nachos.validator.ChipifyingNachoValidator
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.io.IOException
-import java.util.*
 import java.util.regex.Pattern
 import javax.mail.internet.InternetAddress
-import kotlin.collections.ArrayList
 
 /**
  * This fragment describe a logic of sent an encrypted or standard message.
@@ -107,6 +106,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   private lateinit var onMsgSendListener: OnMessageSendListener
   private lateinit var listener: OnChangeMessageEncryptionTypeListener
+  private lateinit var accountAliasesViewModel: AccountAliasesViewModel
   private lateinit var draftCacheDir: File
 
   private var pgpContactsTo: MutableList<PgpContact>? = null
@@ -295,6 +295,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    accountAliasesViewModel = ViewModelProvider(this).get(AccountAliasesViewModel::class.java)
     setHasOptionsMenu(true)
 
     account = AccountDaoSource().getActiveAccountInformation(context)
@@ -333,7 +334,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     super.onActivityCreated(savedInstanceState)
 
     if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account?.accountType, ignoreCase = true)) {
-      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_email_aliases, null, this)
+      setupAccountAliasesViewModel()
     }
 
     val isEncryptedMode = listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED
@@ -534,8 +535,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         return UpdateInfoAboutPgpContactsAsyncTaskLoader(context!!, recipientsBcc!!.chipAndTokenValues)
       }
 
-      R.id.loader_id_load_email_aliases -> return LoadGmailAliasesLoader(context!!, account!!)
-
       else -> return super.onCreateLoader(id, args)
     }
   }
@@ -571,46 +570,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         if (pgpContactsBcc?.isNotEmpty() == true) {
           updateChips(recipientsBcc!!, pgpContactsBcc!!)
         }
-      }
-
-      R.id.loader_id_load_email_aliases -> {
-        val accountAliasesDaoList = result as List<AccountAliases>?
-        val aliases = ArrayList<String>()
-        account?.let {
-          aliases.add(it.email)
-        }
-
-        for (accountAlias in accountAliasesDaoList!!) {
-          accountAlias.sendAsEmail?.let { aliases.add(it) }
-        }
-
-        fromAddrs?.clear()
-        fromAddrs?.addAll(aliases)
-
-        for (email in aliases) {
-          fromAddrs?.updateKeyAvailability(email, !CollectionUtils.isEmpty
-          (UserIdEmailsKeysDaoSource().getLongIdsByEmail(context, email)))
-        }
-
-        if (msgInfo != null) {
-          prepareAliasForReplyIfNeeded(aliases)
-        } else if (listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
-          showFirstMatchedAliasWithPrvKey(aliases)
-        }
-
-        if (fromAddrs?.count == 1) {
-          if (imageButtonAliases?.visibility == View.VISIBLE) {
-            imageButtonAliases?.visibility = View.INVISIBLE
-          }
-        } else {
-          if (serviceInfo?.isFromFieldEditable == true) {
-            imageButtonAliases?.visibility = View.VISIBLE
-          } else {
-            imageButtonAliases?.visibility = View.INVISIBLE
-          }
-        }
-
-        //AccountAliasesDao().updateAliases(context!!, account!!, accountAliasesDaoList)
       }
 
       else -> super.onSuccess(loaderId, result)
@@ -1262,16 +1221,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         }
 
         if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account?.accountType, ignoreCase = true)) {
-          /*val accountAliases = AccountAliasesDao().getAliases(context!!, account)
-          for (alias in accountAliases) {
-            val iterator = ccSet.iterator()
+          accountAliasesViewModel.accountAliasesLiveData.value?.let {
+            for (alias in it) {
+              val iterator = ccSet.iterator()
 
-            while (iterator.hasNext()) {
-              if (iterator.next().address.equals(alias.sendAsEmail, ignoreCase = true)) {
-                iterator.remove()
+              while (iterator.hasNext()) {
+                if (iterator.next().address.equals(alias.sendAsEmail, ignoreCase = true)) {
+                  iterator.remove()
+                }
               }
             }
-          }*/
+          }
         }
       }
 
@@ -1508,6 +1468,56 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       fragment.setTargetFragment(this@CreateMessageFragment, REQUEST_CODE_SHOW_PUB_KEY_DIALOG)
       fragment.show(parentFragmentManager, ChoosePublicKeyDialogFragment::class.java.simpleName)
     }
+  }
+
+  private fun setupAccountAliasesViewModel() {
+    accountAliasesViewModel.fetchUpdates(viewLifecycleOwner)
+    accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner, Observer {
+      val aliases = ArrayList<String>()
+      accountAliasesViewModel.accountLiveData.value?.let { accountEntity ->
+        aliases.add(accountEntity.email)
+      }
+
+      for (accountAlias in it) {
+        aliases.add(accountAlias.sendAsEmail)
+      }
+
+      fromAddrs?.clear()
+      fromAddrs?.addAll(aliases)
+
+      for (email in aliases) {
+        fromAddrs?.updateKeyAvailability(email, !CollectionUtils.isEmpty
+        (UserIdEmailsKeysDaoSource().getLongIdsByEmail(context, email)))
+      }
+
+      if (msgInfo != null) {
+        prepareAliasForReplyIfNeeded(aliases)
+      } else if (listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
+        showFirstMatchedAliasWithPrvKey(aliases)
+      }
+
+      if (serviceInfo != null) {
+        serviceInfo?.let { serviceInfo ->
+          if (serviceInfo.isFromFieldEditable) {
+            imageButtonAliases?.visibility = View.VISIBLE
+          } else {
+            imageButtonAliases?.visibility = View.INVISIBLE
+          }
+        }
+      } else {
+        fromAddrs?.count?.let { count: Int ->
+          if (count in 0..1) {
+            if (imageButtonAliases?.visibility == View.VISIBLE) {
+              imageButtonAliases?.visibility = View.INVISIBLE
+            }
+          } else {
+            imageButtonAliases?.visibility = View.VISIBLE
+          }
+        }
+      }
+
+      updateViews()
+    })
   }
 
   /**
