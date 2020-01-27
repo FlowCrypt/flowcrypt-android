@@ -18,7 +18,7 @@ ext {
     /* https://developer.android.com/jetpack/androidx/releases/recyclerview*/
     recyclerViewVersion = '1.1.0'
     /* https://developer.android.com/jetpack/androidx/releases/lifecycle*/
-    lifecycleVersion = '2.2.0-rc03'
+    lifecycleVersion = '2.2.0'
     /* https://developer.android.com/jetpack/androidx/releases/room#declaring_dependencies*/
     roomVersion = '2.2.3'
     /* https://developer.android.com/jetpack/androidx/releases/paging#declaring_dependencies*/
