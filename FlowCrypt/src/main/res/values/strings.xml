@@ -415,4 +415,6 @@
     <string name="can_not_send_due_to_auth_failure">Can\'t send message: auth failure</string>
     <string name="mark_read">Mark read</string>
     <string name="selection_text">Selected: %1$d</string>
+    <string name="marked_for_archiving">Marked for archiving</string>
+    <string name="undo">Undo</string>
 </resources>

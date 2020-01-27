@@ -111,8 +111,16 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
    * @param duration How long to display the message.
    */
   @JvmOverloads
-  fun showInfoSnackbar(view: View?, msgText: String, duration: Int = Snackbar.LENGTH_INDEFINITE) {
-    view?.let { Snackbar.make(it, msgText, duration).setAction(android.R.string.ok) {}.show() }
+  fun showInfoSnackbar(view: View?, msgText: String, duration: Int = Snackbar.LENGTH_INDEFINITE)
+      : Snackbar? {
+    view?.let {
+      snackBar = Snackbar.make(it, msgText, duration).setAction(android.R.string.ok) {}.apply {
+        show()
+      }
+      return snackBar
+    }
+
+    return snackBar
   }
 
   /**
@@ -123,8 +131,9 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
    * @param btnName         The text of the Snackbar button
    * @param onClickListener The Snackbar button click listener.
    */
-  fun showSnackbar(view: View, msgText: String, btnName: String, onClickListener: View.OnClickListener) {
-    showSnackbar(view, msgText, btnName, Snackbar.LENGTH_INDEFINITE, onClickListener)
+  fun showSnackbar(view: View, msgText: String, btnName: String,
+                   onClickListener: View.OnClickListener): Snackbar? {
+    return showSnackbar(view, msgText, btnName, Snackbar.LENGTH_INDEFINITE, onClickListener)
   }
 
   /**
@@ -136,9 +145,18 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
    * @param duration        How long to display the message.
    * @param onClickListener The Snackbar button click listener.
    */
-  fun showSnackbar(view: View?, msgText: String, btnName: String, duration: Int, onClickListener:
-  View.OnClickListener) {
-    view?.let { Snackbar.make(view, msgText, duration).setAction(btnName, onClickListener).show() }
+  fun showSnackbar(view: View?, msgText: String, btnName: String, duration: Int,
+                   onClickListener: View.OnClickListener): Snackbar? {
+    view?.let {
+      snackBar = Snackbar.make(it, msgText, duration).setAction(btnName, onClickListener).apply {
+        show()
+      }
+
+      return snackBar
+    }
+
+    return snackBar
+
   }
 
   fun dismissCurrentSnackBar() {

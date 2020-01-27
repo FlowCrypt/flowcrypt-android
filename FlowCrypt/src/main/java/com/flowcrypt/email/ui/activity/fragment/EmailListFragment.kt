@@ -598,8 +598,25 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         if (position != RecyclerView.NO_POSITION) {
           val item = adapter.getItemId(position)
           listener?.currentFolder?.let {
-            messagesViewModel.changeMsgsState(listOf(item), it, MessageState.PENDING_ARCHIVING)
+            messagesViewModel.changeMsgsState(listOf(item), it, MessageState
+                .PENDING_ARCHIVING, false)
           }
+
+          val snackBar = showSnackbar(view, getString(R.string.marked_for_archiving),
+              getString(R.string.undo), Snackbar.LENGTH_LONG, View.OnClickListener {
+            listener?.currentFolder?.let {
+              messagesViewModel.changeMsgsState(listOf(item), it, MessageState.NONE, false)
+            }
+          })
+
+          snackBar?.addCallback(object : Snackbar.Callback() {
+            override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+              super.onDismissed(transientBottomBar, event)
+              if (event != DISMISS_EVENT_ACTION) {
+                messagesViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
+              }
+            }
+          })
         }
       }
 

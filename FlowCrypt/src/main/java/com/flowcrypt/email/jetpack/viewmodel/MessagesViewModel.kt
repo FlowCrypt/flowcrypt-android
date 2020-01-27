@@ -130,7 +130,8 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
     }
   }
 
-  fun changeMsgsState(ids: Collection<Long>, localFolder: LocalFolder, newMsgState: MessageState) {
+  fun changeMsgsState(ids: Collection<Long>, localFolder: LocalFolder, newMsgState: MessageState,
+                      notifyMsgStatesListener: Boolean = true) {
     viewModelScope.launch {
       val entities = roomDatabase.msgDao().getMsgsByIDSuspend(localFolder.account,
           localFolder.fullName, ids.map { it })
@@ -147,7 +148,9 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
       } else {
         val candidates = prepareCandidates(entities, newMsgState)
         roomDatabase.msgDao().updateSuspend(candidates)
-        msgStatesLiveData.postValue(newMsgState)
+        if (notifyMsgStatesListener) {
+          msgStatesLiveData.postValue(newMsgState)
+        }
       }
     }
   }
