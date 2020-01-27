@@ -1,0 +1,64 @@
+/*
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
+package com.flowcrypt.email.database
+
+import androidx.room.Room
+import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.SmallTest
+import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.DoesNotNeedMailserver
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import java.io.IOException
+
+
+/**
+ * @author Denis Bondarenko
+ *         Date: 1/27/20
+ *         Time: 9:25 AM
+ *         E-mail: DenBond7@gmail.com
+ */
+@SmallTest
+@RunWith(AndroidJUnit4::class)
+@DoesNotNeedMailserver
+class MigrationTest {
+  // Array of all migrations which we are going to test
+  private val arrayOfMigrations = arrayOf(
+      FlowCryptRoomDatabase.MIGRATION_19_20,
+      FlowCryptRoomDatabase.MIGRATION_20_21)
+
+  @get:Rule
+  val migrationTestHelper: MigrationTestHelper = MigrationTestHelper(
+      InstrumentationRegistry.getInstrumentation(),
+      FlowCryptRoomDatabase::class.java.canonicalName,
+      FrameworkSQLiteOpenHelperFactory()
+  )
+
+  @Test
+  @Throws(IOException::class)
+  fun testAllMigrations() {
+    // Create earliest version of the database.
+    migrationTestHelper.createDatabase(FlowCryptRoomDatabase.DB_NAME, INIT_DATABASE_VERSION).apply {
+      close()
+    }
+
+    // Open latest version of the DB. Room will validate the schema once all migrations execute.
+    Room.databaseBuilder(
+        InstrumentationRegistry.getInstrumentation().targetContext,
+        FlowCryptRoomDatabase::class.java, FlowCryptRoomDatabase.DB_NAME
+    ).addMigrations(*arrayOfMigrations).build().apply {
+      openHelper.writableDatabase
+      close()
+    }
+  }
+
+  companion object {
+    const val INIT_DATABASE_VERSION = 19
+  }
+}

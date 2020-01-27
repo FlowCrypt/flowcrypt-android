@@ -8,6 +8,7 @@ package com.flowcrypt.email.database
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import androidx.annotation.VisibleForTesting
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -70,7 +71,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val COLUMN_NAME_COUNT = "COUNT(*)"
-    private const val DB_NAME = "flowcrypt.db"
+    const val DB_NAME = "flowcrypt.db"
     private const val DROP_TABLE = "DROP TABLE IF EXISTS "
     private const val CREATE_TEMP_TABLE_IF_NOT_EXISTS = "CREATE TEMP TABLE IF NOT EXISTS "
 
@@ -338,7 +339,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
-    private val MIGRATION_19_20 = object : Migration(19, 20) {
+    @VisibleForTesting
+    val MIGRATION_19_20 = object : Migration(19, 20) {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
@@ -374,7 +376,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
-    private val MIGRATION_20_21 = object : Migration(20, 21) {
+    @VisibleForTesting
+    val MIGRATION_20_21 = object : Migration(20, 21) {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
