@@ -593,6 +593,19 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         return false
       }
 
+      override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+        val position = viewHolder.adapterPosition
+        return if (position != RecyclerView.NO_POSITION) {
+          val msgEntity = adapter.getMsgEntity(position)
+          if (msgEntity?.msgState == MessageState.PENDING_ARCHIVING) {
+            0
+          } else
+            super.getSwipeDirs(recyclerView, viewHolder)
+
+        } else
+          super.getSwipeDirs(recyclerView, viewHolder)
+      }
+
       override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         val position = viewHolder.adapterPosition
         if (position != RecyclerView.NO_POSITION) {
@@ -606,13 +619,15 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
               getString(R.string.undo), Snackbar.LENGTH_LONG, View.OnClickListener {
             listener?.currentFolder?.let {
               messagesViewModel.changeMsgsState(listOf(item), it, MessageState.NONE, false)
+              //we should force archiving action because we can have other messages in the pending archiving states
+              messagesViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
             }
           })
 
           snackBar?.addCallback(object : Snackbar.Callback() {
             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
               super.onDismissed(transientBottomBar, event)
-              if (event != DISMISS_EVENT_ACTION) {
+              if (event != DISMISS_EVENT_ACTION && event != DISMISS_EVENT_CONSECUTIVE) {
                 messagesViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
               }
             }
