@@ -22,11 +22,11 @@ else
     rm $SDK_ARCHIVE
 
     echo "yes" | ~/Android/Sdk/tools/bin/sdkmanager --licenses > /dev/null
-    ( sleep 5; echo "y" ) | ~/Android/Sdk/tools/bin/sdkmanager "build-tools;29.0.0" "platforms;android-28"
+    ( sleep 5; echo "y" ) | ~/Android/Sdk/tools/bin/sdkmanager "build-tools;29.0.2" "platforms;android-29"
     ~/Android/Sdk/tools/bin/sdkmanager "extras;google;m2repository"
     ~/Android/Sdk/tools/bin/sdkmanager "platform-tools"
     ~/Android/Sdk/tools/bin/sdkmanager "emulator"
-    ~/Android/Sdk/tools/bin/sdkmanager "system-images;android-28;google_apis;x86_64"
+    ~/Android/Sdk/tools/bin/sdkmanager "system-images;android-29;google_apis;x86_64"
 fi
 
 ~/Android/Sdk/tools/bin/sdkmanager --list
