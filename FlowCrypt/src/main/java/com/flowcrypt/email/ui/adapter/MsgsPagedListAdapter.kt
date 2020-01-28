@@ -20,6 +20,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.annotation.IntDef
 import androidx.core.content.ContextCompat
+import androidx.paging.PagedList
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.SelectionTracker
@@ -91,6 +92,18 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
   override fun getItemId(position: Int): Long {
     return getItem(position)?.id ?: super.getItemId(position)
+  }
+
+  override fun onCurrentListChanged(previousList: PagedList<MessageEntity>?, currentList: PagedList<MessageEntity>?) {
+    super.onCurrentListChanged(previousList, currentList)
+    val currentIds = currentList?.map { it?.id }?.toSet()
+    val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
+
+    for (id in ids) {
+      if (currentIds?.contains(id) == false) {
+        tracker?.deselect(id)
+      }
+    }
   }
 
   fun getMsgEntity(position: Int?): MessageEntity? {

@@ -7,6 +7,8 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.PorterDuff
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -110,7 +112,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
 
     adapter.submitList(it)
-    actionMode?.invalidate()
   }
 
   private val boundaryCallback = object : PagedList.BoundaryCallback<MessageEntity>() {
@@ -643,6 +644,11 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
                                viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float,
                                actionState: Int, isCurrentlyActive: Boolean) {
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+        if (this.icon == null || this.background == null) {
+          c.drawColor(Color.TRANSPARENT, PorterDuff.Mode.MULTIPLY)
+          return
+        }
+
         val icon = this.icon ?: return
         val background = this.background ?: return
 
