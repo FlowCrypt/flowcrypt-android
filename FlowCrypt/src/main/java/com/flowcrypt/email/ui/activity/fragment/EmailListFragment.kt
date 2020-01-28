@@ -787,14 +787,12 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     var isEnabled = false
 
     when (FoldersManager.getFolderType(listener?.currentFolder)) {
-      FoldersManager.FolderType.INBOX, FoldersManager.FolderType.SENT -> {
+      //archive action is enabled only in INBOX folder for GMAIL. While we don't support GMail
+      // labels we can't use the archive action in other folders.
+      FoldersManager.FolderType.INBOX -> {
         if (AccountDao.ACCOUNT_TYPE_GOOGLE == listener?.currentAccountDao?.accountType) {
           isEnabled = true
         }
-      }
-
-      FoldersManager.FolderType.DRAFTS, FoldersManager.FolderType.OUTBOX -> {
-        isEnabled = false
       }
 
       else -> {
