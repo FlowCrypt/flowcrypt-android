@@ -30,6 +30,7 @@ import javax.mail.Flags
 import javax.mail.Message
 import javax.mail.MessageRemovedException
 import javax.mail.MessagingException
+import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 import kotlin.collections.HashMap
 
@@ -68,13 +69,13 @@ data class MessageEntity(
 ) : Parcelable {
 
   @Ignore
-  val from: List<InternetAddress> = listOf(*InternetAddress.parse(fromAddress ?: ""))
+  val from: List<InternetAddress> = parseAddresses(fromAddress)
   @Ignore
-  val replyToAddress: List<InternetAddress> = listOf(*InternetAddress.parse(replyTo ?: ""))
+  val replyToAddress: List<InternetAddress> = parseAddresses(replyTo, true)
   @Ignore
-  val to: List<InternetAddress> = listOf(*InternetAddress.parse(toAddress ?: ""))
+  val to: List<InternetAddress> = parseAddresses(toAddress)
   @Ignore
-  val cc: List<InternetAddress> = listOf(*InternetAddress.parse(ccAddress ?: ""))
+  val cc: List<InternetAddress> = parseAddresses(ccAddress)
   @Ignore
   val msgState: MessageState = MessageState.generate(state ?: MessageState.NONE.value)
   @Ignore
@@ -147,6 +148,28 @@ data class MessageEntity(
     return 0
   }
 
+  private fun parseAddresses(fromAddress: String?, skipErrors: Boolean = false):
+      List<InternetAddress> {
+    try {
+      return listOf(*InternetAddress.parse(fromAddress ?: ""))
+    } catch (e: AddressException) {
+      val list = listOf(*InternetAddress.parse(fromAddress ?: "", false)).mapNotNull {
+        try {
+          it.validate()
+          it
+        } catch (e: AddressException) {
+          null
+        }
+      }
+
+      if (!skipErrors && list.isEmpty()) {
+        throw AddressException("No valid addresses")
+      }
+
+      return list
+    }
+  }
+
   companion object CREATOR : Parcelable.Creator<MessageEntity> {
     override fun createFromParcel(parcel: Parcel): MessageEntity {
       return MessageEntity(parcel)
@@ -196,6 +219,8 @@ data class MessageEntity(
             messageEntities.add(genMsgEntity(email, label, msg, folder.getUID(msg),
                 isNewTemp, isEncrypted))
           } catch (e: MessageRemovedException) {
+            e.printStackTrace()
+          } catch (e: AddressException) {
             e.printStackTrace()
           }
         }
