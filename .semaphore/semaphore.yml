@@ -24,6 +24,7 @@ blocks:
             - checkout && cd ~
             - cat /proc/cpuinfo
             - echo $PATH
+            - ls /opt/android-sdk-linux/emulator
 
             # restore caches
             - export SUM=$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
@@ -41,7 +42,6 @@ blocks:
             - sdkmanager "system-images;android-29;google_apis;x86_64"
             - echo no | avdmanager -v create avd --name ci-test-pixel-x86-64-api29 --package "system-images;android-29;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
             # Run Android emulator
-            - emulator -accel-check # debug
             - emulator -list-avds # debug
             - emulator -no-window -avd ci-test-pixel-x86-64-api29 -no-boot-anim -no-audio & # start emulator in the background
             - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
