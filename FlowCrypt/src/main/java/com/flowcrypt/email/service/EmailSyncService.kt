@@ -264,8 +264,11 @@ class EmailSyncService : BaseService(), SyncListener {
       try {
         //we should handle any exceptions here to prevent showing messages
         val attDaoSource = AttachmentDaoSource()
+        val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
         for (msg in msgs) {
-          attDaoSource.updateAttsTable(this, account.email, localFolder.fullName, remoteFolder.getUID(msg), msg)
+          if (remoteFolder.getUID(msg) in savedMsgUIDsSet) {
+            attDaoSource.updateAttsTable(this, account.email, localFolder.fullName, remoteFolder.getUID(msg), msg)
+          }
         }
 
         updateLocalContactsIfNeeded(remoteFolder, msgs)
