@@ -108,6 +108,7 @@ android {
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
             buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
             resValue 'string', 'application_id', android.defaultConfig.applicationId
+            resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
             resValue 'string', 'gradle_http_log_level', 'NONE'
@@ -155,6 +156,7 @@ android {
             buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"BODY\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
             buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
+            resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'true'
             resValue 'string', 'gradle_is_http_log_enabled', 'true'
             resValue 'string', 'gradle_http_log_level', 'BODY'
@@ -176,6 +178,7 @@ android {
             buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"BASIC\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
             buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
+            resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
             resValue 'string', 'gradle_is_node_http_debug_enabled', 'false'
@@ -198,6 +201,7 @@ android {
             buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"NONE\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
             buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
+            resValue 'string', 'gradle_is_acra_enabled', 'false'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
             resValue 'string', 'gradle_http_log_level', 'NONE'
