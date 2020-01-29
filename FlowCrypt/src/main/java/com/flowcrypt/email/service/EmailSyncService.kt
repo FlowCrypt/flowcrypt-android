@@ -353,7 +353,7 @@ class EmailSyncService : BaseService(), SyncListener {
           areAllMsgsEncrypted = isEncryptedModeEnabled
       )
 
-      FlowCryptRoomDatabase.getDatabase(context).msgDao().insert(msgEntities)
+      FlowCryptRoomDatabase.getDatabase(context).msgDao().insertWithReplace(msgEntities)
 
       if (!isEncryptedModeEnabled) {
         emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)
