@@ -23,6 +23,7 @@ blocks:
             - sudo rm -rf ~/.rbenv ~/.phpbrew
             - checkout && cd ~
             - cat /proc/cpuinfo
+            - echo $PATH
 
             # restore caches
             - export SUM=$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
