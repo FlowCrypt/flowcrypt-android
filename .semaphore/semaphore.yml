@@ -17,8 +17,6 @@ blocks:
       env_vars:
         - name: SEMAPHORE_GIT_DIR
           value: /home/semaphore/git/flowcrypt-android
-        - name: ANDROID_SDK_ROOT
-          value: /home/semaphore/Android/Sdk
       jobs:
         - name: Test without mailserver
           commands:
@@ -42,9 +40,9 @@ blocks:
             - sdkmanager "system-images;android-29;google_apis;x86_64"
             - echo no | avdmanager -v create avd --name ci-test-pixel-x86-64-api29 --package "system-images;android-29;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
             # Run Android emulator
-            - ~/Android/Sdk/emulator/emulator -accel-check # debug
-            - ~/Android/Sdk/emulator/emulator -list-avds # debug
-            - ~/Android/Sdk/emulator/emulator -no-window -avd ci-test-pixel-x86-64-api29 -no-boot-anim -no-audio & # start emulator in the background
+            - emulator -accel-check # debug
+            - emulator -list-avds # debug
+            - emulator -no-window -avd ci-test-pixel-x86-64-api29 -no-boot-anim -no-audio & # start emulator in the background
             - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
             # - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-disable-emulator-animations.sh )
             # run tests
