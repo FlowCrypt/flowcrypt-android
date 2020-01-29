@@ -24,9 +24,7 @@ blocks:
             - checkout && cd ~
             - cat /proc/cpuinfo
             - ls /opt/android-sdk-linux/
-            - ls /opt/android-sdk-linux/system-images
             - ls /opt/android-sdk-linux/platforms
-            - ls /opt/android-sdk-linux/extras
             - echo $ANDROID_HOME
 
 
