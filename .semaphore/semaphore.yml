@@ -34,13 +34,12 @@ blocks:
             - cache restore $BUILD_CACHE
 
             # Install android emulator
-            - sdkmanager "platform-tools" "platforms;android-29" "emulator"
-            - sdkmanager "system-images;android-29;google_apis;x86_64"
-            - echo no | avdmanager -v create avd --name ci-test-pixel-x86-64-api29 --package "system-images;android-29;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
+            - sdkmanager "platform-tools" "platforms;android-24" "emulator"
+            - sdkmanager "system-images;android-24;default;armeabi-v7a"
+            - echo no | avdmanager create avd -n Nexus_S_API_24 -k "system-images;android-24;default;armeabi-v7a" --device "Nexus S"
             # Run Android emulator
-            - emulator -accel-check # debug
             - emulator -list-avds # debug
-            - emulator -no-window -avd ci-test-pixel-x86-64-api29 -no-boot-anim -no-audio & # start emulator in the background
+            - emulator -no-window -avd Nexus_S_API_24 -no-boot-anim -no-audio & # start emulator in the background
             - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
             # - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-disable-emulator-animations.sh )
             # run tests
