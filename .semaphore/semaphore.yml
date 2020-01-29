@@ -36,7 +36,9 @@ blocks:
             - cache restore $BUILD_CACHE
 
             # build + test
-            - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
+            - sudo apt-get update
+            - sudo apt-get -yq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
+            - sudo kvm-ok
             - sdkmanager "platform-tools" "platforms;android-29" "emulator" "extras;google;m2repository" "build-tools;29.0.2"
             - sdkmanager "system-images;android-29;google_apis;x86_64"
             - echo no | avdmanager -v create avd --name ci-test-pixel-x86-64-api29 --package "system-images;android-29;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
