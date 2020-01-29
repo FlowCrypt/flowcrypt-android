@@ -23,9 +23,11 @@ blocks:
             - sudo rm -rf ~/.rbenv ~/.phpbrew
             - checkout && cd ~
             - cat /proc/cpuinfo
-            - ls ~
-            - ls Android
-            - ls Android/Sdk
+            - ls /opt/android-sdk-linux/
+            - ls /opt/android-sdk-linux/system-images
+            - ls /opt/android-sdk-linux/platforms
+            - ls /opt/android-sdk-linux/extras
+            - echo $ANDROID_HOME
 
 
 
