@@ -105,7 +105,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
 
     initViews()
 
-    idlingForPassphraseChecking = SingleIdlingResources()
+    idlingForPassphraseChecking = SingleIdlingResources(delay = 500)
     timer = Timer()
 
     viewModel = ViewModelProvider(this).get(PasswordStrengthViewModel::class.java)
@@ -191,11 +191,11 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
   }
 
   override fun afterTextChanged(editable: Editable) {
-    idlingForPassphraseChecking!!.setIdleState(false)
+    idlingForPassphraseChecking?.setIdleState(false)
     val passphrase = editable.toString()
-    timer!!.cancel()
+    timer?.cancel()
     timer = Timer()
-    timer!!.schedule(
+    timer?.schedule(
         object : TimerTask() {
           override fun run() {
             runOnUiThread(object : TimerTask() {
@@ -216,8 +216,6 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
   override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {
     when (nodeResponseWrapper.requestCode) {
       R.id.live_data_id_check_passphrase_strength -> {
-        idlingForPassphraseChecking!!.setIdleState(true)
-
         when (nodeResponseWrapper.status) {
           Status.SUCCESS -> {
             strengthBarResult = nodeResponseWrapper.result as ZxcvbnStrengthBarResult?
@@ -238,6 +236,8 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
           else -> {
           }
         }
+
+        idlingForPassphraseChecking?.setIdleState(isIdleNow = true, useDelay = true)
       }
     }
   }
@@ -343,7 +343,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
         Constants.PASSWORD_QUALITY_WEAK -> qualityValue = getString(R.string.password_quality_weak)
       }
 
-      qualityValue = qualityValue!!.toUpperCase(Locale.getDefault())
+      qualityValue = qualityValue.toUpperCase(Locale.getDefault())
     }
 
     return qualityValue
