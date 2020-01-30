@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.text.Html
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -255,7 +254,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
   private fun printDecryptMsgResult(actionName: String, r: ParseDecryptedMsgResult, executionTime: Long) {
     if (r.error != null) {
       addResultLine(actionName, r, executionTime)
-    } else if (Html.fromHtml(r.text).length != TEST_MSG_HTML.length) {
+    } else if (r.text?.length != TEST_MSG_HTML.length) {
       addResultLine(actionName, executionTime,
           "wrong meta block len " + r.msgBlocks!!.size + "!=" + TEST_MSG_HTML.length, false)
     } else if (r.msgBlocks!![0].type !== MsgBlock.Type.PLAIN_HTML) {
@@ -266,7 +265,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
       when {
         block.type !== MsgBlock.Type.PLAIN_HTML ->
           addResultLine(actionName, executionTime, "wrong block type: " + r.msgBlocks!!.size, false)
-        Html.fromHtml(r.text).toString() != TEST_MSG_HTML -> addResultLine(actionName, executionTime, "block content mismatch",
+        r.text.toString() != TEST_MSG_HTML -> addResultLine(actionName, executionTime, "block content mismatch",
             false)
         r.msgBlocks!!.size > 1 -> addResultLine(actionName, executionTime, "unexpected second block", false)
         else -> addResultLine(actionName, r, executionTime)
