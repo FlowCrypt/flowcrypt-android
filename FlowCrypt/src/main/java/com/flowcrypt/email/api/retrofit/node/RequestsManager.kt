@@ -21,7 +21,6 @@ import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent
 import com.flowcrypt.email.model.PgpKeyInfo
 import com.flowcrypt.email.node.TestData
-import java.util.*
 
 /**
  * @author DenBond7
@@ -38,23 +37,24 @@ object RequestsManager {
   }
 
   fun encryptMsg(requestCode: Int, msg: String) {
-    load(requestCode, EncryptMsgRequest(msg, Arrays.asList(*TestData.mixedPubKeys)))
+    load(requestCode, EncryptMsgRequest(msg, listOf(*TestData.mixedPubKeys)))
   }
 
-  fun decryptMsg(requestCode: Int, msg: ByteArray, prvKeys: Array<PgpKeyInfo>) {
-    load(requestCode, ParseDecryptMsgRequest(msg, Arrays.asList(*prvKeys)))
+  fun decryptMsg(requestCode: Int, data: ByteArray = ByteArray(0), uri: Uri? = null,
+                 prvKeys: Array<PgpKeyInfo>, isEmail: Boolean = false) {
+    load(requestCode, ParseDecryptMsgRequest(data = data, uri = uri, pgpKeyInfos = listOf(*prvKeys), isEmail = isEmail))
   }
 
   fun encryptFile(requestCode: Int, data: ByteArray) {
-    load(requestCode, EncryptFileRequest(data, "file.txt", Arrays.asList(*TestData.mixedPubKeys)))
+    load(requestCode, EncryptFileRequest(data, "file.txt", listOf(*TestData.mixedPubKeys)))
   }
 
   fun encryptFile(requestCode: Int, context: Context, fileUri: Uri) {
-    load(requestCode, EncryptFileRequest(context, fileUri, "file.txt", Arrays.asList(*TestData.mixedPubKeys)))
+    load(requestCode, EncryptFileRequest(context, fileUri, "file.txt", listOf(*TestData.mixedPubKeys)))
   }
 
   fun decryptFile(requestCode: Int, encryptedData: ByteArray, prvKeys: Array<PgpKeyInfo>) {
-    load(requestCode, DecryptFileRequest(encryptedData, Arrays.asList(*prvKeys)))
+    load(requestCode, DecryptFileRequest(encryptedData, listOf(*prvKeys)))
   }
 
   private fun load(requestCode: Int, nodeRequest: NodeRequest) {

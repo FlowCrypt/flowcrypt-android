@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit.request.node
 
+import android.net.Uri
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo
 import com.flowcrypt.email.model.PgpKeyInfo
@@ -19,7 +20,8 @@ import retrofit2.Response
  * Time: 03:29 PM
  * E-mail: DenBond7@gmail.com
  */
-class ParseDecryptMsgRequest @JvmOverloads constructor(override val data: ByteArray,
+class ParseDecryptMsgRequest @JvmOverloads constructor(override val data: ByteArray = ByteArray(0),
+                                                       override val uri: Uri? = null,
                                                        pgpKeyInfos: List<PgpKeyInfo>,
                                                        @Expose val isEmail: Boolean = false) : BaseNodeRequest() {
 

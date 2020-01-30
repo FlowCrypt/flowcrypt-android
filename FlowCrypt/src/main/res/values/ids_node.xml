@@ -7,6 +7,7 @@
 <resources>
     <item name="req_id_get_version" type="id" />
     <item name="req_id_encrypt_msg" type="id" />
+    <item name="req_id_decrypt_email" type="id" />
     <item name="req_id_decrypt_msg_ecc" type="id" />
     <item name="req_id_decrypt_msg_rsa_2048" type="id" />
     <item name="req_id_decrypt_msg_rsa_4096" type="id" />

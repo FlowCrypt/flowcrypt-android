@@ -39,6 +39,6 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
     val pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys()
 
     apiRepository.parseDecryptMsg(R.id.live_data_id_parse_and_decrypt_msg, responsesLiveData,
-        ParseDecryptMsgRequest(rawMimeBytes, pgpKeyInfoList, true))
+        ParseDecryptMsgRequest(data = rawMimeBytes, pgpKeyInfos = pgpKeyInfoList, isEmail = true))
   }
 }
