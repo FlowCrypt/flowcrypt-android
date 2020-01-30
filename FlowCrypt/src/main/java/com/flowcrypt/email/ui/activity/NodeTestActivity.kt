@@ -264,7 +264,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
   }
 
   private fun addResultLine(actionName: String, ms: Long, result: String?, isFinal: Boolean) {
-    if (result == null || "ok" != result && "success" != result) {
+    if (result == null || result !in listOf("ok", "success")) {
       hasTestFailure = true
     }
 
