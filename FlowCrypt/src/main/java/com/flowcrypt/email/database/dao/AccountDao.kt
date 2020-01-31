@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.database.dao
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -22,4 +23,7 @@ interface AccountDao {
 
   @Query("SELECT * FROM accounts WHERE is_active = 1")
   suspend fun getActiveAccount(): AccountEntity?
+
+  @Query("SELECT * FROM accounts WHERE is_active = 1")
+  fun getActiveAccountLD(): LiveData<AccountEntity?>
 }

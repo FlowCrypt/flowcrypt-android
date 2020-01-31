@@ -18,6 +18,7 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.google.gson.Gson
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import java.security.cert.X509Certificate
@@ -33,7 +34,7 @@ import javax.net.ssl.HostnameVerifier
  * E-mail: DenBond7@gmail.com
  */
 object NodeRetrofitHelper {
-  private const val TIMEOUT = 60
+  private const val TIMEOUT = 90
   private var okHttpClient: OkHttpClient? = null
   @Volatile
   private var retrofit: Retrofit? = null
@@ -109,16 +110,18 @@ object NodeRetrofitHelper {
   }
 
   private fun headersInterceptor(nodeSecret: NodeSecret): Interceptor {
-    return Interceptor { chain ->
-      var request: okhttp3.Request = chain.request()
-      val headers = request
-          .headers()
-          .newBuilder()
-          .add("Authorization", nodeSecret.authHeader)
-          .add("Connection", "Keep-Alive")
-          .build()
-      request = request.newBuilder().headers(headers).build()
-      chain.proceed(request)
+    return object : Interceptor {
+      override fun intercept(chain: Interceptor.Chain): Response {
+        var request: okhttp3.Request = chain.request()
+        val headers = request
+            .headers
+            .newBuilder()
+            .add("Authorization", nodeSecret.authHeader)
+            .add("Connection", "Keep-Alive")
+            .build()
+        request = request.newBuilder().headers(headers).build()
+        return chain.proceed(request)
+      }
     }
   }
 

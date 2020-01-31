@@ -103,12 +103,13 @@ class UserIdEmailsKeysDaoSource : BaseDaoSource() {
    * @param email   An email which will be used for searching.
    * @return A list of found longId.
    */
-  fun getLongIdsByEmail(context: Context, email: String): List<String> {
+  fun getLongIdsByEmail(context: Context?, email: String?): List<String> {
     val longIdsList = ArrayList<String>()
     if (!TextUtils.isEmpty(email)) {
       val selection = "$COL_USER_ID_EMAIL = ?"
-      val selectionArgs = arrayOf(email.toLowerCase(Locale.getDefault()))
-      val cursor = context.contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
+      val selectionArgs = arrayOf(email?.toLowerCase(Locale.getDefault()))
+      val cursor = context?.contentResolver?.query(baseContentUri, null, selection, selectionArgs,
+          null)
 
       if (cursor != null) {
         while (cursor.moveToNext()) {

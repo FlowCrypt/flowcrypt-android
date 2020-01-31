@@ -109,12 +109,12 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
     @get:ClassRule
     @JvmStatic
     val mockWebServerRule = FlowCryptMockWebServerRule(1212, object : Dispatcher() {
-      override fun dispatch(request: RecordedRequest?): MockResponse {
+      override fun dispatch(request: RecordedRequest): MockResponse {
         val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-        val model = gson.fromJson<LoginModel>(InputStreamReader(request?.body?.inputStream()),
+        val model = gson.fromJson<LoginModel>(InputStreamReader(request.body.inputStream()),
             LoginModel::class.java)
 
-        if (request?.path.equals("/account/login")) {
+        if (request.path.equals("/account/login")) {
           when (model.account) {
             EMAIL_LOGIN_ERROR -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(LOGIN_API_ERROR_RESPONSE))
@@ -133,7 +133,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
           }
         }
 
-        if (request?.path.equals("/account/get")) {
+        if (request.path.equals("/account/get")) {
           when (model.account) {
             EMAIL_DOMAIN_RULES_ERROR -> return MockResponse().setResponseCode(200)
                 .setBody(gson.toJson(DOMAIN_RULES_ERROR_RESPONSE))

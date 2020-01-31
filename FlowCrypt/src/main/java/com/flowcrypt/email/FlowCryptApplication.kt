@@ -17,11 +17,12 @@ import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.acra.CustomReportSenderFactory
-import com.squareup.leakcanary.LeakCanary
+import leakcanary.AppWatcher
 import org.acra.ACRA
 import org.acra.ReportField
 import org.acra.annotation.ReportsCrashes
 import org.acra.sender.HttpSender
+import java.util.*
 
 /**
  * The application class for FlowCrypt. Base class for maintaining global application state. The production version.
@@ -64,6 +65,7 @@ class FlowCryptApplication : Application() {
 
   override fun onCreate() {
     super.onCreate()
+    initPerInstallationSharedPrefs()
     CacheManager.init(this)
     MsgsCacheManager.init(this)
     NotificationChannelManager.registerNotificationChannels(this)
@@ -77,30 +79,49 @@ class FlowCryptApplication : Application() {
 
   override fun attachBaseContext(base: Context) {
     super.attachBaseContext(base)
-    initAcra()
+    initACRA()
   }
 
-  fun initAcra() {
+  private fun initACRA() {
     if (!GeneralUtil.isDebugBuild()) {
-      ACRA.init(this)
+      setupACRA()
     } else if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
             Constants.PREF_KEY_IS_ACRA_ENABLED, BuildConfig.IS_ACRA_ENABLED)) {
-      ACRA.init(this)
+      setupACRA()
     }
+  }
+
+  private fun setupACRA() {
+    ACRA.init(this)
+    val installVersion = SharedPreferencesHelper.getString(
+        PreferenceManager.getDefaultSharedPreferences(this),
+        Constants.PREF_KEY_INSTALL_VERSION, "unknown")
+    ACRA.getErrorReporter().putCustomData(
+        Constants.PREF_KEY_INSTALL_VERSION.toUpperCase(Locale.getDefault()), installVersion)
   }
 
   /**
    * Init the LeakCanary tools if the current build is debug and detect memory leaks enabled.
    */
-  fun initLeakCanary() {
-    if (SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
-            Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED, false)) {
-      if (LeakCanary.isInAnalyzerProcess(this)) {
-        // This process is dedicated to LeakCanary for heap analysis.
-        // You should not init your app in this process.
-        return
+  private fun initLeakCanary() {
+    if (GeneralUtil.isDebugBuild()) {
+      val isEnabled = SharedPreferencesHelper.getBoolean(PreferenceManager.getDefaultSharedPreferences(this),
+          Constants.PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED, false)
+      AppWatcher.config = AppWatcher.config.copy(enabled = isEnabled)
+    } else {
+      AppWatcher.config = AppWatcher.config.copy(enabled = false)
+    }
+  }
+
+  private fun initPerInstallationSharedPrefs() {
+    val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+    if (sharedPreferences.all.isEmpty()) {
+      if (!sharedPreferences.contains(Constants.PREF_KEY_INSTALL_VERSION)) {
+        sharedPreferences
+            .edit()
+            .putString(Constants.PREF_KEY_INSTALL_VERSION, BuildConfig.VERSION_NAME)
+            .apply()
       }
-      LeakCanary.install(this)
     }
   }
 }

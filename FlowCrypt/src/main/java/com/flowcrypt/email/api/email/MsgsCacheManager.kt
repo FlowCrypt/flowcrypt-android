@@ -6,9 +6,10 @@
 package com.flowcrypt.email.api.email
 
 import android.content.Context
-import okhttp3.internal.cache.DiskLruCache
+import com.flowcrypt.email.util.cache.DiskLruCache
 import okhttp3.internal.io.FileSystem
-import okio.Okio
+import okio.buffer
+import okio.source
 import java.io.File
 import java.io.InputStream
 
@@ -28,15 +29,14 @@ object MsgsCacheManager {
   lateinit var diskLruCache: DiskLruCache
 
   fun init(context: Context) {
-    diskLruCache = DiskLruCache.create(FileSystem.SYSTEM, File(context.filesDir, CACHE_DIR_NAME),
-        CACHE_VERSION, 1, CACHE_SIZE)
+    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.filesDir, CACHE_DIR_NAME), CACHE_VERSION, 1, CACHE_SIZE)
   }
 
   fun addMsg(key: String, inputStream: InputStream) {
     val editor = diskLruCache.edit(key) ?: return
 
-    val bufferedSink = Okio.buffer(editor.newSink(0))
-    bufferedSink.writeAll(Okio.source(inputStream))
+    val bufferedSink = editor.newSink(0).buffer()
+    bufferedSink.writeAll(inputStream.source())
     bufferedSink.flush()
     editor.commit()
   }
@@ -44,8 +44,8 @@ object MsgsCacheManager {
   fun getMsgAsByteArray(key: String): ByteArray {
     val snapshot = diskLruCache.get(key) ?: return byteArrayOf()
 
-    val bufferedSource = Okio.buffer(snapshot.getSource(0))
-    val byteArray = bufferedSource.readByteArray() ?: byteArrayOf()
+    val bufferedSource = snapshot.getSource(0).buffer()
+    val byteArray = bufferedSource.readByteArray()
     bufferedSource.close()
     return byteArray
   }

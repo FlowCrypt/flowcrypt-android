@@ -41,25 +41,26 @@ class ActionQueueIntentService : JobIntentService() {
   override fun onHandleWork(intent: Intent) {
     val intentAction = intent.action
     if (ACTION_RUN_ACTIONS == intentAction) {
-      val actions = intent.getParcelableArrayListExtra<Action>(EXTRA_KEY_ACTIONS)
-      val resultReceiver = intent.getParcelableExtra<ResultReceiver>(EXTRA_KEY_RESULTS_RECEIVER)
+      val actions = intent.getParcelableArrayListExtra<Action>(EXTRA_KEY_ACTIONS) ?: return
+      val resultReceiver =
+          intent.getParcelableExtra<ResultReceiver>(EXTRA_KEY_RESULTS_RECEIVER) ?: return
 
-      if (actions != null && !actions.isEmpty()) {
+      if (actions.isNotEmpty()) {
         LogsUtil.d(TAG, "Received " + actions.size + " action(s) for run in the queue")
         for (action in actions) {
-          if (action != null) {
-            LogsUtil.d(TAG, "Run " + action.javaClass.simpleName)
+          action?.let {
+            LogsUtil.d(TAG, "Run " + it.javaClass.simpleName)
             try {
-              action.run(applicationContext)
-              val successBundle = ActionResultReceiver.generateSuccessBundle(action)
+              it.run(applicationContext)
+              val successBundle = ActionResultReceiver.generateSuccessBundle(it)
               resultReceiver.send(ActionResultReceiver.RESULT_CODE_OK, successBundle)
-              LogsUtil.d(TAG, action.javaClass.simpleName + ": success")
+              LogsUtil.d(TAG, it.javaClass.simpleName + ": success")
             } catch (e: Exception) {
               e.printStackTrace()
               ExceptionUtil.handleError(e)
-              val errorBundle = ActionResultReceiver.generateErrorBundle(action, e)
+              val errorBundle = ActionResultReceiver.generateErrorBundle(it, e)
               resultReceiver.send(ActionResultReceiver.RESULT_CODE_ERROR, errorBundle)
-              LogsUtil.d(TAG, action.javaClass.simpleName + ": an error occurred")
+              LogsUtil.d(TAG, it.javaClass.simpleName + ": an error occurred")
             }
           }
         }

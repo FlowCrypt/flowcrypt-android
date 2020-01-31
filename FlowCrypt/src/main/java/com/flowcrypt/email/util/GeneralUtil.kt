@@ -287,7 +287,7 @@ class GeneralUtil {
     @JvmStatic
     fun clearClipboard(context: Context) {
       val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-      clipboard.primaryClip = ClipData.newPlainText(null, "")
+      clipboard.setPrimaryClip(ClipData.newPlainText(null, ""))
     }
 
     /**
@@ -323,7 +323,9 @@ class GeneralUtil {
       val intent = Intent(Intent.ACTION_VIEW)
       intent.data = Uri.parse(url)
       if (intent.resolveActivity(context.packageManager) != null) {
-        customTabsIntent.launchUrl(context, intent.data)
+        intent.data?.let {
+          customTabsIntent.launchUrl(context, it)
+        }
       }
     }
 

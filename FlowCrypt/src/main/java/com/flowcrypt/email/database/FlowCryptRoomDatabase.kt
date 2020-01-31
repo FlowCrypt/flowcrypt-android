@@ -8,6 +8,7 @@ package com.flowcrypt.email.database
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import androidx.annotation.VisibleForTesting
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -18,7 +19,7 @@ import com.flowcrypt.email.database.dao.AccountDao
 import com.flowcrypt.email.database.dao.AttachmentDao
 import com.flowcrypt.email.database.dao.LabelDao
 import com.flowcrypt.email.database.dao.MessageDao
-import com.flowcrypt.email.database.dao.source.AccountAliasesDaoSource
+import com.flowcrypt.email.database.dao.source.AccountAliasesDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
@@ -66,13 +67,15 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   abstract fun labelDao(): LabelDao
 
+  abstract fun accountAliasesDao(): AccountAliasesDao
+
   companion object {
     const val COLUMN_NAME_COUNT = "COUNT(*)"
-    private const val DB_NAME = "flowcrypt.db"
+    const val DB_NAME = "flowcrypt.db"
     private const val DROP_TABLE = "DROP TABLE IF EXISTS "
     private const val CREATE_TEMP_TABLE_IF_NOT_EXISTS = "CREATE TEMP TABLE IF NOT EXISTS "
 
-    const val DB_VERSION = 20
+    const val DB_VERSION = 21
 
     private val MIGRATION_1_3 = object : Migration(1, 3) {
       override fun migrate(database: SupportSQLiteDatabase) {
@@ -136,8 +139,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL(AccountAliasesDaoSource.ACCOUNTS_ALIASES_TABLE_SQL_CREATE)
-          database.execSQL(AccountAliasesDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES)
+          database.execSQL("CREATE TABLE `accounts_aliases` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT NOT NULL, `send_as_email` TEXT NOT NULL, `display_name` TEXT DEFAULT NULL, `is_default` INTEGER DEFAULT 0, `verification_status` TEXT NOT NULL)")
+          database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS`email_account_type_send_as_email_in_accounts_aliases` ON `accounts_aliases` (`email`, `account_type`, `send_as_email`)")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -150,7 +153,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         database.beginTransaction()
         try {
           database.execSQL("DROP INDEX IF EXISTS email_account_type_in_accounts_aliases")
-          database.execSQL(AccountAliasesDaoSource.CREATE_INDEX_EMAIL_TYPE_IN_ACCOUNTS_ALIASES)
+          database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS`email_account_type_send_as_email_in_accounts_aliases` ON `accounts_aliases` (`email`, `account_type`, `send_as_email`)")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -336,11 +339,12 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
-    private val MIGRATION_19_20 = object : Migration(19, DB_VERSION) {
+    @VisibleForTesting
+    val MIGRATION_19_20 = object : Migration(19, 20) {
       override fun migrate(database: SupportSQLiteDatabase) {
-        //recreate 'contacts' table because of wrong column type BOOLEAN
         database.beginTransaction()
         try {
+          //recreate 'contacts' table because of wrong column type BOOLEAN
           database.execSQL("CREATE TEMP TABLE IF NOT EXISTS contacts_temp AS SELECT * FROM contacts;")
           database.execSQL("DROP TABLE IF EXISTS contacts;")
           database.execSQL("CREATE TABLE IF NOT EXISTS contacts (_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, name TEXT DEFAULT NULL, public_key BLOB DEFAULT NULL, has_pgp INTEGER NOT NULL, client TEXT DEFAULT NULL, attested INTEGER DEFAULT NULL, fingerprint TEXT DEFAULT NULL, long_id TEXT DEFAULT NULL, keywords TEXT DEFAULT NULL, last_use INTEGER DEFAULT 0 NOT NULL);")
@@ -365,6 +369,22 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           database.execSQL("INSERT INTO attachment SELECT * FROM $tempTableName;")
           database.execSQL("DROP TABLE IF EXISTS $tempTableName;")
 
+          database.setTransactionSuccessful()
+        } finally {
+          database.endTransaction()
+        }
+      }
+    }
+
+    @VisibleForTesting
+    val MIGRATION_20_21 = object : Migration(20, 21) {
+      override fun migrate(database: SupportSQLiteDatabase) {
+        database.beginTransaction()
+        try {
+          //Recreate 'accounts_aliases' table to use an ability of foreign keys
+          database.execSQL("DROP TABLE IF EXISTS `accounts_aliases`;")
+          database.execSQL("CREATE TABLE `accounts_aliases` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `account_type` TEXT NOT NULL, `send_as_email` TEXT NOT NULL, `display_name` TEXT DEFAULT NULL, `is_default` INTEGER DEFAULT 0, `verification_status` TEXT NOT NULL, FOREIGN KEY(`email`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+          database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS`email_account_type_send_as_email_in_accounts_aliases` ON `accounts_aliases` (`email`, `account_type`, `send_as_email`)")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -404,7 +424,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
                 MIGRATION_16_17,
                 MIGRATION_17_18,
                 MIGRATION_18_19,
-                MIGRATION_19_20)
+                MIGRATION_19_20,
+                MIGRATION_20_21)
             .build()
         INSTANCE = instance
         return instance

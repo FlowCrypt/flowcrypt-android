@@ -13,6 +13,8 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaSteps
+import com.flowcrypt.email.database.dao.BaseDao.Companion.doOperationViaStepsSuspend
 import com.flowcrypt.email.database.entity.MessageEntity
 import java.util.*
 import javax.mail.Flags
@@ -156,43 +158,16 @@ abstract class MessageDao : BaseDao<MessageEntity> {
 
   @Transaction
   open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {
-    val step = 50
-    val list = ArrayList(msgsUID)
-
-    if (msgsUID.size <= step) {
-      delete(email, label, msgsUID)
-    } else {
-      var i = 0
-      while (i < list.size) {
-        val stepUIDs = if (list.size - i > step) {
-          list.subList(i, i + step)
-        } else {
-          list.subList(i, list.size)
-        }
-        delete(email, label, stepUIDs)
-        i += step
-      }
+    doOperationViaSteps(list = ArrayList(msgsUID)) { stepUIDs: Collection<Long> ->
+      delete(email, label, stepUIDs)
     }
   }
 
   @Transaction
   open fun updateFlags(email: String?, label: String?, flagsMap: Map<Long, Flags>) {
-    val msgEntities = getMsgsByUids(account = email, folder = label, msgsUID = flagsMap.keys)
-    val modifiedMsgEntities = ArrayList<MessageEntity>()
-
-    for (msgEntity in msgEntities) {
-      val flags = flagsMap[msgEntity.uid]
-      flags?.let {
-        val modifiedMsgEntity = if (it.contains(Flags.Flag.SEEN)) {
-          msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()), isNew = false)
-        } else {
-          msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()))
-        }
-        modifiedMsgEntities.add(modifiedMsgEntity)
-      }
+    doOperationViaSteps(list = ArrayList(flagsMap.keys)) { stepUIDs: Collection<Long> ->
+      updateFlagsByUIDs(email, label, flagsMap, stepUIDs)
     }
-
-    update(modifiedMsgEntities)
   }
 
   /**
@@ -253,23 +228,29 @@ abstract class MessageDao : BaseDao<MessageEntity> {
    */
   @Transaction
   open suspend fun setOldStatus(email: String?, label: String?, uidList: List<Long>) {
-    val step = 50
-    if (uidList.isNotEmpty()) {
-      if (uidList.size <= step) {
-        markMsgsAsOld(email, label, uidList)
-      } else {
-        var i = 0
-        while (i < uidList.size) {
-          val tempList = if (uidList.size - i > step) {
-            uidList.subList(i, i + step)
-          } else {
-            uidList.subList(i, uidList.size)
-          }
-          markMsgsAsOld(email, label, tempList)
-          i += step
+    doOperationViaStepsSuspend(list = uidList) { stepUIDs: Collection<Long> ->
+      markMsgsAsOld(email, label, stepUIDs)
+    }
+  }
+
+  private fun updateFlagsByUIDs(email: String?, label: String?, flagsMap: Map<Long, Flags>,
+                                uids: Collection<Long>?): Int {
+    val msgEntities = getMsgsByUids(account = email, folder = label, msgsUID = uids)
+    val modifiedMsgEntities = ArrayList<MessageEntity>()
+
+    for (msgEntity in msgEntities) {
+      val flags = flagsMap[msgEntity.uid]
+      flags?.let {
+        val modifiedMsgEntity = if (it.contains(Flags.Flag.SEEN)) {
+          msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()), isNew = false)
+        } else {
+          msgEntity.copy(flags = it.toString().toUpperCase(Locale.getDefault()))
         }
+        modifiedMsgEntities.add(modifiedMsgEntity)
       }
     }
+
+    return update(modifiedMsgEntities)
   }
 
   data class UidFlagsPair(val uid: Long, val flags: String? = null)

@@ -81,8 +81,8 @@ class FromAddressesAdapter<T>(context: Context,
    * @param emailAddress The given email address
    * @param hasPgp       true if we have a private key for the given email address, otherwise false
    */
-  fun updateKeyAvailability(emailAddress: String, hasPgp: Boolean) {
-    if (keysAvailability != null) {
+  fun updateKeyAvailability(emailAddress: String?, hasPgp: Boolean) {
+    if (keysAvailability != null && emailAddress != null) {
       keysAvailability[emailAddress] = hasPgp
     }
   }

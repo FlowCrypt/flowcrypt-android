@@ -261,12 +261,21 @@ class EmailSyncService : BaseService(), SyncListener {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, localFolder)
       }
 
-      val attDaoSource = AttachmentDaoSource()
-      for (msg in msgs) {
-        attDaoSource.updateAttsTable(this, account.email, localFolder.fullName, remoteFolder.getUID(msg), msg)
-      }
+      try {
+        //we should handle any exceptions here to prevent showing messages
+        val attDaoSource = AttachmentDaoSource()
+        val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
+        for (msg in msgs) {
+          if (remoteFolder.getUID(msg) in savedMsgUIDsSet) {
+            attDaoSource.updateAttsTable(this, account.email, localFolder.fullName, remoteFolder.getUID(msg), msg)
+          }
+        }
 
-      updateLocalContactsIfNeeded(remoteFolder, msgs)
+        updateLocalContactsIfNeeded(remoteFolder, msgs)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+      }
     } catch (e: MessagingException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
@@ -344,7 +353,7 @@ class EmailSyncService : BaseService(), SyncListener {
           areAllMsgsEncrypted = isEncryptedModeEnabled
       )
 
-      FlowCryptRoomDatabase.getDatabase(context).msgDao().insert(msgEntities)
+      FlowCryptRoomDatabase.getDatabase(context).msgDao().insertWithReplace(msgEntities)
 
       if (!isEncryptedModeEnabled) {
         emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)

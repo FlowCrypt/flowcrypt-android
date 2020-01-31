@@ -6,6 +6,11 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.PorterDuff
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -18,12 +23,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.paging.PagedList
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -105,7 +112,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
 
     adapter.submitList(it)
-    actionMode?.invalidate()
   }
 
   private val boundaryCallback = object : PagedList.BoundaryCallback<MessageEntity>() {
@@ -539,16 +545,22 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
     emptyView = view.findViewById(R.id.emptyView)
     swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
-    swipeRefreshLayout!!.setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
-    swipeRefreshLayout!!.setOnRefreshListener(this)
+    swipeRefreshLayout?.setColorSchemeResources(
+        R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
+    swipeRefreshLayout?.setOnRefreshListener(this)
   }
 
   private fun setupRecyclerView() {
     val layoutManager = LinearLayoutManager(context)
     recyclerViewMsgs?.layoutManager = layoutManager
+    recyclerViewMsgs?.setHasFixedSize(true)
     recyclerViewMsgs?.addItemDecoration(DividerItemDecoration(context, layoutManager.orientation))
     recyclerViewMsgs?.adapter = adapter
+    setupItemTouchHelper()
+    setupSelectionTracker()
+  }
 
+  private fun setupSelectionTracker() {
     adapter.tracker = null
     if (listener?.currentFolder?.searchQuery == null) {
       recyclerViewMsgs?.let { recyclerView ->
@@ -567,6 +579,116 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         }
       }
     }
+  }
+
+  private fun setupItemTouchHelper() {
+    val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+        0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+      private val icon: Drawable?
+        get() = context?.let { ContextCompat.getDrawable(it, R.drawable.ic_archive_white_24dp) }
+      private val background: ColorDrawable?
+        get() = context?.let { ColorDrawable(ContextCompat.getColor(it, R.color.colorPrimaryDark)) }
+
+      override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
+                          target: RecyclerView.ViewHolder): Boolean {
+        return false
+      }
+
+      override fun getSwipeDirs(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder): Int {
+        val position = viewHolder.adapterPosition
+        return if (position != RecyclerView.NO_POSITION) {
+          val msgEntity = adapter.getMsgEntity(position)
+          if (msgEntity?.msgState == MessageState.PENDING_ARCHIVING) {
+            0
+          } else
+            super.getSwipeDirs(recyclerView, viewHolder)
+
+        } else
+          super.getSwipeDirs(recyclerView, viewHolder)
+      }
+
+      override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+        val position = viewHolder.adapterPosition
+        if (position != RecyclerView.NO_POSITION) {
+          val item = adapter.getItemId(position)
+          listener?.currentFolder?.let {
+            messagesViewModel.changeMsgsState(listOf(item), it, MessageState
+                .PENDING_ARCHIVING, false)
+          }
+
+          val snackBar = showSnackbar(view, getString(R.string.marked_for_archiving),
+              getString(R.string.undo), Snackbar.LENGTH_LONG, View.OnClickListener {
+            listener?.currentFolder?.let {
+              messagesViewModel.changeMsgsState(listOf(item), it, MessageState.NONE, false)
+              //we should force archiving action because we can have other messages in the pending archiving states
+              messagesViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
+            }
+          })
+
+          snackBar?.addCallback(object : Snackbar.Callback() {
+            override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+              super.onDismissed(transientBottomBar, event)
+              if (event != DISMISS_EVENT_ACTION && event != DISMISS_EVENT_CONSECUTIVE) {
+                messagesViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
+              }
+            }
+          })
+        }
+      }
+
+      override fun isItemViewSwipeEnabled(): Boolean {
+        return isArchiveActionEnabled()
+      }
+
+      override fun onChildDraw(c: Canvas, recyclerView: RecyclerView,
+                               viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float,
+                               actionState: Int, isCurrentlyActive: Boolean) {
+        super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+        if (this.icon == null || this.background == null) {
+          c.drawColor(Color.TRANSPARENT, PorterDuff.Mode.MULTIPLY)
+          return
+        }
+
+        val icon = this.icon ?: return
+        val background = this.background ?: return
+
+        val itemView = viewHolder.itemView
+        val backgroundCornerOffset = 20
+
+        val iconMargin = (itemView.height - icon.intrinsicHeight) / 2
+        val iconTop = itemView.top + (itemView.height - icon.intrinsicHeight) / 2
+        val iconBottom = iconTop + icon.intrinsicHeight
+
+        when {
+          dX > 0 -> { // Swiping to the right
+            val iconLeft = itemView.left + iconMargin
+            val iconRight = itemView.left + iconMargin + icon.intrinsicWidth
+            icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+
+            background.setBounds(itemView.left, itemView.top,
+                itemView.left + dX.toInt() + backgroundCornerOffset, itemView.bottom)
+          }
+
+          dX < 0 -> { // Swiping to the left
+            val iconLeft = itemView.right - iconMargin - icon.intrinsicWidth
+            val iconRight = itemView.right - iconMargin
+            icon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
+
+            background.setBounds(itemView.right + dX.toInt() - backgroundCornerOffset,
+                itemView.top, itemView.right, itemView.bottom)
+          }
+
+          else -> { // view is unSwiped
+            background.setBounds(0, 0, 0, 0)
+          }
+        }
+
+        background.draw(c)
+        icon.draw(c)
+      }
+    })
+
+    itemTouchHelper.attachToRecyclerView(recyclerViewMsgs)
   }
 
   private fun genActionModeForMsgs(): ActionMode.Callback {
@@ -665,16 +787,12 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     var isEnabled = false
 
     when (FoldersManager.getFolderType(listener?.currentFolder)) {
+      //archive action is enabled only in INBOX folder for GMAIL. While we don't support GMail
+      // labels we can't use the archive action in other folders.
       FoldersManager.FolderType.INBOX -> {
         if (AccountDao.ACCOUNT_TYPE_GOOGLE == listener?.currentAccountDao?.accountType) {
           isEnabled = true
         }
-      }
-
-      FoldersManager.FolderType.SENT -> isEnabled = true
-
-      FoldersManager.FolderType.DRAFTS, FoldersManager.FolderType.OUTBOX -> {
-        isEnabled = false
       }
 
       else -> {

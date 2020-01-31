@@ -11,7 +11,7 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Response
-import okhttp3.internal.http.HttpHeaders
+import okhttp3.internal.http.promisesBody
 import okio.Buffer
 import java.io.EOFException
 import java.nio.charset.Charset
@@ -53,12 +53,12 @@ class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) 
     val logBody = level == Level.BODY
     val logHeaders = logBody || level == Level.HEADERS
 
-    val requestBody = request.body()
+    val requestBody = request.body
     val hasRequestBody = requestBody != null
 
     val connection = chain.connection()
     val protocol = if (connection != null) connection.protocol() else Protocol.HTTP_1_1
-    var requestStartMsg = "--> " + request.method() + ' '.toString() + request.url() + ' '.toString() + protocol
+    var requestStartMsg = "--> " + request.method + ' '.toString() + request.url + ' '.toString() + protocol
     if (!logHeaders && hasRequestBody) {
       requestStartMsg += " (" + requestBody!!.contentLength() + "-byte body)"
     }
@@ -77,9 +77,9 @@ class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) 
         }
       }
 
-      val headers = request.headers()
+      val headers = request.headers
       var i = 0
-      val count = headers.size()
+      val count = headers.size
       while (i < count) {
         val name = headers.name(i)
         // Skip headers from the request body as they are explicitly logged above.
@@ -91,9 +91,9 @@ class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) 
       }
 
       if (!logBody || !hasRequestBody) {
-        logger.log("--> END " + request.method())
-      } else if (isBodyEncoded(request.headers())) {
-        logger.log("--> END " + request.method() + " (encoded body omitted)")
+        logger.log("--> END " + request.method)
+      } else if (isBodyEncoded(request.headers)) {
+        logger.log("--> END " + request.method + " (encoded body omitted)")
       } else {
         val buffer = Buffer()
         requestBody!!.writeTo(buffer)
@@ -107,10 +107,10 @@ class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) 
         logger.log("")
         if (isPlainText(buffer)) {
           logger.log(buffer.readString(charset!!))
-          logger.log("--> END " + request.method()
+          logger.log("--> END " + request.method
               + " (" + requestBody.contentLength() + "-byte body)")
         } else {
-          logger.log("--> END " + request.method() + " (binary "
+          logger.log("--> END " + request.method + " (binary "
               + requestBody.contentLength() + "-byte body omitted)")
         }
       }
@@ -127,30 +127,30 @@ class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) 
 
     val tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs)
 
-    val responseBody = response.body()
+    val responseBody = response.body
     val contentLength = responseBody?.contentLength() ?: 0
     val bodySize = if (contentLength != (-1).toLong()) "$contentLength-byte" else "unknown-length"
-    logger.log("<-- " + response.code() + ' '.toString() + response.message()
-        + ' '.toString() + response.request().url() + " (" + tookMs +
+    logger.log("<-- " + response.code + ' '.toString() + response.message
+        + ' '.toString() + response.request.url + " (" + tookMs +
         "ms" + (if (!logHeaders) ", $bodySize body" else "") + ')'.toString())
 
     if (logHeaders) {
-      val headers = response.headers()
+      val headers = response.headers
       var i = 0
-      val count = headers.size()
+      val count = headers.size
       while (i < count) {
         logger.log(headers.name(i) + ": " + headers.value(i))
         i++
       }
 
-      if (!logBody || !HttpHeaders.hasBody(response)) {
+      if (!logBody || !response.promisesBody()) {
         logger.log("<-- END HTTP")
-      } else if (isBodyEncoded(response.headers())) {
+      } else if (isBodyEncoded(response.headers)) {
         logger.log("<-- END HTTP (encoded body omitted)")
       } else {
         val source = responseBody!!.source()
         source.request(java.lang.Long.MAX_VALUE) // Buffer the entire body.
-        val buffer = source.buffer()
+        val buffer = source.buffer
 
         var charset: Charset? = UTF8
         val contentType = responseBody.contentType()
@@ -169,7 +169,7 @@ class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) 
 
         if (!isPlainText(buffer)) {
           logger.log("")
-          logger.log("<-- END HTTP (binary " + buffer.size() + "-byte body omitted)")
+          logger.log("<-- END HTTP (binary " + buffer.size + "-byte body omitted)")
           return response
         }
 
@@ -178,7 +178,7 @@ class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) 
           logger.log(buffer.clone().readString(charset!!))
         }
 
-        logger.log("<-- END HTTP (" + buffer.size() + "-byte body)")
+        logger.log("<-- END HTTP (" + buffer.size + "-byte body)")
       }
     }
 
@@ -288,7 +288,7 @@ class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) 
     private fun isPlainText(buffer: Buffer): Boolean {
       try {
         val prefix = Buffer()
-        val byteCount = if (buffer.size() < 64) buffer.size() else 64
+        val byteCount = if (buffer.size < 64) buffer.size else 64
         buffer.copyTo(prefix, 0, byteCount)
         for (i in 0..15) {
           if (prefix.exhausted()) {

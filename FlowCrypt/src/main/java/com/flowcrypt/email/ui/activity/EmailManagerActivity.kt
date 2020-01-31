@@ -637,7 +637,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   private fun setupLabelsViewModel() {
     labelsViewModel = ViewModelProvider(this).get(LabelsViewModel::class.java)
-    labelsViewModel.accountLiveData.observe(this, Observer { })
     labelsViewModel.labelsLiveData.observe(this, Observer {
 
       if (it.isNotEmpty()) {

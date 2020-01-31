@@ -13,6 +13,20 @@
                 android:targetClass="com.flowcrypt.email"
                 android:targetPackage="@string/application_id" />
         </androidx.preference.Preference>
+
+        <androidx.preference.SwitchPreference
+            android:defaultValue="@string/gradle_is_acra_enabled"
+            android:key="@string/pref_key_is_acra_enabled"
+            android:summaryOff="@string/pref_summary_disabled"
+            android:summaryOn="@string/pref_summary_enabled"
+            android:title="@string/pref_title_acra" />
+
+        <androidx.preference.SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/pref_key_is_detect_memory_leak_enabled"
+            android:summaryOff="@string/pref_summary_disabled"
+            android:summaryOn="@string/pref_summary_enabled"
+            android:title="@string/pref_title_detect_memory_leaks" />
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory android:title="@string/pref_title_http">

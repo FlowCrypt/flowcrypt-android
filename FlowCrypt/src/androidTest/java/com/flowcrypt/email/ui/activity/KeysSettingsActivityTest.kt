@@ -33,7 +33,6 @@ import androidx.test.filters.LargeTest
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.DebugTestAnnotation
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -137,7 +136,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DebugTestAnnotation
   fun testKeyDetailsShowPrivateKey() {
     selectFirstKey()
     onView(withId(R.id.btnShowPrKey))
@@ -147,7 +145,6 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-
   @DoesNotNeedMailserver
   fun testKeyDetailsCheckDetails() {
     selectFirstKey()

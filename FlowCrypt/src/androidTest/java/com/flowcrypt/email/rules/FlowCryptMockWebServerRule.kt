@@ -25,7 +25,7 @@ class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatch
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        server.setDispatcher(responseDispatcher)
+        server.dispatcher = responseDispatcher
         //todo-DenBond7 need to think about this server.useHttps(SslContextBuilder.localhost()
         // .getSocketFactory(), false);
         server.start(port)

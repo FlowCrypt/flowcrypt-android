@@ -112,7 +112,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     when (item.itemId) {
       R.id.menuActionCopy -> {
         val clipboard = context!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.primaryClip = ClipData.newPlainText("pubKey", details?.publicKey)
+        clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", details?.publicKey))
         Toast.makeText(context, getString(R.string.public_key_copied_to_clipboard),
             Toast.LENGTH_SHORT).show()
         return true

@@ -46,8 +46,8 @@ class Constants {
      * The preference keys.
      */
     const val PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED = "preferences_key_is_write_logs_to_file_enabled"
-    const val PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED = "preferences_key_is_detect_memory_leak_enabled"
-    const val PREF_KEY_IS_ACRA_ENABLED = "preferences_key_is_acra_enabled"
+    const val PREF_KEY_IS_DETECT_MEMORY_LEAK_ENABLED = "pref_key_is_detect_memory_leak_enabled"
+    const val PREF_KEY_IS_ACRA_ENABLED = "pref_key_is_acra_enabled"
     const val PREF_KEY_IS_MAIL_DEBUG_ENABLED = "preferences_key_is_mail_debug_enabled"
     const val PREF_KEY_IS_HTTP_LOG_ENABLED = "pref_key_is_http_log_enabled"
     const val PREF_KEY_HTTP_LOG_LEVEL = "pref_key_http_log_level"
@@ -64,6 +64,7 @@ class Constants {
     const val PREF_KEY_LAST_ATT_ORDER_ID = "preferences_key_last_att_order_id"
     const val PREF_KEY_IS_CHECK_KEYS_NEEDED = "preferences_key_is_check_keys_needed"
     const val PREF_KEY_BACKUPS = "pref_key_backups"
+    const val PREF_KEY_INSTALL_VERSION = "pref_key_install_version"
 
     /**
      * The max total size off all attachment which can be send via the app.

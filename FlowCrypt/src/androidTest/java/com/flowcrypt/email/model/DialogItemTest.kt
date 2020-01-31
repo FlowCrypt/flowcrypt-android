@@ -8,6 +8,7 @@ package com.flowcrypt.email.model
 import android.os.Parcel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import com.flowcrypt.email.DebugTestAnnotation
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import org.junit.Assert
@@ -23,6 +24,7 @@ import org.junit.runner.RunWith
 @SmallTest
 @RunWith(AndroidJUnit4::class)
 @DoesNotNeedMailserver
+@DebugTestAnnotation
 class DialogItemTest {
   @Test
   fun testParcelable() {

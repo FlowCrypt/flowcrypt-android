@@ -115,8 +115,10 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
           if (entity.hasAttachments == true) {
             try {
               val parentDirName = entity.attachmentsDirectory
-              val dir = File(File(app.cacheDir, Constants.ATTACHMENTS_CACHE_DIR), parentDirName)
-              FileAndDirectoryUtils.deleteDir(dir)
+              parentDirName?.let {
+                val dir = File(File(app.cacheDir, Constants.ATTACHMENTS_CACHE_DIR), it)
+                FileAndDirectoryUtils.deleteDir(dir)
+              }
             } catch (e: IOException) {
               e.printStackTrace()
             }
@@ -130,7 +132,8 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
     }
   }
 
-  fun changeMsgsState(ids: Collection<Long>, localFolder: LocalFolder, newMsgState: MessageState) {
+  fun changeMsgsState(ids: Collection<Long>, localFolder: LocalFolder, newMsgState: MessageState,
+                      notifyMsgStatesListener: Boolean = true) {
     viewModelScope.launch {
       val entities = roomDatabase.msgDao().getMsgsByIDSuspend(localFolder.account,
           localFolder.fullName, ids.map { it })
@@ -147,7 +150,9 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
       } else {
         val candidates = prepareCandidates(entities, newMsgState)
         roomDatabase.msgDao().updateSuspend(candidates)
-        msgStatesLiveData.postValue(newMsgState)
+        if (notifyMsgStatesListener) {
+          msgStatesLiveData.postValue(newMsgState)
+        }
       }
     }
   }

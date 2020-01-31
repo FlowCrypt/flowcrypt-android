@@ -8,9 +8,6 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
-import androidx.lifecycle.liveData
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 
 /**
@@ -19,16 +16,8 @@ import com.flowcrypt.email.database.entity.LabelEntity
  *         Time: 12:32 PM
  *         E-mail: DenBond7@gmail.com
  */
-class LabelsViewModel(application: Application) : BaseAndroidViewModel(application) {
-  private val roomDatabase = FlowCryptRoomDatabase.getDatabase(application)
-
-  val accountLiveData: LiveData<AccountEntity?> = liveData {
-    val accountEntity = roomDatabase.accountDao().getActiveAccount()
-    emit(accountEntity)
-  }
-
+class LabelsViewModel(application: Application) : AccountViewModel(application) {
   val labelsLiveData: LiveData<List<LabelEntity>> = Transformations.switchMap(accountLiveData) {
-    val account = it?.email ?: ""
-    roomDatabase.labelDao().getLabelsLD(account)
+    roomDatabase.labelDao().getLabelsLD(it?.email ?: "")
   }
 }

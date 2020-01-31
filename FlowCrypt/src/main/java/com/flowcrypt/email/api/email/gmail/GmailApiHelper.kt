@@ -39,11 +39,14 @@ class GmailApiHelper {
      */
     @JvmStatic
     fun generateGmailApiService(context: Context, account: AccountDao?): Gmail {
-      if (account == null || account.account == null) {
-        throw IllegalArgumentException("AccountDao is not valid.")
-      }
+      requireNotNull(account)
+      return generateGmailApiService(context, account.account)
+    }
 
-      val credential = generateGoogleAccountCredential(context, account.account)
+    fun generateGmailApiService(context: Context, account: Account?): Gmail {
+      requireNotNull(account)
+
+      val credential = generateGoogleAccountCredential(context, account)
 
       val transport = NetHttpTransport()
       val factory = JacksonFactory.getDefaultInstance()

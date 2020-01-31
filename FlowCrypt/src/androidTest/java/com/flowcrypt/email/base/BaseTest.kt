@@ -9,6 +9,7 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.Build
 import android.text.Html
 import android.view.View
 import android.widget.Toast
@@ -139,7 +140,7 @@ abstract class BaseTest {
     runOnUiThread {
       val clipboard = getTargetContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
       val clip = ClipData.newPlainText(label, text)
-      clipboard.primaryClip = clip
+      clipboard.setPrimaryClip(clip)
     }
   }
 
@@ -162,8 +163,13 @@ abstract class BaseTest {
     return getTargetContext().getString(resId, *formatArgs)
   }
 
+  @Suppress("DEPRECATION")
   protected fun getHtmlString(html: String): String {
-    return Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString()
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+      Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString()
+    } else {
+      Html.fromHtml(html).toString()
+    }
   }
 
   fun getTargetContext(): Context {

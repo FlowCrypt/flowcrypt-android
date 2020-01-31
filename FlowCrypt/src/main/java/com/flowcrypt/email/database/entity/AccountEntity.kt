@@ -5,9 +5,11 @@
 
 package com.flowcrypt.email.database.entity
 
+import android.accounts.Account
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
@@ -51,4 +53,9 @@ data class AccountEntity(
     @ColumnInfo(name = "is_show_only_encrypted", defaultValue = "0") val isShowOnlyEncrypted: Boolean?,
     @ColumnInfo(defaultValue = "NULL") val uuid: String?,
     @ColumnInfo(name = "domain_rules", defaultValue = "NULL") val domainRules: String?,
-    @ColumnInfo(name = "is_restore_access_required", defaultValue = "0") val isRestoreAccessRequired: Boolean?)
+    @ColumnInfo(name = "is_restore_access_required", defaultValue = "0") val
+    isRestoreAccessRequired: Boolean?) {
+
+  @Ignore
+  val account: Account? = Account(this.email, accountType)
+}

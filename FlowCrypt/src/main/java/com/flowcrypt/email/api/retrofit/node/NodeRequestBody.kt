@@ -8,11 +8,11 @@ package com.flowcrypt.email.api.retrofit.node
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import okhttp3.MediaType
 import okhttp3.RequestBody
-import okhttp3.internal.Util
+import okhttp3.internal.closeQuietly
 import okio.BufferedSink
 import okio.ByteString
-import okio.Okio
 import okio.Source
+import okio.source
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 
@@ -47,10 +47,10 @@ class NodeRequestBody constructor(private val nodeRequest: NodeRequest,
     var dataSource: Source? = null
 
     try {
-      dataSource = Okio.source(ByteArrayInputStream(nodeRequest.data))
-      sink.writeAll(dataSource!!)
+      dataSource = ByteArrayInputStream(nodeRequest.data).source()
+      sink.writeAll(dataSource)
     } finally {
-      Util.closeQuietly(dataSource)
+      dataSource?.closeQuietly()
     }
 
     nodeRequest.uri?.let {
@@ -58,11 +58,11 @@ class NodeRequestBody constructor(private val nodeRequest: NodeRequest,
       try {
         val inputStream = nodeRequest.context?.contentResolver?.openInputStream(it)
         if (inputStream != null) {
-          uriSource = Okio.source(BufferedInputStream(inputStream))
-          sink.writeAll(uriSource!!)
+          uriSource = BufferedInputStream(inputStream).source()
+          sink.writeAll(uriSource)
         }
       } finally {
-        Util.closeQuietly(uriSource)
+        uriSource?.closeQuietly()
       }
     }
   }

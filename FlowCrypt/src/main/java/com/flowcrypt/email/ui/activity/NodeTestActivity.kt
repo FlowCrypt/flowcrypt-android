@@ -8,13 +8,13 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.text.Html
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.node.RequestsManager
+import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
@@ -25,6 +25,8 @@ import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.VersionResult
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.node.TestData
+import com.flowcrypt.email.security.KeysStorageImpl
+import org.apache.commons.io.IOUtils
 import java.util.*
 
 class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<NodeResponseWrapper<*>> {
@@ -50,7 +52,25 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
     when (requestCode) {
       REQUEST_CODE_CHOOSE_FILE -> when (resultCode) {
         Activity.RESULT_OK -> if (data != null) {
-          requestsManager!!.encryptFile(R.id.req_id_encrypt_file_from_uri, applicationContext, data.data!!)
+          resultText = "processing...\n"
+          tvResult?.text = resultText
+
+          requestsManager?.encryptFile(R.id.req_id_encrypt_file_from_uri, applicationContext, data.data!!)
+        }
+      }
+
+      REQUEST_CODE_CHOOSE_EMAIL -> when (resultCode) {
+        Activity.RESULT_OK -> if (data != null) {
+          data.data?.let {
+            resultText = "processing...\n"
+            tvResult?.text = resultText
+
+            val pgpKeyInfoList = KeysStorageImpl.getInstance(this).getAllPgpPrivateKeys()
+            requestsManager?.decryptMsg(R.id.req_id_decrypt_email,
+                data = IOUtils.toByteArray(contentResolver.openInputStream(it)),
+                prvKeys = pgpKeyInfoList.toTypedArray(),
+                isEmail = true)
+          }
         }
       }
 
@@ -68,8 +88,11 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
       }
 
       R.id.btnChooseFile -> {
-        resultText = ""
         chooseFile()
+      }
+
+      R.id.btnChooseEmail -> {
+        chooseEmail()
       }
     }
   }
@@ -99,22 +122,22 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
           val encryptMsgResult = responseWrapper.result as EncryptedMsgResult?
           addResultLine("encrypt-msg", responseWrapper)
           encryptedMsg = encryptMsgResult!!.encryptedMsg
-          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_ecc, encryptedMsg!!.toByteArray(), TestData
-              .eccPrvKeyInfo())
+          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_ecc, data = encryptedMsg!!.toByteArray()
+              , prvKeys = TestData.eccPrvKeyInfo())
         }
 
         R.id.req_id_decrypt_msg_ecc -> {
           val eccDecryptMsgResult = responseWrapper.result as ParseDecryptedMsgResult?
           printDecryptMsgResult("decrypt-msg-ecc", eccDecryptMsgResult!!, responseWrapper.executionTime)
-          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_rsa_2048, encryptedMsg!!.toByteArray(), TestData
-              .rsa2048PrvKeyInfo())
+          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_rsa_2048, data = encryptedMsg!!
+              .toByteArray(), prvKeys = TestData.rsa2048PrvKeyInfo())
         }
 
         R.id.req_id_decrypt_msg_rsa_2048 -> {
           val rsa2048DecryptMsgResult = responseWrapper.result as ParseDecryptedMsgResult?
           printDecryptMsgResult("decrypt-msg-rsa2048", rsa2048DecryptMsgResult!!, responseWrapper.executionTime)
-          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_rsa_4096, encryptedMsg!!.toByteArray(), TestData
-              .rsa4096PrvKeyInfo())
+          requestsManager!!.decryptMsg(R.id.req_id_decrypt_msg_rsa_4096, data = encryptedMsg!!
+              .toByteArray(), prvKeys = TestData.rsa4096PrvKeyInfo())
         }
 
         R.id.req_id_decrypt_msg_rsa_4096 -> {
@@ -213,12 +236,35 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
           printDecryptFileResult("decrypt-file-rsa2048", null, rsa2048DecryptFileFromUriResult3Mb!!,
               responseWrapper.executionTime)
         }
+
+        R.id.req_id_decrypt_email -> {
+          val eccDecryptMsgResult = responseWrapper.result as ParseDecryptedMsgResult?
+
+          for (block in eccDecryptMsgResult?.msgBlocks ?: emptyList<MsgBlock>()) {
+            when (block.type) {
+              MsgBlock.Type.DECRYPT_ERROR -> {
+                val errorMsgBlock = block as? DecryptErrorMsgBlock
+                errorMsgBlock?.let {
+                  resultText += "\ndecrypt-email:found ${block.type.name}: ${block.error?.details?.message}"
+                  tvResult?.text = resultText
+                }
+              }
+
+              else -> {
+                resultText += "\ndecrypt-email:found ${block.type.name}"
+                tvResult?.text = resultText
+              }
+            }
+          }
+          resultText += "\n"
+          addResultLine("decrypt-email", eccDecryptMsgResult, responseWrapper.executionTime)
+        }
       }
     }
   }
 
   private fun addResultLine(actionName: String, ms: Long, result: String?, isFinal: Boolean) {
-    if (result == null || "ok" != result && "success" != result) {
+    if (result == null || result !in listOf("ok", "success")) {
       hasTestFailure = true
     }
 
@@ -255,7 +301,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
   private fun printDecryptMsgResult(actionName: String, r: ParseDecryptedMsgResult, executionTime: Long) {
     if (r.error != null) {
       addResultLine(actionName, r, executionTime)
-    } else if (Html.fromHtml(r.text).length != TEST_MSG_HTML.length) {
+    } else if (r.text?.length != TEST_MSG_HTML.length) {
       addResultLine(actionName, executionTime,
           "wrong meta block len " + r.msgBlocks!!.size + "!=" + TEST_MSG_HTML.length, false)
     } else if (r.msgBlocks!![0].type !== MsgBlock.Type.PLAIN_HTML) {
@@ -266,7 +312,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
       when {
         block.type !== MsgBlock.Type.PLAIN_HTML ->
           addResultLine(actionName, executionTime, "wrong block type: " + r.msgBlocks!!.size, false)
-        Html.fromHtml(r.text).toString() != TEST_MSG_HTML -> addResultLine(actionName, executionTime, "block content mismatch",
+        r.text.toString() != TEST_MSG_HTML -> addResultLine(actionName, executionTime, "block content mismatch",
             false)
         r.msgBlocks!!.size > 1 -> addResultLine(actionName, executionTime, "unexpected second block", false)
         else -> addResultLine(actionName, r, executionTime)
@@ -301,17 +347,27 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
     startActivityForResult(Intent.createChooser(intent, getString(R.string.choose_file)), REQUEST_CODE_CHOOSE_FILE)
   }
 
+  private fun chooseEmail() {
+    val intent = Intent()
+    intent.action = Intent.ACTION_OPEN_DOCUMENT
+    intent.addCategory(Intent.CATEGORY_OPENABLE)
+    intent.type = "*/*"
+    startActivityForResult(Intent.createChooser(intent, getString(R.string.choose_email)), REQUEST_CODE_CHOOSE_EMAIL)
+  }
+
   private fun initViews() {
     setContentView(R.layout.activity_main)
     tvResult = findViewById(R.id.tvResult)
 
-    findViewById<View>(R.id.btnVersion).setOnClickListener(this)
-    findViewById<View>(R.id.btnAllTests).setOnClickListener(this)
-    findViewById<View>(R.id.btnChooseFile).setOnClickListener(this)
+    findViewById<View>(R.id.btnVersion)?.setOnClickListener(this)
+    findViewById<View>(R.id.btnAllTests)?.setOnClickListener(this)
+    findViewById<View>(R.id.btnChooseFile)?.setOnClickListener(this)
+    findViewById<View>(R.id.btnChooseEmail)?.setOnClickListener(this)
   }
 
   companion object {
     private const val REQUEST_CODE_CHOOSE_FILE = 10
+    private const val REQUEST_CODE_CHOOSE_EMAIL = 11
 
     private const val TEST_MSG = "this is ~\na test for\n\ndecrypting\nunicode:\u03A3\nthat's all"
     private const val TEST_MSG_HTML =

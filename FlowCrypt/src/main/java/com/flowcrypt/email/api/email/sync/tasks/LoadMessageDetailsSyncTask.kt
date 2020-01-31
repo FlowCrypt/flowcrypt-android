@@ -15,7 +15,7 @@ import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
-import okio.Okio
+import okio.buffer
 import org.apache.commons.io.FilenameUtils
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
@@ -213,7 +213,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
   private fun storeMsg(key: String, msg: MimeMessage) {
     val editor = MsgsCacheManager.diskLruCache.edit(key) ?: return
 
-    val bufferedSink = Okio.buffer(editor.newSink(0))
+    val bufferedSink = editor.newSink(0).buffer()
     val outputStream = bufferedSink.outputStream()
     val progressOutputStream = ProgressOutputStream(outputStream)
     try {
@@ -267,7 +267,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
    * all requests to the underlying output stream.
    */
   inner class ProgressOutputStream(val out: OutputStream) : OutputStream() {
-    override fun write(b: ByteArray?) {
+    override fun write(b: ByteArray) {
       if (Thread.interrupted()) {
         throw SyncTaskTerminatedException()
       }
@@ -282,7 +282,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
       out.write(b)
     }
 
-    override fun write(b: ByteArray?, off: Int, len: Int) {
+    override fun write(b: ByteArray, off: Int, len: Int) {
       if (Thread.interrupted()) {
         throw SyncTaskTerminatedException()
       }
@@ -295,7 +295,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
    * This class will be used to identify the fetching progress.
    */
   inner class FetchingInputStream(val stream: InputStream) : BufferedInputStream(stream) {
-    override fun read(b: ByteArray?, off: Int, len: Int): Int {
+    override fun read(b: ByteArray, off: Int, len: Int): Int {
       if (Thread.interrupted()) {
         throw SyncTaskTerminatedException()
       }
