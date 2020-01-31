@@ -115,8 +115,10 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
           if (entity.hasAttachments == true) {
             try {
               val parentDirName = entity.attachmentsDirectory
-              val dir = File(File(app.cacheDir, Constants.ATTACHMENTS_CACHE_DIR), parentDirName)
-              FileAndDirectoryUtils.deleteDir(dir)
+              parentDirName?.let {
+                val dir = File(File(app.cacheDir, Constants.ATTACHMENTS_CACHE_DIR), it)
+                FileAndDirectoryUtils.deleteDir(dir)
+              }
             } catch (e: IOException) {
               e.printStackTrace()
             }

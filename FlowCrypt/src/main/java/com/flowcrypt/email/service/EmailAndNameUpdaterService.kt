@@ -42,18 +42,17 @@ class EmailAndNameUpdaterService : JobIntentService() {
   private var contactsDaoSource: ContactsDaoSource = ContactsDaoSource()
 
   override fun onHandleWork(intent: Intent) {
-    if (intent.hasExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME)) {
-      val pairs = intent.getParcelableArrayListExtra<EmailAndNamePair>(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME)
+    val pairs = intent.getParcelableArrayListExtra<EmailAndNamePair>(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME)
+        ?: return
 
-      for ((email, name) in pairs) {
-        val pgpContact = contactsDaoSource.getPgpContact(applicationContext, email)
-        if (pgpContact != null) {
-          if (TextUtils.isEmpty(pgpContact.name)) {
-            email?.let { contactsDaoSource.updateNameOfPgpContact(applicationContext, it, name) }
-          }
-        } else {
-          contactsDaoSource.addRow(applicationContext, PgpContact(email!!, name))
+    for ((email, name) in pairs) {
+      val pgpContact = contactsDaoSource.getPgpContact(applicationContext, email)
+      if (pgpContact != null) {
+        if (TextUtils.isEmpty(pgpContact.name)) {
+          email?.let { contactsDaoSource.updateNameOfPgpContact(applicationContext, it, name) }
         }
+      } else {
+        contactsDaoSource.addRow(applicationContext, PgpContact(email!!, name))
       }
     }
   }

@@ -85,91 +85,90 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     LogsUtil.d(TAG, "onHandleWork")
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
     val accountDao = account ?: return
-    if (intent.hasExtra(EXTRA_KEY_OUTGOING_MESSAGE_INFO)) {
-      val outgoingMsgInfo = intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
-      val uid = outgoingMsgInfo.uid
-      val email = accountDao.email
-      val label = JavaEmailConstants.FOLDER_OUTBOX
+    val outgoingMsgInfo =
+        intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO) ?: return
+    val uid = outgoingMsgInfo.uid
+    val email = accountDao.email
+    val label = JavaEmailConstants.FOLDER_OUTBOX
 
-      if (roomDatabase.msgDao().getMsg(email, label, uid) != null) {
-        return
+    if (roomDatabase.msgDao().getMsg(email, label, uid) != null) {
+      return
+    }
+
+    LogsUtil.d(TAG, "Received a new job: $outgoingMsgInfo")
+    var newMsgId: Long = -1
+
+    try {
+      setupIfNeeded()
+      updateContactsLastUseDateTime(outgoingMsgInfo)
+
+      var pubKeys: List<String>? = null
+      if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+        val senderEmail = outgoingMsgInfo.from
+        pubKeys = SecurityUtils.getRecipientsPubKeys(this,
+            outgoingMsgInfo.getAllRecipients().toMutableList(), accountDao, senderEmail)
       }
 
-      LogsUtil.d(TAG, "Received a new job: $outgoingMsgInfo")
-      var newMsgId: Long = -1
+      val rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys)
+      val mimeMsg = MimeMessage(sess, IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8))
 
-      try {
-        setupIfNeeded()
-        updateContactsLastUseDateTime(outgoingMsgInfo)
+      val msgAttsCacheDir = File(attsCacheDir, UUID.randomUUID().toString())
 
-        var pubKeys: List<String>? = null
-        if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-          val senderEmail = outgoingMsgInfo.from
-          pubKeys = SecurityUtils.getRecipientsPubKeys(this,
-              outgoingMsgInfo.getAllRecipients().toMutableList(), accountDao, senderEmail)
-        }
-
-        val rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys)
-        val mimeMsg = MimeMessage(sess, IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8))
-
-        val msgAttsCacheDir = File(attsCacheDir, UUID.randomUUID().toString())
-
-        val msgEntity = prepareMessageEntity(outgoingMsgInfo, uid, mimeMsg, rawMsg, msgAttsCacheDir)
-        newMsgId = roomDatabase.msgDao().insert(msgEntity)
-
-        if (newMsgId > 0) {
-          updateOutgoingMsgCount(email, roomDatabase)
-
-          val hasAtts = !CollectionUtils.isEmpty(outgoingMsgInfo.atts)
-              || !CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)
-
-          if (hasAtts) {
-            if (!msgAttsCacheDir.exists()) {
-              if (!msgAttsCacheDir.mkdir()) {
-                Log.e(TAG, "Create cache directory " + attsCacheDir!!.name + " filed!")
-                roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.ERROR_CACHE_PROBLEM.value))
-                return
-              }
-            }
-
-            addAttsToCache(outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir)
-          }
-
-          if (CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)) {
-            val insertedMsgEntity = roomDatabase.msgDao().getMsg(
-                msgEntity.email, msgEntity.folder, msgEntity.uid)
-            insertedMsgEntity?.let {
-              roomDatabase.msgDao().update(it.copy(state = MessageState.QUEUED.value))
-              MessagesSenderJobService.schedule(applicationContext)
-            }
-          } else {
-            ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
-          }
-        }
-      } catch (e: Exception) {
-        e.printStackTrace()
-        ExceptionUtil.handleError(e)
-
-        val msgEntity = MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
-
-        if (newMsgId <= 0) {
-          newMsgId = roomDatabase.msgDao().insert(msgEntity)
-        }
-
-        if (newMsgId > 0) {
-          if (e is NoKeyAvailableException) {
-            val errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
-            roomDatabase.msgDao().update(msgEntity.copy(state = MessageState
-                .ERROR_PRIVATE_KEY_NOT_FOUND.value, errorMsg = errorMsg))
-          } else {
-            roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.ERROR_DURING_CREATION.value))
-          }
-        }
-      }
+      val msgEntity = prepareMessageEntity(outgoingMsgInfo, uid, mimeMsg, rawMsg, msgAttsCacheDir)
+      newMsgId = roomDatabase.msgDao().insert(msgEntity)
 
       if (newMsgId > 0) {
         updateOutgoingMsgCount(email, roomDatabase)
+
+        val hasAtts = !CollectionUtils.isEmpty(outgoingMsgInfo.atts)
+            || !CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)
+
+        if (hasAtts) {
+          if (!msgAttsCacheDir.exists()) {
+            if (!msgAttsCacheDir.mkdir()) {
+              Log.e(TAG, "Create cache directory " + attsCacheDir!!.name + " filed!")
+              roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.ERROR_CACHE_PROBLEM.value))
+              return
+            }
+          }
+
+          addAttsToCache(outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir)
+        }
+
+        if (CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)) {
+          val insertedMsgEntity = roomDatabase.msgDao().getMsg(
+              msgEntity.email, msgEntity.folder, msgEntity.uid)
+          insertedMsgEntity?.let {
+            roomDatabase.msgDao().update(it.copy(state = MessageState.QUEUED.value))
+            MessagesSenderJobService.schedule(applicationContext)
+          }
+        } else {
+          ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
+        }
       }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+
+      val msgEntity = MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
+
+      if (newMsgId <= 0) {
+        newMsgId = roomDatabase.msgDao().insert(msgEntity)
+      }
+
+      if (newMsgId > 0) {
+        if (e is NoKeyAvailableException) {
+          val errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
+          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState
+              .ERROR_PRIVATE_KEY_NOT_FOUND.value, errorMsg = errorMsg))
+        } else {
+          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.ERROR_DURING_CREATION.value))
+        }
+      }
+    }
+
+    if (newMsgId > 0) {
+      updateOutgoingMsgCount(email, roomDatabase)
     }
   }
 
@@ -250,7 +249,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             att.uri = uri
             att.name = encryptedTempFile.name
           } else {
-            val cachedAtt = File(attsCacheDir, att.name)
+            val cachedAtt = File(attsCacheDir, att.name ?: UUID.randomUUID().toString())
             FileUtils.copyInputStreamToFile(inputStream, cachedAtt)
             val uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt)
             att.uri = uri
