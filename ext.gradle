@@ -6,8 +6,8 @@
 ext {
     kotlinVersion = '1.3.61'
     /*Global*/
-    appVersionCode = 94
-    appVersionName = '0.9.4'
+    appVersionCode = 95
+    appVersionName = '0.9.5'
     buildToolsVersion = '29.0.2'
     compileSdkVersion = 29
     targetSdkVersion = 29
