@@ -10,7 +10,7 @@ blocks:
 
   - name: Test without mailserver
     execution_time_limit:
-      minutes: 45
+      minutes: 30
     task:
       env_vars:
         - name: SEMAPHORE_GIT_DIR
