@@ -20,7 +20,8 @@
         app:layout_constraintEnd_toStartOf="@+id/btnAllTests"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="SmallSp" />
 
     <Button
         android:id="@+id/btnAllTests"
@@ -31,7 +32,8 @@
         app:layout_constraintEnd_toStartOf="@+id/btnChooseFile"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/btnVersion"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="SmallSp" />
 
     <Button
         android:id="@+id/btnChooseFile"
@@ -42,7 +44,8 @@
         app:layout_constraintEnd_toStartOf="@+id/btnChooseEmail"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/btnAllTests"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="SmallSp" />
 
     <Button
         android:id="@+id/btnChooseEmail"
@@ -54,7 +57,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/btnChooseFile"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="SmallSp" />
 
     <TextView
         android:id="@+id/tvResult"
