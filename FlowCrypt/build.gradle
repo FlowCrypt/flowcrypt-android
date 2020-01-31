@@ -395,6 +395,7 @@ dependencies {
     implementation "com.squareup.okio:okio:${okioVersion}"
     implementation "com.squareup.okhttp3:logging-interceptor:${rootProject.ext.okhttpVersion}"
     implementation "com.squareup.okhttp3:mockwebserver:${rootProject.ext.okhttpVersion}"
+    implementation "com.squareup.leakcanary:leakcanary-object-watcher-android:${rootProject.ext.leakcanaryVersion}"
 
     implementation "com.sun.mail:android-mail:${rootProject.ext.javaMailVersion}"
     implementation("com.sun.mail:gimap:${rootProject.ext.javaMailVersion}") {
