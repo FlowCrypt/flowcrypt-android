@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.node
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import java.io.BufferedInputStream
@@ -30,7 +30,8 @@ data class VersionResult constructor(@SerializedName("http_parser") @Expose val 
                                      @Expose val modules: String?,
                                      @Expose val nghttp2: String?,
                                      @Expose val openssl: String?,
-                                     @Expose override val error: Error?) : BaseNodeResponse {
+                                     @SerializedName("error")
+                                     @Expose override val apiError: ApiError?) : BaseNodeResponse {
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
 
   }
@@ -46,7 +47,7 @@ data class VersionResult constructor(@SerializedName("http_parser") @Expose val 
       source.readString(),
       source.readString(),
       source.readString(),
-      source.readParcelable<Error>(Error::class.java.classLoader)
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader)
   )
 
   override fun describeContents(): Int {
@@ -65,7 +66,7 @@ data class VersionResult constructor(@SerializedName("http_parser") @Expose val 
         writeString(modules)
         writeString(nghttp2)
         writeString(openssl)
-        writeParcelable(error, 0)
+        writeParcelable(apiError, flags)
       }
 
   companion object {

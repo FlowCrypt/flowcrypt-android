@@ -21,24 +21,27 @@ import com.google.gson.annotations.SerializedName
  */
 
 data class ApiError constructor(@Expose val code: Int = 0,
-                                @SerializedName("message") @Expose val msg: String?,
-                                @Expose val internal: String? = null) : Parcelable {
+                                @SerializedName("message") @Expose val msg: String? = null,
+                                @Expose val internal: String? = null,
+                                @Expose val stack: String? = null,
+                                @Expose val type: String? = null) : Parcelable {
   constructor(source: Parcel) : this(
       source.readInt(),
+      source.readString(),
+      source.readString(),
       source.readString(),
       source.readString()
   )
 
-  override fun describeContents(): Int {
-    return 0
-  }
+  override fun describeContents() = 0
 
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeInt(code)
-        writeString(msg)
-        writeString(internal)
-      }
+  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
+    writeInt(code)
+    writeString(msg)
+    writeString(internal)
+    writeString(stack)
+    writeString(type)
+  }
 
   companion object {
     @JvmField

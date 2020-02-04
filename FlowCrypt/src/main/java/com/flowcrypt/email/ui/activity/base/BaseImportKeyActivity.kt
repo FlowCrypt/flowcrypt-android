@@ -306,7 +306,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
         if (e is NodeException) {
           val nodeException = e as NodeException?
 
-          if (WRONG_STRUCTURE_ERROR == nodeException!!.nodeError!!.msg) {
+          if (WRONG_STRUCTURE_ERROR == nodeException?.nodeError?.msg) {
             val mode = if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)
             when (loaderId) {
               R.id.loader_id_validate_key_from_file ->

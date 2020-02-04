@@ -10,15 +10,16 @@ import android.os.Parcel
 import android.os.Parcelable
 import android.util.Base64
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 import org.apache.commons.io.FileUtils
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -38,10 +39,10 @@ import java.io.StringReader
 data class ParseDecryptedMsgResult constructor(
     @Expose val text: String?,
     @Expose val replyType: String,
-    @Expose override val error: Error?,
+    @SerializedName("error")
+    @Expose override val apiError: ApiError?,
     var msgBlocks: MutableList<MsgBlock>?) :
     BaseNodeResponse {
-
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     var isEnabled = true
     val gson = NodeGson.gson
@@ -102,28 +103,25 @@ data class ParseDecryptedMsgResult constructor(
     }
   }
 
-  constructor(source: Parcel) : this(
-      source.readString(),
-      source.readString()!!,
-      source.readParcelable<Error>(Error::class.java.classLoader),
-      mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) }
-  )
-
   fun getMsgEncryptionType(): MessageEncryptionType {
     return if (replyType == "encrypted") MessageEncryptionType.ENCRYPTED else MessageEncryptionType.STANDARD
   }
 
-  override fun describeContents(): Int {
-    return 0
-  }
+  constructor(source: Parcel) : this(
+      source.readString(),
+      source.readString()!!,
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
+      mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) }
+  )
 
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeString(text)
-        writeString(replyType)
-        writeParcelable(error, 0)
-        writeTypedList(msgBlocks)
-      }
+  override fun describeContents() = 0
+
+  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
+    writeString(text)
+    writeString(replyType)
+    writeParcelable(apiError, flags)
+    writeTypedList(msgBlocks)
+  }
 
   companion object {
     @JvmField

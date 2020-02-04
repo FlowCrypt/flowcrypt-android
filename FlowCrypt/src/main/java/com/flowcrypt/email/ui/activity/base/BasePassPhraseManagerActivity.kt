@@ -223,7 +223,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
           }
 
           Status.ERROR -> nodeResponseWrapper.result?.let {
-            Toast.makeText(this, it.error?.toString() ?: "", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, it.apiError?.toString() ?: "", Toast.LENGTH_SHORT).show()
           }
 
           Status.EXCEPTION -> if (nodeResponseWrapper.result != null) {

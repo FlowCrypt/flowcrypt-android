@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.util.exception
 
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 
 /**
  * This exception can occur during the encryption process.
@@ -15,4 +15,4 @@ import com.flowcrypt.email.api.retrofit.response.model.node.Error
  * Time: 6:34 PM
  * E-mail: DenBond7@gmail.com
  */
-class NodeEncryptException(error: Error) : NodeException(error)
+class NodeEncryptException(error: ApiError) : NodeException(error)

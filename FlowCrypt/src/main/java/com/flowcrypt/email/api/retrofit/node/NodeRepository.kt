@@ -19,6 +19,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
+import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -41,10 +42,11 @@ class NodeRepository : PgpApiRepository {
     load(requestCode, liveData, ParseKeysRequest(raw))
   }
 
-  override fun parseDecryptMsg(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>,
-                               request: ParseDecryptMsgRequest) {
-    load(requestCode, liveData, request)
-  }
+  override suspend fun parseDecryptMsg(requestCode: Int, request: ParseDecryptMsgRequest): Result<ParseDecryptedMsgResult?> =
+      withContext(Dispatchers.IO) {
+        val apiService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
+        getResult(call = { apiService.parseDecryptMsg(request) })
+      }
 
   override fun checkPassphraseStrength(requestCode: Int, liveData: MutableLiveData<NodeResponseWrapper<*>>,
                                        request: ZxcvbnStrengthBarRequest) {
@@ -86,7 +88,7 @@ class NodeRepository : PgpApiRepository {
         if (response.body() != null) {
           baseNodeResult = response.body() as BaseNodeResponse
 
-          if (baseNodeResult.error != null) {
+          if (baseNodeResult.apiError != null) {
             return NodeResponseWrapper.error(nodeRequestWrapper.requestCode, baseNodeResult, time)
           }
         } else {

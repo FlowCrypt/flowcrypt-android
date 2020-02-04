@@ -187,8 +187,8 @@ class NodeCallsExecutor {
         throw NullPointerException("Result is null")
       }
 
-      if (result.error != null) {
-        throw NodeException(result.error)
+      if (result.apiError != null) {
+        throw NodeException(result.apiError)
       }
     }
   }

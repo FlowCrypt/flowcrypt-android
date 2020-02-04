@@ -7,8 +7,9 @@ package com.flowcrypt.email.api.retrofit.response.node
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 import org.apache.commons.io.IOUtils
 import java.io.BufferedInputStream
 
@@ -22,7 +23,8 @@ import java.io.BufferedInputStream
  */
 data class DecryptedFileResult constructor(@Expose val isSuccess: Boolean,
                                            @Expose val name: String?,
-                                           @Expose override val error: Error?,
+                                           @SerializedName("error")
+                                           @Expose override val apiError: ApiError?,
                                            var decryptedBytes: ByteArray? = null) : BaseNodeResponse {
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     decryptedBytes = IOUtils.toByteArray(bufferedInputStream)
@@ -31,7 +33,7 @@ data class DecryptedFileResult constructor(@Expose val isSuccess: Boolean,
   constructor(source: Parcel) : this(
       1 == source.readInt(),
       source.readString(),
-      source.readParcelable<Error>(Error::class.java.classLoader),
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
       source.createByteArray()
   )
 
@@ -43,7 +45,7 @@ data class DecryptedFileResult constructor(@Expose val isSuccess: Boolean,
       with(dest) {
         writeInt((if (isSuccess) 1 else 0))
         writeString(name)
-        writeParcelable(error, 0)
+        writeParcelable(apiError, flags)
         writeByteArray(decryptedBytes)
       }
 

@@ -42,10 +42,10 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
@@ -364,11 +364,11 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   /**
    * Show info about an error.
    */
-  fun showErrorInfo(error: Error?, e: Throwable?) {
+  fun showErrorInfo(apiError: ApiError?, e: Throwable?) {
     when {
-      error != null -> textViewStatusInfo!!.text = error.msg
-      e != null -> textViewStatusInfo!!.text = e.message
-      else -> textViewStatusInfo!!.setText(R.string.unknown_error)
+      apiError != null -> textViewStatusInfo?.text = apiError.msg
+      e != null -> textViewStatusInfo?.text = e.message
+      else -> textViewStatusInfo?.setText(R.string.unknown_error)
     }
 
     UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)

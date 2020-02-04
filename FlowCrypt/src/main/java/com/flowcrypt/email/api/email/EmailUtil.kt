@@ -702,8 +702,8 @@ class EmailUtil {
       val response = nodeService.composeEmail(request).execute()
       val result = response.body() ?: throw NullPointerException("ComposeEmailResult == null")
 
-      if (result.error != null) {
-        throw NodeEncryptException(result.error)
+      if (result.apiError != null) {
+        throw NodeEncryptException(result.apiError)
       }
 
       return result.mimeMsg

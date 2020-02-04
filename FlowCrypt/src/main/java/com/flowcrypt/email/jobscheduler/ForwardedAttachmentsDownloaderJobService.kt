@@ -299,8 +299,8 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
           return
         }
 
-        if (encryptedFileResult.error != null) {
-          ExceptionUtil.handleError(Exception(encryptedFileResult.error.msg))
+        if (encryptedFileResult.apiError != null) {
+          ExceptionUtil.handleError(Exception(encryptedFileResult.apiError.msg))
           FileUtils.writeByteArrayToFile(tempFile, byteArrayOf())
           return
         }

@@ -598,9 +598,9 @@ class AttachmentDownloadManagerService : Service() {
       val request = DecryptFileRequest(IOUtils.toByteArray(inputStream), pgpKeyInfoList)
       val response = nodeService.decryptFile(request).execute()
       val result = response.body() ?: throw NullPointerException("Node.js returned an empty result")
-      if (result.error != null) {
-        var exceptionMsg = result.error.msg
-        if ("use_password" == result.error.type) {
+      if (result.apiError != null) {
+        var exceptionMsg = result.apiError.msg
+        if ("use_password" == result.apiError.type) {
           exceptionMsg = context.getString(R.string.opening_password_encrypted_msg_not_implemented_yet)
         }
         throw Exception(exceptionMsg)

@@ -29,10 +29,10 @@ import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.api.retrofit.response.node.VersionResult
 import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
-
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Call
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.Streaming
@@ -59,7 +59,10 @@ interface NodeService {
   fun composeEmail(@Body request: ComposeEmailRequest): Call<ComposeEmailResult>
 
   @POST("/")
-  fun parseDecryptMsg(@Body request: ParseDecryptMsgRequest): Call<ParseDecryptedMsgResult>
+  fun parseDecryptMsgOld(@Body request: ParseDecryptMsgRequest): Call<ParseDecryptedMsgResult>
+
+  @POST("/")
+  suspend fun parseDecryptMsg(@Body request: ParseDecryptMsgRequest): Response<ParseDecryptedMsgResult>
 
   @POST("/")
   fun gmailBackupSearch(@Body request: GmailBackupSearchRequest): Call<GmailBackupSearchResult>

@@ -166,7 +166,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
           }
         }
 
-        Status.ERROR -> Toast.makeText(context, nodeResponseWrapper.result!!.error!!.toString(),
+        Status.ERROR -> Toast.makeText(context, nodeResponseWrapper.result?.apiError?.toString(),
             Toast.LENGTH_SHORT).show()
 
         Status.EXCEPTION -> Toast.makeText(context, nodeResponseWrapper.exception!!.message, Toast.LENGTH_SHORT).show()

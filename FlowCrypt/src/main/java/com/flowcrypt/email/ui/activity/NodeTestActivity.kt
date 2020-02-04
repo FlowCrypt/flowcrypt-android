@@ -106,7 +106,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
       val result = responseWrapper.result ?: return
 
-      result.error?.let {
+      result.apiError?.let {
         addResultLine("ERROR", responseWrapper.executionTime, "error: $it", true)
         return
       }
@@ -289,8 +289,8 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
   private fun addResultLine(actionName: String, result: BaseNodeResponse?, executionTime: Long) {
     if (result != null) {
-      if (result.error != null) {
-        addResultLine(actionName, executionTime, result.error!!.msg, false)
+      if (result.apiError != null) {
+        addResultLine(actionName, executionTime, result.apiError!!.msg, false)
       } else {
         addResultLine(actionName, executionTime, "ok", false)
       }
@@ -299,7 +299,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
   @Suppress("DEPRECATION")
   private fun printDecryptMsgResult(actionName: String, r: ParseDecryptedMsgResult, executionTime: Long) {
-    if (r.error != null) {
+    if (r.apiError != null) {
       addResultLine(actionName, r, executionTime)
     } else if (r.text?.length != TEST_MSG_HTML.length) {
       addResultLine(actionName, executionTime,
@@ -322,7 +322,7 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
   private fun printDecryptFileResult(actionName: String, originalData: ByteArray?, r: DecryptedFileResult,
                                      executionTime: Long) {
-    if (r.error != null) {
+    if (r.apiError != null) {
       addResultLine(actionName, r, executionTime)
     } else if ("file.txt" != r.name) {
       addResultLine(actionName, executionTime, "wrong filename", false)

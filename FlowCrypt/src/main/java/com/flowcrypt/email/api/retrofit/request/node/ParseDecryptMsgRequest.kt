@@ -31,6 +31,6 @@ class ParseDecryptMsgRequest @JvmOverloads constructor(override val data: ByteAr
   override val endpoint: String = "parseDecryptMsg"
 
   override fun getResponse(nodeService: NodeService): Response<*> {
-    return nodeService.parseDecryptMsg(this).execute()
+    return nodeService.parseDecryptMsgOld(this).execute()
   }
 }
