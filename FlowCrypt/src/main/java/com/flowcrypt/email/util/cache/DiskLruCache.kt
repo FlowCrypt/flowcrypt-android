@@ -16,6 +16,7 @@
 
 package com.flowcrypt.email.util.cache
 
+import android.net.Uri
 import com.flowcrypt.email.util.cache.DiskLruCache.Editor
 import okhttp3.OkHttpClient
 import okhttp3.internal.closeQuietly
@@ -787,6 +788,22 @@ class DiskLruCache internal constructor(
 
     /** Returns the byte length of the value for [index]. */
     fun getLength(index: Int): Long = lengths[index]
+
+    /** Returns the byte array of the value for [index]. */
+    fun getByteArray(index: Int): ByteArray {
+      val bufferedSource = getSource(index).buffer()
+      val byteArray = bufferedSource.readByteArray()
+      bufferedSource.close()
+      return byteArray
+    }
+
+    /** Returns the [Uri] of the value for [index]. */
+    fun getUri(index: Int): Uri? {
+      val file = File(directory, "$key.$index")
+      return if (file.exists()) {
+        Uri.fromFile(file)
+      } else null
+    }
 
     override fun close() {
       for (source in sources) {

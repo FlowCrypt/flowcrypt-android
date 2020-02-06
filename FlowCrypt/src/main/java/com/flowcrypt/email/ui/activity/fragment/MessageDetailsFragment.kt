@@ -158,7 +158,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       REQUEST_CODE_START_IMPORT_KEY_ACTIVITY -> when (resultCode) {
         Activity.RESULT_OK -> {
           Toast.makeText(context, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show()
-          UIUtil.exchangeViewVisibility(true, progressView!!, contentView!!)
+          UIUtil.exchangeViewVisibility(true, progressView, contentView)
 
           val activity = baseActivity as MessageDetailsActivity
           activity.decryptMsg()

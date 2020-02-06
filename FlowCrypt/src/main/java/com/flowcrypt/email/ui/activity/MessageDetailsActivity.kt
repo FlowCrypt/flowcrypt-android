@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity
 import android.content.Context
 import android.content.Intent
 import android.database.Cursor
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -19,7 +20,6 @@ import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -41,7 +41,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.flowcrypt.email.util.idling.SingleIdlingResources
-import com.sun.mail.util.ASCIIUtility
 import java.util.*
 
 /**
@@ -59,6 +58,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   private lateinit var localFolder: LocalFolder
   private lateinit var msgDetailsViewModel: MsgDetailsViewModel
   private lateinit var decryptMsgViewModel: DecryptMessageViewModel
+  private lateinit var label: String
 
   @get:VisibleForTesting
   var idlingForDecryption: CountingIdlingResource? = null
@@ -68,8 +68,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   private var isReceiveMsgBodyNeeded: Boolean = false
   private var isRequestMsgDetailsStarted: Boolean = false
   private var isRetrieveIncomingMsgNeeded = true
-  private var rawMimeBytes: ByteArray? = null
-  private lateinit var label: String
+  private var rawMimeBytesOfOutgoingMsg: ByteArray? = null
+  private var msgUri: Uri? = null
   private val uniqueId = UUID.randomUUID().toString()
 
   override val rootView: View
@@ -135,7 +135,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   override fun onNodeStateChanged(isReady: Boolean) {
     super.onNodeStateChanged(isReady)
     if (isReady) {
-      if (rawMimeBytes?.isNotEmpty() == true) {
+      if (rawMimeBytesOfOutgoingMsg?.isNotEmpty() == true) {
         decryptMsg()
       }
     }
@@ -207,14 +207,15 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   fun decryptMsg() {
-    if (rawMimeBytes?.isNotEmpty() == true) {
-      idlingForDecryption!!.increment()
-      onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
-          .progress_id_processing, 65)
-      decryptMsgViewModel.decryptMessage(rawMimeBytes!!)
-      onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
-          .progress_id_processing, 70)
+    idlingForDecryption?.increment()
+    onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id.progress_id_processing, 65)
+    when {
+      rawMimeBytesOfOutgoingMsg?.isNotEmpty() == true -> rawMimeBytesOfOutgoingMsg?.let { decryptMsgViewModel.decryptMessage(it) }
+      msgUri != null || msgUri != Uri.EMPTY -> msgUri?.let {
+        decryptMsgViewModel.decryptMessage(this@MessageDetailsActivity, it)
+      }
     }
+    onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id.progress_id_processing, 70)
   }
 
   fun loadMsgDetails() {
@@ -250,16 +251,15 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
       override fun onChanged(it: MessageEntity?) {
         if (it != null) {
-          this@MessageDetailsActivity.rawMimeBytes = if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder,
-                  ignoreCase = true)) {
-            it.rawMessageWithoutAttachments?.toByteArray()
+          if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
+            rawMimeBytesOfOutgoingMsg = it.rawMessageWithoutAttachments?.toByteArray()
           } else {
-            MsgsCacheManager.getMsgAsByteArray(messageEntity.id.toString())
+            msgUri = MsgsCacheManager.getMsgAsUri(it.id.toString())
           }
 
           onMsgDetailsUpdated()
 
-          if (rawMimeBytes?.isNotEmpty() == true) {
+          if (rawMimeBytesOfOutgoingMsg?.isNotEmpty() == true || msgUri != null) {
             if (isRetrieveIncomingMsgNeeded) {
               isRetrieveIncomingMsgNeeded = false
               isReceiveMsgBodyNeeded = false
@@ -273,7 +273,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             }
           } else {
             if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
-              this@MessageDetailsActivity.isRequestMsgDetailsStarted = true
+              isRequestMsgDetailsStarted = true
               loadMsgDetails()
             } else {
               isReceiveMsgBodyNeeded = true
@@ -408,7 +408,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             }
           } else {
             val msgInfo = IncomingMessageInfo(messageEntity, result.text, result.msgBlocks!!,
-                EmailUtil.getHeadersFromRawMIME(ASCIIUtility.toString(rawMimeBytes)), result.getMsgEncryptionType())
+                decryptMsgViewModel.headersLiveData.value, result.getMsgEncryptionType())
             val fragment = supportFragmentManager
                 .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
 

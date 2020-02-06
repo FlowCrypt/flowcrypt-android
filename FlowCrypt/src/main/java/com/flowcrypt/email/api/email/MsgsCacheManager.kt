@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.email
 
 import android.content.Context
+import android.net.Uri
 import com.flowcrypt.email.util.cache.DiskLruCache
 import okhttp3.internal.io.FileSystem
 import okio.buffer
@@ -42,16 +43,15 @@ object MsgsCacheManager {
   }
 
   fun getMsgAsByteArray(key: String): ByteArray {
-    val snapshot = diskLruCache.get(key) ?: return byteArrayOf()
+    return diskLruCache[key]?.getByteArray(0) ?: return byteArrayOf()
+  }
 
-    val bufferedSource = snapshot.getSource(0).buffer()
-    val byteArray = bufferedSource.readByteArray()
-    bufferedSource.close()
-    return byteArray
+  fun getMsgAsUri(key: String): Uri? {
+    return diskLruCache[key]?.getUri(0) ?: return null
   }
 
   fun isMsgExist(key: String): Boolean {
-    val snapshot = diskLruCache.get(key) ?: return false
+    val snapshot = diskLruCache[key] ?: return false
     return snapshot.getLength(0) > 0
   }
 }
