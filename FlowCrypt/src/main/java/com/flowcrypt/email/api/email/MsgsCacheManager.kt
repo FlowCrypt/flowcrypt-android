@@ -50,6 +50,10 @@ object MsgsCacheManager {
     return diskLruCache[key]?.getUri(0) ?: return null
   }
 
+  fun getMsgSnapshot(key: String): DiskLruCache.Snapshot? {
+    return diskLruCache[key]
+  }
+
   fun isMsgExist(key: String): Boolean {
     val snapshot = diskLruCache[key] ?: return false
     return snapshot.getLength(0) > 0

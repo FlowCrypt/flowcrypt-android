@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.activity
 import android.content.Context
 import android.content.Intent
 import android.database.Cursor
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -38,6 +37,7 @@ import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.flowcrypt.email.util.idling.SingleIdlingResources
@@ -69,7 +69,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   private var isRequestMsgDetailsStarted: Boolean = false
   private var isRetrieveIncomingMsgNeeded = true
   private var rawMimeBytesOfOutgoingMsg: ByteArray? = null
-  private var msgUri: Uri? = null
+  private var msgSnapshot: DiskLruCache.Snapshot? = null
   private val uniqueId = UUID.randomUUID().toString()
 
   override val rootView: View
@@ -211,7 +211,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id.progress_id_processing, 65)
     when {
       rawMimeBytesOfOutgoingMsg?.isNotEmpty() == true -> rawMimeBytesOfOutgoingMsg?.let { decryptMsgViewModel.decryptMessage(it) }
-      msgUri != null || msgUri != Uri.EMPTY -> msgUri?.let {
+      msgSnapshot != null -> msgSnapshot?.let {
         decryptMsgViewModel.decryptMessage(this@MessageDetailsActivity, it)
       }
     }
@@ -254,12 +254,12 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
           if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
             rawMimeBytesOfOutgoingMsg = it.rawMessageWithoutAttachments?.toByteArray()
           } else {
-            msgUri = MsgsCacheManager.getMsgAsUri(it.id.toString())
+            msgSnapshot = MsgsCacheManager.getMsgSnapshot(it.id.toString())
           }
 
           onMsgDetailsUpdated()
 
-          if (rawMimeBytesOfOutgoingMsg?.isNotEmpty() == true || msgUri != null) {
+          if (rawMimeBytesOfOutgoingMsg?.isNotEmpty() == true || msgSnapshot != null) {
             if (isRetrieveIncomingMsgNeeded) {
               isRetrieveIncomingMsgNeeded = false
               isReceiveMsgBodyNeeded = false
