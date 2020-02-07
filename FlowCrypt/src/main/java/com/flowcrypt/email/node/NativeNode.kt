@@ -5,9 +5,12 @@
 
 package com.flowcrypt.email.node
 
+import android.content.Context
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import org.apache.commons.io.IOUtils
+import java.nio.charset.StandardCharsets
 
 /**
  * This class describes a logic of running Node.js using the native code. Here we run Node.js server with given
@@ -32,14 +35,14 @@ internal class NativeNode private constructor(private val isDebugEnabled: Boolea
   /**
    * Run the Node.js using input parameters.
    *
-   * @param jsCode An input js code
+   * @param context Interface to global information about an application environment.
    */
-  fun start(jsCode: String) { // takes just a few ms
+  fun start(context: Context) { // takes just a few ms
     if (!isRunning) {
       isRunning = true
       Thread(Runnable {
         Thread.currentThread().name = NativeNode::class.java.simpleName
-        startSynchronously(jsCode)
+        startSynchronously(context)
         isRunning = false // if it ever stops running, set isRunning back to false
         isReady = false
       }).start()
@@ -50,13 +53,13 @@ internal class NativeNode private constructor(private val isDebugEnabled: Boolea
     return isReady
   }
 
-  private fun startSynchronously(jsCode: String) {
+  private fun startSynchronously(context: Context) {
     try {
       // slow!
       // takes 1750ms to start node with no scripts - using node-chakracore v8.6.0
       // startNodeWithArguments(new String[]{"node", "-e", "console.log('NODE: ' + Date.now())"});
       // about 3500ms with scripts
-      startNodeWithArguments(arrayOf("node", "-e", getJsSrc(jsCode)))
+      startNodeWithArguments(arrayOf("node", "-e", getJsSrc(context)))
     } catch (e: Exception) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
@@ -64,7 +67,7 @@ internal class NativeNode private constructor(private val isDebugEnabled: Boolea
 
   }
 
-  private fun getJsSrc(jsCode: String): String {
+  private fun getJsSrc(context: Context): String {
     var src = ""
     src += genConst("NODE_UNIX_SOCKET", nodeSecret.unixSocketFilePath) // not used yet
     src += genConst("NODE_PORT", nodeSecret.port.toString())
@@ -77,7 +80,7 @@ internal class NativeNode private constructor(private val isDebugEnabled: Boolea
     src += genConst("APP_VERSION", BuildConfig.VERSION_NAME.split("_")[0])
     src += genConst("APP_PROFILE", "false")
     src += genConst("NODE_PRINT_REPLAY", "false")
-    src += jsCode
+    src += IOUtils.toString(context.assets.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8)
     return src
   }
 

@@ -73,7 +73,7 @@ class Node private constructor(app: Application) {
 
       nativeNode = NativeNode.getInstance(isDebugEnabled, nodeSecret!!) // takes about 100ms due to static native loads
     }
-    nativeNode!!.start(IOUtils.toString(context.assets.open("js/flowcrypt-android.js"), StandardCharsets.UTF_8))
+    nativeNode!!.start(context)
   }
 
   private fun waitUntilReady() {
