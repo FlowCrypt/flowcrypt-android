@@ -20,6 +20,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.model.PgpKeyInfo
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.cache.DiskLruCache
 import com.sun.mail.util.ASCIIUtility
 import kotlinx.coroutines.Dispatchers
@@ -28,10 +29,12 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
 import org.spongycastle.bcpg.ArmoredInputStream
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
+import javax.mail.BodyPart
 import javax.mail.MessagingException
 import javax.mail.Multipart
 import javax.mail.Part
@@ -49,6 +52,7 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
     KeysStorageImpl.OnRefreshListener {
   val headersLiveData: MutableLiveData<String> = MutableLiveData()
   val decryptLiveData: MutableLiveData<Result<ParseDecryptedMsgResult?>> = MutableLiveData()
+
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(application)
   private val apiRepository: PgpApiRepository = NodeRepository()
 
@@ -92,15 +96,13 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
   }
 
   private suspend fun parseMimeAndDecrypt(context: Context, uri: Uri, pgpKeyInfoList: List<PgpKeyInfo>): Result<ParseDecryptedMsgResult?> {
-    val mimeMessage = getMimeMessageFromInputStream(context, uri)
-    val armoredEncryptedBytes = findEncryptedMsg(mimeMessage)
-    return if (armoredEncryptedBytes.isNotEmpty()) {
-      val dearmoredBytes = dearmorEncryptedBytes(armoredEncryptedBytes)
+    val uriOfEncryptedPart = getUriOfEncryptedPart(context, uri)
+    return if (uriOfEncryptedPart != null) {
       apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(data = dearmoredBytes, pgpKeyInfos = pgpKeyInfoList, isEmail = false))
+          request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, pgpKeyInfos = pgpKeyInfoList, isEmail = false))
     } else {
       apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(context = context, uri = uri, pgpKeyInfos = pgpKeyInfoList, isEmail = true))
+          request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, pgpKeyInfos = pgpKeyInfoList, isEmail = true))
     }
   }
 
@@ -109,15 +111,12 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
         MimeMessage(null, context.contentResolver.openInputStream(uri))
       }
 
-  private suspend fun dearmorEncryptedBytes(byteArray: ByteArray) =
-      withContext(Dispatchers.IO) {
-        val armoredInput = ArmoredInputStream(ByteArrayInputStream(byteArray))
-        val binaryOutput = ByteArrayOutputStream()
-        IOUtils.copy(armoredInput, binaryOutput)
-        binaryOutput.toByteArray()
-      }
+  private suspend fun getUriOfEncryptedPart(context: Context, uri: Uri): Uri? {
+    val mimeMessage: MimeMessage = getMimeMessageFromInputStream(context, uri)
+    return findEncryptedPart(mimeMessage)
+  }
 
-  private suspend fun findEncryptedMsg(part: Part): ByteArray = withContext(Dispatchers.Default) {
+  private suspend fun findEncryptedPart(part: Part): Uri? = withContext(Dispatchers.Default) {
     try {
       if (part.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
         val multiPart = part.content as Multipart
@@ -125,44 +124,56 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
         for (partCount in 0 until partsNumber) {
           val bodyPart = multiPart.getBodyPart(partCount)
           if (bodyPart.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
-            val att = findEncryptedMsg(bodyPart)
-            if (att.isNotEmpty()) {
-              return@withContext att
+            val encryptedPart = findEncryptedPart(bodyPart)
+            if (encryptedPart != null) {
+              return@withContext encryptedPart
             }
           } else if (bodyPart?.disposition?.toLowerCase(Locale.getDefault()) in listOf(Part.ATTACHMENT, Part.INLINE)) {
-            val attName = bodyPart.fileName?.toLowerCase(Locale.getDefault()) ?: ""
-            if (attName in listOf("message", "msg.asc", "message.asc", "encrypted.asc", "encrypted.eml.pgp", "Message.pgp", "")) {
-              return@withContext bodyPart.inputStream.readBytes()
+            val fileName = bodyPart.fileName?.toLowerCase(Locale.getDefault()) ?: ""
+            if (fileName in listOf("message", "msg.asc", "message.asc", "encrypted.asc", "encrypted.eml.pgp", "Message.pgp", "")) {
+              val file = prepareTempFile(bodyPart)
+              return@withContext Uri.fromFile(file)
             }
 
             val contentType = bodyPart.contentType?.toLowerCase(Locale.getDefault()) ?: ""
             if (contentType in listOf("application/octet-stream", "application/pgp-encrypted")) {
-              return@withContext bodyPart.inputStream.readBytes()
+              val file = prepareTempFile(bodyPart)
+              return@withContext Uri.fromFile(file)
             }
           }
         }
-        return@withContext ByteArray(0)
+        return@withContext null
       } else {
-        return@withContext ByteArray(0)
+        return@withContext null
       }
     } catch (e: MessagingException) {
       e.printStackTrace()
-      return@withContext ByteArray(0)
+      return@withContext null
     } catch (e: IOException) {
       e.printStackTrace()
-      return@withContext ByteArray(0)
+      return@withContext null
     }
+  }
+
+  private suspend fun prepareTempFile(bodyPart: BodyPart): File = withContext(Dispatchers.IO) {
+    val tempDir = CacheManager.getCurrentMsgTempDir()
+    val file = File(tempDir, FILE_NAME_ENCRYPTED_MESSAGE)
+    IOUtils.copy(ArmoredInputStream(bodyPart.inputStream), FileOutputStream(file))
+    return@withContext file
   }
 
   /**
    * We fetch the first 50Kb from the given input stream and extract headers.
    */
-  private suspend fun getHeaders(inputStream: InputStream?): String =
-      withContext(Dispatchers.IO) {
-        inputStream ?: return@withContext ""
-        val d = ByteArray(50000)
-        IOUtils.read(inputStream, d)
-        EmailUtil.getHeadersFromRawMIME(ASCIIUtility.toString(d))
-      }
+  private suspend fun getHeaders(inputStream: InputStream?): String = withContext(Dispatchers.IO) {
+    inputStream ?: return@withContext ""
+    val d = ByteArray(50000)
+    IOUtils.read(inputStream, d)
+    EmailUtil.getHeadersFromRawMIME(ASCIIUtility.toString(d))
+  }
+
+  companion object {
+    private const val FILE_NAME_ENCRYPTED_MESSAGE = "temp_encrypted_msg.asc"
+  }
 
 }
