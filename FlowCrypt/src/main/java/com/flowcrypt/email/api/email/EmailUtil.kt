@@ -148,12 +148,12 @@ class EmailUtil {
           if (cursor.moveToFirst()) {
             val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
             if (nameIndex != -1) {
-              attInfo.name = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+              attInfo.name = cursor.getString(nameIndex)
             }
 
             val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
             if (sizeIndex != -1) {
-              attInfo.encodedSize = cursor.getLong(cursor.getColumnIndex(OpenableColumns.SIZE))
+              attInfo.encodedSize = cursor.getLong(sizeIndex)
             }
           }
           cursor.close()
