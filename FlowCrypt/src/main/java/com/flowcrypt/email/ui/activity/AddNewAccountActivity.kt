@@ -65,7 +65,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener,
               .KEY_EXTRA_AUTH_CREDENTIALS)
           val accountDaoSource = AccountDaoSource()
           accountDaoSource.addRow(this, authCreds)
-          accountDaoSource.setActiveAccount(this, authCreds.email)
+          accountDaoSource.setActiveAccount(this, authCreds?.email)
 
           val intent = Intent()
           intent.putExtra(KEY_EXTRA_NEW_ACCOUNT, accountDaoSource.getActiveAccountInformation(this))

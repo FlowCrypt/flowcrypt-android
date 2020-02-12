@@ -130,9 +130,10 @@ class GeneralUtil {
     fun getFileSizeFromUri(context: Context, fileUri: Uri?): Long {
       var fileSize: Long = -1
 
-      if (fileUri != null) {
+      fileUri?.let {
         if (ContentResolver.SCHEME_FILE.equals(fileUri.scheme!!, ignoreCase = true)) {
-          fileSize = File(fileUri.path).length()
+          val path = it.path ?: return@let
+          fileSize = File(path).length()
         } else {
           val returnCursor = context.contentResolver.query(fileUri,
               arrayOf(OpenableColumns.SIZE), null, null, null)
@@ -162,10 +163,10 @@ class GeneralUtil {
     @JvmStatic
     fun getFileNameFromUri(context: Context, fileUri: Uri?): String? {
       var fileName: String? = null
-
-      if (fileUri != null) {
+      fileUri?.let {
         if (ContentResolver.SCHEME_FILE.equals(fileUri.scheme!!, ignoreCase = true)) {
-          fileName = File(fileUri.path).name
+          val path = it.path ?: return@let
+          fileName = File(path).name
         } else {
           val returnCursor = context.contentResolver.query(fileUri,
               arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
@@ -259,12 +260,12 @@ class GeneralUtil {
      */
     @JvmStatic
     fun getFileMimeTypeFromUri(context: Context, uri: Uri): String? {
-      if (ContentResolver.SCHEME_CONTENT.equals(uri.scheme!!, ignoreCase = true)) {
+      return if (ContentResolver.SCHEME_CONTENT.equals(uri.scheme, ignoreCase = true)) {
         val contentResolver = context.contentResolver
-        return contentResolver.getType(uri)
+        contentResolver.getType(uri)
       } else {
         val fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
-        return MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase(Locale.getDefault()))
+        MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase(Locale.getDefault()))
       }
     }
 
@@ -284,7 +285,7 @@ class GeneralUtil {
      *
      * @param context Interface to global information about an application environment.
      */
-    @JvmStatic
+    @Suppress("unused")
     fun clearClipboard(context: Context) {
       val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
       clipboard.setPrimaryClip(ClipData.newPlainText(null, ""))

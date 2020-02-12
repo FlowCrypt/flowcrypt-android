@@ -60,9 +60,8 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
 
     if (intent != null) {
       serviceInfo = intent.getParcelableExtra(EXTRA_KEY_SERVICE_INFO)
-      if (intent.hasExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)) {
-        msgEncryptionType = intent.getParcelableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)
-      }
+      msgEncryptionType = intent.getParcelableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)
+          ?: MessageEncryptionType.ENCRYPTED
     }
 
     super.onCreate(savedInstanceState)

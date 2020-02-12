@@ -440,6 +440,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         Activity.RESULT_OK -> {
           if (data != null) {
             val keyList: List<AttachmentInfo> = data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST)
+                ?: return
             val key = keyList.first()
             if (atts?.none { it.name == key.name && it.encodedSize == key.encodedSize } == true) {
               atts.add(key)
@@ -768,16 +769,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     val sizeWarningMsg = getString(R.string.template_warning_max_total_attachments_size,
         FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES.toLong()))
 
-    for (attachmentInfo in extraActionInfo!!.atts) {
+    extraActionInfo?.atts?.forEach { attachmentInfo ->
       if (hasAbilityToAddAtt(attachmentInfo)) {
 
-        if (TextUtils.isEmpty(attachmentInfo.name)) {
+        if (attachmentInfo.name.isNullOrEmpty()) {
           val msg = "attachmentInfo.getName() == null, uri = " + attachmentInfo.uri!!
           ExceptionUtil.handleError(NullPointerException(msg))
-          continue
+          return
         }
 
-        val draftAtt = File(draftCacheDir, attachmentInfo.name)
+        val fileName = attachmentInfo.name ?: return
+        val draftAtt = File(draftCacheDir, fileName)
 
         try {
           val inputStream = context!!.contentResolver.openInputStream(attachmentInfo.uri!!)
@@ -799,7 +801,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
       } else {
         Toast.makeText(context, sizeWarningMsg, Toast.LENGTH_SHORT).show()
-        break
+        return@forEach
       }
     }
   }

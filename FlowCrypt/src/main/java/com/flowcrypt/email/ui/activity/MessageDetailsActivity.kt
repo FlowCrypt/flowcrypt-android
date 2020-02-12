@@ -294,8 +294,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
       finish()
     }
 
-    this.localFolder = intent.getParcelableExtra(EXTRA_KEY_FOLDER)
-    this.messageEntity = intent.getParcelableExtra(EXTRA_KEY_MSG)
+    this.localFolder = intent.getParcelableExtra(EXTRA_KEY_FOLDER) ?: throw NullPointerException()
+    this.messageEntity = intent.getParcelableExtra(EXTRA_KEY_MSG) ?: throw NullPointerException()
 
     label = if (localFolder.searchQuery.isNullOrEmpty()) {
       localFolder.fullName

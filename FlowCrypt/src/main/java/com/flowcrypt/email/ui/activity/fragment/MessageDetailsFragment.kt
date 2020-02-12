@@ -167,14 +167,12 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
       REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION -> when (resultCode) {
         Activity.RESULT_OK -> {
-          val atts: List<AttachmentInfo>
-          if (data != null) {
-            atts = data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST)
+          val atts: List<AttachmentInfo> = data?.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment
+              .KEY_ATTACHMENT_INFO_LIST) ?: emptyList()
 
-            if (!CollectionUtils.isEmpty(atts)) {
-              makeAttsProtected(atts)
-              sendTemplateMsgWithPublicKey(atts[0])
-            }
+          if (!CollectionUtils.isEmpty(atts)) {
+            makeAttsProtected(atts)
+            sendTemplateMsgWithPublicKey(atts[0])
           }
         }
       }
@@ -650,7 +648,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           val att = EmailUtil.getAttInfoFromUri(activity, decryptAtt.fileUri)
           if (att != null) {
             att.isDecrypted = true
-            att.uri = FileProvider.getUriForFile(context!!, Constants.FILE_PROVIDER_AUTHORITY, File(att.uri?.path))
+            att.uri?.path?.let {
+              att.uri = FileProvider.getUriForFile(context!!, Constants.FILE_PROVIDER_AUTHORITY, File(it))
+            }
             atts.add(att)
           }
         }

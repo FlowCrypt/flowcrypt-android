@@ -331,10 +331,7 @@ class MessagesSenderJobService : JobService() {
     private fun deleteMsgAtts(context: Context, account: AccountDao, attsCacheDir: File,
                               details: MessageEntity, attDaoSource: AttachmentDaoSource) {
       attDaoSource.deleteAtts(context, account.email, JavaEmailConstants.FOLDER_OUTBOX, details.uid)
-
-      if (!TextUtils.isEmpty(details.attachmentsDirectory)) {
-        FileAndDirectoryUtils.deleteDir(File(attsCacheDir, details.attachmentsDirectory))
-      }
+      details.attachmentsDirectory?.let { FileAndDirectoryUtils.deleteDir(File(attsCacheDir, it)) }
     }
 
     private fun sendMsg(context: Context, account: AccountDao, msgEntity: MessageEntity, atts: List<AttachmentInfo>): Boolean {
