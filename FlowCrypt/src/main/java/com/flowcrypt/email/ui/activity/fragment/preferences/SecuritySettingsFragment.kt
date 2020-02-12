@@ -28,14 +28,11 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
   private var account: AccountDao? = null
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-    addPreferencesFromResource(R.xml.preferences_security_settings)
+    setPreferencesFromResource(R.xml.preferences_security_settings, rootKey)
 
     account = AccountDaoSource().getActiveAccountInformation(context!!)
 
-    val preferenceChangePassPhrase = findPreference(Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE)
-    if (preferenceChangePassPhrase != null) {
-      preferenceChangePassPhrase.onPreferenceClickListener = this
-    }
+    findPreference<Preference>(Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE)?.onPreferenceClickListener = this
   }
 
   override fun onPreferenceClick(preference: Preference): Boolean {

@@ -11,11 +11,11 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.provider.Settings
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.preference.Preference
+import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 
@@ -29,7 +29,7 @@ import com.flowcrypt.email.R
  */
 class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferences.OnSharedPreferenceChangeListener {
 
-  private var sharedPreferences: SharedPreferences? = null
+  private lateinit var sharedPreferences: SharedPreferences
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -37,7 +37,7 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferenc
   }
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-    addPreferencesFromResource(R.xml.dev_preferences)
+    setPreferencesFromResource(R.xml.dev_preferences, rootKey)
   }
 
   override fun onDisplayPreferenceDialog(preference: Preference?) {
@@ -52,16 +52,12 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferenc
 
   override fun onResume() {
     super.onResume()
-    if (sharedPreferences != null) {
-      sharedPreferences!!.registerOnSharedPreferenceChangeListener(this)
-    }
+    sharedPreferences.registerOnSharedPreferenceChangeListener(this)
   }
 
   override fun onPause() {
     super.onPause()
-    if (sharedPreferences != null) {
-      sharedPreferences!!.unregisterOnSharedPreferenceChangeListener(this)
-    }
+    sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
   }
 
   override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {

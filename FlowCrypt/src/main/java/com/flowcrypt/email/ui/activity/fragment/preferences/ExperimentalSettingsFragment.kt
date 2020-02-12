@@ -20,11 +20,11 @@ import com.flowcrypt.email.util.GeneralUtil
  * E-mail: DenBond7@gmail.com
  */
 class ExperimentalSettingsFragment : BasePreferenceFragment() {
-  override fun onCreatePreferences(bundle: Bundle?, s: String?) {
-    addPreferencesFromResource(R.xml.preferences_experimental_settings)
+  override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    setPreferencesFromResource(R.xml.preferences_experimental_settings, rootKey)
 
     if (GeneralUtil.isDebugBuild()) {
-      val preference = Preference(context!!)
+      val preference = Preference(context)
       preference.setTitle(R.string.action_dev_settings)
       preference.isIconSpaceReserved = false
       preference.intent = Intent(context, DevSettingsActivity::class.java)

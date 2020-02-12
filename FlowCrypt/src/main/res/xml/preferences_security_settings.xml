@@ -3,16 +3,16 @@
   ~ Contributors: DenBond7
   -->
 
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <androidx.preference.Preference
+    <Preference
         android:key="@string/preferences_key_security_change_pass_phrase"
         android:title="@string/change_pass_phrase"
         app:iconSpaceReserved="false" />
 
-    <androidx.preference.CheckBoxPreference
+    <CheckBoxPreference
         android:defaultValue="true"
         android:key="acra.enable"
         android:title="@string/pref_title_allow_anonymous_crash_reports"
         app:iconSpaceReserved="false" />
-</androidx.preference.PreferenceScreen>
+</PreferenceScreen>

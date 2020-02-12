@@ -374,6 +374,8 @@ dependencies {
     implementation "androidx.room:room-runtime:$roomVersion"
     implementation "androidx.room:room-ktx:$roomVersion"
     implementation "androidx.paging:paging-runtime-ktx:$pagingVersion"
+    implementation 'androidx.preference:preference:1.1.0'
+
 
     //https://developers.google.com/android/guides/setup
     implementation 'com.google.android.gms:play-services-base:17.1.0'

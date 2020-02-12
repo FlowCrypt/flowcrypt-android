@@ -35,7 +35,7 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.
   private var entries: Array<String>? = null
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-    addPreferencesFromResource(R.xml.preferences_notifications_settings)
+    setPreferencesFromResource(R.xml.preferences_notifications_settings, rootKey)
 
     val accountDaoSource = AccountDaoSource()
     val account = accountDaoSource.getActiveAccountInformation(context!!)
@@ -95,14 +95,14 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.
   }
 
   private fun initPreferences(isEncryptedModeEnabled: Boolean) {
-    val preferenceSettingsSecurity = findPreference(Constants.PREF_KEY_MANAGE_NOTIFICATIONS)
+    val preferenceSettingsSecurity = findPreference<Preference>(Constants.PREF_KEY_MANAGE_NOTIFICATIONS)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      preferenceSettingsSecurity.onPreferenceClickListener = this
+      preferenceSettingsSecurity?.onPreferenceClickListener = this
     } else {
-      preferenceSettingsSecurity.isVisible = false
+      preferenceSettingsSecurity?.isVisible = false
     }
 
-    val filter = findPreference(Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER) as ListPreference
+    val filter = findPreference<Preference>(Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER) as ListPreference
     filter.entryValues = levels
     filter.entries = entries
     filter.onPreferenceChangeListener = this
