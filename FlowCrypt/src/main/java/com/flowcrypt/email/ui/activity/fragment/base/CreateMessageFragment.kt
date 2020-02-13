@@ -321,12 +321,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
-
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account?.accountType, ignoreCase = true)) {
-      setupAccountAliasesViewModel()
-    } else {
-      showContent()
-    }
+    setupAccountAliasesViewModel()
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -1227,15 +1222,13 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           }
         }
 
-        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account?.accountType, ignoreCase = true)) {
-          accountAliasesViewModel.accountAliasesLiveData.value?.let {
-            for (alias in it) {
-              val iterator = ccSet.iterator()
+        accountAliasesViewModel.accountAliasesLiveData.value?.let {
+          for (alias in it) {
+            val iterator = ccSet.iterator()
 
-              while (iterator.hasNext()) {
-                if (iterator.next().address.equals(alias.sendAsEmail, ignoreCase = true)) {
-                  iterator.remove()
-                }
+            while (iterator.hasNext()) {
+              if (iterator.next().address.equals(alias.sendAsEmail, ignoreCase = true)) {
+                iterator.remove()
               }
             }
           }
