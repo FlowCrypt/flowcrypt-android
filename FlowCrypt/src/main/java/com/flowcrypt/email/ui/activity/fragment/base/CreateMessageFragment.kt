@@ -322,21 +322,15 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
 
-    if ((msgInfo != null || extraActionInfo != null) && !isIncomingMsgInfoUsed) {
-      this.isIncomingMsgInfoUsed = true
-      updateViews()
+    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account?.accountType, ignoreCase = true)) {
+      setupAccountAliasesViewModel()
+    } else {
+      showContent()
     }
-
-    showAtts()
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account?.accountType, ignoreCase = true)) {
-      setupAccountAliasesViewModel()
-    }
-
     val isEncryptedMode = listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED
     if (msgInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
       updateRecipients()
@@ -1095,6 +1089,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     progressBarBcc = view.findViewById(R.id.progressBarBcc)
   }
 
+  private fun showContent() {
+    UIUtil.exchangeViewVisibility(false, progressView, contentView)
+
+    if ((msgInfo != null || extraActionInfo != null) && !isIncomingMsgInfoUsed) {
+      this.isIncomingMsgInfoUsed = true
+      updateViews()
+    }
+
+    showAtts()
+  }
+
   /**
    * Update views on the screen. This method can be called when we need to update the current
    * screen.
@@ -1518,7 +1523,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         }
       }
 
-      updateViews()
+      showContent()
     })
   }
 
