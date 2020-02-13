@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.api.retrofit.okhttp
 
+import android.content.Context
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.util.DebugLogWriter
 import okhttp3.Headers
 import okhttp3.Interceptor
@@ -14,6 +16,7 @@ import okhttp3.Response
 import okhttp3.internal.http.promisesBody
 import okio.Buffer
 import java.io.EOFException
+import java.io.File
 import java.nio.charset.Charset
 import java.nio.charset.UnsupportedCharsetException
 import java.util.concurrent.TimeUnit
@@ -38,7 +41,19 @@ import java.util.concurrent.TimeUnit
  * Time: 13:55
  * E-mail: DenBond7@gmail.com
  */
-class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) : Interceptor {
+class LoggingInFileInterceptor constructor(context: Context, fileName: String) : Interceptor {
+  private val logger: Logger
+
+  init {
+    val file = File(context.filesDir, BuildConfig.APPLICATION_ID + "_" + fileName + ".log")
+    logger = object : Logger {
+      private val debugLogWriter = DebugLogWriter(file)
+      override fun log(message: String) {
+        debugLogWriter.writeLog(message)
+      }
+    }
+  }
+
   @Volatile
   private var level = Level.NONE
 
@@ -57,7 +72,7 @@ class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) 
     val hasRequestBody = requestBody != null
 
     val connection = chain.connection()
-    val protocol = if (connection != null) connection.protocol() else Protocol.HTTP_1_1
+    val protocol = connection?.protocol() ?: Protocol.HTTP_1_1
     var requestStartMsg = "--> " + request.method + ' '.toString() + request.url + ' '.toString() + protocol
     if (!logHeaders && hasRequestBody) {
       requestStartMsg += " (" + requestBody!!.contentLength() + "-byte body)"
@@ -261,21 +276,7 @@ class LoggingInFileInterceptor constructor(val logger: Logger = Logger.DEFAULT) 
   }
 
   interface Logger {
-
     fun log(message: String)
-
-    companion object {
-      /**
-       * A [Logger] defaults output appropriate for the current platform.
-       */
-      val DEFAULT: Logger = object : Logger {
-        private val debugLogWriter = DebugLogWriter("API")
-
-        override fun log(message: String) {
-          debugLogWriter.writeLog(message)
-        }
-      }
-    }
   }
 
   companion object {

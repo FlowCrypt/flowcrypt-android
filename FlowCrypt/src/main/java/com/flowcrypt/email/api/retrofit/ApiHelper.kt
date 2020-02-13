@@ -59,7 +59,7 @@ class ApiHelper private constructor(context: Context) {
                 Constants.PREF_KEY_IS_WRITE_LOGS_TO_FILE_ENABLED, false)
 
         if (isWriteLogsEnabled) {
-          val loggingInFileInterceptor = LoggingInFileInterceptor()
+          val loggingInFileInterceptor = LoggingInFileInterceptor(context, "API")
           loggingInFileInterceptor.setLevel(LoggingInFileInterceptor.Level.valueOf(levelString
               ?: LoggingInFileInterceptor.Level.NONE.name))
           okHttpClientBuilder.addInterceptor(loggingInFileInterceptor)
