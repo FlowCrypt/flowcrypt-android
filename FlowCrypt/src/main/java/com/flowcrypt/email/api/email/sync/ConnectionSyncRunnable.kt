@@ -73,13 +73,15 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
     LogsUtil.d(tag, " stopped!")
   }
 
-  private fun removeOldTasks(cls: Class<*>, queue: BlockingQueue<SyncTask>) {
+  private fun removeOldTasks(cls: Class<*>, queue: BlockingQueue<SyncTask>, syncTask: SyncTask? = null) {
     val iterator = queue.iterator()
     while (iterator.hasNext()) {
       val item = iterator.next()
       if (cls.isInstance(item)) {
-        item.isCancelled = true
-        iterator.remove()
+        if (syncTask == null || (item.requestCode == syncTask.requestCode && item.ownerKey == syncTask.ownerKey)) {
+          item.isCancelled = true
+          iterator.remove()
+        }
       }
     }
   }
@@ -179,8 +181,9 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
   fun refreshMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder) {
     try {
       val syncTaskBlockingQueue = tasksQueue
-      removeOldTasks(RefreshMessagesSyncTask::class.java, syncTaskBlockingQueue)
-      syncTaskBlockingQueue.put(RefreshMessagesSyncTask(ownerKey, requestCode, localFolder))
+      val task = RefreshMessagesSyncTask(ownerKey, requestCode, localFolder)
+      removeOldTasks(RefreshMessagesSyncTask::class.java, syncTaskBlockingQueue, task)
+      syncTaskBlockingQueue.put(task)
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }
