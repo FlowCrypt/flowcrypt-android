@@ -219,8 +219,10 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   fun loadMsgDetails() {
-    loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, uniqueId, localFolder, messageEntity
-        .uid.toInt(), messageEntity.id?.toInt() ?: -1)
+    if (!JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
+      loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, uniqueId, localFolder, messageEntity
+          .uid.toInt(), messageEntity.id?.toInt() ?: -1)
+    }
   }
 
   private fun updateActionProgressState(progress: Int, message: String?) {
