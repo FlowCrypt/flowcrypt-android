@@ -311,7 +311,7 @@ class EmailSyncService : BaseService(), SyncListener {
       )
 
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-      roomDatabase.msgDao().insert(msgEntities)
+      roomDatabase.msgDao().insertWithReplace(msgEntities)
 
       if (newMsgs.isNotEmpty()) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE)
