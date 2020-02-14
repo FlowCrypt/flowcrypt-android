@@ -75,11 +75,13 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
 
     val pgpContactFromKey = keyDetails.primaryPgpContact
 
-    pgpContact!!.pubkey = pgpContactFromKey.pubkey
+    pgpContact?.pubkey = pgpContactFromKey.pubkey
     contactsDaoSource.updatePgpContact(this, pgpContact)
 
-    if (!pgpContact!!.email.equals(pgpContactFromKey.email, ignoreCase = true)) {
-      contactsDaoSource.addRow(this, pgpContactFromKey)
+    if (!pgpContact?.email.equals(pgpContactFromKey.email, ignoreCase = true)) {
+      if (contactsDaoSource.getPgpContact(this, pgpContactFromKey.email) == null) {
+        contactsDaoSource.addRow(this, pgpContactFromKey)
+      }
     }
   }
 
