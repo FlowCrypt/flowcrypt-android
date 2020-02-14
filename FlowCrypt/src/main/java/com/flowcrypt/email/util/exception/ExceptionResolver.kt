@@ -115,7 +115,8 @@ object ExceptionResolver {
     }
 
     if (e is GoogleAuthException) {
-      if ("InternalError".equals(e.message, ignoreCase = true)) {
+      if ("InternalError".equals(e.message, ignoreCase = true) ||
+          "ServiceDisabled".equals(e.message, ignoreCase = true)) {
         return false
       }
     }
