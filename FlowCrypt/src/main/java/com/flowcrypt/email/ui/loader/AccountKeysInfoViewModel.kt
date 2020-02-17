@@ -35,7 +35,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-class LoadAccountKeysInfo(application: Application) : AccountViewModel(application) {
+class AccountKeysInfoViewModel(application: Application) : AccountViewModel(application) {
   private val repository: ApiRepository = FlowcryptApiRepository()
   val accountKeysInfoLiveData: LiveData<Result<LookUpEmailsResponse>> = Transformations
       .switchMap(accountLiveData) { accountEntity ->

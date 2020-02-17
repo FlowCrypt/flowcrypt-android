@@ -14,7 +14,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
 import com.flowcrypt.email.ui.adapter.AttesterKeyAdapter
-import com.flowcrypt.email.ui.loader.LoadAccountKeysInfo
+import com.flowcrypt.email.ui.loader.AccountKeysInfoViewModel
 import com.flowcrypt.email.util.UIUtil
 
 /**
@@ -28,7 +28,7 @@ import com.flowcrypt.email.util.UIUtil
  */
 
 class AttesterSettingsActivity : BaseBackStackActivity() {
-  private val loadAccountKeysInfo: LoadAccountKeysInfo by viewModels()
+  private val accountKeysInfoViewModel: AccountKeysInfoViewModel by viewModels()
   private var progressBar: View? = null
   private var emptyView: View? = null
   private var layoutContent: View? = null
@@ -43,7 +43,7 @@ class AttesterSettingsActivity : BaseBackStackActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     initViews()
-    setupLoadAccountKeysInfo()
+    setupAccountKeysInfoViewModel()
   }
 
   private fun initViews() {
@@ -53,8 +53,8 @@ class AttesterSettingsActivity : BaseBackStackActivity() {
     listViewKeys = findViewById(R.id.listViewKeys)
   }
 
-  private fun setupLoadAccountKeysInfo() {
-    loadAccountKeysInfo.accountKeysInfoLiveData.observe(this, Observer {
+  private fun setupAccountKeysInfoViewModel() {
+    accountKeysInfoViewModel.accountKeysInfoLiveData.observe(this, Observer {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
