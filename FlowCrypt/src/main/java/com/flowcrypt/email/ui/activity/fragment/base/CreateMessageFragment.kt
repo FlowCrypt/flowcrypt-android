@@ -321,22 +321,11 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
-
-    if ((msgInfo != null || extraActionInfo != null) && !isIncomingMsgInfoUsed) {
-      this.isIncomingMsgInfoUsed = true
-      updateViews()
-    }
-
-    showAtts()
+    setupAccountAliasesViewModel()
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account?.accountType, ignoreCase = true)) {
-      setupAccountAliasesViewModel()
-    }
-
     val isEncryptedMode = listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED
     if (msgInfo != null && GeneralUtil.isConnected(context) && isEncryptedMode) {
       updateRecipients()
@@ -440,6 +429,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         Activity.RESULT_OK -> {
           if (data != null) {
             val keyList: List<AttachmentInfo> = data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST)
+                ?: return
             val key = keyList.first()
             if (atts?.none { it.name == key.name && it.encodedSize == key.encodedSize } == true) {
               atts.add(key)
@@ -768,16 +758,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     val sizeWarningMsg = getString(R.string.template_warning_max_total_attachments_size,
         FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES.toLong()))
 
-    for (attachmentInfo in extraActionInfo!!.atts) {
+    extraActionInfo?.atts?.forEach { attachmentInfo ->
       if (hasAbilityToAddAtt(attachmentInfo)) {
 
-        if (TextUtils.isEmpty(attachmentInfo.name)) {
+        if (attachmentInfo.name.isNullOrEmpty()) {
           val msg = "attachmentInfo.getName() == null, uri = " + attachmentInfo.uri!!
           ExceptionUtil.handleError(NullPointerException(msg))
-          continue
+          return
         }
 
-        val draftAtt = File(draftCacheDir, attachmentInfo.name)
+        val fileName = attachmentInfo.name ?: return
+        val draftAtt = File(draftCacheDir, fileName)
 
         try {
           val inputStream = context!!.contentResolver.openInputStream(attachmentInfo.uri!!)
@@ -799,7 +790,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
       } else {
         Toast.makeText(context, sizeWarningMsg, Toast.LENGTH_SHORT).show()
-        break
+        return@forEach
       }
     }
   }
@@ -1093,6 +1084,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     progressBarBcc = view.findViewById(R.id.progressBarBcc)
   }
 
+  private fun showContent() {
+    UIUtil.exchangeViewVisibility(false, progressView, contentView)
+
+    if ((msgInfo != null || extraActionInfo != null) && !isIncomingMsgInfoUsed) {
+      this.isIncomingMsgInfoUsed = true
+      updateViews()
+    }
+
+    showAtts()
+  }
+
   /**
    * Update views on the screen. This method can be called when we need to update the current
    * screen.
@@ -1220,15 +1222,13 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           }
         }
 
-        if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account?.accountType, ignoreCase = true)) {
-          accountAliasesViewModel.accountAliasesLiveData.value?.let {
-            for (alias in it) {
-              val iterator = ccSet.iterator()
+        accountAliasesViewModel.accountAliasesLiveData.value?.let {
+          for (alias in it) {
+            val iterator = ccSet.iterator()
 
-              while (iterator.hasNext()) {
-                if (iterator.next().address.equals(alias.sendAsEmail, ignoreCase = true)) {
-                  iterator.remove()
-                }
+            while (iterator.hasNext()) {
+              if (iterator.next().address.equals(alias.sendAsEmail, ignoreCase = true)) {
+                iterator.remove()
               }
             }
           }
@@ -1516,7 +1516,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         }
       }
 
-      updateViews()
+      showContent()
     })
   }
 

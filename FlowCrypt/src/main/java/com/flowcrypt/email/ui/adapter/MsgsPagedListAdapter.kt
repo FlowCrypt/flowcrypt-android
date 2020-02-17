@@ -32,6 +32,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.util.DateTimeUtil
+import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.UIUtil
 import java.util.*
 import java.util.regex.Pattern
@@ -117,7 +118,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
   }
 
   fun changeProgress(isFooterEnabled: Boolean) {
-
+    LogsUtil.d(javaClass.name, isFooterEnabled.toString())
   }
 
   private fun updateItem(messageEntity: MessageEntity?, viewHolder: MessageViewHolder) {

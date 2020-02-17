@@ -46,9 +46,14 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
     super.onCreate(savedInstanceState)
     this.isShowAnotherAccountBtnEnabled =
         intent?.getBooleanExtra(KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, true) ?: true
-    this.account = intent.getParcelableExtra(EXTRA_KEY_ACCOUNT_DAO)
+    val account: AccountDao? = intent.getParcelableExtra(EXTRA_KEY_ACCOUNT_DAO)
 
-    initViews()
+    if (account == null) {
+      finish()
+    } else {
+      this.account = account
+      initViews()
+    }
   }
 
   override fun onClick(v: View) {

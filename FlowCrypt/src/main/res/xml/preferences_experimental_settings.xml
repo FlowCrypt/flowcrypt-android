@@ -4,21 +4,21 @@
   ~ Contributors: DenBond7
   -->
 
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <androidx.preference.Preference
+    <Preference
         android:title="@string/simulate_app_crash"
         app:iconSpaceReserved="false">
         <intent
             android:targetClass="com.flowcrypt.email"
             android:targetPackage="@string/application_id" />
-    </androidx.preference.Preference>
+    </Preference>
 
-    <androidx.preference.Preference
+    <Preference
         android:title="Node backend test"
         app:iconSpaceReserved="false">
         <intent
             android:targetClass="com.flowcrypt.email.ui.activity.NodeTestActivity"
             android:targetPackage="@string/application_id" />
-    </androidx.preference.Preference>
-</androidx.preference.PreferenceScreen>
+    </Preference>
+</PreferenceScreen>

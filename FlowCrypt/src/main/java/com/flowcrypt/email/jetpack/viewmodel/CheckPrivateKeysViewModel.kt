@@ -50,7 +50,7 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
               Result.Status.SUCCESS -> result.data?.decryptedKey ?: ""
 
               Result.Status.ERROR -> {
-                copy.errorMsg = result.data?.error?.msg
+                copy.errorMsg = result.data?.apiError?.msg
                 ""
               }
 

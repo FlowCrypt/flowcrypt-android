@@ -7,9 +7,10 @@ package com.flowcrypt.email.api.retrofit.response.node
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.node.Word
 import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 import java.io.BufferedInputStream
 
 /**
@@ -23,7 +24,8 @@ import java.io.BufferedInputStream
 data class ZxcvbnStrengthBarResult constructor(@Expose val word: Word?,
                                                @Expose val seconds: Double,
                                                @Expose val time: String?,
-                                               @Expose override val error: Error?) : BaseNodeResponse {
+                                               @SerializedName("error")
+                                               @Expose override val apiError: ApiError?) : BaseNodeResponse {
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
 
   }
@@ -32,7 +34,7 @@ data class ZxcvbnStrengthBarResult constructor(@Expose val word: Word?,
       source.readParcelable<Word>(Word::class.java.classLoader),
       source.readDouble(),
       source.readString(),
-      source.readParcelable<Error>(Error::class.java.classLoader)
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader)
   )
 
   override fun describeContents(): Int {
@@ -41,10 +43,10 @@ data class ZxcvbnStrengthBarResult constructor(@Expose val word: Word?,
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
       with(dest) {
-        writeParcelable(word, 0)
+        writeParcelable(word, flags)
         writeDouble(seconds)
         writeString(time)
-        writeParcelable(error, 0)
+        writeParcelable(apiError, flags)
       }
 
   companion object {

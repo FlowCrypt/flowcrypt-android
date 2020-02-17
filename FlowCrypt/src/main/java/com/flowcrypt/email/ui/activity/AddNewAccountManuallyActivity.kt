@@ -90,8 +90,10 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
 
   private val digitsTextWatcher: TextWatcher = object : TextWatcher {
     override fun afterTextChanged(s: Editable?) {
-      if (!Pattern.compile("\\d+").matcher(s).matches()) {
-        s?.clear()
+      s?.let {
+        if (!Pattern.compile("\\d+").matcher(it).matches()) {
+          it.clear()
+        }
       }
     }
 

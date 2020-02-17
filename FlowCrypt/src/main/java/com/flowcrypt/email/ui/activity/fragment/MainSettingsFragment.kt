@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.os.Bundle
+import androidx.preference.Preference
 import com.flowcrypt.email.Constants
 
 import com.flowcrypt.email.R
@@ -29,8 +30,7 @@ class MainSettingsFragment : BasePreferenceFragment() {
 
     val account = AccountDaoSource().getActiveAccountInformation(context)
 
-    val preferenceBackups = findPreference(Constants.PREF_KEY_BACKUPS)
-    preferenceBackups?.isVisible =
+    findPreference<Preference>(Constants.PREF_KEY_BACKUPS)?.isVisible =
         !(account?.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP) ?: false)
   }
 }

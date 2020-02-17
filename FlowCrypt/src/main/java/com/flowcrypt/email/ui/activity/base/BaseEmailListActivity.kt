@@ -87,18 +87,8 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
   }
 
   override fun onSyncServiceConnected() {
-    syncServiceConnected()
   }
 
-  /**
-   * Notify [EmailListFragment] that the activity already connected to the [EmailSyncService]
-   */
-  protected fun syncServiceConnected() {
-    val emailListFragment = supportFragmentManager
-        .findFragmentById(R.id.emailListFragment) as EmailListFragment?
-
-    //emailListFragment?.onSyncServiceConnected()
-  }
 
   /**
    * Handle an error from the sync service.

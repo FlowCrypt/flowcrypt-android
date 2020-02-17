@@ -7,11 +7,11 @@ package com.flowcrypt.email.security
 
 import android.content.Context
 import android.content.Intent
-import android.preference.PreferenceManager
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.text.TextUtils
 import android.util.Base64
+import androidx.preference.PreferenceManager
 import com.flowcrypt.email.broadcastreceivers.CorruptedStorageBroadcastReceiver
 import com.flowcrypt.email.util.exception.ManualHandledException
 import java.nio.charset.StandardCharsets

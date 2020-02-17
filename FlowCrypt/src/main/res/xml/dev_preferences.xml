@@ -3,40 +3,40 @@
   ~ Contributors: DenBond7
   -->
 
-<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <androidx.preference.PreferenceCategory android:title="@string/pref_title_general">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/pref_title_general">
         <com.flowcrypt.email.ui.activity.fragment.preferences.BuildConfInfoPreference
             android:key="@string/preferences_key_build_config_info"
             android:title="@string/pref_title_build_config_info" />
-        <androidx.preference.Preference android:title="@string/crash_the_app">
+        <Preference android:title="@string/crash_the_app">
             <intent
                 android:targetClass="com.flowcrypt.email"
                 android:targetPackage="@string/application_id" />
-        </androidx.preference.Preference>
+        </Preference>
 
-        <androidx.preference.SwitchPreference
+        <SwitchPreference
             android:defaultValue="@string/gradle_is_acra_enabled"
             android:key="@string/pref_key_is_acra_enabled"
             android:summaryOff="@string/pref_summary_disabled"
             android:summaryOn="@string/pref_summary_enabled"
             android:title="@string/pref_title_acra" />
 
-        <androidx.preference.SwitchPreference
+        <SwitchPreference
             android:defaultValue="false"
             android:key="@string/pref_key_is_detect_memory_leak_enabled"
             android:summaryOff="@string/pref_summary_disabled"
             android:summaryOn="@string/pref_summary_enabled"
             android:title="@string/pref_title_detect_memory_leaks" />
-    </androidx.preference.PreferenceCategory>
+    </PreferenceCategory>
 
-    <androidx.preference.PreferenceCategory android:title="@string/pref_title_http">
-        <androidx.preference.SwitchPreference
+    <PreferenceCategory android:title="@string/pref_title_http">
+        <SwitchPreference
             android:defaultValue="@string/gradle_is_http_log_enabled"
             android:key="@string/pref_key_is_http_log_enabled"
             android:summaryOff="@string/pref_summary_disabled"
             android:summaryOn="@string/pref_summary_enabled"
             android:title="@string/pref_title_http_logs" />
-        <androidx.preference.ListPreference
+        <ListPreference
             android:defaultValue="@string/gradle_http_log_level"
             android:dependency="@string/pref_key_is_http_log_enabled"
             android:entries="@array/http_log_level_entries_and_values"
@@ -44,33 +44,33 @@
             android:key="@string/pref_key_http_log_level"
             android:summary="%s"
             android:title="@string/pref_title_http_log_level" />
-        <androidx.preference.SwitchPreference
+        <SwitchPreference
             android:defaultValue="false"
             android:dependency="@string/pref_key_is_http_log_enabled"
             android:key="@string/preferences_key_is_write_logs_to_file_enabled"
             android:summaryOff="@string/pref_summary_disabled"
             android:summaryOn="@string/pref_summary_enabled"
             android:title="@string/pref_title_write_api_logs_to_file" />
-    </androidx.preference.PreferenceCategory>
+    </PreferenceCategory>
 
-    <androidx.preference.PreferenceCategory android:title="@string/pref_title_java_mail">
-        <androidx.preference.SwitchPreference
+    <PreferenceCategory android:title="@string/pref_title_java_mail">
+        <SwitchPreference
             android:defaultValue="@string/gradle_is_mail_debug_enabled"
             android:key="@string/preferences_key_is_mail_debug_enabled"
             android:summaryOff="@string/pref_summary_disabled"
             android:summaryOn="@string/pref_summary_enabled"
             android:title="@string/pref_title_imap_debug" />
-    </androidx.preference.PreferenceCategory>
+    </PreferenceCategory>
 
-    <androidx.preference.PreferenceCategory android:title="@string/pref_title_node">
-        <androidx.preference.SwitchPreference
+    <PreferenceCategory android:title="@string/pref_title_node">
+        <SwitchPreference
             android:defaultValue="@string/gradle_is_node_http_debug_enabled"
             android:key="@string/pref_key_is_node_http_debug_enabled"
             android:summaryOff="@string/pref_summary_disabled"
             android:summaryOn="@string/pref_summary_enabled"
             android:title="@string/pref_title_node_http" />
 
-        <androidx.preference.ListPreference
+        <ListPreference
             android:defaultValue="@string/gradle_node_http_log_level"
             android:dependency="@string/pref_key_is_node_http_debug_enabled"
             android:entries="@array/http_log_level_entries_and_values"
@@ -79,11 +79,11 @@
             android:summary="%s"
             android:title="@string/pref_title_node_http_log_level" />
 
-        <androidx.preference.SwitchPreference
+        <SwitchPreference
             android:defaultValue="false"
             android:key="@string/pref_key_is_native_node_debug_enabled"
             android:summaryOff="@string/pref_summary_disabled"
             android:summaryOn="@string/pref_summary_enabled"
             android:title="@string/pref_title_native_node_logs" />
-    </androidx.preference.PreferenceCategory>
-</androidx.preference.PreferenceScreen>
+    </PreferenceCategory>
+</PreferenceScreen>

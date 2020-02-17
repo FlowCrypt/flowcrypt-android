@@ -14,7 +14,6 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.sun.mail.imap.IMAPFolder
-import java.util.*
 import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Message
@@ -49,8 +48,8 @@ class LoadMessagesToCacheSyncTask(ownerKey: String,
 
     val context = listener.context
     val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
-    var foundMsgs: Array<Message>? = emptyArray<Message>()
-    var msgsCount: Int = 0
+    var foundMsgs: Array<Message> = emptyArray()
+    var msgsCount = 0
 
     if (isEncryptedModeEnabled) {
       foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(account))
@@ -81,7 +80,7 @@ class LoadMessagesToCacheSyncTask(ownerKey: String,
       listener.onMsgsReceived(account, localFolder, imapFolder, arrayOf(), ownerKey, requestCode)
     } else {
       val msgs: Array<Message> = if (isEncryptedModeEnabled) {
-        Arrays.copyOfRange(foundMsgs, start - 1, end)
+        foundMsgs.copyOfRange(start - 1, end)
       } else {
         imapFolder.getMessages(start, end)
       }

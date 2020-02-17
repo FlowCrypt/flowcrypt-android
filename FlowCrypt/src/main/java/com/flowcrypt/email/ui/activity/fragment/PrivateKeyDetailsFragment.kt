@@ -117,7 +117,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
           showInfoSnackbar(view!!, error, Snackbar.LENGTH_LONG)
 
           try {
-            DocumentsContract.deleteDocument(context!!.contentResolver, data.data)
+            data.data?.let { DocumentsContract.deleteDocument(context!!.contentResolver, it) }
           } catch (fileNotFound: FileNotFoundException) {
             fileNotFound.printStackTrace()
           }

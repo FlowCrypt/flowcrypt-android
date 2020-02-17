@@ -19,18 +19,14 @@ import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
-import com.flowcrypt.email.api.retrofit.LoadingState
-import com.flowcrypt.email.api.retrofit.Status
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
-import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
-import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -41,10 +37,10 @@ import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.flowcrypt.email.util.idling.SingleIdlingResources
-import com.sun.mail.util.ASCIIUtility
 import java.util.*
 
 /**
@@ -56,12 +52,13 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.LoaderCallbacks<Cursor>,
-    Observer<NodeResponseWrapper<*>>, MessageDetailsFragment.MessageDetailsListener {
+    MessageDetailsFragment.MessageDetailsListener {
 
   private lateinit var messageEntity: MessageEntity
   private lateinit var localFolder: LocalFolder
   private lateinit var msgDetailsViewModel: MsgDetailsViewModel
   private lateinit var decryptMsgViewModel: DecryptMessageViewModel
+  private lateinit var label: String
 
   @get:VisibleForTesting
   var idlingForDecryption: CountingIdlingResource? = null
@@ -71,8 +68,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   private var isReceiveMsgBodyNeeded: Boolean = false
   private var isRequestMsgDetailsStarted: Boolean = false
   private var isRetrieveIncomingMsgNeeded = true
-  private var rawMimeBytes: ByteArray? = null
-  private lateinit var label: String
+  private var rawMimeBytesOfOutgoingMsg: ByteArray? = null
+  private var msgSnapshot: DiskLruCache.Snapshot? = null
   private val uniqueId = UUID.randomUUID().toString()
 
   override val rootView: View
@@ -84,8 +81,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   override fun onCreate(savedInstanceState: Bundle?) {
     initMsgDetailsViewModel()
     super.onCreate(savedInstanceState)
-    decryptMsgViewModel = ViewModelProvider(this).get(DecryptMessageViewModel::class.java)
-    decryptMsgViewModel.responsesLiveData.observe(this, this)
+    setupDecryptMessageViewModel()
 
     idlingForDecryption = CountingIdlingResource(
         GeneralUtil.genIdlingResourcesName(MessageDetailsActivity::class.java), GeneralUtil.isDebugBuild())
@@ -139,7 +135,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   override fun onNodeStateChanged(isReady: Boolean) {
     super.onNodeStateChanged(isReady)
     if (isReady) {
-      if (rawMimeBytes?.isNotEmpty() == true) {
+      if (rawMimeBytesOfOutgoingMsg?.isNotEmpty() == true) {
         decryptMsg()
       }
     }
@@ -204,82 +200,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     }
   }
 
-  override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {
-    when (nodeResponseWrapper.requestCode) {
-      R.id.live_data_id_parse_and_decrypt_msg -> when (nodeResponseWrapper.status) {
-        Status.LOADING -> {
-          nodeResponseWrapper.loadingState?.let {
-            when (it) {
-              LoadingState.PREPARE_REQUEST -> {
-                onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
-                    .progress_id_processing, 75)
-              }
-
-              LoadingState.PREPARE_SERVICE -> {
-                onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
-                    .progress_id_processing, 80)
-              }
-
-              LoadingState.RUN_REQUEST -> {
-                onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
-                    .progress_id_processing, 85)
-              }
-
-              else -> {
-              }
-            }
-          }
-        }
-
-        Status.SUCCESS -> {
-          onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
-              .progress_id_processing, 90)
-          val result = nodeResponseWrapper.result as ParseDecryptedMsgResult?
-          if (result == null) {
-            Toast.makeText(this, getString(R.string.unknown_error), Toast.LENGTH_LONG).show()
-            if (!idlingForDecryption!!.isIdleNow) {
-              idlingForDecryption!!.decrement()
-            }
-            return
-          } else {
-            val msgInfo = IncomingMessageInfo(messageEntity, result.text, result.msgBlocks!!,
-                EmailUtil.getHeadersFromRawMIME(ASCIIUtility.toString(rawMimeBytes)), result.getMsgEncryptionType())
-            val fragment = supportFragmentManager
-                .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
-
-            if (fragment != null) {
-              fragment.showIncomingMsgInfo(msgInfo)
-              LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_attachments, null, this)
-            }
-            if (!idlingForDecryption!!.isIdleNow) {
-              idlingForDecryption!!.decrement()
-            }
-          }
-        }
-
-        Status.ERROR -> {
-          idlingForWebView.setIdleState(true)
-          updateActionProgressState(100, null)
-          showErrorInfo(nodeResponseWrapper.result?.error, null)
-          if (!idlingForDecryption!!.isIdleNow) {
-            idlingForDecryption!!.decrement()
-          }
-          ExceptionUtil.handleError(ManualHandledException("" + nodeResponseWrapper.result?.error))
-        }
-
-        Status.EXCEPTION -> {
-          idlingForWebView.setIdleState(true)
-          updateActionProgressState(100, null)
-          showErrorInfo(null, nodeResponseWrapper.exception)
-          if (!idlingForDecryption!!.isIdleNow) {
-            idlingForDecryption!!.decrement()
-          }
-          ExceptionUtil.handleError(nodeResponseWrapper.exception!!)
-        }
-      }
-    }
-  }
-
   override fun getMsgDetailsViewModel(): MsgDetailsViewModel? {
     return if (::msgDetailsViewModel.isInitialized) {
       msgDetailsViewModel
@@ -287,19 +207,22 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
   }
 
   fun decryptMsg() {
-    if (rawMimeBytes?.isNotEmpty() == true) {
-      idlingForDecryption!!.increment()
-      onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
-          .progress_id_processing, 65)
-      decryptMsgViewModel.decryptMessage(rawMimeBytes!!)
-      onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id
-          .progress_id_processing, 70)
+    idlingForDecryption?.increment()
+    onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id.progress_id_processing, 65)
+    when {
+      rawMimeBytesOfOutgoingMsg?.isNotEmpty() == true -> rawMimeBytesOfOutgoingMsg?.let { decryptMsgViewModel.decryptMessage(it) }
+      msgSnapshot != null -> msgSnapshot?.let {
+        decryptMsgViewModel.decryptMessage(this@MessageDetailsActivity, it)
+      }
     }
+    onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id.progress_id_processing, 70)
   }
 
   fun loadMsgDetails() {
-    loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, uniqueId, localFolder, messageEntity
-        .uid.toInt(), messageEntity.id?.toInt() ?: -1)
+    if (!JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
+      loadMsgDetails(R.id.syns_request_code_load_raw_mime_msg, uniqueId, localFolder, messageEntity
+          .uid.toInt(), messageEntity.id?.toInt() ?: -1)
+    }
   }
 
   private fun updateActionProgressState(progress: Int, message: String?) {
@@ -309,11 +232,11 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     fragment?.setActionProgress(progress, message)
   }
 
-  private fun showErrorInfo(error: Error?, e: Throwable?) {
+  private fun showErrorInfo(apiError: ApiError?, e: Throwable?) {
     val fragment = supportFragmentManager
         .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
 
-    fragment?.showErrorInfo(error, e)
+    fragment?.showErrorInfo(apiError, e)
   }
 
   private fun messageNotAvailableInFolder(showToast: Boolean = true) {
@@ -330,16 +253,15 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
       override fun onChanged(it: MessageEntity?) {
         if (it != null) {
-          this@MessageDetailsActivity.rawMimeBytes = if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder,
-                  ignoreCase = true)) {
-            it.rawMessageWithoutAttachments?.toByteArray()
+          if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
+            rawMimeBytesOfOutgoingMsg = it.rawMessageWithoutAttachments?.toByteArray()
           } else {
-            MsgsCacheManager.getMsgAsByteArray(messageEntity.id.toString())
+            msgSnapshot = MsgsCacheManager.getMsgSnapshot(it.id.toString())
           }
 
           onMsgDetailsUpdated()
 
-          if (rawMimeBytes?.isNotEmpty() == true) {
+          if (rawMimeBytesOfOutgoingMsg?.isNotEmpty() == true || msgSnapshot != null) {
             if (isRetrieveIncomingMsgNeeded) {
               isRetrieveIncomingMsgNeeded = false
               isReceiveMsgBodyNeeded = false
@@ -353,7 +275,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             }
           } else {
             if (isSyncServiceBound && !isRequestMsgDetailsStarted) {
-              this@MessageDetailsActivity.isRequestMsgDetailsStarted = true
+              isRequestMsgDetailsStarted = true
               loadMsgDetails()
             } else {
               isReceiveMsgBodyNeeded = true
@@ -374,8 +296,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
       finish()
     }
 
-    this.localFolder = intent.getParcelableExtra(EXTRA_KEY_FOLDER)
-    this.messageEntity = intent.getParcelableExtra(EXTRA_KEY_MSG)
+    this.localFolder = intent.getParcelableExtra(EXTRA_KEY_FOLDER) ?: throw NullPointerException()
+    this.messageEntity = intent.getParcelableExtra(EXTRA_KEY_MSG) ?: throw NullPointerException()
 
     label = if (localFolder.searchQuery.isNullOrEmpty()) {
       localFolder.fullName
@@ -468,6 +390,62 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
 
     supportActionBar?.title = actionBarTitle
     supportActionBar?.subtitle = actionBarSubTitle
+  }
+
+  private fun setupDecryptMessageViewModel() {
+    decryptMsgViewModel = ViewModelProvider(this).get(DecryptMessageViewModel::class.java)
+    decryptMsgViewModel.decryptLiveData.observe(this, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id.progress_id_processing, 75)
+        }
+
+        Result.Status.SUCCESS -> {
+          onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id.progress_id_processing, 90)
+          val result = it.data
+          if (result == null) {
+            Toast.makeText(this, getString(R.string.unknown_error), Toast.LENGTH_LONG).show()
+            if (!idlingForDecryption!!.isIdleNow) {
+              idlingForDecryption!!.decrement()
+            }
+          } else {
+            val msgInfo = IncomingMessageInfo(messageEntity, result.text, result.msgBlocks!!,
+                decryptMsgViewModel.headersLiveData.value, result.getMsgEncryptionType())
+            val fragment = supportFragmentManager
+                .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
+
+            fragment?.let { messageDetailsFragment ->
+              messageDetailsFragment.showIncomingMsgInfo(msgInfo)
+              LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_attachments, null, this)
+            }
+
+            if (!idlingForDecryption!!.isIdleNow) {
+              idlingForDecryption!!.decrement()
+            }
+          }
+        }
+
+        Result.Status.ERROR -> {
+          idlingForWebView.setIdleState(true)
+          updateActionProgressState(100, null)
+          showErrorInfo(it.data?.apiError, null)
+          if (!idlingForDecryption!!.isIdleNow) {
+            idlingForDecryption!!.decrement()
+          }
+          ExceptionUtil.handleError(ManualHandledException("" + it.data?.apiError))
+        }
+
+        Result.Status.EXCEPTION -> {
+          idlingForWebView.setIdleState(true)
+          updateActionProgressState(100, null)
+          showErrorInfo(null, it.exception)
+          if (!idlingForDecryption!!.isIdleNow) {
+            idlingForDecryption!!.decrement()
+          }
+          ExceptionUtil.handleError(it.exception!!)
+        }
+      }
+    })
   }
 
   companion object {

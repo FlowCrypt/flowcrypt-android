@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity.base
 
 import android.app.Activity
 import android.graphics.Color
-import android.graphics.PorterDuff
 import android.os.Bundle
 import android.text.Editable
 import android.text.Spannable
@@ -24,6 +23,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.BlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.Constants
@@ -223,7 +224,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
           }
 
           Status.ERROR -> nodeResponseWrapper.result?.let {
-            Toast.makeText(this, it.error?.toString() ?: "", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, it.apiError?.toString() ?: "", Toast.LENGTH_SHORT).show()
           }
 
           Status.EXCEPTION -> if (nodeResponseWrapper.result != null) {
@@ -276,17 +277,24 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
 
     when (word!!.word) {
       Constants.PASSWORD_QUALITY_WEAK,
-      Constants.PASSWORD_QUALITY_POOR -> btnSetPassPhrase.background.setColorFilter(
-          ContextCompat.getColor(this, R.color.silver), PorterDuff.Mode.MULTIPLY)
+      Constants.PASSWORD_QUALITY_POOR -> {
+        val colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+            ContextCompat.getColor(this, R.color.silver), BlendModeCompat.MODULATE)
+        btnSetPassPhrase.background.colorFilter = colorFilter
+      }
 
-      else -> btnSetPassPhrase.background.setColorFilter(ContextCompat.getColor(this, R.color.colorPrimary),
-          PorterDuff.Mode.MULTIPLY)
+      else -> {
+        val colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(
+            ContextCompat.getColor(this, R.color.colorPrimary), BlendModeCompat.MODULATE)
+        btnSetPassPhrase.background.colorFilter = colorFilter
+      }
     }
 
     val color = parseColor()
 
     progressBarPasswordQuality.progress = word.bar
-    progressBarPasswordQuality.progressDrawable.setColorFilter(color, PorterDuff.Mode.SRC_IN)
+    val colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(color, BlendModeCompat.SRC_IN)
+    progressBarPasswordQuality.progressDrawable.colorFilter = colorFilter
 
     val qualityValue = getLocalizedPasswordQualityValue(word)
 

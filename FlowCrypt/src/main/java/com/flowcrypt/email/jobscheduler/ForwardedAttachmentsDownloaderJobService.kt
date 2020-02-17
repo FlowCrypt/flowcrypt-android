@@ -175,7 +175,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
         }
 
         val msgEntity = detailsList[0]
-        val msgAttsDir = File(attCacheDir, msgEntity.attachmentsDirectory)
+        val msgAttsDir = File(attCacheDir, msgEntity.attachmentsDirectory!!)
         try {
           var pubKeys: List<String>? = null
           if (msgEntity.isEncrypted == true) {
@@ -207,7 +207,6 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
             break
           }
         }
-
       }
     }
 
@@ -224,7 +223,9 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
           continue
         }
 
-        val attFile = File(msgAttsDir, att.name)
+        val attName = att.name ?: continue
+
+        val attFile = File(msgAttsDir, attName)
         val exists = attFile.exists()
 
         if (exists) {
@@ -299,8 +300,8 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
           return
         }
 
-        if (encryptedFileResult.error != null) {
-          ExceptionUtil.handleError(Exception(encryptedFileResult.error.msg))
+        if (encryptedFileResult.apiError != null) {
+          ExceptionUtil.handleError(Exception(encryptedFileResult.apiError.msg))
           FileUtils.writeByteArrayToFile(tempFile, byteArrayOf())
           return
         }

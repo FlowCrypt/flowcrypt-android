@@ -18,7 +18,8 @@ import retrofit2.Response
  * Time: 5:43 PM
  * E-mail: DenBond7@gmail.com
  */
-open class BaseNodeRequest(final override var context: Context?, override val uri: Uri?) : NodeRequest {
+open class BaseNodeRequest constructor(final override var context: Context?, override val uri: Uri?) :
+    NodeRequest {
 
   init {
     this.context = context?.applicationContext

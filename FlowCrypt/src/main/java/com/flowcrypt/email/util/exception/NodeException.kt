@@ -5,7 +5,7 @@
 
 package com.flowcrypt.email.util.exception
 
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 
 /**
  * It's a base Node exception.
@@ -15,7 +15,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.Error
  * Time: 10:08 AM
  * E-mail: DenBond7@gmail.com
  */
-open class NodeException(val nodeError: Error?) : Exception() {
+open class NodeException(val nodeError: ApiError?) : Exception() {
 
   override val message: String = if (nodeError != null) {
     StringBuilder()

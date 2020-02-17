@@ -55,7 +55,9 @@ class CustomReportSender(config: ACRAConfiguration,
   }
 
   companion object {
-    val listOfExtensions = listOf("DOC", "DOCX", "LOG", "MSG", "ODT", "PAGES", "RTF", "TEX", "TXT",
+    val listOfExtensions = listOf(
+        "PGP", "ASC",
+        "DOC", "DOCX", "LOG", "MSG", "ODT", "PAGES", "RTF", "TEX", "TXT",
         "WPD", "WPS", "CSV", "DAT", "GED", "KEY", "KEYCHAIN", "PPS", "PPT", "PPTX", "SDF", "TAR", "TAX2016", "TAX2018",
         "VCF", "XML", "AIF", "IFF", "M3U", "M4A", "MID", "MP3", "MPA", "WAV", "WMA", "3G2", "3GP", "ASF", "AVI", "FLV",
         "M4V", "MOV", "MP4", "MPG", "RM", "SRT", "SWF", "VOB", "WMV", "3DM", "3DS", "MAX", "OBJ", "BMP", "DDS", "GIF",

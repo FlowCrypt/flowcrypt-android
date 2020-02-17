@@ -5,8 +5,7 @@
 
 package com.flowcrypt.email.api.retrofit.response.node
 
-import android.os.Parcelable
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import java.io.BufferedInputStream
 
 /**
@@ -17,8 +16,6 @@ import java.io.BufferedInputStream
  * Time: 11:42 AM
  * E-mail: DenBond7@gmail.com
  */
-interface BaseNodeResponse : Parcelable {
-  val error: Error?
-
+interface BaseNodeResponse : ApiResponse {
   fun handleRawData(bufferedInputStream: BufferedInputStream)
 }

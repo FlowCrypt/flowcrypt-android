@@ -42,10 +42,10 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
@@ -158,7 +158,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       REQUEST_CODE_START_IMPORT_KEY_ACTIVITY -> when (resultCode) {
         Activity.RESULT_OK -> {
           Toast.makeText(context, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show()
-          UIUtil.exchangeViewVisibility(true, progressView!!, contentView!!)
+          UIUtil.exchangeViewVisibility(true, progressView, contentView)
 
           val activity = baseActivity as MessageDetailsActivity
           activity.decryptMsg()
@@ -167,14 +167,12 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
       REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION -> when (resultCode) {
         Activity.RESULT_OK -> {
-          val atts: List<AttachmentInfo>
-          if (data != null) {
-            atts = data.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment.KEY_ATTACHMENT_INFO_LIST)
+          val atts: List<AttachmentInfo> = data?.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment
+              .KEY_ATTACHMENT_INFO_LIST) ?: emptyList()
 
-            if (!CollectionUtils.isEmpty(atts)) {
-              makeAttsProtected(atts)
-              sendTemplateMsgWithPublicKey(atts[0])
-            }
+          if (!CollectionUtils.isEmpty(atts)) {
+            makeAttsProtected(atts)
+            sendTemplateMsgWithPublicKey(atts[0])
           }
         }
       }
@@ -364,11 +362,11 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   /**
    * Show info about an error.
    */
-  fun showErrorInfo(error: Error?, e: Throwable?) {
+  fun showErrorInfo(apiError: ApiError?, e: Throwable?) {
     when {
-      error != null -> textViewStatusInfo!!.text = error.msg
-      e != null -> textViewStatusInfo!!.text = e.message
-      else -> textViewStatusInfo!!.setText(R.string.unknown_error)
+      apiError != null -> textViewStatusInfo?.text = apiError.msg
+      e != null -> textViewStatusInfo?.text = e.message
+      else -> textViewStatusInfo?.setText(R.string.unknown_error)
     }
 
     UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
@@ -650,7 +648,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           val att = EmailUtil.getAttInfoFromUri(activity, decryptAtt.fileUri)
           if (att != null) {
             att.isDecrypted = true
-            att.uri = FileProvider.getUriForFile(context!!, Constants.FILE_PROVIDER_AUTHORITY, File(att.uri?.path))
+            att.uri?.path?.let {
+              att.uri = FileProvider.getUriForFile(context!!, Constants.FILE_PROVIDER_AUTHORITY, File(it))
+            }
             atts.add(att)
           }
         }

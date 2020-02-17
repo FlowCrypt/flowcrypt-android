@@ -17,7 +17,7 @@ import org.junit.runners.model.Statement
  * Time: 17:54
  * E-mail: DenBond7@gmail.com
  */
-class AddAccountToDatabaseRule(val account: AccountDao) : BaseRule() {
+class AddAccountToDatabaseRule constructor(val account: AccountDao) : BaseRule() {
 
   constructor() : this(AccountDaoManager.getDefaultAccountDao())
 

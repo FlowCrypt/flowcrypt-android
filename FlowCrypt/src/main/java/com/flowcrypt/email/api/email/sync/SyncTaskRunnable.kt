@@ -43,8 +43,9 @@ class SyncTaskRunnable(val accountDao: AccountDao, val synListener: SyncListener
         synListener.onActionProgress(accountDao, task.ownerKey, task.requestCode, R.id.progress_id_running_imap_action)
         task.runIMAPAction(accountDao, session, store, synListener)
       }
-      LogsUtil.d(tag, "The task = " + task.javaClass.simpleName + " completed (" + (System
-          .currentTimeMillis() - time) + "ms)")
+      LogsUtil.d(tag, "The task = " + task.javaClass.simpleName +
+          " |requestCode = {${task.requestCode}|ownerKey = ${task.ownerKey} completed ("
+          + (System.currentTimeMillis() - time) + "ms)")
     } catch (e: Exception) {
       e.printStackTrace()
       if (e is ConnectionException) {

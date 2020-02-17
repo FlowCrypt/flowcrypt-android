@@ -166,7 +166,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
           }
         }
 
-        Status.ERROR -> Toast.makeText(context, nodeResponseWrapper.result!!.error!!.toString(),
+        Status.ERROR -> Toast.makeText(context, nodeResponseWrapper.result?.apiError?.toString(),
             Toast.LENGTH_SHORT).show()
 
         Status.EXCEPTION -> Toast.makeText(context, nodeResponseWrapper.exception!!.message, Toast.LENGTH_SHORT).show()
@@ -191,7 +191,9 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
           showInfoSnackbar(view!!, error, Snackbar.LENGTH_LONG)
 
           try {
-            context?.let { DocumentsContract.deleteDocument(it.contentResolver, data?.data) }
+            context?.contentResolver?.let { contentResolver ->
+              data?.data?.let { DocumentsContract.deleteDocument(contentResolver, it) }
+            }
           } catch (fileNotFound: FileNotFoundException) {
             fileNotFound.printStackTrace()
           }

@@ -19,7 +19,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
  *         E-mail: DenBond7@gmail.com
  */
 @Dao
-interface AccountDao {
+interface AccountDao : BaseDao<AccountEntity> {
 
   @Query("SELECT * FROM accounts WHERE is_active = 1")
   suspend fun getActiveAccount(): AccountEntity?

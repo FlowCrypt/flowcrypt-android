@@ -7,8 +7,9 @@ package com.flowcrypt.email.api.retrofit.response.node
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 import org.apache.commons.io.IOUtils
 import java.io.BufferedInputStream
 import java.io.IOException
@@ -22,8 +23,9 @@ import java.nio.charset.StandardCharsets
  * Time: 3:00 PM
  * E-mail: DenBond7@gmail.com
  */
-data class ComposeEmailResult constructor(@Expose override val error: Error?,
-                                          var mimeMsg: String = "") : BaseNodeResponse {
+data class ComposeEmailResult constructor(@SerializedName("error")
+                                          @Expose override val apiError: ApiError?,
+                                          var mimeMsg: String = "") : BaseNodeResponse, Parcelable {
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     val bytes = IOUtils.toByteArray(bufferedInputStream) ?: return
 
@@ -35,19 +37,16 @@ data class ComposeEmailResult constructor(@Expose override val error: Error?,
   }
 
   constructor(source: Parcel) : this(
-      source.readParcelable<Error>(Error::class.java.classLoader),
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
       source.readString()!!
   )
 
-  override fun describeContents(): Int {
-    return 0
-  }
+  override fun describeContents() = 0
 
-  override fun writeToParcel(dest: Parcel, flags: Int) =
-      with(dest) {
-        writeParcelable(error, 0)
-        writeString(mimeMsg)
-      }
+  override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
+    writeParcelable(apiError, flags)
+    writeString(mimeMsg)
+  }
 
   companion object {
     @JvmField

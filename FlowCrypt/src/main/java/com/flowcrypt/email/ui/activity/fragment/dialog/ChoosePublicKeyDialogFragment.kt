@@ -163,13 +163,13 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
         }
 
         Status.ERROR -> {
-          UIUtil.exchangeViewVisibility(false, progressBar!!, textViewMsg!!)
-          textViewMsg?.text = nodeResponseWrapper.result!!.error!!.toString()
+          UIUtil.exchangeViewVisibility(false, progressBar, textViewMsg)
+          textViewMsg?.text = nodeResponseWrapper.result?.apiError?.toString()
         }
 
         Status.EXCEPTION -> {
-          UIUtil.exchangeViewVisibility(false, progressBar!!, textViewMsg!!)
-          textViewMsg?.text = nodeResponseWrapper.exception!!.message
+          UIUtil.exchangeViewVisibility(false, progressBar, textViewMsg)
+          textViewMsg?.text = nodeResponseWrapper.exception?.message
         }
       }
     }

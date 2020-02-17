@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.node
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
@@ -24,7 +24,8 @@ import java.io.BufferedInputStream
 data class ParseKeysResult constructor(@Expose val format: String?,
                                        @Expose @SerializedName("keyDetails") val nodeKeyDetails:
                                        MutableList<NodeKeyDetails> = mutableListOf(),
-                                       @Expose override val error: Error?) : BaseNodeResponse {
+                                       @SerializedName("error")
+                                       @Expose override val apiError: ApiError?) : BaseNodeResponse {
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
 
   }
@@ -32,7 +33,7 @@ data class ParseKeysResult constructor(@Expose val format: String?,
   constructor(source: Parcel) : this(
       source.readString(),
       source.createTypedArrayList(NodeKeyDetails.CREATOR)!!,
-      source.readParcelable<Error>(Error::class.java.classLoader)
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader)
   )
 
   override fun describeContents(): Int {
@@ -43,7 +44,7 @@ data class ParseKeysResult constructor(@Expose val format: String?,
       with(dest) {
         writeString(format)
         writeTypedList(nodeKeyDetails)
-        writeParcelable(error, 0)
+        writeParcelable(apiError, flags)
       }
 
   companion object {

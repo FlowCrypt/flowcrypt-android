@@ -12,7 +12,6 @@ import android.util.AttributeSet
 import android.view.View
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
-import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.browser.customtabs.CustomTabsIntent
@@ -68,7 +67,6 @@ class EmailWebView : WebView {
     webSettings.loadsImagesAutomatically = true
     webSettings.loadsImagesAutomatically = true
     webSettings.javaScriptEnabled = false
-    webSettings.layoutAlgorithm = WebSettings.LayoutAlgorithm.SINGLE_COLUMN
   }
 
   fun setOnPageFinishedListener(onPageFinishedListener: OnPageFinishedListener) {

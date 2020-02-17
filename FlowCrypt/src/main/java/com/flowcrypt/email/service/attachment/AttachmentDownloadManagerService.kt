@@ -6,9 +6,11 @@
 package com.flowcrypt.email.service.attachment
 
 import android.app.Service
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
@@ -17,7 +19,9 @@ import android.os.Looper
 import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
+import android.provider.MediaStore
 import android.text.TextUtils
+import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.flowcrypt.email.BuildConfig
@@ -45,7 +49,6 @@ import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.FileInputStream
-import java.io.IOException
 import java.io.InputStream
 import java.lang.ref.WeakReference
 import java.util.*
@@ -105,10 +108,10 @@ class AttachmentDownloadManagerService : Service() {
     if (intent != null && !TextUtils.isEmpty(intent.action)) {
       val attInfo = intent.getParcelableExtra<AttachmentInfo>(EXTRA_KEY_ATTACHMENT_INFO)
       when (intent.action) {
-        ACTION_CANCEL_DOWNLOAD_ATTACHMENT -> cancelDownloadAtt(attInfo)
+        ACTION_CANCEL_DOWNLOAD_ATTACHMENT -> attInfo?.let { cancelDownloadAtt(it) }
 
-        ACTION_RETRY_DOWNLOAD_ATTACHMENT, ACTION_START_DOWNLOAD_ATTACHMENT -> if (attInfo != null) {
-          addDownloadTaskToQueue(applicationContext, attInfo)
+        ACTION_RETRY_DOWNLOAD_ATTACHMENT, ACTION_START_DOWNLOAD_ATTACHMENT -> attInfo?.let {
+          addDownloadTaskToQueue(applicationContext, it)
         }
 
         else -> checkAndStopIfNeeded()
@@ -227,12 +230,11 @@ class AttachmentDownloadManagerService : Service() {
       internal const val MESSAGE_EXCEPTION_HAPPENED = 1
       internal const val MESSAGE_TASK_ALREADY_EXISTS = 2
       internal const val MESSAGE_ATTACHMENT_DOWNLOAD = 3
-      internal const val MESSAGE_DOWNLOAD_STARTED = 4
-      internal const val MESSAGE_ATTACHMENT_ADDED_TO_QUEUE = 5
-      internal const val MESSAGE_PROGRESS = 6
-      internal const val MESSAGE_RELEASE_RESOURCES = 8
-      internal const val MESSAGE_DOWNLOAD_CANCELED = 9
-      internal const val MESSAGE_STOP_SERVICE = 10
+      internal const val MESSAGE_ATTACHMENT_ADDED_TO_QUEUE = 4
+      internal const val MESSAGE_PROGRESS = 5
+      internal const val MESSAGE_RELEASE_RESOURCES = 6
+      internal const val MESSAGE_DOWNLOAD_CANCELED = 7
+      internal const val MESSAGE_STOP_SERVICE = 8
     }
   }
 
@@ -403,7 +405,7 @@ class AttachmentDownloadManagerService : Service() {
       }
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
-      var attFile: File = prepareAttFile()
+      var attTempFile: File = createTempFile(directory = context.externalCacheDir)
 
       try {
         checkFileSize()
@@ -411,13 +413,10 @@ class AttachmentDownloadManagerService : Service() {
         if (att.uri != null) {
           val inputStream = context.contentResolver.openInputStream(att.uri!!)
           if (inputStream != null) {
-            FileUtils.copyInputStreamToFile(inputStream, attFile)
-            attFile = decryptFileIfNeeded(context, attFile)
-
-            att.name = attFile.name
-
+            FileUtils.copyInputStreamToFile(inputStream, attTempFile)
+            attTempFile = decryptFileIfNeeded(context, attTempFile)
             if (!Thread.currentThread().isInterrupted) {
-              val uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile)
+              val uri = storeFileToSharedFolder(context, attTempFile)
               listener?.onAttDownloaded(att, uri)
             }
 
@@ -453,20 +452,16 @@ class AttachmentDownloadManagerService : Service() {
 
         if (att != null) {
           val inputStream = att.inputStream
-          downloadFile(attFile, inputStream)
+          downloadFile(attTempFile, inputStream)
 
           if (Thread.currentThread().isInterrupted) {
-            removeNotCompletedAtt(attFile)
             listener?.onCanceled(this.att)
           } else {
-            attFile = decryptFileIfNeeded(context, attFile)
-            this.att.name = attFile.name
-
+            attTempFile = decryptFileIfNeeded(context, attTempFile)
             if (Thread.currentThread().isInterrupted) {
-              removeNotCompletedAtt(attFile)
               listener?.onCanceled(this.att)
             } else {
-              val uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile)
+              val uri = storeFileToSharedFolder(context, attTempFile)
               listener?.onAttDownloaded(this.att, uri)
             }
           }
@@ -477,10 +472,53 @@ class AttachmentDownloadManagerService : Service() {
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
-        removeNotCompletedAtt(attFile)
         listener?.onError(att, e)
+      } finally {
+        deleteTempFile(attTempFile)
       }
+    }
 
+    @Suppress("DEPRECATION")
+    private fun storeFileToSharedFolder(context: Context, attFile: File): Uri {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        val resolver = context.contentResolver
+        val fileExtension = FilenameUtils.getExtension(att.name).toLowerCase(Locale.getDefault())
+        val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
+
+        val contentValues = ContentValues().apply {
+          put(MediaStore.DownloadColumns.DISPLAY_NAME, att.name)
+          put(MediaStore.DownloadColumns.SIZE, attFile.length())
+          put(MediaStore.DownloadColumns.MIME_TYPE, mimeType)
+        }
+
+        val imageUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+
+        requireNotNull(imageUri)
+
+        //we should check maybe a file is already exist.
+        // Then we will use the file name from the system
+        val cursor = resolver.query(imageUri, arrayOf(MediaStore.DownloadColumns.DISPLAY_NAME), null, null, null)
+        if (cursor != null) {
+          if (cursor.moveToFirst()) {
+            val nameIndex = cursor.getColumnIndex(MediaStore.DownloadColumns.DISPLAY_NAME)
+            if (nameIndex != -1) {
+              val nameFromSystem = cursor.getString(nameIndex)
+              if (nameFromSystem != att.name) {
+                att.name = nameFromSystem
+              }
+            }
+          }
+          cursor.close()
+        }
+
+        IOUtils.copy(attFile.inputStream(), resolver.openOutputStream(imageUri))
+        return imageUri
+      } else {
+        val sharedFile = File(Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_DOWNLOADS), att.name ?: UUID.randomUUID().toString())
+        IOUtils.copy(attFile.inputStream(), FileUtils.openOutputStream(sharedFile))
+        return FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, sharedFile)
+      }
     }
 
     internal fun setListener(listener: OnDownloadAttachmentListener) {
@@ -558,35 +596,20 @@ class AttachmentDownloadManagerService : Service() {
         throw NullPointerException("Error. The file is missing")
       }
 
-      if (!"pgp".equals(FilenameUtils.getExtension(file.name), ignoreCase = true)) {
+      if (!"pgp".equals(FilenameUtils.getExtension(att.name), ignoreCase = true)) {
         return file
       }
 
       FileInputStream(file).use { inputStream ->
         val decryptedFileResult = getDecryptedFileResult(context, inputStream)
 
-        val decryptedFile = File(file.parent, file.name.substring(0, file.name.lastIndexOf(".")))
+        val decryptedFile = createTempFile(directory = context.externalCacheDir)
+        att.name = att.name?.substring(0, att.name?.lastIndexOf(".") ?: -1)
 
-        var isInnerExceptionHappened = false
-
-        try {
-          FileUtils.openOutputStream(decryptedFile).use { outputStream ->
-            IOUtils.write(decryptedFileResult.decryptedBytes, outputStream)
-            return decryptedFile
-          }
-        } catch (e: IOException) {
-          if (!decryptedFile.delete()) {
-            LogsUtil.d(TAG, "Cannot delete file: $file")
-          }
-
-          isInnerExceptionHappened = true
-          throw e
-        } finally {
-          if (!isInnerExceptionHappened) {
-            if (!file.delete()) {
-              LogsUtil.d(TAG, "Cannot delete file: $file")
-            }
-          }
+        FileUtils.openOutputStream(decryptedFile).use { outputStream ->
+          IOUtils.write(decryptedFileResult.decryptedBytes, outputStream)
+          deleteTempFile(file)
+          return decryptedFile
         }
       }
     }
@@ -598,9 +621,9 @@ class AttachmentDownloadManagerService : Service() {
       val request = DecryptFileRequest(IOUtils.toByteArray(inputStream), pgpKeyInfoList)
       val response = nodeService.decryptFile(request).execute()
       val result = response.body() ?: throw NullPointerException("Node.js returned an empty result")
-      if (result.error != null) {
-        var exceptionMsg = result.error.msg
-        if ("use_password" == result.error.type) {
+      if (result.apiError != null) {
+        var exceptionMsg = result.apiError.msg
+        if ("use_password" == result.apiError.type) {
           exceptionMsg = context.getString(R.string.opening_password_encrypted_msg_not_implemented_yet)
         }
         throw Exception(exceptionMsg)
@@ -614,7 +637,7 @@ class AttachmentDownloadManagerService : Service() {
      *
      * @param attachmentFile The file which will be removed.
      */
-    private fun removeNotCompletedAtt(attachmentFile: File?) {
+    private fun deleteTempFile(attachmentFile: File?) {
       if (attachmentFile != null && attachmentFile.exists()) {
         if (!attachmentFile.delete()) {
           LogsUtil.d(TAG, "Cannot delete a file: $attachmentFile")
@@ -628,15 +651,6 @@ class AttachmentDownloadManagerService : Service() {
       if (!Thread.currentThread().isInterrupted) {
         listener?.onProgress(att, currentPercentage, timeLeft)
       }
-    }
-
-    /**
-     * Create the local file where we will write an input stream from the IMAP server.
-     *
-     * @return A new created file.
-     */
-    private fun prepareAttFile(): File {
-      return File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), att.name)
     }
 
     companion object {

@@ -7,9 +7,10 @@ package com.flowcrypt.email.api.retrofit.response.node
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.api.retrofit.response.base.ApiError
 
-import com.flowcrypt.email.api.retrofit.response.model.node.Error
 import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
 
 import org.apache.commons.io.IOUtils
 
@@ -25,7 +26,8 @@ import java.nio.charset.StandardCharsets
  * Time: 12:51 PM
  * E-mail: DenBond7@gmail.com
  */
-data class EncryptedMsgResult constructor(@Expose override val error: Error?,
+data class EncryptedMsgResult constructor(@SerializedName("error")
+                                          @Expose override val apiError: ApiError?,
                                           var encryptedMsg: String? = null) : BaseNodeResponse {
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
     val bytes = IOUtils.toByteArray(bufferedInputStream) ?: return
@@ -38,7 +40,7 @@ data class EncryptedMsgResult constructor(@Expose override val error: Error?,
   }
 
   constructor(source: Parcel) : this(
-      source.readParcelable<Error>(Error::class.java.classLoader),
+      source.readParcelable<ApiError>(ApiError::class.java.classLoader),
       source.readString()
   )
 
@@ -48,7 +50,7 @@ data class EncryptedMsgResult constructor(@Expose override val error: Error?,
 
   override fun writeToParcel(dest: Parcel, flags: Int) =
       with(dest) {
-        writeParcelable(error, 0)
+        writeParcelable(apiError, flags)
         writeString(encryptedMsg)
       }
 

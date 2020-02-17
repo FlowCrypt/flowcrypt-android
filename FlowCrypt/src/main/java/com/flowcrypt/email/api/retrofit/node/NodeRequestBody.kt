@@ -53,13 +53,14 @@ class NodeRequestBody constructor(private val nodeRequest: NodeRequest,
       dataSource?.closeQuietly()
     }
 
-    nodeRequest.uri?.let {
+    nodeRequest.uri?.let { uri ->
       var uriSource: Source? = null
       try {
-        val inputStream = nodeRequest.context?.contentResolver?.openInputStream(it)
-        if (inputStream != null) {
+        nodeRequest.context?.contentResolver?.openInputStream(uri)?.let { inputStream ->
           uriSource = BufferedInputStream(inputStream).source()
-          sink.writeAll(uriSource)
+          uriSource?.let {
+            sink.writeAll(it)
+          }
         }
       } finally {
         uriSource?.closeQuietly()
