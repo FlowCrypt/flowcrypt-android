@@ -62,8 +62,6 @@ class AttesterSettingsActivity : BaseBackStackActivity() {
           }
 
           Result.Status.SUCCESS -> {
-
-
             UIUtil.exchangeViewVisibility(false, progressBar, layoutContent)
             val result = it.data
             result?.results?.let { responses ->
@@ -76,10 +74,8 @@ class AttesterSettingsActivity : BaseBackStackActivity() {
           }
 
           Result.Status.ERROR -> {
-            //toast(it.apiErrors?.firstError ?: getString(R.string.unknown_error))
-
             UIUtil.exchangeViewVisibility(false, progressBar, layoutContent)
-            //showInfoSnackbar(rootView, it.apiError?.message ?: getString(R.string.unknown_error))
+            showInfoSnackbar(rootView, it.data?.apiError?.msg ?: getString(R.string.unknown_error))
           }
 
           Result.Status.EXCEPTION -> {
