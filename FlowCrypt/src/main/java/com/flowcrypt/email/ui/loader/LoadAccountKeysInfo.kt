@@ -5,23 +5,28 @@
 
 package com.flowcrypt.email.ui.loader
 
-import android.content.Context
-import androidx.loader.content.AsyncTaskLoader
+import android.accounts.Account
+import android.app.Application
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Transformations
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
-import com.flowcrypt.email.api.retrofit.ApiHelper
-import com.flowcrypt.email.api.retrofit.ApiService
+import com.flowcrypt.email.api.retrofit.ApiRepository
+import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.model.PgpContact
-import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.*
 
 /**
- * This loader does job of receiving information about an array of public
+ * This [ViewModel] does job of receiving information about an array of public
  * keys from "https://flowcrypt.com/attester/lookup/email".
  *
  * @author Denis Bondarenko
@@ -30,44 +35,27 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-class LoadAccountKeysInfo(context: Context,
-                          private val account: AccountDao?) : AsyncTaskLoader<LoaderResult>(context) {
+class LoadAccountKeysInfo(application: Application) : AccountViewModel(application) {
+  private val repository: ApiRepository = FlowcryptApiRepository()
+  val accountKeysInfoLiveData: LiveData<Result<LookUpEmailsResponse>> = Transformations
+      .switchMap(accountLiveData) { accountEntity ->
+        liveData {
+          val result: Result<LookUpEmailsResponse> = if (accountEntity != null) {
+            val emails = ArrayList<String>()
+            emails.add(accountEntity.email)
 
-  init {
-    onContentChanged()
-  }
+            if (accountEntity.account?.type == AccountDao.ACCOUNT_TYPE_GOOGLE) {
+              emails.addAll(getAvailableGmailAliases(accountEntity.account))
+            }
 
-  public override fun onStartLoading() {
-    if (takeContentChanged()) {
-      forceLoad()
-    }
-  }
+            repository.postLookUpEmails(application, PostLookUpEmailsModel(emails))
+          } else {
+            Result.exception(NullPointerException("AccountDao is null!"))
+          }
 
-  override fun loadInBackground(): LoaderResult? {
-    if (account != null) {
-      val emails = ArrayList<String>()
-      return try {
-        when (account.accountType) {
-          AccountDao.ACCOUNT_TYPE_GOOGLE -> emails.addAll(getAvailableGmailAliases(account))
-
-          else -> emails.add(account.email)
+          emit(result)
         }
-
-        LoaderResult(getLookUpEmailsResponse(emails), null)
-      } catch (e: IOException) {
-        e.printStackTrace()
-        ExceptionUtil.handleError(e)
-        LoaderResult(null, e)
       }
-
-    } else {
-      return LoaderResult(null, NullPointerException("AccountDao is null!"))
-    }
-  }
-
-  public override fun onStopLoading() {
-    cancelLoad()
-  }
 
   /**
    * Get available Gmail aliases for an input [AccountDao].
@@ -75,12 +63,11 @@ class LoadAccountKeysInfo(context: Context,
    * @param account The [AccountDao] object which contains information about an email account.
    * @return The list of available Gmail aliases.
    */
-  private fun getAvailableGmailAliases(account: AccountDao): Collection<String> {
+  private suspend fun getAvailableGmailAliases(account: Account): Collection<String> = withContext(Dispatchers.IO) {
     val emails = ArrayList<String>()
-    emails.add(account.email)
 
     try {
-      val gmail = GmailApiHelper.generateGmailApiService(context, account)
+      val gmail = GmailApiHelper.generateGmailApiService(getApplication(), account)
       val aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
       for (alias in aliases.sendAs) {
         if (alias.verificationStatus != null) {
@@ -92,24 +79,6 @@ class LoadAccountKeysInfo(context: Context,
       ExceptionUtil.handleError(e)
     }
 
-    return emails
-  }
-
-  /**
-   * Get [LookUpEmailsResponse] object which contain a remote information about
-   * [PgpContact].
-   *
-   * @param emails Used to generate a request to the server.
-   * @return [LookUpEmailsResponse]
-   * @throws IOException
-   */
-  private fun getLookUpEmailsResponse(emails: List<String>): List<LookUpEmailResponse>? {
-    val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-    val response = apiService.postLookUpEmails(PostLookUpEmailsModel(emails)).execute()
-    val lookUpEmailsResponse = response.body()
-
-    return if (lookUpEmailsResponse != null) {
-      lookUpEmailsResponse.results
-    } else ArrayList()
+    return@withContext emails
   }
 }

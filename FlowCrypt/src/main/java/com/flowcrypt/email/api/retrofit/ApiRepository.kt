@@ -10,9 +10,11 @@ import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
 import com.flowcrypt.email.api.retrofit.request.api.DomainRulesRequest
 import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
+import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 
 /**
@@ -41,4 +43,10 @@ interface ApiRepository : BaseApiRepository {
    * @param model An instance of [InitialLegacySubmitModel].
    */
   suspend fun submitPubKey(context: Context, model: InitialLegacySubmitModel): Result<InitialLegacySubmitResponse>
+
+  /**
+   * @param context Interface to global information about an application environment.
+   * @param model An instance of [PostLookUpEmailsModel].
+   */
+  suspend fun postLookUpEmails(context: Context, model: PostLookUpEmailsModel): Result<LookUpEmailsResponse>
 }
