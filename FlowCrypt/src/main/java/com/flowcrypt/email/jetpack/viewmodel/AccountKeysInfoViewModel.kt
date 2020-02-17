@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.loader
+package com.flowcrypt.email.jetpack.viewmodel
 
 import android.accounts.Account
 import android.app.Application
@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

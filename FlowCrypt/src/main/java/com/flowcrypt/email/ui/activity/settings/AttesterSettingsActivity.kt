@@ -12,9 +12,9 @@ import androidx.activity.viewModels
 import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.jetpack.viewmodel.AccountKeysInfoViewModel
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
 import com.flowcrypt.email.ui.adapter.AttesterKeyAdapter
-import com.flowcrypt.email.ui.loader.AccountKeysInfoViewModel
 import com.flowcrypt.email.util.UIUtil
 
 /**
