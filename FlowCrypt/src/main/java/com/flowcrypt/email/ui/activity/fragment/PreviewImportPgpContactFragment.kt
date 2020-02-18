@@ -13,9 +13,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.os.RemoteException
 import android.text.TextUtils
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -63,6 +61,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
 
   private var isParsingStarted: Boolean = false
 
+  override val contentResourceId: Int = R.layout.fragment_preview_import_pgp_contact
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     retainInstance = true
@@ -73,11 +73,6 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
       publicKeysString = bundle.getString(KEY_EXTRA_PUBLIC_KEY_STRING)
       publicKeysFileUri = bundle.getParcelable(KEY_EXTRA_PUBLIC_KEYS_FILE_URI)
     }
-  }
-
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                            savedInstanceState: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_preview_import_pgp_contact, container, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

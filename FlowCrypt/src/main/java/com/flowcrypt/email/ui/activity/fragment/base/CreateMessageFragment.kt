@@ -149,6 +149,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private var isMsgSentToQueue: Boolean = false
   private var originalColor: Int = 0
 
+  override val contentResourceId: Int = R.layout.fragment_create_message
+
   override val contentView: View?
     get() = layoutContent
 
@@ -312,10 +314,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
 
     initExtras(activity?.intent)
-  }
-
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_create_message, container, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

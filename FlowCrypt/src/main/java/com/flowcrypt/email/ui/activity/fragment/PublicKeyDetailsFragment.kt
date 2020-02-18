@@ -15,7 +15,6 @@ import android.provider.DocumentsContract
 import android.text.TextUtils
 import android.text.format.DateFormat
 import android.util.TypedValue
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -65,6 +64,8 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
   private var textViewCreated: TextView? = null
   private var onContactDeletedListener: OnContactDeletedListener? = null
 
+  override val contentResourceId: Int = R.layout.fragment_public_key_details
+
   override fun onAttach(context: Context) {
     super.onAttach(context)
 
@@ -83,10 +84,6 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     if (publicKey == null || email == null) {
       parentFragmentManager.popBackStack()
     }
-  }
-
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, bundle: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_public_key_details, container, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

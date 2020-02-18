@@ -10,13 +10,14 @@ import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
 import com.flowcrypt.email.util.UIUtil
-import java.util.*
+
 
 /**
  * This adapter can be used to show info about public keys from the https://flowcrypt.com/attester/lookup/email/.
@@ -27,70 +28,51 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-class AttesterKeyAdapter(context: Context, responses: List<LookUpEmailResponse>) : BaseAdapter() {
-  private var responses: List<LookUpEmailResponse>? = null
-  private val keysLongIds: List<String>
+class AttesterKeyAdapter(context: Context,
+                         private val responses: MutableList<LookUpEmailResponse> = mutableListOf())
+  : RecyclerView.Adapter<AttesterKeyAdapter.ViewHolder>() {
+  private val keysLongIds: List<String> = KeysDaoSource().getAllKeysLongIds(context)
 
-  init {
-    this.responses = responses
-
-    if (this.responses == null) {
-      this.responses = ArrayList()
-    }
-
-    this.keysLongIds = KeysDaoSource().getAllKeysLongIds(context)
+  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.attester_key_item, parent, false))
   }
 
-  override fun getCount(): Int {
-    return responses!!.size
+  override fun getItemCount(): Int {
+    return responses.size
   }
 
-  override fun getItem(position: Int): LookUpEmailResponse {
-    return responses!![position]
-  }
-
-  override fun getItemId(position: Int): Long {
-    return position.toLong()
-  }
-
-  override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-    var view = convertView
-    val lookUpEmailResponse = getItem(position)
-    val context = parent.context
-    val viewHolder: ViewHolder
-    if (view == null) {
-      viewHolder = ViewHolder()
-      view = LayoutInflater.from(context).inflate(R.layout.attester_key_item, parent, false)
-
-      viewHolder.textViewKeyOwner = view!!.findViewById(R.id.textViewKeyOwner)
-      viewHolder.textViewKeyAttesterStatus = view.findViewById(R.id.textViewKeyAttesterStatus)
-      view.tag = viewHolder
-    } else {
-      viewHolder = view.tag as ViewHolder
-    }
-
+  override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
+    val context = viewHolder.itemView.context
+    val lookUpEmailResponse = responses[position]
     updateView(lookUpEmailResponse, context, viewHolder)
+  }
 
-    return view
+  fun setData(newList: List<LookUpEmailResponse>) {
+    val productDiffUtilCallback = ResponseDiffUtilCallback(responses, newList)
+    val productDiffResult = DiffUtil.calculateDiff(productDiffUtilCallback)
+
+    responses.clear()
+    responses.addAll(newList)
+    productDiffResult.dispatchUpdatesTo(this)
   }
 
   private fun updateView(lookUpEmailResponse: LookUpEmailResponse, context: Context, viewHolder: ViewHolder) {
-    viewHolder.textViewKeyOwner!!.text = lookUpEmailResponse.email
+    viewHolder.textViewKeyOwner.text = lookUpEmailResponse.email
 
     when {
       TextUtils.isEmpty(lookUpEmailResponse.pubKey) -> {
-        viewHolder.textViewKeyAttesterStatus!!.setText(R.string.no_public_key_recorded)
-        viewHolder.textViewKeyAttesterStatus!!.setTextColor(UIUtil.getColor(context, R.color.orange))
+        viewHolder.textViewKeyAttesterStatus.setText(R.string.no_public_key_recorded)
+        viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.orange))
       }
 
       isPublicKeyMatched(lookUpEmailResponse) -> {
-        viewHolder.textViewKeyAttesterStatus!!.setText(R.string.submitted_can_receive_encrypted_email)
-        viewHolder.textViewKeyAttesterStatus!!.setTextColor(UIUtil.getColor(context, R.color.colorPrimary))
+        viewHolder.textViewKeyAttesterStatus.setText(R.string.submitted_can_receive_encrypted_email)
+        viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.colorPrimary))
       }
 
       else -> {
-        viewHolder.textViewKeyAttesterStatus!!.setText(R.string.wrong_public_key_recorded)
-        viewHolder.textViewKeyAttesterStatus!!.setTextColor(UIUtil.getColor(context, R.color.red))
+        viewHolder.textViewKeyAttesterStatus.setText(R.string.wrong_public_key_recorded)
+        viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.red))
       }
     }
   }
@@ -116,8 +98,27 @@ class AttesterKeyAdapter(context: Context, responses: List<LookUpEmailResponse>)
   /**
    * The view holder implementation for a better performance.
    */
-  private class ViewHolder {
-    internal var textViewKeyOwner: TextView? = null
-    internal var textViewKeyAttesterStatus: TextView? = null
+  inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    var textViewKeyOwner: TextView = itemView.findViewById(R.id.textViewKeyOwner)
+    var textViewKeyAttesterStatus: TextView = itemView.findViewById(R.id.textViewKeyAttesterStatus)
+  }
+
+  inner class ResponseDiffUtilCallback(private val oldList: List<LookUpEmailResponse>,
+                                       private val newList: List<LookUpEmailResponse>) : DiffUtil.Callback() {
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+      val oldProduct = oldList[oldItemPosition]
+      val newProduct = newList[newItemPosition]
+      return oldProduct.longId == newProduct.longId
+    }
+
+    override fun getOldListSize(): Int = oldList.size
+
+    override fun getNewListSize(): Int = newList.size
+
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+      val oldProduct = oldList[oldItemPosition]
+      val newProduct = newList[newItemPosition]
+      return oldProduct == newProduct
+    }
   }
 }

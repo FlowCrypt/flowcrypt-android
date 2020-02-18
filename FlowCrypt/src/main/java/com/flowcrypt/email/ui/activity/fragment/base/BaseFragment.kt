@@ -7,7 +7,9 @@ package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.content.Context
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -30,6 +32,14 @@ import com.google.android.material.snackbar.Snackbar
  */
 
 abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderResult> {
+
+  /**
+   * Get the content view resources id. This method must return an resources id of a layout
+   * if we want to show some UI.
+   *
+   * @return The content view resources id.
+   */
+  abstract val contentResourceId: Int
 
   protected lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
 
@@ -60,6 +70,12 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
     super.onAttach(context)
     connectionLifecycleObserver = ConnectionLifecycleObserver(context)
     lifecycle.addObserver(connectionLifecycleObserver)
+  }
+
+  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    return if (contentResourceId > 0) {
+      inflater.inflate(contentResourceId, container, false)
+    } else super.onCreateView(inflater, container, savedInstanceState)
   }
 
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {

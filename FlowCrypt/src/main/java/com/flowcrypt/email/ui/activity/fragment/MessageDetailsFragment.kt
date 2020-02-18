@@ -125,6 +125,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private val localFolder: LocalFolder?
     get() = msgDetailsViewModel?.localFolder
 
+  override val contentResourceId: Int = R.layout.fragment_message_details
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
@@ -141,10 +142,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     dateFormat = DateFormat.getTimeFormat(context)
 
     updateActionsVisibility(localFolder)
-  }
-
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_message_details, container, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

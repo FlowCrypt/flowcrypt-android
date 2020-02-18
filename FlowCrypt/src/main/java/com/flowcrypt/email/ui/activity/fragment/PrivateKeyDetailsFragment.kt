@@ -14,9 +14,7 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.TextUtils
 import android.text.format.DateFormat
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -45,6 +43,8 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
 
   private var details: NodeKeyDetails? = null
 
+  override val contentResourceId: Int = R.layout.fragment_private_key_details
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
@@ -56,10 +56,6 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
     if (details == null) {
       parentFragmentManager.popBackStack()
     }
-  }
-
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, bundle: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_private_key_details, container, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

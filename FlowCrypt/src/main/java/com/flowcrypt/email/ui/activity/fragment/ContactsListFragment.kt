@@ -9,9 +9,7 @@ import android.app.Activity
 import android.content.Intent
 import android.database.Cursor
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ListView
 import android.widget.Toast
@@ -41,6 +39,8 @@ class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteC
   private var listView: ListView? = null
   private var emptyView: View? = null
   private var adapter: ContactsListCursorAdapter? = null
+
+  override val contentResourceId: Int = R.layout.fragment_contacts_list
 
   private val cursorLoaderCallback = object : LoaderManager.LoaderCallbacks<Cursor> {
     override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
@@ -78,11 +78,6 @@ class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteC
         R.id.loader_id_load_contacts_with_pgp -> adapter!!.swapCursor(null)
       }
     }
-  }
-
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                            savedInstanceState: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_contacts_list, container, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

@@ -17,7 +17,6 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -88,6 +87,8 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private var isEmptyViewAvailable = false
   private var keepSelectionInMemory = false
   private var isForceLoadNextMsgsNeeded = false
+
+  override val contentResourceId: Int = R.layout.fragment_email_list
 
   private val isOutboxFolder: Boolean
     get() {
@@ -164,10 +165,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     adapter = MsgsPagedListAdapter(this)
     setupMsgsViewModel()
     setupConnectionNotifier()
-  }
-
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_email_list, container, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

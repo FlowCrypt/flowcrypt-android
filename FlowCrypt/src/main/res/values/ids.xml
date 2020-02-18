@@ -43,6 +43,12 @@
     <item name="viewIdStatusView" type="id" />
     <item name="viewIdTextViewStatusInfo" type="id" />
 
+    <item name="tVProgressMsg" type="id" />
+    <item name="tVStatusMsg" type="id" />
+    <item name="iVStatusImg" type="id" />
+    <item name="tVEmpty" type="id" />
+    <item name="iVEmptyImg" type="id" />
+
     <item name="progress_id_start_of_loading_new_messages" type="id" />
     <item name="progress_id_adding_task_to_queue" type="id" />
     <item name="progress_id_running_task" type="id" />
