@@ -31,7 +31,7 @@ import javax.mail.Session
  * Time: 15:08.
  * E-mail: DenBond7@gmail.com
  */
-class CheckEmailSettingsAsyncTaskLoader(application: Application) : BaseAndroidViewModel(application) {
+class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewModel(application) {
   val checkEmailSettingsLiveData = MutableLiveData<Result<Boolean?>>()
 
   fun check(authCreds: AuthCredentials) {

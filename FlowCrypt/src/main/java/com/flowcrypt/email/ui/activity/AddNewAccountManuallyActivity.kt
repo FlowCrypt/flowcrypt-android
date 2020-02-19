@@ -37,7 +37,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.ui.loader.CheckEmailSettingsAsyncTaskLoader
+import com.flowcrypt.email.ui.loader.CheckEmailSettingsViewModel
 import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -84,7 +84,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   private var isImapSpinnerRestored: Boolean = false
   private var isSmtpSpinnerRestored: Boolean = false
 
-  private val checkEmailSettingsAsyncTaskLoader: CheckEmailSettingsAsyncTaskLoader by viewModels()
+  private val checkEmailSettingsViewModel: CheckEmailSettingsViewModel by viewModels()
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = true
@@ -320,7 +320,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
         if (checkDuplicate()) {
           authCreds = generateAuthCreds()
           authCreds?.let {
-            checkEmailSettingsAsyncTaskLoader.check(it)
+            checkEmailSettingsViewModel.check(it)
           }
         } else {
           showInfoSnackbar(rootView, getString(R.string.template_email_alredy_added,
@@ -411,7 +411,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   }
 
   private fun setupCheckEmailSettingsViewModel() {
-    checkEmailSettingsAsyncTaskLoader.checkEmailSettingsLiveData.observe(this, Observer {
+    checkEmailSettingsViewModel.checkEmailSettingsLiveData.observe(this, Observer {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> UIUtil.exchangeViewVisibility(true, progressView, rootView)
@@ -462,7 +462,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     showSnackbar(rootView, getString(R.string.network_error_please_retry), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
       authCreds?.let {
-        checkEmailSettingsAsyncTaskLoader.check(it)
+        checkEmailSettingsViewModel.check(it)
       }
     })
   }
