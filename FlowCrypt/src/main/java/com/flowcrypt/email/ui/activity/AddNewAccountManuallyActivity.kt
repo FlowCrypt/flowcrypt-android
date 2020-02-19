@@ -19,6 +19,8 @@ import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.activity.viewModels
+import androidx.lifecycle.Observer
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import androidx.preference.PreferenceManager
@@ -28,6 +30,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
@@ -46,7 +49,6 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.sun.mail.util.MailConnectException
 import java.net.SocketTimeoutException
-import java.util.*
 import java.util.regex.Pattern
 import javax.mail.AuthenticationFailedException
 
@@ -81,6 +83,8 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
 
   private var isImapSpinnerRestored: Boolean = false
   private var isSmtpSpinnerRestored: Boolean = false
+
+  private val checkEmailSettingsAsyncTaskLoader: CheckEmailSettingsAsyncTaskLoader by viewModels()
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = true
@@ -210,6 +214,8 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     }
 
     initViews(savedInstanceState)
+
+    setupCheckEmailSettingsViewModel()
   }
 
   public override fun onPause() {
@@ -312,7 +318,10 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
         authCreds = generateAuthCreds()
         UIUtil.hideSoftInput(this, rootView)
         if (checkDuplicate()) {
-          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_check_email_settings, null, this)
+          authCreds = generateAuthCreds()
+          authCreds?.let {
+            checkEmailSettingsAsyncTaskLoader.check(it)
+          }
         } else {
           showInfoSnackbar(rootView, getString(R.string.template_email_alredy_added,
               authCreds!!.email), Snackbar.LENGTH_LONG)
@@ -341,22 +350,15 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   }
 
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
-    when (id) {
-      R.id.loader_id_check_email_settings -> {
-        UIUtil.exchangeViewVisibility(true, progressView!!, rootView)
-
-        authCreds = generateAuthCreds()
-        return CheckEmailSettingsAsyncTaskLoader(this, authCreds!!)
-      }
-
+    return when (id) {
       R.id.loader_id_load_private_key_backups_from_email -> {
         UIUtil.exchangeViewVisibility(true, progressView!!, rootView)
         val account = AccountDao(authCreds!!.email, null, authCreds!!.username, null, null, null,
             false, authCreds)
-        return LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
+        LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
       }
 
-      else -> return Loader(this)
+      else -> Loader(this)
     }
   }
 
@@ -371,16 +373,6 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   @Suppress("UNCHECKED_CAST")
   override fun onSuccess(loaderId: Int, result: Any?) {
     when (loaderId) {
-      R.id.loader_id_check_email_settings -> {
-        val isCorrect = result as Boolean
-        if (isCorrect) {
-          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
-        } else {
-          UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
-          showInfoSnackbar(rootView, getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG)
-        }
-      }
-
       R.id.loader_id_load_private_key_backups_from_email -> {
         val keyDetailsList = result as ArrayList<NodeKeyDetails>?
         if (CollectionUtils.isEmpty(keyDetailsList)) {
@@ -406,35 +398,6 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
 
   override fun onError(loaderId: Int, e: Exception?) {
     when (loaderId) {
-      R.id.loader_id_check_email_settings -> {
-        UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
-        val original = e?.cause
-        if (original != null) {
-          if (original is AuthenticationFailedException) {
-            val isGmailImapServer = editTextImapServer!!.text.toString().equals(GmailConstants
-                .GMAIL_IMAP_SERVER, ignoreCase = true)
-            val isMsgEmpty = TextUtils.isEmpty(original.message)
-            val hasAlert = original.message?.startsWith(GmailConstants
-                .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED)
-            if (isGmailImapServer && !isMsgEmpty && hasAlert == true) {
-              showLessSecurityWarning()
-            } else {
-              showInfoSnackbar(rootView, if (!TextUtils.isEmpty(e.message))
-                e.message
-              else
-                getString(R.string.unknown_error), Snackbar.LENGTH_LONG)
-            }
-          } else if (original is MailConnectException || original is SocketTimeoutException) {
-            showNetworkErrorHint()
-          }
-        } else {
-          showInfoSnackbar(rootView, if (e != null && !TextUtils.isEmpty(e.message))
-            e.message
-          else
-            getString(R.string.unknown_error), Snackbar.LENGTH_LONG)
-        }
-      }
-
       R.id.loader_id_load_private_key_backups_from_email -> {
         UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
         showInfoSnackbar(rootView, if (e != null && !TextUtils.isEmpty(e.message))
@@ -447,11 +410,60 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     }
   }
 
+  private fun setupCheckEmailSettingsViewModel() {
+    checkEmailSettingsAsyncTaskLoader.checkEmailSettingsLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> UIUtil.exchangeViewVisibility(true, progressView, rootView)
+
+          Result.Status.SUCCESS -> {
+            val isCorrect = it.data
+            if (isCorrect == true) {
+              LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
+            } else {
+              UIUtil.exchangeViewVisibility(false, progressView, rootView)
+              showInfoSnackbar(rootView, getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG)
+            }
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            UIUtil.exchangeViewVisibility(false, progressView, rootView)
+            val exception = it.exception ?: return@let
+            val original = it.exception.cause
+            if (original != null) {
+              if (original is AuthenticationFailedException) {
+                val isGmailImapServer = editTextImapServer?.text.toString()
+                    .equals(GmailConstants.GMAIL_IMAP_SERVER, ignoreCase = true)
+                val isMsgEmpty = TextUtils.isEmpty(original.message)
+                val hasAlert = original.message?.startsWith(GmailConstants
+                    .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED)
+                if (isGmailImapServer && !isMsgEmpty && hasAlert == true) {
+                  showLessSecurityWarning()
+                } else {
+                  showInfoSnackbar(rootView, if (exception.message.isNullOrEmpty()) {
+                    getString(R.string.unknown_error)
+                  } else exception.message, Snackbar.LENGTH_LONG)
+                }
+              } else if (original is MailConnectException || original is SocketTimeoutException) {
+                showNetworkErrorHint()
+              }
+            } else {
+              showInfoSnackbar(rootView, if (exception.message.isNullOrEmpty()) {
+                getString(R.string.unknown_error)
+              } else exception.message, Snackbar.LENGTH_LONG)
+            }
+          }
+        }
+      }
+    })
+  }
+
   private fun showNetworkErrorHint() {
     showSnackbar(rootView, getString(R.string.network_error_please_retry), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
-      LoaderManager.getInstance(this@AddNewAccountManuallyActivity)
-          .restartLoader(R.id.loader_id_check_email_settings, null, this@AddNewAccountManuallyActivity)
+      authCreds?.let {
+        checkEmailSettingsAsyncTaskLoader.check(it)
+      }
     })
   }
 
