@@ -5,8 +5,11 @@
 
 package com.flowcrypt.email.util
 
+import org.apache.commons.io.FilenameUtils
 import java.io.File
 import java.io.IOException
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 /**
  * This class describes methods for a work with files and directories.
@@ -93,5 +96,54 @@ class FileAndDirectoryUtils {
         arrayOf()
       }
     }
+
+    /**
+     * Generate a filename which is based on the following strategy: if a file with the given
+     * name is exist we add a suffix like '(1)' to the and of the file.
+     *
+     * @param directory The input directory.
+     * @param fileName The input filename.
+     * @return created file.
+     */
+    fun createFileWithIncreasedIndex(directory: File?, fileName: String): File {
+      val patternWithIndex: Pattern = Pattern.compile("((?<Left>\\()(?<Digits>\\d+)(?<Right>\\))(?<Ext>(\\.\\w+)*|\\.+))\$",
+          Pattern.CASE_INSENSITIVE)
+      val matcherWithIndex: Matcher = patternWithIndex.matcher(fileName)
+      if (matcherWithIndex.find()) {
+        val newIndex = (matcherWithIndex.group(3)?.toInt() ?: 0) + 1
+        val newFileName: String = matcherWithIndex.replaceFirst("\$2$newIndex\$4\$5")
+
+        val newFile = File(directory, newFileName)
+        return if (newFile.exists()) {
+          createFileWithIncreasedIndex(directory, newFileName)
+        } else {
+          newFile
+        }
+      } else {
+        val baseFileName = FilenameUtils.getBaseName(fileName) ?: ""
+        val fileExtension = FilenameUtils.getExtension(fileName) ?: ""
+        val fileExtensionWithDot = if (fileExtension.isNotEmpty()) {
+          FilenameUtils.EXTENSION_SEPARATOR + fileExtension
+        } else ""
+        val newFileName = "$baseFileName(1)$fileExtensionWithDot"
+        val newFile = File(directory, newFileName)
+
+        return if (newFile.exists()) {
+          createFileWithIncreasedIndex(directory, newFileName)
+        } else {
+          newFile
+        }
+      }
+    }
+
+    /**
+     * Normalize the given filename. We leave only letters, digits and chars: '.', '_', '-'
+     *
+     * @param fileName The input filename.
+     * @return normalized file name.
+     */
+    fun normalizeFileName(fileName: String?) =
+        fileName?.replace("[^\\w._-]".toRegex(), "")
+
   }
 }
