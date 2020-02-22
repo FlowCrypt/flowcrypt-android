@@ -212,6 +212,14 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
+          val tempTableName = "messages_temp"
+          database.execSQL("CREATE TEMP TABLE IF NOT EXISTS $tempTableName AS SELECT * FROM messages;")
+          database.execSQL("DROP TABLE IF EXISTS messages;")
+          database.execSQL("CREATE TABLE messages (_id INTEGER PRIMARY KEY AUTOINCREMENT, email VARCHAR(100) NOT NULL, folder TEXT NOT NULL, uid INTEGER NOT NULL, received_date INTEGER DEFAULT NULL, sent_date INTEGER DEFAULT NULL, from_address TEXT DEFAULT NULL, to_address TEXT DEFAULT NULL, cc_address TEXT DEFAULT NULL, subject TEXT DEFAULT NULL, flags TEXT DEFAULT NULL, raw_message_without_attachments TEXT DEFAULT NULL, is_message_has_attachments INTEGER DEFAULT 0, is_encrypted INTEGER DEFAULT -1, is_new INTEGER DEFAULT -1 )")
+          database.execSQL("CREATE INDEX email_in_messages ON messages (email)")
+          database.execSQL("CREATE UNIQUE INDEX email_uid_folder_in_messages ON messages (email, uid, folder)")
+          database.execSQL("INSERT INTO messages SELECT * FROM $tempTableName;")
+          database.execSQL("DROP TABLE IF EXISTS $tempTableName;")
           database.execSQL("ALTER TABLE messages ADD COLUMN state INTEGER DEFAULT -1;")
           database.setTransactionSuccessful()
         } finally {
