@@ -26,7 +26,7 @@ data class AttachmentInfo constructor(var rawData: String? = null,
                                       var fwdUid: Int = 0,
                                       var name: String? = null,
                                       var encodedSize: Long = 0,
-                                      var type: String? = Constants.MIME_TYPE_BINARY_DATA,
+                                      var type: String = Constants.MIME_TYPE_BINARY_DATA,
                                       var id: String? = null,
                                       var path: String = "0",
                                       var uri: Uri? = null,
@@ -37,7 +37,7 @@ data class AttachmentInfo constructor(var rawData: String? = null,
                                       var orderNumber: Int = 0) : Parcelable {
 
   val uniqueStringId: String
-    get() = uid.toString() + "_" + id
+    get() = uid.toString() + "_" + id + "_" + path
 
   fun copy(newFolder: String): AttachmentInfo {
     return copy(folder = newFolder, uid = 0, fwdFolder = this.folder, fwdUid = this.uid, orderNumber = 0)
@@ -52,7 +52,7 @@ data class AttachmentInfo constructor(var rawData: String? = null,
       source.readInt(),
       source.readString(),
       source.readLong(),
-      source.readString(),
+      source.readString()!!,
       source.readString(),
       source.readString()!!,
       source.readParcelable(Uri::class.java.classLoader),

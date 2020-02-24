@@ -26,7 +26,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.JobIdManager
@@ -132,7 +132,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             }
           }
 
-          addAttsToCache(outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir)
+          addAttsToCache(roomDatabase, outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir)
         }
 
         if (CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)) {
@@ -201,13 +201,15 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     )
   }
 
-  private fun addAttsToCache(msgInfo: OutgoingMessageInfo, uid: Long, pubKeys: List<String>?, attsCacheDir: File) {
-    val attDaoSource = AttachmentDaoSource()
+  private fun addAttsToCache(roomDatabase: FlowCryptRoomDatabase, msgInfo: OutgoingMessageInfo,
+                             uid: Long, pubKeys: List<String>?, attsCacheDir: File) {
     val cachedAtts = ArrayList<AttachmentInfo>()
 
     val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-    if (!CollectionUtils.isEmpty(msgInfo.atts)) {
-      for (att in msgInfo.atts!!) {
+    if (msgInfo.atts?.isNotEmpty() == true) {
+      val outgoingAtts = msgInfo.atts.map { it.apply { this.uid = uid.toInt() } }
+
+      for (att in outgoingAtts) {
         if (TextUtils.isEmpty(att.type)) {
           att.type = Constants.MIME_TYPE_BINARY_DATA
         }
@@ -285,7 +287,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       }
     }
 
-    attDaoSource.addRows(this, account!!.email, JavaEmailConstants.FOLDER_OUTBOX, uid, cachedAtts)
+    roomDatabase.attachmentDao().insert(cachedAtts.mapNotNull { AttachmentEntity.fromAttInfo(it) })
   }
 
   private fun setupIfNeeded() {

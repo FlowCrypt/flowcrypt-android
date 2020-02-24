@@ -10,7 +10,6 @@ import android.app.job.JobParameters
 import android.app.job.JobScheduler
 import android.app.job.JobService
 import android.content.ComponentName
-import android.content.ContentValues
 import android.content.Context
 import android.os.AsyncTask
 import android.util.Log
@@ -28,7 +27,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -164,7 +163,6 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
 
     private fun downloadForwardedAtts(context: Context, account: AccountDao) {
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      val attDaoSource = AttachmentDaoSource()
 
       while (true) {
         val detailsList = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
@@ -184,7 +182,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
                 account, senderEmail)
           }
 
-          val atts = attDaoSource.getAttInfoList(context, account.email,
+          val atts = roomDatabase.attachmentDao().getAttachments(account.email,
               JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
 
           if (CollectionUtils.isEmpty(atts)) {
@@ -192,7 +190,8 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
             continue
           }
 
-          val msgState = getNewMsgState(context, attDaoSource, msgEntity, msgAttsDir, pubKeys, atts)
+          val msgState = getNewMsgState(context, roomDatabase, msgEntity,
+              msgAttsDir, pubKeys, atts)
 
           val updateResult = roomDatabase.msgDao().update(msgEntity.copy(state = msgState.value))
           if (updateResult > 0) {
@@ -210,36 +209,38 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
       }
     }
 
-    private fun getNewMsgState(context: Context, attDaoSource: AttachmentDaoSource,
+    private fun getNewMsgState(context: Context, roomDatabase: FlowCryptRoomDatabase,
                                msgEntity: MessageEntity, msgAttsDir: File, pubKeys: List<String>?,
-                               atts: List<AttachmentInfo>): MessageState {
+                               atts: List<AttachmentEntity>): MessageState {
       var folder: IMAPFolder? = null
       var fwdMsg: Message? = null
 
       var msgState = MessageState.QUEUED
 
-      for (att in atts) {
-        if (!att.isForwarded) {
+      for (attachmentEntity in atts) {
+        val attInfo = attachmentEntity.toAttInfo()
+
+        if (!attInfo.isForwarded) {
           continue
         }
 
-        val attName = att.name ?: continue
+        val attName = attachmentEntity.name
 
         val attFile = File(msgAttsDir, attName)
         val exists = attFile.exists()
 
         if (exists) {
-          att.uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile)
-        } else if (att.uri == null) {
+          attInfo.uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile)
+        } else if (attInfo.uri == null) {
           FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir)
 
           if (folder == null) {
-            folder = store!!.getFolder(att.fwdFolder) as IMAPFolder
+            folder = store!!.getFolder(attInfo.fwdFolder) as IMAPFolder
             folder.open(Folder.READ_ONLY)
           }
 
           if (fwdMsg == null) {
-            fwdMsg = folder.getMessageByUID(att.fwdUid.toLong())
+            fwdMsg = folder.getMessageByUID(attInfo.fwdUid.toLong())
           }
 
           if (fwdMsg == null) {
@@ -247,17 +248,17 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
             break
           }
 
-          val part = ImapProtocolUtil.getAttPartByPath(fwdMsg, neededPath = att.path)
+          val part = ImapProtocolUtil.getAttPartByPath(fwdMsg, neededPath = attachmentEntity.path)
           val tempFile = File(fwdAttsCacheDir, UUID.randomUUID().toString())
 
           if (part != null) {
             val inputStream = part.inputStream
             if (inputStream != null) {
-              downloadFile(msgEntity, pubKeys, att, tempFile, inputStream)
+              downloadFile(msgEntity, pubKeys, attInfo, tempFile, inputStream)
 
               if (msgAttsDir.exists()) {
                 FileUtils.moveFile(tempFile, attFile)
-                att.uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile)
+                attInfo.uri = FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, attFile)
               } else {
                 FileAndDirectoryUtils.cleanDir(fwdAttsCacheDir)
                 //It means the user has already deleted the current message. We don't need
@@ -274,10 +275,9 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
           }
         }
 
-        if (att.uri != null) {
-          val contentValues = ContentValues()
-          contentValues.put(AttachmentDaoSource.COL_FILE_URI, att.uri!!.toString())
-          attDaoSource.update(context, att.email, att.folder, att.uid.toLong(), att.id!!, contentValues)
+        if (attInfo.uri != null) {
+          val updateCandidate = AttachmentEntity.fromAttInfo(attInfo)?.copy(id = attachmentEntity.id)
+          updateCandidate?.let { roomDatabase.attachmentDao().update(updateCandidate) }
         }
       }
       return msgState

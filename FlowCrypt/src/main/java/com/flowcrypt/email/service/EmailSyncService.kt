@@ -32,7 +32,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.model.EmailAndNamePair
@@ -237,6 +237,7 @@ class EmailSyncService : BaseService(), SyncListener {
     try {
       val email = account.email
       val folder = localFolder.fullName
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailSyncService)
 
       val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(this, email)
       val msgEntities = MessageEntity.genMessageEntities(
@@ -249,7 +250,7 @@ class EmailSyncService : BaseService(), SyncListener {
           areAllMsgsEncrypted = isEncryptedModeEnabled
       )
 
-      FlowCryptRoomDatabase.getDatabase(this@EmailSyncService).msgDao().insertWithReplace(msgEntities)
+      roomDatabase.msgDao().insertWithReplace(msgEntities)
 
       if (!isEncryptedModeEnabled) {
         emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)
@@ -263,14 +264,22 @@ class EmailSyncService : BaseService(), SyncListener {
 
       try {
         //we should handle any exceptions here to prevent showing messages
-        val attDaoSource = AttachmentDaoSource()
         val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
+        val attachments = mutableListOf<AttachmentEntity>()
         for (msg in msgs) {
           if (remoteFolder.getUID(msg) in savedMsgUIDsSet) {
-            attDaoSource.updateAttsTable(this, account.email, localFolder.fullName, remoteFolder.getUID(msg), msg)
+            val uid = remoteFolder.getUID(msg)
+            attachments.addAll(EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
+              AttachmentEntity.fromAttInfo(it.apply {
+                this.email = account.email
+                this.folder = localFolder.fullName
+                this.uid = uid.toInt()
+              })
+            })
           }
         }
 
+        roomDatabase.attachmentDao().insertWithReplace(attachments)
         updateLocalContactsIfNeeded(remoteFolder, msgs)
       } catch (e: Exception) {
         e.printStackTrace()

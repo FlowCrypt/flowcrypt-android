@@ -373,8 +373,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     updateViews()
   }
 
-  fun updateAttInfos(attInfoList: ArrayList<AttachmentInfo>) {
-    this.atts = attInfoList
+  fun updateAttInfos(attInfoList: List<AttachmentInfo>) {
+    this.atts.addAll(attInfoList)
     showAttsIfTheyExist()
   }
 
