@@ -17,17 +17,17 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
  * E-mail: DenBond7@gmail.com
  */
 @Dao
-abstract class AttachmentDao : BaseDao<AttachmentEntity> {
+interface AttachmentDao : BaseDao<AttachmentEntity> {
 
   @Query("DELETE FROM attachment WHERE email = :email AND folder = :label")
-  abstract suspend fun delete(email: String?, label: String?): Int
+  suspend fun delete(email: String?, label: String?): Int
 
   @Query("SELECT * FROM attachment WHERE email = :account AND folder = :label AND uid = :uid")
-  abstract fun getAttachments(account: String, label: String, uid: Long): List<AttachmentEntity>
+  fun getAttachments(account: String, label: String, uid: Long): List<AttachmentEntity>
 
   @Query("SELECT * FROM attachment WHERE email = :account AND folder = :label AND uid = :uid")
-  abstract fun getAttachmentsLD(account: String, label: String, uid: Long): LiveData<List<AttachmentEntity>>
+  fun getAttachmentsLD(account: String, label: String, uid: Long): LiveData<List<AttachmentEntity>>
 
   @Query("DELETE FROM attachment WHERE email = :account AND folder = :label AND uid = :uid")
-  abstract fun delete(account: String, label: String, uid: Long): Int
+  fun delete(account: String, label: String, uid: Long): Int
 }
