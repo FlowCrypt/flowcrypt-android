@@ -87,13 +87,13 @@ object ExceptionResolver {
         || e is SSLProtocolException
         || e is MessagingException) {
       e.message?.let {
-        if (e.message!!.contains("Connection closed by peer")
-            || e.message!!.contains("I/O error during system call")
-            || e.message!!.contains("Failure in SSL library, usually a protocol error")
-            || e.message!!.contains("Handshake failed")
-            || e.message!!.contains("Exception reading response")
-            || e.message!!.contains("connection failure")
-            || e.message!!.contains("Connection reset;")) {
+        if (it.contains("Connection closed by peer")
+            || it.contains("I/O error during system call")
+            || it.contains("Failure in SSL library, usually a protocol error")
+            || it.contains("Handshake failed")
+            || it.contains("Exception reading response")
+            || it.contains("connection failure")
+            || it.contains("Connection reset;")) {
           return false
         }
       }
@@ -110,6 +110,10 @@ object ExceptionResolver {
       }
 
       if ("* BYE System Error".equals(e.message, ignoreCase = true)) {
+        return false
+      }
+
+      if ("Error reading input stream;".equals(e.message, ignoreCase = true)) {
         return false
       }
     }
