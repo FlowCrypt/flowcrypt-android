@@ -6,7 +6,7 @@
 package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDao
+import com.flowcrypt.email.database.dao.AttachmentDao
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
