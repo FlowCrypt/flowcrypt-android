@@ -18,7 +18,7 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
  * E-mail: DenBond7@gmail.com
  */
 @Dao
-abstract class AttachmentDaoSource : BaseDao<AttachmentEntity> {
+abstract class AttachmentDao : BaseDao<AttachmentEntity> {
 
   @Query("DELETE FROM attachment WHERE email = :email AND folder = :label")
   abstract suspend fun delete(email: String?, label: String?): Int

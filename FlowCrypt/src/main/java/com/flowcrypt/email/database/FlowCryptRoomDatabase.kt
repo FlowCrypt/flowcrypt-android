@@ -22,7 +22,7 @@ import com.flowcrypt.email.database.dao.source.AccountAliasesDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
+import com.flowcrypt.email.database.dao.source.imap.AttachmentDao
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
@@ -62,7 +62,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   abstract fun accountDao(): AccountDao
 
-  abstract fun attachmentDao(): AttachmentDaoSource
+  abstract fun attachmentDao(): AttachmentDao
 
   abstract fun labelDao(): LabelDao
 
