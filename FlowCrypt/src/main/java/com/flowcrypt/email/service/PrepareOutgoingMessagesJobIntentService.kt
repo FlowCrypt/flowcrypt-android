@@ -207,7 +207,13 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
     val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
     if (msgInfo.atts?.isNotEmpty() == true) {
-      val outgoingAtts = msgInfo.atts.map { it.apply { this.uid = uid.toInt() } }
+      val outgoingAtts = msgInfo.atts.map {
+        it.apply {
+          this.email = account?.email
+          this.folder = JavaEmailConstants.FOLDER_OUTBOX
+          this.uid = uid.toInt()
+        }
+      }
 
       for (att in outgoingAtts) {
         if (TextUtils.isEmpty(att.type)) {
