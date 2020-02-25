@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.entity.AttachmentEntity
+import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.FetchProfile
 import javax.mail.Folder
@@ -52,7 +53,8 @@ class LoadAttsInfoSyncTask(ownerKey: String,
     val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
       AttachmentEntity.fromAttInfo(it.apply {
         email = account.email
-        folder = localFolder.fullName
+        folder = if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else
+          SearchMessagesActivity.SEARCH_FOLDER_NAME
         uid = msgUid.toInt()
       })
     }
