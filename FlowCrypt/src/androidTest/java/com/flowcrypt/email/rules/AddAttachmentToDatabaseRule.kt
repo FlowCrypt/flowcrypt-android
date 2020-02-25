@@ -6,7 +6,8 @@
 package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.database.dao.AttachmentDao
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
@@ -28,6 +29,8 @@ class AddAttachmentToDatabaseRule(val attInfo: AttachmentInfo) : BaseRule() {
   }
 
   private fun saveAttToDatabase() {
-    AttachmentDao().addRow(targetContext, attInfo)
+    AttachmentEntity.fromAttInfo(attInfo)?.let {
+      FlowCryptRoomDatabase.getDatabase(targetContext).attachmentDao().insert(it)
+    }
   }
 }

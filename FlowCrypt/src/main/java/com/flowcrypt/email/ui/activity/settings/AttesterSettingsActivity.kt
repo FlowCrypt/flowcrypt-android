@@ -6,8 +6,10 @@
 package com.flowcrypt.email.ui.activity.settings
 
 import android.view.View
+import androidx.annotation.VisibleForTesting
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
+import com.flowcrypt.email.util.idling.SingleIdlingResources
 
 /**
  * Basically, this Activity gets all known addresses of the user, and then submits one call with all addresses to
@@ -25,4 +27,7 @@ class AttesterSettingsActivity : BaseBackStackActivity() {
 
   override val rootView: View
     get() = findViewById(R.id.attesterSettingsFragment)
+
+  @get:VisibleForTesting
+  val idlingForAttester: SingleIdlingResources = SingleIdlingResources(false)
 }

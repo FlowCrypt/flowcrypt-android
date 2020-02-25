@@ -19,7 +19,9 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.jetpack.viewmodel.AccountKeysInfoViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
+import com.flowcrypt.email.ui.activity.settings.AttesterSettingsActivity
 import com.flowcrypt.email.ui.adapter.AttesterKeyAdapter
+import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.material.snackbar.Snackbar
 
 /**
@@ -43,6 +45,11 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
   private var sRL: SwipeRefreshLayout? = null
   private val accountKeysInfoViewModel: AccountKeysInfoViewModel by viewModels()
   private lateinit var attesterKeyAdapter: AttesterKeyAdapter
+
+  private val idlingForAttester: SingleIdlingResources?
+    get() {
+      return (activity as? AttesterSettingsActivity)?.idlingForAttester
+    }
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
@@ -78,11 +85,15 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
     accountKeysInfoViewModel.accountKeysInfoLiveData.observe(viewLifecycleOwner, Observer {
       it?.let {
         when (it.status) {
-          Result.Status.LOADING -> if (sRL?.isRefreshing != true) {
-            showProgress()
-          } else return@let
+          Result.Status.LOADING -> {
+            idlingForAttester?.setIdleState(false)
+            if (sRL?.isRefreshing != true) {
+              showProgress()
+            } else return@let
+          }
 
           Result.Status.SUCCESS -> {
+            idlingForAttester?.setIdleState(true)
             sRL?.isRefreshing = false
             it.data?.results?.let { responses ->
               if (responses.isNotEmpty()) {
@@ -95,6 +106,7 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
           }
 
           Result.Status.ERROR -> {
+            idlingForAttester?.setIdleState(true)
             sRL?.isRefreshing = false
             showStatus(it.data?.apiError?.msg ?: getString(R.string.unknown_error))
             showSnackbar(contentView, getString(R.string.an_error_has_occurred),
@@ -104,6 +116,7 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
           }
 
           Result.Status.EXCEPTION -> {
+            idlingForAttester?.setIdleState(true)
             sRL?.isRefreshing = false
             showStatus(it.exception?.message ?: getString(R.string.unknown_error))
             showSnackbar(contentView, getString(R.string.an_error_has_occurred),

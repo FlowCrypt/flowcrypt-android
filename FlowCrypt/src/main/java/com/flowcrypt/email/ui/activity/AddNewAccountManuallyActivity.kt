@@ -20,6 +20,7 @@ import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
@@ -43,6 +44,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
@@ -85,6 +87,8 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   private var isSmtpSpinnerRestored: Boolean = false
 
   private val checkEmailSettingsViewModel: CheckEmailSettingsViewModel by viewModels()
+  @get:VisibleForTesting
+  val idlingForEmailSettings: SingleIdlingResources = SingleIdlingResources()
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = true
@@ -300,7 +304,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       R.id.spinnerSmtpSecyrityType -> {
         val (_, _, _, defSmtpPort) = parent.adapter.getItem(position) as SecurityType
         if (isSmtpSpinnerRestored) {
-          editTextSmtpPort!!.setText(defSmtpPort.toString())
+          editTextSmtpPort?.setText(defSmtpPort.toString())
         } else {
           isSmtpSpinnerRestored = true
         }
@@ -414,9 +418,13 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     checkEmailSettingsViewModel.checkEmailSettingsLiveData.observe(this, Observer {
       it?.let {
         when (it.status) {
-          Result.Status.LOADING -> UIUtil.exchangeViewVisibility(true, progressView, rootView)
+          Result.Status.LOADING -> {
+            idlingForEmailSettings.setIdleState(false)
+            UIUtil.exchangeViewVisibility(true, progressView, rootView)
+          }
 
           Result.Status.SUCCESS -> {
+            idlingForEmailSettings.setIdleState(true)
             val isCorrect = it.data
             if (isCorrect == true) {
               LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
@@ -427,6 +435,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            idlingForEmailSettings.setIdleState(true)
             UIUtil.exchangeViewVisibility(false, progressView, rootView)
             val exception = it.exception ?: return@let
             val original = it.exception.cause
@@ -462,6 +471,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     showSnackbar(rootView, getString(R.string.network_error_please_retry), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
       authCreds?.let {
+        idlingForEmailSettings.setIdleState(false)
         checkEmailSettingsViewModel.check(it)
       }
     })
