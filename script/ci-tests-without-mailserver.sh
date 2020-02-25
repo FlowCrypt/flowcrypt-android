@@ -1,4 +1,4 @@
 #!/bin/bash
 
-./gradlew :FlowCrypt:testDevTestDebugUnitTest
+./gradlew :FlowCrypt:connectedDevTestDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.annotation=com.flowcrypt.email.DoesNotNeedMailserver
 
