@@ -39,8 +39,8 @@ data class AttachmentInfo constructor(var rawData: String? = null,
   val uniqueStringId: String
     get() = uid.toString() + "_" + id + "_" + path
 
-  fun copy(newFolder: String): AttachmentInfo {
-    return copy(folder = newFolder, uid = 0, fwdFolder = this.folder, fwdUid = this.uid, orderNumber = 0)
+  fun copy(newFolder: String, newUid: Int): AttachmentInfo {
+    return copy(folder = newFolder, uid = newUid, fwdFolder = this.folder, fwdUid = this.uid, orderNumber = 0)
   }
 
   constructor(source: Parcel) : this(
