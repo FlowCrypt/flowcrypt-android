@@ -11,11 +11,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.viewModels
+import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.Observer
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
@@ -24,7 +27,7 @@ import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
 import com.flowcrypt.email.ui.loader.SaveBackupToInboxAsyncTaskLoader
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.UIUtil
-import java.util.*
+import com.flowcrypt.email.util.idling.SingleIdlingResources
 
 /**
  * This activity describes a logic of changing the pass phrase of all imported private keys of an active account.
@@ -35,6 +38,10 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.LoaderCallbacks<LoaderResult> {
+  private val privateKeysViewModel: LoadPrivateKeysFromMailAsyncTaskLoader by viewModels()
+
+  @get:VisibleForTesting
+  val idlingForFetchingKeys: SingleIdlingResources = SingleIdlingResources()
 
   override fun onConfirmPassPhraseSuccess() {
     LoaderManager.getInstance(this).restartLoader(R.id.loader_id_change_pass_phrase, null, this)
@@ -43,6 +50,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     SystemNotificationManager(this).cancel(SystemNotificationManager.NOTIFICATION_ID_PASSPHRASE_TOO_WEAK)
+    setupPrivateKeysViewModel()
   }
 
   override fun onBackPressed() {
@@ -96,8 +104,6 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
         ChangePassPhraseAsyncTaskLoader(this, account!!, editTextKeyPassword.text.toString())
       }
 
-      R.id.loader_id_load_private_key_backups_from_email -> LoadPrivateKeysFromMailAsyncTaskLoader(this, account!!)
-
       R.id.loader_id_save_backup_to_inbox -> SaveBackupToInboxAsyncTaskLoader(this, account!!)
 
       else -> Loader(this)
@@ -111,7 +117,6 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
   override fun onLoaderReset(loader: Loader<LoaderResult>) {
     when (loader.id) {
       R.id.loader_id_change_pass_phrase,
-      R.id.loader_id_load_private_key_backups_from_email,
       R.id.loader_id_save_backup_to_inbox -> isBackEnabled = true
     }
   }
@@ -127,16 +132,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
           setResult(Activity.RESULT_OK)
           finish()
         } else {
-          LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
-        }
-      }
-
-      R.id.loader_id_load_private_key_backups_from_email -> {
-        val keyDetailsList = result as ArrayList<KeyDetails>?
-        if (keyDetailsList!!.isEmpty()) {
-          runBackupKeysActivity()
-        } else {
-          LoaderManager.getInstance(this).initLoader(R.id.loader_id_save_backup_to_inbox, null, this)
+          account?.let { privateKeysViewModel.fetchAvailableKeys(it) }
         }
       }
 
@@ -160,7 +156,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
         showInfoSnackbar(rootView, e!!.message)
       }
 
-      R.id.loader_id_load_private_key_backups_from_email, R.id.loader_id_save_backup_to_inbox -> runBackupKeysActivity()
+      R.id.loader_id_save_backup_to_inbox -> runBackupKeysActivity()
 
       else -> super.onError(loaderId, e)
     }
@@ -170,6 +166,34 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
     isBackEnabled = true
     Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show()
     startActivityForResult(Intent(this, BackupKeysActivity::class.java), REQUEST_CODE_BACKUP_WITH_OPTION)
+  }
+
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.privateKeysLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            idlingForFetchingKeys.setIdleState(false)
+          }
+
+          Result.Status.SUCCESS -> {
+            idlingForFetchingKeys.setIdleState(true)
+
+            val keyDetailsList = it.data
+            if (keyDetailsList?.isEmpty() == true) {
+              runBackupKeysActivity()
+            } else {
+              LoaderManager.getInstance(this).initLoader(R.id.loader_id_save_backup_to_inbox, null, this)
+            }
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            idlingForFetchingKeys.setIdleState(true)
+            runBackupKeysActivity()
+          }
+        }
+      }
+    })
   }
 
   companion object {

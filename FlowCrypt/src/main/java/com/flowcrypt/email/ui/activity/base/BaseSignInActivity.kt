@@ -10,6 +10,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.viewModels
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.R
@@ -18,19 +20,24 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity
 import com.flowcrypt.email.ui.activity.BaseNodeActivity
+import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
+import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import java.util.*
 
 /**
  * This activity will be a common point of a sign-in logic.
@@ -49,12 +56,17 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
   protected var uuid: String? = null
   protected var domainRules: List<String>? = null
 
+  protected val privateKeysViewModel: LoadPrivateKeysFromMailAsyncTaskLoader by viewModels()
+  @get:VisibleForTesting
+  val idlingForFetchingKeys: SingleIdlingResources = SingleIdlingResources()
+
   abstract val progressView: View?
 
   @JvmField
   protected var googleSignInAccount: GoogleSignInAccount? = null
 
   abstract fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?)
+  abstract fun onFetchKeysCompleted(keyDetailsList: ArrayList<NodeKeyDetails>?)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -67,6 +79,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
     client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
     initViews()
     setupEnterpriseViewModel()
+    setupPrivateKeysViewModel()
   }
 
   override fun onSaveInstanceState(outState: Bundle) {
@@ -182,6 +195,37 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
     }
 
     enterpriseDomainRulesViewModel.domainRulesLiveData.observe(this, observer)
+  }
+
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.privateKeysLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            idlingForFetchingKeys.setIdleState(false)
+            UIUtil.exchangeViewVisibility(true, progressView, rootView)
+          }
+
+          Result.Status.SUCCESS -> {
+            idlingForFetchingKeys.setIdleState(true)
+            onFetchKeysCompleted(it.data)
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            idlingForFetchingKeys.setIdleState(true)
+
+            UIUtil.exchangeViewVisibility(false, progressView, rootView)
+
+            if (it.exception is UserRecoverableAuthIOException) {
+              startActivityForResult(it.exception.intent, REQUEST_CODE_RESOLVE_SIGN_IN_ERROR)
+            } else {
+              UIUtil.showInfoSnackbar(rootView,
+                  it.exception?.message ?: getString(R.string.unknown_error))
+            }
+          }
+        }
+      }
+    })
   }
 
   companion object {

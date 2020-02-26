@@ -5,20 +5,25 @@
 
 package com.flowcrypt.email.ui.loader
 
-import android.content.Context
+import android.app.Application
 import android.text.TextUtils
-import androidx.loader.content.AsyncTaskLoader
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.SearchBackupsUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.jetpack.viewmodel.BaseAndroidViewModel
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.GoogleAuthException
 import com.sun.mail.imap.IMAPFolder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.*
 import javax.mail.Folder
@@ -34,55 +39,41 @@ import javax.mail.Store
  * Time: 22:28.
  * E-mail: DenBond7@gmail.com
  */
-class LoadPrivateKeysFromMailAsyncTaskLoader(context: Context,
-                                             private val account: AccountDao) : AsyncTaskLoader<LoaderResult>(context) {
-  private var data: LoaderResult? = null
-  private var isActionStarted: Boolean = false
-  private var isLoaderReset: Boolean = false
+class LoadPrivateKeysFromMailAsyncTaskLoader(application: Application) : BaseAndroidViewModel(application) {
+  val privateKeysLiveData = MutableLiveData<Result<ArrayList<NodeKeyDetails>?>>()
 
-  public override fun onStartLoading() {
-    if (data != null) {
-      deliverResult(data)
-    } else {
-      if (!isActionStarted) {
-        forceLoad()
-      }
+  fun fetchAvailableKeys(accountDao: AccountDao) {
+    viewModelScope.launch {
+      privateKeysLiveData.postValue(Result.loading())
+      val result = fetchKeys(accountDao)
+      privateKeysLiveData.postValue(result)
     }
   }
 
-  override fun loadInBackground(): LoaderResult? {
-    isActionStarted = true
-    val privateKeyDetailsList = ArrayList<NodeKeyDetails>()
+  private suspend fun fetchKeys(accountDao: AccountDao): Result<ArrayList<NodeKeyDetails>>? =
+      withContext(Dispatchers.IO) {
+        val privateKeyDetailsList = ArrayList<NodeKeyDetails>()
 
-    return try {
-      val session = OpenStoreHelper.getAccountSess(context, account)
+        try {
+          val session = OpenStoreHelper.getAccountSess(getApplication(), accountDao)
 
-      when (account.accountType) {
-        AccountDao.ACCOUNT_TYPE_GOOGLE ->
-          privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(context, account, session))
+          when (accountDao.accountType) {
+            AccountDao.ACCOUNT_TYPE_GOOGLE ->
+              privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(getApplication(), accountDao, session))
 
-        else -> privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(session))
+            else -> privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(session, accountDao))
+          }
+
+          Result.success(privateKeyDetailsList)
+        } catch (e: Exception) {
+          e.printStackTrace()
+          ExceptionUtil.handleError(e)
+          Result.exception(e, null)
+        }
       }
-      LoaderResult(privateKeyDetailsList, null)
-    } catch (e: Exception) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      LoaderResult(null, e)
-    }
-  }
-
-  override fun deliverResult(data: LoaderResult?) {
-    this.data = data
-    super.deliverResult(data)
-  }
-
-  override fun onReset() {
-    super.onReset()
-    this.isLoaderReset = true
-  }
 
   /**
-   * Get a list of [NodeKeyDetails] using the standard **JavaMail API**
+   * Get a list of [NodeKeyDetails] using the standard JavaMail API
    *
    * @param session A [Session] object.
    * @return A list of [NodeKeyDetails]
@@ -90,55 +81,48 @@ class LoadPrivateKeysFromMailAsyncTaskLoader(context: Context,
    * @throws IOException
    * @throws GoogleAuthException
    */
-  private fun getPrivateKeyBackupsUsingJavaMailAPI(session: Session): Collection<NodeKeyDetails> {
-    val details = ArrayList<NodeKeyDetails>()
-    var store: Store? = null
-    try {
-      store = OpenStoreHelper.openStore(context, account, session)
-      val folders = store.defaultFolder.list("*")
+  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(session: Session, accountDao: AccountDao):
+      Collection<NodeKeyDetails> =
+      withContext(Dispatchers.IO) {
+        val details = ArrayList<NodeKeyDetails>()
+        var store: Store? = null
+        try {
+          store = OpenStoreHelper.openStore(getApplication(), accountDao, session)
+          val folders = store.defaultFolder.list("*")
 
-      for (folder in folders) {
-        val containsNoSelectAttr = EmailUtil.containsNoSelectAttr(folder as IMAPFolder)
-        if (!isLoadInBackgroundCanceled && !isLoaderReset && !containsNoSelectAttr) {
-          folder.open(Folder.READ_ONLY)
+          for (folder in folders) {
+            val containsNoSelectAttr = EmailUtil.containsNoSelectAttr(folder as IMAPFolder)
+            if (!containsNoSelectAttr) {
+              folder.open(Folder.READ_ONLY)
 
-          val foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(account.email))
+              val foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(accountDao.email))
 
-          for (message in foundMsgs) {
-            val backup = EmailUtil.getKeyFromMimeMsg(message)
+              for (message in foundMsgs) {
+                val backup = EmailUtil.getKeyFromMimeMsg(message)
 
-            if (TextUtils.isEmpty(backup)) {
-              continue
+                if (TextUtils.isEmpty(backup)) {
+                  continue
+                }
+
+                try {
+                  details.addAll(NodeCallsExecutor.parseKeys(backup))
+                } catch (e: NodeException) {
+                  e.printStackTrace()
+                  ExceptionUtil.handleError(e)
+                }
+              }
+
+              folder.close(false)
             }
-
-            try {
-              details.addAll(NodeCallsExecutor.parseKeys(backup))
-            } catch (e: NodeException) {
-              e.printStackTrace()
-              ExceptionUtil.handleError(e)
-            }
-
           }
 
-          folder.close(false)
+          store.close()
+        } catch (e: Exception) {
+          e.printStackTrace()
+          store?.close()
+          throw e
         }
+
+        return@withContext details
       }
-
-      store.close()
-    } catch (e: MessagingException) {
-      e.printStackTrace()
-      store?.close()
-      throw e
-    } catch (e: IOException) {
-      e.printStackTrace()
-      store?.close()
-      throw e
-    } catch (e: GoogleAuthException) {
-      e.printStackTrace()
-      store?.close()
-      throw e
-    }
-
-    return details
-  }
 }

@@ -11,8 +11,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.Loader
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AuthCredentials
@@ -22,21 +20,17 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.provider.FlowcryptContract
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
-import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import java.util.*
 
 /**
@@ -47,7 +41,7 @@ import java.util.*
  * Time: 14:50
  * E-mail: DenBond7@gmail.com
  */
-class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<LoaderResult> {
+class SignInActivity : BaseSignInActivity() {
 
   override val rootView: View
     get() = findViewById(R.id.signInView)
@@ -165,59 +159,6 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
 
       else -> super.onClick(v)
     }
-
-  }
-
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
-    return when (id) {
-      R.id.loader_id_load_private_key_backups_from_email -> {
-        isStartCheckKeysActivityEnabled = true
-
-        UIUtil.exchangeViewVisibility(true, progressView, rootView)
-        val account = AccountDao(googleSignInAccount!!, uuid, domainRules)
-        LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
-      }
-
-      else -> Loader(this)
-    }
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
-    when (loader.id) {
-      R.id.loader_id_load_private_key_backups_from_email -> if (loaderResult.result != null) {
-        val keyDetailsList = loaderResult.result as ArrayList<NodeKeyDetails>?
-        if (CollectionUtils.isEmpty(keyDetailsList)) {
-          if (googleSignInAccount != null) {
-            startService(Intent(this, CheckClipboardToFindKeyService::class.java))
-            val intent = CreateOrImportKeyActivity.newIntent(this, AccountDao
-            (googleSignInAccount!!, uuid, domainRules), true)
-            startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
-          }
-        } else if (isStartCheckKeysActivityEnabled) {
-          val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
-              keyDetailsList!!.size, keyDetailsList.size)
-          val positiveBtnTitle = getString(R.string.continue_)
-          val negativeBtnTitle = getString(R.string.use_another_account)
-          val intent = CheckKeysActivity.newIntent(context = this, privateKeys = keyDetailsList, type = KeyDetails.Type.EMAIL, subTitle = subTitle,
-              positiveBtnTitle = positiveBtnTitle, negativeBtnTitle = negativeBtnTitle)
-          startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
-        }
-      } else if (loaderResult.exception != null) {
-        UIUtil.exchangeViewVisibility(false, progressView, rootView)
-
-        if (loaderResult.exception is UserRecoverableAuthIOException) {
-          startActivityForResult((loaderResult.exception as UserRecoverableAuthIOException).intent,
-              REQUEST_CODE_RESOLVE_SIGN_IN_ERROR)
-        } else {
-          UIUtil.showInfoSnackbar(rootView, loaderResult.exception?.message ?: "")
-        }
-      }
-    }
-  }
-
-  override fun onLoaderReset(loader: Loader<LoaderResult>) {
-
   }
 
   override fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?) {
@@ -229,7 +170,29 @@ class SignInActivity : BaseSignInActivity(), LoaderManager.LoaderCallbacks<Loade
         startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
       }
     } else {
-      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
+      googleSignInAccount?.let {
+        isStartCheckKeysActivityEnabled = true
+        privateKeysViewModel.fetchAvailableKeys(AccountDao(it, uuid, domainRules))
+      }
+    }
+  }
+
+  override fun onFetchKeysCompleted(keyDetailsList: ArrayList<NodeKeyDetails>?) {
+    if (keyDetailsList.isNullOrEmpty()) {
+      googleSignInAccount?.let {
+        startService(Intent(this, CheckClipboardToFindKeyService::class.java))
+        val intent = CreateOrImportKeyActivity.newIntent(this,
+            AccountDao(it, uuid, domainRules), true)
+        startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
+      }
+    } else if (isStartCheckKeysActivityEnabled) {
+      val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key, keyDetailsList.size, keyDetailsList.size)
+      val positiveBtnTitle = getString(R.string.continue_)
+      val negativeBtnTitle = getString(R.string.use_another_account)
+      val intent = CheckKeysActivity.newIntent(context = this, privateKeys = keyDetailsList,
+          type = KeyDetails.Type.EMAIL, subTitle = subTitle, positiveBtnTitle = positiveBtnTitle,
+          negativeBtnTitle = negativeBtnTitle)
+      startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
     }
   }
 

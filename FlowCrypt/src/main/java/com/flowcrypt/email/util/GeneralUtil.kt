@@ -246,9 +246,9 @@ class GeneralUtil {
      * @param email The current email.
      * @return true if the email has valid format, otherwise false.
      */
-    @JvmStatic
-    fun isEmailValid(email: CharSequence): Boolean {
-      return !TextUtils.isEmpty(email) && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    fun isEmailValid(email: CharSequence?): Boolean {
+      return email?.isNotEmpty() == true && android.util.Patterns.EMAIL_ADDRESS.matcher(email)
+          .matches()
     }
 
     /**
