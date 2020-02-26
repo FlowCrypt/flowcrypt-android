@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.loader
+package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.text.TextUtils
@@ -16,7 +16,6 @@ import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.jetpack.viewmodel.BaseAndroidViewModel
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.GoogleAuthException

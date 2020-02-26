@@ -19,11 +19,11 @@ import androidx.loader.content.Loader
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.loader.ChangePassPhraseAsyncTaskLoader
-import com.flowcrypt.email.ui.loader.LoadPrivateKeysViewModel
 import com.flowcrypt.email.ui.loader.SaveBackupToInboxAsyncTaskLoader
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.UIUtil
