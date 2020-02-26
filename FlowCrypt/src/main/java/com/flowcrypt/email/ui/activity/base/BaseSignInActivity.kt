@@ -25,7 +25,7 @@ import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity
 import com.flowcrypt.email.ui.activity.BaseNodeActivity
-import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
+import com.flowcrypt.email.ui.loader.LoadPrivateKeysViewModel
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
@@ -56,7 +56,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
   protected var uuid: String? = null
   protected var domainRules: List<String>? = null
 
-  protected val privateKeysViewModel: LoadPrivateKeysFromMailAsyncTaskLoader by viewModels()
+  protected val privateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
   @get:VisibleForTesting
   val idlingForFetchingKeys: SingleIdlingResources = SingleIdlingResources()
 

@@ -36,7 +36,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.jetpack.viewmodel.CheckEmailSettingsViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
+import com.flowcrypt.email.ui.loader.LoadPrivateKeysViewModel
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.UIUtil
@@ -84,7 +84,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   private var isSmtpSpinnerRestored: Boolean = false
 
   private val checkEmailSettingsViewModel: CheckEmailSettingsViewModel by viewModels()
-  private val privateKeysViewModel: LoadPrivateKeysFromMailAsyncTaskLoader by viewModels()
+  private val privateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
 
   @get:VisibleForTesting
   val idlingForEmailSettings: SingleIdlingResources = SingleIdlingResources()

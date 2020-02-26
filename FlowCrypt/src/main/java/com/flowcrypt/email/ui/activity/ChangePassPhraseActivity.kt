@@ -23,7 +23,7 @@ import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.loader.ChangePassPhraseAsyncTaskLoader
-import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
+import com.flowcrypt.email.ui.loader.LoadPrivateKeysViewModel
 import com.flowcrypt.email.ui.loader.SaveBackupToInboxAsyncTaskLoader
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.UIUtil
@@ -38,7 +38,7 @@ import com.flowcrypt.email.util.idling.SingleIdlingResources
  * E-mail: DenBond7@gmail.com
  */
 class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.LoaderCallbacks<LoaderResult> {
-  private val privateKeysViewModel: LoadPrivateKeysFromMailAsyncTaskLoader by viewModels()
+  private val privateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
 
   @get:VisibleForTesting
   val idlingForFetchingKeys: SingleIdlingResources = SingleIdlingResources()

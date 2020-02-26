@@ -39,7 +39,7 @@ import javax.mail.Store
  * Time: 22:28.
  * E-mail: DenBond7@gmail.com
  */
-class LoadPrivateKeysFromMailAsyncTaskLoader(application: Application) : BaseAndroidViewModel(application) {
+class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
   val privateKeysLiveData = MutableLiveData<Result<ArrayList<NodeKeyDetails>?>>()
 
   fun fetchAvailableKeys(accountDao: AccountDao) {
