@@ -79,7 +79,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   fun registerIdling() {
     val activity = activityTestRule?.activity ?: return
     if (activity is AddNewAccountManuallyActivity) {
-      IdlingRegistry.getInstance().register(activity.idlingForEmailSettings)
+      IdlingRegistry.getInstance().register(activity.idlingForFetchingPrivateKeys)
     }
   }
 
@@ -87,7 +87,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   fun unregisterIdling() {
     val activity = activityTestRule?.activity ?: return
     if (activity is AddNewAccountManuallyActivity) {
-      IdlingRegistry.getInstance().unregister(activity.idlingForEmailSettings)
+      IdlingRegistry.getInstance().unregister(activity.idlingForFetchingPrivateKeys)
     }
   }
 

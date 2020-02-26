@@ -87,10 +87,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   private val privateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
 
   @get:VisibleForTesting
-  val idlingForEmailSettings: SingleIdlingResources = SingleIdlingResources()
-
-  @get:VisibleForTesting
-  val idlingForFetchingKeys: SingleIdlingResources = SingleIdlingResources()
+  val idlingForFetchingPrivateKeys: SingleIdlingResources = SingleIdlingResources()
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = true
@@ -266,12 +263,11 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            idlingForEmailSettings.setIdleState(false)
+            idlingForFetchingPrivateKeys.setIdleState(false)
             UIUtil.exchangeViewVisibility(true, progressView, rootView)
           }
 
           Result.Status.SUCCESS -> {
-            idlingForEmailSettings.setIdleState(true)
             val isCorrect = it.data
             if (isCorrect == true) {
               authCreds?.let { authCredentials ->
@@ -280,13 +276,14 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
                 privateKeysViewModel.fetchAvailableKeys(account)
               }
             } else {
+              idlingForFetchingPrivateKeys.setIdleState(true)
               UIUtil.exchangeViewVisibility(false, progressView, rootView)
               showInfoSnackbar(rootView, getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG)
             }
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            idlingForEmailSettings.setIdleState(true)
+            idlingForFetchingPrivateKeys.setIdleState(true)
             UIUtil.exchangeViewVisibility(false, progressView, rootView)
             val exception = it.exception ?: return@let
             val original = it.exception.cause
@@ -323,12 +320,11 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            idlingForFetchingKeys.setIdleState(false)
             UIUtil.exchangeViewVisibility(true, progressView, rootView)
           }
 
           Result.Status.SUCCESS -> {
-            idlingForFetchingKeys.setIdleState(true)
+            idlingForFetchingPrivateKeys.setIdleState(true)
 
             val keyDetailsList = it.data
             if (CollectionUtils.isEmpty(keyDetailsList)) {
@@ -347,7 +343,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            idlingForFetchingKeys.setIdleState(true)
+            idlingForFetchingPrivateKeys.setIdleState(true)
             UIUtil.exchangeViewVisibility(false, progressView, rootView)
             showInfoSnackbar(rootView, it.exception?.message ?: getString(R.string
                 .unknown_error), Snackbar.LENGTH_LONG)
