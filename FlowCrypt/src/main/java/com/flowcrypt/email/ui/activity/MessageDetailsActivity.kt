@@ -268,7 +268,13 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
       var isUpdateEnabled = true
 
       override fun onChanged(list: List<AttachmentEntity>) {
-        val attachmentInfoList = list.map { it.toAttInfo() }.toMutableList()
+        val attachmentInfoList = list.map {
+          if (localFolder.searchQuery.isNullOrEmpty()) {
+            it.toAttInfo()
+          } else {
+            it.toAttInfo().copy(folder = localFolder.fullName)
+          }
+        }.toMutableList()
         if (isUpdateEnabled) {
           if (attachmentInfoList.isNotEmpty()) {
             updateAtts(attachmentInfoList)
