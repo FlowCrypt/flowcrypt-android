@@ -49,7 +49,7 @@ class TwoWayDialogFragment : DialogFragment() {
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val dialogBuilder = AlertDialog.Builder(context!!)
+    val dialogBuilder = AlertDialog.Builder(requireContext())
 
     dialogBuilder.setTitle(dialogTitle)
     dialogBuilder.setMessage(dialogMsg)

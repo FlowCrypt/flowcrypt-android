@@ -59,7 +59,7 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val dialog = AlertDialog.Builder(activity!!)
+    val dialog = AlertDialog.Builder(requireActivity())
     dialog.setTitle(dialogTitle)
     dialog.setMessage(if (hasHtml) UIUtil.getHtmlSpannedFromText(dialogMsg!!) else dialogMsg)
     dialog.setPositiveButton(buttonTitle, this)
@@ -76,7 +76,7 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
         }
 
         if (isPopBackStack) {
-          val fragmentManager = activity!!.supportFragmentManager
+          val fragmentManager = requireActivity().supportFragmentManager
           fragmentManager.popBackStackImmediate()
         }
       }

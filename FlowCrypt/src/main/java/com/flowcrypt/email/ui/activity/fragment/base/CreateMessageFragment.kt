@@ -506,21 +506,21 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         pgpContactsTo?.clear()
         progressBarTo?.visibility = View.VISIBLE
         isUpdateToCompleted = false
-        return UpdateInfoAboutPgpContactsAsyncTaskLoader(context!!, recipientsTo!!.chipAndTokenValues)
+        return UpdateInfoAboutPgpContactsAsyncTaskLoader(requireContext(), recipientsTo!!.chipAndTokenValues)
       }
 
       R.id.loader_id_load_info_about_pgp_contacts_cc -> {
         pgpContactsCc?.clear()
         progressBarCc?.visibility = View.VISIBLE
         isUpdateCcCompleted = false
-        return UpdateInfoAboutPgpContactsAsyncTaskLoader(context!!, recipientsCc!!.chipAndTokenValues)
+        return UpdateInfoAboutPgpContactsAsyncTaskLoader(requireContext(), recipientsCc!!.chipAndTokenValues)
       }
 
       R.id.loader_id_load_info_about_pgp_contacts_bcc -> {
         pgpContactsBcc?.clear()
         progressBarBcc?.visibility = View.VISIBLE
         isUpdateBccCompleted = false
-        return UpdateInfoAboutPgpContactsAsyncTaskLoader(context!!, recipientsBcc!!.chipAndTokenValues)
+        return UpdateInfoAboutPgpContactsAsyncTaskLoader(requireContext(), recipientsBcc!!.chipAndTokenValues)
       }
 
       else -> return super.onCreateLoader(id, args)
@@ -626,7 +626,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         editTextFrom?.setText(parent.adapter.getItem(position) as CharSequence)
         if (listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
           val adapter = parent.adapter as ArrayAdapter<*>
-          val colorGray = UIUtil.getColor(context!!, R.color.gray)
+          val colorGray = UIUtil.getColor(requireContext(), R.color.gray)
           editTextFrom?.setTextColor(if (adapter.isEnabled(position)) originalColor else colorGray)
         } else {
           editTextFrom?.setTextColor(originalColor)
@@ -672,7 +672,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           recipientsBcc?.onFocusChangeListener?.onFocusChange(recipientsBcc, false)
           fromAddrs?.setUseKeysInfo(true)
 
-          val colorGray = UIUtil.getColor(context!!, R.color.gray)
+          val colorGray = UIUtil.getColor(requireContext(), R.color.gray)
           val selectedItemPosition = spinnerFrom?.selectedItemPosition
           if (selectedItemPosition != null && selectedItemPosition != AdapterView.INVALID_POSITION
               && spinnerFrom?.adapter?.count ?: 0 > selectedItemPosition) {
@@ -713,10 +713,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       }
 
       if (!TextUtils.isEmpty(intent.action) && intent.action?.startsWith("android.intent.action") == true) {
-        this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(context!!, intent)
+        this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(requireContext(), intent)
 
         if (hasExternalStorageUris(extraActionInfo?.atts)) {
-          val isPermissionGranted = ContextCompat.checkSelfPermission(context!!,
+          val isPermissionGranted = ContextCompat.checkSelfPermission(requireContext(),
               Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
           if (isPermissionGranted) {
             requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
@@ -769,11 +769,11 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         val draftAtt = File(draftCacheDir, fileName)
 
         try {
-          val inputStream = context!!.contentResolver.openInputStream(attachmentInfo.uri!!)
+          val inputStream = requireContext().contentResolver.openInputStream(attachmentInfo.uri!!)
 
           if (inputStream != null) {
             FileUtils.copyInputStreamToFile(inputStream, draftAtt)
-            val uri = FileProvider.getUriForFile(context!!, Constants.FILE_PROVIDER_AUTHORITY, draftAtt)
+            val uri = FileProvider.getUriForFile(requireContext(), Constants.FILE_PROVIDER_AUTHORITY, draftAtt)
             attachmentInfo.uri = uri
             atts!!.add(attachmentInfo)
           }
@@ -981,8 +981,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     pgpContactsNachoTextView?.setIllegalCharacters(',')
     pgpContactsNachoTextView?.addChipTerminator(' ', ChipTerminatorHandler
         .BEHAVIOR_CHIPIFY_TO_TERMINATOR)
-    pgpContactsNachoTextView?.chipTokenizer = SingleCharacterSpanChipTokenizer(context!!,
-        CustomChipSpanChipCreator(context!!), PGPContactChipSpan::class.java)
+    pgpContactsNachoTextView?.chipTokenizer = SingleCharacterSpanChipTokenizer(requireContext(),
+        CustomChipSpanChipCreator(requireContext()), PGPContactChipSpan::class.java)
     pgpContactsNachoTextView?.setAdapter(preparePgpContactAdapter())
     pgpContactsNachoTextView?.onFocusChangeListener = this
     pgpContactsNachoTextView?.setListener(this)
@@ -991,7 +991,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private fun showUpdateContactsSnackBar(loaderId: Int) {
     showSnackbar(view, getString(R.string.please_update_information_about_contacts),
         getString(R.string.update), Snackbar.LENGTH_LONG, View.OnClickListener {
-      if (GeneralUtil.isConnected(context!!)) {
+      if (GeneralUtil.isConnected(requireContext())) {
         LoaderManager.getInstance(this@CreateMessageFragment).restartLoader(loaderId, null,
             this@CreateMessageFragment)
       } else {
@@ -1174,7 +1174,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         if (hasAbilityToAddAtt(att)) {
           atts?.add(att)
         } else {
-          showInfoSnackbar(view!!, getString(R.string.template_warning_max_total_attachments_size,
+          showInfoSnackbar(requireView(), getString(R.string.template_warning_max_total_attachments_size,
               FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES.toLong())),
               Snackbar.LENGTH_LONG)
         }
@@ -1340,7 +1340,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    */
   @SuppressLint("Recycle")
   private fun preparePgpContactAdapter(): PgpContactAdapter {
-    val pgpContactAdapter = PgpContactAdapter(context!!, null, true)
+    val pgpContactAdapter = PgpContactAdapter(requireContext(), null, true)
     //setup a search contacts logic in the database
     pgpContactAdapter.filterQueryProvider = FilterQueryProvider { constraint ->
       val uri = ContactsDaoSource().baseContentUri
@@ -1348,7 +1348,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       val selectionArgs = arrayOf("%$constraint%")
       val sortOrder = ContactsDaoSource.COL_LAST_USE + " DESC"
 
-      context!!.contentResolver.query(uri, null, selection, selectionArgs, sortOrder)
+      requireContext().contentResolver.query(uri, null, selection, selectionArgs, sortOrder)
     }
 
     return pgpContactAdapter

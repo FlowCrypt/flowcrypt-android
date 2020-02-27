@@ -50,7 +50,7 @@ class EditScreenshotDialogFragment : DialogFragment(), View.OnClickListener,
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val dialog = AlertDialog.Builder(activity!!)
+    val dialog = AlertDialog.Builder(requireContext())
 
     val view = LayoutInflater.from(context).inflate(R.layout.fragment_screenshot_editor,
         if ((view != null) and (view is ViewGroup)) view as ViewGroup? else null, false)
@@ -61,7 +61,7 @@ class EditScreenshotDialogFragment : DialogFragment(), View.OnClickListener,
 
     photoEditor = PhotoEditor.Builder(context, photoEditorView).build()
     photoEditor.setBrushDrawingMode(true)
-    photoEditor.brushColor = ContextCompat.getColor(context!!, R.color.black)
+    photoEditor.brushColor = ContextCompat.getColor(requireContext(), R.color.black)
     photoEditor.setOpacity(100)
 
     return dialog.create()
@@ -110,12 +110,12 @@ class EditScreenshotDialogFragment : DialogFragment(), View.OnClickListener,
       R.id.radioGroupColors -> {
         when (checkedId) {
           R.id.radioButtonFullColor -> {
-            photoEditor.brushColor = ContextCompat.getColor(context!!, R.color.black)
+            photoEditor.brushColor = ContextCompat.getColor(requireContext(), R.color.black)
             photoEditor.setOpacity(100)
           }
 
           R.id.radioButtonLightColor -> {
-            photoEditor.brushColor = ContextCompat.getColor(context!!, R.color.yellow)
+            photoEditor.brushColor = ContextCompat.getColor(requireContext(), R.color.yellow)
             photoEditor.setOpacity(50)
           }
         }

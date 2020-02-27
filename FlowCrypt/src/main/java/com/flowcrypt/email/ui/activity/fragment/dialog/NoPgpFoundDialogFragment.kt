@@ -35,10 +35,9 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    if (arguments != null) {
-      this.pgpContact = arguments!!.getParcelable(EXTRA_KEY_PGP_CONTACT)
-      this.isRemoveActionEnabled = arguments!!.getBoolean(EXTRA_KEY_IS_REMOVE_ACTION_ENABLED)
-    }
+
+    this.pgpContact = arguments?.getParcelable(EXTRA_KEY_PGP_CONTACT)
+    this.isRemoveActionEnabled = arguments?.getBoolean(EXTRA_KEY_IS_REMOVE_ACTION_ENABLED) ?: false
 
     dialogItems = ArrayList()
 
@@ -56,7 +55,7 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val builder = AlertDialog.Builder(activity)
-    val dialogItemAdapter = DialogItemAdapter(context!!, dialogItems!!)
+    val dialogItemAdapter = DialogItemAdapter(requireContext(), dialogItems!!)
 
     builder.setTitle(R.string.recipient_does_not_use_pgp)
     builder.setAdapter(dialogItemAdapter, this)

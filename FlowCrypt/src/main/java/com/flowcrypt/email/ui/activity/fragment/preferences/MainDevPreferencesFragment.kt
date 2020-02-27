@@ -72,7 +72,7 @@ class MainDevPreferencesFragment : BaseDevPreferencesFragment(), SharedPreferenc
   private fun showApplicationDetailsSettingsActivity() {
     Toast.makeText(activity, R.string.toast_message_press_force_stop_to_apply_changes, Toast.LENGTH_SHORT).show()
     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-    val uri = Uri.fromParts("package", activity!!.packageName, null)
+    val uri = Uri.fromParts("package", requireActivity().packageName, null)
     intent.data = uri
     startActivity(intent)
   }

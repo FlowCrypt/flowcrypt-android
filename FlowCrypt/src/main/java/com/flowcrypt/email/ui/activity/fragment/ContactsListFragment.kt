@@ -51,10 +51,10 @@ class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteC
           val selection = ContactsDaoSource.COL_HAS_PGP + " = ?"
           val selectionArgs = arrayOf("1")
 
-          CursorLoader(context!!, uri, null, selection, selectionArgs, null)
+          CursorLoader(requireContext(), uri, null, selection, selectionArgs, null)
         }
 
-        else -> Loader(context!!)
+        else -> Loader(requireContext())
       }
     }
 
@@ -103,9 +103,8 @@ class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteC
   }
 
   override fun onContactDeleteClick(email: String) {
-    ContactsDaoSource().deletePgpContact(context!!, email)
-    Toast.makeText(context!!,
-        getString(R.string.the_contact_was_deleted, email), Toast.LENGTH_SHORT).show()
+    ContactsDaoSource().deletePgpContact(requireContext(), email)
+    Toast.makeText(context, getString(R.string.the_contact_was_deleted, email), Toast.LENGTH_SHORT).show()
     LoaderManager.getInstance(this)
         .restartLoader(R.id.loader_id_load_contacts_with_pgp, null, cursorLoaderCallback)
   }
@@ -138,7 +137,7 @@ class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteC
     this.progressBar = root.findViewById(R.id.progressBar)
     this.listView = root.findViewById(R.id.listViewContacts)
     this.emptyView = root.findViewById(R.id.emptyView)
-    this.adapter = ContactsListCursorAdapter(context!!, null, false, this)
+    this.adapter = ContactsListCursorAdapter(requireContext(), null, false, this)
     this.listView?.adapter = adapter
     this.listView?.onItemClickListener = this
 

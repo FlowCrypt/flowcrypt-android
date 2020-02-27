@@ -110,7 +110,7 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
   open fun onError(loaderId: Int, e: Exception?) {
     e?.message?.let {
       if (view != null) {
-        UIUtil.showInfoSnackbar(view!!, it)
+        UIUtil.showInfoSnackbar(requireView(), it)
       }
     }
   }
@@ -184,10 +184,10 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
       when {
         loaderResult.result != null -> onSuccess(loaderId, loaderResult.result)
         loaderResult.exception != null -> onError(loaderId, loaderResult.exception)
-        else -> UIUtil.showInfoSnackbar(view!!, getString(R.string.unknown_error))
+        else -> UIUtil.showInfoSnackbar(requireView(), getString(R.string.unknown_error))
       }
     } else {
-      UIUtil.showInfoSnackbar(view!!, getString(R.string.unknown_error))
+      UIUtil.showInfoSnackbar(requireView(), getString(R.string.unknown_error))
     }
   }
 }

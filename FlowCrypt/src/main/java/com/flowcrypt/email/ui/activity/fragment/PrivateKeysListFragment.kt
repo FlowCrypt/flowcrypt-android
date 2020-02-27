@@ -52,7 +52,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    recyclerViewAdapter = PrivateKeysRecyclerViewAdapter(context!!, ArrayList(), this)
+    recyclerViewAdapter = PrivateKeysRecyclerViewAdapter(requireContext(), ArrayList(), this)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -138,7 +138,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
   private fun runCreateOrImportKeyActivity() {
     val account = AccountDaoSource().getActiveAccountInformation(context) ?: return
-    startActivityForResult(ImportPrivateKeyActivity.getIntent(context = context!!, accountDao = account,
+    startActivityForResult(ImportPrivateKeyActivity.getIntent(context = requireContext(), accountDao = account,
         title = getString(R.string.import_private_key),
         throwErrorIfDuplicateFoundEnabled = true,
         cls = ImportPrivateKeyActivity::class.java,
@@ -155,7 +155,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
     recyclerView.setHasFixedSize(true)
     val manager = LinearLayoutManager(context)
     val decoration = DividerItemDecoration(recyclerView.context, manager.orientation)
-    decoration.setDrawable(resources.getDrawable(R.drawable.divider_1dp_grey, context!!.theme))
+    decoration.setDrawable(resources.getDrawable(R.drawable.divider_1dp_grey, requireContext().theme))
     recyclerView.addItemDecoration(decoration)
     recyclerView.layoutManager = manager
     recyclerView.adapter = recyclerViewAdapter
