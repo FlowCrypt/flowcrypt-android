@@ -24,7 +24,6 @@ import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -74,11 +73,6 @@ class SecurityContentProvider : ContentProvider() {
       MATCHED_CODE_ACCOUNTS_TABLE -> {
         id = sqLiteDatabase.insert(AccountDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
         result = Uri.parse(AccountDaoSource().baseContentUri.toString() + "/" + id)
-      }
-
-      MATCHED_CODE_ATTACHMENT_TABLE -> {
-        id = sqLiteDatabase.insert(AttachmentDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
-        result = Uri.parse(AttachmentDaoSource().baseContentUri.toString() + "/" + id)
       }
 
       MATCHED_CODE_ACTION_QUEUE_TABLE -> {
@@ -157,8 +151,7 @@ class SecurityContentProvider : ContentProvider() {
         rowsCount += sqLiteDatabase.delete(ImapLabelsDaoSource().tableName,
             ImapLabelsDaoSource.COL_EMAIL + " = ?", selectionArgs)
         rowsCount += sqLiteDatabase.delete("messages", "email = ?", selectionArgs)
-        rowsCount += sqLiteDatabase.delete(AttachmentDaoSource().tableName,
-            AttachmentDaoSource.COL_EMAIL + " = ?", selectionArgs)
+        rowsCount += sqLiteDatabase.delete("attachment", "email = ?", selectionArgs)
         rowsCount += sqLiteDatabase.delete("accounts_aliases", "email = ?", selectionArgs)
       }
 
@@ -167,7 +160,7 @@ class SecurityContentProvider : ContentProvider() {
         rowsCount += sqLiteDatabase.delete("accounts_aliases", null, null)
         rowsCount += sqLiteDatabase.delete(ImapLabelsDaoSource().tableName, null, null)
         rowsCount += sqLiteDatabase.delete("messages", null, null)
-        rowsCount += sqLiteDatabase.delete(AttachmentDaoSource().tableName, null, null)
+        rowsCount += sqLiteDatabase.delete("attachment", null, null)
         rowsCount += sqLiteDatabase.delete(KeysDaoSource().tableName, null, null)
         rowsCount += sqLiteDatabase.delete(UserIdEmailsKeysDaoSource().tableName, null, null)
         rowsCount += sqLiteDatabase.delete(ContactsDaoSource().tableName, null, null)
@@ -239,10 +232,6 @@ class SecurityContentProvider : ContentProvider() {
 
       MATCHED_CODE_ACCOUNTS_SINGLE_ROW -> return AccountDaoSource().singleRowContentType
 
-      MATCHED_CODE_ATTACHMENT_TABLE -> return AttachmentDaoSource().rowsContentType
-
-      MATCHED_CODE_ATTACHMENT_SINGLE_ROW -> return AttachmentDaoSource().singleRowContentType
-
       MATCHED_CODE_ACTION_QUEUE_TABLE -> return ActionQueueDaoSource().rowsContentType
 
       MATCHED_CODE_ACTION_QUEUE_ROW -> return ActionQueueDaoSource().singleRowContentType
@@ -271,8 +260,6 @@ class SecurityContentProvider : ContentProvider() {
 
       MATCHED_CODE_ACCOUNTS_TABLE -> AccountDaoSource.TABLE_NAME_ACCOUNTS
 
-      MATCHED_CODE_ATTACHMENT_TABLE -> AttachmentDaoSource.TABLE_NAME_ATTACHMENT
-
       MATCHED_CODE_ACTION_QUEUE_TABLE -> ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE
 
       MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE -> UserIdEmailsKeysDaoSource.TABLE_NAME_USER_ID_EMAILS_AND_KEYS
@@ -293,8 +280,6 @@ class SecurityContentProvider : ContentProvider() {
     private const val MATCHED_CODE_IMAP_LABELS_SINGLE_ROW = 7
     private const val MATCHED_CODE_ACCOUNTS_TABLE = 10
     private const val MATCHED_CODE_ACCOUNTS_SINGLE_ROW = 11
-    private const val MATCHED_CODE_ATTACHMENT_TABLE = 12
-    private const val MATCHED_CODE_ATTACHMENT_SINGLE_ROW = 13
     private const val MATCHED_CODE_KEY_ERASE_DATABASE = 16
     private const val MATCHED_CODE_ACTION_QUEUE_TABLE = 17
     private const val MATCHED_CODE_ACTION_QUEUE_ROW = 18
@@ -324,10 +309,6 @@ class SecurityContentProvider : ContentProvider() {
           MATCHED_CODE_ACCOUNTS_TABLE)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountDaoSource.TABLE_NAME_ACCOUNTS
           + SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ACCOUNTS_SINGLE_ROW)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AttachmentDaoSource.TABLE_NAME_ATTACHMENT,
-          MATCHED_CODE_ATTACHMENT_TABLE)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AttachmentDaoSource.TABLE_NAME_ATTACHMENT
-          + SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ATTACHMENT_SINGLE_ROW)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE
           + SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ACTION_QUEUE_ROW)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE,

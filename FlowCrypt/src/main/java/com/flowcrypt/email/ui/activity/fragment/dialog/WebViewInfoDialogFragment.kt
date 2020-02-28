@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -41,8 +42,9 @@ class WebViewInfoDialogFragment : DialogFragment(), View.OnClickListener {
     }
   }
 
+  @SuppressLint("InflateParams")
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-    val dialog = AlertDialog.Builder(context!!)
+    val dialog = AlertDialog.Builder(requireContext())
     dialog.setTitle(dialogTitle)
 
     val rootView = LayoutInflater.from(context).inflate(R.layout.fragment_info_in_webview, null)

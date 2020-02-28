@@ -26,7 +26,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.JobIdManager
@@ -38,7 +38,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
-import com.google.android.gms.common.util.CollectionUtils
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import java.io.ByteArrayInputStream
@@ -120,8 +119,8 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       if (newMsgId > 0) {
         updateOutgoingMsgCount(email, roomDatabase)
 
-        val hasAtts = !CollectionUtils.isEmpty(outgoingMsgInfo.atts)
-            || !CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)
+        val hasAtts = outgoingMsgInfo.atts?.isNotEmpty() == true
+            || outgoingMsgInfo.forwardedAtts?.isNotEmpty() == true
 
         if (hasAtts) {
           if (!msgAttsCacheDir.exists()) {
@@ -132,10 +131,10 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             }
           }
 
-          addAttsToCache(outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir)
+          addAttsToCache(roomDatabase, outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir)
         }
 
-        if (CollectionUtils.isEmpty(outgoingMsgInfo.forwardedAtts)) {
+        if (outgoingMsgInfo.forwardedAtts?.isEmpty() == true) {
           val insertedMsgEntity = roomDatabase.msgDao().getMsg(
               msgEntity.email, msgEntity.folder, msgEntity.uid)
           insertedMsgEntity?.let {
@@ -187,7 +186,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     val messageEntity = MessageEntity.genMsgEntity(account!!.email,
         JavaEmailConstants.FOLDER_OUTBOX, mimeMsg, generatedUID, false)
 
-    val hasAtts = !CollectionUtils.isEmpty(msgInfo.atts) || !CollectionUtils.isEmpty(msgInfo.forwardedAtts)
+    val hasAtts = msgInfo.atts?.isNotEmpty() == true || msgInfo.forwardedAtts?.isNotEmpty() == true
     val isEncrypted = msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED
     val msgStateValue = if (msgInfo.isForwarded) MessageState.NEW_FORWARDED.value else MessageState.NEW.value
 
@@ -201,13 +200,21 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     )
   }
 
-  private fun addAttsToCache(msgInfo: OutgoingMessageInfo, uid: Long, pubKeys: List<String>?, attsCacheDir: File) {
-    val attDaoSource = AttachmentDaoSource()
+  private fun addAttsToCache(roomDatabase: FlowCryptRoomDatabase, msgInfo: OutgoingMessageInfo,
+                             uid: Long, pubKeys: List<String>?, attsCacheDir: File) {
     val cachedAtts = ArrayList<AttachmentInfo>()
 
     val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-    if (!CollectionUtils.isEmpty(msgInfo.atts)) {
-      for (att in msgInfo.atts!!) {
+    if (msgInfo.atts?.isNotEmpty() == true) {
+      val outgoingAtts = msgInfo.atts.map {
+        it.apply {
+          this.email = account?.email
+          this.folder = JavaEmailConstants.FOLDER_OUTBOX
+          this.uid = uid.toInt()
+        }
+      }
+
+      for (att in outgoingAtts) {
         if (TextUtils.isEmpty(att.type)) {
           att.type = Constants.MIME_TYPE_BINARY_DATA
         }
@@ -269,30 +276,30 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       }
     }
 
-    if (!CollectionUtils.isEmpty(msgInfo.forwardedAtts)) {
-      for (att in msgInfo.forwardedAtts!!) {
-        if (TextUtils.isEmpty(att.type)) {
+    if (msgInfo.forwardedAtts?.isNotEmpty() == true) {
+      for (att in msgInfo.forwardedAtts) {
+        if (att.type.isEmpty()) {
           att.type = Constants.MIME_TYPE_BINARY_DATA
         }
 
         if (att.isEncryptionAllowed && msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-          val encryptedAtt = att.copy(JavaEmailConstants.FOLDER_OUTBOX)
-          encryptedAtt.name = encryptedAtt.name!! + Constants.PGP_FILE_EXT
+          val encryptedAtt = att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid.toInt())
+          encryptedAtt.name = encryptedAtt.name + Constants.PGP_FILE_EXT
           cachedAtts.add(encryptedAtt)
         } else {
-          cachedAtts.add(att.copy(JavaEmailConstants.FOLDER_OUTBOX))
+          cachedAtts.add(att.copy(JavaEmailConstants.FOLDER_OUTBOX, uid.toInt()))
         }
       }
     }
 
-    attDaoSource.addRows(this, account!!.email, JavaEmailConstants.FOLDER_OUTBOX, uid, cachedAtts)
+    roomDatabase.attachmentDao().insert(cachedAtts.mapNotNull { AttachmentEntity.fromAttInfo(it) })
   }
 
   private fun setupIfNeeded() {
     if (attsCacheDir == null) {
       attsCacheDir = File(cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
-      if (!attsCacheDir!!.exists()) {
-        if (!attsCacheDir!!.mkdirs()) {
+      if (attsCacheDir?.exists() == false) {
+        if (attsCacheDir?.mkdirs() == false) {
           throw IllegalStateException("Create cache directory " + attsCacheDir!!.name + " filed!")
         }
       }

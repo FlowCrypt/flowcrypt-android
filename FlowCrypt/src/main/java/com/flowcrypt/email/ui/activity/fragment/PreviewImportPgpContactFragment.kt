@@ -13,9 +13,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.os.RemoteException
 import android.text.TextUtils
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -63,6 +61,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
 
   private var isParsingStarted: Boolean = false
 
+  override val contentResourceId: Int = R.layout.fragment_preview_import_pgp_contact
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     retainInstance = true
@@ -75,11 +75,6 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
     }
   }
 
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                            savedInstanceState: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_preview_import_pgp_contact, container, false)
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
@@ -89,8 +84,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
     super.onActivityCreated(savedInstanceState)
     if (TextUtils.isEmpty(publicKeysString) && publicKeysFileUri == null) {
       if (activity != null) {
-        activity!!.setResult(Activity.RESULT_CANCELED)
-        activity!!.finish()
+        requireActivity().setResult(Activity.RESULT_CANCELED)
+        requireActivity().finish()
       }
     } else if (!isParsingStarted) {
       PublicKeysParserAsyncTask(this, publicKeysString ?: "", publicKeysFileUri).execute()
@@ -125,12 +120,12 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
   override fun onError(loaderId: Int, e: Exception?) {
     when (loaderId) {
       R.id.loader_id_parse_public_keys -> if (activity != null) {
-        activity!!.setResult(Activity.RESULT_CANCELED)
+        requireActivity().setResult(Activity.RESULT_CANCELED)
         Toast.makeText(context, if (TextUtils.isEmpty(e!!.message))
           getString(R.string.unknown_error)
         else
           e.message, Toast.LENGTH_SHORT).show()
-        activity!!.finish()
+        requireActivity().finish()
       }
 
       else -> super.onError(loaderId, e)
@@ -155,8 +150,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
       if (result!!) {
         Toast.makeText(context, R.string.success, Toast.LENGTH_SHORT).show()
         if (activity != null) {
-          activity!!.setResult(Activity.RESULT_OK)
-          activity!!.finish()
+          requireActivity().setResult(Activity.RESULT_OK)
+          requireActivity().finish()
         }
       } else {
         UIUtil.exchangeViewVisibility(false, layoutProgress!!, layoutContentView!!)
@@ -177,7 +172,9 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
 
       try {
         if (publicKeysFileUri != null && weakRef.get() != null) {
-          armoredKeys = GeneralUtil.readFileFromUriToString(weakRef.get()?.context!!, publicKeysFileUri)
+          weakRef.get()?.context?.let {
+            armoredKeys = GeneralUtil.readFileFromUriToString(it, publicKeysFileUri)
+          }
         }
       } catch (e: IOException) {
         e.printStackTrace()
@@ -213,8 +210,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
         } else {
           if (weakRef.get() != null) {
             LoaderResult(null, IllegalArgumentException(
-                weakRef.get()?.context!!.getString(R.string.clipboard_has_wrong_structure,
-                    weakRef.get()?.context!!.getString(R.string.public_))))
+                weakRef.get()?.requireContext()?.getString(R.string.clipboard_has_wrong_structure,
+                    weakRef.get()?.requireContext()?.getString(R.string.public_))))
           } else {
             LoaderResult(null,
                 IllegalArgumentException("The content of your clipboard doesn't look like a valid PGP pubkey."))
@@ -273,7 +270,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
         emails.add(keyOwner)
 
         if (weakRef.get() != null) {
-          val contact = ContactsDaoSource().getPgpContact(weakRef.get()?.context!!, keyOwner)
+          val contact = ContactsDaoSource().getPgpContact(weakRef.get()?.requireContext()!!, keyOwner)
           return PublicKeyInfo(keyWords!!, fingerprint!!, keyOwner, longId!!, contact, nodeKeyDetails.publicKey!!)
         }
       }
@@ -339,7 +336,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
           val end = if (updateCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else updateCandidates.size - 1
 
           if (weakRef.get() != null) {
-            source.updatePgpContacts(weakRef.get()?.context!!, updateCandidates.subList(start, end + 1))
+            source.updatePgpContacts(weakRef.get()?.requireContext()!!, updateCandidates.subList
+            (start, end + 1))
           }
           i = end + 1
 

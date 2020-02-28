@@ -69,6 +69,8 @@ class LegalSettingsActivity : BaseSettingsActivity() {
     private var assetsPath: String? = null
     private lateinit var webView: WebView
 
+    override val contentResourceId: Int = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
       super.onCreate(savedInstanceState)
       val args = arguments

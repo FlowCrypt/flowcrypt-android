@@ -246,9 +246,9 @@ class GeneralUtil {
      * @param email The current email.
      * @return true if the email has valid format, otherwise false.
      */
-    @JvmStatic
-    fun isEmailValid(email: CharSequence): Boolean {
-      return !TextUtils.isEmpty(email) && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    fun isEmailValid(email: CharSequence?): Boolean {
+      return email?.isNotEmpty() == true && android.util.Patterns.EMAIL_ADDRESS.matcher(email)
+          .matches()
     }
 
     /**
@@ -259,13 +259,14 @@ class GeneralUtil {
      * @return A mime type of of the [Uri].
      */
     @JvmStatic
-    fun getFileMimeTypeFromUri(context: Context, uri: Uri): String? {
+    fun getFileMimeTypeFromUri(context: Context, uri: Uri): String {
       return if (ContentResolver.SCHEME_CONTENT.equals(uri.scheme, ignoreCase = true)) {
         val contentResolver = context.contentResolver
-        contentResolver.getType(uri)
+        contentResolver.getType(uri) ?: Constants.MIME_TYPE_BINARY_DATA
       } else {
         val fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString())
         MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase(Locale.getDefault()))
+            ?: Constants.MIME_TYPE_BINARY_DATA
       }
     }
 

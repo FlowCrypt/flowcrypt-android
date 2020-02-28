@@ -30,7 +30,7 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     setPreferencesFromResource(R.xml.preferences_security_settings, rootKey)
 
-    account = AccountDaoSource().getActiveAccountInformation(context!!)
+    account = AccountDaoSource().getActiveAccountInformation(requireContext())
 
     findPreference<Preference>(Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE)?.onPreferenceClickListener = this
   }
@@ -38,8 +38,8 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
   override fun onPreferenceClick(preference: Preference): Boolean {
     return when (preference.key) {
       Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE -> {
-        if (UserIdEmailsKeysDaoSource().getLongIdsByEmail(context!!, account!!.email).isEmpty()) {
-          UIUtil.showInfoSnackbar(view!!, getString(R.string.account_has_no_associated_keys,
+        if (UserIdEmailsKeysDaoSource().getLongIdsByEmail(requireContext(), account!!.email).isEmpty()) {
+          UIUtil.showInfoSnackbar(requireView(), getString(R.string.account_has_no_associated_keys,
               getString(R.string.support_email)))
         } else {
           startActivity(ChangePassPhraseActivity.newIntent(context, account))

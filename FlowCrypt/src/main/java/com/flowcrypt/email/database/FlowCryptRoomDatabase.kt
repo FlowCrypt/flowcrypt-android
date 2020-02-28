@@ -15,15 +15,14 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.database.dao.AccountAliasesDao
 import com.flowcrypt.email.database.dao.AccountDao
 import com.flowcrypt.email.database.dao.AttachmentDao
 import com.flowcrypt.email.database.dao.LabelDao
 import com.flowcrypt.email.database.dao.MessageDao
-import com.flowcrypt.email.database.dao.source.AccountAliasesDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
@@ -70,11 +69,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun accountAliasesDao(): AccountAliasesDao
 
   companion object {
-    const val COLUMN_NAME_COUNT = "COUNT(*)"
     const val DB_NAME = "flowcrypt.db"
-    private const val DROP_TABLE = "DROP TABLE IF EXISTS "
-    private const val CREATE_TEMP_TABLE_IF_NOT_EXISTS = "CREATE TEMP TABLE IF NOT EXISTS "
-
     const val DB_VERSION = 21
 
     private val MIGRATION_1_3 = object : Migration(1, 3) {
@@ -212,6 +207,14 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
+          val tempTableName = "messages_temp"
+          database.execSQL("CREATE TEMP TABLE IF NOT EXISTS $tempTableName AS SELECT * FROM messages;")
+          database.execSQL("DROP TABLE IF EXISTS messages;")
+          database.execSQL("CREATE TABLE messages (_id INTEGER PRIMARY KEY AUTOINCREMENT, email VARCHAR(100) NOT NULL, folder TEXT NOT NULL, uid INTEGER NOT NULL, received_date INTEGER DEFAULT NULL, sent_date INTEGER DEFAULT NULL, from_address TEXT DEFAULT NULL, to_address TEXT DEFAULT NULL, cc_address TEXT DEFAULT NULL, subject TEXT DEFAULT NULL, flags TEXT DEFAULT NULL, raw_message_without_attachments TEXT DEFAULT NULL, is_message_has_attachments INTEGER DEFAULT 0, is_encrypted INTEGER DEFAULT -1, is_new INTEGER DEFAULT -1 )")
+          database.execSQL("CREATE INDEX email_in_messages ON messages (email)")
+          database.execSQL("CREATE UNIQUE INDEX email_uid_folder_in_messages ON messages (email, uid, folder)")
+          database.execSQL("INSERT INTO messages SELECT * FROM $tempTableName;")
+          database.execSQL("DROP TABLE IF EXISTS $tempTableName;")
           database.execSQL("ALTER TABLE messages ADD COLUMN state INTEGER DEFAULT -1;")
           database.setTransactionSuccessful()
         } finally {
@@ -224,10 +227,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL("ALTER TABLE " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT +
-              " ADD COLUMN " + AttachmentDaoSource.COL_FORWARDED_FOLDER + " TEXT;")
-          database.execSQL("ALTER TABLE " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT +
-              " ADD COLUMN " + AttachmentDaoSource.COL_FORWARDED_UID + " INTEGER DEFAULT -1;")
+          database.execSQL("ALTER TABLE attachment ADD COLUMN forwarded_folder TEXT;")
+          database.execSQL("ALTER TABLE attachment ADD COLUMN forwarded_uid INTEGER DEFAULT -1;")
           database.execSQL("ALTER TABLE messages ADD COLUMN attachments_directory TEXT;")
           database.setTransactionSuccessful()
         } finally {
@@ -259,21 +260,17 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         database.beginTransaction()
         try {
           //delete non-OUTBOX attachments
-          database.delete(AttachmentDaoSource.TABLE_NAME_ATTACHMENT, AttachmentDaoSource.COL_FOLDER
-              + " NOT IN (?)", arrayOf(JavaEmailConstants.FOLDER_OUTBOX))
+          database.delete("attachment", "folder NOT IN (?)", arrayOf(JavaEmailConstants.FOLDER_OUTBOX))
 
-          val tempTableName = "att"
+          val tempTableName = "attachment_temp"
 
-          database.execSQL(CREATE_TEMP_TABLE_IF_NOT_EXISTS + tempTableName + " AS SELECT * FROM "
-              + AttachmentDaoSource.TABLE_NAME_ATTACHMENT)
+          database.execSQL("CREATE TEMP TABLE IF NOT EXISTS $tempTableName AS SELECT * FROM attachment")
+          database.execSQL("DROP TABLE IF EXISTS attachment")
+          database.execSQL("CREATE TABLE `attachment` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `folder` TEXT NOT NULL, `uid` INTEGER NOT NULL, `name` TEXT NOT NULL, `encodedSize` INTEGER DEFAULT 0, `type` TEXT NOT NULL, `attachment_id` TEXT, `file_uri` TEXT, `forwarded_folder` TEXT, `forwarded_uid` INTEGER DEFAULT -1, `path` TEXT NOT NULL)")
+          database.execSQL("CREATE UNIQUE INDEX `email_uid_folder_path_in_attachment` ON `attachment` (`email`, `uid`, `folder`, `path`)")
 
-          database.execSQL(DROP_TABLE + AttachmentDaoSource.TABLE_NAME_ATTACHMENT)
-          database.execSQL(AttachmentDaoSource.ATTACHMENT_TABLE_SQL_CREATE)
-          database.execSQL(AttachmentDaoSource.CREATE_UNIQUE_INDEX_EMAIL_UID_FOLDER_PATH_IN_ATTACHMENT)
-
-          database.execSQL("INSERT INTO " + AttachmentDaoSource.TABLE_NAME_ATTACHMENT
-              + " SELECT *, 0 FROM " + tempTableName)
-          database.execSQL(DROP_TABLE + tempTableName)
+          database.execSQL("INSERT INTO attachment SELECT *, 0 FROM $tempTableName")
+          database.execSQL("DROP TABLE IF EXISTS $tempTableName")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -285,9 +282,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.delete("messages", "folder NOT IN(?,?) ", arrayOf("INBOX", "Outbox"))
-          database.delete(AttachmentDaoSource.TABLE_NAME_ATTACHMENT,
-              AttachmentDaoSource.COL_FOLDER + " NOT IN(?,?) ", arrayOf("INBOX", "Outbox"))
+          database.delete("messages", "folder NOT IN(?,?)", arrayOf("INBOX", "Outbox"))
+          database.delete("attachment", "folder NOT IN(?,?)", arrayOf("INBOX", "Outbox"))
 
           val contentValues = ContentValues()
           contentValues.putNull("raw_message_without_attachments")

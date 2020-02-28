@@ -8,9 +8,7 @@ package com.flowcrypt.email.ui.activity.fragment
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -50,14 +48,11 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
   private var recyclerViewAdapter: PrivateKeysRecyclerViewAdapter? = null
 
+  override val contentResourceId: Int = R.layout.fragment_private_keys
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    recyclerViewAdapter = PrivateKeysRecyclerViewAdapter(context!!, ArrayList(), this)
-  }
-
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                            savedInstanceState: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_private_keys, container, false)
+    recyclerViewAdapter = PrivateKeysRecyclerViewAdapter(requireContext(), ArrayList(), this)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -143,7 +138,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
   private fun runCreateOrImportKeyActivity() {
     val account = AccountDaoSource().getActiveAccountInformation(context) ?: return
-    startActivityForResult(ImportPrivateKeyActivity.getIntent(context = context!!, accountDao = account,
+    startActivityForResult(ImportPrivateKeyActivity.getIntent(context = requireContext(), accountDao = account,
         title = getString(R.string.import_private_key),
         throwErrorIfDuplicateFoundEnabled = true,
         cls = ImportPrivateKeyActivity::class.java,
@@ -160,7 +155,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
     recyclerView.setHasFixedSize(true)
     val manager = LinearLayoutManager(context)
     val decoration = DividerItemDecoration(recyclerView.context, manager.orientation)
-    decoration.setDrawable(resources.getDrawable(R.drawable.divider_1dp_grey, context!!.theme))
+    decoration.setDrawable(resources.getDrawable(R.drawable.divider_1dp_grey, requireContext().theme))
     recyclerView.addItemDecoration(decoration)
     recyclerView.layoutManager = manager
     recyclerView.adapter = recyclerViewAdapter

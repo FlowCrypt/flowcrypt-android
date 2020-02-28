@@ -28,7 +28,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -212,11 +212,9 @@ class MessagesSenderJobService : JobService() {
           roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENDING.value))
           Thread.sleep(2000)
 
-          val attsDaoSource = AttachmentDaoSource()
-          val attInfoList = attsDaoSource.getAttInfoList(context, email,
-              JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
-
-          val isMsgSent = sendMsg(context, account, msgEntity, attInfoList)
+          val attachments = roomDatabase.attachmentDao()
+              .getAttachments(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
+          val isMsgSent = sendMsg(context, account, msgEntity, attachments)
 
           if (!isMsgSent) {
             continue
@@ -227,8 +225,8 @@ class MessagesSenderJobService : JobService() {
           if (msgEntity != null && msgEntity.msgState === MessageState.SENT) {
             roomDatabase.msgDao().delete(msgEntity)
 
-            if (!CollectionUtils.isEmpty(attInfoList)) {
-              deleteMsgAtts(context, account, attsCacheDir, msgEntity, attsDaoSource)
+            if (!CollectionUtils.isEmpty(attachments)) {
+              deleteMsgAtts(roomDatabase, account, attsCacheDir, msgEntity)
             }
 
             val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsExceptSent(email).size
@@ -289,11 +287,10 @@ class MessagesSenderJobService : JobService() {
         }
         val msgEntity = list.first()
         try {
-          val attDaoSource = AttachmentDaoSource()
-          val atts = attDaoSource.getAttInfoList(context, email,
-              JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
+          val attachments = roomDatabase.attachmentDao()
+              .getAttachments(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
 
-          val mimeMsg = createMimeMsg(context, sess, msgEntity, atts)
+          val mimeMsg = createMimeMsg(context, sess, msgEntity, attachments)
           val isMsgSaved = saveCopyOfSentMsg(account, store, context, mimeMsg)
 
           if (!isMsgSaved) {
@@ -302,8 +299,8 @@ class MessagesSenderJobService : JobService() {
 
           roomDatabase.msgDao().delete(msgEntity)
 
-          if (!CollectionUtils.isEmpty(atts)) {
-            deleteMsgAtts(context, account, attsCacheDir, msgEntity, attDaoSource)
+          if (attachments.isNotEmpty()) {
+            deleteMsgAtts(roomDatabase, account, attsCacheDir, msgEntity)
           }
         } catch (e: Exception) {
           e.printStackTrace()
@@ -328,13 +325,13 @@ class MessagesSenderJobService : JobService() {
       }
     }
 
-    private fun deleteMsgAtts(context: Context, account: AccountDao, attsCacheDir: File,
-                              details: MessageEntity, attDaoSource: AttachmentDaoSource) {
-      attDaoSource.deleteAtts(context, account.email, JavaEmailConstants.FOLDER_OUTBOX, details.uid)
+    private fun deleteMsgAtts(roomDatabase: FlowCryptRoomDatabase, account: AccountDao, attsCacheDir: File,
+                              details: MessageEntity) {
+      roomDatabase.attachmentDao().delete(account.email, JavaEmailConstants.FOLDER_OUTBOX, details.uid)
       details.attachmentsDirectory?.let { FileAndDirectoryUtils.deleteDir(File(attsCacheDir, it)) }
     }
 
-    private fun sendMsg(context: Context, account: AccountDao, msgEntity: MessageEntity, atts: List<AttachmentInfo>): Boolean {
+    private fun sendMsg(context: Context, account: AccountDao, msgEntity: MessageEntity, atts: List<AttachmentEntity>): Boolean {
       val mimeMsg = createMimeMsg(context, sess, msgEntity, atts)
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
@@ -405,7 +402,7 @@ class MessagesSenderJobService : JobService() {
      * @throws IOException
      * @throws MessagingException
      */
-    private fun createMimeMsg(context: Context, sess: Session?, details: MessageEntity, atts: List<AttachmentInfo>): MimeMessage {
+    private fun createMimeMsg(context: Context, sess: Session?, details: MessageEntity, atts: List<AttachmentEntity>): MimeMessage {
       val stream = IOUtils.toInputStream(details.rawMessageWithoutAttachments, StandardCharsets.UTF_8)
       val mimeMsg = MimeMessage(sess, stream)
 
@@ -433,11 +430,12 @@ class MessagesSenderJobService : JobService() {
      * @return Generated [MimeBodyPart] with the attachment.
      * @throws MessagingException
      */
-    private fun genBodyPartWithAtt(context: Context, att: AttachmentInfo): BodyPart {
+    private fun genBodyPartWithAtt(context: Context, att: AttachmentEntity): BodyPart {
       val attBodyPart = MimeBodyPart()
-      attBodyPart.dataHandler = DataHandler(AttachmentInfoDataSource(context, att))
-      attBodyPart.fileName = att.name
-      attBodyPart.contentID = att.id
+      val attInfo = att.toAttInfo()
+      attBodyPart.dataHandler = DataHandler(AttachmentInfoDataSource(context, attInfo))
+      attBodyPart.fileName = attInfo.name
+      attBodyPart.contentID = attInfo.id
 
       return attBodyPart
     }
@@ -513,15 +511,11 @@ class MessagesSenderJobService : JobService() {
                                                               private val att: AttachmentInfo) : DataSource {
 
     override fun getInputStream(): InputStream? {
-      val inputStream: InputStream?
-      if (att.uri == null) {
-        if (att.rawData != null) {
-          inputStream = IOUtils.toInputStream(att.rawData!!, StandardCharsets.UTF_8)
-        } else {
-          inputStream = null
-        }
+      val inputStream: InputStream? = if (att.uri == null) {
+        val rawData = att.rawData ?: return null
+        IOUtils.toInputStream(rawData, StandardCharsets.UTF_8)
       } else {
-        inputStream = context.contentResolver.openInputStream(att.uri!!)
+        att.uri?.let { context.contentResolver.openInputStream(it) }
       }
 
       return if (inputStream == null) null else BufferedInputStream(inputStream)

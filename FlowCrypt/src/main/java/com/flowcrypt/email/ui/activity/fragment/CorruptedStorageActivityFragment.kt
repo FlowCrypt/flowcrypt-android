@@ -48,7 +48,7 @@ class CorruptedStorageActivityFragment : Fragment(), View.OnClickListener {
     when (v.id) {
       R.id.btnResetAppSettings -> {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-        val uri = Uri.fromParts("package", activity!!.packageName, null)
+        val uri = Uri.fromParts("package", requireActivity().packageName, null)
         intent.data = uri
         startActivity(intent)
       }

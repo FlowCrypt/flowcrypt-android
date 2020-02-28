@@ -27,7 +27,7 @@ open class BaseDialogFragment : DialogFragment() {
   val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
 
   protected val isNodeReady: Boolean
-    get() = Node.getInstance(activity!!.application).liveData.value ?: false
+    get() = Node.getInstance(requireActivity().application).liveData.value ?: false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -43,7 +43,7 @@ open class BaseDialogFragment : DialogFragment() {
   }
 
   private fun registerNodeIdlingResources() {
-    Node.getInstance(activity!!.application).liveData.observe(this, Observer { aBoolean ->
+    Node.getInstance(requireActivity().application).liveData.observe(this, Observer { aBoolean ->
       nodeIdlingResource.setIdleState(aBoolean!!)
       onNodeStateChanged(aBoolean)
     })

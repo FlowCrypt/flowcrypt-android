@@ -9,6 +9,7 @@ import android.view.View
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingPolicies
+import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -38,6 +39,7 @@ import org.hamcrest.Matchers.instanceOf
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.startsWith
+import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -71,6 +73,22 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   @Before
   fun setUp() {
     IdlingPolicies.setMasterPolicyTimeout(60, TimeUnit.SECONDS)
+  }
+
+  @Before
+  fun registerIdling() {
+    val activity = activityTestRule?.activity ?: return
+    if (activity is AddNewAccountManuallyActivity) {
+      IdlingRegistry.getInstance().register(activity.idlingForFetchingPrivateKeys)
+    }
+  }
+
+  @After
+  fun unregisterIdling() {
+    val activity = activityTestRule?.activity ?: return
+    if (activity is AddNewAccountManuallyActivity) {
+      IdlingRegistry.getInstance().unregister(activity.idlingForFetchingPrivateKeys)
+    }
   }
 
   @Test

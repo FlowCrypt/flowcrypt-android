@@ -30,6 +30,9 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
   var msgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(msgEntity.email,
       msgEntity.folder, msgEntity.uid)
 
+  val attsLiveData = roomDatabase.attachmentDao().getAttachmentsLD(msgEntity.email,
+      msgEntity.folder, msgEntity.uid)
+
   val msgStatesLiveData = MutableLiveData<MessageState>()
 
   fun setSeenStatus(isSeen: Boolean) {

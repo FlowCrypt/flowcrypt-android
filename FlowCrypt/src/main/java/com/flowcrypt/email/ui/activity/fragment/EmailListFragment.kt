@@ -17,7 +17,6 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -88,6 +87,8 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private var isEmptyViewAvailable = false
   private var keepSelectionInMemory = false
   private var isForceLoadNextMsgsNeeded = false
+
+  override val contentResourceId: Int = R.layout.fragment_email_list
 
   private val isOutboxFolder: Boolean
     get() {
@@ -164,10 +165,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     adapter = MsgsPagedListAdapter(this)
     setupMsgsViewModel()
     setupConnectionNotifier()
-  }
-
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_email_list, container, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -253,7 +250,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         if (e is UserRecoverableAuthException) {
           super.onErrorOccurred(requestCode, errorType,
               Exception(getString(R.string.gmail_user_recoverable_auth_exception)))
-          showSnackbar(view!!, getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
+          showSnackbar(requireView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
               Snackbar.LENGTH_INDEFINITE, View.OnClickListener { listener!!.onRetryGoogleAuth() })
         } else if (e is GoogleAuthException || e!!.message.equals("ServiceDisabled", ignoreCase = true)) {
           super.onErrorOccurred(requestCode, errorType,
@@ -407,13 +404,13 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   private fun showConnProblemHint() {
-    showSnackbar(view!!, getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
-        Snackbar.LENGTH_LONG, View.OnClickListener { onRefresh() })
+    showSnackbar(requireView(), getString(R.string.can_not_connect_to_the_imap_server),
+        getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener { onRefresh() })
   }
 
   private fun showConnLostHint() {
     isForceLoadNextMsgsNeeded = true
-    showSnackbar(view!!, getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
+    showSnackbar(requireView(), getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
       loadNextItemsToAdapter()
     })
@@ -464,7 +461,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
     }
 
-    infoDialogFragment.show(activity!!.supportFragmentManager, InfoDialogFragment::class.java.simpleName)
+    infoDialogFragment.show(requireActivity().supportFragmentManager, InfoDialogFragment::class.java.simpleName)
   }
 
   private fun isItSyncOrOutboxFolder(localFolder: LocalFolder?): Boolean {

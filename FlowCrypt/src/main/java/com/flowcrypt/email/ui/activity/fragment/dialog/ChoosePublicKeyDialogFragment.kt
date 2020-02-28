@@ -75,7 +75,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     buttonOk = view.findViewById(R.id.buttonOk)
     buttonOk?.setOnClickListener(this)
 
-    val builder = AlertDialog.Builder(context!!)
+    val builder = AlertDialog.Builder(requireContext())
     builder.setView(view)
 
     return builder.create()
@@ -147,7 +147,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
             }
 
             if (atts.size > 1) {
-              val adapter = PubKeysArrayAdapter(context!!, atts, choiceMode)
+              val adapter = PubKeysArrayAdapter(requireContext(), atts, choiceMode)
               listViewKeys?.choiceMode = choiceMode
               listViewKeys?.adapter = adapter
               listViewKeys?.setItemChecked(0, true)

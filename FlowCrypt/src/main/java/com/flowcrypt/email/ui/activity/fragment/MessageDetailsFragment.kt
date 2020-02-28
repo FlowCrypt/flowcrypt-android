@@ -125,6 +125,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private val localFolder: LocalFolder?
     get() = msgDetailsViewModel?.localFolder
 
+  override val contentResourceId: Int = R.layout.fragment_message_details
 
   override fun onAttach(context: Context) {
     super.onAttach(context)
@@ -141,10 +142,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     dateFormat = DateFormat.getTimeFormat(context)
 
     updateActionsVisibility(localFolder)
-  }
-
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_message_details, container, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -265,7 +262,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       }
 
       R.id.imageButtonMoreOptions -> {
-        val popup = PopupMenu(context!!, v)
+        val popup = PopupMenu(requireContext(), v)
         popup.menuInflater.inflate(R.menu.popup_reply_actions, popup.menu)
         popup.setOnMenuItemClickListener {
           when (it.itemId) {
@@ -297,7 +294,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           for (att in atts) {
             att.isForwarded = true
           }
-          msgInfo!!.atts = atts
+          msgInfo?.atts = atts
         }
 
         startActivity(CreateMessageActivity.generateIntent(context, prepareMsgInfoForReply(), MessageType.FORWARD,
@@ -310,9 +307,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     super.onErrorOccurred(requestCode, errorType, e)
     isAdditionalActionEnabled = true
     UIUtil.exchangeViewVisibility(false, progressBarActionRunning!!, layoutContent!!)
-    if (activity != null) {
-      activity!!.invalidateOptionsMenu()
-    }
+    activity?.invalidateOptionsMenu()
 
     when (requestCode) {
       R.id.syns_request_code_load_raw_mime_msg -> when (errorType) {
@@ -351,9 +346,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     imageBtnReplyAll?.visibility = View.VISIBLE
     imageBtnMoreOptions?.visibility = View.VISIBLE
     isAdditionalActionEnabled = true
-    if (activity != null) {
-      activity!!.invalidateOptionsMenu()
-    }
+    activity?.invalidateOptionsMenu()
     msgInfo.localFolder = localFolder
     updateMsgBody()
     UIUtil.exchangeViewVisibility(false, progressView!!, contentView!!)
@@ -376,8 +369,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     updateViews()
   }
 
-  fun updateAttInfos(attInfoList: ArrayList<AttachmentInfo>) {
-    this.atts = attInfoList
+  fun updateAttInfos(attInfoList: List<AttachmentInfo>) {
+    this.atts.addAll(attInfoList)
     showAttsIfTheyExist()
   }
 
@@ -389,7 +382,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   }
 
   private fun showConnLostHint() {
-    showSnackbar(view!!, getString(R.string.failed_load_message_from_email_server),
+    showSnackbar(requireView(), getString(R.string.failed_load_message_from_email_server),
         getString(R.string.retry), View.OnClickListener {
       UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
       (baseActivity as MessageDetailsActivity).loadMsgDetails()
@@ -481,7 +474,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     }
 
     if (account != null) {
-      val foldersManager = FoldersManager.fromDatabase(context!!, account.email)
+      val foldersManager = FoldersManager.fromDatabase(requireContext(), account.email)
       if (foldersManager.folderAll == null) {
         isArchiveActionEnabled = false
       }
@@ -582,7 +575,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         intentOpenFile.action = Intent.ACTION_VIEW
         intentOpenFile.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        if (intentOpenFile.resolveActivity(context!!.packageManager) != null) {
+        if (intentOpenFile.resolveActivity(requireContext().packageManager) != null) {
           startActivity(intentOpenFile)
         }
       }
@@ -592,14 +585,14 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private fun getDownloadAttClickListener(att: AttachmentInfo): View.OnClickListener {
     return View.OnClickListener {
       lastClickedAtt = att
-      lastClickedAtt!!.orderNumber = GeneralUtil.genAttOrderId(context!!)
-      val isPermissionGranted = ContextCompat.checkSelfPermission(context!!,
+      lastClickedAtt!!.orderNumber = GeneralUtil.genAttOrderId(requireContext())
+      val isPermissionGranted = ContextCompat.checkSelfPermission(requireContext(),
           Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
       if (isPermissionGranted) {
         requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
             REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE)
       } else {
-        context!!.startService(AttachmentDownloadManagerService.newIntent(context!!, lastClickedAtt!!))
+        context?.startService(AttachmentDownloadManagerService.newIntent(context, lastClickedAtt!!))
       }
     }
   }
@@ -649,7 +642,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           if (att != null) {
             att.isDecrypted = true
             att.uri?.path?.let {
-              att.uri = FileProvider.getUriForFile(context!!, Constants.FILE_PROVIDER_AUTHORITY, File(it))
+              att.uri = FileProvider.getUriForFile(requireContext(), Constants.FILE_PROVIDER_AUTHORITY, File(it))
             }
             atts.add(att)
           }
@@ -772,7 +765,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
     textViewPgpPublicKey.text = block.content
 
-    val existingPgpContact = ContactsDaoSource().getPgpContact(context!!, email)
+    val existingPgpContact = ContactsDaoSource().getPgpContact(requireContext(), email)
     val button = pubKeyView.findViewById<Button>(R.id.buttonKeyAction)
     if (button != null) {
       if (existingPgpContact == null) {
@@ -799,7 +792,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     button.setText(R.string.save_contact)
     button.setOnClickListener { v ->
       val pgpContact = block.keyDetails!!.primaryPgpContact
-      val uri = ContactsDaoSource().addRow(context!!, pgpContact)
+      val uri = ContactsDaoSource().addRow(requireContext(), pgpContact)
       if (uri != null) {
         Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show()
         v.visibility = View.GONE
@@ -820,7 +813,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     button.setText(R.string.update_contact)
     button.setOnClickListener { v ->
       val pgpContact = block.keyDetails!!.primaryPgpContact
-      val isUpdated = ContactsDaoSource().updatePgpContact(context!!, pgpContact) > 0
+      val isUpdated = ContactsDaoSource().updatePgpContact(context, pgpContact) > 0
       if (isUpdated) {
         Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
         v.visibility = View.GONE
@@ -841,7 +834,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     button.setText(R.string.replace_contact)
     button.setOnClickListener { v ->
       val pgpContact = block.keyDetails!!.primaryPgpContact
-      val isUpdated = ContactsDaoSource().updatePgpContact(context!!, pgpContact) > 0
+      val isUpdated = ContactsDaoSource().updatePgpContact(context, pgpContact) > 0
       if (isUpdated) {
         Toast.makeText(context, R.string.contact_successfully_replaced, Toast.LENGTH_SHORT).show()
         v.visibility = View.GONE
@@ -919,7 +912,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       val account = AccountDaoSource().getActiveAccountInformation(context)
           ?: return@setOnClickListener
       startActivityForResult(ImportPrivateKeyActivity.getIntent(
-          context = context!!, accountDao = account,
+          context = context, accountDao = account,
           title = getString(R.string.import_private_key),
           throwErrorIfDuplicateFoundEnabled = true,
           cls = ImportPrivateKeyActivity::class.java,

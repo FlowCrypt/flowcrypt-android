@@ -6,8 +6,8 @@
 ext {
     kotlinVersion = '1.3.61'
     /*Global*/
-    appVersionCode = 96
-    appVersionName = '0.9.6'
+    appVersionCode = 97
+    appVersionName = '0.9.7'
     buildToolsVersion = '29.0.2'
     compileSdkVersion = 29
     targetSdkVersion = 29
@@ -20,7 +20,7 @@ ext {
     /* https://developer.android.com/jetpack/androidx/releases/lifecycle*/
     lifecycleVersion = '2.2.0'
     /* https://developer.android.com/jetpack/androidx/releases/room#declaring_dependencies*/
-    roomVersion = '2.2.3'
+    roomVersion = '2.2.4'
     /* https://developer.android.com/jetpack/androidx/releases/paging#declaring_dependencies*/
     pagingVersion = '2.1.1'
     /* https://mvnrepository.com/artifact/androidx.test.espresso*/

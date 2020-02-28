@@ -19,8 +19,9 @@ import android.widget.CompoundButton
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.Loader
+import androidx.activity.viewModels
+import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -28,25 +29,25 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.jetpack.viewmodel.CheckEmailSettingsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.SecurityUtils
-import com.flowcrypt.email.ui.loader.CheckEmailSettingsAsyncTaskLoader
-import com.flowcrypt.email.ui.loader.LoadPrivateKeysFromMailAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.sun.mail.util.MailConnectException
 import java.net.SocketTimeoutException
-import java.util.*
 import java.util.regex.Pattern
 import javax.mail.AuthenticationFailedException
 
@@ -60,7 +61,7 @@ import javax.mail.AuthenticationFailedException
  */
 
 class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheckedChangeListener,
-    AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher, LoaderManager.LoaderCallbacks<LoaderResult> {
+    AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher {
 
   private var editTextEmail: EditText? = null
   private var editTextUserName: EditText? = null
@@ -81,6 +82,12 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
 
   private var isImapSpinnerRestored: Boolean = false
   private var isSmtpSpinnerRestored: Boolean = false
+
+  private val checkEmailSettingsViewModel: CheckEmailSettingsViewModel by viewModels()
+  private val privateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
+
+  @get:VisibleForTesting
+  val idlingForFetchingPrivateKeys: SingleIdlingResources = SingleIdlingResources()
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = true
@@ -105,104 +112,9 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     }
   }
 
-  /**
-   * Retrieve a temp [AuthCredentials] from the shared preferences.
-   */
-  private val tempAuthCreds: AuthCredentials?
-    get() {
-      val authCredsJson =
-          SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(this),
-              Constants.PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS, "")
-
-      if (!TextUtils.isEmpty(authCredsJson)) {
-        try {
-          return Gson().fromJson(authCredsJson, AuthCredentials::class.java)
-        } catch (e: JsonSyntaxException) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-        }
-
-      }
-
-      return null
-    }
-
-  /**
-   * Do a lot of checks to validate an outgoing message info.
-   *
-   * @return <tt>Boolean</tt> true if all information is correct, false otherwise.
-   */
-  private val isDataCorrect: Boolean
-    get() {
-      if (TextUtils.isEmpty(editTextEmail!!.text)) {
-        showInfoSnackbar(editTextEmail!!, getString(R.string.text_must_not_be_empty, getString(R.string.e_mail)))
-        editTextEmail!!.requestFocus()
-      } else if (GeneralUtil.isEmailValid(editTextEmail!!.text)) {
-        when {
-          TextUtils.isEmpty(editTextUserName!!.text) -> {
-            showInfoSnackbar(editTextUserName!!, getString(R.string.text_must_not_be_empty,
-                getString(R.string.username)))
-            editTextUserName!!.requestFocus()
-          }
-
-          TextUtils.isEmpty(editTextPassword!!.text) -> {
-            showInfoSnackbar(editTextPassword!!, getString(R.string.text_must_not_be_empty,
-                getString(R.string.password)))
-            editTextPassword!!.requestFocus()
-          }
-
-          TextUtils.isEmpty(editTextImapServer!!.text) -> {
-            showInfoSnackbar(editTextImapServer!!, getString(R.string.text_must_not_be_empty,
-                getString(R.string.imap_server)))
-            editTextImapServer!!.requestFocus()
-          }
-
-          TextUtils.isEmpty(editTextImapPort!!.text) -> {
-            showInfoSnackbar(editTextImapPort!!, getString(R.string.text_must_not_be_empty,
-                getString(R.string.imap_port)))
-            editTextImapPort!!.requestFocus()
-          }
-
-          TextUtils.isEmpty(editTextSmtpServer!!.text) -> {
-            showInfoSnackbar(editTextSmtpServer!!, getString(R.string.text_must_not_be_empty,
-                getString(R.string.smtp_server)))
-            editTextSmtpServer!!.requestFocus()
-          }
-
-          TextUtils.isEmpty(editTextSmtpPort!!.text) -> {
-            showInfoSnackbar(editTextSmtpPort!!, getString(R.string.text_must_not_be_empty,
-                getString(R.string.smtp_port)))
-            editTextSmtpPort!!.requestFocus()
-          }
-
-          checkBoxRequireSignInForSmtp!!.isChecked -> when {
-            TextUtils.isEmpty(editTextSmtpUsername!!.text) -> {
-              showInfoSnackbar(editTextSmtpUsername!!, getString(R.string.text_must_not_be_empty,
-                  getString(R.string.smtp_username)))
-              editTextSmtpUsername!!.requestFocus()
-            }
-
-            TextUtils.isEmpty(editTextSmtpPassword!!.text) -> {
-              showInfoSnackbar(editTextSmtpPassword!!, getString(R.string.text_must_not_be_empty,
-                  getString(R.string.smtp_password)))
-              editTextSmtpPassword!!.requestFocus()
-            }
-            else -> return true
-          }
-
-          else -> return true
-        }
-      } else {
-        showInfoSnackbar(editTextEmail!!, getString(R.string.error_email_is_not_valid))
-        editTextEmail!!.requestFocus()
-      }
-
-      return false
-    }
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    this.authCreds = tempAuthCreds
+    this.authCreds = getTempAuthCreds()
 
     if (authCreds == null) {
       isImapSpinnerRestored = true
@@ -210,6 +122,9 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     }
 
     initViews(savedInstanceState)
+
+    setupCheckEmailSettingsViewModel()
+    setupPrivateKeysViewModel()
   }
 
   public override fun onPause() {
@@ -294,7 +209,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       R.id.spinnerSmtpSecyrityType -> {
         val (_, _, _, defSmtpPort) = parent.adapter.getItem(position) as SecurityType
         if (isSmtpSpinnerRestored) {
-          editTextSmtpPort!!.setText(defSmtpPort.toString())
+          editTextSmtpPort?.setText(defSmtpPort.toString())
         } else {
           isSmtpSpinnerRestored = true
         }
@@ -308,11 +223,14 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.buttonTryToConnect -> if (isDataCorrect) {
+      R.id.buttonTryToConnect -> if (isDataCorrect()) {
         authCreds = generateAuthCreds()
         UIUtil.hideSoftInput(this, rootView)
         if (checkDuplicate()) {
-          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_check_email_settings, null, this)
+          authCreds = generateAuthCreds()
+          authCreds?.let {
+            checkEmailSettingsViewModel.check(it)
+          }
         } else {
           showInfoSnackbar(rootView, getString(R.string.template_email_alredy_added,
               authCreds!!.email), Snackbar.LENGTH_LONG)
@@ -340,118 +258,107 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     }
   }
 
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
-    when (id) {
-      R.id.loader_id_check_email_settings -> {
-        UIUtil.exchangeViewVisibility(true, progressView!!, rootView)
-
-        authCreds = generateAuthCreds()
-        return CheckEmailSettingsAsyncTaskLoader(this, authCreds!!)
-      }
-
-      R.id.loader_id_load_private_key_backups_from_email -> {
-        UIUtil.exchangeViewVisibility(true, progressView!!, rootView)
-        val account = AccountDao(authCreds!!.email, null, authCreds!!.username, null, null, null,
-            false, authCreds)
-        return LoadPrivateKeysFromMailAsyncTaskLoader(this, account)
-      }
-
-      else -> return Loader(this)
-    }
-  }
-
-  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
-    handleLoaderResult(loader, loaderResult)
-  }
-
-  override fun onLoaderReset(loader: Loader<LoaderResult>) {
-
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  override fun onSuccess(loaderId: Int, result: Any?) {
-    when (loaderId) {
-      R.id.loader_id_check_email_settings -> {
-        val isCorrect = result as Boolean
-        if (isCorrect) {
-          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_private_key_backups_from_email, null, this)
-        } else {
-          UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
-          showInfoSnackbar(rootView, getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG)
-        }
-      }
-
-      R.id.loader_id_load_private_key_backups_from_email -> {
-        val keyDetailsList = result as ArrayList<NodeKeyDetails>?
-        if (CollectionUtils.isEmpty(keyDetailsList)) {
-          val account = AccountDao(authCreds!!.email, null, authCreds!!.username, null, null, null,
-              false, authCreds)
-          startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
-              REQUEST_CODE_ADD_NEW_ACCOUNT)
-          UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
-        } else {
-          val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
-              keyDetailsList!!.size, keyDetailsList.size)
-          val intent = CheckKeysActivity.newIntent(this, privateKeys = keyDetailsList, type = KeyDetails.Type.EMAIL, subTitle = subTitle,
-              positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R.string.use_another_account))
-          startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL)
-        }
-
-        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_private_key_backups_from_email)
-      }
-
-      else -> super.onSuccess(loaderId, result)
-    }
-  }
-
-  override fun onError(loaderId: Int, e: Exception?) {
-    when (loaderId) {
-      R.id.loader_id_check_email_settings -> {
-        UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
-        val original = e?.cause
-        if (original != null) {
-          if (original is AuthenticationFailedException) {
-            val isGmailImapServer = editTextImapServer!!.text.toString().equals(GmailConstants
-                .GMAIL_IMAP_SERVER, ignoreCase = true)
-            val isMsgEmpty = TextUtils.isEmpty(original.message)
-            val hasAlert = original.message?.startsWith(GmailConstants
-                .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED)
-            if (isGmailImapServer && !isMsgEmpty && hasAlert == true) {
-              showLessSecurityWarning()
-            } else {
-              showInfoSnackbar(rootView, if (!TextUtils.isEmpty(e.message))
-                e.message
-              else
-                getString(R.string.unknown_error), Snackbar.LENGTH_LONG)
-            }
-          } else if (original is MailConnectException || original is SocketTimeoutException) {
-            showNetworkErrorHint()
+  private fun setupCheckEmailSettingsViewModel() {
+    checkEmailSettingsViewModel.checkEmailSettingsLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            idlingForFetchingPrivateKeys.setIdleState(false)
+            UIUtil.exchangeViewVisibility(true, progressView, rootView)
           }
-        } else {
-          showInfoSnackbar(rootView, if (e != null && !TextUtils.isEmpty(e.message))
-            e.message
-          else
-            getString(R.string.unknown_error), Snackbar.LENGTH_LONG)
+
+          Result.Status.SUCCESS -> {
+            val isCorrect = it.data
+            if (isCorrect == true) {
+              authCreds?.let { authCredentials ->
+                val account = AccountDao(authCredentials.email, null, authCredentials.username,
+                    null, null, null, false, authCreds)
+                privateKeysViewModel.fetchAvailableKeys(account)
+              }
+            } else {
+              idlingForFetchingPrivateKeys.setIdleState(true)
+              UIUtil.exchangeViewVisibility(false, progressView, rootView)
+              showInfoSnackbar(rootView, getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG)
+            }
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            idlingForFetchingPrivateKeys.setIdleState(true)
+            UIUtil.exchangeViewVisibility(false, progressView, rootView)
+            val exception = it.exception ?: return@let
+            val original = it.exception.cause
+            if (original != null) {
+              if (original is AuthenticationFailedException) {
+                val isGmailImapServer = editTextImapServer?.text.toString()
+                    .equals(GmailConstants.GMAIL_IMAP_SERVER, ignoreCase = true)
+                val isMsgEmpty = TextUtils.isEmpty(original.message)
+                val hasAlert = original.message?.startsWith(GmailConstants
+                    .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED)
+                if (isGmailImapServer && !isMsgEmpty && hasAlert == true) {
+                  showLessSecurityWarning()
+                } else {
+                  showInfoSnackbar(rootView, if (exception.message.isNullOrEmpty()) {
+                    getString(R.string.unknown_error)
+                  } else exception.message, Snackbar.LENGTH_LONG)
+                }
+              } else if (original is MailConnectException || original is SocketTimeoutException) {
+                showNetworkErrorHint()
+              }
+            } else {
+              showInfoSnackbar(rootView, if (exception.message.isNullOrEmpty()) {
+                getString(R.string.unknown_error)
+              } else exception.message, Snackbar.LENGTH_LONG)
+            }
+          }
         }
       }
+    })
+  }
 
-      R.id.loader_id_load_private_key_backups_from_email -> {
-        UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
-        showInfoSnackbar(rootView, if (e != null && !TextUtils.isEmpty(e.message))
-          e.message
-        else
-          getString(R.string.unknown_error), Snackbar.LENGTH_LONG)
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.privateKeysLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            UIUtil.exchangeViewVisibility(true, progressView, rootView)
+          }
+
+          Result.Status.SUCCESS -> {
+            idlingForFetchingPrivateKeys.setIdleState(true)
+
+            val keyDetailsList = it.data
+            if (CollectionUtils.isEmpty(keyDetailsList)) {
+              val account = AccountDao(authCreds!!.email, null, authCreds!!.username, null, null, null,
+                  false, authCreds)
+              startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
+                  REQUEST_CODE_ADD_NEW_ACCOUNT)
+              UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
+            } else {
+              val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
+                  keyDetailsList!!.size, keyDetailsList.size)
+              val intent = CheckKeysActivity.newIntent(this, privateKeys = keyDetailsList, type = KeyDetails.Type.EMAIL, subTitle = subTitle,
+                  positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R.string.use_another_account))
+              startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL)
+            }
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            idlingForFetchingPrivateKeys.setIdleState(true)
+            UIUtil.exchangeViewVisibility(false, progressView, rootView)
+            showInfoSnackbar(rootView, it.exception?.message ?: getString(R.string
+                .unknown_error), Snackbar.LENGTH_LONG)
+          }
+        }
       }
-
-      else -> super.onError(loaderId, e)
-    }
+    })
   }
 
   private fun showNetworkErrorHint() {
     showSnackbar(rootView, getString(R.string.network_error_please_retry), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
-      LoaderManager.getInstance(this@AddNewAccountManuallyActivity)
-          .restartLoader(R.id.loader_id_check_email_settings, null, this@AddNewAccountManuallyActivity)
+      authCreds?.let {
+        checkEmailSettingsViewModel.check(it)
+      }
     })
   }
 
@@ -592,6 +499,105 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
         checkBoxRequireSignInForSmtp!!.isChecked,
         editTextSmtpUsername!!.text.toString(),
         editTextSmtpPassword!!.text.toString())
+  }
+
+  /**
+   * Do a lot of checks to validate an outgoing message info.
+   *
+   * @return <tt>Boolean</tt> true if all information is correct, false otherwise.
+   */
+  private fun isDataCorrect(): Boolean {
+    when {
+      editTextEmail?.text.isNullOrEmpty() -> {
+        showInfoSnackbar(editTextEmail, getString(R.string.text_must_not_be_empty, getString(R.string.e_mail)))
+        editTextEmail?.requestFocus()
+      }
+
+      GeneralUtil.isEmailValid(editTextEmail?.text) -> {
+        when {
+          editTextUserName?.text.isNullOrEmpty() -> {
+            showInfoSnackbar(editTextUserName!!, getString(R.string.text_must_not_be_empty,
+                getString(R.string.username)))
+            editTextUserName?.requestFocus()
+          }
+
+          editTextPassword?.text.isNullOrEmpty() -> {
+            showInfoSnackbar(editTextPassword!!, getString(R.string.text_must_not_be_empty,
+                getString(R.string.password)))
+            editTextPassword?.requestFocus()
+          }
+
+          editTextImapServer?.text.isNullOrEmpty() -> {
+            showInfoSnackbar(editTextImapServer!!, getString(R.string.text_must_not_be_empty,
+                getString(R.string.imap_server)))
+            editTextImapServer?.requestFocus()
+          }
+
+          editTextImapPort?.text.isNullOrEmpty() -> {
+            showInfoSnackbar(editTextImapPort!!, getString(R.string.text_must_not_be_empty,
+                getString(R.string.imap_port)))
+            editTextImapPort?.requestFocus()
+          }
+
+          editTextSmtpServer?.text.isNullOrEmpty() -> {
+            showInfoSnackbar(editTextSmtpServer!!, getString(R.string.text_must_not_be_empty,
+                getString(R.string.smtp_server)))
+            editTextSmtpServer?.requestFocus()
+          }
+
+          editTextSmtpPort?.text.isNullOrEmpty() -> {
+            showInfoSnackbar(editTextSmtpPort!!, getString(R.string.text_must_not_be_empty,
+                getString(R.string.smtp_port)))
+            editTextSmtpPort?.requestFocus()
+          }
+
+          checkBoxRequireSignInForSmtp?.isChecked == true -> when {
+            editTextSmtpUsername?.text.isNullOrEmpty() -> {
+              showInfoSnackbar(editTextSmtpUsername, getString(R.string.text_must_not_be_empty,
+                  getString(R.string.smtp_username)))
+              editTextSmtpUsername?.requestFocus()
+            }
+
+            editTextSmtpPassword?.text.isNullOrEmpty() -> {
+              showInfoSnackbar(editTextSmtpPassword, getString(R.string.text_must_not_be_empty,
+                  getString(R.string.smtp_password)))
+              editTextSmtpPassword?.requestFocus()
+            }
+            else -> return true
+          }
+
+          else -> return true
+        }
+      }
+
+      else -> {
+        showInfoSnackbar(editTextEmail, getString(R.string.error_email_is_not_valid))
+        editTextEmail?.requestFocus()
+      }
+    }
+
+    return false
+  }
+
+  /**
+   * Retrieve a temp [AuthCredentials] from the shared preferences.
+   */
+  private fun getTempAuthCreds(): AuthCredentials? {
+    val authCredsJson =
+        SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(this),
+            Constants.PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS, "")
+
+    if (!TextUtils.isEmpty(authCredsJson)) {
+      try {
+        return Gson().fromJson(authCredsJson, AuthCredentials::class.java)
+      } catch (e: JsonSyntaxException) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+      }
+
+    }
+
+    return null
   }
 
   companion object {

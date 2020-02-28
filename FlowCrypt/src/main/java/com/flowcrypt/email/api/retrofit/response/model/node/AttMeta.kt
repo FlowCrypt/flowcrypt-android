@@ -15,13 +15,13 @@ import com.google.gson.annotations.Expose
  *         Time: 10:16 AM
  *         E-mail: DenBond7@gmail.com
  */
-data class AttMeta(@Expose val name: String,
+data class AttMeta(@Expose val name: String?,
                    @Expose var data: String?,
                    @Expose val length: Long,
                    @Expose val type: String?) : Parcelable {
 
   constructor(source: Parcel) : this(
-      source.readString()!!,
+      source.readString(),
       source.readString(),
       source.readLong(),
       source.readString()

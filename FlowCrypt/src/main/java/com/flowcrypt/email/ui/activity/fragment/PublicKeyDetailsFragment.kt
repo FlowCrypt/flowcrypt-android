@@ -15,7 +15,6 @@ import android.provider.DocumentsContract
 import android.text.TextUtils
 import android.text.format.DateFormat
 import android.util.TypedValue
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -65,6 +64,8 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
   private var textViewCreated: TextView? = null
   private var onContactDeletedListener: OnContactDeletedListener? = null
 
+  override val contentResourceId: Int = R.layout.fragment_public_key_details
+
   override fun onAttach(context: Context) {
     super.onAttach(context)
 
@@ -83,10 +84,6 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     if (publicKey == null || email == null) {
       parentFragmentManager.popBackStack()
     }
-  }
-
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, bundle: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_public_key_details, container, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -111,7 +108,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.menuActionCopy -> {
-        val clipboard = context!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", details?.publicKey))
         Toast.makeText(context, getString(R.string.public_key_copied_to_clipboard),
             Toast.LENGTH_SHORT).show()
@@ -188,7 +185,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
       if (e is IllegalStateException) {
         if (e.message != null && e.message!!.startsWith("Already exists")) {
           error = getString(R.string.not_saved_file_already_exists)
-          showInfoSnackbar(view!!, error, Snackbar.LENGTH_LONG)
+          showInfoSnackbar(requireView(), error, Snackbar.LENGTH_LONG)
 
           try {
             context?.contentResolver?.let { contentResolver ->
@@ -206,7 +203,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
         ExceptionUtil.handleError(e)
       }
 
-      showInfoSnackbar(view!!, error ?: "")
+      showInfoSnackbar(requireView(), error ?: "")
     }
   }
 

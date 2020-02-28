@@ -5,10 +5,13 @@
 
 package com.flowcrypt.email.api.email.sync.tasks
 
+import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
+import com.flowcrypt.email.database.entity.AttachmentEntity
+import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.FetchProfile
 import javax.mail.Folder
@@ -46,9 +49,17 @@ class LoadAttsInfoSyncTask(ownerKey: String,
     fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
     imapFolder.fetch(arrayOf(msg), fetchProfile)
 
-    AttachmentDaoSource().deleteAtts(listener.context, account.email, localFolder.fullName, uid)
-    AttachmentDaoSource().updateAttsTable(listener.context, account.email, localFolder.fullName, uid, msg)
+    val msgUid = uid
+    val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
+      AttachmentEntity.fromAttInfo(it.apply {
+        email = account.email
+        folder = if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else
+          SearchMessagesActivity.SEARCH_FOLDER_NAME
+        uid = msgUid.toInt()
+      })
+    }
 
+    FlowCryptRoomDatabase.getDatabase(listener.context).attachmentDao().insertWithReplace(attachments)
     listener.onAttsInfoReceived(account, localFolder, imapFolder, uid, ownerKey, requestCode)
 
     imapFolder.close(false)

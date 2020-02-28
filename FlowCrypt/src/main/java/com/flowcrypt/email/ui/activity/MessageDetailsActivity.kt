@@ -7,16 +7,12 @@ package com.flowcrypt.email.ui.activity
 
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.CursorLoader
-import androidx.loader.content.Loader
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -28,7 +24,7 @@ import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.source.imap.AttachmentDaoSource
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.DecryptMessageViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
@@ -51,9 +47,7 @@ import java.util.*
  * Time: 16:29
  * E-mail: DenBond7@gmail.com
  */
-class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.LoaderCallbacks<Cursor>,
-    MessageDetailsFragment.MessageDetailsListener {
-
+class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragment.MessageDetailsListener {
   private lateinit var messageEntity: MessageEntity
   private lateinit var localFolder: LocalFolder
   private lateinit var msgDetailsViewModel: MsgDetailsViewModel
@@ -89,47 +83,9 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     updateViews()
   }
 
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
-    return when (id) {
-      R.id.loader_id_load_attachments -> {
-        val uriAtt = AttachmentDaoSource().baseContentUri
-        val selectionAtt = (AttachmentDaoSource.COL_EMAIL + " = ?" + " AND "
-            + AttachmentDaoSource.COL_FOLDER + " = ? AND " + AttachmentDaoSource.COL_UID + " = ?")
-        val selectionArgsAtt = arrayOf(messageEntity.email, label, messageEntity.uid.toString())
-        CursorLoader(this, uriAtt, null, selectionAtt, selectionArgsAtt, null)
-      }
-
-      else -> Loader(this)
-    }
-  }
-
   override fun onDestroy() {
     cancelLoadMsgDetails(uniqueId)
     super.onDestroy()
-  }
-
-  override fun onLoadFinished(loader: Loader<Cursor>, cursor: Cursor?) {
-    when (loader.id) {
-      R.id.loader_id_load_attachments -> if (cursor != null) {
-        val atts = ArrayList<AttachmentInfo>()
-        while (cursor.moveToNext()) {
-          atts.add(AttachmentDaoSource.getAttInfo(cursor))
-        }
-
-        if (atts.isNotEmpty()) {
-          updateAtts(atts)
-          LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_load_attachments)
-        } else if (messageEntity.hasAttachments == true) {
-          loadAttsInfo(R.id.syns_request_code_load_atts_info, localFolder, messageEntity.uid.toInt())
-        }
-      }
-    }
-  }
-
-  override fun onLoaderReset(loader: Loader<Cursor>) {
-    when (loader.id) {
-      R.id.loader_id_load_attachments -> updateAtts(ArrayList())
-    }
   }
 
   override fun onNodeStateChanged(isReady: Boolean) {
@@ -308,6 +264,27 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     msgDetailsViewModel = ViewModelProvider(this, MsgDetailsViewModelFactory(localFolder,
         messageEntity, application)).get(MsgDetailsViewModel::class.java)
     msgDetailsViewModel.msgLiveData.observe(this, genMsgObserver())
+    msgDetailsViewModel.attsLiveData.observe(this, object : Observer<List<AttachmentEntity>> {
+      var isUpdateEnabled = true
+
+      override fun onChanged(list: List<AttachmentEntity>) {
+        val attachmentInfoList = list.map {
+          if (localFolder.searchQuery.isNullOrEmpty()) {
+            it.toAttInfo()
+          } else {
+            it.toAttInfo().copy(folder = localFolder.fullName)
+          }
+        }.toMutableList()
+        if (isUpdateEnabled) {
+          if (attachmentInfoList.isNotEmpty()) {
+            updateAtts(attachmentInfoList)
+            isUpdateEnabled = false
+          } else if (messageEntity.hasAttachments == true) {
+            loadAttsInfo(R.id.syns_request_code_load_atts_info, localFolder, messageEntity.uid.toInt())
+          }
+        }
+      }
+    })
     msgDetailsViewModel.msgStatesLiveData.observe(this, Observer {
       var finishActivity = true
       when (it) {
@@ -349,10 +326,9 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
     fragment?.onMsgDetailsUpdated()
   }
 
-  private fun updateAtts(atts: ArrayList<AttachmentInfo>) {
+  private fun updateAtts(atts: MutableList<AttachmentInfo>) {
     val fragment = supportFragmentManager
         .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
-
     fragment?.updateAttInfos(atts)
   }
 
@@ -414,10 +390,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), LoaderManager.Loader
             val fragment = supportFragmentManager
                 .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
 
-            fragment?.let { messageDetailsFragment ->
-              messageDetailsFragment.showIncomingMsgInfo(msgInfo)
-              LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_attachments, null, this)
-            }
+            fragment?.showIncomingMsgInfo(msgInfo)
 
             if (!idlingForDecryption!!.isIdleNow) {
               idlingForDecryption!!.decrement()

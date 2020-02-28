@@ -3,49 +3,21 @@
   ~ Contributors: DenBond7
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    tools:context="com.flowcrypt.email.ui.activity.settings.AttesterSettingsActivity">
 
     <include layout="@layout/toolbar" />
 
-    <FrameLayout
-        android:id="@+id/screenContent"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/attesterSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.AttesterSettingsFragment"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:layout="@layout/fragment_message_details" />
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center" />
-
-        <FrameLayout
-            android:id="@+id/layoutContent"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            tools:visibility="visible">
-
-            <ListView
-                android:id="@+id/listViewKeys"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:divider="@color/aluminum"
-                android:dividerHeight="1dp"
-                tools:listitem="@layout/attester_key_item" />
-
-        </FrameLayout>
-
-        <TextView
-            android:id="@+id/emptyView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="@string/no_results"
-            android:visibility="gone" />
-    </FrameLayout>
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

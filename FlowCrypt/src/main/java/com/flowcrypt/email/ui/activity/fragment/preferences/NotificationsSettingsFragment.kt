@@ -38,10 +38,10 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.
     setPreferencesFromResource(R.xml.preferences_notifications_settings, rootKey)
 
     val accountDaoSource = AccountDaoSource()
-    val account = accountDaoSource.getActiveAccountInformation(context!!)
+    val account = accountDaoSource.getActiveAccountInformation(requireContext())
 
     if (account != null) {
-      val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context!!, account.email)
+      val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(requireContext(), account.email)
 
       if (isEncryptedModeEnabled) {
         levels = arrayOf(
@@ -61,7 +61,7 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.
       val intent = Intent(context, SignInActivity::class.java)
       intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
       startActivity(intent)
-      activity!!.finish()
+      requireActivity().finish()
     }
   }
 
@@ -108,7 +108,7 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.
     filter.onPreferenceChangeListener = this
 
     var currentValue = SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(
-        context!!), Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
+        requireContext()), Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
 
     if (isEncryptedModeEnabled && NOTIFICATION_LEVEL_ALL_MESSAGES == currentValue) {
       filter.value = NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY

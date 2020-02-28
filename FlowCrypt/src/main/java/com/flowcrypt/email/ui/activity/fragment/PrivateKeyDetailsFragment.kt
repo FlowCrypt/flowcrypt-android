@@ -14,9 +14,7 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.TextUtils
 import android.text.format.DateFormat
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -45,6 +43,8 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
 
   private var details: NodeKeyDetails? = null
 
+  override val contentResourceId: Int = R.layout.fragment_private_key_details
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
@@ -56,10 +56,6 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
     if (details == null) {
       parentFragmentManager.popBackStack()
     }
-  }
-
-  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, bundle: Bundle?): View? {
-    return inflater.inflate(R.layout.fragment_private_key_details, container, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -91,7 +87,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
       }
 
       R.id.btnCopyToClipboard -> {
-        val clipboard = context!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("pubKey", details?.publicKey))
         Toast.makeText(context, getString(R.string.copied), Toast.LENGTH_SHORT).show()
       }
@@ -105,7 +101,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
 
   private fun saveKey(data: Intent) {
     try {
-      GeneralUtil.writeFileFromStringToUri(context!!, data.data!!, details!!.publicKey!!)
+      GeneralUtil.writeFileFromStringToUri(requireContext(), data.data!!, details!!.publicKey!!)
       Toast.makeText(context, getString(R.string.saved), Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
       e.printStackTrace()
@@ -114,10 +110,10 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
       if (e is IllegalStateException) {
         if (e.message != null && e.message!!.startsWith("Already exists")) {
           error = getString(R.string.not_saved_file_already_exists)
-          showInfoSnackbar(view!!, error, Snackbar.LENGTH_LONG)
+          showInfoSnackbar(requireView(), error, Snackbar.LENGTH_LONG)
 
           try {
-            data.data?.let { DocumentsContract.deleteDocument(context!!.contentResolver, it) }
+            data.data?.let { DocumentsContract.deleteDocument(requireContext().contentResolver, it) }
           } catch (fileNotFound: FileNotFoundException) {
             fileNotFound.printStackTrace()
           }
@@ -130,7 +126,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
         ExceptionUtil.handleError(e)
       }
 
-      showInfoSnackbar(view!!, error ?: "")
+      showInfoSnackbar(requireView(), error ?: "")
     }
   }
 

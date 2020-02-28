@@ -78,7 +78,17 @@ data class ParseDecryptedMsgResult constructor(
                 if (tempDir != null) {
                   try {
                     val decryptedAtt: DecryptedAttMsgBlock = block as DecryptedAttMsgBlock
-                    val file = File(tempDir, decryptedAtt.attMeta.name)
+                    val fileName = FileAndDirectoryUtils.normalizeFileName(decryptedAtt.attMeta.name)
+                    val file = if (fileName.isNullOrEmpty()) {
+                      createTempFile(directory = tempDir)
+                    } else {
+                      val file = File(tempDir, fileName)
+                      if (file.exists()) {
+                        FileAndDirectoryUtils.createFileWithIncreasedIndex(tempDir, fileName)
+                      } else {
+                        file
+                      }
+                    }
                     FileUtils.writeByteArrayToFile(file, Base64.decode(decryptedAtt.attMeta.data, Base64.DEFAULT))
                     decryptedAtt.attMeta.data = null //clear raw info to prevent Binder exception
                     decryptedAtt.fileUri = Uri.fromFile(file)
