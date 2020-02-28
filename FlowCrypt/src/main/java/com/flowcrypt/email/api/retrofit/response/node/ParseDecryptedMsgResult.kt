@@ -39,6 +39,7 @@ import java.io.StringReader
 data class ParseDecryptedMsgResult constructor(
     @Expose val text: String?,
     @Expose val replyType: String,
+    @Expose val subject: String?,
     @SerializedName("error")
     @Expose override val apiError: ApiError?,
     var msgBlocks: MutableList<MsgBlock>?) :
@@ -120,6 +121,7 @@ data class ParseDecryptedMsgResult constructor(
   constructor(source: Parcel) : this(
       source.readString(),
       source.readString()!!,
+      source.readString(),
       source.readParcelable<ApiError>(ApiError::class.java.classLoader),
       mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) }
   )
@@ -129,6 +131,7 @@ data class ParseDecryptedMsgResult constructor(
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
     writeString(text)
     writeString(replyType)
+    writeString(subject)
     writeParcelable(apiError, flags)
     writeTypedList(msgBlocks)
   }
