@@ -10,10 +10,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.viewpager.widget.ViewPager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -32,7 +36,7 @@ import com.google.android.material.tabs.TabLayout
 
 class LegalSettingsActivity : BaseSettingsActivity() {
 
-  private var tabPagerAdapter: TabPagerAdapter? = null
+  private var tabPagerAdapter: TabPagerAdapter = TabPagerAdapter(supportFragmentManager)
   private var viewPager: ViewPager? = null
   private var tabLayout: TabLayout? = null
 
@@ -54,11 +58,8 @@ class LegalSettingsActivity : BaseSettingsActivity() {
   }
 
   private fun updateViews() {
-    if (tabPagerAdapter == null) {
-      tabPagerAdapter = TabPagerAdapter(supportFragmentManager)
-    }
-    viewPager!!.adapter = tabPagerAdapter
-    tabLayout!!.setupWithViewPager(viewPager)
+    viewPager?.adapter = tabPagerAdapter
+    tabLayout?.setupWithViewPager(viewPager)
   }
 
   /**
@@ -67,49 +68,69 @@ class LegalSettingsActivity : BaseSettingsActivity() {
    */
   class WebViewFragment : BaseFragment() {
     private var assetsPath: String? = null
-    private lateinit var webView: WebView
+    private var isRefreshEnabled: Boolean = false
 
     override val contentResourceId: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
       super.onCreate(savedInstanceState)
-      val args = arguments
-      if (args != null) {
-        this.assetsPath = args.getString(KEY_URL)
-      }
+      assetsPath = arguments?.getString(KEY_URL)
+      isRefreshEnabled = arguments?.getBoolean(KEY_IS_REFRESH_ENABLED, false) ?: false
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
-      webView = WebView(context)
-      webView.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-          ViewGroup.LayoutParams.MATCH_PARENT)
-
-      return webView
+      return inflater.inflate(R.layout.swipe_to_refrech_with_webview, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
       super.onViewCreated(view, savedInstanceState)
-
-      if (::webView.isInitialized) {
-        webView.loadUrl(assetsPath!!)
+      val webView = view.findViewById<WebView>(R.id.webView)
+      val swipeRefreshLayout = view.findViewById<SwipeRefreshLayout>(R.id.swipeRefreshLayout)
+      if (isRefreshEnabled) {
+        swipeRefreshLayout?.setColorSchemeResources(R.color.colorPrimary, R.color.colorPrimary, R.color.colorPrimary)
+        swipeRefreshLayout.setOnRefreshListener {
+          webView?.loadUrl(assetsPath)
+        }
+      } else {
+        swipeRefreshLayout.isEnabled = false
       }
+
+      webView?.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+          ViewGroup.LayoutParams.MATCH_PARENT)
+      webView?.webViewClient = object : WebViewClient() {
+        override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+          if (error?.description == "net::ERR_INTERNET_DISCONNECTED") {
+            webView?.loadUrl("file:///android_asset/html/no_connection.htm")
+          } else {
+            super.onReceivedError(view, request, error)
+          }
+        }
+
+        override fun onPageFinished(view: WebView?, url: String?) {
+          super.onPageFinished(view, url)
+          swipeRefreshLayout.isRefreshing = false
+        }
+      }
+      webView?.loadUrl(assetsPath)
     }
 
     companion object {
       internal const val KEY_URL = BuildConfig.APPLICATION_ID + ".KEY_URL"
+      internal const val KEY_IS_REFRESH_ENABLED = BuildConfig.APPLICATION_ID + ".KEY_IS_REFRESH_ENABLED"
 
       /**
        * Generate an instance of the [WebViewFragment].
        *
        * @param assetsPath The path to a html in the assets directory.
+       * @param isRefreshEnabled If true a user will be able to update a tab.
        * @return <tt>[WebViewFragment]</tt>
        */
-      @JvmStatic
-      fun newInstance(assetsPath: String): WebViewFragment {
+      fun newInstance(assetsPath: String, isRefreshEnabled: Boolean = false): WebViewFragment {
         val args = Bundle()
         args.putString(KEY_URL, "file:///android_asset/$assetsPath")
+        args.putBoolean(KEY_IS_REFRESH_ENABLED, isRefreshEnabled)
 
         val webViewFragment = WebViewFragment()
         webViewFragment.arguments = args
@@ -120,12 +141,13 @@ class LegalSettingsActivity : BaseSettingsActivity() {
        * Generate an instance of the [WebViewFragment].
        *
        * @param uri The [Uri] which contains info about a URL.
+       * @param isRefreshEnabled If true a user will be able to update a tab.
        * @return <tt>[WebViewFragment]</tt>
        */
-      @JvmStatic
-      fun newInstance(uri: Uri): WebViewFragment {
+      fun newInstance(uri: Uri, isRefreshEnabled: Boolean = false): WebViewFragment {
         val args = Bundle()
         args.putString(KEY_URL, uri.toString())
+        args.putBoolean(KEY_IS_REFRESH_ENABLED, isRefreshEnabled)
 
         val webViewFragment = WebViewFragment()
         webViewFragment.arguments = args
@@ -142,9 +164,11 @@ class LegalSettingsActivity : BaseSettingsActivity() {
 
     override fun getItem(i: Int): Fragment {
       when (i) {
-        TAB_POSITION_PRIVACY -> return WebViewFragment.newInstance(Uri.parse(Constants.FLOWCRYPT_PRIVACY_URL))
+        TAB_POSITION_PRIVACY -> return WebViewFragment.newInstance(Uri.parse(Constants
+            .FLOWCRYPT_PRIVACY_URL), true)
 
-        TAB_POSITION_TERMS -> return WebViewFragment.newInstance(Uri.parse(Constants.FLOWCRYPT_TERMS_URL))
+        TAB_POSITION_TERMS -> return WebViewFragment.newInstance(Uri.parse(Constants
+            .FLOWCRYPT_TERMS_URL), true)
 
         TAB_POSITION_LICENCE -> return WebViewFragment.newInstance("html/license.htm")
 
