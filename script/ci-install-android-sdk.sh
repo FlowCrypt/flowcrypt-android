@@ -26,6 +26,7 @@ else
     ~/Android/Sdk/tools/bin/sdkmanager "extras;google;m2repository"
     ~/Android/Sdk/tools/bin/sdkmanager "platform-tools"
     ~/Android/Sdk/tools/bin/sdkmanager "emulator"
+    ~/Android/Sdk/tools/bin/sdkmanager "ndk;21.0.6113669"
     ~/Android/Sdk/tools/bin/sdkmanager "system-images;android-29;google_apis;x86_64"
 fi
 
