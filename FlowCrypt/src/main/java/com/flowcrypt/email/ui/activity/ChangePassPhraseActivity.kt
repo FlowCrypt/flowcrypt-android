@@ -20,10 +20,10 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
-import com.flowcrypt.email.ui.loader.ChangePassPhraseAsyncTaskLoader
 import com.flowcrypt.email.ui.loader.SaveBackupToInboxAsyncTaskLoader
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.UIUtil
@@ -38,18 +38,20 @@ import com.flowcrypt.email.util.idling.SingleIdlingResources
  * E-mail: DenBond7@gmail.com
  */
 class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.LoaderCallbacks<LoaderResult> {
-  private val privateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
+  private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
+  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   @get:VisibleForTesting
   val idlingForFetchingKeys: SingleIdlingResources = SingleIdlingResources()
 
   override fun onConfirmPassPhraseSuccess() {
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_change_pass_phrase, null, this)
+    privateKeysViewModel.changePassphrase(editTextKeyPassword.text.toString())
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     SystemNotificationManager(this).cancel(SystemNotificationManager.NOTIFICATION_ID_PASSPHRASE_TOO_WEAK)
+    setupLoadPrivateKeysViewModel()
     setupPrivateKeysViewModel()
   }
 
@@ -98,12 +100,6 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
 
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
     return when (id) {
-      R.id.loader_id_change_pass_phrase -> {
-        isBackEnabled = false
-        UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
-        ChangePassPhraseAsyncTaskLoader(this, account!!, editTextKeyPassword.text.toString())
-      }
-
       R.id.loader_id_save_backup_to_inbox -> SaveBackupToInboxAsyncTaskLoader(this, account!!)
 
       else -> Loader(this)
@@ -116,7 +112,6 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
 
   override fun onLoaderReset(loader: Loader<LoaderResult>) {
     when (loader.id) {
-      R.id.loader_id_change_pass_phrase,
       R.id.loader_id_save_backup_to_inbox -> isBackEnabled = true
     }
   }
@@ -124,18 +119,6 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
   @Suppress("UNCHECKED_CAST")
   override fun onSuccess(loaderId: Int, result: Any?) {
     when (loaderId) {
-      R.id.loader_id_change_pass_phrase -> {
-        KeysStorageImpl.getInstance(this).refresh(this)
-        if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP) == true) {
-          isBackEnabled = true
-          Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
-          setResult(Activity.RESULT_OK)
-          finish()
-        } else {
-          account?.let { privateKeysViewModel.fetchAvailableKeys(it) }
-        }
-      }
-
       R.id.loader_id_save_backup_to_inbox -> {
         isBackEnabled = true
         Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
@@ -149,13 +132,6 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
 
   override fun onError(loaderId: Int, e: Exception?) {
     when (loaderId) {
-      R.id.loader_id_change_pass_phrase -> {
-        isBackEnabled = true
-        editTextKeyPasswordSecond.text = null
-        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-        showInfoSnackbar(rootView, e!!.message)
-      }
-
       R.id.loader_id_save_backup_to_inbox -> runBackupKeysActivity()
 
       else -> super.onError(loaderId, e)
@@ -168,8 +144,8 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
     startActivityForResult(Intent(this, BackupKeysActivity::class.java), REQUEST_CODE_BACKUP_WITH_OPTION)
   }
 
-  private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.privateKeysLiveData.observe(this, Observer {
+  private fun setupLoadPrivateKeysViewModel() {
+    loadPrivateKeysViewModel.privateKeysLiveData.observe(this, Observer {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -190,6 +166,40 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             idlingForFetchingKeys.setIdleState(true)
             runBackupKeysActivity()
+          }
+        }
+      }
+    })
+  }
+
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.changePassphraseLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            isBackEnabled = false
+            UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
+          }
+
+          Result.Status.SUCCESS -> {
+            if (it.data == true) {
+              KeysStorageImpl.getInstance(this).refresh(this)
+              if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP) == true) {
+                isBackEnabled = true
+                Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
+                setResult(Activity.RESULT_OK)
+                finish()
+              } else {
+                account?.let { loadPrivateKeysViewModel.fetchAvailableKeys(it) }
+              }
+            }
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            isBackEnabled = true
+            editTextKeyPasswordSecond.text = null
+            UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+            showInfoSnackbar(rootView, it.exception?.message ?: getString(R.string.unknown_error))
           }
         }
       }
