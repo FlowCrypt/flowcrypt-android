@@ -17,8 +17,6 @@ blocks:
           value: /home/semaphore/git/flowcrypt-android
         - name: ANDROID_SDK_ROOT
           value: /home/semaphore/Android/Sdk
-        - name: ANDROID_NDK_HOME
-          value: /home/semaphore/Android/Sdk/ndk-bundle
       jobs:
         - name: Test without mailserver
           commands:
@@ -53,8 +51,10 @@ blocks:
             - cache has_key $BUILD_NATIVE_CACHE || cache store $BUILD_NATIVE_CACHE git/flowcrypt-android/FlowCrypt/.externalNativeBuild
             - cache has_key $BUILD_CACHE || cache store $BUILD_CACHE git/flowcrypt-android/FlowCrypt/build
 
-
-
+      epilogue:
+        on_fail:
+          commands:
+            - artifact push job --expire-in 1w $SEMAPHORE_GIT_DIR/FlowCrypt/build/reports/androidTests/connected/flavors/DEVTEST/index.html
 
 #            # transfer testable result to next block
 #            - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
