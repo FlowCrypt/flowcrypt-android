@@ -6,12 +6,19 @@
 package com.flowcrypt.email.database.entity
 
 import android.accounts.Account
+import android.content.Context
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.model.AuthCredentials
+import com.flowcrypt.email.api.email.model.SecurityType
+import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.util.exception.ExceptionUtil
 
 /**
  * @author Denis Bondarenko
@@ -58,4 +65,79 @@ data class AccountEntity(
 
   @Ignore
   val account: Account? = Account(this.email, accountType)
+
+  fun toAccountDaoCompatibility(context: Context): AccountDao {
+    var authCreds: AuthCredentials? = null
+    var uuid: String? = null
+    try {
+      val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
+      authCreds = getAuthCredsCompatibility(context, keyStoreCryptoManager)
+      val encryptedUuid = this.uuid
+      if (!encryptedUuid.isNullOrEmpty()) {
+        uuid = keyStoreCryptoManager.decryptWithRSAOrAES(context, encryptedUuid)
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+
+    val domainRulesString = this.domainRules
+    val domainRules = if (domainRulesString.isNullOrEmpty()) {
+      emptyList()
+    } else {
+      domainRulesString.split(",").map { it.trim() }
+    }
+
+    return AccountDao(
+        email,
+        accountType,
+        displayName,
+        givenName,
+        familyName,
+        photoUrl,
+        areContactsLoaded ?: false,
+        authCreds,
+        uuid,
+        domainRules,
+        isRestoreAccessRequired ?: false)
+  }
+
+  fun getAuthCredsCompatibility(context: Context, manager: KeyStoreCryptoManager): AuthCredentials {
+    var imapOpt: SecurityType.Option = SecurityType.Option.NONE
+
+    if (imapIsUseSslTls == true) {
+      imapOpt = SecurityType.Option.SSL_TLS
+    } else if (imapIsUseStarttls == true) {
+      imapOpt = SecurityType.Option.STARTLS
+    }
+
+    var smtpOpt: SecurityType.Option = SecurityType.Option.NONE
+
+    if (smtpIsUseSslTls == true) {
+      smtpOpt = SecurityType.Option.SSL_TLS
+    } else if (smtpIsUseStarttls == true) {
+      smtpOpt = SecurityType.Option.STARTLS
+    }
+
+    var originalPassword = this.password
+
+    //fixed a bug when try to decrypting the template password.
+    // See https://github.com/FlowCrypt/flowcrypt-android/issues/168
+    if ("password".equals(originalPassword, ignoreCase = true)) {
+      originalPassword = ""
+    }
+
+    return AuthCredentials(email,
+        username,
+        manager.decryptWithRSAOrAES(context, originalPassword)!!,
+        imapServer,
+        imapPort ?: JavaEmailConstants.DEFAULT_IMAP_PORT,
+        imapOpt,
+        smtpServer,
+        smtpPort ?: JavaEmailConstants.DEFAULT_SMTP_PORT,
+        smtpOpt,
+        smtpIsUseCustomSign == true,
+        smtpUsername,
+        manager.decryptWithRSAOrAES(context, smtpPassword))
+  }
 }

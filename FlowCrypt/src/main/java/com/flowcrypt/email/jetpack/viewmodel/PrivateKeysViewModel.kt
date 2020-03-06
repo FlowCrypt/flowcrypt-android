@@ -11,6 +11,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
+import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -39,6 +42,7 @@ import kotlinx.coroutines.withContext
 class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(application),
     KeysStorageImpl.OnRefreshListener {
   val changePassphraseLiveData = MutableLiveData<Result<Boolean>>()
+  val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
   private lateinit var keysStorage: KeysStorageImpl
   private lateinit var apiRepository: PgpApiRepository
 
@@ -103,6 +107,29 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         e.printStackTrace()
         ExceptionUtil.handleError(e)
         changePassphraseLiveData.value = Result.exception(e)
+      }
+    }
+  }
+
+  fun saveBackupToInbox() {
+    viewModelScope.launch {
+      saveBackupToInboxLiveData.value = Result.loading()
+      withContext(Dispatchers.IO) {
+        try {
+          val account = FlowCryptRoomDatabase.getDatabase(getApplication()).accountDao().getActiveAccount()
+          requireNotNull(account)
+
+          val accountDaoCompatibility = account.toAccountDaoCompatibility(getApplication())
+          val sess = OpenStoreHelper.getAccountSess(getApplication(), accountDaoCompatibility)
+          val transport = SmtpProtocolUtil.prepareSmtpTransport(getApplication(), sess, accountDaoCompatibility)
+          val msg = EmailUtil.genMsgWithAllPrivateKeys(getApplication(), accountDaoCompatibility, sess)
+          transport.sendMessage(msg, msg.allRecipients)
+          saveBackupToInboxLiveData.postValue(Result.success(true))
+        } catch (e: Exception) {
+          e.printStackTrace()
+          ExceptionUtil.handleError(e)
+          saveBackupToInboxLiveData.postValue(Result.exception(e))
+        }
       }
     }
   }

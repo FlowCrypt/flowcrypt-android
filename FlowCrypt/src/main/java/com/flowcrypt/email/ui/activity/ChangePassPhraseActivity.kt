@@ -14,17 +14,13 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.Loader
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
-import com.flowcrypt.email.ui.loader.SaveBackupToInboxAsyncTaskLoader
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.idling.SingleIdlingResources
@@ -37,7 +33,7 @@ import com.flowcrypt.email.util.idling.SingleIdlingResources
  * Time: 20:15
  * E-mail: DenBond7@gmail.com
  */
-class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.LoaderCallbacks<LoaderResult> {
+class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
@@ -98,46 +94,6 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
     btnSuccess.setText(R.string.back)
   }
 
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
-    return when (id) {
-      R.id.loader_id_save_backup_to_inbox -> SaveBackupToInboxAsyncTaskLoader(this, account!!)
-
-      else -> Loader(this)
-    }
-  }
-
-  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
-    handleLoaderResult(loader, loaderResult)
-  }
-
-  override fun onLoaderReset(loader: Loader<LoaderResult>) {
-    when (loader.id) {
-      R.id.loader_id_save_backup_to_inbox -> isBackEnabled = true
-    }
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  override fun onSuccess(loaderId: Int, result: Any?) {
-    when (loaderId) {
-      R.id.loader_id_save_backup_to_inbox -> {
-        isBackEnabled = true
-        Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
-        setResult(Activity.RESULT_OK)
-        finish()
-      }
-
-      else -> super.onSuccess(loaderId, result)
-    }
-  }
-
-  override fun onError(loaderId: Int, e: Exception?) {
-    when (loaderId) {
-      R.id.loader_id_save_backup_to_inbox -> runBackupKeysActivity()
-
-      else -> super.onError(loaderId, e)
-    }
-  }
-
   private fun runBackupKeysActivity() {
     isBackEnabled = true
     Toast.makeText(this, R.string.back_up_updated_key, Toast.LENGTH_LONG).show()
@@ -159,7 +115,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
             if (keyDetailsList?.isEmpty() == true) {
               runBackupKeysActivity()
             } else {
-              LoaderManager.getInstance(this).initLoader(R.id.loader_id_save_backup_to_inbox, null, this)
+              privateKeysViewModel.saveBackupToInbox()
             }
           }
 
@@ -200,6 +156,28 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity(), LoaderManager.
             editTextKeyPasswordSecond.text = null
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
             showInfoSnackbar(rootView, it.exception?.message ?: getString(R.string.unknown_error))
+          }
+        }
+      }
+    })
+
+    privateKeysViewModel.saveBackupToInboxLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+          }
+
+          Result.Status.SUCCESS -> {
+            isBackEnabled = true
+
+            Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
+            setResult(Activity.RESULT_OK)
+            finish()
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            isBackEnabled = true
+            runBackupKeysActivity()
           }
         }
       }
