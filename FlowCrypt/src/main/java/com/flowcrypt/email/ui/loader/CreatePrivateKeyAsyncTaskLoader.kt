@@ -17,11 +17,12 @@ import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
+import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.results.LoaderResult
@@ -62,6 +63,7 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
     val email = account.email
     isActionStarted = true
     var nodeKeyDetails: NodeKeyDetails? = null
+    val dao = FlowCryptRoomDatabase.getDatabase(context).userIdEmailsKeysDao()
     try {
       val manager = KeyStoreCryptoManager.getInstance(context)
 
@@ -73,8 +75,10 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
       KeysDaoSource().addRow(context, keysDao)
           ?: return LoaderResult(null, NullPointerException("Cannot save the generated private key"))
 
-      UserIdEmailsKeysDaoSource().addRow(context, nodeKeyDetails.longId!!,
-          nodeKeyDetails.primaryPgpContact.email)
+      nodeKeyDetails.longId?.let {
+        dao.insertWithReplace(
+            UserIdEmailsKeysEntity(longId = it, userIdEmail = nodeKeyDetails.primaryPgpContact.email))
+      }
 
       val daoSource = ActionQueueDaoSource()
 
@@ -110,8 +114,10 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
     } catch (e: Exception) {
       e.printStackTrace()
       if (nodeKeyDetails != null) {
-        KeysDaoSource().removeKey(context, nodeKeyDetails.longId!!)
-        UserIdEmailsKeysDaoSource().removeKey(context, nodeKeyDetails.longId!!)
+        nodeKeyDetails.longId?.let {
+          KeysDaoSource().removeKey(context, it)
+          dao.deleteByLongId(it)
+        }
       }
       ExceptionUtil.handleError(e)
       return LoaderResult(null, e)

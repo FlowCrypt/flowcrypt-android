@@ -20,7 +20,6 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.provider.FlowcryptContract
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
@@ -30,7 +29,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.material.snackbar.Snackbar
 import java.util.*
 
 /**
@@ -75,7 +73,7 @@ class SignInActivity : BaseSignInActivity() {
             if (keys.isNullOrEmpty()) {
               showInfoSnackbar(rootView, getString(R.string.unknown_error))
             } else {
-              saveKeysAndOpenMainScreen(keys)
+              privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
             }
           }
 
@@ -134,18 +132,6 @@ class SignInActivity : BaseSignInActivity() {
     }
   }
 
-  private fun saveKeysAndOpenMainScreen(keys: List<NodeKeyDetails>) {
-    try {
-      SecurityUtils.encryptAndSaveKeysToDatabase(this, keys, KeyDetails.Type.EMAIL)
-      runEmailManagerActivity()
-    } catch (e: java.lang.Exception) {
-      showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
-          getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
-        saveKeysAndOpenMainScreen(keys)
-      })
-    }
-  }
-
   override fun onClick(v: View) {
     when (v.id) {
       R.id.buttonPrivacy -> GeneralUtil.openCustomTab(this, Constants.FLOWCRYPT_PRIVACY_URL)
@@ -172,7 +158,7 @@ class SignInActivity : BaseSignInActivity() {
     } else {
       googleSignInAccount?.let {
         isStartCheckKeysActivityEnabled = true
-        privateKeysViewModel.fetchAvailableKeys(AccountDao(it, uuid, domainRules))
+        loadPrivateKeysViewModel.fetchAvailableKeys(AccountDao(it, uuid, domainRules))
       }
     }
   }
@@ -194,6 +180,10 @@ class SignInActivity : BaseSignInActivity() {
           negativeBtnTitle = negativeBtnTitle)
       startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
     }
+  }
+
+  override fun onPrivateKeysSaved() {
+    runEmailManagerActivity()
   }
 
   private fun addNewAccount(authCreds: AuthCredentials) {

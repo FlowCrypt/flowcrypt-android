@@ -13,9 +13,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
@@ -24,15 +24,16 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
 import com.flowcrypt.email.extensions.showDialogFragment
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
 
@@ -50,7 +51,6 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   var countingIdlingResource: CountingIdlingResource? = null
     private set
   private var privateKeysFromEmailBackups: ArrayList<NodeKeyDetails>? = null
-  private lateinit var submitPubKeyViewModel: SubmitPubKeyViewModel
   private val unlockedKeys: MutableList<NodeKeyDetails> = ArrayList()
   private var keyDetailsType: KeyDetails.Type = KeyDetails.Type.EMAIL
 
@@ -58,6 +58,9 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   private var buttonImportBackup: Button? = null
 
   private var isLoadPrivateKeysRequestSent: Boolean = false
+
+  private val submitPubKeyViewModel: SubmitPubKeyViewModel by viewModels()
+  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_import_private_key
@@ -78,6 +81,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     }
 
     setupSubmitPubKeyViewModel()
+    setupPrivateKeysViewModel()
   }
 
   override fun initViews() {
@@ -188,6 +192,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
               if (intent?.getBooleanExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, true) == true) {
                 account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
               } else {
+                privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
                 handleSuccessSubmit()
               }
             }
@@ -306,8 +311,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   }
 
   private fun setupSubmitPubKeyViewModel() {
-    submitPubKeyViewModel = ViewModelProvider(this).get(SubmitPubKeyViewModel::class.java)
-    val observer = Observer<Result<ApiResponse>?> {
+    submitPubKeyViewModel.submitPubKeyLiveData.observe(this, Observer<Result<ApiResponse>?> {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -342,25 +346,42 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
           }
         }
       }
-    }
+    })
+  }
 
-    submitPubKeyViewModel.submitPubKeyLiveData.observe(this, observer)
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.savePrivateKeysLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
+          }
+
+          Result.Status.SUCCESS -> {
+            setResult(Activity.RESULT_OK)
+            finish()
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+            val e = it.exception
+            if (e is SavePrivateKeyToDatabaseException) {
+              showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+                  getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
+                privateKeysViewModel.encryptAndSaveKeysToDatabase(e.keys, KeyDetails.Type.EMAIL)
+              })
+            } else {
+              showInfoSnackbar(rootView, e?.message ?: getString(R.string.unknown_error))
+            }
+          }
+        }
+      }
+    })
   }
 
   private fun handleSuccessSubmit() {
-    try {
-      UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
-      textViewProgressText.setText(R.string.saving_prv_keys)
-      SecurityUtils.encryptAndSaveKeysToDatabase(this, unlockedKeys, keyDetailsType)
-      setResult(Activity.RESULT_OK)
-      finish()
-    } catch (e: Exception) {
-      UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-      showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
-          getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
-        handleSuccessSubmit()
-      })
-    }
+    textViewProgressText.setText(R.string.saving_prv_keys)
+    privateKeysViewModel.encryptAndSaveKeysToDatabase(unlockedKeys, keyDetailsType)
   }
 
   companion object {

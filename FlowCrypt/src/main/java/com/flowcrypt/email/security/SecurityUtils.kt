@@ -9,13 +9,10 @@ import android.content.Context
 import android.text.TextUtils
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.KeysDao
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
-import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.PgpKeyInfo
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
@@ -112,8 +109,7 @@ class SecurityUtils {
     @JvmStatic
     fun genPrivateKeysBackup(context: Context, account: AccountDao): String {
       val builder = StringBuilder()
-      val email = account.email
-      val longIdsByEmail = UserIdEmailsKeysDaoSource().getLongIdsByEmail(context, email)
+      val longIdsByEmail = FlowCryptRoomDatabase.getDatabase(context).userIdEmailsKeysDao().getLongIdsByEmail(account.email)
       val longids = longIdsByEmail.toTypedArray()
       val keysStorage = KeysStorageImpl.getInstance(context)
       val pgpKeyInfoList = keysStorage.getFilteredPgpPrivateKeys(longids)
@@ -204,14 +200,14 @@ class SecurityUtils {
      */
     @JvmStatic
     fun getSenderPublicKey(context: Context, account: AccountDao, senderEmail: String): String? {
-      val userIdEmailsKeysDaoSource = UserIdEmailsKeysDaoSource()
-      var longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(context, senderEmail)
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+      var longIds = roomDatabase.userIdEmailsKeysDao().getLongIdsByEmail(senderEmail)
 
       if (longIds.isEmpty()) {
         if (account.email.equals(senderEmail, ignoreCase = true)) {
           throw NoKeyAvailableException(context, account.email)
         } else {
-          longIds = userIdEmailsKeysDaoSource.getLongIdsByEmail(context, account.email)
+          longIds = roomDatabase.userIdEmailsKeysDao().getLongIdsByEmail(account.email)
           if (longIds.isEmpty()) {
             throw NoKeyAvailableException(context, account.email, senderEmail)
           }
@@ -241,32 +237,6 @@ class SecurityUtils {
      */
     fun generateRandomUUID(): String {
       return String(Hex.encodeHex(DigestUtils.sha1(UUID.randomUUID().toString())))
-    }
-
-    fun encryptAndSaveKeysToDatabase(context: Context, keys: List<NodeKeyDetails>,
-                                     type: KeyDetails.Type) {
-      //maybe it'd be better to move some logic to a new ViewModel
-      val keysDaoSource = KeysDaoSource()
-      val userIdEmailsKeysDaoSource = UserIdEmailsKeysDaoSource()
-      val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-
-      for (keyDetails in keys) {
-        if (!keysDaoSource.hasKey(context, keyDetails.longId!!)) {
-          val passphrase = if (keyDetails.isDecrypted == true) "" else keyDetails.passphrase!!
-          val keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, type, keyDetails, passphrase)
-          val uri = keysDaoSource.addRow(context, keysDao)
-
-          uri?.let {
-            KeysStorageImpl.getInstance(context).refresh(context)
-            val contactsDaoSource = ContactsDaoSource()
-            val pairs = UserIdEmailsKeysDaoSource.genPairs(context, keyDetails, keyDetails.pgpContacts, contactsDaoSource)
-
-            for (pair in pairs) {
-              userIdEmailsKeysDaoSource.addRow(context, pair.first, pair.second)
-            }
-          }
-        }
-      }
     }
   }
 }

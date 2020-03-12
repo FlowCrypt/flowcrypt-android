@@ -21,6 +21,6 @@ import androidx.room.PrimaryKey
     indices = [Index(name = "long_id_user_id_email_in_user_id_emails_and_keys", value = ["long_id", "user_id_email"], unique = true)]
 )
 data class UserIdEmailsKeysEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
     @ColumnInfo(name = "long_id") val longId: String,
     @ColumnInfo(name = "user_id_email") val userIdEmail: String)

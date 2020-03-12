@@ -16,7 +16,6 @@ import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -82,7 +81,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
           if (keys.isNullOrEmpty()) {
             showInfoSnackbar(rootView, getString(R.string.unknown_error))
           } else {
-            saveKeysAndReturnOkResult(keys)
+            privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
           }
         }
 
@@ -117,7 +116,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
             REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL)
         UIUtil.exchangeViewVisibility(false, progressView, rootView)
       } else {
-        googleSignInAccount?.let { privateKeysViewModel.fetchAvailableKeys(AccountDao(it, uuid, domainRules)) }
+        googleSignInAccount?.let { loadPrivateKeysViewModel.fetchAvailableKeys(AccountDao(it, uuid, domainRules)) }
       }
     } else {
       UIUtil.exchangeViewVisibility(false, progressView, rootView)
@@ -142,6 +141,10 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
     }
   }
 
+  override fun onPrivateKeysSaved() {
+    returnResultOk()
+  }
+
   private fun returnResultOk() {
     val accountDaoSource = saveGmailAccount()
     val account = accountDaoSource.getActiveAccountInformation(this)
@@ -159,18 +162,6 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
     accountDaoSource.addRow(this, googleSignInAccount, uuid, domainRules)
     accountDaoSource.setActiveAccount(this, googleSignInAccount!!.email)
     return accountDaoSource
-  }
-
-  private fun saveKeysAndReturnOkResult(keys: List<NodeKeyDetails>) {
-    try {
-      SecurityUtils.encryptAndSaveKeysToDatabase(this, keys, KeyDetails.Type.EMAIL)
-      returnResultOk()
-    } catch (e: java.lang.Exception) {
-      showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
-          getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
-        saveKeysAndReturnOkResult(keys)
-      })
-    }
   }
 
   companion object {

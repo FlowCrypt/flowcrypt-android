@@ -68,6 +68,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   abstract fun accountAliasesDao(): AccountAliasesDao
 
+  abstract fun userIdEmailsKeysDao(): UserIdEmailsKeysDaoSource
+
   companion object {
     const val DB_NAME = "flowcrypt.db"
     const val DB_VERSION = 21
@@ -192,8 +194,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
               " ADD COLUMN " + AccountDaoSource.COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0;")
 
-          database.execSQL(UserIdEmailsKeysDaoSource.SQL_CREATE_TABLE)
-          database.execSQL(UserIdEmailsKeysDaoSource.INDEX_LONG_ID_USER_ID_EMAIL)
+          database.execSQL("CREATE TABLE user_id_emails_and_keys (_id INTEGER PRIMARY KEY AUTOINCREMENT, long_id TEXT NOT NULL, user_id_email TEXT NOT NULL )")
+          database.execSQL("CREATE UNIQUE INDEX long_id_user_id_email_in_user_id_emails_and_keys ON user_id_emails_and_keys (long_id, user_id_email)")
           ActionQueueDaoSource().addAction(database, FillUserIdEmailsKeysTableAction())
 
           database.setTransactionSuccessful()
@@ -411,9 +413,9 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
       synchronized(this) {
         val instance = Room.databaseBuilder(
-            context.applicationContext,
-            FlowCryptRoomDatabase::class.java,
-            DB_NAME)
+                context.applicationContext,
+                FlowCryptRoomDatabase::class.java,
+                DB_NAME)
             .addMigrations(
                 MIGRATION_1_3,
                 MIGRATION_3_4,

@@ -13,7 +13,6 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -23,11 +22,14 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
+import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.AddNewAccountManuallyActivity
 import com.flowcrypt.email.ui.activity.BaseNodeActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -36,6 +38,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import java.util.*
 
@@ -51,12 +54,14 @@ import java.util.*
 abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
 
   protected lateinit var client: GoogleSignInClient
-  protected var isRunSignInWithGmailNeeded: Boolean = false
-  protected lateinit var enterpriseDomainRulesViewModel: EnterpriseDomainRulesViewModel
+  private var isRunSignInWithGmailNeeded: Boolean = false
   protected var uuid: String? = null
   protected var domainRules: List<String>? = null
 
-  protected val privateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
+  private val enterpriseDomainRulesViewModel: EnterpriseDomainRulesViewModel by viewModels()
+  protected val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
+  protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
+
   @get:VisibleForTesting
   val idlingForFetchingKeys: SingleIdlingResources = SingleIdlingResources()
 
@@ -67,6 +72,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
 
   abstract fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?)
   abstract fun onFetchKeysCompleted(keyDetailsList: ArrayList<NodeKeyDetails>?)
+  abstract fun onPrivateKeysSaved()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -78,7 +84,9 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
 
     client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
     initViews()
+
     setupEnterpriseViewModel()
+    setupLoadPrivateKeysViewModel()
     setupPrivateKeysViewModel()
   }
 
@@ -165,8 +173,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
   }
 
   private fun setupEnterpriseViewModel() {
-    enterpriseDomainRulesViewModel = ViewModelProvider(this).get(EnterpriseDomainRulesViewModel::class.java)
-    val observer = Observer<Result<ApiResponse>?> {
+    enterpriseDomainRulesViewModel.domainRulesLiveData.observe(this, Observer<Result<ApiResponse>?> {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -192,13 +199,11 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
           }
         }
       }
-    }
-
-    enterpriseDomainRulesViewModel.domainRulesLiveData.observe(this, observer)
+    })
   }
 
-  private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.privateKeysLiveData.observe(this, Observer {
+  private fun setupLoadPrivateKeysViewModel() {
+    loadPrivateKeysViewModel.privateKeysLiveData.observe(this, Observer {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -221,6 +226,35 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
             } else {
               UIUtil.showInfoSnackbar(rootView,
                   it.exception?.message ?: getString(R.string.unknown_error))
+            }
+          }
+        }
+      }
+    })
+  }
+
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.savePrivateKeysLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            UIUtil.exchangeViewVisibility(true, progressView, rootView)
+          }
+
+          Result.Status.SUCCESS -> {
+            onPrivateKeysSaved()
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            UIUtil.exchangeViewVisibility(false, progressView, rootView)
+            val e = it.exception
+            if (e is SavePrivateKeyToDatabaseException) {
+              showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+                  getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
+                privateKeysViewModel.encryptAndSaveKeysToDatabase(e.keys, KeyDetails.Type.EMAIL)
+              })
+            } else {
+              showInfoSnackbar(rootView, e?.message ?: getString(R.string.unknown_error))
             }
           }
         }
