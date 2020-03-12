@@ -3,14 +3,14 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database.dao.source
+package com.flowcrypt.email.database.dao
 
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.BaseDao
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.util.GeneralUtil
