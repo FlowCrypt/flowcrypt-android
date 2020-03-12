@@ -23,7 +23,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
+import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDao
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
@@ -161,7 +161,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
             uri?.let {
               KeysStorageImpl.getInstance(context).refresh(context)
-              totalList.addAll(UserIdEmailsKeysDaoSource.genEntities(context, keyDetails, keyDetails.pgpContacts))
+              totalList.addAll(UserIdEmailsKeysDao.genEntities(context, keyDetails, keyDetails.pgpContacts))
             }
           }
         }

@@ -27,7 +27,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 @Dao
-interface UserIdEmailsKeysDaoSource : BaseDao<UserIdEmailsKeysEntity> {
+interface UserIdEmailsKeysDao : BaseDao<UserIdEmailsKeysEntity> {
   @Query("SELECT * FROM user_id_emails_and_keys")
   fun getAllLD(): LiveData<List<UserIdEmailsKeysEntity>>
 
