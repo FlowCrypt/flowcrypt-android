@@ -19,7 +19,7 @@ import com.flowcrypt.email.database.entity.ActionQueueEntity
  * E-mail: DenBond7@gmail.com
  */
 @Dao
-interface ActionQueueDaoSource : BaseDao<ActionQueueEntity> {
+interface ActionQueueDao : BaseDao<ActionQueueEntity> {
   @Query("SELECT * FROM action_queue WHERE email = :email")
   suspend fun getActionsByEmailSuspend(email: String?): List<ActionQueueEntity>
 
