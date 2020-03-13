@@ -3,11 +3,10 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database.dao.source
+package com.flowcrypt.email.database.dao
 
 import androidx.room.Dao
 import androidx.room.Query
-import com.flowcrypt.email.database.dao.BaseDao
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 
 /**
