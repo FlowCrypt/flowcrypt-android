@@ -14,7 +14,6 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity
@@ -148,7 +147,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
   private fun returnResultOk() {
     val accountDaoSource = saveGmailAccount()
     val account = accountDaoSource.getActiveAccountInformation(this)
-    ActionQueueDaoSource().addAction(this, LoadGmailAliasesAction(email = account?.email))
+    roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = account?.email))
 
     val intent = Intent()
     intent.putExtra(KEY_EXTRA_NEW_ACCOUNT, account)

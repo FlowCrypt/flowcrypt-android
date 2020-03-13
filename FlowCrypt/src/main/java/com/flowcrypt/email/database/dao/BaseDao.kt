@@ -34,6 +34,15 @@ interface BaseDao<T> {
   @Insert(onConflict = SQLiteDatabase.CONFLICT_REPLACE)
   fun insertWithReplace(entities: Iterable<T>)
 
+  @Insert
+  suspend fun insertSuspend(entity: T): Long
+
+  @Insert
+  suspend fun insertSuspend(vararg entities: T)
+
+  @Insert
+  suspend fun insertSuspend(entities: Iterable<T>)
+
   @Insert(onConflict = SQLiteDatabase.CONFLICT_REPLACE)
   suspend fun insertWithReplaceSuspend(vararg entities: T)
 

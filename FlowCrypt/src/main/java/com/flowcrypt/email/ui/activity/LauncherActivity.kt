@@ -16,7 +16,6 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.jetpack.viewmodel.CheckGmailTokenViewModel
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
@@ -104,7 +103,7 @@ class LauncherActivity : BaseActivity() {
           .getDefaultSharedPreferences(this), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, true)
 
       if (isCheckKeysNeeded) {
-        ActionQueueDaoSource().addAction(this, EncryptPrivateKeysIfNeededAction(0, account!!.email, 0))
+        roomBasicViewModel.addActionToQueue(EncryptPrivateKeysIfNeededAction(0, account!!.email, 0))
       }
 
       EmailSyncService.startEmailSyncService(this)

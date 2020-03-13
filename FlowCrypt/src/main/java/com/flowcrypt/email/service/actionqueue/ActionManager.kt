@@ -5,11 +5,15 @@
 
 package com.flowcrypt.email.service.actionqueue
 
-import android.content.Context
+import android.app.Application
 import android.util.LongSparseArray
+import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
+import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.service.actionqueue.actions.Action
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 /**
@@ -21,20 +25,25 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-class ActionManager(context: Context) : ActionResultReceiver.ResultReceiverCallBack {
-  private val context: Context = context.applicationContext
+class ActionManager(application: Application) : RoomBasicViewModel(application), ActionResultReceiver.ResultReceiverCallBack {
   private val runningActions: LongSparseArray<Action> = LongSparseArray()
   private val completedActionsSet: MutableSet<Long> = HashSet()
-  private val actionQueueDaoSource: ActionQueueDaoSource = ActionQueueDaoSource()
 
   override fun onSuccess(action: Action?) {
-    completedActionsSet.add(action!!.id)
-    actionQueueDaoSource.deleteAction(context, action)
-    runningActions.delete(action.id)
+    action?.let {
+      completedActionsSet.add(it.id)
+      runningActions.delete(it.id)
+
+      viewModelScope.launch {
+        withContext(Dispatchers.IO) {
+          roomDatabase.actionQueueDao().deleteByIdSuspend(it.id)
+        }
+      }
+    }
   }
 
   override fun onError(exception: Exception, action: Action?) {
-    runningActions.delete(action!!.id)
+    action?.id?.let { runningActions.delete(it) }
   }
 
   /**
@@ -43,16 +52,23 @@ class ActionManager(context: Context) : ActionResultReceiver.ResultReceiverCallB
    * @param account The [AccountDao] which has some actions.
    */
   fun checkAndAddActionsToQueue(account: AccountDao) {
-    val actions = actionQueueDaoSource.getActions(context, account)
-    val candidates = ArrayList<Action>()
-    for (action in actions) {
-      if (!completedActionsSet.contains(action.id) && runningActions.indexOfValue(action) < 0) {
-        candidates.add(action)
-      }
-    }
+    viewModelScope.launch {
+      withContext(Dispatchers.IO) {
+        val actions = roomDatabase.actionQueueDao().getActionsByEmailSuspend(account.email)
+            .map { it.toAction() }
+        val candidates = ArrayList<Action>()
+        for (action in actions) {
+          action?.let {
+            if (!completedActionsSet.contains(action.id) && runningActions.indexOfValue(action) < 0) {
+              candidates.add(action)
+            }
+          }
+        }
 
-    if (!candidates.isEmpty()) {
-      ActionQueueIntentService.appendActionsToQueue(context, candidates, this)
+        if (candidates.isNotEmpty()) {
+          ActionQueueIntentService.appendActionsToQueue(getApplication(), candidates, this@ActionManager)
+        }
+      }
     }
   }
 }

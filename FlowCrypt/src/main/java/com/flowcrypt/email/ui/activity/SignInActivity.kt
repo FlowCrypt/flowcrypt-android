@@ -17,7 +17,6 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.provider.FlowcryptContract
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
@@ -206,7 +205,7 @@ class SignInActivity : BaseSignInActivity() {
 
     val account = addGmailAccount(googleSignInAccount)
     if (account != null) {
-      ActionQueueDaoSource().addAction(this, LoadGmailAliasesAction(email = account.email))
+      roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = account.email))
       EmailManagerActivity.runEmailManagerActivity(this)
       finish()
     } else {

@@ -32,7 +32,6 @@ import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
-import com.flowcrypt.email.service.actionqueue.actions.FillUserIdEmailsKeysTableAction
 
 
 /**
@@ -69,6 +68,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun accountAliasesDao(): AccountAliasesDao
 
   abstract fun userIdEmailsKeysDao(): UserIdEmailsKeysDao
+
+  abstract fun actionQueueDao(): ActionQueueDaoSource
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
@@ -162,7 +163,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL(ActionQueueDaoSource.ACTION_QUEUE_TABLE_SQL_CREATE)
+          database.execSQL("CREATE TABLE `action_queue` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `action_type` TEXT NOT NULL, `action_json` TEXT NOT NULL)")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -196,7 +197,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
           database.execSQL("CREATE TABLE user_id_emails_and_keys (_id INTEGER PRIMARY KEY AUTOINCREMENT, long_id TEXT NOT NULL, user_id_email TEXT NOT NULL )")
           database.execSQL("CREATE UNIQUE INDEX long_id_user_id_email_in_user_id_emails_and_keys ON user_id_emails_and_keys (long_id, user_id_email)")
-          ActionQueueDaoSource().addAction(database, FillUserIdEmailsKeysTableAction())
+          database.execSQL("INSERT INTO `action_queue` (email,action_type,action_json) VALUES ('system','fill_user_id_emails_keys_table','{\"email\":\"system\",\"id\":0,\"actionType\":\"FILL_USER_ID_EMAILS_KEYS_TABLE\",\"version\":0}');")
 
           database.setTransactionSuccessful()
         } finally {
