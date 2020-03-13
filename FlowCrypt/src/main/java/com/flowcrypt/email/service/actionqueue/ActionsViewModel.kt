@@ -25,7 +25,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-class ActionManager(application: Application) : RoomBasicViewModel(application), ActionResultReceiver.ResultReceiverCallBack {
+class ActionsViewModel(application: Application) : RoomBasicViewModel(application), ActionResultReceiver.ResultReceiverCallBack {
   private val runningActions: LongSparseArray<Action> = LongSparseArray()
   private val completedActionsSet: MutableSet<Long> = HashSet()
 
@@ -66,7 +66,7 @@ class ActionManager(application: Application) : RoomBasicViewModel(application),
         }
 
         if (candidates.isNotEmpty()) {
-          ActionQueueIntentService.appendActionsToQueue(getApplication(), candidates, this@ActionManager)
+          ActionQueueIntentService.appendActionsToQueue(getApplication(), candidates, this@ActionsViewModel)
         }
       }
     }

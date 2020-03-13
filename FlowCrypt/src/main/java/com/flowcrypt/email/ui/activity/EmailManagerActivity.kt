@@ -47,7 +47,7 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.MessagesNotificationManager
-import com.flowcrypt.email.service.actionqueue.ActionManager
+import com.flowcrypt.email.service.actionqueue.ActionsViewModel
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
@@ -79,7 +79,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   private lateinit var client: GoogleSignInClient
   private val labelsViewModel: LabelsViewModel by viewModels()
-  private val actionsViewModel: ActionManager by viewModels()
+  private val actionsViewModel: ActionsViewModel by viewModels()
 
   override var currentAccountDao: AccountDao? = null
   private var foldersManager: FoldersManager? = null
