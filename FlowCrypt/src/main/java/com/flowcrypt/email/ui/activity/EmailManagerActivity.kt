@@ -42,12 +42,12 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.provider.FlowcryptContract
+import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.MessagesNotificationManager
-import com.flowcrypt.email.service.actionqueue.ActionsViewModel
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment

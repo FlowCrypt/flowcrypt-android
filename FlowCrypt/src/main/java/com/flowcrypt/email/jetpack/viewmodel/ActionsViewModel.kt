@@ -3,13 +3,14 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.service.actionqueue
+package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.util.LongSparseArray
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
+import com.flowcrypt.email.service.actionqueue.ActionQueueIntentService
+import com.flowcrypt.email.service.actionqueue.ActionResultReceiver
 import com.flowcrypt.email.service.actionqueue.actions.Action
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
