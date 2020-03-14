@@ -251,7 +251,6 @@
         settings?</string>
     <string name="get_access_to_gmail">Get access to Gmail</string>
     <string name="sign_in">SIGN IN</string>
-    <string name="network_error_please_retry">Network error, please retry</string>
     <string name="setup_app">Please set up the app before use this option</string>
     <plurals name="not_recovered_all_keys">
         <item quantity="one">%1$d of %2$d keys successfully unlocked. There is 1 key left. Try a different pass phrase to unlock all keys.</item>
@@ -418,4 +417,5 @@
     <string name="marked_for_archiving">Marked for archiving</string>
     <string name="undo">Undo</string>
     <string name="choose_email">Choose email</string>
+    <string name="network_error">Network error</string>
 </resources>

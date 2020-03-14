@@ -43,7 +43,11 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
 
   private suspend fun checkAuthCreds(authCreds: AuthCredentials): Result<Boolean?> =
       withContext(Dispatchers.IO) {
-        val session = Session.getInstance(PropertiesHelper.genProps(authCreds))
+        val props = PropertiesHelper.genProps(authCreds)
+        props[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_CONNECTIONTIMEOUT] = 1000 * 10
+        props[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_CONNECTIONTIMEOUT] = 1000 * 10
+
+        val session = Session.getInstance(props)
         session.debug = EmailUtil.hasEnabledDebug(getApplication())
 
         try {
