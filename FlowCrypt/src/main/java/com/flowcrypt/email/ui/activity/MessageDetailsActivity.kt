@@ -385,8 +385,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
               idlingForDecryption!!.decrement()
             }
           } else {
-            val msgInfo = IncomingMessageInfo(messageEntity, result.text, result.msgBlocks!!,
-                decryptMsgViewModel.headersLiveData.value, result.getMsgEncryptionType())
+            val msgInfo = IncomingMessageInfo(messageEntity, result.text,
+                result.subject, result.msgBlocks!!, decryptMsgViewModel.headersLiveData.value, result.getMsgEncryptionType())
             val fragment = supportFragmentManager
                 .findFragmentById(R.id.messageDetailsFragment) as MessageDetailsFragment?
 

@@ -17,12 +17,14 @@ import android.os.RemoteException
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.activity.viewModels
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.Observer
 import androidx.loader.content.Loader
 import com.flowcrypt.email.R
+import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.service.BaseService
@@ -44,7 +46,9 @@ import java.lang.ref.WeakReference
  * E-mail: DenBond7@gmail.com
  */
 abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback {
+  protected val roomBasicViewModel: RoomBasicViewModel by viewModels()
   protected val tag: String = javaClass.simpleName
+
   @get:VisibleForTesting
   val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
 

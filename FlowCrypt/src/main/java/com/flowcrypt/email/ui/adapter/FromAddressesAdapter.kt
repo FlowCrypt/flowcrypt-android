@@ -26,14 +26,11 @@ import java.util.*
 class FromAddressesAdapter<T>(context: Context,
                               resource: Int,
                               textViewResId: Int,
-                              objects: List<T>) : ArrayAdapter<T>(context, resource, textViewResId, objects) {
-  private val keysAvailability: MutableMap<String, Boolean>?
+                              val objects: List<T>) : ArrayAdapter<T>(context, resource,
+    textViewResId, objects) {
+  private val keysAvailability: MutableMap<String, Boolean> = HashMap()
   private var originalColor: Int = 0
   private var useKeysInfo: Boolean = false
-
-  init {
-    keysAvailability = HashMap()
-  }
 
   override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
     val view = super.getDropDownView(position, convertView, parent)
@@ -52,7 +49,7 @@ class FromAddressesAdapter<T>(context: Context,
 
     return if (useKeysInfo && getItem(position) is String) {
       val email = getItem(position) as String
-      val result = keysAvailability!![email]
+      val result = keysAvailability[email]
       result ?: super.isEnabled(position)
     } else {
       super.isEnabled(position)
@@ -81,10 +78,8 @@ class FromAddressesAdapter<T>(context: Context,
    * @param emailAddress The given email address
    * @param hasPgp       true if we have a private key for the given email address, otherwise false
    */
-  fun updateKeyAvailability(emailAddress: String?, hasPgp: Boolean) {
-    if (keysAvailability != null && emailAddress != null) {
-      keysAvailability[emailAddress] = hasPgp
-    }
+  fun updateKeyAvailability(emailAddress: String, hasPgp: Boolean) {
+    keysAvailability[emailAddress] = hasPgp
   }
 
   /**
@@ -94,7 +89,7 @@ class FromAddressesAdapter<T>(context: Context,
    * @return true if the given email address has a private key, otherwise false.
    */
   fun hasPrvKey(emailAddress: String): Boolean {
-    val result = keysAvailability!![emailAddress]
+    val result = keysAvailability[emailAddress]
     return keysAvailability.containsKey(emailAddress) && result != null && result
   }
 }

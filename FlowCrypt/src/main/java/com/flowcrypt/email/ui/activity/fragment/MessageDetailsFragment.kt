@@ -348,6 +348,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     isAdditionalActionEnabled = true
     activity?.invalidateOptionsMenu()
     msgInfo.localFolder = localFolder
+
+    msgInfo.inlineSubject?.let { textViewSubject?.text = it }
+
     updateMsgBody()
     UIUtil.exchangeViewVisibility(false, progressView!!, contentView!!)
   }

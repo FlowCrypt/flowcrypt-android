@@ -17,11 +17,12 @@ import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
+import com.flowcrypt.email.database.entity.ActionQueueEntity
+import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.results.LoaderResult
@@ -62,6 +63,8 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
     val email = account.email
     isActionStarted = true
     var nodeKeyDetails: NodeKeyDetails? = null
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+    val dao = roomDatabase.userIdEmailsKeysDao()
     try {
       val manager = KeyStoreCryptoManager.getInstance(context)
 
@@ -73,10 +76,10 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
       KeysDaoSource().addRow(context, keysDao)
           ?: return LoaderResult(null, NullPointerException("Cannot save the generated private key"))
 
-      UserIdEmailsKeysDaoSource().addRow(context, nodeKeyDetails.longId!!,
-          nodeKeyDetails.primaryPgpContact.email)
-
-      val daoSource = ActionQueueDaoSource()
+      nodeKeyDetails.longId?.let {
+        dao.insertWithReplace(
+            UserIdEmailsKeysEntity(longId = it, userIdEmail = nodeKeyDetails.primaryPgpContact.email))
+      }
 
       if (account.isRuleExist(AccountDao.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
         val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
@@ -87,31 +90,37 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
 
         if (!account.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP)) {
           if (!saveCreatedPrivateKeyAsBackupToInbox(nodeKeyDetails)) {
-            daoSource.addAction(context, BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.longId!!))
+            val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.longId!!))
+            backupAction?.let { action -> roomDatabase.actionQueueDao().insert(action) }
           }
         }
       } else {
         if (!account.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP)) {
           if (!saveCreatedPrivateKeyAsBackupToInbox(nodeKeyDetails)) {
-            daoSource.addAction(context, BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.longId!!))
+            val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.longId!!))
+            backupAction?.let { action -> roomDatabase.actionQueueDao().insert(action) }
           }
         }
 
         if (!registerUserPublicKey(nodeKeyDetails)) {
-          daoSource.addAction(context, RegisterUserPublicKeyAction(0, email, 0, nodeKeyDetails.publicKey!!))
+          val registerAction = ActionQueueEntity.fromAction(RegisterUserPublicKeyAction(0, email, 0, nodeKeyDetails.publicKey!!))
+          registerAction?.let { action -> roomDatabase.actionQueueDao().insert(action) }
         }
       }
 
       if (!requestingTestMsgWithNewPublicKey(nodeKeyDetails)) {
-        daoSource.addAction(context, SendWelcomeTestEmailAction(0, email, 0, nodeKeyDetails.publicKey!!))
+        val welcomeEmailAction = ActionQueueEntity.fromAction(SendWelcomeTestEmailAction(0, email, 0, nodeKeyDetails.publicKey!!))
+        welcomeEmailAction?.let { action -> roomDatabase.actionQueueDao().insert(action) }
       }
 
       return LoaderResult(nodeKeyDetails.longId, null)
     } catch (e: Exception) {
       e.printStackTrace()
       if (nodeKeyDetails != null) {
-        KeysDaoSource().removeKey(context, nodeKeyDetails.longId!!)
-        UserIdEmailsKeysDaoSource().removeKey(context, nodeKeyDetails.longId!!)
+        nodeKeyDetails.longId?.let {
+          KeysDaoSource().removeKey(context, it)
+          dao.deleteByLongId(it)
+        }
       }
       ExceptionUtil.handleError(e)
       return LoaderResult(null, e)

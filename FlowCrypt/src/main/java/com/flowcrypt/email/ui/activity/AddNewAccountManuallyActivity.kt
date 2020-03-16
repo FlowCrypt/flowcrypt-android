@@ -33,14 +33,17 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.CheckEmailSettingsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
@@ -61,7 +64,8 @@ import javax.mail.AuthenticationFailedException
  */
 
 class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheckedChangeListener,
-    AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher {
+    AdapterView.OnItemSelectedListener, View.OnClickListener, TextWatcher,
+    TwoWayDialogFragment.OnTwoWayDialogListener {
 
   private var editTextEmail: EditText? = null
   private var editTextUserName: EditText? = null
@@ -84,7 +88,8 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   private var isSmtpSpinnerRestored: Boolean = false
 
   private val checkEmailSettingsViewModel: CheckEmailSettingsViewModel by viewModels()
-  private val privateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
+  private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
+  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   @get:VisibleForTesting
   val idlingForFetchingPrivateKeys: SingleIdlingResources = SingleIdlingResources()
@@ -124,6 +129,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     initViews(savedInstanceState)
 
     setupCheckEmailSettingsViewModel()
+    setupLoadPrivateKeysViewModel()
     setupPrivateKeysViewModel()
   }
 
@@ -151,7 +157,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
           if (keys.isNullOrEmpty()) {
             showInfoSnackbar(rootView, getString(R.string.unknown_error))
           } else {
-            saveKeysAndReturnOkResult(keys)
+            privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
           }
         }
 
@@ -174,18 +180,6 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
-    }
-  }
-
-  private fun saveKeysAndReturnOkResult(keys: List<NodeKeyDetails>) {
-    try {
-      SecurityUtils.encryptAndSaveKeysToDatabase(this, keys, KeyDetails.Type.EMAIL)
-      returnOkResult()
-    } catch (e: java.lang.Exception) {
-      showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
-          getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
-        saveKeysAndReturnOkResult(keys)
-      })
     }
   }
 
@@ -251,10 +245,24 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     if (GeneralUtil.isEmailValid(editable)) {
       val email = editable.toString()
       val mainDomain = email.substring(email.indexOf('@') + 1)
-      editTextImapServer!!.setText(getString(R.string.template_imap_server, mainDomain))
-      editTextSmtpServer!!.setText(getString(R.string.template_smtp_server, mainDomain))
-      editTextUserName!!.setText(email.substring(0, email.indexOf('@')))
-      editTextSmtpUsername!!.setText(email.substring(0, email.indexOf('@')))
+      editTextImapServer?.setText(getString(R.string.template_imap_server, mainDomain))
+      editTextSmtpServer?.setText(getString(R.string.template_smtp_server, mainDomain))
+      editTextUserName?.setText(email.substring(0, email.indexOf('@')))
+      editTextSmtpUsername?.setText(email.substring(0, email.indexOf('@')))
+    }
+  }
+
+  override fun onDialogButtonClick(requestCode: Int, result: Int) {
+    when (requestCode) {
+      REQUEST_CODE_RETRY_SETTINGS_CHECKING -> {
+        when (result) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            authCreds?.let {
+              checkEmailSettingsViewModel.check(it)
+            }
+          }
+        }
+      }
     }
   }
 
@@ -273,7 +281,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
               authCreds?.let { authCredentials ->
                 val account = AccountDao(authCredentials.email, null, authCredentials.username,
                     null, null, null, false, authCreds)
-                privateKeysViewModel.fetchAvailableKeys(account)
+                loadPrivateKeysViewModel.fetchAvailableKeys(account)
               }
             } else {
               idlingForFetchingPrivateKeys.setIdleState(true)
@@ -287,6 +295,10 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
             UIUtil.exchangeViewVisibility(false, progressView, rootView)
             val exception = it.exception ?: return@let
             val original = it.exception.cause
+            var title: String? = null
+            val msg: String? = if (exception.message.isNullOrEmpty()) {
+              getString(R.string.unknown_error)
+            } else exception.message
             if (original != null) {
               if (original is AuthenticationFailedException) {
                 val isGmailImapServer = editTextImapServer?.text.toString()
@@ -296,27 +308,27 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
                     .GMAIL_ALERT_MESSAGE_WHEN_LESS_SECURE_NOT_ALLOWED)
                 if (isGmailImapServer && !isMsgEmpty && hasAlert == true) {
                   showLessSecurityWarning()
-                } else {
-                  showInfoSnackbar(rootView, if (exception.message.isNullOrEmpty()) {
-                    getString(R.string.unknown_error)
-                  } else exception.message, Snackbar.LENGTH_LONG)
+                  return@let
                 }
               } else if (original is MailConnectException || original is SocketTimeoutException) {
-                showNetworkErrorHint()
+                title = getString(R.string.network_error)
               }
-            } else {
-              showInfoSnackbar(rootView, if (exception.message.isNullOrEmpty()) {
-                getString(R.string.unknown_error)
-              } else exception.message, Snackbar.LENGTH_LONG)
             }
+
+            showDialogFragment(TwoWayDialogFragment.newInstance(requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
+                dialogTitle = title,
+                dialogMsg = msg,
+                positiveButtonTitle = getString(R.string.retry),
+                negativeButtonTitle = getString(R.string.cancel),
+                isCancelable = true))
           }
         }
       }
     })
   }
 
-  private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.privateKeysLiveData.observe(this, Observer {
+  private fun setupLoadPrivateKeysViewModel() {
+    loadPrivateKeysViewModel.privateKeysLiveData.observe(this, Observer {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -353,11 +365,31 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     })
   }
 
-  private fun showNetworkErrorHint() {
-    showSnackbar(rootView, getString(R.string.network_error_please_retry), getString(R.string.retry),
-        Snackbar.LENGTH_LONG, View.OnClickListener {
-      authCreds?.let {
-        checkEmailSettingsViewModel.check(it)
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.savePrivateKeysLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            UIUtil.exchangeViewVisibility(true, progressView, rootView)
+          }
+
+          Result.Status.SUCCESS -> {
+            returnOkResult()
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            UIUtil.exchangeViewVisibility(false, progressView, rootView)
+            val e = it.exception
+            if (e is SavePrivateKeyToDatabaseException) {
+              showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+                  getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
+                privateKeysViewModel.encryptAndSaveKeysToDatabase(e.keys, KeyDetails.Type.EMAIL)
+              })
+            } else {
+              showInfoSnackbar(rootView, e?.message ?: getString(R.string.unknown_error))
+            }
+          }
+        }
       }
     })
   }
@@ -608,5 +640,6 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
 
     private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 10
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL = 11
+    private const val REQUEST_CODE_RETRY_SETTINGS_CHECKING = 12
   }
 }

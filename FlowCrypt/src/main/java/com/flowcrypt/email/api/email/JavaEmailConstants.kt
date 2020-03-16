@@ -24,6 +24,7 @@ class JavaEmailConstants {
     const val PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE = "mail.imap.starttls.enable"
     const val PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS = "mail.imap.auth.mechanisms"
     const val PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE = "mail.imap.fetchsize"
+    const val PROPERTY_NAME_MAIL_IMAP_CONNECTIONTIMEOUT = "mail.imap.connectiontimeout"
     const val DEFAULT_IMAP_PORT = 143
     const val SSL_IMAP_PORT = 993
 
@@ -32,6 +33,7 @@ class JavaEmailConstants {
     const val PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE = "mail.smtp.ssl.enable"
     const val PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE = "mail.smtp.starttls.enable"
     const val PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS = "mail.smtp.auth.mechanisms"
+    const val PROPERTY_NAME_MAIL_SMTP_CONNECTIONTIMEOUT = "mail.smtp.connectiontimeout"
     const val DEFAULT_SMTP_PORT = 25
     const val SSL_SMTP_PORT = 465
     const val STARTTLS_SMTP_PORT = 587

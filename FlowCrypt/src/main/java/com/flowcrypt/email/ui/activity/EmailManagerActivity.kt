@@ -22,6 +22,7 @@ import android.widget.LinearLayout
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -30,7 +31,6 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.bumptech.glide.request.RequestOptions
@@ -42,12 +42,12 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.provider.FlowcryptContract
+import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.MessagesNotificationManager
-import com.flowcrypt.email.service.actionqueue.ActionManager
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
@@ -78,11 +78,13 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     View.OnClickListener, SearchView.OnQueryTextListener {
 
   private lateinit var client: GoogleSignInClient
-  private lateinit var labelsViewModel: LabelsViewModel
+  private val labelsViewModel: LabelsViewModel by viewModels()
+  private val actionsViewModel: ActionsViewModel by viewModels()
 
   override var currentAccountDao: AccountDao? = null
   private var foldersManager: FoldersManager? = null
   override var currentFolder: LocalFolder? = null
+
   @get:VisibleForTesting
   var countingIdlingResourceForLabel: CountingIdlingResource? = null
     private set
@@ -165,7 +167,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
         client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
-        ActionManager(this).checkAndAddActionsToQueue(it)
+        actionsViewModel.checkAndAddActionsToQueue(it)
 
         countingIdlingResourceForLabel = CountingIdlingResource(
             GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java), GeneralUtil.isDebugBuild())
@@ -480,7 +482,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   /**
    * Notify a fragment about [DrawerLayout] changes.
    *
-   * @param isOpen true if the drawer is open, otherwise false.
+   * @param isOpened true if the drawer is open, otherwise false.
    */
   private fun notifyFragmentAboutDrawerChange(slideOffset: Float, isOpened: Boolean) {
     val fragment = supportFragmentManager
@@ -636,7 +638,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   private fun setupLabelsViewModel() {
-    labelsViewModel = ViewModelProvider(this).get(LabelsViewModel::class.java)
     labelsViewModel.labelsLiveData.observe(this, Observer {
 
       if (it.isNotEmpty()) {

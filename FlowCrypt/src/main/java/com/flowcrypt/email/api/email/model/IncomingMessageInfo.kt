@@ -27,6 +27,7 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
                                            var atts: List<AttachmentInfo>? = null,
                                            var localFolder: LocalFolder? = null,
                                            var text: String? = null,
+                                           var inlineSubject: String? = null,
                                            val msgBlocks: List<MsgBlock>? = null,
                                            val origMsgHeaders: String? = null,
                                            val encryptionType: MessageEncryptionType) : Parcelable {
@@ -54,12 +55,13 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
 
   fun getUid(): Int = msgEntity.uid.toInt()
 
-  constructor(msgEntity: MessageEntity, text: String?, msgBlocks: List<MsgBlock>,
+  constructor(msgEntity: MessageEntity, text: String?, subject: String?, msgBlocks: List<MsgBlock>,
               origMsgHeaders: String?, encryptionType: MessageEncryptionType) : this(
       msgEntity,
       null,
       null,
       text,
+      subject,
       msgBlocks,
       origMsgHeaders,
       encryptionType)
@@ -87,6 +89,7 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
       source.createTypedArrayList(AttachmentInfo.CREATOR),
       source.readParcelable<LocalFolder>(LocalFolder::class.java.classLoader),
       source.readString(),
+      source.readString(),
       mutableListOf<MsgBlock>().apply { source.readTypedList(this, BaseMsgBlock.CREATOR) },
       source.readString(),
       source.readParcelable(MessageEncryptionType::class.java.classLoader)!!
@@ -99,6 +102,7 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
     writeTypedList(atts)
     writeParcelable(localFolder, flags)
     writeString(text)
+    writeString(inlineSubject)
     writeTypedList(msgBlocks)
     writeString(origMsgHeaders)
     writeParcelable(encryptionType, flags)

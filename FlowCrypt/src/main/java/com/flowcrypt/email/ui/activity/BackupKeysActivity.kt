@@ -14,8 +14,10 @@ import android.widget.Button
 import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.annotation.IdRes
 import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.Observer
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import androidx.test.espresso.idling.CountingIdlingResource
@@ -23,7 +25,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity
@@ -47,6 +49,9 @@ import com.google.android.material.snackbar.Snackbar
  */
 class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener,
     RadioGroup.OnCheckedChangeListener, LoaderManager.LoaderCallbacks<LoaderResult> {
+
+  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
+  private var longIdsOfCurrentAccount: MutableList<String> = mutableListOf()
 
   @get:VisibleForTesting
   var countingIdlingResource: CountingIdlingResource? = null
@@ -73,6 +78,11 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     account = AccountDaoSource().getActiveAccountInformation(this)
     countingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(BackupKeysActivity::class.java),
         GeneralUtil.isDebugBuild())
+
+    privateKeysViewModel.longIdsOfCurrentAccountLiveData.observe(this, Observer {
+      longIdsOfCurrentAccount.clear()
+      longIdsOfCurrentAccount.addAll(it)
+    })
   }
 
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
@@ -124,8 +134,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   override fun onClick(v: View) {
     when (v.id) {
       R.id.buttonBackupAction -> {
-        val longIds = UserIdEmailsKeysDaoSource().getLongIdsByEmail(this, account!!.email)
-        if (CollectionUtils.isEmpty(longIds)) {
+        if (CollectionUtils.isEmpty(longIdsOfCurrentAccount)) {
           showInfoSnackbar(rootView, getString(R.string.there_are_no_private_keys,
               account!!.email), Snackbar.LENGTH_LONG)
         } else {

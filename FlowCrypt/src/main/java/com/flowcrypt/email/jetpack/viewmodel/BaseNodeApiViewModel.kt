@@ -17,7 +17,7 @@ import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent
  * Time: 3:35 PM
  * E-mail: DenBond7@gmail.com
  */
-abstract class BaseNodeApiViewModel(application: Application) : BaseAndroidViewModel(application) {
+abstract class BaseNodeApiViewModel(application: Application) : AccountViewModel(application) {
   var responsesLiveData: SingleLiveEvent<NodeResponseWrapper<*>>
     protected set
 

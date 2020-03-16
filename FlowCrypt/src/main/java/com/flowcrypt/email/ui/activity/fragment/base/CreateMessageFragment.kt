@@ -40,8 +40,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import com.flowcrypt.email.Constants
@@ -56,8 +56,9 @@ import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
+import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
@@ -106,8 +107,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   private lateinit var onMsgSendListener: OnMessageSendListener
   private lateinit var listener: OnChangeMessageEncryptionTypeListener
-  private lateinit var accountAliasesViewModel: AccountAliasesViewModel
   private lateinit var draftCacheDir: File
+
+  private val accountAliasesViewModel: AccountAliasesViewModel by viewModels()
+  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   private var pgpContactsTo: MutableList<PgpContact>? = null
   private var pgpContactsCc: MutableList<PgpContact>? = null
@@ -297,7 +300,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    accountAliasesViewModel = ViewModelProvider(this).get(AccountAliasesViewModel::class.java)
     setHasOptionsMenu(true)
 
     account = AccountDaoSource().getActiveAccountInformation(context)
@@ -307,11 +309,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
     fromAddrs?.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
     fromAddrs?.setUseKeysInfo(listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED)
-    if (account != null) {
-      fromAddrs?.add(account?.email)
-      fromAddrs?.updateKeyAvailability(account?.email, !CollectionUtils.isEmpty(
-          UserIdEmailsKeysDaoSource().getLongIdsByEmail(context, account?.email)))
-    }
+    account?.email?.let { fromAddrs?.add(it) }
 
     initExtras(activity?.intent)
   }
@@ -320,6 +318,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
     setupAccountAliasesViewModel()
+    setupPrivateKeysViewModel()
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -1483,9 +1482,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       fromAddrs?.clear()
       fromAddrs?.addAll(aliases)
 
-      for (email in aliases) {
-        fromAddrs?.updateKeyAvailability(email, !CollectionUtils.isEmpty
-        (UserIdEmailsKeysDaoSource().getLongIdsByEmail(context, email)))
+      privateKeysViewModel.userIdEmailsKeysLiveData.value?.let { entities ->
+        updateFromAddressAdapter(entities)
       }
 
       if (msgInfo != null) {
@@ -1516,6 +1514,22 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
       showContent()
     })
+  }
+
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.userIdEmailsKeysLiveData.observe(viewLifecycleOwner, Observer {
+      updateFromAddressAdapter(it)
+    })
+  }
+
+  private fun updateFromAddressAdapter(list: List<UserIdEmailsKeysEntity>) {
+    val setOfUsers = list.map { entity -> entity.userIdEmail }
+
+    fromAddrs?.let { adapter ->
+      for (email in adapter.objects) {
+        adapter.updateKeyAvailability(email, setOfUsers.contains(email))
+      }
+    }
   }
 
   /**

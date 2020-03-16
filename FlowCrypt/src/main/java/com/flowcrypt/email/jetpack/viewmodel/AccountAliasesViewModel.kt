@@ -41,7 +41,8 @@ class AccountAliasesViewModel(application: Application) : AccountViewModel(appli
       .switchMap(accountLiveData) { accountEntity ->
         liveData {
           val account = accountEntity?.account ?: return@liveData
-          val aliases: Collection<AccountAliasesEntity> = fetchAliases(getApplication(), account)
+          val context: Context = getApplication()
+          val aliases: Collection<AccountAliasesEntity> = fetchAliases(context, account)
           emit(aliases)
         }
       }

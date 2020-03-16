@@ -15,15 +15,12 @@ import android.content.UriMatcher
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
-import android.provider.BaseColumns
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.ActionQueueDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
-import com.flowcrypt.email.database.dao.source.UserIdEmailsKeysDaoSource
 import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -73,16 +70,6 @@ class SecurityContentProvider : ContentProvider() {
       MATCHED_CODE_ACCOUNTS_TABLE -> {
         id = sqLiteDatabase.insert(AccountDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
         result = Uri.parse(AccountDaoSource().baseContentUri.toString() + "/" + id)
-      }
-
-      MATCHED_CODE_ACTION_QUEUE_TABLE -> {
-        id = sqLiteDatabase.insert(ActionQueueDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
-        result = Uri.parse(ActionQueueDaoSource().baseContentUri.toString() + "/" + id)
-      }
-
-      MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE -> {
-        id = sqLiteDatabase.insert(UserIdEmailsKeysDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
-        result = Uri.parse(UserIdEmailsKeysDaoSource().baseContentUri.toString() + "/" + id)
       }
 
       else -> throw UnsupportedOperationException("Unknown uri: $uri")
@@ -162,12 +149,9 @@ class SecurityContentProvider : ContentProvider() {
         rowsCount += sqLiteDatabase.delete("messages", null, null)
         rowsCount += sqLiteDatabase.delete("attachment", null, null)
         rowsCount += sqLiteDatabase.delete(KeysDaoSource().tableName, null, null)
-        rowsCount += sqLiteDatabase.delete(UserIdEmailsKeysDaoSource().tableName, null, null)
+        rowsCount += sqLiteDatabase.delete("user_id_emails_and_keys", null, null)
         rowsCount += sqLiteDatabase.delete(ContactsDaoSource().tableName, null, null)
       }
-
-      MATCHED_CODE_ACTION_QUEUE_ROW -> rowsCount = sqLiteDatabase.delete(ActionQueueDaoSource().tableName,
-          BaseColumns._ID + " = ?", arrayOf(uri.lastPathSegment))
 
       else -> rowsCount = sqLiteDatabase.delete(getMatchedTableName(uri), selection, selectionArgs)
     }
@@ -232,14 +216,6 @@ class SecurityContentProvider : ContentProvider() {
 
       MATCHED_CODE_ACCOUNTS_SINGLE_ROW -> return AccountDaoSource().singleRowContentType
 
-      MATCHED_CODE_ACTION_QUEUE_TABLE -> return ActionQueueDaoSource().rowsContentType
-
-      MATCHED_CODE_ACTION_QUEUE_ROW -> return ActionQueueDaoSource().singleRowContentType
-
-      MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE -> return UserIdEmailsKeysDaoSource().rowsContentType
-
-      MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_ROW -> return UserIdEmailsKeysDaoSource().singleRowContentType
-
       else -> throw IllegalArgumentException("Unknown uri: $uri")
     }
   }
@@ -260,10 +236,6 @@ class SecurityContentProvider : ContentProvider() {
 
       MATCHED_CODE_ACCOUNTS_TABLE -> AccountDaoSource.TABLE_NAME_ACCOUNTS
 
-      MATCHED_CODE_ACTION_QUEUE_TABLE -> ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE
-
-      MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE -> UserIdEmailsKeysDaoSource.TABLE_NAME_USER_ID_EMAILS_AND_KEYS
-
       else -> throw UnsupportedOperationException("Unknown uri: $uri")
     }
   }
@@ -281,10 +253,6 @@ class SecurityContentProvider : ContentProvider() {
     private const val MATCHED_CODE_ACCOUNTS_TABLE = 10
     private const val MATCHED_CODE_ACCOUNTS_SINGLE_ROW = 11
     private const val MATCHED_CODE_KEY_ERASE_DATABASE = 16
-    private const val MATCHED_CODE_ACTION_QUEUE_TABLE = 17
-    private const val MATCHED_CODE_ACTION_QUEUE_ROW = 18
-    private const val MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE = 19
-    private const val MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_ROW = 20
 
     private const val SINGLE_APPENDED_SUFFIX = "/#"
     private val URI_MATCHER = UriMatcher(UriMatcher.NO_MATCH)
@@ -309,14 +277,6 @@ class SecurityContentProvider : ContentProvider() {
           MATCHED_CODE_ACCOUNTS_TABLE)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountDaoSource.TABLE_NAME_ACCOUNTS
           + SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ACCOUNTS_SINGLE_ROW)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE
-          + SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ACTION_QUEUE_ROW)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ActionQueueDaoSource.TABLE_NAME_ACTION_QUEUE,
-          MATCHED_CODE_ACTION_QUEUE_TABLE)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, UserIdEmailsKeysDaoSource.TABLE_NAME_USER_ID_EMAILS_AND_KEYS
-          + SINGLE_APPENDED_SUFFIX, MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_ROW)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, UserIdEmailsKeysDaoSource.TABLE_NAME_USER_ID_EMAILS_AND_KEYS,
-          MATCHED_CODE_ACTION_USER_ID_EMAILS_AND_KEYS_TABLE)
     }
   }
 }

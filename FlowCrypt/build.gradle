@@ -319,6 +319,8 @@ android {
             variant.resValue 'string', 'application_id', variant.applicationId
         }
     }
+
+    ndkVersion "21.0.6113669"
 }
 
 easylauncher {
