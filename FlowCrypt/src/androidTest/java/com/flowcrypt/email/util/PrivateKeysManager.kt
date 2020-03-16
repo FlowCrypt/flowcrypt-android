@@ -9,9 +9,10 @@ import androidx.test.internal.runner.junit4.statement.UiThreadStatement
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.KeysDao
-import com.flowcrypt.email.database.dao.UserIdEmailsKeysDao
 import com.flowcrypt.email.database.dao.source.KeysDaoSource
+import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -40,7 +41,8 @@ class PrivateKeysManager {
           .targetContext)
 
       KeysDaoSource().addRow(context, KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase))
-      UserIdEmailsKeysDao().addRow(context, nodeKeyDetails.longId!!, nodeKeyDetails.primaryPgpContact.email)
+      FlowCryptRoomDatabase.getDatabase(context).userIdEmailsKeysDao()
+          .insertWithReplace(UserIdEmailsKeysEntity(longId = nodeKeyDetails.longId!!, userIdEmail = nodeKeyDetails.primaryPgpContact.email))
 
       UiThreadStatement.runOnUiThread { KeysStorageImpl.getInstance(context).refresh(context) }
       // Added timeout for a better sync between threads.
@@ -70,7 +72,7 @@ class PrivateKeysManager {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
 
       KeysDaoSource().removeKey(context, nodeKeyDetails.longId!!)
-      UserIdEmailsKeysDao().removeKey(context, nodeKeyDetails.longId!!)
+      FlowCryptRoomDatabase.getDatabase(context).userIdEmailsKeysDao().deleteByLongId(nodeKeyDetails.longId!!)
 
       UiThreadStatement.runOnUiThread { KeysStorageImpl.getInstance(context).refresh(context) }
       // Added timeout for a better sync between threads.
