@@ -17,7 +17,7 @@ import com.flowcrypt.email.database.entity.KeyEntity
  * E-mail: DenBond7@gmail.com
  */
 @Dao
-abstract class KeysDaoSource : BaseDao<KeyEntity> {
+abstract class KeysDao : BaseDao<KeyEntity> {
   @Query("DELETE FROM keys WHERE long_id = :longId")
   abstract fun deleteByLongId(longId: String): Int
 
