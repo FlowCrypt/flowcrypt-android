@@ -21,7 +21,7 @@ import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.KeysDao
+import com.flowcrypt.email.database.dao.KeysDaoCompatibility
 import com.flowcrypt.email.database.dao.UserIdEmailsKeysDao
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
@@ -86,13 +86,13 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         }
 
         val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(getApplication())
-        val keysDaoList = ArrayList<KeysDao>()
+        val keysDaoList = ArrayList<KeysDaoCompatibility>()
 
         for (keyEntity in list) {
           keyEntity.privateKeyAsString.let { privateKey ->
             val modifiedNodeKeyDetails =
                 getModifiedNodeKeyDetails(keyEntity.passphrase, newPassphrase, privateKey)
-            keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, modifiedNodeKeyDetails, newPassphrase))
+            keysDaoList.add(KeysDaoCompatibility.generateKeysDao(keyStoreCryptoManager, modifiedNodeKeyDetails, newPassphrase))
           }
         }
 
@@ -140,7 +140,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         for (keyDetails in keys) {
           if (roomDatabase.keysDao().getKeyByLongIdSuspend(keyDetails.longId!!) == null) {
             val passphrase = if (keyDetails.isDecrypted == true) "" else keyDetails.passphrase!!
-            val keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, type, keyDetails, passphrase)
+            val keysDao = KeysDaoCompatibility.generateKeysDao(keyStoreCryptoManager, type, keyDetails, passphrase)
             val isAdded = roomDatabase.keysDao().insertSuspend(KeyEntity.fromKeyDaoCompatibility(keysDao)) > 0
 
             if (isAdded) {

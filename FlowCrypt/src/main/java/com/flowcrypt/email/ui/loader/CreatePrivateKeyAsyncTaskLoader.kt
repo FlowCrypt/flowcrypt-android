@@ -18,7 +18,7 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.KeysDao
+import com.flowcrypt.email.database.dao.KeysDaoCompatibility
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.KeyEntity
@@ -70,7 +70,7 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
       val (key) = NodeCallsExecutor.genKey(passphrase, genContacts())
       nodeKeyDetails = key
 
-      val keysDao = KeysDao.generateKeysDao(manager, KeyDetails.Type.NEW, nodeKeyDetails!!, passphrase)
+      val keysDao = KeysDaoCompatibility.generateKeysDao(manager, KeyDetails.Type.NEW, nodeKeyDetails!!, passphrase)
 
       val isKeyAdded = roomDatabase.keysDao().insert(KeyEntity.fromKeyDaoCompatibility(keysDao)) > 0
       if (isKeyAdded) {

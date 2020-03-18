@@ -21,15 +21,15 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType
  * E-mail: DenBond7@gmail.com
  */
 
-data class KeysDao constructor(var longId: String? = null,
-                               var privateKeySourceType: PrivateKeySourceType? = null,
-                               var publicKey: String? = null,
-                               var privateKey: String? = null,
-                               var passphrase: String? = null) {
+data class KeysDaoCompatibility constructor(var longId: String? = null,
+                                            var privateKeySourceType: PrivateKeySourceType? = null,
+                                            var publicKey: String? = null,
+                                            var privateKey: String? = null,
+                                            var passphrase: String? = null) {
 
   companion object {
     /**
-     * Generate [KeysDao] using input parameters.
+     * Generate [KeysDaoCompatibility] using input parameters.
      * This method use [NodeKeyDetails.getLongId] for generate an algorithm parameter spec String and
      * [KeyStoreCryptoManager] for generate encrypted version of the private key and password.
      *
@@ -41,7 +41,7 @@ data class KeysDao constructor(var longId: String? = null,
      */
     @JvmStatic
     fun generateKeysDao(keyStoreCryptoManager: KeyStoreCryptoManager, type: KeyDetails.Type,
-                        nodeKeyDetails: NodeKeyDetails, passphrase: String): KeysDao {
+                        nodeKeyDetails: NodeKeyDetails, passphrase: String): KeysDaoCompatibility {
       val keysDao = generateKeysDao(keyStoreCryptoManager, nodeKeyDetails, passphrase)
 
       when (type) {
@@ -56,7 +56,7 @@ data class KeysDao constructor(var longId: String? = null,
     }
 
     /**
-     * Generate [KeysDao] using input parameters.
+     * Generate [KeysDaoCompatibility] using input parameters.
      * This method use [NodeKeyDetails.getLongId] for generate an algorithm parameter spec String and
      * [KeyStoreCryptoManager] for generate encrypted version of the private key and password.
      *
@@ -67,12 +67,12 @@ data class KeysDao constructor(var longId: String? = null,
      */
     @JvmStatic
     fun generateKeysDao(keyStoreCryptoManager: KeyStoreCryptoManager, nodeKeyDetails: NodeKeyDetails,
-                        passphrase: String): KeysDao {
+                        passphrase: String): KeysDaoCompatibility {
       if (nodeKeyDetails.isDecrypted!!) {
         throw IllegalArgumentException("Error. The key is decrypted!")
       }
 
-      val keysDao = KeysDao()
+      val keysDao = KeysDaoCompatibility()
       val randomVector: String
 
       if (TextUtils.isEmpty(nodeKeyDetails.longId)) {

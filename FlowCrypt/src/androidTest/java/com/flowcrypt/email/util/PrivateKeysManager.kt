@@ -9,7 +9,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.KeysDao
+import com.flowcrypt.email.database.dao.KeysDaoCompatibility
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
@@ -39,7 +39,7 @@ class PrivateKeysManager {
           .targetContext)
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       roomDatabase.keysDao().insertWithReplace(KeyEntity.fromKeyDaoCompatibility(
-          KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase)))
+          KeysDaoCompatibility.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase)))
       roomDatabase.userIdEmailsKeysDao()
           .insertWithReplace(UserIdEmailsKeysEntity(longId = nodeKeyDetails.longId!!, userIdEmail = nodeKeyDetails.primaryPgpContact.email))
 

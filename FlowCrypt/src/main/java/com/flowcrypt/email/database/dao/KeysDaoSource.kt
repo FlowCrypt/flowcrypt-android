@@ -3,13 +3,11 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database.dao.source
+package com.flowcrypt.email.database.dao
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
-import com.flowcrypt.email.database.dao.BaseDao
-import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.entity.KeyEntity
 
 /**
@@ -32,10 +30,10 @@ abstract class KeysDaoSource : BaseDao<KeyEntity> {
   @Query("SELECT * FROM keys WHERE long_id = :longId")
   abstract suspend fun getKeyByLongIdSuspend(longId: String): KeyEntity?
 
-  fun updateExistedKeys(keysDaoList: List<KeysDao>): Int {
+  fun updateExistedKeys(keysDaoCompatibilityList: List<KeysDaoCompatibility>): Int {
     val existedKeys = getAllKeys().associateBy({ it.longId }, { it }).toMutableMap()
 
-    for (keyDao in keysDaoList) {
+    for (keyDao in keysDaoCompatibilityList) {
       keyDao.longId?.let { longId ->
         val modCandidateKey = existedKeys[longId]
         modCandidateKey?.let { key ->

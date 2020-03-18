@@ -11,7 +11,7 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.flowcrypt.email.database.dao.KeysDao
+import com.flowcrypt.email.database.dao.KeysDaoCompatibility
 
 /**
  * @author Denis Bondarenko
@@ -68,15 +68,15 @@ data class KeyEntity(
   }
 
   companion object {
-    fun fromKeyDaoCompatibility(keysDao: KeysDao): KeyEntity {
+    fun fromKeyDaoCompatibility(keysDaoCompatibility: KeysDaoCompatibility): KeyEntity {
       return KeyEntity(
-          longId = keysDao.longId!!,
-          source = keysDao.privateKeySourceType!!.toString(),
-          publicKey = keysDao.publicKey?.toByteArray()
+          longId = keysDaoCompatibility.longId!!,
+          source = keysDaoCompatibility.privateKeySourceType!!.toString(),
+          publicKey = keysDaoCompatibility.publicKey?.toByteArray()
               ?: throw NullPointerException("keysDao.publicKey == null"),
-          privateKey = keysDao.privateKey?.toByteArray()
+          privateKey = keysDaoCompatibility.privateKey?.toByteArray()
               ?: throw NullPointerException("keysDao.privateKey == null"),
-          passphrase = keysDao.passphrase)
+          passphrase = keysDaoCompatibility.passphrase)
     }
   }
 }

@@ -13,7 +13,7 @@ import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.KeysDao
+import com.flowcrypt.email.database.dao.KeysDaoCompatibility
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -50,7 +50,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
     }
 
     val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-    val keysDaoList = ArrayList<KeysDao>()
+    val keysDaoList = ArrayList<KeysDaoCompatibility>()
 
     for (key in list) {
       val passphrase = key.passphrase
@@ -87,7 +87,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
           continue
         }
 
-        keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, modifiedKeyDetailsList[0], passphrase))
+        keysDaoList.add(KeysDaoCompatibility.generateKeysDao(keyStoreCryptoManager, modifiedKeyDetailsList[0], passphrase))
       } catch (e: NodeException) {
         if (e.nodeError?.msg == "Error: Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.") {
           val currentAccount = AccountDaoSource().getActiveAccountInformation(context)
