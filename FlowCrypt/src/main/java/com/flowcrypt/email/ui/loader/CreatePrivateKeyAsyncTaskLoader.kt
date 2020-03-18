@@ -20,8 +20,8 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.KeysDaoSource
 import com.flowcrypt.email.database.entity.ActionQueueEntity
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.PgpContact
@@ -64,7 +64,6 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
     isActionStarted = true
     var nodeKeyDetails: NodeKeyDetails? = null
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-    val dao = roomDatabase.userIdEmailsKeysDao()
     try {
       val manager = KeyStoreCryptoManager.getInstance(context)
 
@@ -73,11 +72,13 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
 
       val keysDao = KeysDao.generateKeysDao(manager, KeyDetails.Type.NEW, nodeKeyDetails!!, passphrase)
 
-      KeysDaoSource().addRow(context, keysDao)
-          ?: return LoaderResult(null, NullPointerException("Cannot save the generated private key"))
+      val isKeyAdded = roomDatabase.keysDao().insert(KeyEntity.fromKeyDaoCompatibility(keysDao)) > 0
+      if (isKeyAdded) {
+        return LoaderResult(null, NullPointerException("Cannot save the generated private key"))
+      }
 
       nodeKeyDetails.longId?.let {
-        dao.insertWithReplace(
+        roomDatabase.userIdEmailsKeysDao().insertWithReplace(
             UserIdEmailsKeysEntity(longId = it, userIdEmail = nodeKeyDetails.primaryPgpContact.email))
       }
 
@@ -118,8 +119,8 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
       e.printStackTrace()
       if (nodeKeyDetails != null) {
         nodeKeyDetails.longId?.let {
-          KeysDaoSource().removeKey(context, it)
-          dao.deleteByLongId(it)
+          roomDatabase.keysDao().deleteByLongId(it)
+          roomDatabase.userIdEmailsKeysDao().deleteByLongId(it)
         }
       }
       ExceptionUtil.handleError(e)

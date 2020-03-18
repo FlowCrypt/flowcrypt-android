@@ -616,9 +616,9 @@ class AttachmentDownloadManagerService : Service() {
 
     private fun getDecryptedFileResult(context: Context, inputStream: InputStream): DecryptedFileResult {
       val keysStorage = KeysStorageImpl.getInstance(context)
-      val pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys()
+      val list = keysStorage.getAllPgpPrivateKeys()
       val nodeService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-      val request = DecryptFileRequest(IOUtils.toByteArray(inputStream), pgpKeyInfoList)
+      val request = DecryptFileRequest(IOUtils.toByteArray(inputStream), list)
       val response = nodeService.decryptFile(request).execute()
       val result = response.body() ?: throw NullPointerException("Node.js returned an empty result")
       if (result.apiError != null) {

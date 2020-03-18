@@ -12,6 +12,7 @@ import androidx.preference.PreferenceManager
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.jobscheduler.SyncJobService
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.GeneralUtil
@@ -65,6 +66,7 @@ class FlowCryptApplication : Application() {
 
   override fun onCreate() {
     super.onCreate()
+    KeysStorageImpl.getInstance(this)
     initPerInstallationSharedPrefs()
     CacheManager.init(this)
     MsgsCacheManager.init(this)

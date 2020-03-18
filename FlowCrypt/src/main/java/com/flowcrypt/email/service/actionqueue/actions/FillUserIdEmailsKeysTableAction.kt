@@ -32,10 +32,10 @@ data class FillUserIdEmailsKeysTableAction @JvmOverloads constructor(override va
   override fun run(context: Context) {
     val keysStorage = KeysStorageImpl.getInstance(context)
     val list = mutableListOf<UserIdEmailsKeysEntity>()
-    val pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys()
+    val keyEntities = keysStorage.getAllPgpPrivateKeys()
 
-    for (key in pgpKeyInfoList) {
-      val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(key.private)
+    for (key in keyEntities) {
+      val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(key.privateKeyAsString)
       for (nodeKeyDetails in nodeKeyDetailsList) {
         for (pgpContact in nodeKeyDetails.pgpContacts) {
           nodeKeyDetails.longId?.let {

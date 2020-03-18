@@ -8,8 +8,10 @@ package com.flowcrypt.email.database.entity
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.flowcrypt.email.database.dao.KeysDao
 
 /**
  * @author Denis Bondarenko
@@ -21,12 +23,18 @@ import androidx.room.PrimaryKey
     indices = [Index(name = "long_id_in_keys", value = ["long_id"], unique = true)]
 )
 data class KeyEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
     @ColumnInfo(name = "long_id") val longId: String,
     val source: String,
     @ColumnInfo(name = "public_key") val publicKey: ByteArray,
     @ColumnInfo(name = "private_key") val privateKey: ByteArray,
     @ColumnInfo(defaultValue = "NULL") val passphrase: String?) {
+
+  @Ignore
+  val privateKeyAsString = String(privateKey)
+
+  @Ignore
+  val publicKeyAsString = String(privateKey)
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -52,5 +60,23 @@ data class KeyEntity(
     result = 31 * result + privateKey.contentHashCode()
     result = 31 * result + (passphrase?.hashCode() ?: 0)
     return result
+  }
+
+  override fun toString(): String {
+    return "KeyEntity(id=$id, longId='$longId', source='$source', publicKey=${publicKey
+        .contentToString()}, privateKey=${privateKey.contentToString()}, passphrase=(hidden))"
+  }
+
+  companion object {
+    fun fromKeyDaoCompatibility(keysDao: KeysDao): KeyEntity {
+      return KeyEntity(
+          longId = keysDao.longId!!,
+          source = keysDao.privateKeySourceType!!.toString(),
+          publicKey = keysDao.publicKey?.toByteArray()
+              ?: throw NullPointerException("keysDao.publicKey == null"),
+          privateKey = keysDao.privateKey?.toByteArray()
+              ?: throw NullPointerException("keysDao.privateKey == null"),
+          passphrase = keysDao.passphrase)
+    }
   }
 }

@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
-import com.flowcrypt.email.database.dao.source.KeysDaoSource
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.UIUtil
 
 
@@ -27,11 +27,8 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 9:42
  * E-mail: DenBond7@gmail.com
  */
-
-class AttesterKeyAdapter(context: Context,
-                         private val responses: MutableList<LookUpEmailResponse> = mutableListOf())
+class AttesterKeyAdapter(private val responses: MutableList<LookUpEmailResponse> = mutableListOf())
   : RecyclerView.Adapter<AttesterKeyAdapter.ViewHolder>() {
-  private val keysLongIds: List<String> = KeysDaoSource().getAllKeysLongIds(context)
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.attester_key_item, parent, false))
@@ -65,7 +62,7 @@ class AttesterKeyAdapter(context: Context,
         viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.orange))
       }
 
-      isPublicKeyMatched(lookUpEmailResponse) -> {
+      isPublicKeyMatched(viewHolder.itemView.context, lookUpEmailResponse) -> {
         viewHolder.textViewKeyAttesterStatus.setText(R.string.submitted_can_receive_encrypted_email)
         viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.colorPrimary))
       }
@@ -80,19 +77,13 @@ class AttesterKeyAdapter(context: Context,
   /**
    * Check is public key found, and the longid does not match any longids of saved keys.
    *
+   * @param context Interface to global information about an application environment.
    * @param lookUpEmailResponse The [LookUpEmailResponse] object which contains info about a public key from
    * the Attester API.
    * @return true if public key found, and the longid does not match any longids of saved keys, otherwise false.
    */
-  private fun isPublicKeyMatched(lookUpEmailResponse: LookUpEmailResponse): Boolean {
-
-    for (longId in keysLongIds) {
-      if (longId == lookUpEmailResponse.longId) {
-        return true
-      }
-    }
-
-    return false
+  private fun isPublicKeyMatched(context: Context, lookUpEmailResponse: LookUpEmailResponse): Boolean {
+    return KeysStorageImpl.getInstance(context).getPgpPrivateKey(lookUpEmailResponse.longId) != null
   }
 
   /**

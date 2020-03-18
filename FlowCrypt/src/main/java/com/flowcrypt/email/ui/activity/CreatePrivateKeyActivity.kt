@@ -17,7 +17,6 @@ import androidx.loader.content.Loader
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.model.results.LoaderResult
-import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.loader.CreatePrivateKeyAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
@@ -119,7 +118,6 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
         layoutSecondPasswordCheck.visibility = View.GONE
         layoutSuccess.visibility = View.VISIBLE
         UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-        KeysStorageImpl.getInstance(this).refresh(this)
       }
 
       else -> super.onSuccess(loaderId, result)

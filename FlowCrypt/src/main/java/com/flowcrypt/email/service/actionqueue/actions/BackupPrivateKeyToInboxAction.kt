@@ -35,13 +35,13 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
   override fun run(context: Context) {
     val account = AccountDaoSource().getAccountInformation(context, email)
     val keysStorage = KeysStorageImpl.getInstance(context)
-    val pgpKeyInfo = keysStorage.getPgpPrivateKey(privateKeyLongId)
-    if (account != null && pgpKeyInfo != null && !TextUtils.isEmpty(pgpKeyInfo.private)) {
+    val keyEntity = keysStorage.getPgpPrivateKey(privateKeyLongId)
+    if (account != null && keyEntity != null && !TextUtils.isEmpty(keyEntity.privateKeyAsString)) {
       val session = OpenStoreHelper.getAccountSess(context, account)
       val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
 
-      val (encryptedKey) = NodeCallsExecutor.encryptKey(pgpKeyInfo.private!!,
-          keysStorage.getPassphrase(privateKeyLongId)!!)
+      val (encryptedKey) = NodeCallsExecutor.encryptKey(keyEntity.privateKeyAsString, keyEntity
+          .passphrase!!)
 
       if (TextUtils.isEmpty(encryptedKey)) {
         throw IllegalStateException("An error occurred during encrypting some key")
@@ -78,7 +78,8 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
         object : Parcelable.Creator<BackupPrivateKeyToInboxAction> {
           override fun createFromParcel(source: Parcel): BackupPrivateKeyToInboxAction =
               BackupPrivateKeyToInboxAction(source)
-      override fun newArray(size: Int): Array<BackupPrivateKeyToInboxAction?> = arrayOfNulls(size)
-    }
+
+          override fun newArray(size: Int): Array<BackupPrivateKeyToInboxAction?> = arrayOfNulls(size)
+        }
   }
 }

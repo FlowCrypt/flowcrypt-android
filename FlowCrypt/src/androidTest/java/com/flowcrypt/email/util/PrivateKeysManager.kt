@@ -5,17 +5,15 @@
 
 package com.flowcrypt.email.util
 
-import androidx.test.internal.runner.junit4.statement.UiThreadStatement
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.KeysDao
-import com.flowcrypt.email.database.dao.source.KeysDaoSource
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
-import com.flowcrypt.email.security.KeysStorageImpl
 import java.util.*
 
 /**
@@ -39,12 +37,12 @@ class PrivateKeysManager {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(InstrumentationRegistry.getInstrumentation()
           .targetContext)
-
-      KeysDaoSource().addRow(context, KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase))
-      FlowCryptRoomDatabase.getDatabase(context).userIdEmailsKeysDao()
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+      roomDatabase.keysDao().insertWithReplace(KeyEntity.fromKeyDaoCompatibility(
+          KeysDao.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase)))
+      roomDatabase.userIdEmailsKeysDao()
           .insertWithReplace(UserIdEmailsKeysEntity(longId = nodeKeyDetails.longId!!, userIdEmail = nodeKeyDetails.primaryPgpContact.email))
 
-      UiThreadStatement.runOnUiThread { KeysStorageImpl.getInstance(context).refresh(context) }
       // Added timeout for a better sync between threads.
       Thread.sleep(3000)
     }
@@ -70,11 +68,12 @@ class PrivateKeysManager {
     fun deleteKey(keyPath: String) {
       val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
       val context = InstrumentationRegistry.getInstrumentation().targetContext
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+      nodeKeyDetails.longId?.let {
+        roomDatabase.keysDao().deleteByLongId(it)
+        roomDatabase.userIdEmailsKeysDao().deleteByLongId(it)
+      }
 
-      KeysDaoSource().removeKey(context, nodeKeyDetails.longId!!)
-      FlowCryptRoomDatabase.getDatabase(context).userIdEmailsKeysDao().deleteByLongId(nodeKeyDetails.longId!!)
-
-      UiThreadStatement.runOnUiThread { KeysStorageImpl.getInstance(context).refresh(context) }
       // Added timeout for a better sync between threads.
       Thread.sleep(3000)
     }

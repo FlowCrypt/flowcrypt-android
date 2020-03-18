@@ -5,12 +5,12 @@
 
 package com.flowcrypt.email.node
 
-import com.flowcrypt.email.model.PgpKeyInfo
+import com.flowcrypt.email.database.entity.KeyEntity
 import java.util.*
 
 class TestData internal constructor() {
   companion object {
-    const val ECC_PUB_KEY = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
+    private const val ECC_PUB_KEY = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
         "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
         "Comment: Seamlessly send and receive encrypted email\n" +
         "\n" +
@@ -25,7 +25,7 @@ class TestData internal constructor() {
         "=WZgv\n" +
         "-----END PGP PUBLIC KEY BLOCK-----\n"
 
-    const val ECC_PRV_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+    private const val ECC_PRV_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
         "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
         "Comment: Seamlessly send and receive encrypted email\n" +
         "\n" +
@@ -44,7 +44,7 @@ class TestData internal constructor() {
         "=8qZ6\n" +
         "-----END PGP PRIVATE KEY BLOCK-----"
 
-    const val RSA_2048_PRV_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+    private const val RSA_2048_PRV_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
         "Version: FlowCrypt [BUILD_REPLACEABLE_VERSION] Gmail Encryption\n" +
         "Comment: Seamlessly send and receive encrypted email\n" +
         "\n" +
@@ -108,7 +108,7 @@ class TestData internal constructor() {
         "=15Xc\n" +
         "-----END PGP PRIVATE KEY BLOCK-----"
 
-    const val RSA_2048_PUB_KEY = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
+    private const val RSA_2048_PUB_KEY = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
         "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
         "Comment: Seamlessly send and receive encrypted email\n" +
         "\n" +
@@ -141,7 +141,7 @@ class TestData internal constructor() {
         "=VKq5\n" +
         "-----END PGP PUBLIC KEY BLOCK-----\n"
 
-    const val RSA_4096_PRV_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+    private const val RSA_4096_PRV_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
         "Version: FlowCrypt  Email Encryption - flowcrypt.com\n" +
         "Comment: Seamlessly send, receive and search encrypted email\n" +
         "\n" +
@@ -257,7 +257,7 @@ class TestData internal constructor() {
         "=5aR+\n" +
         "-----END PGP PRIVATE KEY BLOCK-----"
 
-    const val RSA_4096_PUB_KEY = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
+    private const val RSA_4096_PUB_KEY = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
         "Version: FlowCrypt 6.3.5 Gmail Encryption\n" +
         "Comment: Seamlessly send and receive encrypted email\n" +
         "\n" +
@@ -321,18 +321,36 @@ class TestData internal constructor() {
     }
 
     @JvmStatic
-    fun eccPrvKeyInfo(): Array<PgpKeyInfo> {
-      return arrayOf(PgpKeyInfo("063635B3E33EB14C", ECC_PRV_KEY, ECC_PUB_KEY, "some long pp"))
+    fun eccPrvKeyInfo(): Array<KeyEntity> {
+      return arrayOf(KeyEntity(
+          longId = "063635B3E33EB14C",
+          source = "TEST",
+          privateKey = ECC_PRV_KEY.toByteArray(),
+          publicKey = ECC_PUB_KEY.toByteArray(),
+          passphrase = "some long pp"
+      ))
     }
 
     @JvmStatic
-    fun rsa2048PrvKeyInfo(): Array<PgpKeyInfo> {
-      return arrayOf(PgpKeyInfo("3A30F4CC0A9A8F10", RSA_2048_PRV_KEY, RSA_2048_PUB_KEY, "some long pp"))
+    fun rsa2048PrvKeyInfo(): Array<KeyEntity> {
+      return arrayOf(KeyEntity(
+          longId = "3A30F4CC0A9A8F10",
+          source = "TEST",
+          privateKey = RSA_2048_PRV_KEY.toByteArray(),
+          publicKey = RSA_2048_PUB_KEY.toByteArray(),
+          passphrase = "some long pp"
+      ))
     }
 
     @JvmStatic
-    fun rsa4096PrvKeyInfo(): Array<PgpKeyInfo> {
-      return arrayOf(PgpKeyInfo("7C307E6F2092962D", RSA_4096_PRV_KEY, RSA_4096_PUB_KEY, "some long pp"))
+    fun rsa4096PrvKeyInfo(): Array<KeyEntity> {
+      return arrayOf(KeyEntity(
+          longId = "7C307E6F2092962D",
+          source = "TEST",
+          privateKey = RSA_4096_PRV_KEY.toByteArray(),
+          publicKey = RSA_4096_PUB_KEY.toByteArray(),
+          passphrase = "some long pp"
+      ))
     }
 
     @JvmStatic
@@ -340,10 +358,7 @@ class TestData internal constructor() {
       get() = arrayOf(ECC_PUB_KEY, RSA_2048_PUB_KEY, RSA_4096_PUB_KEY)
 
     @JvmStatic
-    val mixedPrvKeys: Array<PgpKeyInfo>
-      get() = arrayOf(
-          PgpKeyInfo("063635B3E33EB14C", ECC_PRV_KEY, ECC_PUB_KEY, "some long pp"),
-          PgpKeyInfo("3A30F4CC0A9A8F10", RSA_2048_PRV_KEY, RSA_2048_PUB_KEY, "some long pp"),
-          PgpKeyInfo("7C307E6F2092962D", RSA_4096_PRV_KEY, RSA_4096_PUB_KEY, "some long pp"))
+    val mixedPrvKeys: Array<KeyEntity>
+      get() = eccPrvKeyInfo() + rsa2048PrvKeyInfo() + rsa4096PrvKeyInfo()
   }
 }

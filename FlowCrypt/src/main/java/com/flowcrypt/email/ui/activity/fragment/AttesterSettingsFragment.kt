@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.viewModels
@@ -44,17 +43,12 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
 
   private var sRL: SwipeRefreshLayout? = null
   private val accountKeysInfoViewModel: AccountKeysInfoViewModel by viewModels()
-  private lateinit var attesterKeyAdapter: AttesterKeyAdapter
+  private val attesterKeyAdapter: AttesterKeyAdapter = AttesterKeyAdapter()
 
   private val idlingForAttester: SingleIdlingResources?
     get() {
       return (activity as? AttesterSettingsActivity)?.idlingForAttester
     }
-
-  override fun onAttach(context: Context) {
-    super.onAttach(context)
-    attesterKeyAdapter = AttesterKeyAdapter(context)
-  }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
