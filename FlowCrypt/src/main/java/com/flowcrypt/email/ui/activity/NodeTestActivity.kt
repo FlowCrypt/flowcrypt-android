@@ -239,8 +239,9 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
         R.id.req_id_decrypt_email -> {
           val eccDecryptMsgResult = responseWrapper.result as ParseDecryptedMsgResult?
+          val blocks: List<MsgBlock> = eccDecryptMsgResult?.msgBlocks ?: emptyList()
 
-          for (block in eccDecryptMsgResult?.msgBlocks ?: emptyList()) {
+          for (block in blocks) {
             when (block.type) {
               MsgBlock.Type.DECRYPT_ERROR -> {
                 val errorMsgBlock = block as? DecryptErrorMsgBlock
