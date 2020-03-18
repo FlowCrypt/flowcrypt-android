@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.retrofit.node.RequestsManager
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.node.exception.NodeNotReady
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import org.apache.commons.io.IOUtils
@@ -43,6 +44,7 @@ class Node private constructor(app: Application) {
 
   private fun init(context: Context) {
     Thread(Runnable {
+      KeysStorageImpl.getInstance(context.applicationContext).fetchKeysManually(context.applicationContext)
       Thread.currentThread().name = "Node"
       try {
         val certs = getCachedNodeSecretCerts(context)

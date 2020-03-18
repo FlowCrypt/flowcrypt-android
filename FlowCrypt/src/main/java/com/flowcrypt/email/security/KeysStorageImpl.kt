@@ -6,7 +6,10 @@
 package com.flowcrypt.email.security
 
 import android.content.Context
+import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -28,15 +31,20 @@ import kotlinx.coroutines.withContext
 class KeysStorageImpl private constructor(val context: Context) : KeysStorage {
   private var keys = mutableListOf<KeyEntity>()
   private val onKeysUpdatedListeners: MutableList<OnKeysUpdatedListener> = mutableListOf()
+  private val mediatorLiveData = MediatorLiveData<List<KeyEntity>>()
   private val encryptedKeysLiveData: LiveData<List<KeyEntity>> = FlowCryptRoomDatabase.getDatabase(context).keysDao().getAllKeysLD()
   private val decryptedKeysLiveData = encryptedKeysLiveData.switchMap { list ->
     liveData {
       emit(list.map { getKeyEntityWithDecryptedInfo(it) })
     }
   }
+  private val manuallyDecryptedKeysLiveData: MutableLiveData<List<KeyEntity>> = MutableLiveData()
 
   init {
-    decryptedKeysLiveData.observeForever {
+    mediatorLiveData.addSource(decryptedKeysLiveData) { mediatorLiveData.value = it }
+    mediatorLiveData.addSource(manuallyDecryptedKeysLiveData) { mediatorLiveData.value = it }
+
+    mediatorLiveData.observeForever {
       keys.clear()
       keys.addAll(it)
 
@@ -44,6 +52,19 @@ class KeysStorageImpl private constructor(val context: Context) : KeysStorage {
         onRefreshListener.onKeysUpdated()
       }
     }
+  }
+
+  /**
+   * This method can be used as a manual trigger which helps to fetch existed private keys
+   * manually. Don't call it from the main thread!
+   *
+   * @param context Interface to global information about an application environment.
+   */
+  @WorkerThread
+  fun fetchKeysManually(context: Context) {
+    val keys = FlowCryptRoomDatabase.getDatabase(context).keysDao().getAllKeys()
+    val decryptedKeys = keys.map { getDecryptedKeyEntity(it) }
+    manuallyDecryptedKeysLiveData.postValue(decryptedKeys)
   }
 
   override fun findPgpContact(longId: String?): PgpContact? {
@@ -72,14 +93,18 @@ class KeysStorageImpl private constructor(val context: Context) : KeysStorage {
 
   private suspend fun getKeyEntityWithDecryptedInfo(keyEntity: KeyEntity): KeyEntity =
       withContext(Dispatchers.IO) {
-        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context.applicationContext)
-        val randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(keyEntity.longId)
-
-        val privateKey = keyStoreCryptoManager.decrypt(keyEntity.privateKeyAsString, randomVector)
-        val passphrase = keyStoreCryptoManager.decrypt(keyEntity.passphrase, randomVector)
-
-        return@withContext keyEntity.copy(privateKey = privateKey.toByteArray(), passphrase = passphrase)
+        return@withContext getDecryptedKeyEntity(keyEntity)
       }
+
+  private fun getDecryptedKeyEntity(keyEntity: KeyEntity): KeyEntity {
+    val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context.applicationContext)
+    val randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(keyEntity.longId)
+
+    val privateKey = keyStoreCryptoManager.decrypt(keyEntity.privateKeyAsString, randomVector)
+    val passphrase = keyStoreCryptoManager.decrypt(keyEntity.passphrase, randomVector)
+
+    return keyEntity.copy(privateKey = privateKey.toByteArray(), passphrase = passphrase)
+  }
 
   interface OnKeysUpdatedListener {
     fun onKeysUpdated()
