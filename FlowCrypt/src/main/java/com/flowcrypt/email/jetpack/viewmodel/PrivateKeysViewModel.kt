@@ -12,15 +12,18 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
-import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
+import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.database.dao.KeysDaoCompatibility
 import com.flowcrypt.email.database.dao.UserIdEmailsKeysDao
 import com.flowcrypt.email.database.entity.KeyEntity
@@ -44,8 +47,10 @@ import kotlinx.coroutines.withContext
  * Time: 10:50 AM
  * E-mail: DenBond7@gmail.com
  */
-class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(application),
-    KeysStorageImpl.OnKeysUpdatedListener {
+class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(application) {
+  private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
+  private val apiRepository: PgpApiRepository = NodeRepository()
+
   val changePassphraseLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
   val savePrivateKeysLiveData = MutableLiveData<Result<Boolean>>()
@@ -53,21 +58,19 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   val longIdsOfCurrentAccountLiveData: LiveData<List<String>> = Transformations.switchMap(accountLiveData) {
     roomDatabase.userIdEmailsKeysDao().getLongIdsByEmailLD(it?.email ?: "")
   }
-
   val userIdEmailsKeysLiveData = roomDatabase.userIdEmailsKeysDao().getAllLD()
+  val privateKeyDetailsLiveData: LiveData<Result<ParseKeysResult?>> =
+      Transformations.switchMap(keysStorage.keysLiveData) { keyEntities ->
+        liveData {
+          val request = if (keyEntities.isNotEmpty()) {
 
-  private lateinit var keysStorage: KeysStorageImpl
-  private lateinit var apiRepository: PgpApiRepository
-
-  override fun onKeysUpdated() {
-    checkAndFetchKeys()
-  }
-
-  fun init(apiRepository: PgpApiRepository) {
-    this.apiRepository = apiRepository
-    this.keysStorage = KeysStorageImpl.getInstance(getApplication())
-    checkAndFetchKeys()
-  }
+            ParseKeysRequest(keyEntities.joinToString { it.privateKeyAsString + "\n" })
+          } else {
+            ParseKeysRequest(null)
+          }
+          emit(apiRepository.fetchKeyDetails(request))
+        }
+      }
 
   fun changePassphrase(newPassphrase: String) {
     viewModelScope.launch {
@@ -77,9 +80,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         requireNotNull(account)
 
         val longIds = roomDatabase.userIdEmailsKeysDao().getLongIdsByEmailSuspend(account.email)
-
-        val keysStore = KeysStorageImpl.getInstance(getApplication())
-        val list = keysStore.getFilteredPgpPrivateKeys(longIds.toTypedArray())
+        val list = keysStorage.getFilteredPgpPrivateKeys(longIds.toTypedArray())
 
         if (CollectionUtils.isEmpty(list)) {
           throw NoPrivateKeysAvailableException(getApplication(), account.email)
@@ -192,22 +193,4 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
         modifiedKeyDetailsList[0]
       }
-
-  private fun fetchKeys(rawKey: String?) {
-    apiRepository.fetchKeyDetails(R.id.live_data_id_fetch_keys, responsesLiveData, rawKey)
-  }
-
-  private fun checkAndFetchKeys() {
-    val list = keysStorage.getAllPgpPrivateKeys()
-    if (!CollectionUtils.isEmpty(list)) {
-      val builder = StringBuilder()
-      for (keyInfo in list) {
-        builder.append(keyInfo.privateKeyAsString).append("\n")
-      }
-
-      fetchKeys(builder.toString())
-    } else {
-      fetchKeys(null)
-    }
-  }
 }

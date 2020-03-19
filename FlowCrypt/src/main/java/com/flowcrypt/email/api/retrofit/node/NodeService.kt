@@ -71,6 +71,9 @@ interface NodeService {
   fun parseKeys(@Body request: ParseKeysRequest): Call<ParseKeysResult>
 
   @POST("/")
+  suspend fun parseKeysSuspend(@Body request: ParseKeysRequest): Response<ParseKeysResult>
+
+  @POST("/")
   fun decryptKey(@Body request: DecryptKeyRequest): Call<DecryptKeyResult>
 
   @POST("/")

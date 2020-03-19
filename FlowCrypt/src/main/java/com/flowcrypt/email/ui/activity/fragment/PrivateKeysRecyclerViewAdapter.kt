@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
@@ -26,10 +27,10 @@ import java.util.concurrent.TimeUnit
  * E-mail: DenBond7@gmail.com
  */
 class PrivateKeysRecyclerViewAdapter(context: Context,
-                                     private var list: List<NodeKeyDetails>?,
                                      private val listener: OnKeySelectedListener?)
   : RecyclerView.Adapter<PrivateKeysRecyclerViewAdapter.ViewHolder>() {
   private val dateFormat: java.text.DateFormat = DateFormat.getMediumDateFormat(context)
+  private val list: MutableList<NodeKeyDetails> = mutableListOf()
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     val view = LayoutInflater.from(parent.context).inflate(R.layout.key_item, parent, false)
@@ -37,7 +38,7 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
   }
 
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-    val nodeKeyDetails = list!![position]
+    val nodeKeyDetails = list[position]
     val (email) = nodeKeyDetails.primaryPgpContact
 
     viewHolder.textViewKeyOwner.text = email
@@ -57,12 +58,16 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
   }
 
   override fun getItemCount(): Int {
-    return list?.size ?: 0
+    return list.size
   }
 
-  fun swap(nodeKeyDetailsList: List<NodeKeyDetails>) {
-    this.list = nodeKeyDetailsList
-    notifyDataSetChanged()
+  fun swap(newList: List<NodeKeyDetails>) {
+    val diffUtilCallback = DiffUtilCallback(this.list, newList)
+    val productDiffResult = DiffUtil.calculateDiff(diffUtilCallback)
+
+    list.clear()
+    list.addAll(newList)
+    productDiffResult.dispatchUpdatesTo(this)
   }
 
   interface OnKeySelectedListener {
@@ -73,5 +78,24 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
     val textViewKeyOwner: TextView = view.findViewById(R.id.textViewKeyOwner)
     val textViewKeywords: TextView = view.findViewById(R.id.textViewKeywords)
     val textViewCreationDate: TextView = view.findViewById(R.id.textViewCreationDate)
+  }
+
+  inner class DiffUtilCallback(private val oldList: List<NodeKeyDetails>,
+                               private val newList: List<NodeKeyDetails>) : DiffUtil.Callback() {
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+      val old = oldList[oldItemPosition]
+      val new = newList[newItemPosition]
+      return old.longId == new.longId
+    }
+
+    override fun getOldListSize(): Int = oldList.size
+
+    override fun getNewListSize(): Int = newList.size
+
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+      val old = oldList[oldItemPosition]
+      val new = newList[newItemPosition]
+      return old == new
+    }
   }
 }

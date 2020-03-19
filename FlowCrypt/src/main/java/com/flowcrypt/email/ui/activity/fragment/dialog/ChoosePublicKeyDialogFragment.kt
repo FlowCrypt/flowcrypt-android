@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
@@ -15,17 +16,13 @@ import android.view.ViewGroup
 import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
-import com.flowcrypt.email.api.retrofit.LoadingState
-import com.flowcrypt.email.api.retrofit.Status
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
-import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.ui.adapter.PubKeysArrayAdapter
@@ -41,9 +38,7 @@ import com.google.android.gms.common.util.CollectionUtils
  * Time: 13:13
  * E-mail: DenBond7@gmail.com
  */
-
-class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener, Observer<NodeResponseWrapper<*>> {
-
+class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener {
   private var atts: MutableList<AttachmentInfo> = mutableListOf()
   private var listViewKeys: ListView? = null
   private var textViewMsg: TextView? = null
@@ -53,6 +48,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   private var title: Int? = null
   private var choiceMode: Int = ListView.CHOICE_MODE_NONE
   private var returnResultImmediatelyIfSingle: Boolean = false
+  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -63,6 +59,11 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
         ?: ListView.CHOICE_MODE_NONE
     this.returnResultImmediatelyIfSingle =
         arguments?.getBoolean(KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE, false) ?: false
+  }
+
+  override fun onActivityCreated(savedInstanceState: Bundle?) {
+    super.onActivityCreated(savedInstanceState)
+    setupPrivateKeysViewModel()
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -96,27 +97,17 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     }
   }
 
-  override fun onNodeStateChanged(newState: Boolean?) {
-    super.onNodeStateChanged(newState)
-    if (newState!!) {
-      fetchKeys()
-    }
-  }
-
-  override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {
-    when (nodeResponseWrapper.requestCode) {
-      R.id.live_data_id_fetch_keys -> when (nodeResponseWrapper.status) {
-        Status.LOADING -> {
-          nodeResponseWrapper.loadingState?.let {
-            if (LoadingState.PREPARE_REQUEST == it) {
-              buttonOk?.visibility = View.GONE
-              UIUtil.exchangeViewVisibility(true, progressBar!!, listViewKeys!!)
-            }
-          }
+  @SuppressLint("FragmentLiveDataObserve")
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.privateKeyDetailsLiveData.observe(this@ChoosePublicKeyDialogFragment, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          buttonOk?.visibility = View.GONE
+          UIUtil.exchangeViewVisibility(true, progressBar, listViewKeys)
         }
 
-        Status.SUCCESS -> {
-          val parseKeysResult = nodeResponseWrapper.result as ParseKeysResult?
+        Result.Status.SUCCESS -> {
+          val parseKeysResult = it.data
           val nodeKeyDetailsList = parseKeysResult!!.nodeKeyDetails
           if (CollectionUtils.isEmpty(nodeKeyDetailsList)) {
             textViewMsg?.text = getString(R.string.no_pub_keys)
@@ -162,23 +153,17 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
           }
         }
 
-        Status.ERROR -> {
+        Result.Status.ERROR -> {
           UIUtil.exchangeViewVisibility(false, progressBar, textViewMsg)
-          textViewMsg?.text = nodeResponseWrapper.result?.apiError?.toString()
+          textViewMsg?.text = it.data?.apiError?.toString()
         }
 
-        Status.EXCEPTION -> {
+        Result.Status.EXCEPTION -> {
           UIUtil.exchangeViewVisibility(false, progressBar, textViewMsg)
-          textViewMsg?.text = nodeResponseWrapper.exception?.message
+          textViewMsg?.text = it.exception?.message
         }
       }
-    }
-  }
-
-  private fun fetchKeys() {
-    val viewModel = ViewModelProvider(this).get(PrivateKeysViewModel::class.java)
-    viewModel.init(NodeRepository())
-    viewModel.responsesLiveData.observe(this, this)
+    })
   }
 
   private fun sendResult() {

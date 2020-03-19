@@ -29,9 +29,9 @@ import kotlinx.coroutines.withContext
  * E-mail: DenBond7@gmail.com
  */
 class KeysStorageImpl private constructor(val context: Context) : KeysStorage {
+  val keysLiveData = MediatorLiveData<List<KeyEntity>>()
   private var keys = mutableListOf<KeyEntity>()
   private val onKeysUpdatedListeners: MutableList<OnKeysUpdatedListener> = mutableListOf()
-  private val mediatorLiveData = MediatorLiveData<List<KeyEntity>>()
   private val encryptedKeysLiveData: LiveData<List<KeyEntity>> = FlowCryptRoomDatabase.getDatabase(context).keysDao().getAllKeysLD()
   private val decryptedKeysLiveData = encryptedKeysLiveData.switchMap { list ->
     liveData {
@@ -41,10 +41,10 @@ class KeysStorageImpl private constructor(val context: Context) : KeysStorage {
   private val manuallyDecryptedKeysLiveData: MutableLiveData<List<KeyEntity>> = MutableLiveData()
 
   init {
-    mediatorLiveData.addSource(decryptedKeysLiveData) { mediatorLiveData.value = it }
-    mediatorLiveData.addSource(manuallyDecryptedKeysLiveData) { mediatorLiveData.value = it }
+    keysLiveData.addSource(decryptedKeysLiveData) { keysLiveData.value = it }
+    keysLiveData.addSource(manuallyDecryptedKeysLiveData) { keysLiveData.value = it }
 
-    mediatorLiveData.observeForever {
+    keysLiveData.observeForever {
       keys.clear()
       keys.addAll(it)
 
