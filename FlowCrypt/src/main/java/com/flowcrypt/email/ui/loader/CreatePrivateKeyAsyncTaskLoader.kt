@@ -73,7 +73,7 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
       val keysDao = KeysDaoCompatibility.generateKeysDao(manager, KeyDetails.Type.NEW, nodeKeyDetails!!, passphrase)
 
       val isKeyAdded = roomDatabase.keysDao().insert(KeyEntity.fromKeyDaoCompatibility(keysDao)) > 0
-      if (isKeyAdded) {
+      if (!isKeyAdded) {
         return LoaderResult(null, NullPointerException("Cannot save the generated private key"))
       }
 
