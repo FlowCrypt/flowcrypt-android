@@ -107,9 +107,17 @@ class Node private constructor(app: Application) {
   private fun getCachedNodeSecretCerts(context: Context): NodeSecretCerts? {
     try {
       context.openFileInput(NODE_SECRETS_CACHE_FILENAME).use { inputStream ->
+        val gson = NodeGson.gson
         val rawData = IOUtils.toString(inputStream, StandardCharsets.UTF_8)
-        val decryptedData = KeyStoreCryptoManager.decrypt(rawData)
-        return NodeGson.gson.fromJson(decryptedData, NodeSecretCerts::class.java)
+
+        val splitPosition = rawData.indexOf('\n')
+
+        if (splitPosition == -1) {
+          throw IllegalArgumentException("wrong rawData")
+        }
+
+        val decryptedData = KeyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1))
+        return gson.fromJson(decryptedData, NodeSecretCerts::class.java)
       }
     } catch (e: FileNotFoundException) {
       e.printStackTrace()
