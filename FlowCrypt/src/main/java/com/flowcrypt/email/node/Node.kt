@@ -96,12 +96,7 @@ class Node private constructor(app: Application) {
     val data = gson.toJson(nodeSecretCerts)
     try {
       context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE).use { outputStream ->
-        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-        val spec = KeyStoreCryptoManager.generateAlgorithmParameterSpecString()
-        val encryptedData = keyStoreCryptoManager.encrypt(data, spec)
-        outputStream.write(spec.toByteArray())
-        outputStream.write('\n'.toInt())
-        outputStream.write(encryptedData.toByteArray())
+        outputStream.write(KeyStoreCryptoManager.encrypt(data).toByteArray())
       }
     } catch (e: Exception) {
       throw RuntimeException("Could not save certs cache", e)
@@ -112,20 +107,9 @@ class Node private constructor(app: Application) {
   private fun getCachedNodeSecretCerts(context: Context): NodeSecretCerts? {
     try {
       context.openFileInput(NODE_SECRETS_CACHE_FILENAME).use { inputStream ->
-        val gson = NodeGson.gson
         val rawData = IOUtils.toString(inputStream, StandardCharsets.UTF_8)
-
-        val splitPosition = rawData.indexOf('\n')
-
-        if (splitPosition == -1) {
-          throw IllegalArgumentException("wrong rawData")
-        }
-
-        val spec = rawData.substring(0, splitPosition)
-
-        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-        val decryptedData = keyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1), spec)
-        return gson.fromJson(decryptedData, NodeSecretCerts::class.java)
+        val decryptedData = KeyStoreCryptoManager.decrypt(rawData)
+        return NodeGson.gson.fromJson(decryptedData, NodeSecretCerts::class.java)
       }
     } catch (e: FileNotFoundException) {
       e.printStackTrace()

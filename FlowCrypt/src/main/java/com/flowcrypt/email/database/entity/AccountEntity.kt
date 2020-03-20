@@ -6,7 +6,6 @@
 package com.flowcrypt.email.database.entity
 
 import android.accounts.Account
-import android.content.Context
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -66,15 +65,14 @@ data class AccountEntity(
   @Ignore
   val account: Account? = Account(this.email, accountType)
 
-  fun toAccountDaoCompatibility(context: Context): AccountDao {
+  fun toAccountDaoCompatibility(): AccountDao {
     var authCreds: AuthCredentials? = null
     var uuid: String? = null
     try {
-      val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-      authCreds = getAuthCredsCompatibility(context, keyStoreCryptoManager)
+      authCreds = getAuthCredsCompatibility()
       val encryptedUuid = this.uuid
       if (!encryptedUuid.isNullOrEmpty()) {
-        uuid = keyStoreCryptoManager.decryptWithRSAOrAES(context, encryptedUuid)
+        uuid = KeyStoreCryptoManager.decrypt(encryptedUuid)
       }
     } catch (e: Exception) {
       e.printStackTrace()
@@ -102,7 +100,7 @@ data class AccountEntity(
         isRestoreAccessRequired ?: false)
   }
 
-  fun getAuthCredsCompatibility(context: Context, manager: KeyStoreCryptoManager): AuthCredentials {
+  private fun getAuthCredsCompatibility(): AuthCredentials {
     var imapOpt: SecurityType.Option = SecurityType.Option.NONE
 
     if (imapIsUseSslTls == true) {
@@ -129,7 +127,7 @@ data class AccountEntity(
 
     return AuthCredentials(email,
         username,
-        manager.decryptWithRSAOrAES(context, originalPassword)!!,
+        KeyStoreCryptoManager.decrypt(originalPassword),
         imapServer,
         imapPort ?: JavaEmailConstants.DEFAULT_IMAP_PORT,
         imapOpt,
@@ -138,6 +136,6 @@ data class AccountEntity(
         smtpOpt,
         smtpIsUseCustomSign == true,
         smtpUsername,
-        manager.decryptWithRSAOrAES(context, smtpPassword))
+        KeyStoreCryptoManager.decrypt(smtpPassword))
   }
 }

@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.database.dao
 
-import android.text.TextUtils
-
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
@@ -40,9 +38,9 @@ data class KeysDaoCompatibility constructor(var longId: String? = null,
      * @param passphrase            A passphrase which user provided;
      */
     @JvmStatic
-    fun generateKeysDao(keyStoreCryptoManager: KeyStoreCryptoManager, type: KeyDetails.Type,
+    fun generateKeysDao(type: KeyDetails.Type,
                         nodeKeyDetails: NodeKeyDetails, passphrase: String): KeysDaoCompatibility {
-      val keysDao = generateKeysDao(keyStoreCryptoManager, nodeKeyDetails, passphrase)
+      val keysDao = generateKeysDao(nodeKeyDetails, passphrase)
 
       when (type) {
         KeyDetails.Type.EMAIL -> keysDao.privateKeySourceType = PrivateKeySourceType.BACKUP
@@ -66,25 +64,18 @@ data class KeysDaoCompatibility constructor(var longId: String? = null,
      * @param passphrase            A passphrase which user provided;
      */
     @JvmStatic
-    fun generateKeysDao(keyStoreCryptoManager: KeyStoreCryptoManager, nodeKeyDetails: NodeKeyDetails,
+    fun generateKeysDao(nodeKeyDetails: NodeKeyDetails,
                         passphrase: String): KeysDaoCompatibility {
       if (nodeKeyDetails.isDecrypted!!) {
         throw IllegalArgumentException("Error. The key is decrypted!")
       }
 
       val keysDao = KeysDaoCompatibility()
-      val randomVector: String
-
-      if (TextUtils.isEmpty(nodeKeyDetails.longId)) {
-        throw IllegalArgumentException("longid == null")
-      } else {
-        randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(nodeKeyDetails.longId!!)
-      }
 
       keysDao.longId = nodeKeyDetails.longId
-      keysDao.privateKey = keyStoreCryptoManager.encrypt(nodeKeyDetails.privateKey!!, randomVector)
+      keysDao.privateKey = KeyStoreCryptoManager.encrypt(nodeKeyDetails.privateKey)
       keysDao.publicKey = nodeKeyDetails.publicKey
-      keysDao.passphrase = keyStoreCryptoManager.encrypt(passphrase, randomVector)
+      keysDao.passphrase = KeyStoreCryptoManager.encrypt(passphrase)
       return keysDao
     }
   }

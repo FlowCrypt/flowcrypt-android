@@ -50,8 +50,7 @@ class AccountDaoSource : BaseDaoSource() {
       val contentValues = genContentValues(googleSignInAccount) ?: return null
 
       uuid?.let {
-        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-        contentValues.put(COL_UUID, keyStoreCryptoManager.encryptWithRSAOrAES(it))
+        contentValues.put(COL_UUID, KeyStoreCryptoManager.encrypt(it))
       }
 
       domainRules?.let { contentValues.put(COL_DOMAIN_RULES, it.joinToString()) }
@@ -82,13 +81,12 @@ class AccountDaoSource : BaseDaoSource() {
       contentValues.put(COL_ACCOUNT_TYPE, accountDao.accountType)
 
       if (accountDao.authCreds != null) {
-        val authCredentialsValues = genContentValues(context, accountDao.authCreds)
+        val authCredentialsValues = genContentValues(accountDao.authCreds)
         authCredentialsValues?.let { contentValues.putAll(it) }
       }
 
       accountDao.uuid?.let {
-        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-        contentValues.put(COL_UUID, keyStoreCryptoManager.encryptWithRSAOrAES(it))
+        contentValues.put(COL_UUID, KeyStoreCryptoManager.encrypt(it))
       }
 
       accountDao.domainRules?.let { contentValues.put(COL_DOMAIN_RULES, it.joinToString()) }
@@ -109,7 +107,7 @@ class AccountDaoSource : BaseDaoSource() {
   fun addRow(context: Context, authCreds: AuthCredentials?): Uri? {
     val contentResolver = context.contentResolver
     if (authCreds != null && contentResolver != null) {
-      val contentValues = genContentValues(context, authCreds) ?: return null
+      val contentValues = genContentValues(authCreds) ?: return null
 
       return contentResolver.insert(baseContentUri, contentValues)
     } else
@@ -130,7 +128,7 @@ class AccountDaoSource : BaseDaoSource() {
     var account: AccountDao? = null
 
     if (cursor?.moveToFirst() == true) {
-      account = getCurrentAccountDao(context, cursor)
+      account = getCurrentAccountDao(cursor)
     }
 
     cursor?.close()
@@ -152,7 +150,7 @@ class AccountDaoSource : BaseDaoSource() {
     val cursor = context.contentResolver.query(baseContentUri, null, selection, selectionArgs, null)
 
     if (cursor != null && cursor.moveToFirst()) {
-      return getCurrentAccountDao(context, cursor)
+      return getCurrentAccountDao(cursor)
     }
 
     cursor?.close()
@@ -256,7 +254,7 @@ class AccountDaoSource : BaseDaoSource() {
     val accountDaoList = ArrayList<AccountDao>()
     if (cursor != null) {
       while (cursor.moveToNext()) {
-        accountDaoList.add(getCurrentAccountDao(context, cursor))
+        accountDaoList.add(getCurrentAccountDao(cursor))
       }
     }
 
@@ -389,7 +387,7 @@ class AccountDaoSource : BaseDaoSource() {
    * @param authCreds The [AuthCredentials] object;
    * @return The generated [ContentValues].
    */
-  private fun genContentValues(context: Context, authCreds: AuthCredentials): ContentValues? {
+  private fun genContentValues(authCreds: AuthCredentials): ContentValues? {
     val contentValues = ContentValues()
     val email = authCreds.email
     if (!TextUtils.isEmpty(email)) {
@@ -397,11 +395,9 @@ class AccountDaoSource : BaseDaoSource() {
     } else
       return null
 
-    val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-
     contentValues.put(COL_ACCOUNT_TYPE, email.substring(email.indexOf('@') + 1))
     contentValues.put(COL_USERNAME, authCreds.username)
-    contentValues.put(COL_PASSWORD, keyStoreCryptoManager.encryptWithRSAOrAES(authCreds.password))
+    contentValues.put(COL_PASSWORD, KeyStoreCryptoManager.encrypt(authCreds.password))
     contentValues.put(COL_IMAP_SERVER, authCreds.imapServer)
     contentValues.put(COL_IMAP_PORT, authCreds.imapPort)
     contentValues.put(COL_IMAP_IS_USE_SSL_TLS, authCreds.imapOpt === SecurityType.Option.SSL_TLS)
@@ -413,7 +409,7 @@ class AccountDaoSource : BaseDaoSource() {
     contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCreds.hasCustomSignInForSmtp)
     contentValues.put(COL_SMTP_USERNAME, authCreds.smtpSigInUsername)
     contentValues.put(COL_SMTP_PASSWORD,
-        authCreds.smtpSignInPassword?.let { keyStoreCryptoManager.encryptWithRSAOrAES(it) })
+        authCreds.smtpSignInPassword?.let { KeyStoreCryptoManager.encrypt(it) })
 
     contentValues.put(COL_IS_ACTIVE, true)
 
@@ -491,20 +487,18 @@ class AccountDaoSource : BaseDaoSource() {
     /**
      * Generate the [AccountDao] from the current cursor position;
      *
-     * @param context Interface to global information about an application environment;
      * @param cursor  The cursor from which to get the data.
      * @return [AccountDao].
      */
     @JvmStatic
-    fun getCurrentAccountDao(context: Context, cursor: Cursor): AccountDao {
+    fun getCurrentAccountDao(cursor: Cursor): AccountDao {
       var authCreds: AuthCredentials? = null
       var uuid: String? = null
       try {
-        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-        authCreds = getCurrentAuthCredsFromCursor(context, keyStoreCryptoManager, cursor)
+        authCreds = getCurrentAuthCredsFromCursor(cursor)
         val encryptedUuid = cursor.getString(cursor.getColumnIndex(COL_UUID))
         if (!encryptedUuid.isNullOrEmpty()) {
-          uuid = keyStoreCryptoManager.decryptWithRSAOrAES(context, encryptedUuid)
+          uuid = KeyStoreCryptoManager.decrypt(encryptedUuid)
         }
       } catch (e: Exception) {
         e.printStackTrace()
@@ -535,15 +529,12 @@ class AccountDaoSource : BaseDaoSource() {
     /**
      * Get the current [AuthCredentials] object from the current [Cursor] position.
      *
-     * @param context Interface to global information about an application environment;
-     * @param manager The manager which does encryption/decryption work.
      * @param cursor  The cursor from which to get the data.
      * @return Generated [AuthCredentials] object.
      * @throws GeneralSecurityException
      */
     @JvmStatic
-    fun getCurrentAuthCredsFromCursor(context: Context, manager: KeyStoreCryptoManager,
-                                      cursor: Cursor): AuthCredentials {
+    private fun getCurrentAuthCredsFromCursor(cursor: Cursor): AuthCredentials {
 
       var imapOpt: SecurityType.Option = SecurityType.Option.NONE
 
@@ -571,7 +562,7 @@ class AccountDaoSource : BaseDaoSource() {
 
       return AuthCredentials(cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
           cursor.getString(cursor.getColumnIndex(COL_USERNAME)),
-          manager.decryptWithRSAOrAES(context, originalPassword)!!,
+          KeyStoreCryptoManager.decrypt(originalPassword),
           cursor.getString(cursor.getColumnIndex(COL_IMAP_SERVER)),
           cursor.getInt(cursor.getColumnIndex(COL_IMAP_PORT)),
           imapOpt,
@@ -580,8 +571,7 @@ class AccountDaoSource : BaseDaoSource() {
           smtpOpt,
           cursor.getInt(cursor.getColumnIndex(COL_SMTP_IS_USE_CUSTOM_SIGN)) == 1,
           cursor.getString(cursor.getColumnIndex(COL_SMTP_USERNAME)),
-          manager.decryptWithRSAOrAES(context, cursor.getString(cursor.getColumnIndex(COL_SMTP_PASSWORD))
-          ))
+          KeyStoreCryptoManager.decrypt(cursor.getString(cursor.getColumnIndex(COL_SMTP_PASSWORD))))
     }
   }
 }

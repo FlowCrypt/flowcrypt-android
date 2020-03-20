@@ -29,7 +29,6 @@ import com.flowcrypt.email.database.dao.UserIdEmailsKeysDao
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
@@ -86,14 +85,13 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           throw NoPrivateKeysAvailableException(getApplication(), account.email)
         }
 
-        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(getApplication())
         val keysDaoList = ArrayList<KeysDaoCompatibility>()
 
         for (keyEntity in list) {
           keyEntity.privateKeyAsString.let { privateKey ->
             val modifiedNodeKeyDetails =
                 getModifiedNodeKeyDetails(keyEntity.passphrase, newPassphrase, privateKey)
-            keysDaoList.add(KeysDaoCompatibility.generateKeysDao(keyStoreCryptoManager, modifiedNodeKeyDetails, newPassphrase))
+            keysDaoList.add(KeysDaoCompatibility.generateKeysDao(modifiedNodeKeyDetails, newPassphrase))
           }
         }
 
@@ -115,7 +113,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           val account = roomDatabase.accountDao().getActiveAccount()
           requireNotNull(account)
 
-          val accountDaoCompatibility = account.toAccountDaoCompatibility(getApplication())
+          val accountDaoCompatibility = account.toAccountDaoCompatibility()
           val sess = OpenStoreHelper.getAccountSess(getApplication(), accountDaoCompatibility)
           val transport = SmtpProtocolUtil.prepareSmtpTransport(getApplication(), sess, accountDaoCompatibility)
           val msg = EmailUtil.genMsgWithAllPrivateKeys(getApplication(), accountDaoCompatibility, sess)
@@ -135,13 +133,11 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       savePrivateKeysLiveData.value = Result.loading()
       try {
         val context: Context = getApplication()
-        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-
         val totalList = mutableListOf<UserIdEmailsKeysEntity>()
         for (keyDetails in keys) {
           if (roomDatabase.keysDao().getKeyByLongIdSuspend(keyDetails.longId!!) == null) {
             val passphrase = if (keyDetails.isDecrypted == true) "" else keyDetails.passphrase!!
-            val keysDao = KeysDaoCompatibility.generateKeysDao(keyStoreCryptoManager, type, keyDetails, passphrase)
+            val keysDao = KeysDaoCompatibility.generateKeysDao(type, keyDetails, passphrase)
             val isAdded = roomDatabase.keysDao().insertSuspend(KeyEntity.fromKeyDaoCompatibility(keysDao)) > 0
 
             if (isAdded) {

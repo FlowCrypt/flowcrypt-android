@@ -97,11 +97,8 @@ class KeysStorageImpl private constructor(val context: Context) : KeysStorage {
       }
 
   private fun getDecryptedKeyEntity(keyEntity: KeyEntity): KeyEntity {
-    val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context.applicationContext)
-    val randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(keyEntity.longId)
-
-    val privateKey = keyStoreCryptoManager.decrypt(keyEntity.privateKeyAsString, randomVector)
-    val passphrase = keyStoreCryptoManager.decrypt(keyEntity.passphrase, randomVector)
+    val privateKey = KeyStoreCryptoManager.decrypt(keyEntity.privateKeyAsString)
+    val passphrase = KeyStoreCryptoManager.decrypt(keyEntity.passphrase)
 
     return keyEntity.copy(privateKey = privateKey.toByteArray(), passphrase = passphrase)
   }
