@@ -266,12 +266,11 @@ class MessagesSenderJobService : JobService() {
                 newMsgState = MessageState.ERROR_CACHE_PROBLEM
               }
             }
-            roomDatabase.msgDao().update(msgEntity.copy(state = newMsgState.value))
+            roomDatabase.msgDao().update(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
           }
 
           Thread.sleep(5000)
         }
-
       }
     }
 

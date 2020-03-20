@@ -139,20 +139,16 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
           localFolder.fullName, ids.map { it })
 
       if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
-        when (newMsgState) {
-          MessageState.PENDING_DELETING -> {
-            deleteOutgoingMsgs(entities)
-          }
+        if (newMsgState == MessageState.PENDING_DELETING) {
+          deleteOutgoingMsgs(entities)
+          return@launch
+        }
+      }
 
-          else -> {
-          }
-        }
-      } else {
-        val candidates = prepareCandidates(entities, newMsgState)
-        roomDatabase.msgDao().updateSuspend(candidates)
-        if (notifyMsgStatesListener) {
-          msgStatesLiveData.postValue(newMsgState)
-        }
+      val candidates = prepareCandidates(entities, newMsgState)
+      roomDatabase.msgDao().updateSuspend(candidates)
+      if (notifyMsgStatesListener) {
+        msgStatesLiveData.postValue(newMsgState)
       }
     }
   }

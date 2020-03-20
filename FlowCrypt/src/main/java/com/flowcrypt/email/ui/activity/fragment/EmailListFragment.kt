@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.PorterDuff
@@ -80,9 +81,10 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private var tracker: SelectionTracker<Long>? = null
   private var keyProvider: CustomStableIdKeyProvider? = null
   private var actionMode: ActionMode? = null
+  private var activeMsgEntity: MessageEntity? = null
 
   private lateinit var adapter: MsgsPagedListAdapter
-  private lateinit var messagesViewModel: MessagesViewModel
+  private lateinit var msgsViewModel: MessagesViewModel
   private var listener: OnManageEmailsListener? = null
   private var isEmptyViewAvailable = false
   private var keepSelectionInMemory = false
@@ -196,6 +198,18 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   override fun onPause() {
     super.onPause()
     snackBar?.dismiss()
+  }
+
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    when (requestCode) {
+      REQUEST_CODE_RETRY_TO_SEND_MESSAGES -> when (resultCode) {
+        TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
+          msgsViewModel.changeMsgsState(listOf(activeMsgEntity?.id ?: -1), it, MessageState.QUEUED)
+        }
+      }
+
+      else -> super.onActivityResult(requestCode, resultCode, data)
+    }
   }
 
   override fun onRefresh() {
@@ -318,7 +332,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       isForceClearCacheNeeded = true
     }
 
-    messagesViewModel.loadMsgs(this, localFolder = newFolder,
+    msgsViewModel.loadMsgs(this, localFolder = newFolder,
         observer = msgsObserver, boundaryCallback = boundaryCallback,
         forceClearFolderCache = isForceClearCacheNeeded, deleteAllMsgs = deleteAllMsgs)
   }
@@ -344,7 +358,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   fun onFetchMsgsCompleted() {
-    msgsObserver.onChanged(messagesViewModel.msgsLiveData?.value)
+    msgsObserver.onChanged(msgsViewModel.msgsLiveData?.value)
   }
 
   fun onRefreshMsgsCompleted() {
@@ -352,6 +366,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   override fun onMsgClick(msgEntity: MessageEntity) {
+    activeMsgEntity = msgEntity
     if (tracker?.hasSelection() == true) {
       return
     }
@@ -417,7 +432,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   private fun handleOutgoingMsgWhichHasSomeError(messageEntity: MessageEntity) {
-    var message: String? = null
+    var message: String? = messageEntity.errorMsg?.take(DIALOG_MSG_MAX_LENGTH) ?: ""
 
     when (messageEntity.msgState) {
       MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
@@ -440,7 +455,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
       MessageState.ERROR_SENDING_FAILED -> {
         val twoWayDialogFragment = TwoWayDialogFragment.newInstance(dialogTitle = "",
-            dialogMsg = getString(R.string.message_failed_to_send),
+            dialogMsg = getString(R.string.message_failed_to_send, message),
             positiveButtonTitle = getString(R.string.retry),
             negativeButtonTitle = getString(R.string.cancel),
             isCancelable = true)
@@ -457,7 +472,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         dialogMsg = message, buttonTitle = null, isPopBackStack = false, isCancelable = true, hasHtml = false)
     infoDialogFragment.onInfoDialogButtonClickListener = object : InfoDialogFragment.OnInfoDialogButtonClickListener {
       override fun onInfoDialogButtonClick() {
-        messagesViewModel.deleteOutgoingMsgs(listOf(messageEntity))
+        msgsViewModel.deleteOutgoingMsgs(listOf(messageEntity))
       }
     }
 
@@ -609,16 +624,16 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         if (position != RecyclerView.NO_POSITION) {
           val item = adapter.getItemId(position)
           listener?.currentFolder?.let {
-            messagesViewModel.changeMsgsState(listOf(item), it, MessageState
+            msgsViewModel.changeMsgsState(listOf(item), it, MessageState
                 .PENDING_ARCHIVING, false)
           }
 
           val snackBar = showSnackbar(view, getString(R.string.marked_for_archiving),
               getString(R.string.undo), Snackbar.LENGTH_LONG, View.OnClickListener {
             listener?.currentFolder?.let {
-              messagesViewModel.changeMsgsState(listOf(item), it, MessageState.NONE, false)
+              msgsViewModel.changeMsgsState(listOf(item), it, MessageState.NONE, false)
               //we should force archiving action because we can have other messages in the pending archiving states
-              messagesViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
+              msgsViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
             }
           })
 
@@ -626,7 +641,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
               super.onDismissed(transientBottomBar, event)
               if (event != DISMISS_EVENT_ACTION && event != DISMISS_EVENT_CONSECUTIVE) {
-                messagesViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
+                msgsViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
               }
             }
           })
@@ -696,24 +711,24 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         listener?.currentFolder?.let {
           result = when (item?.itemId) {
             R.id.menuActionArchiveMessage -> {
-              messagesViewModel.changeMsgsState(ids, it, MessageState.PENDING_ARCHIVING)
+              msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_ARCHIVING)
               mode?.finish()
               true
             }
 
             R.id.menuActionDeleteMessage -> {
-              messagesViewModel.changeMsgsState(ids, it, MessageState.PENDING_DELETING)
+              msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_DELETING)
               mode?.finish()
               true
             }
 
             R.id.menuActionMarkUnread -> {
-              messagesViewModel.changeMsgsState(ids, it, MessageState.PENDING_MARK_UNREAD)
+              msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_MARK_UNREAD)
               true
             }
 
             R.id.menuActionMarkRead -> {
-              messagesViewModel.changeMsgsState(ids, it, MessageState.PENDING_MARK_READ)
+              msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_MARK_READ)
               true
             }
 
@@ -763,9 +778,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   private fun setupMsgsViewModel() {
-    messagesViewModel = ViewModelProvider(this).get(MessagesViewModel::class.java)
-    messagesViewModel.accountLiveData.observe(this, Observer { })
-    messagesViewModel.msgStatesLiveData.observe(this, Observer {
+    msgsViewModel = ViewModelProvider(this).get(MessagesViewModel::class.java)
+    msgsViewModel.accountLiveData.observe(this, Observer { })
+    msgsViewModel.msgStatesLiveData.observe(this, Observer {
       val activity = activity as? BaseSyncActivity ?: return@Observer
       with(activity) {
         when (it) {
@@ -773,6 +788,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
           MessageState.PENDING_DELETING -> deleteMsgs()
           MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
           MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> changeMsgsReadState()
+          MessageState.QUEUED -> MessagesSenderJobService.schedule(context)
           else -> {
           }
         }
@@ -838,5 +854,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   companion object {
     private const val REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10
     private const val REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 11
+
+    private const val DIALOG_MSG_MAX_LENGTH = 600
   }
 }
