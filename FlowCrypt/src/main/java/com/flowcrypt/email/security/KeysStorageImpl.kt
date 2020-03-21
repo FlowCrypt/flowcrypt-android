@@ -16,8 +16,6 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeysStorage
 import com.flowcrypt.email.model.PgpContact
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
  * This class implements [KeysStorage]. Here we collect information about imported private keys
@@ -35,7 +33,11 @@ class KeysStorageImpl private constructor(val context: Context) : KeysStorage {
   private val encryptedKeysLiveData: LiveData<List<KeyEntity>> = FlowCryptRoomDatabase.getDatabase(context).keysDao().getAllKeysLD()
   private val decryptedKeysLiveData = encryptedKeysLiveData.switchMap { list ->
     liveData {
-      emit(list.map { getKeyEntityWithDecryptedInfo(it) })
+      emit(list.map {
+        it.copy(
+            privateKey = KeyStoreCryptoManager.decryptSuspend(it.privateKeyAsString).toByteArray(),
+            passphrase = KeyStoreCryptoManager.decryptSuspend(it.passphrase))
+      })
     }
   }
   private val manuallyDecryptedKeysLiveData: MutableLiveData<List<KeyEntity>> = MutableLiveData()
@@ -90,11 +92,6 @@ class KeysStorageImpl private constructor(val context: Context) : KeysStorage {
   fun hasKeys(): Boolean {
     return keys.isNotEmpty()
   }
-
-  private suspend fun getKeyEntityWithDecryptedInfo(keyEntity: KeyEntity): KeyEntity =
-      withContext(Dispatchers.IO) {
-        return@withContext getDecryptedKeyEntity(keyEntity)
-      }
 
   private fun getDecryptedKeyEntity(keyEntity: KeyEntity): KeyEntity {
     val privateKey = KeyStoreCryptoManager.decrypt(keyEntity.privateKeyAsString)
