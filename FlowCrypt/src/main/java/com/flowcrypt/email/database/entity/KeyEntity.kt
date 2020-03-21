@@ -11,7 +11,9 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.KeysDaoCompatibility
+import com.flowcrypt.email.security.model.PrivateKeySourceType
 
 /**
  * @author Denis Bondarenko
@@ -77,6 +79,18 @@ data class KeyEntity(
           privateKey = keysDaoCompatibility.privateKey?.toByteArray()
               ?: throw NullPointerException("keysDao.privateKey == null"),
           passphrase = keysDaoCompatibility.passphrase)
+    }
+
+    fun fromNodeKeyDetails(nodeKeyDetails: NodeKeyDetails): KeyEntity {
+      return KeyEntity(
+          longId = nodeKeyDetails.longId
+              ?: throw NullPointerException("nodeKeyDetails.longId == null"),
+          source = PrivateKeySourceType.BACKUP.toString(),
+          publicKey = nodeKeyDetails.publicKey?.toByteArray()
+              ?: throw NullPointerException("nodeKeyDetails.publicKey == null"),
+          privateKey = nodeKeyDetails.privateKey?.toByteArray()
+              ?: throw NullPointerException("nodeKeyDetails.privateKey == null"),
+          passphrase = nodeKeyDetails.passphrase)
     }
   }
 }

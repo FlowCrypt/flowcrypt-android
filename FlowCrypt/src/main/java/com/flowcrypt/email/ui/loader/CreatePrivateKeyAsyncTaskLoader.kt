@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.KeysDaoCompatibility
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.KeyEntity
@@ -26,6 +25,7 @@ import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
 import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
 import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction
@@ -64,12 +64,15 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
     var nodeKeyDetails: NodeKeyDetails? = null
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
     try {
-      val (key) = NodeCallsExecutor.genKey(passphrase, genContacts())
-      nodeKeyDetails = key
+      val result = NodeCallsExecutor.genKey(passphrase, genContacts())
+      nodeKeyDetails = result.key ?: throw java.lang.NullPointerException("NodeKeyDetails == null")
 
-      val keysDao = KeysDaoCompatibility.generateKeysDao(KeyDetails.Type.NEW, nodeKeyDetails!!, passphrase)
+      val keyEntity = KeyEntity.fromNodeKeyDetails(nodeKeyDetails)
+          .copy(source = KeyDetails.Type.NEW.toPrivateKeySourceTypeString(),
+              privateKey = KeyStoreCryptoManager.encrypt(nodeKeyDetails.privateKey).toByteArray(),
+              passphrase = KeyStoreCryptoManager.encrypt(passphrase))
 
-      val isKeyAdded = roomDatabase.keysDao().insert(KeyEntity.fromKeyDaoCompatibility(keysDao)) > 0
+      val isKeyAdded = roomDatabase.keysDao().insert(keyEntity) > 0
       if (!isKeyAdded) {
         return LoaderResult(null, NullPointerException("Cannot save the generated private key"))
       }

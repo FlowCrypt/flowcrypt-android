@@ -9,7 +9,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.KeysDaoCompatibility
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
@@ -35,11 +34,12 @@ class PrivateKeysManager {
     @JvmStatic
     fun saveKeyToDatabase(nodeKeyDetails: NodeKeyDetails, passphrase: String, type: KeyDetails.Type) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
-      val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(InstrumentationRegistry.getInstrumentation()
-          .targetContext)
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      roomDatabase.keysDao().insertWithReplace(KeyEntity.fromKeyDaoCompatibility(
-          KeysDaoCompatibility.generateKeysDao(keyStoreCryptoManager, type, nodeKeyDetails, passphrase)))
+      val keyEntity = KeyEntity.fromNodeKeyDetails(nodeKeyDetails).copy(
+          source = type.toString(),
+          privateKey = KeyStoreCryptoManager.encrypt(nodeKeyDetails.privateKey).toByteArray(),
+          passphrase = KeyStoreCryptoManager.encrypt(passphrase))
+      roomDatabase.keysDao().insertWithReplace(keyEntity)
       roomDatabase.userIdEmailsKeysDao()
           .insertWithReplace(UserIdEmailsKeysEntity(longId = nodeKeyDetails.longId!!, userIdEmail = nodeKeyDetails.primaryPgpContact.email))
 

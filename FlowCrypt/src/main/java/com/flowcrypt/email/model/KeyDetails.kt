@@ -7,6 +7,7 @@ package com.flowcrypt.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.security.model.PrivateKeySourceType
 
 /**
  * This class describes a details about the key. The key can be one of three
@@ -52,6 +53,14 @@ data class KeyDetails constructor(val keyName: String? = null,
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
       dest.writeInt(ordinal)
+    }
+
+    fun toPrivateKeySourceTypeString(): String {
+      return when (this) {
+        EMAIL -> PrivateKeySourceType.BACKUP
+        FILE, CLIPBOARD -> PrivateKeySourceType.IMPORT
+        NEW -> PrivateKeySourceType.NEW
+      }.toString()
     }
   }
 
