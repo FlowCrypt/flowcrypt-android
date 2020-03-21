@@ -40,10 +40,10 @@ object KeyStoreCryptoManager {
   private const val TRANSFORMATION_AES_CBC_PKCS7_PADDING = "AES/CBC/PKCS7Padding"
   private const val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
   private const val ANDROID_KEY_STORE_AES_ALIAS = "flowcrypt_main_aes"
+  private const val BASE64_FLAGS = Base64.DEFAULT
 
   private val keyStore: KeyStore = KeyStore.getInstance(PROVIDER_ANDROID_KEY_STORE)
   private var secretKey: SecretKey? = null
-  private val base64Flags = Base64.DEFAULT
 
   init {
     keyStore.load(null)
@@ -75,7 +75,7 @@ object KeyStoreCryptoManager {
     val input = (plainData ?: "").toByteArray(StandardCharsets.UTF_8)
     val cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply { init(Cipher.ENCRYPT_MODE, secretKey) }
     val encryptedBytes = cipher.doFinal(input)
-    return Base64.encodeToString(cipher.iv, base64Flags) + "\n" + Base64.encodeToString(encryptedBytes, base64Flags)
+    return Base64.encodeToString(cipher.iv, BASE64_FLAGS) + "\n" + Base64.encodeToString(encryptedBytes, BASE64_FLAGS)
   }
 
   /**
@@ -111,9 +111,9 @@ object KeyStoreCryptoManager {
 
       val iv = encryptedData.substring(0, splitPosition)
       val cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply {
-        init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(Base64.decode(iv, base64Flags)))
+        init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(Base64.decode(iv, BASE64_FLAGS)))
       }
-      val decodedBytes = cipher.doFinal(Base64.decode(encryptedData.substring(splitPosition + 1), base64Flags))
+      val decodedBytes = cipher.doFinal(Base64.decode(encryptedData.substring(splitPosition + 1), BASE64_FLAGS))
       String(decodedBytes, StandardCharsets.UTF_8)
     }
   }
