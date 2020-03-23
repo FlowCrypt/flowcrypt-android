@@ -125,7 +125,6 @@ class Node private constructor(app: Application) {
     } catch (e: Exception) {
       throw RuntimeException("Could not load certs cache", e)
     }
-
   }
 
   companion object {
