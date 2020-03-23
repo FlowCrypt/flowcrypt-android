@@ -134,7 +134,7 @@ object KeyStoreCryptoManager {
    * Generate [SecretKey] using AndroidKeyStore for the AES symmetric algorithm.
    */
   private fun genAESSecretKey() {
-    val keyPairGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES,
+    val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES,
         PROVIDER_ANDROID_KEY_STORE
     ).apply {
       val purposes = KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
@@ -146,6 +146,6 @@ object KeyStoreCryptoManager {
       )
     }
 
-    keyPairGenerator.generateKey()
+    keyGenerator.generateKey()
   }
 }
