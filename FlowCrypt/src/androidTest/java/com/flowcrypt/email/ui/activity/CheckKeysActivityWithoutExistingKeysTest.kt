@@ -30,6 +30,7 @@ import com.flowcrypt.email.ui.activity.base.BaseCheckKeysActivityTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.not
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -98,6 +99,7 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseCheckKeysActivityTest() {
   }
 
   @Test
+  @Ignore("Need to fix this via idling")
   fun testCheckClickButtonNeutral() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonUseExistingKeys))
