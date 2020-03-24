@@ -26,7 +26,7 @@ import com.flowcrypt.email.model.PgpContact
  * Time: 13:06
  * E-mail: DenBond7@gmail.com
  */
-class KeysStorageImpl private constructor(val context: Context) : KeysStorage {
+class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   val keysLiveData = MediatorLiveData<List<KeyEntity>>()
   private var keys = mutableListOf<KeyEntity>()
   private val onKeysUpdatedListeners: MutableList<OnKeysUpdatedListener> = mutableListOf()
@@ -110,8 +110,9 @@ class KeysStorageImpl private constructor(val context: Context) : KeysStorage {
 
     @JvmStatic
     fun getInstance(context: Context): KeysStorageImpl {
+      val appContext = context.applicationContext
       return INSTANCE ?: synchronized(this) {
-        INSTANCE ?: KeysStorageImpl(context).also { INSTANCE = it }
+        INSTANCE ?: KeysStorageImpl(appContext).also { INSTANCE = it }
       }
     }
   }
