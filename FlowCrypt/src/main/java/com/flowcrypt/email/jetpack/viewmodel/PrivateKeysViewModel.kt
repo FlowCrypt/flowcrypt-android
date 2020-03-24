@@ -12,18 +12,20 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
-import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
+import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.KeysDao
+import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.database.dao.UserIdEmailsKeysDao
-import com.flowcrypt.email.database.dao.source.KeysDaoSource
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
@@ -44,8 +46,9 @@ import kotlinx.coroutines.withContext
  * Time: 10:50 AM
  * E-mail: DenBond7@gmail.com
  */
-class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(application),
-    KeysStorageImpl.OnRefreshListener {
+class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(application) {
+  private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
+  private val apiRepository: PgpApiRepository = NodeRepository()
 
   val changePassphraseLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
@@ -54,22 +57,19 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   val longIdsOfCurrentAccountLiveData: LiveData<List<String>> = Transformations.switchMap(accountLiveData) {
     roomDatabase.userIdEmailsKeysDao().getLongIdsByEmailLD(it?.email ?: "")
   }
-
   val userIdEmailsKeysLiveData = roomDatabase.userIdEmailsKeysDao().getAllLD()
+  val privateKeyDetailsLiveData: LiveData<Result<ParseKeysResult?>> =
+      Transformations.switchMap(keysStorage.keysLiveData) { keyEntities ->
+        liveData {
+          val request = if (keyEntities.isNotEmpty()) {
 
-  private lateinit var keysStorage: KeysStorageImpl
-  private lateinit var apiRepository: PgpApiRepository
-
-  override fun onRefresh() {
-    checkAndFetchKeys()
-  }
-
-  fun init(apiRepository: PgpApiRepository) {
-    this.apiRepository = apiRepository
-    this.keysStorage = KeysStorageImpl.getInstance(getApplication())
-    this.keysStorage.attachOnRefreshListener(this)
-    checkAndFetchKeys()
-  }
+            ParseKeysRequest(keyEntities.joinToString { it.privateKeyAsString + "\n" })
+          } else {
+            ParseKeysRequest(null)
+          }
+          emit(apiRepository.fetchKeyDetails(request))
+        }
+      }
 
   fun changePassphrase(newPassphrase: String) {
     viewModelScope.launch {
@@ -79,39 +79,26 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         requireNotNull(account)
 
         val longIds = roomDatabase.userIdEmailsKeysDao().getLongIdsByEmailSuspend(account.email)
+        val list = keysStorage.getFilteredPgpPrivateKeys(longIds.toTypedArray())
 
-        val keysStore = KeysStorageImpl.getInstance(getApplication())
-        val pgpKeyInfoList = keysStore.getFilteredPgpPrivateKeys(longIds.toTypedArray())
-
-        if (CollectionUtils.isEmpty(pgpKeyInfoList)) {
+        if (CollectionUtils.isEmpty(list)) {
           throw NoPrivateKeysAvailableException(getApplication(), account.email)
         }
 
-        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(getApplication())
-        val keysDaoList = ArrayList<KeysDao>()
+        roomDatabase.keysDao().updateSuspend(list.map { keyEntity ->
+          with(getModifiedNodeKeyDetails(keyEntity.passphrase, newPassphrase, keyEntity.privateKeyAsString)) {
+            if (isDecrypted == true) {
+              throw IllegalArgumentException("Error. The key is decrypted!")
+            }
 
-        for ((longid, private) in pgpKeyInfoList) {
-          val passphrase = keysStore.getPassphrase(longid)
-          private?.let { privateKey ->
-            val modifiedNodeKeyDetails =
-                getModifiedNodeKeyDetails(passphrase, newPassphrase, privateKey)
-            keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, modifiedNodeKeyDetails, newPassphrase))
+            keyEntity.copy(
+                privateKey = KeyStoreCryptoManager.encryptSuspend(privateKey).toByteArray(),
+                publicKey = publicKey?.toByteArray()
+                    ?: throw NullPointerException("NodeKeyDetails.publicKey == null"),
+                passphrase = KeyStoreCryptoManager.encryptSuspend(newPassphrase)
+            )
           }
-        }
-
-        val contentProviderResults = KeysDaoSource().updateKeys(getApplication(), keysDaoList)
-
-        if (contentProviderResults.isEmpty()) {
-          throw IllegalArgumentException("An error occurred during changing passphrases")
-        }
-
-        for (contentProviderResult in contentProviderResults) {
-          if (contentProviderResult.count < 1) {
-            throw IllegalArgumentException("An error occurred when we tried update " + contentProviderResult.uri)
-          }
-        }
-
-        keysStore.refresh(getApplication())
+        })
         changePassphraseLiveData.value = Result.success(true)
       } catch (e: Exception) {
         e.printStackTrace()
@@ -129,7 +116,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           val account = roomDatabase.accountDao().getActiveAccount()
           requireNotNull(account)
 
-          val accountDaoCompatibility = account.toAccountDaoCompatibility(getApplication())
+          val accountDaoCompatibility = account.toAccountDaoCompatibility()
           val sess = OpenStoreHelper.getAccountSess(getApplication(), accountDaoCompatibility)
           val transport = SmtpProtocolUtil.prepareSmtpTransport(getApplication(), sess, accountDaoCompatibility)
           val msg = EmailUtil.genMsgWithAllPrivateKeys(getApplication(), accountDaoCompatibility, sess)
@@ -148,19 +135,20 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     viewModelScope.launch {
       savePrivateKeysLiveData.value = Result.loading()
       try {
-        val keysDaoSource = KeysDaoSource()
         val context: Context = getApplication()
-        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-
         val totalList = mutableListOf<UserIdEmailsKeysEntity>()
         for (keyDetails in keys) {
-          if (!keysDaoSource.hasKey(context, keyDetails.longId!!)) {
-            val passphrase = if (keyDetails.isDecrypted == true) "" else keyDetails.passphrase!!
-            val keysDao = KeysDao.generateKeysDao(keyStoreCryptoManager, type, keyDetails, passphrase)
-            val uri = keysDaoSource.addRow(context, keysDao)
+          val longId = keyDetails.longId
+          requireNotNull(longId)
+          if (roomDatabase.keysDao().getKeyByLongIdSuspend(longId) == null) {
+            val passphrase = if (keyDetails.isDecrypted == true) "" else keyDetails.passphrase ?: ""
+            val keyEntity = KeyEntity.fromNodeKeyDetails(keyDetails)
+                .copy(source = type.toPrivateKeySourceTypeString(),
+                    privateKey = KeyStoreCryptoManager.encryptSuspend(keyDetails.privateKey).toByteArray(),
+                    passphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
+            val isAdded = roomDatabase.keysDao().insertSuspend(keyEntity) > 0
 
-            uri?.let {
-              KeysStorageImpl.getInstance(context).refresh(context)
+            if (isAdded) {
               totalList.addAll(UserIdEmailsKeysDao.genEntities(context, keyDetails, keyDetails.pgpContacts))
             }
           }
@@ -168,6 +156,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         roomDatabase.userIdEmailsKeysDao().insertWithReplaceSuspend(totalList)
         savePrivateKeysLiveData.value = Result.success(true)
       } catch (e: Exception) {
+        e.printStackTrace()
         savePrivateKeysLiveData.value = Result.exception(SavePrivateKeyToDatabaseException(keys, e))
       }
     }
@@ -208,22 +197,4 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
         modifiedKeyDetailsList[0]
       }
-
-  private fun fetchKeys(rawKey: String?) {
-    apiRepository.fetchKeyDetails(R.id.live_data_id_fetch_keys, responsesLiveData, rawKey)
-  }
-
-  private fun checkAndFetchKeys() {
-    val pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys()
-    if (!CollectionUtils.isEmpty(pgpKeyInfoList)) {
-      val builder = StringBuilder()
-      for (keyInfo in pgpKeyInfoList) {
-        builder.append(keyInfo.private).append("\n")
-      }
-
-      fetchKeys(builder.toString())
-    } else {
-      fetchKeys(null)
-    }
-  }
 }

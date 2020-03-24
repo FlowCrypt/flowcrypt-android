@@ -8,8 +8,12 @@ package com.flowcrypt.email.database.entity
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.dao.KeysDaoCompatibility
+import com.flowcrypt.email.security.model.PrivateKeySourceType
 
 /**
  * @author Denis Bondarenko
@@ -21,12 +25,18 @@ import androidx.room.PrimaryKey
     indices = [Index(name = "long_id_in_keys", value = ["long_id"], unique = true)]
 )
 data class KeyEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long?,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
     @ColumnInfo(name = "long_id") val longId: String,
     val source: String,
     @ColumnInfo(name = "public_key") val publicKey: ByteArray,
     @ColumnInfo(name = "private_key") val privateKey: ByteArray,
     @ColumnInfo(defaultValue = "NULL") val passphrase: String?) {
+
+  @Ignore
+  val privateKeyAsString = String(privateKey)
+
+  @Ignore
+  val publicKeyAsString = String(privateKey)
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -52,5 +62,35 @@ data class KeyEntity(
     result = 31 * result + privateKey.contentHashCode()
     result = 31 * result + (passphrase?.hashCode() ?: 0)
     return result
+  }
+
+  override fun toString(): String {
+    return "KeyEntity(id=$id, longId='$longId', source='$source', publicKey=${publicKey
+        .contentToString()}, privateKey=${privateKey.contentToString()}, passphrase=(hidden))"
+  }
+
+  companion object {
+    fun fromKeyDaoCompatibility(keysDaoCompatibility: KeysDaoCompatibility): KeyEntity {
+      return KeyEntity(
+          longId = keysDaoCompatibility.longId!!,
+          source = keysDaoCompatibility.privateKeySourceType!!.toString(),
+          publicKey = keysDaoCompatibility.publicKey?.toByteArray()
+              ?: throw NullPointerException("keysDao.publicKey == null"),
+          privateKey = keysDaoCompatibility.privateKey?.toByteArray()
+              ?: throw NullPointerException("keysDao.privateKey == null"),
+          passphrase = keysDaoCompatibility.passphrase)
+    }
+
+    fun fromNodeKeyDetails(nodeKeyDetails: NodeKeyDetails): KeyEntity {
+      return KeyEntity(
+          longId = nodeKeyDetails.longId
+              ?: throw NullPointerException("nodeKeyDetails.longId == null"),
+          source = PrivateKeySourceType.BACKUP.toString(),
+          publicKey = nodeKeyDetails.publicKey?.toByteArray()
+              ?: throw NullPointerException("nodeKeyDetails.publicKey == null"),
+          privateKey = nodeKeyDetails.privateKey?.toByteArray()
+              ?: throw NullPointerException("nodeKeyDetails.privateKey == null"),
+          passphrase = nodeKeyDetails.passphrase)
+    }
   }
 }

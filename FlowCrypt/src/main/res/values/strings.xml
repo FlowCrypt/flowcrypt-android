@@ -340,7 +340,7 @@
     <string name="an_error_has_occurred">An error has occurred</string>
     <string name="outgoing">Outgoing</string>
     <string name="cannot_send_message_unknown_error">Can\'t send message: unknown error</string>
-    <string name="message_failed_to_send">Message failed to send: unknown error</string>
+    <string name="message_failed_to_send">Message failed to send: unknown error\n\n%1$s</string>
     <string name="my_public_key">My Public Key</string>
     <string name="public_key_below_is_safe_to_share">Public Keys are safe to share</string>
     <string name="show_public_key">Show public key</string>

@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.retrofit.node.RequestsManager
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.node.exception.NodeNotReady
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import org.apache.commons.io.IOUtils
@@ -43,6 +44,7 @@ class Node private constructor(app: Application) {
 
   private fun init(context: Context) {
     Thread(Runnable {
+      KeysStorageImpl.getInstance(context.applicationContext).fetchKeysManually(context.applicationContext)
       Thread.currentThread().name = "Node"
       try {
         val certs = getCachedNodeSecretCerts(context)
@@ -94,12 +96,7 @@ class Node private constructor(app: Application) {
     val data = gson.toJson(nodeSecretCerts)
     try {
       context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE).use { outputStream ->
-        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-        val spec = KeyStoreCryptoManager.generateAlgorithmParameterSpecString()
-        val encryptedData = keyStoreCryptoManager.encrypt(data, spec)
-        outputStream.write(spec.toByteArray())
-        outputStream.write('\n'.toInt())
-        outputStream.write(encryptedData.toByteArray())
+        outputStream.write(KeyStoreCryptoManager.encrypt(data).toByteArray())
       }
     } catch (e: Exception) {
       throw RuntimeException("Could not save certs cache", e)
@@ -119,10 +116,7 @@ class Node private constructor(app: Application) {
           throw IllegalArgumentException("wrong rawData")
         }
 
-        val spec = rawData.substring(0, splitPosition)
-
-        val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-        val decryptedData = keyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1), spec)
+        val decryptedData = KeyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1))
         return gson.fromJson(decryptedData, NodeSecretCerts::class.java)
       }
     } catch (e: FileNotFoundException) {
@@ -131,7 +125,6 @@ class Node private constructor(app: Application) {
     } catch (e: Exception) {
       throw RuntimeException("Could not load certs cache", e)
     }
-
   }
 
   companion object {

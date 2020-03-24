@@ -12,11 +12,9 @@ import android.text.TextUtils
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
-import com.flowcrypt.email.broadcastreceivers.UpdateStorageConnectorBroadcastReceiver
-import com.flowcrypt.email.database.dao.KeysDao
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.dao.KeysDaoCompatibility
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.KeysDaoSource
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -43,23 +41,23 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
 
   override fun run(context: Context) {
     val keysStore = KeysStorageImpl.getInstance(context)
-    val pgpKeyInfoList = keysStore.getAllPgpPrivateKeys()
+    val list = keysStore.getAllPgpPrivateKeys()
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
-    if (CollectionUtils.isEmpty(pgpKeyInfoList)) {
+    if (CollectionUtils.isEmpty(list)) {
       return
     }
 
-    val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-    val keysDaoList = ArrayList<KeysDao>()
+    val keysDaoList = ArrayList<KeysDaoCompatibility>()
 
-    for ((longid, private) in pgpKeyInfoList) {
-      val passphrase = keysStore.getPassphrase(longid)
+    for (key in list) {
+      val passphrase = key.passphrase
 
       if (TextUtils.isEmpty(passphrase)) {
         continue
       }
 
-      val keyDetailsList = NodeCallsExecutor.parseKeys(private!!)
+      val keyDetailsList = NodeCallsExecutor.parseKeys(key.privateKeyAsString)
       if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size != 1) {
         ExceptionUtil.handleError(
             IllegalArgumentException("An error occurred during the key parsing| 1: "
@@ -87,7 +85,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
           continue
         }
 
-        keysDaoList.add(KeysDao.generateKeysDao(keyStoreCryptoManager, modifiedKeyDetailsList[0], passphrase))
+        keysDaoList.add(KeysDaoCompatibility.generateKeysDao(modifiedKeyDetailsList[0], passphrase))
       } catch (e: NodeException) {
         if (e.nodeError?.msg == "Error: Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.") {
           val currentAccount = AccountDaoSource().getActiveAccountInformation(context)
@@ -96,20 +94,8 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
       }
     }
 
-    if (keysDaoList.size > 0) {
-      val contentProviderResults = KeysDaoSource().updateKeys(context, keysDaoList)
-
-      if (contentProviderResults.isEmpty()) {
-        throw IllegalArgumentException("An error occurred during saving changes")
-      }
-
-      for (contentProviderResult in contentProviderResults) {
-        if (contentProviderResult.count < 1) {
-          throw IllegalArgumentException("An error occurred when we tried update " + contentProviderResult.uri)
-        }
-      }
-
-      context.sendBroadcast(UpdateStorageConnectorBroadcastReceiver.newIntent(context))
+    if (keysDaoList.isNotEmpty()) {
+      roomDatabase.keysDao().updateExistedKeys(keysDaoList)
     }
 
     SharedPreferencesHelper.setBoolean(PreferenceManager

@@ -18,8 +18,8 @@ import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.request.node.VersionRequest
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.jetpack.livedata.SingleLiveEvent
-import com.flowcrypt.email.model.PgpKeyInfo
 import com.flowcrypt.email.node.TestData
 
 /**
@@ -41,8 +41,8 @@ object RequestsManager {
   }
 
   fun decryptMsg(requestCode: Int, data: ByteArray = ByteArray(0), uri: Uri? = null,
-                 prvKeys: Array<PgpKeyInfo>, isEmail: Boolean = false) {
-    load(requestCode, ParseDecryptMsgRequest(data = data, uri = uri, pgpKeyInfos = listOf(*prvKeys), isEmail = isEmail))
+                 prvKeys: Array<KeyEntity>, isEmail: Boolean = false) {
+    load(requestCode, ParseDecryptMsgRequest(data = data, uri = uri, keyEntities = listOf(*prvKeys), isEmail = isEmail))
   }
 
   fun encryptFile(requestCode: Int, data: ByteArray) {
@@ -53,7 +53,7 @@ object RequestsManager {
     load(requestCode, EncryptFileRequest(context, fileUri, "file.txt", listOf(*TestData.mixedPubKeys)))
   }
 
-  fun decryptFile(requestCode: Int, encryptedData: ByteArray, prvKeys: Array<PgpKeyInfo>) {
+  fun decryptFile(requestCode: Int, encryptedData: ByteArray, prvKeys: Array<KeyEntity>) {
     load(requestCode, DecryptFileRequest(encryptedData, listOf(*prvKeys)))
   }
 

@@ -19,7 +19,6 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.UIUtil
@@ -139,7 +138,6 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
 
           Result.Status.SUCCESS -> {
             if (it.data == true) {
-              KeysStorageImpl.getInstance(this).refresh(this)
               if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP) == true) {
                 isBackEnabled = true
                 Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()

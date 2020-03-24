@@ -22,7 +22,6 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.KeysDaoSource
 import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
@@ -204,7 +203,6 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   }
 
   override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>) {
-    val keysDaoSource = KeysDaoSource()
     var areFreshKeysExisted = false
     var arePrivateKeysExisted = false
 
@@ -214,7 +212,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       }
 
       val longId = key.longId ?: continue
-      if (!keysDaoSource.hasKey(this, longId)) {
+      if (KeysStorageImpl.getInstance(application).getPgpPrivateKey(longId) == null) {
         areFreshKeysExisted = true
       }
     }

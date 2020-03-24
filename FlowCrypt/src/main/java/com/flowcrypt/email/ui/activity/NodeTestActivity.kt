@@ -65,10 +65,10 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
             resultText = "processing...\n"
             tvResult?.text = resultText
 
-            val pgpKeyInfoList = KeysStorageImpl.getInstance(this).getAllPgpPrivateKeys()
+            val list = KeysStorageImpl.getInstance(this).getAllPgpPrivateKeys()
             requestsManager?.decryptMsg(R.id.req_id_decrypt_email,
                 data = IOUtils.toByteArray(contentResolver.openInputStream(it)),
-                prvKeys = pgpKeyInfoList.toTypedArray(),
+                prvKeys = list.toTypedArray(),
                 isEmail = true)
           }
         }
@@ -239,8 +239,9 @@ class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<Nod
 
         R.id.req_id_decrypt_email -> {
           val eccDecryptMsgResult = responseWrapper.result as ParseDecryptedMsgResult?
+          val blocks: List<MsgBlock> = eccDecryptMsgResult?.msgBlocks ?: emptyList()
 
-          for (block in eccDecryptMsgResult?.msgBlocks ?: emptyList<MsgBlock>()) {
+          for (block in blocks) {
             when (block.type) {
               MsgBlock.Type.DECRYPT_ERROR -> {
                 val errorMsgBlock = block as? DecryptErrorMsgBlock

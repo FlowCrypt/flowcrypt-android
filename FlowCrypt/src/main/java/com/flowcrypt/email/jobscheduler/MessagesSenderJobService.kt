@@ -266,12 +266,11 @@ class MessagesSenderJobService : JobService() {
                 newMsgState = MessageState.ERROR_CACHE_PROBLEM
               }
             }
-            roomDatabase.msgDao().update(msgEntity.copy(state = newMsgState.value))
+            roomDatabase.msgDao().update(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
           }
 
           Thread.sleep(5000)
         }
-
       }
     }
 
@@ -353,8 +352,7 @@ class MessagesSenderJobService : JobService() {
             }
 
             var sentMsg = com.google.api.services.gmail.model.Message()
-            sentMsg.raw = Base64.encodeToString(outputStream.toByteArray(), Base64.URL_SAFE)
-
+            sentMsg.raw = Base64.encodeToString(outputStream.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
             if (!TextUtils.isEmpty(threadId)) {
               sentMsg.threadId = threadId
             }
@@ -547,7 +545,7 @@ class MessagesSenderJobService : JobService() {
       context ?: return
 
       val jobInfoBuilder = JobInfo.Builder(JobIdManager.JOB_TYPE_SEND_MESSAGES,
-          ComponentName(context, MessagesSenderJobService::class.java))
+              ComponentName(context, MessagesSenderJobService::class.java))
           .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
           .setPersisted(true)
 

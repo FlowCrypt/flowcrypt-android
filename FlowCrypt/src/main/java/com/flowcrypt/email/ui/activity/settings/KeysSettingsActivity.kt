@@ -15,7 +15,6 @@ import com.flowcrypt.email.ui.activity.fragment.PrivateKeysListFragment
 /**
  * This [Activity] shows information about available keys in the database.
  *
- *
  * Here we can import new keys.
  *
  * @author DenBond7
@@ -23,9 +22,7 @@ import com.flowcrypt.email.ui.activity.fragment.PrivateKeysListFragment
  * Time: 11:30
  * E-mail: DenBond7@gmail.com
  */
-
 class KeysSettingsActivity : BaseBackStackActivity() {
-
   override val contentViewResourceId: Int
     get() = R.layout.activity_keys_settings
 
@@ -38,20 +35,6 @@ class KeysSettingsActivity : BaseBackStackActivity() {
     if (savedInstanceState == null) {
       val keysListFragment = PrivateKeysListFragment.newInstance()
       supportFragmentManager.beginTransaction().replace(R.id.layoutContent, keysListFragment).commitNow()
-    }
-  }
-
-  override fun onNodeStateChanged(isReady: Boolean) {
-    super.onNodeStateChanged(isReady)
-    if (isReady) {
-      val fragmentList = supportFragmentManager.fragments
-
-      for (fragment in fragmentList) {
-        if (fragment is PrivateKeysListFragment) {
-          fragment.fetchKeys()
-          return
-        }
-      }
     }
   }
 }

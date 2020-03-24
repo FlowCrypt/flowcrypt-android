@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.retrofit.request.node
 
 import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.model.node.PrivateKeyInfo
-import com.flowcrypt.email.model.PgpKeyInfo
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.google.gson.annotations.Expose
 import retrofit2.Response
 
@@ -19,12 +19,12 @@ import retrofit2.Response
  * Time: 4:32 PM
  * E-mail: DenBond7@gmail.com
  */
-class DecryptFileRequest(override val data: ByteArray,
-                         pgpKeyInfos: List<PgpKeyInfo>) :
-    BaseNodeRequest() {
+class DecryptFileRequest(override val data: ByteArray, keyEntities: List<KeyEntity>) : BaseNodeRequest() {
 
   @Expose
-  private val keys: List<PrivateKeyInfo> = pgpKeyInfos.map { PrivateKeyInfo(it.private!!, it.longid, it.passphrase) }
+  private val keys: List<PrivateKeyInfo> = keyEntities.map {
+    PrivateKeyInfo(it.privateKeyAsString, it.longId, it.passphrase)
+  }
 
   override val endpoint: String = "decryptFile"
 

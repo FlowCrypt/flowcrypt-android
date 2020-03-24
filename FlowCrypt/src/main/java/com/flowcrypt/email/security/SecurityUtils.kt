@@ -12,8 +12,6 @@ import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
-import com.flowcrypt.email.database.dao.source.KeysDaoSource
-import com.flowcrypt.email.model.PgpKeyInfo
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
@@ -35,58 +33,6 @@ import java.util.*
 
 class SecurityUtils {
   companion object {
-    /**
-     * Get a PrivateKeyInfo list.
-     *
-     * @param context Interface to global information about an application environment.
-     * @return <tt>List<PrivateKeyInfo></PrivateKeyInfo></tt> Return a list of PrivateKeyInfo objects.
-     */
-    @JvmStatic
-    fun getPgpKeyInfoList(context: Context): List<PgpKeyInfo> {
-      val pgpKeyInfos = ArrayList<PgpKeyInfo>()
-      val cursor = context.contentResolver.query(KeysDaoSource().baseContentUri, null, null, null, null)
-
-      val keyStoreCryptoManager = KeyStoreCryptoManager.getInstance(context)
-
-      if (cursor != null && cursor.moveToFirst()) {
-        do {
-          val longId = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_LONG_ID))
-          val pubKey = cursor.getString(cursor.getColumnIndex(KeysDaoSource.COL_PUBLIC_KEY))
-
-          val randomVector = KeyStoreCryptoManager.normalizeAlgorithmParameterSpecString(longId)
-
-          val prvKey = keyStoreCryptoManager.decrypt(cursor.getString(
-              cursor.getColumnIndex(KeysDaoSource.COL_PRIVATE_KEY)), randomVector)
-          val passphrase = keyStoreCryptoManager.decrypt(cursor.getString(
-              cursor.getColumnIndex(KeysDaoSource.COL_PASSPHRASE)), randomVector)
-
-          pgpKeyInfos.add(PgpKeyInfo(longId, prvKey, pubKey, passphrase))
-        } while (cursor.moveToNext())
-      }
-
-      cursor?.close()
-      return pgpKeyInfos
-    }
-
-    /**
-     * Check is backup of keys exist in the database.
-     *
-     * @return <tt>Boolean</tt> true if exists one or more private keys, false otherwise;
-     */
-    @JvmStatic
-    fun hasBackup(context: Context): Boolean {
-      val cursor = context.contentResolver.query(KeysDaoSource().baseContentUri, null, null, null, null)
-
-      var hasBackup = false
-      if (cursor != null && cursor.moveToFirst()) {
-        hasBackup = cursor.count > 0
-      }
-
-      cursor?.close()
-
-      return hasBackup
-    }
-
     /**
      * Generate a new name for the private key which will be exported.
      *
@@ -112,18 +58,19 @@ class SecurityUtils {
       val longIdsByEmail = FlowCryptRoomDatabase.getDatabase(context).userIdEmailsKeysDao().getLongIdsByEmail(account.email)
       val longids = longIdsByEmail.toTypedArray()
       val keysStorage = KeysStorageImpl.getInstance(context)
-      val pgpKeyInfoList = keysStorage.getFilteredPgpPrivateKeys(longids)
+      val keys = keysStorage.getFilteredPgpPrivateKeys(longids)
 
-      if (CollectionUtils.isEmpty(pgpKeyInfoList)) {
+      if (CollectionUtils.isEmpty(keys)) {
         throw NoPrivateKeysAvailableException(context, account.email)
       }
 
       var firstPassPhrase: String? = null
 
-      for (i in pgpKeyInfoList.indices) {
-        val (longid, private) = pgpKeyInfoList[i]
+      for (i in keys.indices) {
+        val key = keys[i]
 
-        val passPhrase = keysStorage.getPassphrase(longid)
+        val passPhrase = key.passphrase
+        val private = key.privateKeyAsString
 
         if (i == 0) {
           firstPassPhrase = passPhrase
@@ -136,7 +83,7 @@ class SecurityUtils {
         }
 
         val zxcvbn = Zxcvbn()
-        val measure = zxcvbn.measure(passPhrase!!, Arrays.asList(*Constants.PASSWORD_WEAK_WORDS)).guesses
+        val measure = zxcvbn.measure(passPhrase!!, listOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
         val passwordStrength = NodeCallsExecutor.zxcvbnStrengthBar(measure)
 
         when (passwordStrength.word!!.word) {
@@ -144,7 +91,7 @@ class SecurityUtils {
           Constants.PASSWORD_QUALITY_POOR -> throw PrivateKeyStrengthException("Pass phrase too weak")
         }
 
-        val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(private!!)
+        val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(private)
         val (isDecrypted, privateKey) = nodeKeyDetailsList[0]
 
         val encryptedKey: String?
@@ -216,7 +163,7 @@ class SecurityUtils {
 
       val pgpKeyInfo = KeysStorageImpl.getInstance(context).getPgpPrivateKey(longIds[0])
       if (pgpKeyInfo != null) {
-        val details = NodeCallsExecutor.parseKeys(pgpKeyInfo.private!!)
+        val details = NodeCallsExecutor.parseKeys(pgpKeyInfo.privateKeyAsString)
         if (CollectionUtils.isEmpty(details)) {
           throw IllegalStateException("There are no details about the given private key")
         }

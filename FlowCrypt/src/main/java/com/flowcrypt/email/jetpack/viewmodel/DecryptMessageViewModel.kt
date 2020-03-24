@@ -18,7 +18,7 @@ import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
-import com.flowcrypt.email.model.PgpKeyInfo
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.cache.DiskLruCache
@@ -48,27 +48,20 @@ import javax.mail.internet.MimeMessage
  * Time: 11:47 AM
  * E-mail: DenBond7@gmail.com
  */
-class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(application),
-    KeysStorageImpl.OnRefreshListener {
+class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(application) {
   val headersLiveData: MutableLiveData<String> = MutableLiveData()
   val decryptLiveData: MutableLiveData<Result<ParseDecryptedMsgResult?>> = MutableLiveData()
 
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(application)
   private val apiRepository: PgpApiRepository = NodeRepository()
 
-  init {
-    this.keysStorage.attachOnRefreshListener(this)
-  }
-
-  override fun onRefresh() {}
-
   fun decryptMessage(rawMimeBytes: ByteArray) {
     decryptLiveData.value = Result.loading()
     viewModelScope.launch {
       headersLiveData.value = getHeaders(ByteArrayInputStream(rawMimeBytes))
-      val pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys()
+      val list = keysStorage.getAllPgpPrivateKeys()
       val result = apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(data = rawMimeBytes, pgpKeyInfos = pgpKeyInfoList, isEmail = true))
+          request = ParseDecryptMsgRequest(data = rawMimeBytes, keyEntities = list, isEmail = true))
       decryptLiveData.value = result
     }
   }
@@ -79,13 +72,13 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
       val uri = msgSnapshot.getUri(0)
       if (uri != null) {
         headersLiveData.value = getHeaders(context.contentResolver.openInputStream(uri))
-        val pgpKeyInfoList = keysStorage.getAllPgpPrivateKeys()
+        val list = keysStorage.getAllPgpPrivateKeys()
         val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
         val result = if (largerThan1Mb) {
-          parseMimeAndDecrypt(context, uri, pgpKeyInfoList)
+          parseMimeAndDecrypt(context, uri, list)
         } else {
           apiRepository.parseDecryptMsg(
-              request = ParseDecryptMsgRequest(context = context, uri = uri, pgpKeyInfos = pgpKeyInfoList, isEmail = true))
+              request = ParseDecryptMsgRequest(context = context, uri = uri, keyEntities = list, isEmail = true))
         }
         decryptLiveData.value = result
       } else {
@@ -95,14 +88,15 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
     }
   }
 
-  private suspend fun parseMimeAndDecrypt(context: Context, uri: Uri, pgpKeyInfoList: List<PgpKeyInfo>): Result<ParseDecryptedMsgResult?> {
+  private suspend fun parseMimeAndDecrypt(context: Context, uri: Uri, list: List<KeyEntity>):
+      Result<ParseDecryptedMsgResult?> {
     val uriOfEncryptedPart = getUriOfEncryptedPart(context, uri)
     return if (uriOfEncryptedPart != null) {
       apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, pgpKeyInfos = pgpKeyInfoList, isEmail = false))
+          request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, keyEntities = list, isEmail = false))
     } else {
       apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, pgpKeyInfos = pgpKeyInfoList, isEmail = true))
+          request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, keyEntities = list, isEmail = true))
     }
   }
 

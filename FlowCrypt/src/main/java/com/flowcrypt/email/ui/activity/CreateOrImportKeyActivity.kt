@@ -13,7 +13,7 @@ import android.view.View
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.model.KeyImportModel
-import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -120,7 +120,7 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
     if (account.isRuleExist(AccountDao.DomainRule.NO_PRV_CREATE)) {
       buttonSkipSetup.visibility = View.GONE
     } else {
-      if (SecurityUtils.hasBackup(this)) {
+      if (KeysStorageImpl.getInstance(application).hasKeys()) {
         buttonSkipSetup?.visibility = View.VISIBLE
         buttonSkipSetup?.setOnClickListener(this)
       } else {

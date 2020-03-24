@@ -19,7 +19,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.jetpack.viewmodel.CheckGmailTokenViewModel
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
-import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.FeedbackJobIntentService
 import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction
@@ -98,7 +98,7 @@ class LauncherActivity : BaseActivity() {
   }
 
   private fun showEmailManagerActivity() {
-    if (SecurityUtils.hasBackup(this)) {
+    if (KeysStorageImpl.getInstance(application).hasKeys()) {
       val isCheckKeysNeeded = SharedPreferencesHelper.getBoolean(PreferenceManager
           .getDefaultSharedPreferences(this), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, true)
 

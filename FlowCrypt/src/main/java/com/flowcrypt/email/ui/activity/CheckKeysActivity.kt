@@ -24,7 +24,6 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeysStorageImpl
-import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -181,7 +180,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
     initButton(R.id.buttonPositiveAction, View.VISIBLE, positiveBtnTitle)
     initButton(R.id.buttonNegativeAction, View.VISIBLE, negativeBtnTitle)
 
-    if (SecurityUtils.hasBackup(this) && intent?.getBooleanExtra
+    if (KeysStorageImpl.getInstance(application).hasKeys() && intent?.getBooleanExtra
         (KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, false) == true) {
       initButton(R.id.buttonUseExistingKeys, View.VISIBLE, getString(R.string.use_existing_keys))
     }

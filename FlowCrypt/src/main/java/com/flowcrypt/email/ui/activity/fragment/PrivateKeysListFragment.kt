@@ -6,30 +6,25 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.LoadingState
-import com.flowcrypt.email.api.retrofit.Status
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
-import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.util.UIUtil
-import com.google.android.gms.common.util.CollectionUtils
-import java.util.*
 
 /**
  * This [Fragment] shows information about available private keys in the database.
@@ -39,37 +34,31 @@ import java.util.*
  * Time: 10:30
  * E-mail: DenBond7@gmail.com
  */
-class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKeysRecyclerViewAdapter.OnKeySelectedListener,
-    Observer<NodeResponseWrapper<*>> {
+class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKeysRecyclerViewAdapter.OnKeySelectedListener {
 
   private var progressBar: View? = null
   private var emptyView: View? = null
   private var content: View? = null
 
-  private var recyclerViewAdapter: PrivateKeysRecyclerViewAdapter? = null
+  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
+  private lateinit var recyclerViewAdapter: PrivateKeysRecyclerViewAdapter
 
   override val contentResourceId: Int = R.layout.fragment_private_keys
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    recyclerViewAdapter = PrivateKeysRecyclerViewAdapter(requireContext(), ArrayList(), this)
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
+    recyclerViewAdapter = PrivateKeysRecyclerViewAdapter(context, this)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
-
-    if (recyclerViewAdapter!!.itemCount == 0 && baseActivity.isNodeReady) {
-      fetchKeys()
-    }
+    setupPrivateKeysViewModel()
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-
-    if (supportActionBar != null) {
-      supportActionBar!!.setTitle(R.string.keys)
-    }
+    supportActionBar?.setTitle(R.string.keys)
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -98,42 +87,31 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
     }
   }
 
-  override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {
-    when (nodeResponseWrapper.requestCode) {
-      R.id.live_data_id_fetch_keys -> when (nodeResponseWrapper.status) {
-        Status.LOADING -> {
-          nodeResponseWrapper.loadingState?.let {
-            if (LoadingState.PREPARE_REQUEST == it) {
-              emptyView?.visibility = View.GONE
-              UIUtil.exchangeViewVisibility(true, progressBar, content)
-            }
-          }
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.privateKeyDetailsLiveData.observe(viewLifecycleOwner, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          emptyView?.visibility = View.GONE
+          UIUtil.exchangeViewVisibility(true, progressBar, content)
         }
 
-        Status.SUCCESS -> {
-          val parseKeysResult = nodeResponseWrapper.result as ParseKeysResult?
-          val nodeKeyDetailsList = parseKeysResult!!.nodeKeyDetails
-          if (CollectionUtils.isEmpty(nodeKeyDetailsList)) {
-            recyclerViewAdapter!!.swap(emptyList())
-            UIUtil.exchangeViewVisibility(true, emptyView!!, content!!)
+        Result.Status.SUCCESS -> {
+          val parseKeysResult = it.data
+          val detailsList: List<NodeKeyDetails> = parseKeysResult?.nodeKeyDetails ?: emptyList()
+          if (detailsList.isEmpty()) {
+            recyclerViewAdapter.swap(emptyList())
+            UIUtil.exchangeViewVisibility(true, emptyView, content)
           } else {
-            recyclerViewAdapter!!.swap(nodeKeyDetailsList)
-            UIUtil.exchangeViewVisibility(false, progressBar!!, content!!)
+            recyclerViewAdapter.swap(detailsList)
+            UIUtil.exchangeViewVisibility(false, progressBar, content)
           }
         }
 
-        Status.ERROR -> Toast.makeText(context, nodeResponseWrapper.result?.apiError?.toString(),
-            Toast.LENGTH_SHORT).show()
+        Result.Status.ERROR -> Toast.makeText(context, it.data?.apiError?.toString(), Toast.LENGTH_SHORT).show()
 
-        Status.EXCEPTION -> Toast.makeText(context, nodeResponseWrapper.exception!!.message, Toast.LENGTH_SHORT).show()
+        Result.Status.EXCEPTION -> Toast.makeText(context, it.exception?.message, Toast.LENGTH_SHORT).show()
       }
-    }
-  }
-
-  fun fetchKeys() {
-    val viewModel = ViewModelProvider(this).get(PrivateKeysViewModel::class.java)
-    viewModel.init(NodeRepository())
-    viewModel.responsesLiveData.observe(viewLifecycleOwner, this)
+    })
   }
 
   private fun runCreateOrImportKeyActivity() {
@@ -160,8 +138,8 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
     recyclerView.layoutManager = manager
     recyclerView.adapter = recyclerViewAdapter
 
-    if (recyclerViewAdapter!!.itemCount > 0) {
-      progressBar!!.visibility = View.GONE
+    if (recyclerViewAdapter.itemCount > 0) {
+      progressBar?.visibility = View.GONE
     }
 
     if (root.findViewById<View>(R.id.floatActionButtonAddKey) != null) {
