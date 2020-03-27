@@ -22,7 +22,7 @@ import com.flowcrypt.email.database.entity.LabelEntity
  * E-mail: DenBond7@gmail.com
  */
 @Dao
-interface ImapLabelsDaoSource : BaseDao<LabelEntity> {
+interface LabelDao : BaseDao<LabelEntity> {
   @Query("SELECT * FROM imap_labels WHERE email = :account AND folder_name = :label")
   suspend fun getLabelSuspend(account: String?, label: String): LabelEntity?
 
