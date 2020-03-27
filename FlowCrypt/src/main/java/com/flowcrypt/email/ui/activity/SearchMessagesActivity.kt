@@ -49,10 +49,6 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
   override val rootView: View
     get() = View(this)
 
-  override fun refreshFoldersFromCache() {
-
-  }
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 

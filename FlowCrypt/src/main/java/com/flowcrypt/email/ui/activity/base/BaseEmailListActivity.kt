@@ -28,8 +28,6 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
   @VisibleForTesting
   val msgsIdlingResource = SingleIdlingResources()
 
-  abstract fun refreshFoldersFromCache()
-
   @VisibleForTesting
   override val msgsLoadingIdlingResource: SingleIdlingResources
     get() = msgsIdlingResource
@@ -37,7 +35,6 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
       R.id.syns_request_code_load_next_messages -> {
-        refreshFoldersFromCache()
         when (resultCode) {
           EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE -> {
             onNextMsgsLoaded()

@@ -19,5 +19,5 @@ import com.flowcrypt.email.database.entity.AccountEntity
 open class AccountViewModel(application: Application) : BaseAndroidViewModel(application) {
   protected val roomDatabase = FlowCryptRoomDatabase.getDatabase(application)
 
-  val accountLiveData: LiveData<AccountEntity?> = roomDatabase.accountDao().getActiveAccountLD()
+  val activeAccountLiveData: LiveData<AccountEntity?> = roomDatabase.accountDao().getActiveAccountLD()
 }

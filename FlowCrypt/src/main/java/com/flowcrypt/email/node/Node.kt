@@ -18,6 +18,7 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import org.apache.commons.io.IOUtils
 import java.io.FileNotFoundException
 import java.nio.charset.StandardCharsets
@@ -63,6 +64,7 @@ class Node private constructor(app: Application) {
         liveData.postValue(true)
       } catch (e: Exception) {
         e.printStackTrace()
+        ExceptionUtil.handleError(e)
         liveData.postValue(false)
       }
     }).start()
@@ -101,7 +103,6 @@ class Node private constructor(app: Application) {
     } catch (e: Exception) {
       throw RuntimeException("Could not save certs cache", e)
     }
-
   }
 
   private fun getCachedNodeSecretCerts(context: Context): NodeSecretCerts? {
@@ -116,7 +117,11 @@ class Node private constructor(app: Application) {
           throw IllegalArgumentException("wrong rawData")
         }
 
-        val decryptedData = KeyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1))
+        val decryptedData = try {
+          KeyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1))
+        } catch (e: Exception) {
+          KeyStoreCryptoManager.decrypt(rawData)
+        }
         return gson.fromJson(decryptedData, NodeSecretCerts::class.java)
       }
     } catch (e: FileNotFoundException) {

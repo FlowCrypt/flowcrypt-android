@@ -43,7 +43,7 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
   private val repository: ApiRepository = FlowcryptApiRepository()
   val accountKeysInfoLiveData = MediatorLiveData<Result<LookUpEmailsResponse>>()
   private val initLiveData = Transformations
-      .switchMap(accountLiveData) { accountEntity ->
+      .switchMap(activeAccountLiveData) { accountEntity ->
         liveData {
           emit(Result.loading())
           val result: Result<LookUpEmailsResponse> = getResult(accountEntity)
@@ -86,7 +86,8 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
     viewModelScope.launch {
       withContext(Dispatchers.IO) {
         refreshingLiveData.postValue(Result.loading())
-        val accountEntity = accountLiveData.value ?: roomDatabase.accountDao().getActiveAccount()
+        val accountEntity = activeAccountLiveData.value
+            ?: roomDatabase.accountDao().getActiveAccount()
         refreshingLiveData.postValue(getResult(accountEntity))
       }
     }

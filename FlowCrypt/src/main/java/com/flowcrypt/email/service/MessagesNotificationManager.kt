@@ -86,10 +86,8 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
     }
   }
 
-  fun cancelAll(context: Context, account: AccountDao) {
+  fun cancelAll(context: Context, account: AccountDao, foldersManager: FoldersManager) {
     cancel(NOTIFICATIONS_GROUP_MESSAGES)
-
-    val foldersManager = FoldersManager.fromDatabase(context, account.email)
     val localFolder = foldersManager.findInboxFolder()
 
     if (localFolder != null) {

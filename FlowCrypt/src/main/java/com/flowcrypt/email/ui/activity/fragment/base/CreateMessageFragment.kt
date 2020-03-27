@@ -1471,7 +1471,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     accountAliasesViewModel.fetchUpdates(viewLifecycleOwner)
     accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner, Observer {
       val aliases = ArrayList<String>()
-      accountAliasesViewModel.accountLiveData.value?.let { accountEntity ->
+      accountAliasesViewModel.activeAccountLiveData.value?.let { accountEntity ->
         aliases.add(accountEntity.email)
       }
 

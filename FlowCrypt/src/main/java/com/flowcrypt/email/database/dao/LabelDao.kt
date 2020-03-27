@@ -12,16 +12,16 @@ import androidx.room.Transaction
 import com.flowcrypt.email.database.entity.LabelEntity
 
 /**
- * This class describes available methods for [LabelEntity]
+ * This class describes the structure of IMAP labels for different accounts and methods which
+ * will be used to manipulate this data.
  *
- * @author Denis Bondarenko
- *         Date: 12/20/19
- *         Time: 4:54 PM
- *         E-mail: DenBond7@gmail.com
+ * @author DenBond7
+ * Date: 14.06.2017
+ * Time: 15:59
+ * E-mail: DenBond7@gmail.com
  */
 @Dao
 interface LabelDao : BaseDao<LabelEntity> {
-
   @Query("SELECT * FROM imap_labels WHERE email = :account AND folder_name = :label")
   suspend fun getLabelSuspend(account: String?, label: String): LabelEntity?
 
@@ -33,6 +33,9 @@ interface LabelDao : BaseDao<LabelEntity> {
 
   @Query("SELECT * FROM imap_labels WHERE email = :account")
   fun getLabels(account: String): List<LabelEntity>
+
+  @Query("SELECT * FROM imap_labels WHERE email = :account")
+  suspend fun getLabelsSuspend(account: String): List<LabelEntity>
 
   @Transaction
   fun update(existedLabels: Collection<LabelEntity>, freshLabels: Collection<LabelEntity>) {
