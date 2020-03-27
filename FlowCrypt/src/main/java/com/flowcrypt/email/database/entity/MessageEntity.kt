@@ -70,14 +70,19 @@ data class MessageEntity(
 
   @Ignore
   val from: List<InternetAddress> = parseAddresses(fromAddress)
+
   @Ignore
-  val replyToAddress: List<InternetAddress> = parseAddresses(replyTo, true)
+  val replyToAddress: List<InternetAddress> = parseAddresses(replyTo)
+
   @Ignore
   val to: List<InternetAddress> = parseAddresses(toAddress)
+
   @Ignore
   val cc: List<InternetAddress> = parseAddresses(ccAddress)
+
   @Ignore
   val msgState: MessageState = MessageState.generate(state ?: MessageState.NONE.value)
+
   @Ignore
   val isSeen: Boolean = flags?.contains(MessageFlag.SEEN.value) ?: false
 
@@ -148,25 +153,12 @@ data class MessageEntity(
     return 0
   }
 
-  private fun parseAddresses(fromAddress: String?, skipErrors: Boolean = false):
+  private fun parseAddresses(fromAddress: String?):
       List<InternetAddress> {
-    try {
-      return listOf(*InternetAddress.parse(fromAddress ?: ""))
+    return try {
+      listOf(*InternetAddress.parse(fromAddress ?: ""))
     } catch (e: AddressException) {
-      val list = listOf(*InternetAddress.parse(fromAddress ?: "", false)).mapNotNull {
-        try {
-          it.validate()
-          it
-        } catch (e: AddressException) {
-          null
-        }
-      }
-
-      if (!skipErrors && list.isEmpty()) {
-        throw AddressException("No valid addresses")
-      }
-
-      return list
+      emptyList()
     }
   }
 
