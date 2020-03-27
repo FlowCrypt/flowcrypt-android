@@ -182,7 +182,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onResume() {
     super.onResume()
-    MessagesNotificationManager(this).cancelAll(this, currentAccountDao!!)
+
+    val account = currentAccountDao ?: return
+    val manager = foldersManager ?: return
+    MessagesNotificationManager(this).cancelAll(this, account, manager)
   }
 
   override fun onDestroy() {
@@ -414,13 +417,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     return false
   }
 
-  override fun refreshFoldersFromCache() {
-    foldersManager = FoldersManager.fromDatabase(this, currentAccountDao!!.email)
-    if (currentFolder != null && !TextUtils.isEmpty(currentFolder!!.fullName)) {
-      currentFolder = foldersManager!!.getFolderByAlias(currentFolder!!.folderAlias!!)
-    }
-  }
-
   private fun showGmailSignIn() {
     showSnackbar(rootView, getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
         Snackbar.LENGTH_INDEFINITE, View.OnClickListener { onRetryGoogleAuth() })
@@ -439,7 +435,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       contentResolver.delete(uri, null, arrayOf(currentAccountDao!!.email))
     }
 
-    if (!accountDaoList.isEmpty()) {
+    if (accountDaoList.isNotEmpty()) {
       val (email) = accountDaoList[0]
       disconnectFromSyncService()
       AccountDaoSource().setActiveAccount(this@EmailManagerActivity, email)
@@ -639,14 +635,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   private fun setupLabelsViewModel() {
     labelsViewModel.labelsLiveData.observe(this, Observer {
-
-      if (it.isNotEmpty()) {
-        foldersManager?.clear()
-      }
-
-      for (label in it) {
-        foldersManager?.addFolder(LocalFolder(label))
-      }
+      foldersManager?.swapFolders(it)
 
       if (foldersManager?.allFolders?.isNotEmpty() == true) {
         val mailLabels = navigationView?.menu?.findItem(R.id.mailLabels)
@@ -672,7 +661,9 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
         onFolderChanged()
       } else {
-        foldersManager?.getFolderByAlias(currentFolder?.folderAlias)?.let { currentFolder = it }
+        foldersManager?.getFolderByAlias(currentFolder?.folderAlias)?.let { folder ->
+          currentFolder = folder
+        }
       }
     })
   }

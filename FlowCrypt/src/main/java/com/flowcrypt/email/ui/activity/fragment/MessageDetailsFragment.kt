@@ -32,6 +32,8 @@ import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -53,6 +55,7 @@ import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -71,7 +74,6 @@ import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.common.util.CollectionUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
-import java.util.*
 
 /**
  * This fragment describe msgEntity of some message.
@@ -107,6 +109,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var dateFormat: java.text.DateFormat? = null
   private var msgInfo: IncomingMessageInfo? = null
   private var folderType: FoldersManager.FolderType? = null
+  private val labelsViewModel: LabelsViewModel by viewModels()
+  private var atts = mutableListOf<AttachmentInfo>()
 
   private var isAdditionalActionEnabled: Boolean = false
   private var isDeleteActionEnabled: Boolean = false
@@ -114,7 +118,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var isMoveToInboxActionEnabled: Boolean = false
   private var lastClickedAtt: AttachmentInfo? = null
   private var msgEncryptType = MessageEncryptionType.STANDARD
-  private var atts = mutableListOf<AttachmentInfo>()
 
   private val msgDetailsViewModel: MsgDetailsViewModel?
     get() = onMsgDetailsListener.getMsgDetailsViewModel()
@@ -141,13 +144,21 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     setHasOptionsMenu(true)
     dateFormat = DateFormat.getTimeFormat(context)
 
-    updateActionsVisibility(localFolder)
+    updateActionsVisibility(localFolder, null)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
     updateViews()
+
+    setupLabelsViewModel()
+  }
+
+  private fun setupLabelsViewModel() {
+    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner, Observer {
+      updateActionsVisibility(localFolder, it)
+    })
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -438,7 +449,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
    *
    * @param localFolder The localFolder where current message exists.
    */
-  private fun updateActionsVisibility(localFolder: LocalFolder?) {
+  private fun updateActionsVisibility(localFolder: LocalFolder?, foldersManager: FoldersManager?) {
     folderType = FoldersManager.getFolderType(localFolder)
     val account = AccountDaoSource().getActiveAccountInformation(context)
 
@@ -476,8 +487,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       isDeleteActionEnabled = true
     }
 
-    if (account != null) {
-      val foldersManager = FoldersManager.fromDatabase(requireContext(), account.email)
+    if (foldersManager != null) {
       if (foldersManager.folderAll == null) {
         isArchiveActionEnabled = false
       }
@@ -485,6 +495,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       if (foldersManager.folderTrash == null) {
         isDeleteActionEnabled = false
       }
+    } else {
+      isArchiveActionEnabled = false
+      isDeleteActionEnabled = false
     }
 
     when (msgEntity?.msgState) {

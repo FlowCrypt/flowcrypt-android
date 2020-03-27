@@ -54,7 +54,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
   val savePrivateKeysLiveData = MutableLiveData<Result<Boolean>>()
 
-  val longIdsOfCurrentAccountLiveData: LiveData<List<String>> = Transformations.switchMap(accountLiveData) {
+  val longIdsOfCurrentAccountLiveData: LiveData<List<String>> = Transformations.switchMap(activeAccountLiveData) {
     roomDatabase.userIdEmailsKeysDao().getLongIdsByEmailLD(it?.email ?: "")
   }
   val userIdEmailsKeysLiveData = roomDatabase.userIdEmailsKeysDao().getAllLD()

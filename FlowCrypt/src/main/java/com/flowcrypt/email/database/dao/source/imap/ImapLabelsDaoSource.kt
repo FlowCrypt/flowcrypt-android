@@ -5,11 +5,12 @@
 
 package com.flowcrypt.email.database.dao.source.imap
 
-import android.content.Context
-import android.database.Cursor
-import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.database.dao.source.BaseDaoSource
-import java.util.*
+import androidx.lifecycle.LiveData
+import androidx.room.Dao
+import androidx.room.Query
+import androidx.room.Transaction
+import com.flowcrypt.email.database.dao.BaseDao
+import com.flowcrypt.email.database.entity.LabelEntity
 
 /**
  * This class describes the structure of IMAP labels for different accounts and methods which
@@ -20,69 +21,56 @@ import java.util.*
  * Time: 15:59
  * E-mail: DenBond7@gmail.com
  */
+@Dao
+interface ImapLabelsDaoSource : BaseDao<LabelEntity> {
+  @Query("SELECT * FROM imap_labels WHERE email = :account AND folder_name = :label")
+  suspend fun getLabelSuspend(account: String?, label: String): LabelEntity?
 
-class ImapLabelsDaoSource : BaseDaoSource() {
+  @Query("SELECT * FROM imap_labels WHERE email = :account AND folder_name = :label")
+  fun getLabel(account: String?, label: String): LabelEntity?
 
-  override val tableName: String = TABLE_NAME_IMAP_LABELS
+  @Query("SELECT * FROM imap_labels WHERE email = :account")
+  fun getLabelsLD(account: String): LiveData<List<LabelEntity>>
 
-  /**
-   * Generate a [LocalFolder] object from the current cursor position.
-   *
-   * @param cursor The [Cursor] which contains information about [LocalFolder].
-   * @return A generated [LocalFolder].
-   */
-  fun getFolder(cursor: Cursor): LocalFolder {
-    return LocalFolder(
-        cursor.getString(cursor.getColumnIndex(COL_EMAIL)),
-        cursor.getString(cursor.getColumnIndex(COL_FOLDER_NAME)),
-        cursor.getString(cursor.getColumnIndex(COL_FOLDER_ALIAS)),
-        parseAttributes(cursor.getString(cursor.getColumnIndex(COL_FOLDER_ATTRIBUTES))),
-        cursor.getInt(cursor.getColumnIndex(COL_IS_CUSTOM_LABEL)) == 1,
-        cursor.getInt(cursor.getColumnIndex(COL_MESSAGE_COUNT)), null
-    )
-  }
+  @Query("SELECT * FROM imap_labels WHERE email = :account")
+  fun getLabels(account: String): List<LabelEntity>
 
-  /**
-   * Get a [LocalFolder] from the database by an email and a name.
-   *
-   * @param email      The email of the [LocalFolder].
-   * @param folderName The folder name.
-   * @return [LocalFolder] or null if such folder not found.
-   */
-  fun getFolder(context: Context, email: String, folderName: String): LocalFolder? {
-    val contentResolver = context.contentResolver
-    val cursor = contentResolver.query(baseContentUri, null, COL_EMAIL + " = ?" + " AND " +
-        COL_FOLDER_NAME + " = ?", arrayOf(email, folderName), null)
+  @Query("SELECT * FROM imap_labels WHERE email = :account")
+  suspend fun getLabelsSuspend(account: String): List<LabelEntity>
 
-    var localFolder: LocalFolder? = null
-
-    if (cursor != null) {
-      while (cursor.moveToNext()) {
-        localFolder = getFolder(cursor)
+  @Transaction
+  fun update(existedLabels: Collection<LabelEntity>, freshLabels: Collection<LabelEntity>) {
+    val deleteCandidates = mutableListOf<LabelEntity>()
+    for (existedLabel in existedLabels) {
+      var isFolderFound = false
+      for (freshLabel in freshLabels) {
+        if (freshLabel.folderName == existedLabel.folderName) {
+          isFolderFound = true
+          break
+        }
       }
-      cursor.close()
+
+      if (!isFolderFound) {
+        deleteCandidates.add(existedLabel)
+      }
     }
 
-    return localFolder
-  }
+    val newCandidates = mutableListOf<LabelEntity>()
+    for (freshLabel in freshLabels) {
+      var isFolderFound = false
+      for (existedLabel in existedLabels) {
+        if (existedLabel.folderName == freshLabel.folderName) {
+          isFolderFound = true
+          break
+        }
+      }
 
-  private fun parseAttributes(attributesAsString: String?): List<String>? {
-    return if (attributesAsString != null && attributesAsString.isNotEmpty()) {
-      Arrays.asList(*attributesAsString.split("\t".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray())
-    } else {
-      null
+      if (!isFolderFound) {
+        newCandidates.add(freshLabel)
+      }
     }
-  }
 
-  companion object {
-    const val TABLE_NAME_IMAP_LABELS = "imap_labels"
-
-    const val COL_EMAIL = "email"
-    const val COL_FOLDER_NAME = "folder_name"
-    const val COL_FOLDER_ALIAS = "folder_alias"
-    const val COL_MESSAGE_COUNT = "message_count"
-    const val COL_IS_CUSTOM_LABEL = "is_custom_label"
-    const val COL_FOLDER_ATTRIBUTES = "folder_attributes"
-    const val COL_FOLDER_MESSAGE_COUNT = "folder_message_count"
+    delete(deleteCandidates)
+    insert(newCandidates)
   }
 }

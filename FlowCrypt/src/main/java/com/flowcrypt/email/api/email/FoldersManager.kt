@@ -7,8 +7,10 @@ package com.flowcrypt.email.api.email
 
 import android.content.Context
 import android.text.TextUtils
+import androidx.annotation.WorkerThread
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.database.dao.source.imap.ImapLabelsDaoSource
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.LabelEntity
 import com.sun.mail.imap.IMAPFolder
 import java.util.*
 import javax.mail.MessagingException
@@ -134,6 +136,16 @@ class FoldersManager constructor(val account: String) {
   }
 
   /**
+   * Update [FoldersManager] to use fresh data.
+   */
+  fun swapFolders(list: Collection<LabelEntity>) {
+    clear()
+    list.forEach {
+      addFolder(LocalFolder(it))
+    }
+  }
+
+  /**
    * Get [LocalFolder] by the alias name.
    *
    * @param folderAlias The folder alias name.
@@ -191,30 +203,17 @@ class FoldersManager constructor(val account: String) {
   companion object {
 
     /**
-     * Generate a new [FoldersManager] using information from the local database.
+     * Generate a new [FoldersManager] using information from the local database. Should be
+     * called from a background thread only.
      *
      * @param context     Interface to global information about an application environment.
      * @param accountName The name of an account.
      * @return The new [FoldersManager].
      */
-    @JvmStatic
+    @WorkerThread
     fun fromDatabase(context: Context, accountName: String): FoldersManager {
-      val foldersManager = FoldersManager(accountName)
-
-      val cursor = context.contentResolver.query(ImapLabelsDaoSource().baseContentUri,
-          null, ImapLabelsDaoSource.COL_EMAIL + " = ?", arrayOf(accountName), null)
-
-      cursor?.let {
-        val imapLabelsDaoSource = ImapLabelsDaoSource()
-
-        while (cursor.moveToNext()) {
-          foldersManager.addFolder(imapLabelsDaoSource.getFolder(cursor))
-        }
-
-        cursor.close()
-      }
-
-      return foldersManager
+      val appContext = context.applicationContext
+      return build(accountName, FlowCryptRoomDatabase.getDatabase(appContext).labelDao().getLabels(accountName))
     }
 
     /**
@@ -292,6 +291,22 @@ class FoldersManager constructor(val account: String) {
         }
       }
       return null
+    }
+
+    /**
+     * Generate a new [FoldersManager] using information from the local database.
+     *
+     * @param accountName The name of an account.
+     * @return a new [FoldersManager].
+     */
+    fun build(accountName: String, labels: List<LabelEntity>): FoldersManager {
+      val foldersManager = FoldersManager(accountName)
+
+      labels.forEach { label ->
+        foldersManager.addFolder(LocalFolder(label))
+      }
+
+      return foldersManager
     }
   }
 }
