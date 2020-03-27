@@ -173,6 +173,48 @@ class FoldersManager constructor(val account: String) {
     return null
   }
 
+  /**
+   * Sort the server folders for a better user experience.
+   *
+   * @return The sorted labels list.
+   */
+  fun getSortedNames(): Collection<String> {
+    val localFolders = serverFolders.toMutableList()
+    val sortedList = arrayOfNulls<String>(localFolders.size)
+
+    val inbox = folderInbox?.let {
+      localFolders.remove(it)
+      sortedList[0] = it.folderAlias
+      it
+    }
+
+    folderTrash?.let {
+      localFolders.remove(it)
+      sortedList[localFolders.size + 1] = it.folderAlias
+    }
+
+    folderSpam?.let {
+      localFolders.remove(it)
+      sortedList[localFolders.size + 1] = it.folderAlias
+    }
+
+    folderOutbox?.let {
+      localFolders.remove(it)
+      sortedList[localFolders.size + 1] = it.folderAlias
+    }
+
+    for (i in localFolders.indices) {
+      val localFolder = localFolders[i]
+      if (inbox == null) {
+        sortedList[i] = localFolder.folderAlias
+      } else {
+        sortedList[i + 1] = localFolder.folderAlias
+      }
+    }
+
+    return sortedList.filterNotNull()
+  }
+
   private fun prepareFolderKey(imapFolder: IMAPFolder): String {
     val folderType = getFolderType(generateFolder(account, imapFolder, null))
     return folderType?.value ?: imapFolder.fullName

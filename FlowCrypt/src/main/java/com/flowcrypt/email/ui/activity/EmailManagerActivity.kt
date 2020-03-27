@@ -109,52 +109,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   override val contentViewResourceId: Int
     get() = R.layout.activity_email_manager
 
-  /**
-   * Sort the server folders for a better user experience.
-   *
-   * @return The sorted labels list.
-   */
-  private val sortedServerFolders: Array<String?>
-    get() {
-      val localFolders = foldersManager!!.serverFolders.toMutableList()
-      val serverFolders = arrayOfNulls<String>(localFolders.size)
-
-      val inbox = foldersManager!!.folderInbox
-      if (inbox != null) {
-        localFolders.remove(inbox)
-        serverFolders[0] = inbox.folderAlias
-      }
-
-      val trash = foldersManager!!.folderTrash
-      if (trash != null) {
-        localFolders.remove(trash)
-        serverFolders[localFolders.size + 1] = trash.folderAlias
-      }
-
-      val spam = foldersManager!!.folderSpam
-      if (spam != null) {
-        localFolders.remove(spam)
-        serverFolders[localFolders.size + 1] = spam.folderAlias
-      }
-
-      val outbox = foldersManager!!.folderOutbox
-      if (outbox != null) {
-        localFolders.remove(outbox)
-        serverFolders[localFolders.size + 1] = outbox.folderAlias
-      }
-
-      for (i in localFolders.indices) {
-        val localFolder = localFolders[i]
-        if (inbox == null) {
-          serverFolders[i] = localFolder.folderAlias
-        } else {
-          serverFolders[i + 1] = localFolder.folderAlias
-        }
-      }
-
-      return serverFolders
-    }
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setupLabelsViewModel()
@@ -163,8 +117,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     if (currentAccountDao != null) {
       currentAccountDao?.let {
-        this.foldersManager = FoldersManager(it.email)
-
         client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
         actionsViewModel.checkAndAddActionsToQueue(it)
@@ -634,17 +586,17 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   private fun setupLabelsViewModel() {
-    labelsViewModel.labelsLiveData.observe(this, Observer {
-      foldersManager?.swapFolders(it)
+    labelsViewModel.foldersManagerLiveData.observe(this, Observer {
+      this.foldersManager = it
 
       if (foldersManager?.allFolders?.isNotEmpty() == true) {
         val mailLabels = navigationView?.menu?.findItem(R.id.mailLabels)
         mailLabels?.subMenu?.clear()
 
-        for (label in sortedServerFolders) {
-          mailLabels?.subMenu?.add(label)
-          if (JavaEmailConstants.FOLDER_OUTBOX == label) {
-            addOutboxLabel(mailLabels, label)
+        foldersManager?.getSortedNames()?.forEach { name ->
+          mailLabels?.subMenu?.add(name)
+          if (JavaEmailConstants.FOLDER_OUTBOX == name) {
+            addOutboxLabel(mailLabels, name)
           }
         }
 
@@ -672,11 +624,11 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     val menuItem = mailLabels?.subMenu?.getItem(mailLabels.subMenu.size() - 1) ?: return
 
     if (foldersManager?.getFolderByAlias(label)?.msgCount ?: 0 > 0) {
+      val folder = foldersManager?.getFolderByAlias(label) ?: return
       val view = LayoutInflater.from(this).inflate(R.layout.navigation_view_item_with_amount,
           navigationView, false)
       val textViewMsgsCount = view.findViewById<TextView>(R.id.textViewMessageCount)
-      val folder = foldersManager!!.getFolderByAlias(label)
-      textViewMsgsCount.text = folder!!.msgCount.toString()
+      textViewMsgsCount.text = folder.msgCount.toString()
       menuItem.actionView = view
     } else {
       menuItem.actionView = null
