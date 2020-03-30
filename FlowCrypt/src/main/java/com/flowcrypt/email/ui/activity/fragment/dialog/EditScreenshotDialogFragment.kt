@@ -93,8 +93,8 @@ class EditScreenshotDialogFragment : DialogFragment(), View.OnClickListener,
           }
 
           override fun onFailure(e: Exception?) {
-            Toast.makeText(context, e?.message
-                ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, e?.message ?: e?.javaClass?.simpleName
+            ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
           }
         })
       }

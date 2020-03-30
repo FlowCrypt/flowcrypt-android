@@ -12,7 +12,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.DocumentsContract
-import android.text.TextUtils
 import android.text.format.DateFormat
 import android.util.TypedValue
 import android.view.Menu
@@ -37,7 +36,6 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
 import java.io.FileNotFoundException
 import java.util.*
@@ -152,9 +150,9 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
 
         Status.SUCCESS -> {
           val parseKeysResult = nodeResponseWrapper.result as ParseKeysResult?
-          val nodeKeyDetailsList = parseKeysResult!!.nodeKeyDetails
-          if (CollectionUtils.isEmpty(nodeKeyDetailsList)) {
-            Toast.makeText(context, R.string.unknown_error, Toast.LENGTH_SHORT).show()
+          val nodeKeyDetailsList = parseKeysResult?.nodeKeyDetails
+          if (nodeKeyDetailsList.isNullOrEmpty()) {
+            Toast.makeText(context, R.string.error_no_keys, Toast.LENGTH_SHORT).show()
             parentFragmentManager.popBackStack()
           } else {
             details = nodeKeyDetailsList.first()
@@ -180,7 +178,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
       Toast.makeText(context, getString(R.string.saved), Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
       e.printStackTrace()
-      var error = if (TextUtils.isEmpty(e.message)) getString(R.string.unknown_error) else e.message
+      var error = if (e.message.isNullOrEmpty()) e.javaClass.simpleName else e.message
 
       if (e is IllegalStateException) {
         if (e.message != null && e.message!!.startsWith("Already exists")) {

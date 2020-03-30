@@ -418,4 +418,12 @@
     <string name="undo">Undo</string>
     <string name="choose_email">Choose email</string>
     <string name="network_error">Network error</string>
+    <string name="error_occurred_during_adding_new_account">An error occurred during adding a new account</string>
+    <string name="error_no_keys">Error: no keys</string>
+    <string name="could_not_load_private_keys">Couldn\'t load private keys</string>
+    <string name="internal_api_error">Internal API error</string>
+    <string name="internal_node_init_error">Internal Node initializing error</string>
+    <string name="error_loader_result_is_empty">Error. The loader result is empty</string>
+    <string name="could_not_load_domain_rules">Couldn\'t load domain rules</string>
+    <string name="could_not_import_data">Could\'t import data</string>
 </resources>

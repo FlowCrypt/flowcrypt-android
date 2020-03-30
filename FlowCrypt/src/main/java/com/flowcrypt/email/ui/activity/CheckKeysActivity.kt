@@ -243,11 +243,11 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
                   if (remainingKeys.isNotEmpty()) {
                     initButton(R.id.buttonSkipRemainingBackups, View.VISIBLE, getString(R.string.skip_remaining_backups))
                     findViewById<View>(R.id.buttonUseExistingKeys)?.visibility = View.GONE
-                    editTextKeyPassword!!.text = null
+                    editTextKeyPassword?.text = null
                     val mapOfRemainingBackups = prepareMapFromKeyDetailsList(remainingKeys)
                     val remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups)
 
-                    textViewSubTitle!!.text = resources.getQuantityString(
+                    textViewSubTitle?.text = resources.getQuantityString(
                         R.plurals.not_recovered_all_keys, remainingKeyCount,
                         uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
                   } else {
@@ -261,10 +261,6 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
                     showInfoSnackbar(rootView, getString(R.string.password_is_incorrect))
                   }
                 }
-              }
-
-              Result.Status.ERROR -> {
-                showInfoSnackbar(rootView, getString(R.string.unknown_error))
               }
 
               else -> {

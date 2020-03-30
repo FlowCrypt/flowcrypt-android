@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
@@ -104,7 +103,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
             .keyString), REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
       } else {
         UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-        Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, R.string.error_no_keys, Toast.LENGTH_SHORT).show()
       }
     }
   }
@@ -175,8 +174,9 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
     when (loaderId) {
       R.id.loader_id_search_public_key -> {
         UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-        Toast.makeText(this, if (TextUtils.isEmpty(e!!.message)) getString(R.string.unknown_error) else e.message,
-            Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, if (e?.message.isNullOrEmpty()) {
+          e?.javaClass?.simpleName ?: getString(R.string.unknown_error)
+        } else e?.message, Toast.LENGTH_SHORT).show()
       }
 
       else -> super.onError(loaderId, e)

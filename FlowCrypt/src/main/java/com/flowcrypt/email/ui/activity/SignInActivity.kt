@@ -70,7 +70,7 @@ class SignInActivity : BaseSignInActivity() {
                 CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
 
             if (keys.isNullOrEmpty()) {
-              showInfoSnackbar(rootView, getString(R.string.unknown_error))
+              showInfoSnackbar(rootView, getString(R.string.error_no_keys))
             } else {
               privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
             }
@@ -115,7 +115,7 @@ class SignInActivity : BaseSignInActivity() {
         } catch (e: Exception) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
-          Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show()
+          Toast.makeText(this, e.message ?: e.javaClass.simpleName, Toast.LENGTH_SHORT).show()
         }
 
         CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> if (data != null) {

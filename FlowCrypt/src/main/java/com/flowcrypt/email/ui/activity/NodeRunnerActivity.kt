@@ -50,7 +50,7 @@ class NodeRunnerActivity : BaseActivity() {
     if (isReady) {
       finish()
     } else {
-      Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_LONG).show()
+      Toast.makeText(this, getString(R.string.internal_node_init_error), Toast.LENGTH_LONG).show()
     }
   }
 }

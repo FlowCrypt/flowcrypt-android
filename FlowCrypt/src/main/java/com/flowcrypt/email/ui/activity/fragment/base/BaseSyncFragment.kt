@@ -6,10 +6,8 @@
 package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.View
 import android.widget.TextView
-
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
@@ -28,8 +26,10 @@ abstract class BaseSyncFragment : BaseFragment() {
 
   @JvmField
   protected var progressView: View? = null
+
   @JvmField
   protected var statusView: View? = null
+
   @JvmField
   protected var textViewStatusInfo: TextView? = null
 
@@ -81,10 +81,10 @@ abstract class BaseSyncFragment : BaseFragment() {
     when (errorType) {
       SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> textViewStatusInfo?.setText(R.string.there_was_syncing_problem)
 
-      else -> if (e != null && !TextUtils.isEmpty(e.message)) {
-        textViewStatusInfo?.text = e.message
+      else -> if (e?.message.isNullOrEmpty()) {
+        textViewStatusInfo?.text = e?.javaClass?.simpleName
       } else {
-        textViewStatusInfo?.setText(R.string.unknown_error)
+        textViewStatusInfo?.text = e?.message
       }
     }
 

@@ -65,7 +65,8 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
         } catch (e: Exception) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
-          Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show()
+          Toast.makeText(this, e.message
+              ?: getString(R.string.error_occurred_during_adding_new_account), Toast.LENGTH_SHORT).show()
         }
 
         AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL ->
@@ -78,7 +79,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
               CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
 
           if (keys.isNullOrEmpty()) {
-            showInfoSnackbar(rootView, getString(R.string.unknown_error))
+            showInfoSnackbar(rootView, getString(R.string.error_no_keys))
           } else {
             privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
           }
