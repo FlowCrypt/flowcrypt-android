@@ -471,7 +471,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     val infoDialogFragment = InfoDialogFragment.newInstance(dialogTitle = null,
         dialogMsg = message, buttonTitle = null, isPopBackStack = false, isCancelable = true, hasHtml = false)
     infoDialogFragment.onInfoDialogButtonClickListener = object : InfoDialogFragment.OnInfoDialogButtonClickListener {
-      override fun onInfoDialogButtonClick() {
+      override fun onInfoDialogButtonClick(requestCode: Int) {
         msgsViewModel.deleteOutgoingMsgs(listOf(messageEntity))
       }
     }

@@ -119,8 +119,8 @@ class UIUtil {
      */
     @JvmStatic
     @Suppress("DEPRECATION")
-    fun getHtmlSpannedFromText(text: String): CharSequence {
-      return if (!TextUtils.isEmpty(text)) {
+    fun getHtmlSpannedFromText(text: String?): CharSequence? {
+      return if (text?.isNotEmpty() == true) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
           Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY)
         } else {

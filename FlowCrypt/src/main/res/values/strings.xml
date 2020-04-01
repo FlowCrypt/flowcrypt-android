@@ -426,4 +426,5 @@
     <string name="error_loader_result_is_empty">Error. The loader result is empty</string>
     <string name="could_not_load_domain_rules">Couldn\'t load domain rules</string>
     <string name="could_not_import_data">Could\'t import data</string>
+    <string name="partially_encrypted_private_key_error_msg">One of the provided Private Keys is a partially encrypted private key (some packets are encrypted, some not). Such keys are not supported. Please only import fully encrypted keys, with the same pass phrase for all secret packets.</string>
 </resources>

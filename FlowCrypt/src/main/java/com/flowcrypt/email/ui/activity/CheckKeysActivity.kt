@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -42,13 +43,13 @@ import java.nio.charset.StandardCharsets
  * Time: 9:59
  * E-mail: DenBond7@gmail.com
  */
-
-class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
-  private var originalKeys: List<NodeKeyDetails>? = null
+class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFragment.OnInfoDialogButtonClickListener {
+  private var originalKeys: MutableList<NodeKeyDetails> = mutableListOf()
   private val unlockedKeys: ArrayList<NodeKeyDetails> = ArrayList()
   private val remainingKeys: ArrayList<NodeKeyDetails> = ArrayList()
   private var keyDetailsAndLongIdsMap: MutableMap<NodeKeyDetails, String>? = null
   private lateinit var checkPrivateKeysViewModel: CheckPrivateKeysViewModel
+
   @VisibleForTesting
   val idlingForKeyChecking: SingleIdlingResources = SingleIdlingResources()
 
@@ -73,56 +74,59 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    if (intent != null) {
-      getExtras()
+    if (intent == null) {
+      finish()
+      return
+    }
 
-      if (originalKeys != null) {
-        this.keyDetailsAndLongIdsMap = prepareMapFromKeyDetailsList(originalKeys)
+    getExtras()
+
+    if (originalKeys.isNotEmpty()) {
+      this.keyDetailsAndLongIdsMap = prepareMapFromKeyDetailsList(originalKeys)
+      this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
+
+      if (!intent.getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
+        removeAlreadyImportedKeys()
         this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
+        this.originalKeys = ArrayList(keyDetailsAndLongIdsMap?.keys ?: emptyList())
 
-        if (!intent.getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
-          removeAlreadyImportedKeys()
-          this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
-          this.originalKeys = ArrayList(keyDetailsAndLongIdsMap?.keys ?: emptyList())
+        when (uniqueKeysCount) {
+          0 -> {
+            setResult(RESULT_NO_NEW_KEYS)
+            finish()
+          }
 
-          when (uniqueKeysCount) {
-            0 -> {
-              setResult(RESULT_NO_NEW_KEYS)
-              finish()
-            }
+          1 -> {
+            this.subTitle = resources.getQuantityString(
+                R.plurals.found_backup_of_your_account_key, uniqueKeysCount, uniqueKeysCount)
+          }
 
-            1 -> {
+          else -> {
+            if (originalKeys.size != keyDetailsAndLongIdsMap?.size) {
+              val map = prepareMapFromKeyDetailsList(originalKeys)
+              val remainingKeyCount = getUniqueKeysLongIdsCount(map)
+
+              this.subTitle = resources.getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
+                  uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
+            } else {
               this.subTitle = resources.getQuantityString(
                   R.plurals.found_backup_of_your_account_key, uniqueKeysCount, uniqueKeysCount)
             }
-
-            else -> {
-              if (originalKeys?.size != keyDetailsAndLongIdsMap?.size) {
-                val map = prepareMapFromKeyDetailsList(originalKeys)
-                val remainingKeyCount = getUniqueKeysLongIdsCount(map)
-
-                this.subTitle = resources.getQuantityString(R.plurals.not_recovered_all_keys, remainingKeyCount,
-                    uniqueKeysCount - remainingKeyCount, uniqueKeysCount, remainingKeyCount)
-              } else {
-                this.subTitle = resources.getQuantityString(
-                    R.plurals.found_backup_of_your_account_key, uniqueKeysCount, uniqueKeysCount)
-              }
-            }
           }
         }
-
-        originalKeys?.let { remainingKeys.addAll(it) }
-      } else {
-        setResult(Activity.RESULT_CANCELED)
-        finish()
       }
-    } else {
-      finish()
-    }
 
-    if (originalKeys?.isNotEmpty() == true) {
-      initViews()
-      setupCheckPrivateKeysViewModel()
+      remainingKeys.addAll(originalKeys)
+
+      if (originalKeys.isNotEmpty()) {
+        initViews()
+        setupCheckPrivateKeysViewModel()
+      }
+
+      checkExistingOfPartiallyEncryptedPrivateKeys()
+    } else {
+      setResult(Activity.RESULT_CANCELED)
+      finish()
     }
   }
 
@@ -168,25 +172,31 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
     }
   }
 
+  override fun onInfoDialogButtonClick(requestCode: Int) {
+    setResult(RESULT_CANCELED)
+    finish()
+  }
+
   private fun getExtras() {
-    this.originalKeys = intent.getParcelableArrayListExtra(KEY_EXTRA_PRIVATE_KEYS)
-    this.type = intent.getParcelableExtra(KEY_EXTRA_TYPE)
-    this.subTitle = intent.getStringExtra(KEY_EXTRA_SUB_TITLE)
-    this.positiveBtnTitle = intent.getStringExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE)
-    this.negativeBtnTitle = intent.getStringExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE)
+    val keys: List<NodeKeyDetails>? = intent?.getParcelableArrayListExtra(KEY_EXTRA_PRIVATE_KEYS)
+    keys?.let { originalKeys.addAll(it) }
+    this.type = intent?.getParcelableExtra(KEY_EXTRA_TYPE)
+    this.subTitle = intent?.getStringExtra(KEY_EXTRA_SUB_TITLE)
+    this.positiveBtnTitle = intent?.getStringExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE)
+    this.negativeBtnTitle = intent?.getStringExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE)
   }
 
   private fun initViews() {
-    initButton(R.id.buttonPositiveAction, View.VISIBLE, positiveBtnTitle)
-    initButton(R.id.buttonNegativeAction, View.VISIBLE, negativeBtnTitle)
+    initButton(R.id.buttonPositiveAction, text = positiveBtnTitle)
+    initButton(R.id.buttonNegativeAction, text = negativeBtnTitle)
 
     if (KeysStorageImpl.getInstance(application).hasKeys() && intent?.getBooleanExtra
         (KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, false) == true) {
-      initButton(R.id.buttonUseExistingKeys, View.VISIBLE, getString(R.string.use_existing_keys))
+      initButton(R.id.buttonUseExistingKeys, text = getString(R.string.use_existing_keys))
     }
 
     val imageButtonHint = findViewById<View>(R.id.imageButtonHint)
-    if (originalKeys?.isNotEmpty() == true && type === KeyDetails.Type.EMAIL) {
+    if (originalKeys.isNotEmpty() && type === KeyDetails.Type.EMAIL) {
       imageButtonHint?.visibility = View.VISIBLE
       imageButtonHint?.setOnClickListener(this)
     } else {
@@ -207,7 +217,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
     }
   }
 
-  private fun initButton(buttonViewId: Int, visibility: Int, text: String?) {
+  private fun initButton(buttonViewId: Int, visibility: Int = View.VISIBLE, text: String?) {
     val button = findViewById<Button>(buttonViewId)
     button?.visibility = visibility
     button?.text = text
@@ -241,7 +251,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
                   }
 
                   if (remainingKeys.isNotEmpty()) {
-                    initButton(R.id.buttonSkipRemainingBackups, View.VISIBLE, getString(R.string.skip_remaining_backups))
+                    initButton(R.id.buttonSkipRemainingBackups, text = getString(R.string.skip_remaining_backups))
                     findViewById<View>(R.id.buttonUseExistingKeys)?.visibility = View.GONE
                     editTextKeyPassword?.text = null
                     val mapOfRemainingBackups = prepareMapFromKeyDetailsList(remainingKeys)
@@ -272,6 +282,14 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener {
     }
 
     checkPrivateKeysViewModel.liveData.observe(this, observer)
+  }
+
+  private fun checkExistingOfPartiallyEncryptedPrivateKeys() {
+    val partiallyEncryptedPrivateKes = originalKeys.filter { it.isPartiallyEncrypted }
+
+    if (partiallyEncryptedPrivateKes.isNotEmpty()) {
+      showInfoDialogFragment(dialogMsg = getString(R.string.partially_encrypted_private_key_error_msg))
+    }
   }
 
   private fun returnUnlockedKeys(resultCode: Int) {

@@ -5,8 +5,8 @@
 
 package com.flowcrypt.email.ui.activity.fragment.dialog
 
-import android.app.Activity
 import android.app.Dialog
+import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
@@ -36,32 +36,35 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
   private var hasHtml: Boolean = false
   var onInfoDialogButtonClickListener: OnInfoDialogButtonClickListener? = null
 
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
+
+    if (context is OnInfoDialogButtonClickListener) {
+      onInfoDialogButtonClickListener = context
+    }
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val args = arguments
-
-    if (args != null) {
-      dialogTitle = args.getString(KEY_INFO_DIALOG_TITLE, getString(R.string.info))
-      dialogMsg = args.getString(KEY_INFO_DIALOG_MESSAGE)
-      buttonTitle = args.getString(KEY_INFO_BUTTON_TITLE, getString(android.R.string.ok))
-      isPopBackStack = args.getBoolean(KEY_INFO_IS_POP_BACK_STACK, false)
-      hasHtml = args.getBoolean(KEY_INFO_HAS_HTML, false)
-      isCancelable = args.getBoolean(KEY_INFO_IS_CANCELABLE, false)
-    }
+    dialogTitle = arguments?.getString(KEY_INFO_DIALOG_TITLE, getString(R.string.info))
+    dialogMsg = arguments?.getString(KEY_INFO_DIALOG_MESSAGE)
+    buttonTitle = arguments?.getString(KEY_INFO_BUTTON_TITLE, getString(android.R.string.ok))
+    isPopBackStack = arguments?.getBoolean(KEY_INFO_IS_POP_BACK_STACK, false) ?: false
+    hasHtml = arguments?.getBoolean(KEY_INFO_HAS_HTML, false) ?: false
+    isCancelable = arguments?.getBoolean(KEY_INFO_IS_CANCELABLE, false) ?: false
   }
 
   override fun onStart() {
     super.onStart()
     if (hasHtml) {
-      (dialog?.findViewById<View>(android.R.id.message) as TextView).movementMethod =
-          LinkMovementMethod.getInstance()
+      (dialog?.findViewById<View>(android.R.id.message) as? TextView)?.movementMethod = LinkMovementMethod.getInstance()
     }
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val dialog = AlertDialog.Builder(requireActivity())
     dialog.setTitle(dialogTitle)
-    dialog.setMessage(if (hasHtml) UIUtil.getHtmlSpannedFromText(dialogMsg!!) else dialogMsg)
+    dialog.setMessage(if (hasHtml) UIUtil.getHtmlSpannedFromText(dialogMsg) else dialogMsg)
     dialog.setPositiveButton(buttonTitle, this)
     return dialog.create()
   }
@@ -69,11 +72,8 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
   override fun onClick(dialog: DialogInterface, which: Int) {
     when (which) {
       Dialog.BUTTON_POSITIVE -> {
-        sendResult(Activity.RESULT_OK)
-
-        if (onInfoDialogButtonClickListener != null) {
-          onInfoDialogButtonClickListener!!.onInfoDialogButtonClick()
-        }
+        targetFragment?.onActivityResult(targetRequestCode, RESULT_OK, null)
+        onInfoDialogButtonClickListener?.onInfoDialogButtonClick(targetRequestCode)
 
         if (isPopBackStack) {
           val fragmentManager = requireActivity().supportFragmentManager
@@ -83,19 +83,13 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
     }
   }
 
-  private fun sendResult(result: Int) {
-    if (targetFragment == null) {
-      return
-    }
-
-    targetFragment!!.onActivityResult(targetRequestCode, result, null)
-  }
-
   interface OnInfoDialogButtonClickListener {
-    fun onInfoDialogButtonClick()
+    fun onInfoDialogButtonClick(requestCode: Int)
   }
 
   companion object {
+    const val RESULT_OK = -1
+
     private val KEY_INFO_DIALOG_TITLE =
         GeneralUtil.generateUniqueExtraKey("KEY_INFO_DIALOG_TITLE", InfoDialogFragment::class.java)
     private val KEY_INFO_DIALOG_MESSAGE =
@@ -109,8 +103,6 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
     private val KEY_INFO_HAS_HTML =
         GeneralUtil.generateUniqueExtraKey("KEY_INFO_HAS_HTML", InfoDialogFragment::class.java)
 
-    @JvmOverloads
-    @JvmStatic
     fun newInstance(dialogTitle: String? = null, dialogMsg: String? = null,
                     buttonTitle: String? = null, isPopBackStack: Boolean = false,
                     isCancelable: Boolean = false, hasHtml: Boolean = false): InfoDialogFragment {
