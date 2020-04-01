@@ -48,7 +48,9 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
     get() = !TextUtils.isEmpty(privateKey)
 
   val isPartiallyEncrypted: Boolean
-    get() = isFullyDecrypted == false && isFullyEncrypted == false
+    get() {
+      return isFullyDecrypted == false && isFullyEncrypted == false
+    }
 
   constructor(source: Parcel) : this(
       source.readValue(Boolean::class.java.classLoader) as Boolean?,
