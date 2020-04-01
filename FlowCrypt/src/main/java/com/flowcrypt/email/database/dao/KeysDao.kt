@@ -29,23 +29,4 @@ abstract class KeysDao : BaseDao<KeyEntity> {
 
   @Query("SELECT * FROM keys WHERE long_id = :longId")
   abstract suspend fun getKeyByLongIdSuspend(longId: String): KeyEntity?
-
-  fun updateExistedKeys(keysDaoCompatibilityList: List<KeysDaoCompatibility>): Int {
-    val existedKeys = getAllKeys().associateBy({ it.longId }, { it }).toMutableMap()
-
-    for (keyDao in keysDaoCompatibilityList) {
-      keyDao.longId?.let { longId ->
-        val modCandidateKey = existedKeys[longId]
-        modCandidateKey?.let { key ->
-          keyDao.privateKey?.let { privateKey ->
-            existedKeys[longId] = key.copy(
-                privateKey = privateKey.toByteArray(),
-                passphrase = keyDao.passphrase)
-          }
-        }
-      }
-    }
-
-    return update(existedKeys.values)
-  }
 }

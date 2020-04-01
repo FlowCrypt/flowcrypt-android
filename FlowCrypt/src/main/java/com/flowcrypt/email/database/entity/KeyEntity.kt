@@ -12,7 +12,6 @@ import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.KeysDaoCompatibility
 import com.flowcrypt.email.security.model.PrivateKeySourceType
 
 /**
@@ -70,17 +69,6 @@ data class KeyEntity(
   }
 
   companion object {
-    fun fromKeyDaoCompatibility(keysDaoCompatibility: KeysDaoCompatibility): KeyEntity {
-      return KeyEntity(
-          longId = keysDaoCompatibility.longId!!,
-          source = keysDaoCompatibility.privateKeySourceType!!.toString(),
-          publicKey = keysDaoCompatibility.publicKey?.toByteArray()
-              ?: throw NullPointerException("keysDao.publicKey == null"),
-          privateKey = keysDaoCompatibility.privateKey?.toByteArray()
-              ?: throw NullPointerException("keysDao.privateKey == null"),
-          passphrase = keysDaoCompatibility.passphrase)
-    }
-
     fun fromNodeKeyDetails(nodeKeyDetails: NodeKeyDetails): KeyEntity {
       return KeyEntity(
           longId = nodeKeyDetails.longId

@@ -14,7 +14,6 @@ import com.flowcrypt.email.util.exception.FlowCryptException
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 import java.util.*
-import java.util.concurrent.TimeUnit
 import javax.mail.internet.AddressException
 import javax.mail.internet.InternetAddress
 
@@ -24,7 +23,8 @@ import javax.mail.internet.InternetAddress
  * Time: 1:23 PM
  * E-mail: DenBond7@gmail.com
  */
-data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
+data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
+                                      @Expose val isFullyEncrypted: Boolean?,
                                       @Expose @SerializedName("private") val privateKey: String?,
                                       @Expose @SerializedName("public") val publicKey: String?,
                                       @Expose val users: List<String>?,
@@ -47,11 +47,11 @@ data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
   val isPrivate: Boolean
     get() = !TextUtils.isEmpty(privateKey)
 
-  fun getCreatedInMilliseconds(): Long {
-    return TimeUnit.MILLISECONDS.convert(created, TimeUnit.SECONDS)
-  }
+  val isPartiallyEncrypted: Boolean
+    get() = isFullyDecrypted == false && isFullyEncrypted == false
 
   constructor(source: Parcel) : this(
+      source.readValue(Boolean::class.java.classLoader) as Boolean?,
       source.readValue(Boolean::class.java.classLoader) as Boolean?,
       source.readString(),
       source.readString(),
@@ -66,7 +66,8 @@ data class NodeKeyDetails constructor(@Expose val isDecrypted: Boolean?,
   override fun describeContents() = 0
 
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-    writeValue(isDecrypted)
+    writeValue(isFullyDecrypted)
+    writeValue(isFullyEncrypted)
     writeString(privateKey)
     writeString(publicKey)
     writeStringList(users)

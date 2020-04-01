@@ -87,7 +87,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
         roomDatabase.keysDao().updateSuspend(list.map { keyEntity ->
           with(getModifiedNodeKeyDetails(keyEntity.passphrase, newPassphrase, keyEntity.privateKeyAsString)) {
-            if (isDecrypted == true) {
+            if (isFullyDecrypted == true) {
               throw IllegalArgumentException("Error. The key is decrypted!")
             }
 
@@ -141,7 +141,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           val longId = keyDetails.longId
           requireNotNull(longId)
           if (roomDatabase.keysDao().getKeyByLongIdSuspend(longId) == null) {
-            val passphrase = if (keyDetails.isDecrypted == true) "" else keyDetails.passphrase ?: ""
+            val passphrase = if (keyDetails.isFullyDecrypted == true) "" else keyDetails.passphrase
+                ?: ""
             val keyEntity = KeyEntity.fromNodeKeyDetails(keyDetails)
                 .copy(source = type.toPrivateKeySourceTypeString(),
                     privateKey = KeyStoreCryptoManager.encryptSuspend(keyDetails.privateKey).toByteArray(),

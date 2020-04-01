@@ -8,13 +8,13 @@ package com.flowcrypt.email.service.actionqueue.actions
 import android.content.Context
 import android.os.Parcel
 import android.os.Parcelable
-import android.text.TextUtils
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.KeysDaoCompatibility
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -22,7 +22,6 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.gson.annotations.SerializedName
-import java.util.*
 
 /**
  * This [Action] checks all available private keys are they encrypted. If not we will try to encrypt a key and
@@ -40,52 +39,51 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
   override val type: Action.Type = Action.Type.ENCRYPT_PRIVATE_KEYS
 
   override fun run(context: Context) {
-    val keysStore = KeysStorageImpl.getInstance(context)
-    val list = keysStore.getAllPgpPrivateKeys()
+    val keyEntities = KeysStorageImpl.getInstance(context).getAllPgpPrivateKeys()
+    val modifiedKeyEntities = mutableListOf<KeyEntity>()
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
-    if (CollectionUtils.isEmpty(list)) {
+    if (keyEntities.isEmpty()) {
       return
     }
 
-    val keysDaoList = ArrayList<KeysDaoCompatibility>()
+    for (keyEntity in keyEntities) {
+      val passphrase = keyEntity.passphrase ?: continue
 
-    for (key in list) {
-      val passphrase = key.passphrase
-
-      if (TextUtils.isEmpty(passphrase)) {
-        continue
-      }
-
-      val keyDetailsList = NodeCallsExecutor.parseKeys(key.privateKeyAsString)
-      if (CollectionUtils.isEmpty(keyDetailsList) || keyDetailsList.size != 1) {
+      val keyDetailsList = NodeCallsExecutor.parseKeys(keyEntity.privateKeyAsString)
+      if (keyDetailsList.isEmpty() || keyDetailsList.size != 1) {
         ExceptionUtil.handleError(
             IllegalArgumentException("An error occurred during the key parsing| 1: "
                 + if (CollectionUtils.isEmpty(keyDetailsList)) "Empty results" else "Size = " + keyDetailsList.size))
         continue
       }
 
-      val (isDecrypted, privateKey) = keyDetailsList[0]
+      val keyDetails = keyDetailsList.first()
 
-      if ((!isDecrypted!!)) {
+      if (keyDetails.isFullyEncrypted == true) {
         continue
       }
 
       try {
-        val (encryptedKey) = NodeCallsExecutor.encryptKey(privateKey!!, passphrase!!)
+        val encryptedKeyResult = NodeCallsExecutor.encryptKey(keyDetails.privateKey!!, passphrase)
 
-        if (TextUtils.isEmpty(encryptedKey)) {
+        if (encryptedKeyResult.encryptedKey.isNullOrEmpty()) {
           ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key encryption"))
           continue
         }
 
-        val modifiedKeyDetailsList = NodeCallsExecutor.parseKeys(encryptedKey!!)
-        if (CollectionUtils.isEmpty(modifiedKeyDetailsList) || modifiedKeyDetailsList.size != 1) {
+        val encryptedKeyDetailsList = NodeCallsExecutor.parseKeys(encryptedKeyResult.encryptedKey)
+        if (encryptedKeyDetailsList.isEmpty() || encryptedKeyDetailsList.size != 1) {
           ExceptionUtil.handleError(IllegalArgumentException("An error occurred during the key parsing| 2"))
           continue
         }
 
-        keysDaoList.add(KeysDaoCompatibility.generateKeysDao(modifiedKeyDetailsList[0], passphrase))
+        val keyDetailsWithPgpEncryptedInfo = encryptedKeyDetailsList.first()
+        val modifiedKeyEntity = keyEntity.copy(
+            privateKey = KeyStoreCryptoManager.encrypt(keyDetailsWithPgpEncryptedInfo.privateKey).toByteArray(),
+            publicKey = keyDetailsWithPgpEncryptedInfo.publicKey?.toByteArray()
+                ?: keyEntity.publicKey)
+        modifiedKeyEntities.add(modifiedKeyEntity)
       } catch (e: NodeException) {
         if (e.nodeError?.msg == "Error: Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.") {
           val currentAccount = AccountDaoSource().getActiveAccountInformation(context)
@@ -94,9 +92,7 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
       }
     }
 
-    if (keysDaoList.isNotEmpty()) {
-      roomDatabase.keysDao().updateExistedKeys(keysDaoList)
-    }
+    roomDatabase.keysDao().update(modifiedKeyEntities)
 
     SharedPreferencesHelper.setBoolean(PreferenceManager
         .getDefaultSharedPreferences(context), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, false)

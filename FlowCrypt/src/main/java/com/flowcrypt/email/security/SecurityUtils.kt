@@ -86,21 +86,19 @@ class SecurityUtils {
         val measure = zxcvbn.measure(passPhrase!!, listOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
         val passwordStrength = NodeCallsExecutor.zxcvbnStrengthBar(measure)
 
-        when (passwordStrength.word!!.word) {
+        when (passwordStrength.word?.word) {
           Constants.PASSWORD_QUALITY_WEAK,
           Constants.PASSWORD_QUALITY_POOR -> throw PrivateKeyStrengthException("Pass phrase too weak")
         }
 
         val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(private)
-        val (isDecrypted, privateKey) = nodeKeyDetailsList[0]
+        val keyDetails = nodeKeyDetailsList.first()
 
-        val encryptedKey: String?
-
-        if (isDecrypted!!) {
-          val (encryptedKey1) = NodeCallsExecutor.encryptKey(private, passPhrase)
-          encryptedKey = encryptedKey1
+        val encryptedKey = if (keyDetails.isFullyDecrypted == true) {
+          val encryptKeResult = NodeCallsExecutor.encryptKey(private, passPhrase)
+          encryptKeResult.encryptedKey
         } else {
-          encryptedKey = privateKey
+          keyDetails.privateKey
         }
 
         builder.append(if (i > 0) "\n" + encryptedKey!! else encryptedKey)
