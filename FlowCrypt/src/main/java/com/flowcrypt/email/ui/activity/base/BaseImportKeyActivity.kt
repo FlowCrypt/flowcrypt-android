@@ -289,7 +289,10 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
             var msg = when (it.status) {
               Result.Status.ERROR -> {
-                it.data?.apiError?.msg ?: getString(R.string.unknown_error)
+                val apiErrorMsg = it.data?.apiError?.msg
+                if ("Error: This key is only partially encrypted." == apiErrorMsg) {
+                  getString(R.string.partially_encrypted_private_key_error_msg)
+                } else it.data?.apiError?.msg ?: getString(R.string.unknown_error)
               }
 
               else -> it.exception?.message ?: it.exception?.javaClass?.simpleName
