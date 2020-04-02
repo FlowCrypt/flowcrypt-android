@@ -23,7 +23,6 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.extensions.showDialogFragment
-import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
@@ -59,7 +58,6 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   private var isLoadPrivateKeysRequestSent: Boolean = false
 
   private val submitPubKeyViewModel: SubmitPubKeyViewModel by viewModels()
-  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_import_private_key

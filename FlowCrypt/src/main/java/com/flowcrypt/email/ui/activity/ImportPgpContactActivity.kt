@@ -44,7 +44,8 @@ import java.util.*
  * Time: 17:07
  * E-mail: DenBond7@gmail.com
  */
-class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActionListener {
+class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActionListener,
+    LoaderManager.LoaderCallbacks<LoaderResult> {
   private var editTextEmailOrId: EditText? = null
 
   private var isSearchingActiveNow: Boolean = false
@@ -121,8 +122,15 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
         val lookUpRequest = PubRequest(ApiName.GET_PUB, editTextEmailOrId!!.text.toString())
         ApiServiceAsyncTaskLoader(applicationContext, lookUpRequest)
       }
-      else -> super.onCreateLoader(id, args)
+      else -> Loader(this)
     }
+  }
+
+  override fun onLoadFinished(loader: Loader<LoaderResult>, data: LoaderResult?) {
+    handleLoaderResult(loader, data)
+  }
+
+  override fun onLoaderReset(loader: Loader<LoaderResult>) {
   }
 
   override fun onSuccess(loaderId: Int, result: Any?) {

@@ -427,4 +427,7 @@
     <string name="could_not_load_domain_rules">Couldn\'t load domain rules</string>
     <string name="could_not_import_data">Could\'t import data</string>
     <string name="partially_encrypted_private_key_error_msg">One of the provided Private Keys is a partially encrypted private key (some packets are encrypted, some not). Such keys are not supported. Please only import fully encrypted keys, with the same pass phrase for all secret packets.</string>
+    <string name="file_is_too_big">The file is too big</string>
+    <string name="source_is_empty_or_not_available">The source is empty or not available</string>
+    <string name="parsing_keys_please_wait">Parsing keys, please wait</string>
 </resources>

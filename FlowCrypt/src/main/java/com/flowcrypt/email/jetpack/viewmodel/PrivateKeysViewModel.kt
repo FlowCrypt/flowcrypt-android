@@ -7,6 +7,7 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import android.text.TextUtils
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -14,6 +15,7 @@ import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
@@ -28,8 +30,10 @@ import com.flowcrypt.email.database.dao.UserIdEmailsKeysDao
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
@@ -53,6 +57,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   val changePassphraseLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
   val savePrivateKeysLiveData = MutableLiveData<Result<Boolean>>()
+  val parseKeysLiveData = MutableLiveData<Result<ParseKeysResult?>>()
 
   val longIdsOfCurrentAccountLiveData: LiveData<List<String>> = Transformations.switchMap(activeAccountLiveData) {
     roomDatabase.userIdEmailsKeysDao().getLongIdsByEmailLD(it?.email ?: "")
@@ -163,6 +168,51 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
+  /**
+   * Parse keys from the given resource (string or file).
+   */
+  fun parseKeys(keyImportModel: KeyImportModel?, isCheckSizeEnabled: Boolean) {
+    viewModelScope.launch {
+      val context: Context = getApplication()
+      try {
+        parseKeysLiveData.value = Result.loading()
+
+        if (keyImportModel == null) {
+          parseKeysLiveData.value = Result.success(ParseKeysResult(format = "unknown"))
+          return@launch
+        }
+
+        val armoredSource: String
+        when (keyImportModel.type) {
+          KeyDetails.Type.FILE -> {
+            if (isCheckSizeEnabled && isKeyTooBig(keyImportModel.fileUri)) {
+              throw IllegalArgumentException(context.getString(R.string.file_is_too_big))
+            }
+
+            if (keyImportModel.fileUri == null) {
+              throw NullPointerException("Uri is null!")
+            }
+
+            armoredSource = GeneralUtil.readFileFromUriToString(context, keyImportModel.fileUri)
+                ?: throw NullPointerException(context.getString(R.string.source_is_empty_or_not_available))
+          }
+
+          KeyDetails.Type.CLIPBOARD, KeyDetails.Type.EMAIL -> {
+            armoredSource = keyImportModel.keyString
+                ?: throw NullPointerException(context.getString(R.string.source_is_empty_or_not_available))
+          }
+          else -> throw IllegalStateException("Unsupported : ${keyImportModel.type}")
+        }
+
+        parseKeysLiveData.value = apiRepository.fetchKeyDetails(ParseKeysRequest(armoredSource))
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        parseKeysLiveData.value = Result.exception(e)
+      }
+    }
+  }
+
   private suspend fun getModifiedNodeKeyDetails(oldPassphrase: String?,
                                                 newPassphrase: String,
                                                 originalPrivateKey: String?): NodeKeyDetails =
@@ -198,4 +248,21 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
         modifiedKeyDetailsList[0]
       }
+
+  /**
+   * Check that the key size not bigger then [.MAX_SIZE_IN_BYTES].
+   *
+   * @param fileUri The [Uri] of the selected file.
+   * @return true if the key size not bigger then [.MAX_SIZE_IN_BYTES], otherwise false
+   */
+  private fun isKeyTooBig(fileUri: Uri?): Boolean {
+    return GeneralUtil.getFileSizeFromUri(getApplication(), fileUri) > MAX_SIZE_IN_BYTES
+  }
+
+  companion object {
+    /**
+     * Max size of a key is 256k.
+     */
+    private const val MAX_SIZE_IN_BYTES = 256 * 1024
+  }
 }
