@@ -28,24 +28,26 @@ class PublicKeyMsgBlockTest {
     val original = PublicKeyMsgBlock(
         "content",
         true,
-        NodeKeyDetails(false,
-            "privateKey",
-            "pubKey",
-            listOf("Hello<hello@example.com>"),
-            listOf(KeyId(
+        NodeKeyDetails(
+            isFullyDecrypted = false,
+            isFullyEncrypted = false,
+            privateKey = "privateKey",
+            publicKey = "pubKey",
+            users = listOf("Hello<hello@example.com>"),
+            ids = listOf(KeyId(
                 "fingerprint",
                 "longId",
                 "shortId",
                 "keywords"
             )),
-            12,
-            Algo(
+            created = 12,
+            algo = Algo(
                 "algorithm",
                 12,
                 2048,
                 "curve"),
-            "passphrase",
-            "errorMsg"))
+            passphrase = "passphrase",
+            errorMsg = "errorMsg"))
 
     val parcel = Parcel.obtain()
     original.writeToParcel(parcel, original.describeContents())
