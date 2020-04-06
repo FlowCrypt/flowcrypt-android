@@ -34,6 +34,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.extensions.showDialogFragment
+import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.CheckEmailSettingsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -155,7 +156,8 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
               CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
 
           if (keys.isNullOrEmpty()) {
-            showInfoSnackbar(rootView, getString(R.string.unknown_error))
+            UIUtil.exchangeViewVisibility(false, progressView, rootView)
+            showInfoSnackbar(rootView, getString(R.string.error_no_keys))
           } else {
             privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
           }
@@ -297,7 +299,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
             val original = it.exception.cause
             var title: String? = null
             val msg: String? = if (exception.message.isNullOrEmpty()) {
-              getString(R.string.unknown_error)
+              exception.javaClass.simpleName
             } else exception.message
             if (original != null) {
               if (original is AuthenticationFailedException) {
@@ -337,6 +339,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
 
           Result.Status.SUCCESS -> {
             idlingForFetchingPrivateKeys.setIdleState(true)
+            dismissSnackBar()
 
             val keyDetailsList = it.data
             if (CollectionUtils.isEmpty(keyDetailsList)) {
@@ -344,7 +347,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
                   false, authCreds)
               startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
                   REQUEST_CODE_ADD_NEW_ACCOUNT)
-              UIUtil.exchangeViewVisibility(false, progressView!!, rootView)
+              UIUtil.exchangeViewVisibility(false, progressView, rootView)
             } else {
               val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
                   keyDetailsList!!.size, keyDetailsList.size)
@@ -357,8 +360,9 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             idlingForFetchingPrivateKeys.setIdleState(true)
             UIUtil.exchangeViewVisibility(false, progressView, rootView)
-            showInfoSnackbar(rootView, it.exception?.message ?: getString(R.string
-                .unknown_error), Snackbar.LENGTH_LONG)
+            showInfoDialogFragment(dialogMsg = it.exception?.message
+                ?: it.exception?.javaClass?.simpleName
+                ?: getString(R.string.could_not_load_private_keys))
           }
         }
       }
@@ -381,12 +385,13 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
             UIUtil.exchangeViewVisibility(false, progressView, rootView)
             val e = it.exception
             if (e is SavePrivateKeyToDatabaseException) {
-              showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+              showSnackbar(rootView, e.message ?: e.javaClass.simpleName,
                   getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
                 privateKeysViewModel.encryptAndSaveKeysToDatabase(e.keys, KeyDetails.Type.EMAIL)
               })
             } else {
-              showInfoSnackbar(rootView, e?.message ?: getString(R.string.unknown_error))
+              showInfoSnackbar(rootView, e?.message ?: e?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error))
             }
           }
         }

@@ -42,7 +42,7 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
         val copy = keyDetails.copy()
         if (copy.isPrivate) {
           val prvKey = copy.privateKey ?: continue
-          val decryptedKey = if (copy.isDecrypted == true) {
+          val decryptedKey = if (copy.isFullyDecrypted == true) {
             prvKey
           } else {
             val result = repository.decryptKey(context, prvKey, passphrases)

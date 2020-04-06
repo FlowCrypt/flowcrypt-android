@@ -194,13 +194,11 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
   fun showSnackbar(view: View, messageText: String, buttonName: String, duration: Int,
                    onClickListener: View.OnClickListener) {
     snackBar = Snackbar.make(view, messageText, duration).setAction(buttonName, onClickListener)
-    snackBar!!.show()
+    snackBar?.show()
   }
 
   fun dismissSnackBar() {
-    if (snackBar != null) {
-      snackBar!!.dismiss()
-    }
+    snackBar?.dismiss()
   }
 
   fun handleLoaderResult(loader: Loader<*>, loaderResult: LoaderResult?) {
@@ -211,7 +209,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
         else -> showInfoSnackbar(rootView, getString(R.string.unknown_error))
       }
     } else {
-      showInfoSnackbar(rootView, getString(R.string.unknown_error))
+      showInfoSnackbar(rootView, getString(R.string.error_loader_result_is_empty))
     }
   }
 
@@ -309,13 +307,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
 
   private fun setupToolbar() {
     toolbar = findViewById(R.id.toolbar)
-    if (toolbar != null) {
-      setSupportActionBar(toolbar)
-    }
-
-    if (supportActionBar != null) {
-      supportActionBar!!.setDisplayHomeAsUpEnabled(isDisplayHomeAsUpEnabled)
-    }
+    toolbar?.let { setSupportActionBar(it) }
+    supportActionBar?.setDisplayHomeAsUpEnabled(isDisplayHomeAsUpEnabled)
   }
 
   /**

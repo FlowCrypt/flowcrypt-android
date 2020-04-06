@@ -19,25 +19,26 @@ import android.os.IBinder
 import android.text.TextUtils
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.Loader
+import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.extensions.showInfoDialogFragment
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
-import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
-import com.flowcrypt.email.ui.loader.ParseKeysFromResourceAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.material.snackbar.Snackbar
 import java.io.FileNotFoundException
-import java.util.*
 
 /**
  * The base import key activity. This activity defines a logic of import a key (private or
@@ -49,9 +50,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClickListener,
-    LoaderManager.LoaderCallbacks<LoaderResult> {
-
+abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClickListener {
   protected lateinit var checkClipboardToFindKeyService: CheckClipboardToFindKeyService
   protected lateinit var layoutContentView: View
   protected lateinit var layoutProgress: View
@@ -63,6 +62,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   protected var isCheckingClipboardEnabled = true
   protected var isClipboardServiceBound: Boolean = false
   protected var account: AccountDao? = null
+  protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   private var isCheckingPrivateKeyNow: Boolean = false
   private var throwErrorIfDuplicateFound: Boolean = false
@@ -107,18 +107,15 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     initViews()
 
-    if (keyImportModel != null) {
-      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this)
-    }
+    setupPrivateKeysViewModel()
+    keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
   }
 
   override fun onResume() {
     super.onResume()
     if (isClipboardServiceBound && !isCheckingPrivateKeyNow && isCheckingClipboardEnabled) {
       keyImportModel = checkClipboardToFindKeyService.keyImportModel
-      if (keyImportModel != null) {
-        LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this)
-      }
+      keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
     }
   }
 
@@ -172,10 +169,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
 
   override fun onBackPressed() {
     if (isCheckingPrivateKeyNow) {
-      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_file)
-      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_clipboard)
-      isCheckingPrivateKeyNow = false
-      UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+      Toast.makeText(this, R.string.parsing_keys_please_wait, Toast.LENGTH_SHORT).show()
     } else {
       super.onBackPressed()
     }
@@ -213,8 +207,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             if (!TextUtils.isEmpty(privateKeyFromClipboard)) {
               keyImportModel = KeyImportModel(null, privateKeyFromClipboard.toString(),
                   isPrivateKeyMode, KeyDetails.Type.CLIPBOARD)
-
-              LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_clipboard, null, this)
+              keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
             } else {
               showClipboardIsEmptyInfoDialog()
             }
@@ -223,105 +216,6 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
           showClipboardIsEmptyInfoDialog()
         }
       }
-    }
-  }
-
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
-    return when (id) {
-      R.id.loader_id_validate_key_from_file -> {
-        isCheckingPrivateKeyNow = true
-        textViewProgressText.setText(R.string.evaluating)
-        UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
-        ParseKeysFromResourceAsyncTaskLoader(applicationContext, keyImportModel, true)
-      }
-
-      R.id.loader_id_validate_key_from_clipboard -> {
-        isCheckingPrivateKeyNow = true
-        textViewProgressText.setText(R.string.evaluating)
-        UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
-        ParseKeysFromResourceAsyncTaskLoader(applicationContext, keyImportModel, false)
-      }
-
-      else -> Loader(this)
-    }
-  }
-
-  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
-    handleLoaderResult(loader, loaderResult)
-  }
-
-  override fun onLoaderReset(loader: Loader<LoaderResult>) {
-    when (loader.id) {
-      R.id.loader_id_validate_key_from_file, R.id.loader_id_validate_key_from_clipboard -> {
-        isCheckingPrivateKeyNow = false
-        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-      }
-    }
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  override fun onSuccess(loaderId: Int, result: Any?) {
-    when (loaderId) {
-      R.id.loader_id_validate_key_from_file -> {
-        isCheckingPrivateKeyNow = false
-        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-        val keysFromFile = result as ArrayList<NodeKeyDetails>?
-
-        if (keysFromFile!!.isNotEmpty()) {
-          onKeyFound(KeyDetails.Type.FILE, keysFromFile)
-        } else {
-          showInfoSnackbar(rootView, getString(R.string.file_has_wrong_pgp_structure,
-              if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)))
-        }
-      }
-
-      R.id.loader_id_validate_key_from_clipboard -> {
-        isCheckingPrivateKeyNow = false
-        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-        val keysFromClipboard = result as ArrayList<NodeKeyDetails>?
-        if (keysFromClipboard!!.isNotEmpty()) {
-          onKeyFound(KeyDetails.Type.CLIPBOARD, keysFromClipboard)
-        } else {
-          showInfoSnackbar(rootView, getString(R.string.clipboard_has_wrong_structure,
-              if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)))
-        }
-      }
-
-      else -> super.onSuccess(loaderId, result)
-    }
-  }
-
-  override fun onError(loaderId: Int, e: Exception?) {
-    when (loaderId) {
-      R.id.loader_id_validate_key_from_file, R.id.loader_id_validate_key_from_clipboard -> {
-        isCheckingPrivateKeyNow = false
-        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-
-        var errorMsg = e!!.message
-
-        if (e is FileNotFoundException) {
-          errorMsg = getString(R.string.file_not_found)
-        }
-
-        if (e is NodeException) {
-          val nodeException = e as NodeException?
-
-          if (WRONG_STRUCTURE_ERROR == nodeException?.nodeError?.msg) {
-            val mode = if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)
-            when (loaderId) {
-              R.id.loader_id_validate_key_from_file ->
-                errorMsg = getString(R.string.file_has_wrong_pgp_structure, mode)
-
-              R.id.loader_id_validate_key_from_clipboard ->
-                errorMsg = getString(R.string.clipboard_has_wrong_structure, mode)
-            }
-          }
-        }
-
-        showInfoSnackbar(rootView, errorMsg)
-      }
-
-      else -> super.onError(loaderId, e)
     }
   }
 
@@ -340,7 +234,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
    */
   protected open fun handleSelectedFile(uri: Uri) {
     keyImportModel = KeyImportModel(uri, null, isPrivateKeyMode, KeyDetails.Type.FILE)
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_validate_key_from_file, null, this)
+    privateKeysViewModel.parseKeys(keyImportModel, true)
   }
 
   protected open fun initViews() {
@@ -357,6 +251,78 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     if (findViewById<View>(R.id.buttonLoadFromClipboard) != null) {
       findViewById<View>(R.id.buttonLoadFromClipboard).setOnClickListener(this)
     }
+  }
+
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.parseKeysLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            isCheckingPrivateKeyNow = true
+            textViewProgressText.setText(R.string.evaluating)
+            UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
+          }
+
+          Result.Status.SUCCESS -> {
+            isCheckingPrivateKeyNow = false
+            UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+            val keys = it.data?.nodeKeyDetails
+
+            if (keys.isNullOrEmpty()) {
+              val msg = when (keyImportModel?.type) {
+                KeyDetails.Type.FILE ->
+                  getString(R.string.file_has_wrong_pgp_structure,
+                      if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_))
+
+                else ->
+                  getString(R.string.clipboard_has_wrong_structure,
+                      if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_))
+              }
+              showInfoDialogFragment(dialogMsg = msg)
+            } else {
+              keyImportModel?.type?.let { type -> onKeyFound(type, ArrayList(keys)) }
+            }
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            isCheckingPrivateKeyNow = false
+            UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+            var msg = when (it.status) {
+              Result.Status.ERROR -> {
+                val apiErrorMsg = it.data?.apiError?.msg
+                if ("Error: This key is only partially encrypted." == apiErrorMsg) {
+                  getString(R.string.partially_encrypted_private_key_error_msg)
+                } else it.data?.apiError?.msg ?: getString(R.string.unknown_error)
+              }
+
+              else -> it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error)
+            }
+
+            if (it.exception is FileNotFoundException) {
+              msg = getString(R.string.file_not_found)
+            }
+
+            if (it.exception is NodeException) {
+              val nodeException = it.exception as NodeException?
+
+              if (WRONG_STRUCTURE_ERROR == nodeException?.nodeError?.msg) {
+                val mode = if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_)
+                msg = when (keyImportModel?.type) {
+                  KeyDetails.Type.FILE ->
+                    getString(R.string.file_has_wrong_pgp_structure, mode)
+
+                  else ->
+                    getString(R.string.clipboard_has_wrong_structure, mode)
+                }
+              }
+            }
+
+            showInfoDialogFragment(dialogMsg = msg)
+          }
+        }
+      }
+    })
   }
 
   private fun showAccessDeniedWarning() {

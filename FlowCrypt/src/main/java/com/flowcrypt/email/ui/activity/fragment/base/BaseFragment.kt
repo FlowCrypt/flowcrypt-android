@@ -187,7 +187,7 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
         else -> UIUtil.showInfoSnackbar(requireView(), getString(R.string.unknown_error))
       }
     } else {
-      UIUtil.showInfoSnackbar(requireView(), getString(R.string.unknown_error))
+      UIUtil.showInfoSnackbar(requireView(), getString(R.string.error_loader_result_is_empty))
     }
   }
 }

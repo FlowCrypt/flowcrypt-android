@@ -160,7 +160,8 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
           throw error
         }
 
-        UIUtil.showInfoSnackbar(rootView, error?.message ?: getString(R.string.unknown_error))
+        UIUtil.showInfoSnackbar(rootView, error?.message ?: error?.javaClass?.simpleName
+        ?: getString(R.string.unknown_error))
       }
     } catch (e: ApiException) {
       val msg = GoogleSignInStatusCodes.getStatusCodeString(e.statusCode)
@@ -189,13 +190,13 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
           Result.Status.ERROR -> {
             UIUtil.exchangeViewVisibility(false, progressView, rootView)
             Toast.makeText(this, it.data?.apiError?.msg
-                ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
+                ?: getString(R.string.could_not_load_domain_rules), Toast.LENGTH_SHORT).show()
           }
 
           Result.Status.EXCEPTION -> {
             UIUtil.exchangeViewVisibility(false, progressView, rootView)
             Toast.makeText(this, it.exception?.message
-                ?: getString(R.string.unknown_error), Toast.LENGTH_SHORT).show()
+                ?: getString(R.string.could_not_load_domain_rules), Toast.LENGTH_SHORT).show()
           }
         }
       }
@@ -225,7 +226,8 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
               startActivityForResult(it.exception.intent, REQUEST_CODE_RESOLVE_SIGN_IN_ERROR)
             } else {
               UIUtil.showInfoSnackbar(rootView,
-                  it.exception?.message ?: getString(R.string.unknown_error))
+                  it.exception?.message ?: it.exception?.javaClass?.simpleName
+                  ?: getString(R.string.unknown_error))
             }
           }
         }
@@ -249,12 +251,13 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
             UIUtil.exchangeViewVisibility(false, progressView, rootView)
             val e = it.exception
             if (e is SavePrivateKeyToDatabaseException) {
-              showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+              showSnackbar(rootView, e.message ?: e.javaClass.simpleName,
                   getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
                 privateKeysViewModel.encryptAndSaveKeysToDatabase(e.keys, KeyDetails.Type.EMAIL)
               })
             } else {
-              showInfoSnackbar(rootView, e?.message ?: getString(R.string.unknown_error))
+              showInfoSnackbar(rootView, e?.message ?: e?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error))
             }
           }
         }

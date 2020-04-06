@@ -21,11 +21,12 @@ import java.io.BufferedInputStream
  * Time: 12:01 PM
  * E-mail: DenBond7@gmail.com
  */
-data class ParseKeysResult constructor(@Expose val format: String?,
+data class ParseKeysResult constructor(@Expose val format: String? = null,
                                        @Expose @SerializedName("keyDetails") val nodeKeyDetails:
                                        MutableList<NodeKeyDetails> = mutableListOf(),
                                        @SerializedName("error")
-                                       @Expose override val apiError: ApiError?) : BaseNodeResponse {
+                                       @Expose override val apiError: ApiError? = null) :
+    BaseNodeResponse {
   override fun handleRawData(bufferedInputStream: BufferedInputStream) {
 
   }

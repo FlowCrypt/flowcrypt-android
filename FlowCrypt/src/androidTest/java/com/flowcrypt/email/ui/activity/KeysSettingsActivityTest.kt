@@ -51,6 +51,7 @@ import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.hamcrest.core.AllOf.allOf
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -68,6 +69,7 @@ import java.util.concurrent.TimeUnit
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("Temporary excluded")
 class KeysSettingsActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(KeysSettingsActivity::class.java)

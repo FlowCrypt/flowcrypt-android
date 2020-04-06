@@ -8,6 +8,7 @@ package com.flowcrypt.email.security
 import android.content.Context
 import android.text.TextUtils
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
@@ -75,32 +76,37 @@ class SecurityUtils {
         if (i == 0) {
           firstPassPhrase = passPhrase
         } else if (passPhrase != firstPassPhrase) {
-          throw DifferentPassPhrasesException("The keys have different pass phrase")
+          throw DifferentPassPhrasesException(context.getString(R.string.keys_have_different_pass_phrase))
         }
 
         if (TextUtils.isEmpty(passPhrase)) {
-          throw PrivateKeyStrengthException("Empty pass phrase")
+          throw PrivateKeyStrengthException(context.getString(R.string.empty_pass_phrase))
         }
 
         val zxcvbn = Zxcvbn()
         val measure = zxcvbn.measure(passPhrase!!, listOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
         val passwordStrength = NodeCallsExecutor.zxcvbnStrengthBar(measure)
 
-        when (passwordStrength.word!!.word) {
+        when (passwordStrength.word?.word) {
           Constants.PASSWORD_QUALITY_WEAK,
-          Constants.PASSWORD_QUALITY_POOR -> throw PrivateKeyStrengthException("Pass phrase too weak")
+          Constants.PASSWORD_QUALITY_POOR -> throw PrivateKeyStrengthException(context.getString(R.string.pass_phrase_too_weak))
+
+          Constants.PASSWORD_QUALITY_REASONABLE, Constants.PASSWORD_QUALITY_GOOD,
+          Constants.PASSWORD_QUALITY_GREAT, Constants.PASSWORD_QUALITY_PERFECT -> {
+            //everything looks good
+          }
+
+          else -> throw IllegalArgumentException(context.getString(R.string.missing_pass_phrase_strength_evalutaion))
         }
 
         val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(private)
-        val (isDecrypted, privateKey) = nodeKeyDetailsList[0]
+        val keyDetails = nodeKeyDetailsList.first()
 
-        val encryptedKey: String?
-
-        if (isDecrypted!!) {
-          val (encryptedKey1) = NodeCallsExecutor.encryptKey(private, passPhrase)
-          encryptedKey = encryptedKey1
+        val encryptedKey = if (keyDetails.isFullyDecrypted == true) {
+          val encryptKeResult = NodeCallsExecutor.encryptKey(private, passPhrase)
+          encryptKeResult.encryptedKey
         } else {
-          encryptedKey = privateKey
+          keyDetails.privateKey
         }
 
         builder.append(if (i > 0) "\n" + encryptedKey!! else encryptedKey)

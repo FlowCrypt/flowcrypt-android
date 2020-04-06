@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
@@ -45,7 +44,8 @@ import java.util.*
  * Time: 17:07
  * E-mail: DenBond7@gmail.com
  */
-class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActionListener {
+class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActionListener,
+    LoaderManager.LoaderCallbacks<LoaderResult> {
   private var editTextEmailOrId: EditText? = null
 
   private var isSearchingActiveNow: Boolean = false
@@ -104,7 +104,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
             .keyString), REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
       } else {
         UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-        Toast.makeText(this, R.string.unknown_error, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, R.string.error_no_keys, Toast.LENGTH_SHORT).show()
       }
     }
   }
@@ -122,8 +122,15 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
         val lookUpRequest = PubRequest(ApiName.GET_PUB, editTextEmailOrId!!.text.toString())
         ApiServiceAsyncTaskLoader(applicationContext, lookUpRequest)
       }
-      else -> super.onCreateLoader(id, args)
+      else -> Loader(this)
     }
+  }
+
+  override fun onLoadFinished(loader: Loader<LoaderResult>, data: LoaderResult?) {
+    handleLoaderResult(loader, data)
+  }
+
+  override fun onLoaderReset(loader: Loader<LoaderResult>) {
   }
 
   override fun onSuccess(loaderId: Int, result: Any?) {
@@ -175,8 +182,9 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
     when (loaderId) {
       R.id.loader_id_search_public_key -> {
         UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-        Toast.makeText(this, if (TextUtils.isEmpty(e!!.message)) getString(R.string.unknown_error) else e.message,
-            Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, if (e?.message.isNullOrEmpty()) {
+          e?.javaClass?.simpleName ?: getString(R.string.unknown_error)
+        } else e?.message, Toast.LENGTH_SHORT).show()
       }
 
       else -> super.onError(loaderId, e)

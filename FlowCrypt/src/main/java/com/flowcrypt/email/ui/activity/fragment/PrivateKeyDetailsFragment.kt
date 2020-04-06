@@ -105,7 +105,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
       Toast.makeText(context, getString(R.string.saved), Toast.LENGTH_SHORT).show()
     } catch (e: Exception) {
       e.printStackTrace()
-      var error = if (TextUtils.isEmpty(e.message)) getString(R.string.unknown_error) else e.message
+      var error = if (e.message.isNullOrEmpty()) e.javaClass.simpleName else e.message
 
       if (e is IllegalStateException) {
         if (e.message != null && e.message!!.startsWith("Already exists")) {

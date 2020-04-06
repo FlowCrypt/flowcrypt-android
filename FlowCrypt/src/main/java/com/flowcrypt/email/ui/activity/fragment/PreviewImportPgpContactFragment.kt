@@ -121,10 +121,10 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
     when (loaderId) {
       R.id.loader_id_parse_public_keys -> if (activity != null) {
         requireActivity().setResult(Activity.RESULT_CANCELED)
-        Toast.makeText(context, if (TextUtils.isEmpty(e!!.message))
-          getString(R.string.unknown_error)
-        else
-          e.message, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, if (e?.message.isNullOrEmpty()) {
+          e?.javaClass?.simpleName ?: getString(R.string.unknown_error)
+        } else
+          e?.message, Toast.LENGTH_SHORT).show()
         requireActivity().finish()
       }
 
@@ -147,15 +147,15 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
 
   private fun handleImportAllResult(result: Boolean?) {
     if (isAdded) {
-      if (result!!) {
+      if (result == true) {
         Toast.makeText(context, R.string.success, Toast.LENGTH_SHORT).show()
         if (activity != null) {
           requireActivity().setResult(Activity.RESULT_OK)
           requireActivity().finish()
         }
       } else {
-        UIUtil.exchangeViewVisibility(false, layoutProgress!!, layoutContentView!!)
-        Toast.makeText(context, R.string.unknown_error, Toast.LENGTH_SHORT).show()
+        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+        Toast.makeText(context, getString(R.string.could_not_import_data), Toast.LENGTH_SHORT).show()
       }
     }
   }

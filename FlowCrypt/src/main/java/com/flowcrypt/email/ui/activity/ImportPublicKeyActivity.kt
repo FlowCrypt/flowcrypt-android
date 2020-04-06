@@ -66,7 +66,7 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
         showInfoSnackbar(rootView, getString(R.string.select_only_one_key))
       }
     } else {
-      showInfoSnackbar(rootView, getString(R.string.unknown_error))
+      showInfoSnackbar(rootView, getString(R.string.error_no_keys))
     }
   }
 

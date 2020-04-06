@@ -380,9 +380,9 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
           onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id.progress_id_processing, 90)
           val result = it.data
           if (result == null) {
-            Toast.makeText(this, getString(R.string.unknown_error), Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.internal_api_error), Toast.LENGTH_LONG).show()
             if (!idlingForDecryption!!.isIdleNow) {
-              idlingForDecryption!!.decrement()
+              idlingForDecryption?.decrement()
             }
           } else {
             val msgInfo = IncomingMessageInfo(messageEntity, result.text,
@@ -393,7 +393,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
             fragment?.showIncomingMsgInfo(msgInfo)
 
             if (!idlingForDecryption!!.isIdleNow) {
-              idlingForDecryption!!.decrement()
+              idlingForDecryption?.decrement()
             }
           }
         }

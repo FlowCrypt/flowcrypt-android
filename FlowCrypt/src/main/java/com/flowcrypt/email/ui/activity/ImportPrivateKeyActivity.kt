@@ -23,7 +23,6 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.extensions.showDialogFragment
-import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
@@ -59,7 +58,6 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   private var isLoadPrivateKeysRequestSent: Boolean = false
 
   private val submitPubKeyViewModel: SubmitPubKeyViewModel by viewModels()
-  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_import_private_key
@@ -329,10 +327,11 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
               }
 
               Result.Status.SUCCESS -> {
-                it.exception?.message ?: getString(R.string.unknown_error)
+                it.exception?.message ?: it.exception?.javaClass?.simpleName
+                ?: getString(R.string.unknown_error)
               }
 
-              else -> getString(R.string.unknown_error)
+              else -> it.exception?.javaClass?.simpleName ?: getString(R.string.unknown_error)
             }
 
             showDialogFragment(TwoWayDialogFragment.newInstance(requestCode = REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG,
@@ -364,12 +363,13 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
             val e = it.exception
             if (e is SavePrivateKeyToDatabaseException) {
-              showSnackbar(rootView, e.message ?: getString(R.string.unknown_error),
+              showSnackbar(rootView, e.message ?: e.javaClass.simpleName,
                   getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
                 privateKeysViewModel.encryptAndSaveKeysToDatabase(e.keys, KeyDetails.Type.EMAIL)
               })
             } else {
-              showInfoSnackbar(rootView, e?.message ?: getString(R.string.unknown_error))
+              showInfoSnackbar(rootView, e?.message ?: e?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error))
             }
           }
         }

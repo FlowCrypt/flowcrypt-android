@@ -191,7 +191,6 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   override fun onBackPressed() {
     when {
       isPrivateKeySavingNow -> {
-        LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_validate_key_from_file)
         isPrivateKeySavingNow = false
         UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
       }
