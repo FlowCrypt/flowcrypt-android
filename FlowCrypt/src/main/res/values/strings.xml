@@ -430,4 +430,8 @@
     <string name="file_is_too_big">The file is too big</string>
     <string name="source_is_empty_or_not_available">The source is empty or not available</string>
     <string name="parsing_keys_please_wait">Parsing keys, please wait</string>
+    <string name="pass_phrase_too_weak">Pass phrase too weak</string>
+    <string name="missing_pass_phrase_strength_evalutaion">Unexpectedly missing pass phrase strength evaluation</string>
+    <string name="empty_pass_phrase">Empty pass phrase</string>
+    <string name="keys_have_different_pass_phrase">The keys have different pass phrase</string>
 </resources>

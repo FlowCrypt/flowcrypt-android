@@ -8,6 +8,7 @@ package com.flowcrypt.email.security
 import android.content.Context
 import android.text.TextUtils
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
@@ -75,11 +76,11 @@ class SecurityUtils {
         if (i == 0) {
           firstPassPhrase = passPhrase
         } else if (passPhrase != firstPassPhrase) {
-          throw DifferentPassPhrasesException("The keys have different pass phrase")
+          throw DifferentPassPhrasesException(context.getString(R.string.keys_have_different_pass_phrase))
         }
 
         if (TextUtils.isEmpty(passPhrase)) {
-          throw PrivateKeyStrengthException("Empty pass phrase")
+          throw PrivateKeyStrengthException(context.getString(R.string.empty_pass_phrase))
         }
 
         val zxcvbn = Zxcvbn()
@@ -88,7 +89,14 @@ class SecurityUtils {
 
         when (passwordStrength.word?.word) {
           Constants.PASSWORD_QUALITY_WEAK,
-          Constants.PASSWORD_QUALITY_POOR -> throw PrivateKeyStrengthException("Pass phrase too weak")
+          Constants.PASSWORD_QUALITY_POOR -> throw PrivateKeyStrengthException(context.getString(R.string.pass_phrase_too_weak))
+
+          Constants.PASSWORD_QUALITY_REASONABLE, Constants.PASSWORD_QUALITY_GOOD,
+          Constants.PASSWORD_QUALITY_GREAT, Constants.PASSWORD_QUALITY_PERFECT -> {
+            //everything looks good
+          }
+
+          else -> throw IllegalArgumentException(context.getString(R.string.missing_pass_phrase_strength_evalutaion))
         }
 
         val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(private)
