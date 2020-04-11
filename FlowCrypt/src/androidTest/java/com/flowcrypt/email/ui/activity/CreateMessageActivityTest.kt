@@ -45,7 +45,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -494,9 +494,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   private fun savePublicKeyInDatabase() {
-    val contactsDaoSource = ContactsDaoSource()
-    val pgpContact = pgpContact
-    contactsDaoSource.addRow(getTargetContext(), pgpContact)
+    FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao().insert(pgpContact.toContactEntity())
   }
 
   private fun deleteAtt(att: File) {

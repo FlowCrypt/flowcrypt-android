@@ -8,11 +8,8 @@ package com.flowcrypt.email.model
 import android.os.Parcel
 import android.os.Parcelable
 
-import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader
-
 /**
- * The simple POJO class which describes information about result from the
- * [UpdateInfoAboutPgpContactsAsyncTaskLoader]
+ * The simple POJO class which describes information about result
  *
  * @author Denis Bondarenko
  * Date: 31.07.2017

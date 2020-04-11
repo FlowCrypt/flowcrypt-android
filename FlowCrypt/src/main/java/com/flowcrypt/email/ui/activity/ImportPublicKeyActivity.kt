@@ -9,10 +9,11 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
@@ -32,6 +33,7 @@ import java.util.*
 class ImportPublicKeyActivity : BaseImportKeyActivity() {
 
   private var pgpContact: PgpContact? = null
+  private val contactsViewModel: ContactsViewModel by viewModels()
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_import_public_key_for_pgp_contact
@@ -71,18 +73,9 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
   }
 
   private fun updateInformationAboutPgpContact(keyDetails: NodeKeyDetails) {
-    val contactsDaoSource = ContactsDaoSource()
-
     val pgpContactFromKey = keyDetails.primaryPgpContact
-
     pgpContact?.pubkey = pgpContactFromKey.pubkey
-    contactsDaoSource.updatePgpContact(this, pgpContact)
-
-    if (!pgpContact?.email.equals(pgpContactFromKey.email, ignoreCase = true)) {
-      if (contactsDaoSource.getPgpContact(this, pgpContactFromKey.email) == null) {
-        contactsDaoSource.addRow(this, pgpContactFromKey)
-      }
-    }
+    pgpContact?.let { contactsViewModel.updateContactPubKey(it, pgpContactFromKey) }
   }
 
   companion object {

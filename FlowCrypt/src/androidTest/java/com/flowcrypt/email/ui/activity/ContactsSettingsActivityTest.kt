@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity
 
 import android.view.View
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -15,11 +16,10 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyListView
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -59,7 +59,7 @@ class ContactsSettingsActivityTest : BaseTest() {
 
   @Test
   fun testEmptyList() {
-    onView(withId(R.id.listViewContacts))
+    onView(withId(R.id.recyclerViewContacts))
         .check(matches(withEmptyListView())).check(matches(not<View>(isDisplayed())))
     onView(withId(R.id.emptyView))
         .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
@@ -70,7 +70,7 @@ class ContactsSettingsActivityTest : BaseTest() {
     addContactsToDatabase()
     for (ignored in EMAILS) {
       onData(anything())
-          .inAdapterView(withId(R.id.listViewContacts))
+          .inAdapterView(withId(R.id.recyclerViewContacts))
           .onChildView(withId(R.id.imageButtonDeleteContact))
           .atPosition(0)
           .perform(click())
@@ -80,10 +80,9 @@ class ContactsSettingsActivityTest : BaseTest() {
   }
 
   private fun addContactsToDatabase() {
-    val contactsDaoSource = ContactsDaoSource()
     for (email in EMAILS) {
       val pgpContact = PgpContact(email, null, "", true, null, null, null, null, 0)
-      contactsDaoSource.addRow(getTargetContext(), pgpContact)
+      FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao().insert(pgpContact.toContactEntity())
     }
   }
 
@@ -96,9 +95,11 @@ class ContactsSettingsActivityTest : BaseTest() {
 
     @AfterClass
     fun clearContactsFromDatabase() {
-      val contactsDaoSource = ContactsDaoSource()
       for (email in EMAILS) {
-        contactsDaoSource.deletePgpContact(InstrumentationRegistry.getInstrumentation().targetContext, email)
+        val dao = FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext()).contactsDao()
+
+        val contact = dao.getContactByEmails(email) ?: continue
+        dao.delete(contact)
       }
     }
   }

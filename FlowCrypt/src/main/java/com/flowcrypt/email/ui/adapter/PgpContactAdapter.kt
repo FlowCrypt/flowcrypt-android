@@ -13,9 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CursorAdapter
 import android.widget.TextView
-
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.model.PgpContact
 import com.hootsuite.nachos.NachoTextView
 
@@ -28,7 +26,6 @@ import com.hootsuite.nachos.NachoTextView
  * Time: 17:44
  * E-mail: DenBond7@gmail.com
  */
-
 class PgpContactAdapter(context: Context,
                         c: Cursor?,
                         autoRequery: Boolean) : CursorAdapter(context, c, autoRequery) {
@@ -38,7 +35,7 @@ class PgpContactAdapter(context: Context,
   }
 
   override fun convertToString(cursor: Cursor): CharSequence {
-    return cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL))
+    return getStringValue("email", cursor)
   }
 
   override fun bindView(view: View, context: Context, cursor: Cursor) {
@@ -46,8 +43,8 @@ class PgpContactAdapter(context: Context,
     val textViewEmail = view.findViewById<TextView>(R.id.textViewEmail)
     val textViewOnlyEmail = view.findViewById<TextView>(R.id.textViewOnlyEmail)
 
-    val name = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_NAME))
-    val email = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL))
+    val name = getStringValue("name", cursor)
+    val email = getStringValue("email", cursor)
 
     if (TextUtils.isEmpty(name)) {
       textViewEmail.text = null
@@ -57,6 +54,15 @@ class PgpContactAdapter(context: Context,
       textViewEmail.text = email
       textViewName.text = name
       textViewOnlyEmail.text = null
+    }
+  }
+
+  private fun getStringValue(columnName: String, cursor: Cursor): String {
+    val columnIndex = cursor.getColumnIndex(columnName)
+    return if (columnIndex != -1) {
+      cursor.getString(columnIndex) ?: ""
+    } else {
+      ""
     }
   }
 }

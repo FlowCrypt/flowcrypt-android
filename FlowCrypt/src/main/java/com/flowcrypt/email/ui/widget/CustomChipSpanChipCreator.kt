@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.database.Cursor
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.util.UIUtil
 import com.hootsuite.nachos.ChipConfiguration
 import com.hootsuite.nachos.chip.Chip
@@ -76,11 +75,14 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
     if (span.hasPgp() != null) {
       updateChipSpanBackground(span, span.hasPgp()!!)
     } else if (span.data != null && span.data is Cursor) {
-      val cursor = span.data as Cursor?
-      if (cursor != null && !cursor.isClosed) {
-        val (_, _, _, hasPgp) = ContactsDaoSource().getCurrentPgpContact(cursor)
-        span.setHasPgp(hasPgp)
-        updateChipSpanBackground(span, hasPgp)
+      val cursor = span.data as? Cursor ?: return
+      if (!cursor.isClosed) {
+        val columnIndex = cursor.getColumnIndex("has_pgp")
+        if (columnIndex != -1) {
+          val hasPgp = cursor.getInt(columnIndex) == 1
+          span.setHasPgp(hasPgp)
+          updateChipSpanBackground(span, hasPgp)
+        }
       }
     } else {
       val chipBackground = chipConfiguration.chipBackground

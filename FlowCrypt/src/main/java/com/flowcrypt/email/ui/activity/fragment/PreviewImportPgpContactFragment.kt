@@ -22,7 +22,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.PublicKeyInfo
 import com.flowcrypt.email.model.results.LoaderResult
@@ -270,8 +271,9 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
         emails.add(keyOwner)
 
         if (weakRef.get() != null) {
-          val contact = ContactsDaoSource().getPgpContact(weakRef.get()?.requireContext()!!, keyOwner)
-          return PublicKeyInfo(keyWords!!, fingerprint!!, keyOwner, longId!!, contact, nodeKeyDetails.publicKey!!)
+          val contact = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
+              .contactsDao().getContactByEmails(keyOwner)?.toPgpContact()
+          return PublicKeyInfo(keyWords!!, fingerprint!!, keyOwner, longId!!, contact!!, nodeKeyDetails.publicKey!!)
         }
       }
       return null
@@ -286,7 +288,6 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
       get() = R.string.importing_public_keys
 
     override fun doInBackground(vararg uris: Void): Boolean? {
-      val source = ContactsDaoSource()
       val newCandidates = ArrayList<PgpContact>()
       val updateCandidates = ArrayList<PgpContact>()
 
@@ -315,7 +316,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
             val end = if (newCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else newCandidates.size
 
             if (weakRef.get() != null) {
-              source.addRowsUsingApplyBatch(weakRef.get()?.context, newCandidates.subList(start, end))
+              FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
+                  .contactsDao().insert(newCandidates.subList(start, end).map { it.toContactEntity() })
             }
             i = end
 
@@ -336,8 +338,16 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
           val end = if (updateCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else updateCandidates.size - 1
 
           if (weakRef.get() != null) {
-            source.updatePgpContacts(weakRef.get()?.requireContext()!!, updateCandidates.subList
-            (start, end + 1))
+            val contacts = mutableListOf<ContactEntity>()
+            val list = updateCandidates.subList(start, end + 1)
+
+            list.forEach { pgpContact ->
+              val foundContactEntity = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
+                  .contactsDao().getContactByEmails(pgpContact.email)
+              foundContactEntity?.let { entity -> contacts.add(pgpContact.toContactEntity().copy(id = entity.id)) }
+            }
+
+            FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!).contactsDao().update(contacts)
           }
           i = end + 1
 

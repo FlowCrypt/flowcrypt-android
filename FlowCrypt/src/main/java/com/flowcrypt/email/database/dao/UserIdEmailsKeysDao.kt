@@ -10,7 +10,7 @@ import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.util.GeneralUtil
@@ -68,13 +68,13 @@ interface UserIdEmailsKeysDao : BaseDao<UserIdEmailsKeysEntity> {
     suspend fun genEntities(context: Context, keyDetails: NodeKeyDetails,
                             contacts: List<PgpContact>): List<UserIdEmailsKeysEntity> =
         withContext(Dispatchers.IO) {
-          val daoSource = ContactsDaoSource()
+          val contactsDao = FlowCryptRoomDatabase.getDatabase(context).contactsDao()
           val list = mutableListOf<UserIdEmailsKeysEntity>()
           for (pgpContact in contacts) {
             pgpContact.pubkey = keyDetails.publicKey
-            val temp = daoSource.getPgpContact(context, pgpContact.email)
+            val temp = contactsDao.getContactByEmailSuspend(pgpContact.email)
             if (GeneralUtil.isEmailValid(pgpContact.email) && temp == null) {
-              daoSource.addRow(context, pgpContact)
+              contactsDao.insertSuspend(pgpContact.toContactEntity())
               //todo-DenBond7 Need to resolve a situation with different public keys.
               //For example we can have a situation when we have to different public
               // keys with the same email

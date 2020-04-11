@@ -53,11 +53,13 @@ import com.flowcrypt.email.api.email.model.ExtraActionInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
+import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
@@ -72,7 +74,6 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter
-import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
@@ -111,6 +112,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   private val accountAliasesViewModel: AccountAliasesViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
+  private val contactsViewModel: ContactsViewModel by viewModels()
 
   private var pgpContactsTo: MutableList<PgpContact>? = null
   private var pgpContactsCc: MutableList<PgpContact>? = null
@@ -391,11 +393,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT -> {
         when (resultCode) {
           Activity.RESULT_OK -> if (data != null) {
-            val pgpContact = data.getParcelableExtra<PgpContact>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
-
-            if (pgpContact != null) {
-              pgpContactWithNoPublicKey?.pubkey = pgpContact.pubkey
-              ContactsDaoSource().updatePgpContact(context, pgpContactWithNoPublicKey)
+            val pgpContact = data.getParcelableExtra<ContactEntity>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
+            pgpContact?.let {
+              pgpContactWithNoPublicKey?.pubkey = String(pgpContact.publicKey ?: byteArrayOf())
+              pgpContactWithNoPublicKey?.email?.let { email -> contactsViewModel.updateContactPubKey(email, pgpContact.publicKey) }
 
               Toast.makeText(context, R.string.key_successfully_copied, Toast.LENGTH_LONG).show()
               updateRecipients()
@@ -501,26 +502,26 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
     when (id) {
-      R.id.loader_id_load_info_about_pgp_contacts_to -> {
-        pgpContactsTo?.clear()
-        progressBarTo?.visibility = View.VISIBLE
-        isUpdateToCompleted = false
-        return UpdateInfoAboutPgpContactsAsyncTaskLoader(requireContext(), recipientsTo!!.chipAndTokenValues)
-      }
+      /* R.id.loader_id_load_info_about_pgp_contacts_to -> {
+         pgpContactsTo?.clear()
+         progressBarTo?.visibility = View.VISIBLE
+         isUpdateToCompleted = false
+         return UpdateInfoAboutPgpContactsAsyncTaskLoader(requireContext(), recipientsTo!!.chipAndTokenValues)
+       }
 
-      R.id.loader_id_load_info_about_pgp_contacts_cc -> {
-        pgpContactsCc?.clear()
-        progressBarCc?.visibility = View.VISIBLE
-        isUpdateCcCompleted = false
-        return UpdateInfoAboutPgpContactsAsyncTaskLoader(requireContext(), recipientsCc!!.chipAndTokenValues)
-      }
+       R.id.loader_id_load_info_about_pgp_contacts_cc -> {
+         pgpContactsCc?.clear()
+         progressBarCc?.visibility = View.VISIBLE
+         isUpdateCcCompleted = false
+         return UpdateInfoAboutPgpContactsAsyncTaskLoader(requireContext(), recipientsCc!!.chipAndTokenValues)
+       }
 
-      R.id.loader_id_load_info_about_pgp_contacts_bcc -> {
-        pgpContactsBcc?.clear()
-        progressBarBcc?.visibility = View.VISIBLE
-        isUpdateBccCompleted = false
-        return UpdateInfoAboutPgpContactsAsyncTaskLoader(requireContext(), recipientsBcc!!.chipAndTokenValues)
-      }
+       R.id.loader_id_load_info_about_pgp_contacts_bcc -> {
+         pgpContactsBcc?.clear()
+         progressBarBcc?.visibility = View.VISIBLE
+         isUpdateBccCompleted = false
+         return UpdateInfoAboutPgpContactsAsyncTaskLoader(requireContext(), recipientsBcc!!.chipAndTokenValues)
+       }*/
 
       else -> return super.onCreateLoader(id, args)
     }
@@ -1342,12 +1343,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     val pgpContactAdapter = PgpContactAdapter(requireContext(), null, true)
     //setup a search contacts logic in the database
     pgpContactAdapter.filterQueryProvider = FilterQueryProvider { constraint ->
-      val uri = ContactsDaoSource().baseContentUri
-      val selection = ContactsDaoSource.COL_EMAIL + " LIKE ?"
-      val selectionArgs = arrayOf("%$constraint%")
-      val sortOrder = ContactsDaoSource.COL_LAST_USE + " DESC"
-
-      requireContext().contentResolver.query(uri, null, selection, selectionArgs, sortOrder)
+      val dao = FlowCryptRoomDatabase.getDatabase(requireContext()).contactsDao()
+      dao.getFilteredCursor("%$constraint%")
     }
 
     return pgpContactAdapter

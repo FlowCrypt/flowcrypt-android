@@ -8,20 +8,20 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.Menu
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ListView
+import androidx.activity.viewModels
 import androidx.appcompat.widget.SearchView
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.CursorLoader
-import androidx.loader.content.Loader
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
-import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
 import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter
 import com.flowcrypt.email.util.GeneralUtil
@@ -29,7 +29,7 @@ import com.flowcrypt.email.util.UIUtil
 
 /**
  * This activity can be used for select single or multiply contacts (not implemented yet) from the local database. The
- * activity returns [PgpContact] as a result.
+ * activity returns [ContactEntity] as a result.
  *
  * @author Denis Bondarenko
  * Date: 14.11.2017
@@ -37,14 +37,15 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 
-class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCallbacks<Cursor>,
-    AdapterView.OnItemClickListener, SearchView.OnQueryTextListener {
+class SelectContactsActivity : BaseBackStackActivity(),
+    ContactsListCursorAdapter.OnContactClickListener, SearchView.OnQueryTextListener {
 
   private var progressBar: View? = null
-  private var listView: ListView? = null
+  private var recyclerViewContacts: RecyclerView? = null
   private var emptyView: View? = null
-  private var adapter: ContactsListCursorAdapter? = null
+  private val contactsRecyclerViewAdapter: ContactsListCursorAdapter = ContactsListCursorAdapter(false)
   private var searchPattern: String? = null
+  private val contactsViewModel: ContactsViewModel by viewModels()
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_select_contact
@@ -54,27 +55,27 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    contactsRecyclerViewAdapter.onContactClickListener = this
+    //todo-denbond7 need to fix this in the future. Not urgent
+    //val isMultiply = intent.getBooleanExtra(KEY_EXTRA_IS_MULTIPLY, false)
 
-    val isMultiply = intent.getBooleanExtra(KEY_EXTRA_IS_MULTIPLY, false)
     val title = intent.getStringExtra(KEY_EXTRA_TITLE)
 
-    this.adapter = ContactsListCursorAdapter(this, null, false, null, false)
-
-    this.progressBar = findViewById(R.id.progressBar)
-    this.emptyView = findViewById(R.id.emptyView)
-    this.listView = findViewById(R.id.listViewContacts)
-    this.listView?.adapter = adapter
-    this.listView?.choiceMode = if (isMultiply) ListView.CHOICE_MODE_MULTIPLE else ListView
-        .CHOICE_MODE_SINGLE
-    if (!isMultiply) {
-      this.listView?.onItemClickListener = this
-    }
+    progressBar = findViewById(R.id.progressBar)
+    emptyView = findViewById(R.id.emptyView)
+    recyclerViewContacts = findViewById(R.id.recyclerViewContacts)
+    val manager = LinearLayoutManager(this)
+    val decoration = DividerItemDecoration(this, manager.orientation)
+    decoration.setDrawable(resources.getDrawable(R.drawable.divider_1dp_grey, theme))
+    recyclerViewContacts?.addItemDecoration(decoration)
+    recyclerViewContacts?.layoutManager = manager
+    recyclerViewContacts?.adapter = contactsRecyclerViewAdapter
 
     if (!TextUtils.isEmpty(title)) {
       supportActionBar?.title = title
     }
 
-    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_pgp, null, this)
+    setupContactsViewModel()
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -96,68 +97,46 @@ class SelectContactsActivity : BaseBackStackActivity(), LoaderManager.LoaderCall
     return super.onPrepareOptionsMenu(menu)
   }
 
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
-    when (id) {
-      R.id.loader_id_load_contacts_with_pgp -> {
-        var selection = ContactsDaoSource.COL_HAS_PGP + " = ?"
-        var selectionArgs = arrayOf("1")
-
-        if (!TextUtils.isEmpty(searchPattern)) {
-          selection = ContactsDaoSource.COL_HAS_PGP + " = ? AND ( " + ContactsDaoSource.COL_EMAIL + " " +
-              "LIKE ? OR " + ContactsDaoSource.COL_NAME + " " + " LIKE ? )"
-          selectionArgs = arrayOf("1", "%$searchPattern%", "%$searchPattern%")
-        }
-
-        val uri = ContactsDaoSource().baseContentUri
-
-        return CursorLoader(this, uri, null, selection, selectionArgs, null)
-      }
-
-      else -> return Loader(this)
-    }
-  }
-
-  override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
-    when (loader.id) {
-      R.id.loader_id_load_contacts_with_pgp -> {
-        UIUtil.exchangeViewVisibility(false, progressBar, listView)
-
-        if (data != null && data.count > 0) {
-          emptyView?.visibility = View.GONE
-          adapter?.swapCursor(data)
-        } else {
-          UIUtil.exchangeViewVisibility(true, emptyView, listView)
-        }
-      }
-    }
-  }
-
-  override fun onLoaderReset(loader: Loader<Cursor>) {
-    when (loader.id) {
-      R.id.loader_id_load_contacts_with_pgp -> adapter?.swapCursor(null)
-    }
-  }
-
-  override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-    val cursor = parent.adapter.getItem(position) as Cursor
-    val pgpContact = ContactsDaoSource().getCurrentPgpContact(cursor)
-
-    val intentResult = Intent()
-    intentResult.putExtra(KEY_EXTRA_PGP_CONTACT, pgpContact)
-    setResult(Activity.RESULT_OK, intentResult)
+  override fun onContactClick(contactEntity: ContactEntity) {
+    val intent = Intent()
+    intent.putExtra(KEY_EXTRA_PGP_CONTACT, contactEntity)
+    setResult(Activity.RESULT_OK, intent)
     finish()
   }
 
   override fun onQueryTextSubmit(query: String): Boolean {
-    this.searchPattern = query
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_pgp, null, this)
+    searchPattern = query
+    contactsViewModel.filterContacts(searchPattern)
     return true
   }
 
   override fun onQueryTextChange(newText: String): Boolean {
-    this.searchPattern = newText
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_contacts_with_pgp, null, this)
+    searchPattern = newText
+    contactsViewModel.filterContacts(searchPattern)
     return true
+  }
+
+  private fun setupContactsViewModel() {
+    contactsViewModel.contactsWithPgpSearchLiveData.observe(this, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          UIUtil.exchangeViewVisibility(true, progressBar, recyclerViewContacts)
+        }
+
+        Result.Status.SUCCESS -> {
+          UIUtil.exchangeViewVisibility(false, progressBar, recyclerViewContacts)
+          if (it.data.isNullOrEmpty()) {
+            UIUtil.exchangeViewVisibility(true, emptyView, recyclerViewContacts)
+          } else {
+            contactsRecyclerViewAdapter.swap(it.data)
+            UIUtil.exchangeViewVisibility(false, emptyView, recyclerViewContacts)
+          }
+        }
+
+        else -> {
+        }
+      }
+    })
   }
 
   companion object {

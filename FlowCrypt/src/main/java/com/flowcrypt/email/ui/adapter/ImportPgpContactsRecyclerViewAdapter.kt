@@ -12,10 +12,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.PublicKeyInfo
 import com.flowcrypt.email.util.GeneralUtil
@@ -76,7 +74,7 @@ class ImportPgpContactsRecyclerViewAdapter(private val publicKeys: List<PublicKe
     val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
         null, publicKeyInfo.fingerprint, publicKeyInfo.longId, publicKeyInfo.keyWords, 0)
 
-    val uri = ContactsDaoSource().addRow(context, pgpContact)
+    /*val uri = ContactsDaoSource().addRow(context, pgpContact)
     if (uri != null) {
       notifyItemChanged(position)
       Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show()
@@ -84,14 +82,14 @@ class ImportPgpContactsRecyclerViewAdapter(private val publicKeys: List<PublicKe
       publicKeyInfo.pgpContact = pgpContact
     } else {
       Toast.makeText(context, R.string.error_occurred_while_saving_contact, Toast.LENGTH_SHORT).show()
-    }
+    }*/
   }
 
   private fun updateContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
     val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
         null, publicKeyInfo.fingerprint, publicKeyInfo.longId, publicKeyInfo.keyWords, 0)
 
-    val isUpdated = ContactsDaoSource().updatePgpContact(context, pgpContact) > 0
+    /*val isUpdated = ContactsDaoSource().updatePgpContact(context, pgpContact) > 0
     if (isUpdated) {
       Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
       v.visibility = View.GONE
@@ -99,7 +97,7 @@ class ImportPgpContactsRecyclerViewAdapter(private val publicKeys: List<PublicKe
       notifyItemChanged(position)
     } else {
       Toast.makeText(context, R.string.error_occurred_while_updating_contact, Toast.LENGTH_SHORT).show()
-    }
+    }*/
   }
 
   /**

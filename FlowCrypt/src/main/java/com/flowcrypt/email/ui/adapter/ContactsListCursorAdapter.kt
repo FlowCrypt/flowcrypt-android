@@ -5,18 +5,15 @@
 
 package com.flowcrypt.email.ui.adapter
 
-import android.content.Context
-import android.database.Cursor
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CursorAdapter
 import android.widget.ImageButton
 import android.widget.TextView
-
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.entity.ContactEntity
 
 /**
  * This adapter describes logic to prepare show contacts from the database.
@@ -27,58 +24,100 @@ import com.flowcrypt.email.database.dao.source.ContactsDaoSource
  * E-mail: DenBond7@gmail.com
  */
 
-class ContactsListCursorAdapter @JvmOverloads constructor(context: Context,
-                                                          c: Cursor?,
-                                                          autoRequery: Boolean,
-                                                          private val listener: OnDeleteContactListener?,
-                                                          private val isDeleteEnabled: Boolean = true) :
-    CursorAdapter(context, c, autoRequery) {
+class ContactsListCursorAdapter constructor(private val isDeleteEnabled: Boolean = true)
+  : RecyclerView.Adapter<ContactsListCursorAdapter.ViewHolder>() {
 
-  override fun newView(context: Context, cursor: Cursor, parent: ViewGroup): View {
-    return LayoutInflater.from(context).inflate(R.layout.contact_item, parent, false)
+  private val list: MutableList<ContactEntity> = mutableListOf()
+  var onDeleteContactListener: OnDeleteContactListener? = null
+  var onContactClickListener: OnContactClickListener? = null
+
+
+  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactsListCursorAdapter.ViewHolder {
+    return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.contact_item, parent, false))
   }
 
-  override fun bindView(view: View, context: Context, cursor: Cursor) {
-    val textViewName = view.findViewById<TextView>(R.id.textViewName)
-    val textViewEmail = view.findViewById<TextView>(R.id.textViewEmail)
-    val textViewOnlyEmail = view.findViewById<TextView>(R.id.textViewOnlyEmail)
-    val imageButtonDeleteContact = view.findViewById<ImageButton>(R.id.imageButtonDeleteContact)
+  override fun onBindViewHolder(viewHolder: ContactsListCursorAdapter.ViewHolder, position: Int) {
+    val contactEntity = list[position]
 
-    val name = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_NAME))
-    val email = cursor.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL))
+    if (contactEntity.name.isNullOrEmpty()) {
+      viewHolder.textViewName.visibility = View.GONE
+      viewHolder.textViewEmail.visibility = View.GONE
+      viewHolder.textViewOnlyEmail.visibility = View.VISIBLE
 
-    if (TextUtils.isEmpty(name)) {
-      textViewName.visibility = View.GONE
-      textViewEmail.visibility = View.GONE
-      textViewOnlyEmail.visibility = View.VISIBLE
-
-      textViewOnlyEmail.text = email
-      textViewEmail.text = null
-      textViewName.text = null
+      viewHolder.textViewOnlyEmail.text = contactEntity.email
+      viewHolder.textViewEmail.text = null
+      viewHolder.textViewName.text = null
     } else {
-      textViewName.visibility = View.VISIBLE
-      textViewEmail.visibility = View.VISIBLE
-      textViewOnlyEmail.visibility = View.GONE
+      viewHolder.textViewName.visibility = View.VISIBLE
+      viewHolder.textViewEmail.visibility = View.VISIBLE
+      viewHolder.textViewOnlyEmail.visibility = View.GONE
 
-      textViewEmail.text = email
-      textViewName.text = name
-      textViewOnlyEmail.text = null
+      viewHolder.textViewEmail.text = contactEntity.email
+      viewHolder.textViewName.text = contactEntity.name
+      viewHolder.textViewOnlyEmail.text = null
     }
 
     if (isDeleteEnabled) {
-      imageButtonDeleteContact.visibility = View.VISIBLE
-      imageButtonDeleteContact.setOnClickListener {
-        listener?.onContactDeleteClick(email)
+      viewHolder.imageButtonDeleteContact.visibility = View.VISIBLE
+      viewHolder.imageButtonDeleteContact.setOnClickListener {
+        onDeleteContactListener?.onDeleteContact(contactEntity)
       }
     } else {
-      imageButtonDeleteContact.visibility = View.GONE
+      viewHolder.imageButtonDeleteContact.visibility = View.GONE
+    }
+
+    viewHolder.itemView.setOnClickListener {
+      onContactClickListener?.onContactClick(contactEntity)
     }
   }
 
-  /**
-   * This listener can be used to determinate when a contact was deleted.
-   */
+  override fun getItemCount(): Int {
+    return list.size
+  }
+
+  fun swap(newList: List<ContactEntity>) {
+    val diffUtilCallback = DiffUtilCallback(this.list, newList)
+    val productDiffResult = DiffUtil.calculateDiff(diffUtilCallback)
+
+    list.clear()
+    list.addAll(newList)
+    productDiffResult.dispatchUpdatesTo(this)
+  }
+
   interface OnDeleteContactListener {
-    fun onContactDeleteClick(email: String)
+    fun onDeleteContact(contactEntity: ContactEntity)
+  }
+
+  interface OnContactClickListener {
+    fun onContactClick(contactEntity: ContactEntity)
+  }
+
+  /**
+   * The view holder implementation for a better performance.
+   */
+  inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    val textViewName: TextView = itemView.findViewById(R.id.textViewName)
+    val textViewEmail: TextView = itemView.findViewById(R.id.textViewEmail)
+    val textViewOnlyEmail: TextView = itemView.findViewById(R.id.textViewOnlyEmail)
+    val imageButtonDeleteContact: ImageButton = itemView.findViewById(R.id.imageButtonDeleteContact)
+  }
+
+  inner class DiffUtilCallback(private val oldList: List<ContactEntity>,
+                               private val newList: List<ContactEntity>) : DiffUtil.Callback() {
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+      val oldItem = oldList[oldItemPosition]
+      val newItem = newList[newItemPosition]
+      return oldItem.longId == newItem.longId
+    }
+
+    override fun getOldListSize(): Int = oldList.size
+
+    override fun getNewListSize(): Int = newList.size
+
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+      val oldItem = oldList[oldItemPosition]
+      val newItem = newList[newItemPosition]
+      return oldItem == newItem
+    }
   }
 }

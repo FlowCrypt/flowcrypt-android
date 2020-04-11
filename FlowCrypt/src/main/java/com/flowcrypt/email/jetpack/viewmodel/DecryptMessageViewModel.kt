@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -62,6 +63,18 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
       val list = keysStorage.getAllPgpPrivateKeys()
       val result = apiRepository.parseDecryptMsg(
           request = ParseDecryptMsgRequest(data = rawMimeBytes, keyEntities = list, isEmail = true))
+
+      result.data?.let { parseDecryptMsgResult ->
+        for (block in parseDecryptMsgResult.msgBlocks ?: mutableListOf()) {
+          if (block is PublicKeyMsgBlock) {
+            val keyDetails = block.keyDetails ?: continue
+            val pgpContact = keyDetails.primaryPgpContact
+            val contactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
+            block.existingPgpContact = contactEntity?.toPgpContact()
+          }
+        }
+      }
+
       decryptLiveData.value = result
     }
   }

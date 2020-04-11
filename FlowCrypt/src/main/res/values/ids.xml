@@ -8,7 +8,6 @@
     <item name="loader_id_load_info_about_pgp_contacts_to" type="id" />
     <item name="loader_id_load_info_about_pgp_contacts_cc" type="id" />
     <item name="loader_id_load_info_about_pgp_contacts_bcc" type="id" />
-    <item name="loader_id_load_contacts_with_pgp" type="id" />
     <item name="loader_id_post_help_feedback" type="id" />
     <item name="loader_send_backup_with_private_key_to_myself" type="id" />
     <item name="loader_id_save_private_key_as_file" type="id" />

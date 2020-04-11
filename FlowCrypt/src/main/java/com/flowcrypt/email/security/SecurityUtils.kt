@@ -12,7 +12,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
@@ -119,21 +118,22 @@ class SecurityUtils {
      * Get public keys for recipients + keys of the sender;
      *
      * @param context     Interface to global information about an application environment.
-     * @param contacts    A list which contains recipients
+     * @param emails      A list which contains recipients
      * @param account     The given account
      * @param senderEmail The sender email
      * @return A list of public keys.
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    fun getRecipientsPubKeys(context: Context, contacts: MutableList<String>,
+    fun getRecipientsPubKeys(context: Context, emails: MutableList<String>,
                              account: AccountDao, senderEmail: String): List<String> {
       val publicKeys = ArrayList<String>()
-      val pgpContacts = ContactsDaoSource().getPgpContacts(context, contacts)
+      val contacts = FlowCryptRoomDatabase.getDatabase(context).contactsDao()
+          .getContactsByEmails(emails)
 
-      for (pgpContact in pgpContacts) {
-        if (!TextUtils.isEmpty(pgpContact.pubkey)) {
-          pgpContact.pubkey?.let { publicKeys.add(it) }
+      for (contact in contacts) {
+        if (contact.publicKey?.isNotEmpty() == true) {
+          contact.publicKey.let { publicKeys.add(String(it)) }
         }
       }
 

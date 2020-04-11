@@ -24,7 +24,7 @@ import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyListView
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -67,7 +67,7 @@ class SelectContactsActivityTest : BaseTest() {
     //Need to wait a little while data will be updated
     Thread.sleep(2000)
 
-    onView(withId(R.id.listViewContacts))
+    onView(withId(R.id.recyclerViewContacts))
         .check(matches(withEmptyListView())).check(matches(not<View>(isDisplayed())))
     onView(withId(R.id.emptyView))
         .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
@@ -76,7 +76,7 @@ class SelectContactsActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   fun testShowListContacts() {
-    onView(withId(R.id.listViewContacts))
+    onView(withId(R.id.recyclerViewContacts))
         .check(matches(isDisplayed())).check(matches(not<View>(withEmptyListView())))
     onView(withId(R.id.emptyView))
         .check(matches(not<View>(isDisplayed())))
@@ -115,16 +115,17 @@ class SelectContactsActivityTest : BaseTest() {
     onView(withId(com.google.android.material.R.id.search_src_text))
         .perform(clearText(), typeText("some email"))
     closeSoftKeyboard()
-    onView(withId(R.id.listViewContacts))
+    onView(withId(R.id.recyclerViewContacts))
         .check(matches(withEmptyListView()))
     onView(withId(R.id.emptyView))
         .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
   }
 
   private fun clearContactsFromDatabase() {
-    val contactsDaoSource = ContactsDaoSource()
+    val dao = FlowCryptRoomDatabase.getDatabase(getTargetContext()).contactsDao()
     for (email in EMAILS) {
-      contactsDaoSource.deletePgpContact(getTargetContext(), email)
+      val contact = dao.getContactByEmails(email) ?: continue
+      dao.delete(contact)
     }
   }
 
@@ -138,7 +139,7 @@ class SelectContactsActivityTest : BaseTest() {
 
   private fun checkIsDataItemDisplayed(index: Int, viewId: Int, viewText: String) {
     onData(anything())
-        .inAdapterView(withId(R.id.listViewContacts))
+        .inAdapterView(withId(R.id.recyclerViewContacts))
         .onChildView(withChild(withId(viewId)))
         .atPosition(index)
         .check(matches(withChild(withText(viewText))))

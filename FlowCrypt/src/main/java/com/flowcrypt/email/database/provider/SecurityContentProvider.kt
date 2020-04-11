@@ -19,7 +19,6 @@ import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import java.util.*
@@ -50,11 +49,6 @@ class SecurityContentProvider : ContentProvider() {
     val match = URI_MATCHER.match(uri)
     val id: Long
     when (match) {
-      MATCHED_CODE_CONTACTS_TABLE -> {
-        id = sqLiteDatabase.insert(ContactsDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
-        result = Uri.parse(ContactsDaoSource().baseContentUri.toString() + "/" + id)
-      }
-
       MATCHED_CODE_ACCOUNTS_TABLE -> {
         id = sqLiteDatabase.insert(AccountDaoSource().tableName, SQLiteDatabase.CONFLICT_NONE, values)
         result = Uri.parse(AccountDaoSource().baseContentUri.toString() + "/" + id)
@@ -137,7 +131,7 @@ class SecurityContentProvider : ContentProvider() {
         rowsCount += sqLiteDatabase.delete("attachment", null, null)
         rowsCount += sqLiteDatabase.delete("keys", null, null)
         rowsCount += sqLiteDatabase.delete("user_id_emails_and_keys", null, null)
-        rowsCount += sqLiteDatabase.delete(ContactsDaoSource().tableName, null, null)
+        rowsCount += sqLiteDatabase.delete("contacts", null, null)
       }
 
       else -> rowsCount = sqLiteDatabase.delete(getMatchedTableName(uri), selection, selectionArgs)
@@ -187,10 +181,6 @@ class SecurityContentProvider : ContentProvider() {
 
   override fun getType(uri: Uri): String? {
     return when (URI_MATCHER.match(uri)) {
-      MATCHED_CODE_CONTACTS_TABLE -> ContactsDaoSource().rowsContentType
-
-      MATCHED_CODE_CONTACTS_TABLE_SINGLE_ROW -> ContactsDaoSource().singleRowContentType
-
       MATCHED_CODE_ACCOUNTS_TABLE -> AccountDaoSource().rowsContentType
 
       MATCHED_CODE_ACCOUNTS_SINGLE_ROW -> AccountDaoSource().singleRowContentType
@@ -207,7 +197,6 @@ class SecurityContentProvider : ContentProvider() {
    */
   private fun getMatchedTableName(uri: Uri): String {
     return when (URI_MATCHER.match(uri)) {
-      MATCHED_CODE_CONTACTS_TABLE -> ContactsDaoSource.TABLE_NAME_CONTACTS
       MATCHED_CODE_ACCOUNTS_TABLE -> AccountDaoSource.TABLE_NAME_ACCOUNTS
       else -> throw UnsupportedOperationException("Unknown uri: $uri")
     }
@@ -217,8 +206,6 @@ class SecurityContentProvider : ContentProvider() {
     private val TAG = SecurityContentProvider::class.java.simpleName
 
     private const val MATCHED_CODE_KEY_CLEAN_DATABASE = 3
-    private const val MATCHED_CODE_CONTACTS_TABLE = 4
-    private const val MATCHED_CODE_CONTACTS_TABLE_SINGLE_ROW = 5
     private const val MATCHED_CODE_ACCOUNTS_TABLE = 10
     private const val MATCHED_CODE_ACCOUNTS_SINGLE_ROW = 11
     private const val MATCHED_CODE_KEY_ERASE_DATABASE = 16
@@ -231,10 +218,6 @@ class SecurityContentProvider : ContentProvider() {
           MATCHED_CODE_KEY_CLEAN_DATABASE)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, FlowcryptContract.ERASE_DATABASE,
           MATCHED_CODE_KEY_ERASE_DATABASE)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ContactsDaoSource.TABLE_NAME_CONTACTS,
-          MATCHED_CODE_CONTACTS_TABLE)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, ContactsDaoSource.TABLE_NAME_CONTACTS
-          + SINGLE_APPENDED_SUFFIX, MATCHED_CODE_CONTACTS_TABLE_SINGLE_ROW)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountDaoSource.TABLE_NAME_ACCOUNTS,
           MATCHED_CODE_ACCOUNTS_TABLE)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountDaoSource.TABLE_NAME_ACCOUNTS

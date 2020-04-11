@@ -7,9 +7,9 @@ package com.flowcrypt.email.service
 
 import android.content.Context
 import android.content.Intent
-import android.text.TextUtils
 import androidx.core.app.JobIntentService
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.model.EmailAndNamePair
@@ -39,20 +39,21 @@ import java.util.*
  */
 
 class EmailAndNameUpdaterService : JobIntentService() {
-  private var contactsDaoSource: ContactsDaoSource = ContactsDaoSource()
+  private var contactsDaoSource: ContactsDaoSource = FlowCryptRoomDatabase.getDatabase(this).contactsDao()
 
   override fun onHandleWork(intent: Intent) {
     val pairs = intent.getParcelableArrayListExtra<EmailAndNamePair>(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME)
         ?: return
 
-    for ((email, name) in pairs) {
-      val pgpContact = contactsDaoSource.getPgpContact(applicationContext, email)
-      if (pgpContact != null) {
-        if (TextUtils.isEmpty(pgpContact.name)) {
-          email?.let { contactsDaoSource.updateNameOfPgpContact(applicationContext, it, name) }
+    for (pair in pairs) {
+      val email = pair.email ?: continue
+      val contactEntity = contactsDaoSource.getContactByEmails(email)
+      if (contactEntity != null) {
+        if (contactEntity.name.isNullOrEmpty()) {
+          contactsDaoSource.update(contactEntity.copy(name = pair.name))
         }
       } else {
-        contactsDaoSource.addRow(applicationContext, PgpContact(email!!, name))
+        contactsDaoSource.insert(PgpContact(email, pair.name).toContactEntity())
       }
     }
   }

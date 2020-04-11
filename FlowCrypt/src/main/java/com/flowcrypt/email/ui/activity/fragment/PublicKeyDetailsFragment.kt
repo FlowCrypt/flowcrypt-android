@@ -21,6 +21,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.flowcrypt.email.Constants
@@ -31,6 +32,7 @@ import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
+import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -60,17 +62,9 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
   private var layoutLongIdsAndKeyWords: ViewGroup? = null
   private var textViewAlgorithm: TextView? = null
   private var textViewCreated: TextView? = null
-  private var onContactDeletedListener: OnContactDeletedListener? = null
+  private val contactsViewModel: ContactsViewModel by viewModels()
 
   override val contentResourceId: Int = R.layout.fragment_public_key_details
-
-  override fun onAttach(context: Context) {
-    super.onAttach(context)
-
-    if (context is OnContactDeletedListener) {
-      onContactDeletedListener = context
-    }
-  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -120,7 +114,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
 
       R.id.menuActionDelete -> {
         parentFragmentManager.popBackStack()
-        email?.let { onContactDeletedListener?.onContactDeleted(it) }
+        email?.let { contactsViewModel.deleteContactByEmail(it) }
         return true
       }
 
@@ -273,9 +267,5 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
       fragment.arguments = args
       return fragment
     }
-  }
-
-  interface OnContactDeletedListener {
-    fun onContactDeleted(email: String)
   }
 }

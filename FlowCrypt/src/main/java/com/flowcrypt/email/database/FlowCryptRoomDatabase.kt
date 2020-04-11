@@ -24,6 +24,7 @@ import com.flowcrypt.email.database.dao.LabelDao
 import com.flowcrypt.email.database.dao.MessageDao
 import com.flowcrypt.email.database.dao.UserIdEmailsKeysDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
@@ -74,9 +75,11 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   abstract fun keysDao(): KeysDao
 
+  abstract fun contactsDao(): ContactsDaoSource
+
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 21
+    const val DB_VERSION = 22
 
     private val MIGRATION_1_3 = object : Migration(1, 3) {
       override fun migrate(database: SupportSQLiteDatabase) {
@@ -405,6 +408,29 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    @VisibleForTesting
+    val MIGRATION_21_22 = object : Migration(21, 22) {
+      override fun migrate(database: SupportSQLiteDatabase) {
+        database.beginTransaction()
+        try {
+          //recreate 'contacts' table because of wrong '_id' column
+          database.execSQL("CREATE TEMP TABLE IF NOT EXISTS contacts_temp AS SELECT * FROM contacts;")
+          database.execSQL("DROP TABLE IF EXISTS contacts;")
+          database.execSQL("CREATE TABLE `contacts` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `email` TEXT NOT NULL, `name` TEXT DEFAULT NULL, `public_key` BLOB DEFAULT NULL, `has_pgp` INTEGER NOT NULL, `client` TEXT DEFAULT NULL, `attested` INTEGER DEFAULT NULL, `fingerprint` TEXT DEFAULT NULL, `long_id` TEXT DEFAULT NULL, `keywords` TEXT DEFAULT NULL, `last_use` INTEGER NOT NULL DEFAULT 0)")
+          database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `email_in_contacts` ON `contacts` (`email`)")
+          database.execSQL("CREATE INDEX IF NOT EXISTS name_in_contacts ON contacts (name);")
+          database.execSQL("CREATE INDEX IF NOT EXISTS has_pgp_in_contacts ON contacts (has_pgp);")
+          database.execSQL("CREATE INDEX IF NOT EXISTS long_id_in_contacts ON contacts (long_id);")
+          database.execSQL("CREATE INDEX IF NOT EXISTS last_use_in_contacts ON contacts (last_use);")
+          database.execSQL("INSERT INTO contacts SELECT * FROM contacts_temp;")
+          database.execSQL("DROP TABLE IF EXISTS contacts_temp;")
+          database.setTransactionSuccessful()
+        } finally {
+          database.endTransaction()
+        }
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -417,9 +443,9 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
       synchronized(this) {
         val instance = Room.databaseBuilder(
-                context.applicationContext,
-                FlowCryptRoomDatabase::class.java,
-                DB_NAME)
+            context.applicationContext,
+            FlowCryptRoomDatabase::class.java,
+            DB_NAME)
             .addMigrations(
                 MIGRATION_1_3,
                 MIGRATION_3_4,
@@ -438,7 +464,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
                 MIGRATION_17_18,
                 MIGRATION_18_19,
                 MIGRATION_19_20,
-                MIGRATION_20_21)
+                MIGRATION_20_21,
+                MIGRATION_21_22)
             .build()
         INSTANCE = instance
         return instance

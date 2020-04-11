@@ -15,10 +15,6 @@ package com.flowcrypt.email.api.retrofit
  */
 enum class ApiName {
   /*flowcrypt.com/attester*/
-  POST_TEST_WELCOME,
-  POST_INITIAL_LEGACY_SUBMIT,
-  POST_LOOKUP_EMAIL_SINGLE,
-  POST_LOOKUP_EMAIL_MULTIPLY,
   GET_PUB,
 
   /*flowcrypt.com/api*/
