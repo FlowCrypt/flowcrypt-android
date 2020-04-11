@@ -158,7 +158,10 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
 
   fun addContact(pgpContact: PgpContact) {
     viewModelScope.launch {
-      roomDatabase.contactsDao().insertSuspend(pgpContact.toContactEntity())
+      val contact = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
+      if (contact == null) {
+        roomDatabase.contactsDao().insertSuspend(pgpContact.toContactEntity())
+      }
     }
   }
 

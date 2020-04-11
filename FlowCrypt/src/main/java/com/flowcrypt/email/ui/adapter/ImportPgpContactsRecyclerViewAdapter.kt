@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.model.PgpContact
@@ -27,8 +28,11 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 08:07
  * E-mail: DenBond7@gmail.com
  */
-class ImportPgpContactsRecyclerViewAdapter(private val publicKeys: List<PublicKeyInfo>)
+class ImportPgpContactsRecyclerViewAdapter
   : RecyclerView.Adapter<ImportPgpContactsRecyclerViewAdapter.ViewHolder>() {
+
+  private val publicKeys = mutableListOf<PublicKeyInfo>()
+  var contactActionsListener: ContactActionsListener? = null
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.import_pgp_contact_item, parent, false))
@@ -70,45 +74,48 @@ class ImportPgpContactsRecyclerViewAdapter(private val publicKeys: List<PublicKe
     return publicKeys.size
   }
 
+  fun swap(newList: Collection<PublicKeyInfo>) {
+    publicKeys.clear()
+    publicKeys.addAll(newList)
+    notifyDataSetChanged()
+  }
+
   private fun saveContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
     val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
         null, publicKeyInfo.fingerprint, publicKeyInfo.longId, publicKeyInfo.keyWords, 0)
 
-    /*val uri = ContactsDaoSource().addRow(context, pgpContact)
-    if (uri != null) {
-      notifyItemChanged(position)
-      Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show()
-      v.visibility = View.GONE
-      publicKeyInfo.pgpContact = pgpContact
-    } else {
-      Toast.makeText(context, R.string.error_occurred_while_saving_contact, Toast.LENGTH_SHORT).show()
-    }*/
+    contactActionsListener?.onSaveContactClick(publicKeyInfo)
+    Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show()
+    v.visibility = View.GONE
+    publicKeyInfo.pgpContact = pgpContact
+    notifyItemChanged(position)
   }
 
   private fun updateContact(position: Int, v: View, context: Context, publicKeyInfo: PublicKeyInfo) {
     val pgpContact = PgpContact(publicKeyInfo.keyOwner, null, publicKeyInfo.publicKey, true,
         null, publicKeyInfo.fingerprint, publicKeyInfo.longId, publicKeyInfo.keyWords, 0)
 
-    /*val isUpdated = ContactsDaoSource().updatePgpContact(context, pgpContact) > 0
-    if (isUpdated) {
-      Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
-      v.visibility = View.GONE
-      publicKeyInfo.pgpContact = pgpContact
-      notifyItemChanged(position)
-    } else {
-      Toast.makeText(context, R.string.error_occurred_while_updating_contact, Toast.LENGTH_SHORT).show()
-    }*/
+    contactActionsListener?.onUpdateContactClick(publicKeyInfo)
+    Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
+    v.visibility = View.GONE
+    publicKeyInfo.pgpContact = pgpContact
+    notifyItemChanged(position)
   }
 
   /**
    * The view holder implementation for a better performance.
    */
-  class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+  inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     var textViewKeyOwnerTemplate: TextView = itemView.findViewById(R.id.textViewKeyOwnerTemplate)
     var textViewKeyWordsTemplate: TextView = itemView.findViewById(R.id.textViewKeyWordsTemplate)
     var textViewFingerprintTemplate: TextView = itemView.findViewById(R.id.textViewFingerprintTemplate)
     var textViewAlreadyImported: TextView = itemView.findViewById(R.id.textViewAlreadyImported)
     var buttonSaveContact: Button = itemView.findViewById(R.id.buttonSaveContact)
     var buttonUpdateContact: Button = itemView.findViewById(R.id.buttonUpdateContact)
+  }
+
+  interface ContactActionsListener {
+    fun onSaveContactClick(publicKeyInfo: PublicKeyInfo)
+    fun onUpdateContactClick(publicKeyInfo: PublicKeyInfo)
   }
 }
