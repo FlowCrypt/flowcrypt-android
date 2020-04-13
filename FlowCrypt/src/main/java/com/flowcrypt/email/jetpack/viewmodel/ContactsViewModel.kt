@@ -57,7 +57,9 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
           emit(Result.success(foundContacts))
         }
       }
-  val remoteContactsLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
+  val contactsToLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
+  val contactsCcLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
+  val contactsBccLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
 
   fun updateContactPubKey(pgpContact: PgpContact, pgpContactFromKey: PgpContact) {
     viewModelScope.launch {
@@ -101,9 +103,9 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
    *  1. if no pubkey found, create `new PgpContact(js, email, null, null, null, null);` - this
    * means we know they don't currently have PGP
    */
-  fun fetchAndUpdateInfoAboutContacts(emails: List<String>) {
+  fun fetchAndUpdateInfoAboutContacts(type: ContactEntity.Type, emails: List<String>) {
     viewModelScope.launch {
-      remoteContactsLiveData.value = Result.loading()
+      setResultForRemoteContactsLiveData(type, Result.loading())
 
       val pgpContacts = ArrayList<ContactEntity>()
       try {
@@ -123,9 +125,14 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
                 if (remotePgpContact != null) {
                   val updateCandidate = if (localPgpContact.name.isNullOrEmpty()
                       && localPgpContact.email.equals(remotePgpContact.email, ignoreCase = true)) {
-                    remotePgpContact.toContactEntity().copy(id = localPgpContact.id)
+                    remotePgpContact.toContactEntity().copy(
+                        id = localPgpContact.id,
+                        email = localPgpContact.email)
                   } else {
-                    remotePgpContact.toContactEntity().copy(id = localPgpContact.id, name = localPgpContact.name)
+                    remotePgpContact.toContactEntity().copy(
+                        id = localPgpContact.id,
+                        name = localPgpContact.name,
+                        email = localPgpContact.email)
                   }
 
                   roomDatabase.contactsDao().updateSuspend(updateCandidate)
@@ -140,12 +147,27 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
             }
           }
         }
-
-        remoteContactsLiveData.value = Result.success(pgpContacts)
+        setResultForRemoteContactsLiveData(type, Result.success(pgpContacts))
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
-        remoteContactsLiveData.value = Result.exception(e)
+        setResultForRemoteContactsLiveData(type, Result.exception(e))
+      }
+    }
+  }
+
+  private fun setResultForRemoteContactsLiveData(type: ContactEntity.Type, result: Result<List<ContactEntity>>) {
+    when (type) {
+      ContactEntity.Type.TO -> {
+        contactsToLiveData.value = result
+      }
+
+      ContactEntity.Type.CC -> {
+        contactsCcLiveData.value = result
+      }
+
+      ContactEntity.Type.BCC -> {
+        contactsBccLiveData.value = result
       }
     }
   }

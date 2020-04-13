@@ -138,4 +138,8 @@ data class ContactEntity(
       return arrayOfNulls(size)
     }
   }
+
+  enum class Type {
+    TO, CC, BCC
+  }
 }
