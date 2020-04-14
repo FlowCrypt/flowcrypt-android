@@ -23,20 +23,19 @@ import com.flowcrypt.email.database.entity.ContactEntity
  * Time: 18:00
  * E-mail: DenBond7@gmail.com
  */
-
-class ContactsListCursorAdapter constructor(private val isDeleteEnabled: Boolean = true)
-  : RecyclerView.Adapter<ContactsListCursorAdapter.ViewHolder>() {
+class ContactsRecyclerViewAdapter constructor(private val isDeleteEnabled: Boolean = true)
+  : RecyclerView.Adapter<ContactsRecyclerViewAdapter.ViewHolder>() {
 
   private val list: MutableList<ContactEntity> = mutableListOf()
   var onDeleteContactListener: OnDeleteContactListener? = null
   var onContactClickListener: OnContactClickListener? = null
 
 
-  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactsListCursorAdapter.ViewHolder {
+  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactsRecyclerViewAdapter.ViewHolder {
     return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.contact_item, parent, false))
   }
 
-  override fun onBindViewHolder(viewHolder: ContactsListCursorAdapter.ViewHolder, position: Int) {
+  override fun onBindViewHolder(viewHolder: ContactsRecyclerViewAdapter.ViewHolder, position: Int) {
     val contactEntity = list[position]
 
     if (contactEntity.name.isNullOrEmpty()) {

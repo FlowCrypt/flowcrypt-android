@@ -23,7 +23,7 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
-import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter
+import com.flowcrypt.email.ui.adapter.ContactsRecyclerViewAdapter
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
@@ -38,12 +38,12 @@ import com.flowcrypt.email.util.UIUtil
  */
 
 class SelectContactsActivity : BaseBackStackActivity(),
-    ContactsListCursorAdapter.OnContactClickListener, SearchView.OnQueryTextListener {
+    ContactsRecyclerViewAdapter.OnContactClickListener, SearchView.OnQueryTextListener {
 
   private var progressBar: View? = null
   private var recyclerViewContacts: RecyclerView? = null
   private var emptyView: View? = null
-  private val contactsRecyclerViewAdapter: ContactsListCursorAdapter = ContactsListCursorAdapter(false)
+  private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter = ContactsRecyclerViewAdapter(false)
   private var searchPattern: String? = null
   private val contactsViewModel: ContactsViewModel by viewModels()
 

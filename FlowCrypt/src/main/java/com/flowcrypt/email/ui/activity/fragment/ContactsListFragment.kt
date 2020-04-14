@@ -22,7 +22,7 @@ import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.ui.activity.ImportPgpContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
-import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter
+import com.flowcrypt.email.ui.adapter.ContactsRecyclerViewAdapter
 import com.flowcrypt.email.util.UIUtil
 
 /**
@@ -33,13 +33,13 @@ import com.flowcrypt.email.util.UIUtil
  *         Time: 6:11 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteContactListener,
-    ContactsListCursorAdapter.OnContactClickListener {
+class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDeleteContactListener,
+    ContactsRecyclerViewAdapter.OnContactClickListener {
 
   private var progressBar: View? = null
   private var recyclerViewContacts: RecyclerView? = null
   private var emptyView: View? = null
-  private val contactsRecyclerViewAdapter: ContactsListCursorAdapter = ContactsListCursorAdapter(true)
+  private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter = ContactsRecyclerViewAdapter(true)
   private val contactsViewModel: ContactsViewModel by viewModels()
 
   override val contentResourceId: Int = R.layout.fragment_contacts_list
