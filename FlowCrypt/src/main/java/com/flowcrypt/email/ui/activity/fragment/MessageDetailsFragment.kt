@@ -617,7 +617,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
   private fun updateMsgView() {
     emailWebView?.loadUrl("about:blank")
-    if (layoutMsgParts?.childCount != 0) {
+    if (layoutMsgParts?.childCount ?: 0 > 1) {
       layoutMsgParts?.removeViews(1, layoutMsgParts?.childCount ?: 0 - 1)
     }
 
