@@ -289,7 +289,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
         if (weakRef.get() != null) {
           val contact = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
               .contactsDao().getContactByEmails(keyOwner)?.toPgpContact()
-          return PublicKeyInfo(keyWords!!, fingerprint!!, keyOwner, longId!!, contact!!, nodeKeyDetails.publicKey!!)
+          return PublicKeyInfo(keyWords!!, fingerprint!!, keyOwner, longId!!, contact, nodeKeyDetails.publicKey!!)
         }
       }
       return null
