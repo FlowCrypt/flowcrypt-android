@@ -19,12 +19,12 @@ import com.flowcrypt.email.database.dao.AccountAliasesDao
 import com.flowcrypt.email.database.dao.AccountDao
 import com.flowcrypt.email.database.dao.ActionQueueDao
 import com.flowcrypt.email.database.dao.AttachmentDao
+import com.flowcrypt.email.database.dao.ContactsDao
 import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.LabelDao
 import com.flowcrypt.email.database.dao.MessageDao
 import com.flowcrypt.email.database.dao.UserIdEmailsKeysDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
@@ -75,7 +75,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   abstract fun keysDao(): KeysDao
 
-  abstract fun contactsDao(): ContactsDaoSource
+  abstract fun contactsDao(): ContactsDao
 
   companion object {
     const val DB_NAME = "flowcrypt.db"

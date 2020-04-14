@@ -3,13 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.database.dao.source
+package com.flowcrypt.email.database.dao
 
 import android.database.Cursor
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
-import com.flowcrypt.email.database.dao.BaseDao
 import com.flowcrypt.email.database.entity.ContactEntity
 
 /**
@@ -21,7 +20,7 @@ import com.flowcrypt.email.database.entity.ContactEntity
  * E-mail: DenBond7@gmail.com
  */
 @Dao
-interface ContactsDaoSource : BaseDao<ContactEntity> {
+interface ContactsDao : BaseDao<ContactEntity> {
   @Query("SELECT * FROM contacts")
   fun getAllContacts(): List<ContactEntity>
 
