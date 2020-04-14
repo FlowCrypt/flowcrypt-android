@@ -74,7 +74,7 @@ interface UserIdEmailsKeysDao : BaseDao<UserIdEmailsKeysEntity> {
             pgpContact.pubkey = keyDetails.publicKey
             val temp = contactsDao.getContactByEmailSuspend(pgpContact.email)
             if (GeneralUtil.isEmailValid(pgpContact.email) && temp == null) {
-              contactsDao.insertSuspend(pgpContact.toContactEntity())
+              contactsDao.insertWithReplaceSuspend(pgpContact.toContactEntity())
               //todo-DenBond7 Need to resolve a situation with different public keys.
               //For example we can have a situation when we have to different public
               // keys with the same email
