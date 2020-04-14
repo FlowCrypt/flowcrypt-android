@@ -113,8 +113,8 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
       }
 
       R.id.menuActionDelete -> {
-        parentFragmentManager.popBackStack()
         email?.let { contactsViewModel.deleteContactByEmail(it) }
+        parentFragmentManager.popBackStack()
         return true
       }
 
