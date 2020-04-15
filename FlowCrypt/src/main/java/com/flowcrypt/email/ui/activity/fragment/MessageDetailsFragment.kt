@@ -157,12 +157,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     setupLabelsViewModel()
   }
 
-  private fun setupLabelsViewModel() {
-    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner, Observer {
-      updateActionsVisibility(localFolder, it)
-    })
-  }
-
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
       REQUEST_CODE_START_IMPORT_KEY_ACTIVITY -> when (resultCode) {
@@ -388,6 +382,20 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   fun updateAttInfos(attInfoList: List<AttachmentInfo>) {
     this.atts.addAll(attInfoList)
     showAttsIfTheyExist()
+  }
+
+  fun setActionProgress(progress: Int, message: String?) {
+    if (progress > 0) {
+      progressBarActionProgress?.progress = progress
+    }
+
+    if (progress != 100) {
+      textViewActionProgress?.text = getString(R.string.progress_message, progress, message)
+      textViewActionProgress?.visibility = View.VISIBLE
+    } else {
+      textViewActionProgress?.text = null
+      layoutActionProgress?.visibility = View.GONE
+    }
   }
 
   private fun updateMsgBody() {
@@ -978,18 +986,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     return msgInfo?.copy(msgBlocks = emptyList(), text = clipLargeText(msgInfo?.text))
   }
 
-  fun setActionProgress(progress: Int, message: String?) {
-    if (progress > 0) {
-      progressBarActionProgress?.progress = progress
-    }
-
-    if (progress != 100) {
-      textViewActionProgress?.text = getString(R.string.progress_message, progress, message)
-      textViewActionProgress?.visibility = View.VISIBLE
-    } else {
-      textViewActionProgress?.text = null
-      layoutActionProgress?.visibility = View.GONE
-    }
+  private fun setupLabelsViewModel() {
+    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner, Observer {
+      updateActionsVisibility(localFolder, it)
+    })
   }
 
   interface MessageDetailsListener {
