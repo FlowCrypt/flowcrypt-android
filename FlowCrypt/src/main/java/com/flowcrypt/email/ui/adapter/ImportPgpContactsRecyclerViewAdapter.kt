@@ -31,7 +31,7 @@ import com.flowcrypt.email.util.UIUtil
 class ImportPgpContactsRecyclerViewAdapter
   : RecyclerView.Adapter<ImportPgpContactsRecyclerViewAdapter.ViewHolder>() {
 
-  private val publicKeys = mutableListOf<PublicKeyInfo>()
+  val publicKeys = mutableListOf<PublicKeyInfo>()
   var contactActionsListener: ContactActionsListener? = null
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

@@ -62,7 +62,6 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
   private var publicKeysString: String? = null
   private var publicKeysFileUri: Uri? = null
 
-  private val publicKeyInfoList = mutableListOf<PublicKeyInfo>()
   private val contactsViewModel: ContactsViewModel by viewModels()
   private val adapter: ImportPgpContactsRecyclerViewAdapter = ImportPgpContactsRecyclerViewAdapter()
   private var isParsingStarted: Boolean = false
@@ -103,7 +102,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.buttonImportAll -> SaveAllContactsAsyncTask(this, publicKeyInfoList).execute()
+      R.id.buttonImportAll -> SaveAllContactsAsyncTask(this, adapter.publicKeys).execute()
     }
   }
 
