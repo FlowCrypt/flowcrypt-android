@@ -61,7 +61,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   val contactsCcLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
   val contactsBccLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
 
-  fun updateContactPubKey(pgpContact: PgpContact, pgpContactFromKey: PgpContact) {
+  fun updateContactPgpInfo(pgpContact: PgpContact, pgpContactFromKey: PgpContact) {
     viewModelScope.launch {
       val contact = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
       if (contact != null) {
@@ -78,11 +78,17 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  fun updateContactPubKey(email: String, pubKey: ByteArray?) {
+  fun updateContactPgpInfo(email: String, contactEntity: ContactEntity) {
     viewModelScope.launch {
-      val contactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(email)
+      val originalContactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(email)
           ?: return@launch
-      roomDatabase.contactsDao().updateSuspend(contactEntity.copy(publicKey = pubKey))
+      roomDatabase.contactsDao().updateSuspend(
+          originalContactEntity.copy(
+              publicKey = contactEntity.publicKey,
+              fingerprint = contactEntity.fingerprint,
+              longId = contactEntity.longId,
+              keywords = contactEntity.keywords,
+              hasPgp = true))
     }
   }
 
@@ -117,10 +123,11 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
             if (localPgpContact == null) {
               localPgpContact = PgpContact(emailLowerCase, null).toContactEntity()
               roomDatabase.contactsDao().insertSuspend(localPgpContact)
+              localPgpContact = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
             }
 
             try {
-              if (!localPgpContact.hasPgp) {
+              if (localPgpContact?.hasPgp == false) {
                 val remotePgpContact = getPgpContactInfoFromServer(emailLowerCase)
                 if (remotePgpContact != null) {
                   val updateCandidate = if (localPgpContact.name.isNullOrEmpty()

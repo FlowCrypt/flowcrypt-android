@@ -75,7 +75,7 @@ class ImportPublicKeyActivity : BaseImportKeyActivity() {
   private fun updateInformationAboutPgpContact(keyDetails: NodeKeyDetails) {
     val pgpContactFromKey = keyDetails.primaryPgpContact
     pgpContact?.pubkey = pgpContactFromKey.pubkey
-    pgpContact?.let { contactsViewModel.updateContactPubKey(it, pgpContactFromKey) }
+    pgpContact?.let { contactsViewModel.updateContactPgpInfo(it, pgpContactFromKey) }
   }
 
   companion object {

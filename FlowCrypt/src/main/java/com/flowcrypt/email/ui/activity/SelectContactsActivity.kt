@@ -137,6 +137,8 @@ class SelectContactsActivity : BaseBackStackActivity(),
         }
       }
     })
+
+    contactsViewModel.filterContacts(searchPattern)
   }
 
   companion object {

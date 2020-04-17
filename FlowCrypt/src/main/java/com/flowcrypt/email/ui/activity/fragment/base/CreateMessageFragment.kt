@@ -42,7 +42,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.loader.app.LoaderManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -392,13 +391,34 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT -> {
         when (resultCode) {
           Activity.RESULT_OK -> if (data != null) {
-            val pgpContact = data.getParcelableExtra<ContactEntity>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
-            pgpContact?.let {
-              pgpContactWithNoPublicKey?.pubkey = String(pgpContact.publicKey ?: byteArrayOf())
-              pgpContactWithNoPublicKey?.email?.let { email -> contactsViewModel.updateContactPubKey(email, pgpContact.publicKey) }
+            val contactEntity = data.getParcelableExtra<ContactEntity>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
+            contactEntity?.let {
+              pgpContactWithNoPublicKey?.pubkey = String(contactEntity.publicKey ?: byteArrayOf())
+              pgpContactWithNoPublicKey?.email?.let { email -> contactsViewModel.updateContactPgpInfo(email, contactEntity) }
+
+              pgpContactsTo?.forEach {
+                if (it.email.equals(pgpContactWithNoPublicKey?.email, true)) {
+                  it.hasPgp = true
+                }
+              }
+
+              pgpContactsCc?.forEach {
+                if (it.email.equals(pgpContactWithNoPublicKey?.email, true)) {
+                  it.hasPgp = true
+                }
+              }
+
+              pgpContactsBcc?.forEach {
+                if (it.email.equals(pgpContactWithNoPublicKey?.email, true)) {
+                  it.hasPgp = true
+                }
+              }
+
+              updateChips(recipientsTo, pgpContactsTo)
+              updateChips(recipientsCc, pgpContactsCc)
+              updateChips(recipientsBcc, pgpContactsBcc)
 
               Toast.makeText(context, R.string.key_successfully_copied, Toast.LENGTH_LONG).show()
-              updateRecipients()
             }
           }
         }
@@ -896,18 +916,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     pgpContactsNachoTextView?.setAdapter(preparePgpContactAdapter())
     pgpContactsNachoTextView?.onFocusChangeListener = this
     pgpContactsNachoTextView?.setListener(this)
-  }
-
-  private fun showUpdateContactsSnackBar(loaderId: Int) {
-    showSnackbar(view, getString(R.string.please_update_information_about_contacts),
-        getString(R.string.update), Snackbar.LENGTH_LONG, View.OnClickListener {
-      if (GeneralUtil.isConnected(requireContext())) {
-        LoaderManager.getInstance(this@CreateMessageFragment).restartLoader(loaderId, null,
-            this@CreateMessageFragment)
-      } else {
-        showInfoSnackbar(view, getString(R.string.internet_connection_is_not_available))
-      }
-    })
   }
 
   private fun hasExternalStorageUris(attachmentInfoList: List<AttachmentInfo>?): Boolean {
