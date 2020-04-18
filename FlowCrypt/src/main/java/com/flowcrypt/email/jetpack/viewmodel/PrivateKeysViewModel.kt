@@ -33,6 +33,7 @@ import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
@@ -56,6 +57,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
 
   val changePassphraseLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
+  val saveBackupAsFileLiveData = MutableLiveData<Result<Boolean>>()
   val savePrivateKeysLiveData = MutableLiveData<Result<Boolean>>()
   val parseKeysLiveData = MutableLiveData<Result<ParseKeysResult?>>()
 
@@ -113,7 +115,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
-  fun saveBackupToInbox() {
+  fun saveBackupsToInbox() {
     viewModelScope.launch {
       saveBackupToInboxLiveData.value = Result.loading()
       withContext(Dispatchers.IO) {
@@ -131,6 +133,28 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           e.printStackTrace()
           ExceptionUtil.handleError(e)
           saveBackupToInboxLiveData.postValue(Result.exception(e))
+        }
+      }
+    }
+  }
+
+  fun saveBackupsAsFile(destinationUri: Uri) {
+    viewModelScope.launch {
+      saveBackupAsFileLiveData.value = Result.loading()
+      withContext(Dispatchers.IO) {
+        try {
+          val account = roomDatabase.accountDao().getActiveAccount()
+          requireNotNull(account)
+
+          val accountDaoCompatibility = account.toAccountDaoCompatibility()
+          val backup = SecurityUtils.genPrivateKeysBackup(getApplication(), accountDaoCompatibility)
+          val result = GeneralUtil.writeFileFromStringToUri(getApplication(), destinationUri, backup) > 0
+
+          saveBackupAsFileLiveData.postValue(Result.success(result))
+        } catch (e: Exception) {
+          e.printStackTrace()
+          ExceptionUtil.handleError(e)
+          saveBackupAsFileLiveData.postValue(Result.exception(e))
         }
       }
     }

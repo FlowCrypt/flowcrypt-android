@@ -114,7 +114,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
             if (keyDetailsList?.isEmpty() == true) {
               runBackupKeysActivity()
             } else {
-              privateKeysViewModel.saveBackupToInbox()
+              privateKeysViewModel.saveBackupsToInbox()
             }
           }
 

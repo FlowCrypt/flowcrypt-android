@@ -52,7 +52,6 @@ class SecurityUtils {
      * @param account The given account
      * @return A string which includes private keys
      */
-    @JvmStatic
     fun genPrivateKeysBackup(context: Context, account: AccountDao): String {
       val builder = StringBuilder()
       val longIdsByEmail = FlowCryptRoomDatabase.getDatabase(context).userIdEmailsKeysDao().getLongIdsByEmail(account.email)
