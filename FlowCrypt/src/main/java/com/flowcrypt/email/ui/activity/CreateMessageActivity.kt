@@ -93,7 +93,7 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
         menu.removeItem(R.id.menuActionSwitchType)
       }
 
-      if (!serviceInfo!!.hasAbilityToAddNewAtt()) {
+      if (serviceInfo?.hasAbilityToAddNewAtt == false) {
         menu.removeItem(R.id.menuActionAttachFile)
       }
     }

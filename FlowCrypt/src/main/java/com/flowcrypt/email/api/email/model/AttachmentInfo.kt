@@ -89,6 +89,55 @@ data class AttachmentInfo constructor(var rawData: String? = null,
     }
   }
 
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as AttachmentInfo
+
+    if (rawData != other.rawData) return false
+    if (email != other.email) return false
+    if (folder != other.folder) return false
+    if (uid != other.uid) return false
+    if (fwdFolder != other.fwdFolder) return false
+    if (fwdUid != other.fwdUid) return false
+    if (name != other.name) return false
+    if (encodedSize != other.encodedSize) return false
+    if (type != other.type) return false
+    if (id != other.id) return false
+    if (path != other.path) return false
+    if (uri?.toString() != other.uri?.toString()) return false
+    if (isProtected != other.isProtected) return false
+    if (isForwarded != other.isForwarded) return false
+    if (isDecrypted != other.isDecrypted) return false
+    if (isEncryptionAllowed != other.isEncryptionAllowed) return false
+    if (orderNumber != other.orderNumber) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = rawData?.hashCode() ?: 0
+    result = 31 * result + (email?.hashCode() ?: 0)
+    result = 31 * result + (folder?.hashCode() ?: 0)
+    result = 31 * result + uid
+    result = 31 * result + (fwdFolder?.hashCode() ?: 0)
+    result = 31 * result + fwdUid
+    result = 31 * result + (name?.hashCode() ?: 0)
+    result = 31 * result + encodedSize.hashCode()
+    result = 31 * result + type.hashCode()
+    result = 31 * result + (id?.hashCode() ?: 0)
+    result = 31 * result + path.hashCode()
+    result = 31 * result + (uri?.hashCode() ?: 0)
+    result = 31 * result + isProtected.hashCode()
+    result = 31 * result + isForwarded.hashCode()
+    result = 31 * result + isDecrypted.hashCode()
+    result = 31 * result + isEncryptionAllowed.hashCode()
+    result = 31 * result + orderNumber
+    return result
+  }
+
+
   companion object {
     const val DEPTH_SEPARATOR = "/"
     const val INNER_ATTACHMENT_PREFIX = "inner_"

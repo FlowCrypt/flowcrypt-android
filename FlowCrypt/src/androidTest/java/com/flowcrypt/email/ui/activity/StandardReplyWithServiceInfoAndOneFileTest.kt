@@ -150,7 +150,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   @Test
   fun testAvailabilityAddingAtts() {
-    if (!serviceInfo.hasAbilityToAddNewAtt()) {
+    if (!serviceInfo.hasAbilityToAddNewAtt) {
       onView(withId(R.id.menuActionAttachFile))
           .check(doesNotExist())
     }

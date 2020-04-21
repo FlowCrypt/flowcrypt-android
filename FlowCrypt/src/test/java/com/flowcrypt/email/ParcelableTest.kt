@@ -9,9 +9,8 @@ import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import com.flextrade.jfixture.JFixture
-import com.shazam.shazamcrest.MatcherAssert.assertThat
-import com.shazam.shazamcrest.matcher.Matchers.sameBeanAs
 import io.github.classgraph.ClassGraph
+import org.junit.Assert
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
@@ -39,24 +38,20 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
 
   @Test
   fun testParcelable() {
-    // serialise
     val serializedBytes = Parcel.obtain().run {
       writeParcelable(objectInstance, 0)
       marshall()
     }
 
-    // ensure there are some bytes
     assertNotNull(serializedBytes)
 
-    // deserialize
-    val result = Parcel.obtain().run {
+    val retainedParcelable = Parcel.obtain().run {
       unmarshall(serializedBytes, 0, serializedBytes.size)
       setDataPosition(0)
       readParcelable<Parcelable>(this::class.java.classLoader)
     }
 
-    // ensure object created matches the original
-    assertThat(result, sameBeanAs(objectInstance))
+    Assert.assertTrue("$name failed", objectInstance == retainedParcelable)
   }
 
   companion object {
