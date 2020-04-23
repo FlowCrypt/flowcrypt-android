@@ -39,6 +39,10 @@ blocks:
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
             # run JUnit tests first
             - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-junit-tests.sh )
+            # Run an emulator and instrumentation tests
+            - ~/Android/Sdk/emulator/emulator -no-window -avd ci-test-pixel-x86-64-api29 -no-boot-anim -no-audio & # start emulator in the background
+            - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
+            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
 
             # store caches
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
