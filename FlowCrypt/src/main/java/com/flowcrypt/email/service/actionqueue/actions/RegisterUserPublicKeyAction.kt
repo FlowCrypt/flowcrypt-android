@@ -39,7 +39,7 @@ data class RegisterUserPublicKeyAction @JvmOverloads constructor(override var id
     val (apiError) = response.body() ?: throw IllegalArgumentException("The response is null!")
 
     if (apiError != null) {
-      val code = apiError.code
+      val code = apiError.code ?: 0
       if (code < 400 || code >= 500) {
         throw ApiException(apiError)
       }
@@ -69,8 +69,8 @@ data class RegisterUserPublicKeyAction @JvmOverloads constructor(override var id
     @JvmField
     val CREATOR: Parcelable.Creator<RegisterUserPublicKeyAction> =
         object : Parcelable.Creator<RegisterUserPublicKeyAction> {
-      override fun createFromParcel(source: Parcel): RegisterUserPublicKeyAction = RegisterUserPublicKeyAction(source)
-      override fun newArray(size: Int): Array<RegisterUserPublicKeyAction?> = arrayOfNulls(size)
-    }
+          override fun createFromParcel(source: Parcel): RegisterUserPublicKeyAction = RegisterUserPublicKeyAction(source)
+          override fun newArray(size: Int): Array<RegisterUserPublicKeyAction?> = arrayOfNulls(size)
+        }
   }
 }

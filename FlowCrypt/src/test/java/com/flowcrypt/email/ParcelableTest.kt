@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import com.flextrade.jfixture.JFixture
+import com.flowcrypt.email.jfixture.SelectConstructorCustomisation
 import io.github.classgraph.ClassGraph
 import org.junit.Assert
 import org.junit.Assert.assertNotNull
@@ -33,6 +34,7 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
   @Before
   fun setUp() {
     val fixture = JFixture()
+    fixture.customise(SelectConstructorCustomisation(currentClass))
     objectInstance = currentClass.kotlin.objectInstance ?: fixture.create(currentClass)
   }
 
