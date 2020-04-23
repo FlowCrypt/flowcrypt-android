@@ -37,14 +37,7 @@ blocks:
 
             # build + test
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
-            - ~/Android/Sdk/emulator/emulator -accel-check # debug
-            - echo -ne '\n' | ~/Android/Sdk/tools/bin/avdmanager -v create avd --name ci-test-pixel-x86-64-api29 --package "system-images;android-29;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
-            - ~/Android/Sdk/emulator/emulator -list-avds # debug
             # run JUnit tests first
-            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
-            # Run an emulator and instrumentation tests
-            - ~/Android/Sdk/emulator/emulator -no-window -avd ci-test-pixel-x86-64-api29 -no-boot-anim -no-audio & # start emulator in the background
-            - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
             - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
 
             # store caches
