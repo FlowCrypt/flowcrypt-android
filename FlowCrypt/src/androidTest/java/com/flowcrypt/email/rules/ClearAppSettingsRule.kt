@@ -5,9 +5,8 @@
 
 package com.flowcrypt.email.rules
 
-import android.net.Uri
 import com.flowcrypt.email.api.email.MsgsCacheManager
-import com.flowcrypt.email.database.provider.FlowcryptContract
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import org.junit.runner.Description
@@ -44,8 +43,7 @@ class ClearAppSettingsRule : BaseRule() {
     SharedPreferencesHelper.clear(targetContext)
     FileAndDirectoryUtils.cleanDir(targetContext.cacheDir)
     FileAndDirectoryUtils.cleanDir(File(targetContext.filesDir, MsgsCacheManager.CACHE_DIR_NAME))
-    targetContext.contentResolver.delete(Uri.parse(FlowcryptContract.AUTHORITY_URI.toString()
-        + "/" + FlowcryptContract.ERASE_DATABASE), null, null)
-    Thread.sleep(1000)// Added timeout for a better sync between threads.
+    FlowCryptRoomDatabase.getDatabase(targetContext).forceDatabaseCreationIfNeeded()
+    FlowCryptRoomDatabase.getDatabase(targetContext).clearAllTables()
   }
 }

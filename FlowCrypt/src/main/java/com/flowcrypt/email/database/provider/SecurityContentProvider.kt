@@ -123,17 +123,6 @@ class SecurityContentProvider : ContentProvider() {
         rowsCount += sqLiteDatabase.delete("accounts_aliases", "email = ?", selectionArgs)
       }
 
-      MATCHED_CODE_KEY_ERASE_DATABASE -> {
-        rowsCount = sqLiteDatabase.delete(AccountDaoSource().tableName, null, null)
-        rowsCount += sqLiteDatabase.delete("accounts_aliases", null, null)
-        rowsCount += sqLiteDatabase.delete("imap_labels", null, null)
-        rowsCount += sqLiteDatabase.delete("messages", null, null)
-        rowsCount += sqLiteDatabase.delete("attachment", null, null)
-        rowsCount += sqLiteDatabase.delete("keys", null, null)
-        rowsCount += sqLiteDatabase.delete("user_id_emails_and_keys", null, null)
-        rowsCount += sqLiteDatabase.delete("contacts", null, null)
-      }
-
       else -> rowsCount = sqLiteDatabase.delete(getMatchedTableName(uri), selection, selectionArgs)
     }
 
@@ -208,7 +197,6 @@ class SecurityContentProvider : ContentProvider() {
     private const val MATCHED_CODE_KEY_CLEAN_DATABASE = 3
     private const val MATCHED_CODE_ACCOUNTS_TABLE = 10
     private const val MATCHED_CODE_ACCOUNTS_SINGLE_ROW = 11
-    private const val MATCHED_CODE_KEY_ERASE_DATABASE = 16
 
     private const val SINGLE_APPENDED_SUFFIX = "/#"
     private val URI_MATCHER = UriMatcher(UriMatcher.NO_MATCH)
@@ -216,8 +204,6 @@ class SecurityContentProvider : ContentProvider() {
     init {
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, FlowcryptContract.CLEAN_DATABASE,
           MATCHED_CODE_KEY_CLEAN_DATABASE)
-      URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, FlowcryptContract.ERASE_DATABASE,
-          MATCHED_CODE_KEY_ERASE_DATABASE)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountDaoSource.TABLE_NAME_ACCOUNTS,
           MATCHED_CODE_ACCOUNTS_TABLE)
       URI_MATCHER.addURI(FlowcryptContract.AUTHORITY, AccountDaoSource.TABLE_NAME_ACCOUNTS

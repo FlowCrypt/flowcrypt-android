@@ -9,6 +9,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -76,6 +77,11 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun keysDao(): KeysDao
 
   abstract fun contactsDao(): ContactsDao
+
+  @WorkerThread
+  fun forceDatabaseCreationIfNeeded() {
+    super.getOpenHelper().readableDatabase
+  }
 
   companion object {
     const val DB_NAME = "flowcrypt.db"

@@ -27,6 +27,5 @@ class FlowcryptContract {
     val AUTHORITY_URI: Uri = Uri.parse("content://$AUTHORITY")
 
     const val CLEAN_DATABASE = "/clean"
-    const val ERASE_DATABASE = "/erase"
   }
 }
