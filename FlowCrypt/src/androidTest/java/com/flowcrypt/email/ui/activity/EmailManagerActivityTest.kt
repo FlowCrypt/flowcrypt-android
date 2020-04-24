@@ -66,6 +66,7 @@ import java.util.*
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("fix me")
 class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(EmailManagerActivity::class.java)
