@@ -42,8 +42,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.Loader
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -53,17 +51,18 @@ import com.flowcrypt.email.api.email.model.ExtraActionInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
+import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
+import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
-import com.flowcrypt.email.model.UpdateInfoAboutPgpContactsResult
-import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity
 import com.flowcrypt.email.ui.activity.SelectContactsActivity
@@ -72,7 +71,6 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.NoPgpFoundDialogFragment
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter
-import com.flowcrypt.email.ui.loader.UpdateInfoAboutPgpContactsAsyncTaskLoader
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
@@ -111,6 +109,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   private val accountAliasesViewModel: AccountAliasesViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
+  private val contactsViewModel: ContactsViewModel by viewModels()
 
   private var pgpContactsTo: MutableList<PgpContact>? = null
   private var pgpContactsCc: MutableList<PgpContact>? = null
@@ -214,15 +213,15 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       }
       if (listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
         if (recipientsTo?.text?.isNotEmpty() == true && pgpContactsTo?.isEmpty() == true) {
-          showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_to)
+          fetchDetailsAboutContacts(ContactEntity.Type.TO)
           return false
         }
         if (recipientsCc?.text?.isNotEmpty() == true && pgpContactsCc?.isEmpty() == true) {
-          showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_cc)
+          fetchDetailsAboutContacts(ContactEntity.Type.CC)
           return false
         }
         if (recipientsBcc?.text?.isNotEmpty() == true && pgpContactsBcc?.isEmpty() == true) {
-          showUpdateContactsSnackBar(R.id.loader_id_load_info_about_pgp_contacts_bcc)
+          fetchDetailsAboutContacts(ContactEntity.Type.BCC)
           return false
         }
         if (hasRecipientWithoutPgp(true, pgpContactsTo, pgpContactsCc, pgpContactsBcc)) {
@@ -319,6 +318,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     initViews(view)
     setupAccountAliasesViewModel()
     setupPrivateKeysViewModel()
+    setupContactsViewModel()
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -391,14 +391,34 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT -> {
         when (resultCode) {
           Activity.RESULT_OK -> if (data != null) {
-            val pgpContact = data.getParcelableExtra<PgpContact>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
+            val contactEntity = data.getParcelableExtra<ContactEntity>(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT)
+            contactEntity?.let {
+              pgpContactWithNoPublicKey?.pubkey = String(contactEntity.publicKey ?: byteArrayOf())
+              pgpContactWithNoPublicKey?.email?.let { email -> contactsViewModel.updateContactPgpInfo(email, contactEntity) }
 
-            if (pgpContact != null) {
-              pgpContactWithNoPublicKey?.pubkey = pgpContact.pubkey
-              ContactsDaoSource().updatePgpContact(context, pgpContactWithNoPublicKey)
+              pgpContactsTo?.forEach {
+                if (it.email.equals(pgpContactWithNoPublicKey?.email, true)) {
+                  it.hasPgp = true
+                }
+              }
+
+              pgpContactsCc?.forEach {
+                if (it.email.equals(pgpContactWithNoPublicKey?.email, true)) {
+                  it.hasPgp = true
+                }
+              }
+
+              pgpContactsBcc?.forEach {
+                if (it.email.equals(pgpContactWithNoPublicKey?.email, true)) {
+                  it.hasPgp = true
+                }
+              }
+
+              updateChips(recipientsTo, pgpContactsTo)
+              updateChips(recipientsCc, pgpContactsCc)
+              updateChips(recipientsBcc, pgpContactsBcc)
 
               Toast.makeText(context, R.string.key_successfully_copied, Toast.LENGTH_LONG).show()
-              updateRecipients()
             }
           }
         }
@@ -499,102 +519,16 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
   }
 
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
-    when (id) {
-      R.id.loader_id_load_info_about_pgp_contacts_to -> {
-        pgpContactsTo?.clear()
-        progressBarTo?.visibility = View.VISIBLE
-        isUpdateToCompleted = false
-        return UpdateInfoAboutPgpContactsAsyncTaskLoader(requireContext(), recipientsTo!!.chipAndTokenValues)
-      }
-
-      R.id.loader_id_load_info_about_pgp_contacts_cc -> {
-        pgpContactsCc?.clear()
-        progressBarCc?.visibility = View.VISIBLE
-        isUpdateCcCompleted = false
-        return UpdateInfoAboutPgpContactsAsyncTaskLoader(requireContext(), recipientsCc!!.chipAndTokenValues)
-      }
-
-      R.id.loader_id_load_info_about_pgp_contacts_bcc -> {
-        pgpContactsBcc?.clear()
-        progressBarBcc?.visibility = View.VISIBLE
-        isUpdateBccCompleted = false
-        return UpdateInfoAboutPgpContactsAsyncTaskLoader(requireContext(), recipientsBcc!!.chipAndTokenValues)
-      }
-
-      else -> return super.onCreateLoader(id, args)
-    }
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  override fun onSuccess(loaderId: Int, result: Any?) {
-    when (loaderId) {
-      R.id.loader_id_load_info_about_pgp_contacts_to -> {
-        isUpdateToCompleted = true
-        pgpContactsTo = getInfoAboutPgpContacts(result as? UpdateInfoAboutPgpContactsResult?,
-            progressBarTo, R.string.to)
-
-        if (pgpContactsTo?.isNotEmpty() == true) {
-          updateChips(recipientsTo!!, pgpContactsTo!!)
-        }
-      }
-
-      R.id.loader_id_load_info_about_pgp_contacts_cc -> {
-        isUpdateCcCompleted = true
-        pgpContactsCc = getInfoAboutPgpContacts(result as? UpdateInfoAboutPgpContactsResult?,
-            progressBarCc, R.string.cc)
-
-        if (pgpContactsCc?.isNotEmpty() == true) {
-          updateChips(recipientsCc!!, pgpContactsCc!!)
-        }
-      }
-
-      R.id.loader_id_load_info_about_pgp_contacts_bcc -> {
-        isUpdateBccCompleted = true
-        pgpContactsBcc = getInfoAboutPgpContacts(result as? UpdateInfoAboutPgpContactsResult?,
-            progressBarBcc, R.string.bcc)
-
-        if (pgpContactsBcc?.isNotEmpty() == true) {
-          updateChips(recipientsBcc!!, pgpContactsBcc!!)
-        }
-      }
-
-      else -> super.onSuccess(loaderId, result)
-    }
-  }
-
-  override fun onError(loaderId: Int, e: Exception?) {
-    when (loaderId) {
-      R.id.loader_id_load_info_about_pgp_contacts_to -> {
-        super.onError(loaderId, e)
-        isUpdateToCompleted = true
-        progressBarTo?.visibility = View.INVISIBLE
-      }
-
-      R.id.loader_id_load_info_about_pgp_contacts_cc -> {
-        super.onError(loaderId, e)
-        isUpdateCcCompleted = true
-        progressBarCc?.visibility = View.INVISIBLE
-      }
-
-      R.id.loader_id_load_info_about_pgp_contacts_bcc -> {
-        super.onError(loaderId, e)
-        isUpdateBccCompleted = true
-        progressBarBcc?.visibility = View.INVISIBLE
-      }
-    }
-  }
-
   override fun onFocusChange(v: View, hasFocus: Boolean) {
     when (v.id) {
       R.id.editTextRecipientTo -> runUpdatePgpContactsAction(pgpContactsTo, progressBarTo,
-          R.id.loader_id_load_info_about_pgp_contacts_to, hasFocus)
+          ContactEntity.Type.TO, hasFocus)
 
       R.id.editTextRecipientCc -> runUpdatePgpContactsAction(pgpContactsCc, progressBarCc,
-          R.id.loader_id_load_info_about_pgp_contacts_cc, hasFocus)
+          ContactEntity.Type.CC, hasFocus)
 
       R.id.editTextRecipientBcc -> runUpdatePgpContactsAction(pgpContactsBcc, progressBarBcc,
-          R.id.loader_id_load_info_about_pgp_contacts_bcc, hasFocus)
+          ContactEntity.Type.BCC, hasFocus)
 
       R.id.editTextEmailSubject, R.id.editTextEmailMessage -> if (hasFocus) {
         var isExpandButtonNeeded = false
@@ -793,17 +727,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   private fun updateRecipients() {
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_info_about_pgp_contacts_to, null, this)
+    recipientsTo?.chipAndTokenValues?.let { contactsViewModel.fetchAndUpdateInfoAboutContacts(ContactEntity.Type.TO, it) }
 
     if (layoutCc?.visibility == View.VISIBLE) {
-      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_info_about_pgp_contacts_cc, null, this)
+      recipientsCc?.chipAndTokenValues?.let { contactsViewModel.fetchAndUpdateInfoAboutContacts(ContactEntity.Type.CC, it) }
     } else {
       recipientsCc?.setText(null as CharSequence?)
       pgpContactsCc?.clear()
     }
 
     if (layoutBcc?.visibility == View.VISIBLE) {
-      LoaderManager.getInstance(this).restartLoader(R.id.loader_id_load_info_about_pgp_contacts_bcc, null, this)
+      recipientsBcc?.chipAndTokenValues?.let { contactsViewModel.fetchAndUpdateInfoAboutContacts(ContactEntity.Type.BCC, it) }
     } else {
       recipientsBcc?.setText(null as CharSequence?)
       pgpContactsBcc?.clear()
@@ -811,42 +745,16 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   /**
-   * Get information about some [PgpContact]s.
-   *
-   * @param result                  An API result (lookup API).
-   * @param progressBar             A [ProgressBar] which is showing an action progress.
-   * @param additionalToastStringId A hint string id.
-   */
-  private fun getInfoAboutPgpContacts(result: UpdateInfoAboutPgpContactsResult?,
-                                      progressBar: View?, additionalToastStringId: Int):
-      MutableList<PgpContact>? {
-    progressBar?.visibility = View.INVISIBLE
-
-    var pgpContacts: MutableList<PgpContact>? = null
-
-    if (result?.updatedPgpContacts != null) {
-      pgpContacts = result.updatedPgpContacts.toMutableList()
-    }
-
-    if (result == null || !result.isAllInfoReceived) {
-      Toast.makeText(context, getString(R.string.info_about_some_contacts_not_received,
-          getString(additionalToastStringId)), Toast.LENGTH_SHORT).show()
-    }
-
-    return pgpContacts
-  }
-
-  /**
    * Run an action to update information about some [PgpContact]s.
    *
    * @param pgpContacts Old [PgpContact]s
    * @param progressBar A [ProgressBar] which is showing an action progress.
-   * @param loaderId    A loader id.
+   * @param type        A type of contacts
    * @param hasFocus    A value which indicates the view focus.
    * @return A modified contacts list.
    */
   private fun runUpdatePgpContactsAction(pgpContacts: MutableList<PgpContact>?, progressBar: View?,
-                                         loaderId: Int, hasFocus: Boolean): List<PgpContact>? {
+                                         type: ContactEntity.Type, hasFocus: Boolean): List<PgpContact>? {
     if (listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED) {
       progressBar?.visibility = if (hasFocus) View.INVISIBLE else View.VISIBLE
       if (hasFocus) {
@@ -854,7 +762,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       } else {
         if (isContactsUpdateEnabled) {
           if (isAdded) {
-            LoaderManager.getInstance(this).restartLoader(loaderId, null, this)
+            fetchDetailsAboutContacts(type)
           }
         } else {
           progressBar?.visibility = View.INVISIBLE
@@ -863,6 +771,28 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
 
     return pgpContacts
+  }
+
+  private fun fetchDetailsAboutContacts(type: ContactEntity.Type) {
+    when (type) {
+      ContactEntity.Type.TO -> {
+        recipientsTo?.chipAndTokenValues?.let {
+          contactsViewModel.fetchAndUpdateInfoAboutContacts(ContactEntity.Type.TO, it)
+        }
+      }
+
+      ContactEntity.Type.CC -> {
+        recipientsCc?.chipAndTokenValues?.let {
+          contactsViewModel.fetchAndUpdateInfoAboutContacts(ContactEntity.Type.CC, it)
+        }
+      }
+
+      ContactEntity.Type.BCC -> {
+        recipientsBcc?.chipAndTokenValues?.let {
+          contactsViewModel.fetchAndUpdateInfoAboutContacts(ContactEntity.Type.BCC, it)
+        }
+      }
+    }
   }
 
   /**
@@ -952,16 +882,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    * @param view        A view which contains input [PgpContact](s).
    * @param pgpContacts The input [PgpContact](s)
    */
-  private fun updateChips(view: PgpContactsNachoTextView, pgpContacts: List<PgpContact>) {
+  private fun updateChips(view: PgpContactsNachoTextView?, pgpContacts: List<PgpContact>?) {
+    view ?: return
     val builder = SpannableStringBuilder(view.text)
 
     val pgpContactChipSpans = builder.getSpans(0, view.length(), PGPContactChipSpan::class.java)
 
     if (pgpContactChipSpans.isNotEmpty()) {
-      for ((email, _, _, hasPgp) in pgpContacts) {
+      for (pgpContact in pgpContacts ?: emptyList()) {
         for (pgpContactChipSpan in pgpContactChipSpans) {
-          if (email.equals(pgpContactChipSpan.text.toString(), ignoreCase = true)) {
-            pgpContactChipSpan.setHasPgp(hasPgp)
+          if (pgpContact.email.equals(pgpContactChipSpan.text.toString(), ignoreCase = true)) {
+            pgpContactChipSpan.setHasPgp(pgpContact.hasPgp)
             break
           }
         }
@@ -985,18 +916,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     pgpContactsNachoTextView?.setAdapter(preparePgpContactAdapter())
     pgpContactsNachoTextView?.onFocusChangeListener = this
     pgpContactsNachoTextView?.setListener(this)
-  }
-
-  private fun showUpdateContactsSnackBar(loaderId: Int) {
-    showSnackbar(view, getString(R.string.please_update_information_about_contacts),
-        getString(R.string.update), Snackbar.LENGTH_LONG, View.OnClickListener {
-      if (GeneralUtil.isConnected(requireContext())) {
-        LoaderManager.getInstance(this@CreateMessageFragment).restartLoader(loaderId, null,
-            this@CreateMessageFragment)
-      } else {
-        showInfoSnackbar(view, getString(R.string.internet_connection_is_not_available))
-      }
-    })
   }
 
   private fun hasExternalStorageUris(attachmentInfoList: List<AttachmentInfo>?): Boolean {
@@ -1342,12 +1261,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     val pgpContactAdapter = PgpContactAdapter(requireContext(), null, true)
     //setup a search contacts logic in the database
     pgpContactAdapter.filterQueryProvider = FilterQueryProvider { constraint ->
-      val uri = ContactsDaoSource().baseContentUri
-      val selection = ContactsDaoSource.COL_EMAIL + " LIKE ?"
-      val selectionArgs = arrayOf("%$constraint%")
-      val sortOrder = ContactsDaoSource.COL_LAST_USE + " DESC"
-
-      requireContext().contentResolver.query(uri, null, selection, selectionArgs, sortOrder)
+      val dao = FlowCryptRoomDatabase.getDatabase(requireContext()).contactsDao()
+      dao.getFilteredCursor("%$constraint%")
     }
 
     return pgpContactAdapter
@@ -1530,6 +1445,96 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         adapter.updateKeyAvailability(email, setOfUsers.contains(email))
       }
     }
+  }
+
+  private fun setupContactsViewModel() {
+    handleUpdatingToContacts()
+    handleUpdatingCcContacts()
+    handleUpdatingBccContacts()
+  }
+
+  private fun handleUpdatingToContacts() {
+    contactsViewModel.contactsToLiveData.observe(viewLifecycleOwner, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          pgpContactsTo?.clear()
+          progressBarTo?.visibility = View.VISIBLE
+          isUpdateToCompleted = false
+        }
+
+        Result.Status.SUCCESS -> {
+          isUpdateToCompleted = true
+          progressBarTo?.visibility = View.INVISIBLE
+
+          pgpContactsTo = it.data?.map { contactEntity -> contactEntity.toPgpContact() }?.toMutableList()
+          if (pgpContactsTo?.isNotEmpty() == true) {
+            updateChips(recipientsTo, pgpContactsTo)
+          }
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          isUpdateToCompleted = true
+          progressBarTo?.visibility = View.INVISIBLE
+          showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
+        }
+      }
+    })
+  }
+
+  private fun handleUpdatingCcContacts() {
+    contactsViewModel.contactsCcLiveData.observe(viewLifecycleOwner, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          pgpContactsCc?.clear()
+          progressBarCc?.visibility = View.VISIBLE
+          isUpdateCcCompleted = false
+        }
+
+        Result.Status.SUCCESS -> {
+          isUpdateCcCompleted = true
+          progressBarCc?.visibility = View.INVISIBLE
+          pgpContactsCc = it.data?.map { contactEntity -> contactEntity.toPgpContact() }?.toMutableList()
+
+          if (pgpContactsCc?.isNotEmpty() == true) {
+            updateChips(recipientsCc, pgpContactsCc)
+          }
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          isUpdateCcCompleted = true
+          progressBarCc?.visibility = View.INVISIBLE
+          showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
+        }
+      }
+    })
+  }
+
+  private fun handleUpdatingBccContacts() {
+    contactsViewModel.contactsBccLiveData.observe(viewLifecycleOwner, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          pgpContactsBcc?.clear()
+          progressBarBcc?.visibility = View.VISIBLE
+          isUpdateBccCompleted = false
+        }
+
+        Result.Status.SUCCESS -> {
+          isUpdateBccCompleted = true
+          progressBarBcc?.visibility = View.INVISIBLE
+          pgpContactsBcc = it.data?.map { contactEntity -> contactEntity.toPgpContact() }?.toMutableList()
+
+          if (pgpContactsBcc?.isNotEmpty() == true) {
+            updateChips(recipientsBcc, pgpContactsBcc)
+          }
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          isUpdateBccCompleted = true
+          progressBarBcc?.visibility = View.INVISIBLE
+          showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
+        }
+      }
+    })
   }
 
   /**

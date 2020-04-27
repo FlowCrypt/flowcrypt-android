@@ -29,7 +29,7 @@ import java.util.*
 class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener {
 
   private var pgpContact: PgpContact? = null
-  private var dialogItems: MutableList<DialogItem>? = null
+  private var dialogItems: MutableList<DialogItem> = mutableListOf()
   private var isRemoveActionEnabled: Boolean = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,21 +41,21 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
 
     dialogItems = ArrayList()
 
-    dialogItems!!.add(DialogItem(R.mipmap.ic_switch, getString(R.string.switch_to_standard_email),
+    dialogItems.add(DialogItem(R.mipmap.ic_switch, getString(R.string.switch_to_standard_email),
         RESULT_CODE_SWITCH_TO_STANDARD_EMAIL))
-    dialogItems!!.add(DialogItem(R.mipmap.ic_document, getString(R.string.import_their_public_key),
+    dialogItems.add(DialogItem(R.mipmap.ic_document, getString(R.string.import_their_public_key),
         RESULT_CODE_IMPORT_THEIR_PUBLIC_KEY))
-    dialogItems!!.add(DialogItem(R.mipmap.ic_content_copy, getString(R.string.copy_from_other_contact),
-        RESULT_CODE_COPY_FROM_OTHER_CONTACT))
+    dialogItems.add(DialogItem(R.mipmap.ic_content_copy, getString(R.string
+        .copy_from_other_contact), RESULT_CODE_COPY_FROM_OTHER_CONTACT))
     if (isRemoveActionEnabled) {
-      dialogItems!!.add(DialogItem(R.mipmap.ic_remove_recipient, getString(R.string.template_remove_recipient,
-          pgpContact!!.email), RESULT_CODE_REMOVE_CONTACT))
+      dialogItems.add(DialogItem(R.mipmap.ic_remove_recipient, getString(R.string
+          .template_remove_recipient, pgpContact!!.email), RESULT_CODE_REMOVE_CONTACT))
     }
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
     val builder = AlertDialog.Builder(activity)
-    val dialogItemAdapter = DialogItemAdapter(requireContext(), dialogItems!!)
+    val dialogItemAdapter = DialogItemAdapter(requireContext(), dialogItems)
 
     builder.setTitle(R.string.recipient_does_not_use_pgp)
     builder.setAdapter(dialogItemAdapter, this)
@@ -63,8 +63,8 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
   }
 
   override fun onClick(dialog: DialogInterface, which: Int) {
-    val (_, _, id) = dialogItems!![which]
-    sendResult(id)
+    val item = dialogItems[which]
+    sendResult(item.id)
   }
 
   private fun sendResult(result: Int) {
@@ -74,7 +74,7 @@ class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickLi
 
     val returnIntent = Intent()
     returnIntent.putExtra(EXTRA_KEY_PGP_CONTACT, pgpContact)
-    targetFragment!!.onActivityResult(targetRequestCode, result, returnIntent)
+    targetFragment?.onActivityResult(targetRequestCode, result, returnIntent)
   }
 
   companion object {

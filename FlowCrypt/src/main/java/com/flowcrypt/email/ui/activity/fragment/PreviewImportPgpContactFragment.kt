@@ -17,12 +17,15 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.model.PublicKeyInfo
 import com.flowcrypt.email.model.results.LoaderResult
@@ -45,9 +48,9 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 //todo-DenBond7 it would be great to improve this fragment
-class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
+class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
+    ImportPgpContactsRecyclerViewAdapter.ContactActionsListener {
 
-  private var publicKeyInfoList: List<PublicKeyInfo>? = null
   private var recyclerView: RecyclerView? = null
   private var btnImportAll: TextView? = null
   private var textViewProgressTitle: TextView? = null
@@ -59,6 +62,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
   private var publicKeysString: String? = null
   private var publicKeysFileUri: Uri? = null
 
+  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val adapter: ImportPgpContactsRecyclerViewAdapter = ImportPgpContactsRecyclerViewAdapter()
   private var isParsingStarted: Boolean = false
 
   override val contentResourceId: Int = R.layout.fragment_preview_import_pgp_contact
@@ -73,6 +78,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
       publicKeysString = bundle.getString(KEY_EXTRA_PUBLIC_KEY_STRING)
       publicKeysFileUri = bundle.getParcelable(KEY_EXTRA_PUBLIC_KEYS_FILE_URI)
     }
+
+    adapter.contactActionsListener = this
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -95,7 +102,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.buttonImportAll -> publicKeyInfoList?.let { SaveAllContactsAsyncTask(this, it).execute() }
+      R.id.buttonImportAll -> SaveAllContactsAsyncTask(this, adapter.publicKeys).execute()
     }
   }
 
@@ -103,13 +110,13 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
   override fun onSuccess(loaderId: Int, result: Any?) {
     when (loaderId) {
       R.id.loader_id_parse_public_keys -> {
-        publicKeyInfoList = result as List<PublicKeyInfo>?
-        if (publicKeyInfoList!!.isNotEmpty()) {
-          UIUtil.exchangeViewVisibility(false, layoutProgress!!, layoutContentView!!)
-          recyclerView!!.adapter = ImportPgpContactsRecyclerViewAdapter(publicKeyInfoList!!)
-          btnImportAll!!.visibility = if (publicKeyInfoList!!.size > 1) View.VISIBLE else View.GONE
+        val list = result as? List<PublicKeyInfo> ?: emptyList()
+        if (list.isNotEmpty()) {
+          UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+          adapter.swap(list)
+          btnImportAll?.visibility = if (list.size > 1) View.VISIBLE else View.GONE
         } else {
-          UIUtil.exchangeViewVisibility(false, layoutProgress!!, emptyView!!)
+          UIUtil.exchangeViewVisibility(false, layoutProgress, emptyView)
         }
       }
 
@@ -132,16 +139,25 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
     }
   }
 
+  override fun onSaveContactClick(publicKeyInfo: PublicKeyInfo) {
+    contactsViewModel.addContact(publicKeyInfo.toPgpContact())
+  }
+
+  override fun onUpdateContactClick(publicKeyInfo: PublicKeyInfo) {
+    contactsViewModel.updateContact(publicKeyInfo.toPgpContact())
+  }
+
   private fun initViews(root: View) {
     layoutContentView = root.findViewById(R.id.layoutContentView)
     layoutProgress = root.findViewById(R.id.layoutProgress)
     btnImportAll = root.findViewById(R.id.buttonImportAll)
     textViewProgressTitle = root.findViewById(R.id.textViewProgressTitle)
     progressBar = root.findViewById(R.id.progressBar)
-    btnImportAll!!.setOnClickListener(this)
+    btnImportAll?.setOnClickListener(this)
     recyclerView = root.findViewById(R.id.recyclerViewContacts)
-    recyclerView!!.setHasFixedSize(true)
-    recyclerView!!.layoutManager = LinearLayoutManager(context)
+    recyclerView?.setHasFixedSize(true)
+    recyclerView?.layoutManager = LinearLayoutManager(context)
+    recyclerView?.adapter = adapter
     emptyView = root.findViewById(R.id.emptyView)
   }
 
@@ -270,7 +286,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
         emails.add(keyOwner)
 
         if (weakRef.get() != null) {
-          val contact = ContactsDaoSource().getPgpContact(weakRef.get()?.requireContext()!!, keyOwner)
+          val contact = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
+              .contactsDao().getContactByEmails(keyOwner)?.toPgpContact()
           return PublicKeyInfo(keyWords!!, fingerprint!!, keyOwner, longId!!, contact, nodeKeyDetails.publicKey!!)
         }
       }
@@ -286,7 +303,6 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
       get() = R.string.importing_public_keys
 
     override fun doInBackground(vararg uris: Void): Boolean? {
-      val source = ContactsDaoSource()
       val newCandidates = ArrayList<PgpContact>()
       val updateCandidates = ArrayList<PgpContact>()
 
@@ -315,7 +331,8 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
             val end = if (newCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else newCandidates.size
 
             if (weakRef.get() != null) {
-              source.addRowsUsingApplyBatch(weakRef.get()?.context, newCandidates.subList(start, end))
+              FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
+                  .contactsDao().insert(newCandidates.subList(start, end).map { it.toContactEntity() })
             }
             i = end
 
@@ -336,8 +353,16 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener {
           val end = if (updateCandidates.size - i > STEP_AMOUNT) i + STEP_AMOUNT else updateCandidates.size - 1
 
           if (weakRef.get() != null) {
-            source.updatePgpContacts(weakRef.get()?.requireContext()!!, updateCandidates.subList
-            (start, end + 1))
+            val contacts = mutableListOf<ContactEntity>()
+            val list = updateCandidates.subList(start, end + 1)
+
+            list.forEach { pgpContact ->
+              val foundContactEntity = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
+                  .contactsDao().getContactByEmails(pgpContact.email)
+              foundContactEntity?.let { entity -> contacts.add(pgpContact.toContactEntity().copy(id = entity.id)) }
+            }
+
+            FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!).contactsDao().update(contacts)
           }
           i = end + 1
 

@@ -12,13 +12,7 @@ import com.flowcrypt.email.api.retrofit.ApiName
 import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.api.retrofit.BaseResponse
 import com.flowcrypt.email.api.retrofit.request.BaseRequest
-import com.flowcrypt.email.api.retrofit.request.api.PostHelpFeedbackRequest
-import com.flowcrypt.email.api.retrofit.request.attester.LookUpEmailRequest
 import com.flowcrypt.email.api.retrofit.request.attester.PubRequest
-import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
-import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
-import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -55,57 +49,6 @@ class ApiServiceAsyncTaskLoader(context: Context,
 
       if (baseRequest?.apiName != null) {
         when (baseRequest.apiName) {
-          ApiName.POST_LOOKUP_EMAIL_SINGLE -> {
-            val lookUpEmailResponse = BaseResponse<LookUpEmailResponse>()
-            lookUpEmailResponse.apiName = baseRequest.apiName
-
-            val requestModel = baseRequest as LookUpEmailRequest?
-
-            if (apiService != null) {
-              try {
-                lookUpEmailResponse.setResponse(apiService!!.postLookUpEmail(requestModel!!.requestModel).execute())
-              } catch (e: Exception) {
-                lookUpEmailResponse.exception = catchException(e)
-              }
-
-            }
-            baseResponse = lookUpEmailResponse
-          }
-
-          ApiName.POST_HELP_FEEDBACK -> {
-            val postHelpFeedbackResponse = BaseResponse<PostHelpFeedbackResponse>()
-            postHelpFeedbackResponse.apiName = baseRequest.apiName
-
-            val postHelpFeedbackRequest = baseRequest as PostHelpFeedbackRequest?
-
-            if (apiService != null) {
-              try {
-                postHelpFeedbackResponse.setResponse(apiService!!.postHelpFeedback(postHelpFeedbackRequest!!
-                    .requestModel).execute())
-              } catch (e: Exception) {
-                postHelpFeedbackResponse.exception = catchException(e)
-              }
-
-            }
-            baseResponse = postHelpFeedbackResponse
-          }
-
-          ApiName.POST_INITIAL_LEGACY_SUBMIT -> {
-            val initialLegacySubmitResponse = BaseResponse<InitialLegacySubmitResponse>()
-            initialLegacySubmitResponse.apiName = baseRequest.apiName
-
-            if (apiService != null) {
-              try {
-                initialLegacySubmitResponse.setResponse(apiService!!.postInitialLegacySubmit(
-                    baseRequest.requestModel as InitialLegacySubmitModel).execute())
-              } catch (e: Exception) {
-                initialLegacySubmitResponse.exception = catchException(e)
-              }
-
-            }
-            baseResponse = initialLegacySubmitResponse
-          }
-
           ApiName.GET_PUB -> {
             val pubResponse = BaseResponse<PubResponse>()
             pubResponse.apiName = baseRequest.apiName

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run all tests" type="AndroidTestRunConfigurationType" factoryName="Android Instrumented Tests">
     <module name="FlowCrypt" />
@@ -49,3 +50,4 @@
     </method>
   </configuration>
 </component>
+

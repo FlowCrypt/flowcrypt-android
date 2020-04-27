@@ -44,7 +44,7 @@ interface ApiService {
    * @return [<]
    */
   @POST("lookup/email")
-  fun postLookUpEmail(@Body body: PostLookUpEmailModel): Call<LookUpEmailResponse>
+  suspend fun postLookUpEmail(@Body body: PostLookUpEmailModel): Response<LookUpEmailResponse>
 
   /**
    * This method create a [Call] object for the API "https://flowcrypt.com/attester/lookup/email"

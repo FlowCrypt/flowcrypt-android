@@ -29,7 +29,8 @@ class MigrationTest {
   // Array of all migrations which we are going to test
   private val arrayOfMigrations = arrayOf(
       FlowCryptRoomDatabase.MIGRATION_19_20,
-      FlowCryptRoomDatabase.MIGRATION_20_21)
+      FlowCryptRoomDatabase.MIGRATION_20_21,
+      FlowCryptRoomDatabase.MIGRATION_21_22)
 
   @get:Rule
   val migrationTestHelper: MigrationTestHelper = MigrationTestHelper(

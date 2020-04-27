@@ -18,18 +18,16 @@ import androidx.activity.viewModels
 import androidx.annotation.IdRes
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.Loader
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
-import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity
-import com.flowcrypt.email.ui.loader.SavePrivateKeyAsFileAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
@@ -48,7 +46,7 @@ import com.google.android.material.snackbar.Snackbar
  * E-mail: DenBond7@gmail.com
  */
 class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener,
-    RadioGroup.OnCheckedChangeListener, LoaderManager.LoaderCallbacks<LoaderResult> {
+    RadioGroup.OnCheckedChangeListener {
 
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private var longIdsOfCurrentAccount: MutableList<String> = mutableListOf()
@@ -67,7 +65,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   private var account: AccountDao? = null
 
   private var isPrivateKeySendingNow: Boolean = false
-  private var isPrivateKeySavingNow: Boolean = false
+  private var areBackupsSavingNow: Boolean = false
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_backup_keys
@@ -79,10 +77,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     countingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(BackupKeysActivity::class.java),
         GeneralUtil.isDebugBuild())
 
-    privateKeysViewModel.longIdsOfCurrentAccountLiveData.observe(this, Observer {
-      longIdsOfCurrentAccount.clear()
-      longIdsOfCurrentAccount.addAll(it)
-    })
+    setupPrivateKeysViewModel()
   }
 
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
@@ -108,22 +103,22 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
 
         when (e) {
           is PrivateKeyStrengthException -> {
-            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
+            UIUtil.exchangeViewVisibility(false, progressBar, rootView)
             showPassWeakHint()
           }
 
           is DifferentPassPhrasesException -> {
-            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
+            UIUtil.exchangeViewVisibility(false, progressBar, rootView)
             showDifferentPassHint()
           }
 
           is NoPrivateKeysAvailableException -> {
-            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
+            UIUtil.exchangeViewVisibility(false, progressBar, rootView)
             showInfoSnackbar(rootView, e.message, Snackbar.LENGTH_LONG)
           }
 
           else -> {
-            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
+            UIUtil.exchangeViewVisibility(false, progressBar, rootView)
             showBackupingErrorHint()
           }
         }
@@ -136,15 +131,15 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
       R.id.buttonBackupAction -> {
         if (CollectionUtils.isEmpty(longIdsOfCurrentAccount)) {
           showInfoSnackbar(rootView, getString(R.string.there_are_no_private_keys,
-              account!!.email), Snackbar.LENGTH_LONG)
+              account?.email), Snackbar.LENGTH_LONG)
         } else {
-          when (radioGroupBackupsVariants!!.checkedRadioButtonId) {
+          when (radioGroupBackupsVariants?.checkedRadioButtonId) {
             R.id.radioButtonEmail -> {
               dismissSnackBar()
               if (GeneralUtil.isConnected(this)) {
                 countingIdlingResource?.increment()
                 isPrivateKeySendingNow = true
-                UIUtil.exchangeViewVisibility(true, progressBar!!, rootView)
+                UIUtil.exchangeViewVisibility(true, progressBar, rootView)
                 sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner)
               } else {
                 UIUtil.showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
@@ -162,37 +157,11 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     }
   }
 
-  override fun onError(loaderId: Int, e: Exception?) {
-    when (loaderId) {
-      R.id.loader_id_save_private_key_as_file -> {
-        isPrivateKeySavingNow = false
-        when (e) {
-          is PrivateKeyStrengthException -> {
-            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
-            showPassWeakHint()
-          }
-
-          is DifferentPassPhrasesException -> {
-            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
-            showDifferentPassHint()
-          }
-
-          else -> {
-            UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
-            showInfoSnackbar(rootView, e!!.message)
-          }
-        }
-      }
-
-      else -> super.onError(loaderId, e)
-    }
-  }
-
   override fun onBackPressed() {
     when {
-      isPrivateKeySavingNow -> {
-        isPrivateKeySavingNow = false
-        UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
+      areBackupsSavingNow -> {
+        areBackupsSavingNow = false
+        UIUtil.exchangeViewVisibility(false, progressBar, rootView)
       }
 
       isPrivateKeySendingNow -> Toast.makeText(this, R.string.please_wait_while_message_will_be_sent,
@@ -206,13 +175,13 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     when (group.id) {
       R.id.radioGroupBackupsVariants -> when (checkedId) {
         R.id.radioButtonEmail -> if (textViewOptionsHint != null) {
-          textViewOptionsHint!!.setText(R.string.backup_as_email_hint)
-          btnBackupAction!!.setText(R.string.backup_as_email)
+          textViewOptionsHint?.setText(R.string.backup_as_email_hint)
+          btnBackupAction?.setText(R.string.backup_as_email)
         }
 
         R.id.radioButtonDownload -> if (textViewOptionsHint != null) {
-          textViewOptionsHint!!.setText(R.string.backup_as_download_hint)
-          btnBackupAction!!.setText(R.string.backup_as_a_file)
+          textViewOptionsHint?.setText(R.string.backup_as_download_hint)
+          btnBackupAction?.setText(R.string.backup_as_a_file)
         }
       }
     }
@@ -225,7 +194,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
         Activity.RESULT_OK -> if (data != null && data.data != null) {
           try {
             destinationUri = data.data
-            LoaderManager.getInstance(this).restartLoader(R.id.loader_id_save_private_key_as_file, null, this)
+            destinationUri?.let { privateKeysViewModel.saveBackupsAsFile(it) }
           } catch (e: Exception) {
             e.printStackTrace()
             ExceptionUtil.handleError(e)
@@ -236,59 +205,17 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
       }
 
       REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY -> {
-        layoutSyncStatus!!.visibility = View.GONE
-        UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
+        layoutSyncStatus?.visibility = View.GONE
+        UIUtil.exchangeViewVisibility(false, progressBar, rootView)
       }
-    }
-  }
-
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
-    return when (id) {
-      R.id.loader_id_save_private_key_as_file -> {
-        isPrivateKeySavingNow = true
-        UIUtil.exchangeViewVisibility(true, progressBar!!, rootView)
-        SavePrivateKeyAsFileAsyncTaskLoader(applicationContext, account!!, destinationUri!!)
-      }
-
-      else -> Loader(this)
-    }
-  }
-
-  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
-    handleLoaderResult(loader, loaderResult)
-  }
-
-  override fun onLoaderReset(loader: Loader<LoaderResult>) {
-    when (loader.id) {
-      R.id.loader_id_save_private_key_as_file -> {
-        isPrivateKeySavingNow = false
-        UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
-      }
-    }
-  }
-
-  override fun onSuccess(loaderId: Int, result: Any?) {
-    when (loaderId) {
-      R.id.loader_id_save_private_key_as_file -> {
-        isPrivateKeySavingNow = false
-        if (result as Boolean) {
-          setResult(Activity.RESULT_OK)
-          finish()
-        } else {
-          UIUtil.exchangeViewVisibility(false, progressBar!!, rootView)
-          showInfoSnackbar(rootView, getString(R.string.error_occurred_please_try_again))
-        }
-      }
-
-      else -> super.onSuccess(loaderId, result)
     }
   }
 
   private fun showBackupingErrorHint() {
     showSnackbar(rootView, getString(R.string.backup_was_not_sent), getString(R.string.retry),
         Snackbar.LENGTH_LONG, View.OnClickListener {
-      layoutSyncStatus!!.visibility = View.GONE
-      UIUtil.exchangeViewVisibility(true, progressBar!!, rootView)
+      layoutSyncStatus?.visibility = View.GONE
+      UIUtil.exchangeViewVisibility(true, progressBar, rootView)
       sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner)
     })
   }
@@ -316,14 +243,10 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     this.textViewOptionsHint = findViewById(R.id.textViewOptionsHint)
     this.radioGroupBackupsVariants = findViewById(R.id.radioGroupBackupsVariants)
 
-    if (radioGroupBackupsVariants != null) {
-      radioGroupBackupsVariants!!.setOnCheckedChangeListener(this)
-    }
+    radioGroupBackupsVariants?.setOnCheckedChangeListener(this)
 
     btnBackupAction = findViewById(R.id.buttonBackupAction)
-    if (btnBackupAction != null) {
-      btnBackupAction!!.setOnClickListener(this)
-    }
+    btnBackupAction?.setOnClickListener(this)
   }
 
   /**
@@ -335,6 +258,57 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     intent.type = Constants.MIME_TYPE_PGP_KEY
     intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.genPrivateKeyName(account!!.email))
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY)
+  }
+
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.longIdsOfCurrentAccountLiveData.observe(this, Observer {
+      longIdsOfCurrentAccount.clear()
+      longIdsOfCurrentAccount.addAll(it)
+    })
+
+    privateKeysViewModel.saveBackupAsFileLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            areBackupsSavingNow = true
+            UIUtil.exchangeViewVisibility(true, progressBar, rootView)
+          }
+
+          Result.Status.SUCCESS -> {
+            areBackupsSavingNow = false
+            val result = it.data
+            if (result == true) {
+              setResult(Activity.RESULT_OK)
+              finish()
+            } else {
+              UIUtil.exchangeViewVisibility(false, progressBar, rootView)
+              showInfoSnackbar(rootView, getString(R.string.error_occurred_please_try_again))
+            }
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            areBackupsSavingNow = false
+            when (it.exception) {
+              is PrivateKeyStrengthException -> {
+                UIUtil.exchangeViewVisibility(false, progressBar, rootView)
+                showPassWeakHint()
+              }
+
+              is DifferentPassPhrasesException -> {
+                UIUtil.exchangeViewVisibility(false, progressBar, rootView)
+                showDifferentPassHint()
+              }
+
+              else -> {
+                UIUtil.exchangeViewVisibility(false, progressBar, rootView)
+                showInfoDialogFragment(dialogMsg = it.exception?.message
+                    ?: getString(R.string.error_could_not_save_private_keys))
+              }
+            }
+          }
+        }
+      }
+    })
   }
 
   companion object {

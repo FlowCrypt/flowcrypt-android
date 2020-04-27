@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.View
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.fragment.ContactsListFragment
-import com.flowcrypt.email.ui.activity.fragment.PublicKeyDetailsFragment
 
 /**
  * This Activity show information about contacts where has_pgp == true.
@@ -24,12 +23,8 @@ import com.flowcrypt.email.ui.activity.fragment.PublicKeyDetailsFragment
  * E-mail: DenBond7@gmail.com
  */
 
-class ContactsSettingsActivity : BaseSettingsActivity(), PublicKeyDetailsFragment.OnContactDeletedListener {
+class ContactsSettingsActivity : BaseSettingsActivity() {
   private var contactsListFragment: ContactsListFragment? = null
-
-  override fun onContactDeleted(email: String) {
-    contactsListFragment?.onContactDeleteClick(email)
-  }
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_contacts_settings

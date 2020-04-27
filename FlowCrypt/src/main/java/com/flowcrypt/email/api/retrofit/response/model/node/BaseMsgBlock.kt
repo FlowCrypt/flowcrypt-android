@@ -37,6 +37,12 @@ data class BaseMsgBlock(@Expose override val type: MsgBlock.Type = MsgBlock.Type
   companion object {
     const val TAG_TYPE = "type"
 
+    val handledMsgBlockTypes = listOf(
+        MsgBlock.Type.PUBLIC_KEY,
+        MsgBlock.Type.DECRYPT_ERROR,
+        MsgBlock.Type.DECRYPTED_ATT
+    )
+
     @JvmField
     val CREATOR: Parcelable.Creator<MsgBlock> = object : Parcelable.Creator<MsgBlock> {
       override fun createFromParcel(source: Parcel): MsgBlock {

@@ -28,7 +28,7 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
                                            var localFolder: LocalFolder? = null,
                                            var text: String? = null,
                                            var inlineSubject: String? = null,
-                                           val msgBlocks: List<MsgBlock>? = null,
+                                           val msgBlocks: List<@JvmSuppressWildcards MsgBlock>? = null,
                                            val origMsgHeaders: String? = null,
                                            val encryptionType: MessageEncryptionType) : Parcelable {
   fun getSubject(): String? = msgEntity.subject

@@ -53,12 +53,13 @@ import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
+import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
@@ -110,6 +111,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var msgInfo: IncomingMessageInfo? = null
   private var folderType: FoldersManager.FolderType? = null
   private val labelsViewModel: LabelsViewModel by viewModels()
+  private val contactsViewModel: ContactsViewModel by viewModels()
   private var atts = mutableListOf<AttachmentInfo>()
 
   private var isAdditionalActionEnabled: Boolean = false
@@ -153,12 +155,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     updateViews()
 
     setupLabelsViewModel()
-  }
-
-  private fun setupLabelsViewModel() {
-    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner, Observer {
-      updateActionsVisibility(localFolder, it)
-    })
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -263,13 +259,13 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   override fun onClick(v: View) {
     when (v.id) {
       R.id.layoutReplyButton -> {
-        startActivity(CreateMessageActivity.generateIntent(context, prepareMsgInfoForReply(), MessageType.REPLY,
-            msgEncryptType))
+        startActivity(CreateMessageActivity.generateIntent(
+            context, prepareMsgInfoForReply(), MessageType.REPLY, msgEncryptType))
       }
 
       R.id.imageButtonReplyAll, R.id.layoutReplyAllButton -> {
-        startActivity(CreateMessageActivity.generateIntent(context, prepareMsgInfoForReply(), MessageType.REPLY_ALL,
-            msgEncryptType))
+        startActivity(CreateMessageActivity.generateIntent(
+            context, prepareMsgInfoForReply(), MessageType.REPLY_ALL, msgEncryptType))
       }
 
       R.id.imageButtonMoreOptions -> {
@@ -308,8 +304,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           msgInfo?.atts = atts
         }
 
-        startActivity(CreateMessageActivity.generateIntent(context, prepareMsgInfoForReply(), MessageType.FORWARD,
-            msgEncryptType))
+        startActivity(CreateMessageActivity.generateIntent(
+            context, prepareMsgInfoForReply(), MessageType.FORWARD, msgEncryptType))
       }
     }
   }
@@ -317,7 +313,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   override fun onErrorOccurred(requestCode: Int, errorType: Int, e: Exception?) {
     super.onErrorOccurred(requestCode, errorType, e)
     isAdditionalActionEnabled = true
-    UIUtil.exchangeViewVisibility(false, progressBarActionRunning!!, layoutContent!!)
+    UIUtil.exchangeViewVisibility(false, progressBarActionRunning, layoutContent)
     activity?.invalidateOptionsMenu()
 
     when (requestCode) {
@@ -363,7 +359,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     msgInfo.inlineSubject?.let { textViewSubject?.text = it }
 
     updateMsgBody()
-    UIUtil.exchangeViewVisibility(false, progressView!!, contentView!!)
+    UIUtil.exchangeViewVisibility(false, progressView, contentView)
   }
 
   /**
@@ -388,6 +384,20 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     showAttsIfTheyExist()
   }
 
+  fun setActionProgress(progress: Int, message: String?) {
+    if (progress > 0) {
+      progressBarActionProgress?.progress = progress
+    }
+
+    if (progress != 100) {
+      textViewActionProgress?.text = getString(R.string.progress_message, progress, message)
+      textViewActionProgress?.visibility = View.VISIBLE
+    } else {
+      textViewActionProgress?.text = null
+      layoutActionProgress?.visibility = View.GONE
+    }
+  }
+
   private fun updateMsgBody() {
     if (msgInfo != null) {
       updateMsgView()
@@ -398,7 +408,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private fun showConnLostHint() {
     showSnackbar(requireView(), getString(R.string.failed_load_message_from_email_server),
         getString(R.string.retry), View.OnClickListener {
-      UIUtil.exchangeViewVisibility(true, progressView!!, statusView!!)
+      UIUtil.exchangeViewVisibility(true, progressView, statusView)
       (baseActivity as MessageDetailsActivity).loadMsgDetails()
     })
   }
@@ -584,7 +594,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
   private fun getOpenFileClickListener(att: AttachmentInfo, button: View): View.OnClickListener {
     return View.OnClickListener {
-      if (att.uri!!.lastPathSegment!!.endsWith(Constants.PGP_FILE_EXT)) {
+      if (att.uri?.lastPathSegment?.endsWith(Constants.PGP_FILE_EXT) == true) {
         button.performClick()
       } else {
         val intentOpenFile = Intent(Intent.ACTION_VIEW, att.uri)
@@ -601,7 +611,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private fun getDownloadAttClickListener(att: AttachmentInfo): View.OnClickListener {
     return View.OnClickListener {
       lastClickedAtt = att
-      lastClickedAtt!!.orderNumber = GeneralUtil.genAttOrderId(requireContext())
+      lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
       val isPermissionGranted = ContextCompat.checkSelfPermission(requireContext(),
           Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
       if (isPermissionGranted) {
@@ -615,14 +625,15 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
   private fun updateMsgView() {
     emailWebView?.loadUrl("about:blank")
-    if (layoutMsgParts!!.childCount > 1) {
-      layoutMsgParts?.removeViews(1, layoutMsgParts!!.childCount - 1)
+    val childCount = layoutMsgParts?.childCount ?: 0
+    if (childCount > 1) {
+      layoutMsgParts?.removeViews(1, childCount - 1)
     }
 
     var isFirstMsgPartText = true
     var isHtmlDisplayed = false
 
-    for (block in msgInfo!!.msgBlocks!!) {
+    for (block in msgInfo?.msgBlocks ?: emptyList()) {
       val layoutInflater = LayoutInflater.from(context)
       when (block.type) {
         MsgBlock.Type.DECRYPTED_HTML, MsgBlock.Type.PLAIN_HTML -> {
@@ -634,22 +645,22 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
         MsgBlock.Type.DECRYPTED_TEXT -> {
           msgEncryptType = MessageEncryptionType.ENCRYPTED
-          layoutMsgParts!!.addView(genDecryptedTextPart(block, layoutInflater))
+          layoutMsgParts?.addView(genDecryptedTextPart(block, layoutInflater))
         }
 
         MsgBlock.Type.PLAIN_TEXT -> {
-          layoutMsgParts!!.addView(genTextPart(block, layoutInflater))
+          layoutMsgParts?.addView(genTextPart(block, layoutInflater))
           if (isFirstMsgPartText) {
-            viewFooterOfHeader!!.visibility = View.VISIBLE
+            viewFooterOfHeader?.visibility = View.VISIBLE
           }
         }
 
         MsgBlock.Type.PUBLIC_KEY ->
-          layoutMsgParts!!.addView(genPublicKeyPart(block as PublicKeyMsgBlock, layoutInflater))
+          layoutMsgParts?.addView(genPublicKeyPart(block as PublicKeyMsgBlock, layoutInflater))
 
         MsgBlock.Type.DECRYPT_ERROR -> {
           msgEncryptType = MessageEncryptionType.ENCRYPTED
-          layoutMsgParts!!.addView(genDecryptErrorPart(block as DecryptErrorMsgBlock, layoutInflater))
+          layoutMsgParts?.addView(genDecryptErrorPart(block as DecryptErrorMsgBlock, layoutInflater))
         }
 
         MsgBlock.Type.DECRYPTED_ATT -> {
@@ -664,7 +675,8 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           }
         }
 
-        else -> layoutMsgParts!!.addView(genDefPart(block, layoutInflater, R.layout.message_part_other, layoutMsgParts))
+        else -> layoutMsgParts?.addView(genDefPart(block, layoutInflater,
+            R.layout.message_part_other, layoutMsgParts))
       }
       isFirstMsgPartText = false
     }
@@ -692,8 +704,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private fun clipLargeText(text: String?): String? {
     text?.let {
       return if (it.length > CONTENT_MAX_ALLOWED_LENGTH) {
-        it.take(CONTENT_MAX_ALLOWED_LENGTH) +
-            "\n\n" + getString(R.string.clipped_message_too_large)
+        it.take(CONTENT_MAX_ALLOWED_LENGTH) + "\n\n" + getString(R.string.clipped_message_too_large)
       } else text
     }
 
@@ -737,9 +748,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       layoutReplyButton?.setOnClickListener(this)
       layoutFwdButton = layoutReplyBtns?.findViewById(R.id.layoutFwdButton)
       layoutFwdButton?.setOnClickListener(this)
-      layoutReplyBtns!!.findViewById<View>(R.id.layoutReplyAllButton).setOnClickListener(this)
+      layoutReplyBtns?.findViewById<View>(R.id.layoutReplyAllButton)?.setOnClickListener(this)
 
-      layoutReplyBtns!!.visibility = View.VISIBLE
+      layoutReplyBtns?.visibility = View.VISIBLE
     }
   }
 
@@ -763,31 +774,31 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
       buttonView.setText(if (isChecked) R.string.hide_the_public_key else R.string.show_the_public_key)
     }
 
-    val msgEntity = block.keyDetails
-    val (email) = msgEntity!!.primaryPgpContact
+    val keyDetails = block.keyDetails
+    val pgpContact = keyDetails?.primaryPgpContact ?: PgpContact(email = "")
 
-    if (!TextUtils.isEmpty(email)) {
+    if (!TextUtils.isEmpty(pgpContact.email)) {
       val keyOwner = pubKeyView.findViewById<TextView>(R.id.textViewKeyOwnerTemplate)
-      keyOwner.text = getString(R.string.template_message_part_public_key_owner, email)
+      keyOwner.text = getString(R.string.template_message_part_public_key_owner, pgpContact.email)
     }
 
     val keyWords = pubKeyView.findViewById<TextView>(R.id.textViewKeyWordsTemplate)
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_key_words,
-        msgEntity.keywords), keyWords)
+        keyDetails?.keywords), keyWords)
 
     val fingerprint = pubKeyView.findViewById<TextView>(R.id.textViewFingerprintTemplate)
     UIUtil.setHtmlTextToTextView(getString(R.string.template_message_part_public_key_fingerprint,
-        GeneralUtil.doSectionsInText(" ", msgEntity.fingerprint, 4)), fingerprint)
+        GeneralUtil.doSectionsInText(" ", keyDetails?.fingerprint, 4)), fingerprint)
 
     textViewPgpPublicKey.text = block.content
 
-    val existingPgpContact = ContactsDaoSource().getPgpContact(requireContext(), email)
+    val existingPgpContact = block.existingPgpContact
     val button = pubKeyView.findViewById<Button>(R.id.buttonKeyAction)
     if (button != null) {
       if (existingPgpContact == null) {
         initSaveContactButton(block, button)
       } else if (TextUtils.isEmpty(existingPgpContact.longid)
-          || msgEntity.longId!!.equals(existingPgpContact.longid!!, ignoreCase = true)) {
+          || keyDetails?.longId?.equals(existingPgpContact.longid!!, ignoreCase = true) == true) {
         initUpdateContactButton(block, button)
       } else {
         initReplaceContactButton(block, button)
@@ -807,13 +818,12 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private fun initSaveContactButton(block: PublicKeyMsgBlock, button: Button) {
     button.setText(R.string.save_contact)
     button.setOnClickListener { v ->
-      val pgpContact = block.keyDetails!!.primaryPgpContact
-      val uri = ContactsDaoSource().addRow(requireContext(), pgpContact)
-      if (uri != null) {
-        Toast.makeText(context, R.string.contact_successfully_saved, Toast.LENGTH_SHORT).show()
+      val pgpContact = block.keyDetails?.primaryPgpContact
+      if (pgpContact != null) {
+        contactsViewModel.addContact(pgpContact)
         v.visibility = View.GONE
       } else {
-        Toast.makeText(context, R.string.error_occurred_while_saving_contact, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, getString(R.string.contact_for_saving_not_found), Toast.LENGTH_SHORT).show()
       }
     }
   }
@@ -828,13 +838,13 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private fun initUpdateContactButton(block: PublicKeyMsgBlock, button: Button) {
     button.setText(R.string.update_contact)
     button.setOnClickListener { v ->
-      val pgpContact = block.keyDetails!!.primaryPgpContact
-      val isUpdated = ContactsDaoSource().updatePgpContact(context, pgpContact) > 0
-      if (isUpdated) {
+      val pgpContact = block.keyDetails?.primaryPgpContact
+      if (pgpContact != null) {
+        contactsViewModel.updateContact(pgpContact)
         Toast.makeText(context, R.string.contact_successfully_updated, Toast.LENGTH_SHORT).show()
         v.visibility = View.GONE
       } else {
-        Toast.makeText(context, R.string.error_occurred_while_updating_contact, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, getString(R.string.contact_for_updating_is_not_found), Toast.LENGTH_SHORT).show()
       }
     }
   }
@@ -849,13 +859,13 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private fun initReplaceContactButton(block: PublicKeyMsgBlock, button: Button) {
     button.setText(R.string.replace_contact)
     button.setOnClickListener { v ->
-      val pgpContact = block.keyDetails!!.primaryPgpContact
-      val isUpdated = ContactsDaoSource().updatePgpContact(context, pgpContact) > 0
-      if (isUpdated) {
+      val pgpContact = block.keyDetails?.primaryPgpContact
+      if (pgpContact != null) {
+        contactsViewModel.updateContact(pgpContact)
         Toast.makeText(context, R.string.contact_successfully_replaced, Toast.LENGTH_SHORT).show()
         v.visibility = View.GONE
       } else {
-        Toast.makeText(context, R.string.error_occurred_while_replacing_contact, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, getString(R.string.contact_for_replacing_is_not_found), Toast.LENGTH_SHORT).show()
       }
     }
   }
@@ -875,27 +885,27 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   }
 
   private fun genDecryptErrorPart(block: DecryptErrorMsgBlock, layoutInflater: LayoutInflater): View {
-    val (_, details1) = block.error ?: return View(context)
+    val decryptError = block.error ?: return View(context)
 
-    when (details1!!.type) {
+    when (decryptError.details?.type) {
       DecryptErrorDetails.Type.KEY_MISMATCH -> return generateMissingPrivateKeyLayout(block.content, layoutInflater)
 
       DecryptErrorDetails.Type.FORMAT -> {
         val formatErrorMsg = (getString(R.string.decrypt_error_message_badly_formatted,
             getString(R.string.app_name)) + "\n\n"
-            + details1.type + ": " + details1.message)
+            + decryptError.details.type + ": " + decryptError.details.message)
         return getView(block.content, formatErrorMsg, layoutInflater)
       }
 
       DecryptErrorDetails.Type.OTHER -> {
         val otherErrorMsg = getString(R.string.decrypt_error_could_not_open_message, getString(R.string.app_name)) +
             "\n\n" + getString(R.string.decrypt_error_please_write_me, getString(R.string.support_email)) +
-            "\n\n" + details1.type + ": " + details1.message
+            "\n\n" + decryptError.details.type + ": " + decryptError.details.message
         return getView(block.content, otherErrorMsg, layoutInflater)
       }
 
       else -> return getView(block.content, getString(R.string.could_not_decrypt_message_due_to_error,
-          details1.type.toString() + ": " + details1.message),
+          decryptError.details?.type.toString() + ": " + decryptError.details?.message),
           layoutInflater)
     }
   }
@@ -976,18 +986,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     return msgInfo?.copy(msgBlocks = emptyList(), text = clipLargeText(msgInfo?.text))
   }
 
-  fun setActionProgress(progress: Int, message: String?) {
-    if (progress > 0) {
-      progressBarActionProgress?.progress = progress
-    }
-
-    if (progress != 100) {
-      textViewActionProgress?.text = getString(R.string.progress_message, progress, message)
-      textViewActionProgress?.visibility = View.VISIBLE
-    } else {
-      textViewActionProgress?.text = null
-      layoutActionProgress?.visibility = View.GONE
-    }
+  private fun setupLabelsViewModel() {
+    labelsViewModel.foldersManagerLiveData.observe(viewLifecycleOwner, Observer {
+      updateActionsVisibility(localFolder, it)
+    })
   }
 
   interface MessageDetailsListener {

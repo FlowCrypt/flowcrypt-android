@@ -49,6 +49,33 @@ data class DecryptedFileResult constructor(@Expose val isSuccess: Boolean,
         writeByteArray(decryptedBytes)
       }
 
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as DecryptedFileResult
+
+    if (isSuccess != other.isSuccess) return false
+    if (name != other.name) return false
+    if (apiError != other.apiError) return false
+    if (decryptedBytes != null) {
+      if (other.decryptedBytes == null) return false
+      val originalDecryptedBytes = decryptedBytes
+      val otherDecryptedBytes = other.decryptedBytes ?: byteArrayOf()
+      if (originalDecryptedBytes?.contentEquals(otherDecryptedBytes) == false) return false
+    } else if (other.decryptedBytes != null) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = isSuccess.hashCode()
+    result = 31 * result + (name?.hashCode() ?: 0)
+    result = 31 * result + (apiError?.hashCode() ?: 0)
+    result = 31 * result + (decryptedBytes?.contentHashCode() ?: 0)
+    return result
+  }
+
   companion object {
     @JvmField
     val CREATOR: Parcelable.Creator<DecryptedFileResult> = object : Parcelable.Creator<DecryptedFileResult> {

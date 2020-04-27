@@ -20,13 +20,13 @@ import com.google.gson.annotations.SerializedName
  * E-mail: DenBond7@gmail.com
  */
 
-data class ApiError constructor(@Expose val code: Int = 0,
+data class ApiError constructor(@Expose val code: Int? = null,
                                 @SerializedName("message") @Expose val msg: String? = null,
                                 @Expose val internal: String? = null,
                                 @Expose val stack: String? = null,
                                 @Expose val type: String? = null) : Parcelable {
   constructor(source: Parcel) : this(
-      source.readInt(),
+      source.readValue(Int::class.java.classLoader) as Int?,
       source.readString(),
       source.readString(),
       source.readString(),
@@ -36,7 +36,7 @@ data class ApiError constructor(@Expose val code: Int = 0,
   override fun describeContents() = 0
 
   override fun writeToParcel(dest: Parcel, flags: Int) = with(dest) {
-    writeInt(code)
+    writeValue(code)
     writeString(msg)
     writeString(internal)
     writeString(stack)

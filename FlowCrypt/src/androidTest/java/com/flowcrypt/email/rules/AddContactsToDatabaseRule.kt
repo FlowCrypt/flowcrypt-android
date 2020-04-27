@@ -6,7 +6,7 @@
 package com.flowcrypt.email.rules
 
 
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.model.PgpContact
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
@@ -24,7 +24,8 @@ class AddContactsToDatabaseRule(val pgpContacts: List<PgpContact>) : BaseRule() 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        ContactsDaoSource().addRows(targetContext, pgpContacts)
+        FlowCryptRoomDatabase.getDatabase(targetContext).contactsDao().insert(
+            pgpContacts.map { it.toContactEntity() })
         base.evaluate()
       }
     }

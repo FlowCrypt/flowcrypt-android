@@ -7,21 +7,22 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.app.Activity
 import android.content.Intent
-import android.database.Cursor
 import android.os.Bundle
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ListView
 import android.widget.Toast
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.CursorLoader
-import androidx.loader.content.Loader
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.ui.activity.ImportPgpContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
-import com.flowcrypt.email.ui.adapter.ContactsListCursorAdapter
+import com.flowcrypt.email.ui.adapter.ContactsRecyclerViewAdapter
 import com.flowcrypt.email.util.UIUtil
 
 /**
@@ -32,52 +33,21 @@ import com.flowcrypt.email.util.UIUtil
  *         Time: 6:11 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteContactListener,
-    View.OnClickListener, AdapterView.OnItemClickListener {
+class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDeleteContactListener,
+    ContactsRecyclerViewAdapter.OnContactClickListener {
 
   private var progressBar: View? = null
-  private var listView: ListView? = null
+  private var recyclerViewContacts: RecyclerView? = null
   private var emptyView: View? = null
-  private var adapter: ContactsListCursorAdapter? = null
+  private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter = ContactsRecyclerViewAdapter(true)
+  private val contactsViewModel: ContactsViewModel by viewModels()
 
   override val contentResourceId: Int = R.layout.fragment_contacts_list
 
-  private val cursorLoaderCallback = object : LoaderManager.LoaderCallbacks<Cursor> {
-    override fun onCreateLoader(id: Int, args: Bundle?): Loader<Cursor> {
-      return when (id) {
-        R.id.loader_id_load_contacts_with_pgp -> {
-
-          val uri = ContactsDaoSource().baseContentUri
-          val selection = ContactsDaoSource.COL_HAS_PGP + " = ?"
-          val selectionArgs = arrayOf("1")
-
-          CursorLoader(requireContext(), uri, null, selection, selectionArgs, null)
-        }
-
-        else -> Loader(requireContext())
-      }
-    }
-
-    override fun onLoadFinished(loader: Loader<Cursor>, data: Cursor?) {
-      when (loader.id) {
-        R.id.loader_id_load_contacts_with_pgp -> {
-          UIUtil.exchangeViewVisibility(false, progressBar, listView)
-
-          if (data != null && data.count > 0) {
-            adapter!!.swapCursor(data)
-            UIUtil.exchangeViewVisibility(false, emptyView, listView)
-          } else {
-            UIUtil.exchangeViewVisibility(true, emptyView, listView)
-          }
-        }
-      }
-    }
-
-    override fun onLoaderReset(loader: Loader<Cursor>) {
-      when (loader.id) {
-        R.id.loader_id_load_contacts_with_pgp -> adapter!!.swapCursor(null)
-      }
-    }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    contactsRecyclerViewAdapter.onDeleteContactListener = this
+    contactsRecyclerViewAdapter.onContactClickListener = this
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -88,8 +58,7 @@ class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteC
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
     supportActionBar?.setTitle(R.string.contacts)
-    LoaderManager.getInstance(this).initLoader(R.id.loader_id_load_contacts_with_pgp,
-        null, cursorLoaderCallback)
+    setupContactsViewModel()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -102,29 +71,9 @@ class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteC
     }
   }
 
-  override fun onContactDeleteClick(email: String) {
-    ContactsDaoSource().deletePgpContact(requireContext(), email)
-    Toast.makeText(context, getString(R.string.the_contact_was_deleted, email), Toast.LENGTH_SHORT).show()
-    LoaderManager.getInstance(this)
-        .restartLoader(R.id.loader_id_load_contacts_with_pgp, null, cursorLoaderCallback)
-  }
-
-  override fun onClick(v: View) {
-    when (v.id) {
-      R.id.floatActionButtonImportPublicKey ->
-        context?.let {
-          val accountDao = AccountDaoSource().getActiveAccountInformation(it) ?: return
-          startActivityForResult(ImportPgpContactActivity.newIntent(it, accountDao),
-              REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY)
-        }
-
-    }
-  }
-
-  override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-    val cursor = (parent?.getItemAtPosition(position) as? Cursor)
-    val email = cursor?.getString(cursor.getColumnIndex(ContactsDaoSource.COL_EMAIL))
-    val publicKey = cursor?.getString(cursor.getColumnIndex(ContactsDaoSource.COL_PUBLIC_KEY))
+  override fun onContactClick(contactEntity: ContactEntity) {
+    val email = contactEntity.email
+    val publicKey = String(contactEntity.publicKey ?: byteArrayOf())
 
     parentFragmentManager
         .beginTransaction()
@@ -133,22 +82,59 @@ class ContactsListFragment : BaseFragment(), ContactsListCursorAdapter.OnDeleteC
         .commit()
   }
 
+  override fun onDeleteContact(contactEntity: ContactEntity) {
+    contactsViewModel.deleteContact(contactEntity)
+    Toast.makeText(context, getString(R.string.the_contact_was_deleted, contactEntity.email),
+        Toast.LENGTH_SHORT).show()
+  }
+
   private fun initViews(root: View) {
     this.progressBar = root.findViewById(R.id.progressBar)
-    this.listView = root.findViewById(R.id.listViewContacts)
     this.emptyView = root.findViewById(R.id.emptyView)
-    this.adapter = ContactsListCursorAdapter(requireContext(), null, false, this)
-    this.listView?.adapter = adapter
-    this.listView?.onItemClickListener = this
 
-    root.findViewById<View>(R.id.floatActionButtonImportPublicKey)?.setOnClickListener(this)
+    recyclerViewContacts = root.findViewById(R.id.recyclerViewContacts)
+    val manager = LinearLayoutManager(context)
+    val decoration = DividerItemDecoration(context, manager.orientation)
+    decoration.setDrawable(resources.getDrawable(R.drawable.divider_1dp_grey, requireContext().theme))
+    recyclerViewContacts?.addItemDecoration(decoration)
+    recyclerViewContacts?.layoutManager = manager
+    recyclerViewContacts?.adapter = contactsRecyclerViewAdapter
+
+    root.findViewById<View>(R.id.floatActionButtonImportPublicKey)?.setOnClickListener {
+      context?.let {
+        val accountDao = AccountDaoSource().getActiveAccountInformation(it) ?: return@let
+        startActivityForResult(ImportPgpContactActivity.newIntent(it, accountDao),
+            REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY)
+      }
+    }
+  }
+
+  private fun setupContactsViewModel() {
+    contactsViewModel.contactsWithPgpLiveData.observe(viewLifecycleOwner, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          UIUtil.exchangeViewVisibility(true, progressBar, recyclerViewContacts)
+        }
+
+        Result.Status.SUCCESS -> {
+          UIUtil.exchangeViewVisibility(false, progressBar, recyclerViewContacts)
+          if (it.data.isNullOrEmpty()) {
+            UIUtil.exchangeViewVisibility(true, emptyView, recyclerViewContacts)
+          } else {
+            contactsRecyclerViewAdapter.swap(it.data)
+            UIUtil.exchangeViewVisibility(false, emptyView, recyclerViewContacts)
+          }
+        }
+
+        else -> {
+        }
+      }
+    })
   }
 
   companion object {
-
     private const val REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY = 0
 
-    @JvmStatic
     fun newInstance(): ContactsListFragment {
       return ContactsListFragment()
     }

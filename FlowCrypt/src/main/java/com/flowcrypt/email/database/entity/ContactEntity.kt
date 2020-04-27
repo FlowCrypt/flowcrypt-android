@@ -5,11 +5,14 @@
 
 package com.flowcrypt.email.database.entity
 
+import android.os.Parcel
+import android.os.Parcelable
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.flowcrypt.email.model.PgpContact
 
 /**
  * @author Denis Bondarenko
@@ -27,18 +30,31 @@ import androidx.room.PrimaryKey
     ]
 )
 data class ContactEntity(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long,
+    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
     val email: String,
-    @ColumnInfo(defaultValue = "NULL") val name: String?,
-    @ColumnInfo(name = "public_key", defaultValue = "NULL") val publicKey: ByteArray?,
+    @ColumnInfo(defaultValue = "NULL") val name: String? = null,
+    @ColumnInfo(name = "public_key", defaultValue = "NULL") val publicKey: ByteArray? = null,
     @ColumnInfo(name = "has_pgp") val hasPgp: Boolean,
-    @ColumnInfo(defaultValue = "NULL") val client: String?,
-    @ColumnInfo(defaultValue = "NULL") val attested: Boolean?,
-    @ColumnInfo(defaultValue = "NULL") val fingerprint: String?,
-    @ColumnInfo(name = "long_id", defaultValue = "NULL") val longId: String?,
-    @ColumnInfo(defaultValue = "NULL") val keywords: String?,
-    @ColumnInfo(name = "last_use", defaultValue = "0") val lastUse: Long
-) {
+    @ColumnInfo(defaultValue = "NULL") val client: String? = null,
+    @ColumnInfo(defaultValue = "NULL") val attested: Boolean? = null,
+    @ColumnInfo(defaultValue = "NULL") val fingerprint: String? = null,
+    @ColumnInfo(name = "long_id", defaultValue = "NULL") val longId: String? = null,
+    @ColumnInfo(defaultValue = "NULL") val keywords: String? = null,
+    @ColumnInfo(name = "last_use", defaultValue = "0") val lastUse: Long = 0
+) : Parcelable {
+
+  constructor(parcel: Parcel) : this(
+      parcel.readValue(Long::class.java.classLoader) as? Long,
+      parcel.readString() ?: throw IllegalArgumentException("Email can't be empty"),
+      parcel.readString(),
+      parcel.createByteArray(),
+      parcel.readByte() != 0.toByte(),
+      parcel.readString(),
+      parcel.readValue(Boolean::class.java.classLoader) as? Boolean,
+      parcel.readString(),
+      parcel.readString(),
+      parcel.readString(),
+      parcel.readLong())
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -77,5 +93,53 @@ data class ContactEntity(
     result = 31 * result + (keywords?.hashCode() ?: 0)
     result = 31 * result + lastUse.hashCode()
     return result
+  }
+
+  override fun writeToParcel(parcel: Parcel, flags: Int) {
+    parcel.writeValue(id)
+    parcel.writeString(email)
+    parcel.writeString(name)
+    parcel.writeByteArray(publicKey)
+    parcel.writeByte(if (hasPgp) 1 else 0)
+    parcel.writeString(client)
+    parcel.writeValue(attested)
+    parcel.writeString(fingerprint)
+    parcel.writeString(longId)
+    parcel.writeString(keywords)
+    parcel.writeLong(lastUse)
+  }
+
+  override fun describeContents(): Int {
+    return 0
+  }
+
+  fun toPgpContact(): PgpContact {
+    return PgpContact(
+        email = email,
+        name = name,
+        pubkey = String(publicKey ?: byteArrayOf()),
+        hasPgp = hasPgp,
+        client = client,
+        fingerprint = fingerprint,
+        longid = longId,
+        keywords = keywords,
+        lastUse = lastUse)
+  }
+
+  companion object CREATOR : Parcelable.Creator<ContactEntity> {
+    const val CLIENT_FLOWCRYPT = "flowcrypt"
+    const val CLIENT_PGP = "pgp"
+
+    override fun createFromParcel(parcel: Parcel): ContactEntity {
+      return ContactEntity(parcel)
+    }
+
+    override fun newArray(size: Int): Array<ContactEntity?> {
+      return arrayOfNulls(size)
+    }
+  }
+
+  enum class Type {
+    TO, CC, BCC
   }
 }

@@ -25,43 +25,38 @@ data class ServiceInfo constructor(val isToFieldEditable: Boolean = false,
                                    val hasAbilityToAddNewAtt: Boolean = false,
                                    val systemMsg: String? = null,
                                    val atts: List<AttachmentInfo>? = null) : Parcelable {
-
-  constructor(parcel: Parcel) : this(parcel.readByte() != 0.toByte(),
+  constructor(parcel: Parcel) : this(
+      parcel.readByte() != 0.toByte(),
       parcel.readByte() != 0.toByte(),
       parcel.readByte() != 0.toByte(),
       parcel.readByte() != 0.toByte(),
       parcel.readByte() != 0.toByte(),
       parcel.readByte() != 0.toByte(),
       parcel.readString(),
-      mutableListOf<AttachmentInfo>().apply { parcel.readTypedList(this, AttachmentInfo.CREATOR) })
+      parcel.createTypedArrayList(AttachmentInfo.CREATOR))
+
+  override fun writeToParcel(parcel: Parcel, flags: Int) {
+    parcel.writeByte(if (isToFieldEditable) 1 else 0)
+    parcel.writeByte(if (isFromFieldEditable) 1 else 0)
+    parcel.writeByte(if (isMsgEditable) 1 else 0)
+    parcel.writeByte(if (isSubjectEditable) 1 else 0)
+    parcel.writeByte(if (isMsgTypeSwitchable) 1 else 0)
+    parcel.writeByte(if (hasAbilityToAddNewAtt) 1 else 0)
+    parcel.writeString(systemMsg)
+    parcel.writeTypedList(atts)
+  }
 
   override fun describeContents(): Int {
     return 0
   }
 
-  override fun writeToParcel(dest: Parcel, flags: Int) {
-    with(dest) {
-      writeByte(if (isToFieldEditable) 1.toByte() else 0.toByte())
-      writeByte(if (isFromFieldEditable) 1.toByte() else 0.toByte())
-      writeByte(if (isMsgEditable) 1.toByte() else 0.toByte())
-      writeByte(if (isSubjectEditable) 1.toByte() else 0.toByte())
-      writeByte(if (isMsgTypeSwitchable) 1.toByte() else 0.toByte())
-      writeByte(if (hasAbilityToAddNewAtt) 1.toByte() else 0.toByte())
-      writeString(systemMsg)
-      writeTypedList(atts)
+  companion object CREATOR : Parcelable.Creator<ServiceInfo> {
+    override fun createFromParcel(parcel: Parcel): ServiceInfo {
+      return ServiceInfo(parcel)
     }
-  }
 
-  fun hasAbilityToAddNewAtt(): Boolean {
-    return hasAbilityToAddNewAtt
-  }
-
-  companion object {
-    @JvmField
-    @Suppress("unused")
-    val CREATOR: Parcelable.Creator<ServiceInfo> = object : Parcelable.Creator<ServiceInfo> {
-      override fun createFromParcel(source: Parcel): ServiceInfo = ServiceInfo(source)
-      override fun newArray(size: Int): Array<ServiceInfo?> = arrayOfNulls(size)
+    override fun newArray(size: Int): Array<ServiceInfo?> {
+      return arrayOfNulls(size)
     }
   }
 }

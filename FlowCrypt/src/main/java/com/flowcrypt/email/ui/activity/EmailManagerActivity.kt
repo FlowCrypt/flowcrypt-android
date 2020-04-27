@@ -213,13 +213,13 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       REQUEST_CODE_SIGN_IN -> when (resultCode) {
         Activity.RESULT_OK -> {
           val signInResult = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
-          if (signInResult.isSuccess) {
+          if (signInResult?.isSuccess == true) {
             val fragment = supportFragmentManager
                 .findFragmentById(R.id.emailListFragment) as EmailListFragment?
 
             fragment?.reloadMsgs()
           } else {
-            if (!TextUtils.isEmpty(signInResult.status.statusMessage)) {
+            if (signInResult?.status?.statusMessage?.isNotEmpty() == true) {
               UIUtil.showInfoSnackbar(rootView, signInResult.status.statusMessage!!)
             }
           }

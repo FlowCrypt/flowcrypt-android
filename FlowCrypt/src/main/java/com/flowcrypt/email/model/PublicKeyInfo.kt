@@ -7,6 +7,8 @@ package com.flowcrypt.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.database.entity.ContactEntity
+import java.util.*
 
 /**
  * This class describes information about some public key.
@@ -47,6 +49,31 @@ data class PublicKeyInfo constructor(val keyWords: String,
     writeString(longId)
     writeParcelable(pgpContact, flags)
     writeString(publicKey)
+  }
+
+  fun toContactEntity(): ContactEntity {
+    return ContactEntity(
+        email = keyOwner.toLowerCase(Locale.getDefault()),
+        publicKey = publicKey.toByteArray(),
+        hasPgp = true,
+        fingerprint = fingerprint,
+        longId = longId,
+        keywords = keyWords
+    )
+  }
+
+  fun toPgpContact(): PgpContact {
+    return PgpContact(
+        email = keyOwner,
+        name = null,
+        pubkey = publicKey,
+        hasPgp = true,
+        client = null,
+        fingerprint = fingerprint,
+        longid = longId,
+        keywords = keyWords,
+        lastUse = 0
+    )
   }
 
   companion object {

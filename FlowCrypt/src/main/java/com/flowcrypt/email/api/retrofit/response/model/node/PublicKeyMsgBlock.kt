@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.retrofit.response.model.node
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.model.PgpContact
 
 import com.google.gson.annotations.Expose
 
@@ -23,6 +24,8 @@ data class PublicKeyMsgBlock constructor(@Expose override val content: String?,
                                          @Expose val keyDetails: NodeKeyDetails?) : MsgBlock {
   @Expose
   override val type: MsgBlock.Type = MsgBlock.Type.PUBLIC_KEY
+
+  var existingPgpContact: PgpContact? = null
 
   constructor(source: Parcel) : this(
       source.readString(),

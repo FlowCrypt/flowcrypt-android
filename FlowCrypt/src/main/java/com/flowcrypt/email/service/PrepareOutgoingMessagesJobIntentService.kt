@@ -25,7 +25,6 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
@@ -307,17 +306,19 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
   }
 
   /**
-   * Update the [ContactsDaoSource.COL_LAST_USE] field in the [ContactsDaoSource.TABLE_NAME_CONTACTS].
+   * Update 'last_use' field in "contacts" table.
    *
    * @param msgInfo - [OutgoingMessageInfo] which contains information about an outgoing message.
    */
   private fun updateContactsLastUseDateTime(msgInfo: OutgoingMessageInfo) {
-    val contactsDaoSource = ContactsDaoSource()
+    val contactsDao = FlowCryptRoomDatabase.getDatabase(this).contactsDao()
 
-    for (contact in msgInfo.getAllRecipients()) {
-      val updateResult = contactsDaoSource.updateLastUse(this, contact)
-      if (updateResult == -1) {
-        contactsDaoSource.addRow(this, PgpContact(contact, null))
+    for (email in msgInfo.getAllRecipients()) {
+      val contactEntity = contactsDao.getContactByEmails(email)
+      if (contactEntity == null) {
+        contactsDao.insert(PgpContact(email, null).toContactEntity())
+      } else {
+        contactsDao.update(contactEntity.copy(lastUse = System.currentTimeMillis()))
       }
     }
   }

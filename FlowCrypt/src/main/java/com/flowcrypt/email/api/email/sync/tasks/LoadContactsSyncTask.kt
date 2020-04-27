@@ -9,9 +9,10 @@ import android.content.ContentValues
 import android.text.TextUtils
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.dao.source.ContactsDaoSource
+import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.sun.mail.imap.IMAPFolder
 import java.util.*
@@ -66,44 +67,46 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
       emailAndNamePairs.addAll(parseRecipients(msg, Message.RecipientType.BCC))
     }
 
-    val contactsDaoSource = ContactsDaoSource()
-    val availablePgpContacts = contactsDaoSource.getAllPgpContacts(listener.context)
+    val context = listener.context
+    val contactsDao = FlowCryptRoomDatabase.getDatabase(context).contactsDao()
+    val availableContacts = contactsDao.getAllContacts()
 
     val contactsInDatabase = HashSet<String>()
     val contactsWhichWillBeUpdated = HashSet<String>()
     val contactsWhichWillBeCreated = HashSet<String>()
-    val emailNamePairsMap = HashMap<String, String?>()
+    val contactsByEmailMap = HashMap<String, ContactEntity?>()
 
-    val newCandidates = mutableListOf<EmailAndNamePair>()
-    val updateCandidates = mutableListOf<EmailAndNamePair>()
+    val newCandidates = mutableListOf<ContactEntity>()
+    val updateCandidates = mutableListOf<ContactEntity>()
 
-    for ((email, name) in availablePgpContacts) {
-      contactsInDatabase.add(email.toLowerCase(Locale.getDefault()))
-      emailNamePairsMap[email.toLowerCase(Locale.getDefault())] = name
+    for (contact in availableContacts) {
+      contactsInDatabase.add(contact.email.toLowerCase(Locale.getDefault()))
+      contactsByEmailMap[contact.email.toLowerCase(Locale.getDefault())] = contact
     }
 
     for (emailAndNamePair in emailAndNamePairs) {
       if (contactsInDatabase.contains(emailAndNamePair.email)) {
-        if (TextUtils.isEmpty(emailNamePairsMap[emailAndNamePair.email])) {
+        val contactEntity = contactsByEmailMap[emailAndNamePair.email]
+        if (contactEntity?.email.isNullOrEmpty()) {
           if (!contactsWhichWillBeUpdated.contains(emailAndNamePair.email)) {
             emailAndNamePair.email?.let {
               contactsWhichWillBeUpdated.add(it)
             }
-            updateCandidates.add(emailAndNamePair)
+            contactEntity?.copy(name = emailAndNamePair.name)?.let { updateCandidates.add(it) }
           }
         }
       } else {
         if (!contactsWhichWillBeCreated.contains(emailAndNamePair.email)) {
           emailAndNamePair.email?.let {
             contactsWhichWillBeCreated.add(it)
+            newCandidates.add(ContactEntity(email = it, name = emailAndNamePair.name, hasPgp = false))
           }
-          newCandidates.add(emailAndNamePair)
         }
       }
     }
 
-    contactsDaoSource.updatePgpContacts(listener.context, updateCandidates)
-    contactsDaoSource.addRows(listener.context, newCandidates)
+    contactsDao.update(updateCandidates)
+    contactsDao.insert(newCandidates)
   }
 
   /**

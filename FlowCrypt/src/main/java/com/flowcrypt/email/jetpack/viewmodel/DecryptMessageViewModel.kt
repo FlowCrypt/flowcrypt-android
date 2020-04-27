@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -56,19 +57,21 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
   private val apiRepository: PgpApiRepository = NodeRepository()
 
   fun decryptMessage(rawMimeBytes: ByteArray) {
-    decryptLiveData.value = Result.loading()
     viewModelScope.launch {
+      decryptLiveData.value = Result.loading()
       headersLiveData.value = getHeaders(ByteArrayInputStream(rawMimeBytes))
       val list = keysStorage.getAllPgpPrivateKeys()
       val result = apiRepository.parseDecryptMsg(
           request = ParseDecryptMsgRequest(data = rawMimeBytes, keyEntities = list, isEmail = true))
+
+      modifyMsgBlocksIfNeeded(result)
       decryptLiveData.value = result
     }
   }
 
   fun decryptMessage(context: Context, msgSnapshot: DiskLruCache.Snapshot) {
-    decryptLiveData.value = Result.loading()
     viewModelScope.launch {
+      decryptLiveData.value = Result.loading()
       val uri = msgSnapshot.getUri(0)
       if (uri != null) {
         headersLiveData.value = getHeaders(context.contentResolver.openInputStream(uri))
@@ -80,10 +83,25 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
           apiRepository.parseDecryptMsg(
               request = ParseDecryptMsgRequest(context = context, uri = uri, keyEntities = list, isEmail = true))
         }
+
+        modifyMsgBlocksIfNeeded(result)
         decryptLiveData.value = result
       } else {
         val byteArray = msgSnapshot.getByteArray(0)
         decryptMessage(byteArray)
+      }
+    }
+  }
+
+  private suspend fun modifyMsgBlocksIfNeeded(result: Result<ParseDecryptedMsgResult?>) {
+    result.data?.let { parseDecryptMsgResult ->
+      for (block in parseDecryptMsgResult.msgBlocks ?: mutableListOf()) {
+        if (block is PublicKeyMsgBlock) {
+          val keyDetails = block.keyDetails ?: continue
+          val pgpContact = keyDetails.primaryPgpContact
+          val contactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(pgpContact.email)
+          block.existingPgpContact = contactEntity?.toPgpContact()
+        }
       }
     }
   }

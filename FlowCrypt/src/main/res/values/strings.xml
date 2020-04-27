@@ -94,7 +94,6 @@
     <string name="move_to_inbox">Move to Inbox</string>
     <string name="sending_message_must_not_be_empty">Message should not be empty</string>
     <string name="there_was_syncing_problem">There was a syncing problem</string>
-    <string name="info_about_some_contacts_not_received">Could not get information about some %1$s contacts</string>
     <string name="error_occurred_while_receiving_private_keys">Could not retrieve your private key</string>
     <string name="no_subject">(no subject)</string>
     <string name="error_occurred_please_try_again">Error occurred, please try again</string>
@@ -110,9 +109,6 @@
     <string name="contact_successfully_saved">Contact saved</string>
     <string name="contact_successfully_updated">Contact updated</string>
     <string name="contact_successfully_replaced">Contact replaced</string>
-    <string name="error_occurred_while_saving_contact">Error occurred while saving the contact</string>
-    <string name="error_occurred_while_updating_contact">Error occurred while updating the contact</string>
-    <string name="error_occurred_while_replacing_contact">Error occurred while replacing the contact</string>
     <string name="import_private_key">Import Private Key</string>
     <string name="load_from_a_file">Load from a file</string>
     <string name="load_from_clipboard">Load from clipboard</string>
@@ -135,7 +131,6 @@
     <string name="copy_from_other_contact">Copy from other contact</string>
     <string name="template_remove_recipient">Remove %1$s</string>
     <string name="recipient_does_not_use_pgp">Recipient doesn\'t use PGP</string>
-    <string name="update">Update</string>
     <string name="reply">Reply</string>
     <string name="import_public_key">Import Public Key</string>
     <string name="private_">Private</string>
@@ -264,9 +259,6 @@
     <string name="reply_all_encrypted">Reply All\nEncrypted</string>
     <string name="forward_template">\n\n---------- Forwarded message ----------\nFrom: %1$s\nDate: %2$s\nSubject: %3$s\nTo: %4$s\n</string>
     <string name="cannot_forward_encrypted_attachments">Encrypted attachments are not forwarded. Please attach the files if you want them included.</string>
-    <string name="to">To</string>
-    <string name="cc">Cc</string>
-    <string name="bcc">Bcc</string>
     <string name="failed_please_try_again_later">Failed. Please try again later</string>
     <string name="google_auth_exception_service_disabled">Gmail server is not available.\n Please try again later</string>
     <string name="failed_load_labels_from_email_server">Failed to load labels from the email server</string>
@@ -434,4 +426,8 @@
     <string name="missing_pass_phrase_strength_evalutaion">Unexpectedly missing pass phrase strength evaluation</string>
     <string name="empty_pass_phrase">Empty pass phrase</string>
     <string name="keys_have_different_pass_phrase">The keys have different pass phrase</string>
+    <string name="contact_for_saving_not_found">Contact for saving is not found</string>
+    <string name="contact_for_updating_is_not_found">Contact for updating is not found</string>
+    <string name="contact_for_replacing_is_not_found">Contact for replacing is not found</string>
+    <string name="error_could_not_save_private_keys">Error: couldn\'t save private keys</string>
 </resources>
