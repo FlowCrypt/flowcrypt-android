@@ -24,8 +24,7 @@ import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.api.email.sync.tasks.SyncFolderSyncTask
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
@@ -77,44 +76,44 @@ class SyncJobService : JobService(), SyncListener {
     return false
   }
 
-  override fun onMsgWithBackupToKeyOwnerSent(account: AccountDao, ownerKey: String, requestCode: Int, isSent: Boolean) {
+  override fun onMsgWithBackupToKeyOwnerSent(account: AccountEntity, ownerKey: String, requestCode: Int, isSent: Boolean) {
 
   }
 
-  override fun onPrivateKeysFound(account: AccountDao, keys: List<NodeKeyDetails>, ownerKey: String, requestCode: Int) {
+  override fun onPrivateKeysFound(account: AccountEntity, keys: List<NodeKeyDetails>, ownerKey: String, requestCode: Int) {
 
   }
 
-  override fun onMsgSent(account: AccountDao, ownerKey: String, requestCode: Int, isSent: Boolean) {
+  override fun onMsgSent(account: AccountEntity, ownerKey: String, requestCode: Int, isSent: Boolean) {
 
   }
 
-  override fun onMsgsMoved(account: AccountDao, srcFolder: IMAPFolder, destFolder: IMAPFolder,
+  override fun onMsgsMoved(account: AccountEntity, srcFolder: IMAPFolder, destFolder: IMAPFolder,
                            msgs: List<Message>, ownerKey: String, requestCode: Int) {
 
   }
 
-  override fun onMsgMoved(account: AccountDao, srcFolder: IMAPFolder, destFolder: IMAPFolder,
+  override fun onMsgMoved(account: AccountEntity, srcFolder: IMAPFolder, destFolder: IMAPFolder,
                           msg: Message?, ownerKey: String, requestCode: Int) {
 
   }
 
-  override fun onMsgDetailsReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
+  override fun onMsgDetailsReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                                     uid: Long, id: Long, msg: Message?, ownerKey: String, requestCode: Int) {
 
   }
 
-  override fun onMsgsReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
+  override fun onMsgsReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                               msgs: Array<Message>, ownerKey: String, requestCode: Int) {
 
   }
 
-  override fun onSearchMsgsReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
+  override fun onSearchMsgsReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                                     msgs: Array<Message>, ownerKey: String, requestCode: Int) {
 
   }
 
-  override fun onRefreshMsgsReceived(account: AccountDao, localFolder: LocalFolder,
+  override fun onRefreshMsgsReceived(account: AccountEntity, localFolder: LocalFolder,
                                      remoteFolder: IMAPFolder, newMsgs: Array<Message>,
                                      updateMsgs: Array<Message>, ownerKey: String, requestCode: Int) {
     try {
@@ -164,36 +163,36 @@ class SyncJobService : JobService(), SyncListener {
 
   }
 
-  override fun onFoldersInfoReceived(account: AccountDao, folders: Array<javax.mail.Folder>, ownerKey: String,
+  override fun onFoldersInfoReceived(account: AccountEntity, folders: Array<javax.mail.Folder>, ownerKey: String,
                                      requestCode: Int) {
 
   }
 
-  override fun onError(account: AccountDao, errorType: Int, e: Exception, ownerKey: String, requestCode: Int) {
+  override fun onError(account: AccountEntity, errorType: Int, e: Exception, ownerKey: String, requestCode: Int) {
 
   }
 
-  override fun onActionProgress(account: AccountDao, ownerKey: String, requestCode: Int,
+  override fun onActionProgress(account: AccountEntity, ownerKey: String, requestCode: Int,
                                 resultCode: Int, value: Int) {
 
   }
 
-  override fun onMsgChanged(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder, msg: Message,
+  override fun onMsgChanged(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, msg: Message,
                             ownerKey: String, requestCode: Int) {
 
   }
 
-  override fun onIdentificationToEncryptionCompleted(account: AccountDao, localFolder: LocalFolder,
+  override fun onIdentificationToEncryptionCompleted(account: AccountEntity, localFolder: LocalFolder,
                                                      remoteFolder: IMAPFolder, ownerKey: String, requestCode: Int) {
 
   }
 
-  override fun onNewMsgsReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
+  override fun onNewMsgsReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                                  newMsgs: Array<Message>, msgsEncryptionStates: Map<Long, Boolean>,
                                  ownerKey: String, requestCode: Int) {
     try {
       val context = applicationContext
-      val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
+      val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
 
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
@@ -235,7 +234,7 @@ class SyncJobService : JobService(), SyncListener {
 
   }
 
-  override fun onAttsInfoReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder, uid: Long,
+  override fun onAttsInfoReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, uid: Long,
                                   ownerKey: String, requestCode: Int) {
   }
 
@@ -257,7 +256,7 @@ class SyncJobService : JobService(), SyncListener {
       try {
         if (weakRef.get() != null) {
           val context = weakRef.get()!!.applicationContext
-          val account = AccountDaoSource().getActiveAccountInformation(context)
+          val account = FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccount()
 
           if (account != null) {
             val foldersManager = FoldersManager.fromDatabase(context, account.email)

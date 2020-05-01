@@ -18,7 +18,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
@@ -52,12 +52,6 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
     get() = R.layout.activity_create_message
 
   override fun onCreate(savedInstanceState: Bundle?) {
-    val account = AccountDaoSource().getActiveAccountInformation(this)
-    if (account == null) {
-      Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show()
-      finish()
-    }
-
     if (intent != null) {
       serviceInfo = intent.getParcelableExtra(EXTRA_KEY_SERVICE_INFO)
       msgEncryptionType = intent.getParcelableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)
@@ -146,6 +140,15 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
 
     invalidateOptionsMenu()
     notifyFragmentAboutChangeMsgEncryptionType(messageEncryptionType)
+  }
+
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    //check create a message from extra info when account didn't setup
+    if (activeAccount == null) {
+      Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show()
+      finish()
+    }
   }
 
   private fun prepareActionBarTitle() {

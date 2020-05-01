@@ -7,17 +7,15 @@ package com.flowcrypt.email.ui.activity
 
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.provider.FlowcryptContract
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
@@ -28,6 +26,7 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import kotlinx.coroutines.launch
 import java.util.*
 
 /**
@@ -104,23 +103,18 @@ class SignInActivity : BaseSignInActivity() {
 
       REQUEST_CODE_ADD_OTHER_ACCOUNT -> when (resultCode) {
         Activity.RESULT_OK -> try {
-          val authCreds = data!!.getParcelableExtra<AuthCredentials>(AddNewAccountManuallyActivity
-              .KEY_EXTRA_AUTH_CREDENTIALS)
+          val authCreds = data?.getParcelableExtra<AccountEntity>(
+              AddNewAccountManuallyActivity.KEY_EXTRA_AUTH_CREDENTIALS)
           if (authCreds != null) {
             addNewAccount(authCreds)
           } else {
-            ExceptionUtil.handleError(NullPointerException("AuthCredentials is null!"))
+            ExceptionUtil.handleError(NullPointerException("AccountEntity is null!"))
             Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
           }
         } catch (e: Exception) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
           Toast.makeText(this, e.message ?: e.javaClass.simpleName, Toast.LENGTH_SHORT).show()
-        }
-
-        CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> if (data != null) {
-          val accountDao = data.getParcelableExtra<AccountDao>(CreateOrImportKeyActivity.EXTRA_KEY_ACCOUNT_DAO)
-          clearInfoAboutOldAccount(accountDao)
         }
 
         AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL ->
@@ -147,17 +141,17 @@ class SignInActivity : BaseSignInActivity() {
   }
 
   override fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?) {
-    if (domainRules?.contains(AccountDao.DomainRule.NO_PRV_BACKUP.name) == true) {
+    if (domainRules?.contains(AccountEntity.DomainRule.NO_PRV_BACKUP.name) == true) {
       if (googleSignInAccount != null) {
         startService(Intent(this, CheckClipboardToFindKeyService::class.java))
         val intent = CreateOrImportKeyActivity.newIntent(this,
-            AccountDao(googleSignInAccount, uuid, domainRules), true)
+            AccountEntity(googleSignInAccount, uuid, domainRules), true)
         startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
       }
     } else {
       googleSignInAccount?.let {
         isStartCheckKeysActivityEnabled = true
-        loadPrivateKeysViewModel.fetchAvailableKeys(AccountDao(it, uuid, domainRules))
+        loadPrivateKeysViewModel.fetchAvailableKeys(AccountEntity(it, uuid, domainRules))
       }
     }
   }
@@ -167,7 +161,7 @@ class SignInActivity : BaseSignInActivity() {
       googleSignInAccount?.let {
         startService(Intent(this, CheckClipboardToFindKeyService::class.java))
         val intent = CreateOrImportKeyActivity.newIntent(this,
-            AccountDao(it, uuid, domainRules), true)
+            AccountEntity(it, uuid, domainRules), true)
         startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
       }
     } else if (isStartCheckKeysActivityEnabled) {
@@ -185,67 +179,54 @@ class SignInActivity : BaseSignInActivity() {
     runEmailManagerActivity()
   }
 
-  private fun addNewAccount(authCreds: AuthCredentials) {
-    val accountDaoSource = AccountDaoSource()
-    accountDaoSource.addRow(this, authCreds)
-    EmailSyncService.startEmailSyncService(this)
+  private fun addNewAccount(accountEntity: AccountEntity) {
+    lifecycleScope.launch {
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@SignInActivity)
+      roomDatabase.accountDao().insertSuspend(accountEntity.copy(isActive = true))
+      EmailSyncService.startEmailSyncService(this@SignInActivity)
 
-    val account = accountDaoSource.getAccountInformation(this, authCreds.email)
-
-    if (account != null) {
-      EmailManagerActivity.runEmailManagerActivity(this)
-      finish()
-    } else {
-      Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
+      val addedAccount = roomDatabase.accountDao().getAccount(accountEntity.email)
+      if (addedAccount != null) {
+        EmailManagerActivity.runEmailManagerActivity(this@SignInActivity)
+        finish()
+      } else {
+        Toast.makeText(this@SignInActivity, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
+      }
     }
   }
 
   private fun runEmailManagerActivity() {
     EmailSyncService.startEmailSyncService(this)
 
-    val account = addGmailAccount(googleSignInAccount)
-    if (account != null) {
-      roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = account.email))
-      EmailManagerActivity.runEmailManagerActivity(this)
-      finish()
-    } else {
-      Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
-    }
-  }
-
-  /**
-   * Clear information about created but a not used account.
-   *
-   * @param account The account which will be deleted from the local database.
-   */
-  private fun clearInfoAboutOldAccount(account: AccountDao?) {
-    if (account != null) {
-      val uri = Uri.parse(FlowcryptContract.AUTHORITY_URI.toString() + "/" + FlowcryptContract.CLEAN_DATABASE)
-      contentResolver.delete(uri, null, arrayOf(account.email))
-    }
-  }
-
-  /**
-   * Created a GMAIL [AccountDao] and add it to the database.
-   *
-   * @param googleSignInAccount The [GoogleSignInAccount] object which contains information about a Google
-   * account.
-   * @return Generated [AccountDao].
-   */
-  private fun addGmailAccount(googleSignInAccount: GoogleSignInAccount?): AccountDao? {
     if (googleSignInAccount == null) {
       ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
-      return null
+      Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
+      return
     }
 
-    val accountDaoSource = AccountDaoSource()
+    googleSignInAccount?.email?.let { email ->
+      lifecycleScope.launch {
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@SignInActivity)
+        val existedAccount = roomDatabase.accountDao().getAccountSuspend(email)
 
-    val isAccountUpdated = accountDaoSource.updateAccountInformation(this, googleSignInAccount) > 0
-    if (!isAccountUpdated) {
-      accountDaoSource.addRow(this, googleSignInAccount, uuid, domainRules)
+        val insertOrUpdateCandidate = googleSignInAccount?.let {
+          AccountEntity(it, uuid, domainRules)
+        }
+
+        insertOrUpdateCandidate?.let {
+          if (existedAccount == null) {
+            roomDatabase.accountDao().insertSuspend(insertOrUpdateCandidate)
+          } else {
+            roomDatabase.accountDao().updateSuspend(insertOrUpdateCandidate.copy(id =
+            existedAccount.id, uuid = existedAccount.uuid, domainRules = existedAccount.domainRules))
+          }
+        }
+
+        roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = googleSignInAccount?.email))
+        EmailManagerActivity.runEmailManagerActivity(this@SignInActivity)
+        finish()
+      }
     }
-
-    return AccountDaoSource().getAccountInformation(this, googleSignInAccount.email!!)
   }
 
   /**

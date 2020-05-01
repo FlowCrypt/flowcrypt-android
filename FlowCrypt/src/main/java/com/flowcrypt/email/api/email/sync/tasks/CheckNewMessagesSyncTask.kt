@@ -9,8 +9,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.FetchProfile
 import javax.mail.Folder
@@ -31,11 +30,11 @@ class CheckNewMessagesSyncTask(ownerKey: String,
                                requestCode: Int,
                                val localFolder: LocalFolder) : BaseSyncTask(ownerKey, requestCode) {
 
-  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
     val email = account.email
     val folderName = localFolder.fullName
-    val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, email)
+    val isEncryptedModeEnabled = account.isShowOnlyEncrypted
 
     val folder = store.getFolder(localFolder.fullName) as IMAPFolder
     folder.open(Folder.READ_ONLY)
@@ -45,7 +44,7 @@ class CheckNewMessagesSyncTask(ownerKey: String,
     var newMsgs: Array<Message> = emptyArray()
 
     if (newestCachedUID < nextUID - 1) {
-      if (isEncryptedModeEnabled) {
+      if (isEncryptedModeEnabled == true) {
         val foundMsgs = folder.search(EmailUtil.genEncryptedMsgsSearchTerm(account))
 
         val fetchProfile = FetchProfile()

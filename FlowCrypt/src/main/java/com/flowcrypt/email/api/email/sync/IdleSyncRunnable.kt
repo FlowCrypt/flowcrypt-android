@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.email.sync
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -34,7 +34,7 @@ import javax.mail.search.SubjectTerm
  *         Time: 3:33 PM
  *         E-mail: DenBond7@gmail.com
  */
-class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListener,
+class IdleSyncRunnable constructor(account: AccountEntity, syncListener: SyncListener,
                                    val emailSyncManager: EmailSyncManager) :
     BaseSyncRunnable(account, syncListener), MessageCountListener, MessageChangedListener {
   private var localFolder: LocalFolder? = null

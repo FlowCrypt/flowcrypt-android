@@ -15,7 +15,7 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.GoogleAuthException
@@ -41,26 +41,26 @@ import javax.mail.Store
 class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
   val privateKeysLiveData = MutableLiveData<Result<ArrayList<NodeKeyDetails>?>>()
 
-  fun fetchAvailableKeys(accountDao: AccountDao) {
+  fun fetchAvailableKeys(accountEntity: AccountEntity) {
     viewModelScope.launch {
       privateKeysLiveData.postValue(Result.loading())
-      val result = fetchKeys(accountDao)
+      val result = fetchKeys(accountEntity)
       privateKeysLiveData.postValue(result)
     }
   }
 
-  private suspend fun fetchKeys(accountDao: AccountDao): Result<ArrayList<NodeKeyDetails>>? =
+  private suspend fun fetchKeys(accountEntity: AccountEntity): Result<ArrayList<NodeKeyDetails>>? =
       withContext(Dispatchers.IO) {
         val privateKeyDetailsList = ArrayList<NodeKeyDetails>()
 
         try {
-          val session = OpenStoreHelper.getAccountSess(getApplication(), accountDao)
+          val session = OpenStoreHelper.getAccountSess(getApplication(), accountEntity)
 
-          when (accountDao.accountType) {
-            AccountDao.ACCOUNT_TYPE_GOOGLE ->
-              privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(getApplication(), accountDao, session))
+          when (accountEntity.accountType) {
+            AccountEntity.ACCOUNT_TYPE_GOOGLE ->
+              privateKeyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(getApplication(), accountEntity, session))
 
-            else -> privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(session, accountDao))
+            else -> privateKeyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(session, accountEntity))
           }
 
           Result.success(privateKeyDetailsList)
@@ -80,13 +80,13 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
    * @throws IOException
    * @throws GoogleAuthException
    */
-  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(session: Session, accountDao: AccountDao):
+  private suspend fun getPrivateKeyBackupsUsingJavaMailAPI(session: Session, accountEntity: AccountEntity):
       Collection<NodeKeyDetails> =
       withContext(Dispatchers.IO) {
         val details = ArrayList<NodeKeyDetails>()
         var store: Store? = null
         try {
-          store = OpenStoreHelper.openStore(getApplication(), accountDao, session)
+          store = OpenStoreHelper.openStore(getApplication(), accountEntity, session)
           val folders = store.defaultFolder.list("*")
 
           for (folder in folders) {
@@ -94,7 +94,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
             if (!containsNoSelectAttr) {
               folder.open(Folder.READ_ONLY)
 
-              val foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(accountDao.email))
+              val foundMsgs = folder.search(SearchBackupsUtil.genSearchTerms(accountEntity.email))
 
               for (message in foundMsgs) {
                 val backup = EmailUtil.getKeyFromMimeMsg(message)

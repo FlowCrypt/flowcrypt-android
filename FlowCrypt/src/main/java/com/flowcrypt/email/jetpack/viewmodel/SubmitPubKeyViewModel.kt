@@ -17,7 +17,7 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
 import kotlinx.coroutines.launch
@@ -32,7 +32,7 @@ class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(app
   private val repository: ApiRepository = FlowcryptApiRepository()
   val submitPubKeyLiveData: MutableLiveData<Result<ApiResponse>?> = MutableLiveData()
 
-  fun submitPubKey(account: AccountDao, keys: List<NodeKeyDetails>) {
+  fun submitPubKey(account: AccountEntity, keys: List<NodeKeyDetails>) {
     submitPubKeyLiveData.value = Result.loading(null)
     val context: Context = getApplication()
 
@@ -45,7 +45,7 @@ class SubmitPubKeyViewModel(application: Application) : BaseAndroidViewModel(app
 
         when (result.status) {
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            if (account.isRuleExist(AccountDao.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
+            if (account.isRuleExist(AccountEntity.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
               submitPubKeyLiveData.value = result
             } else {
               val registerAction = ActionQueueEntity.fromAction(RegisterUserPublicKeyAction(0, account.email, 0, it))

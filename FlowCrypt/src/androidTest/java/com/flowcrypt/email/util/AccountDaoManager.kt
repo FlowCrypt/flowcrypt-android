@@ -5,8 +5,6 @@
 
 package com.flowcrypt.email.util
 
-import com.flowcrypt.email.database.dao.source.AccountDao
-
 /**
  * @author Denis Bondarenko
  * Date: 15.01.2018
@@ -16,19 +14,19 @@ import com.flowcrypt.email.database.dao.source.AccountDao
 class AccountDaoManager {
   companion object {
     @JvmStatic
-    fun getDefaultAccountDao(): AccountDao {
-      return TestGeneralUtil.readObjectFromResources("default_account.json", AccountDao::class.java)
+    fun getDefaultAccountDao(): AccountEntity {
+      return TestGeneralUtil.readObjectFromResources("default_account.json", AccountEntity::class.java)
     }
 
     @JvmStatic
-    fun getAccountDao(accountPath: String): AccountDao {
-      return TestGeneralUtil.readObjectFromResources(accountPath, AccountDao::class.java)
+    fun getAccountDao(accountPath: String): AccountEntity {
+      return TestGeneralUtil.readObjectFromResources(accountPath, AccountEntity::class.java)
     }
 
     @JvmStatic
-    fun getUserWitMoreThan21Letters(): AccountDao {
+    fun getUserWitMoreThan21Letters(): AccountEntity {
       return TestGeneralUtil.readObjectFromResources("user_with_more_than_21_letters_account.json",
-          AccountDao::class.java)
+          AccountEntity::class.java)
     }
   }
 }

@@ -22,8 +22,6 @@ import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.SecurityUtils
@@ -62,7 +60,6 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   private var btnBackupAction: Button? = null
 
   private var destinationUri: Uri? = null
-  private var account: AccountDao? = null
 
   private var isPrivateKeySendingNow: Boolean = false
   private var areBackupsSavingNow: Boolean = false
@@ -73,7 +70,6 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     initViews()
-    account = AccountDaoSource().getActiveAccountInformation(this)
     countingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(BackupKeysActivity::class.java),
         GeneralUtil.isDebugBuild())
 
@@ -131,7 +127,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
       R.id.buttonBackupAction -> {
         if (CollectionUtils.isEmpty(longIdsOfCurrentAccount)) {
           showInfoSnackbar(rootView, getString(R.string.there_are_no_private_keys,
-              account?.email), Snackbar.LENGTH_LONG)
+              activeAccount?.email), Snackbar.LENGTH_LONG)
         } else {
           when (radioGroupBackupsVariants?.checkedRadioButtonId) {
             R.id.radioButtonEmail -> {
@@ -223,16 +219,16 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   private fun showDifferentPassHint() {
     showSnackbar(rootView, getString(R.string.different_pass_phrases), getString(R.string.fix),
         Snackbar.LENGTH_LONG, View.OnClickListener {
-      startActivityForResult(ChangePassPhraseActivity.newIntent(this@BackupKeysActivity,
-          account), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY)
+      startActivityForResult(ChangePassPhraseActivity.newIntent(this@BackupKeysActivity),
+          REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY)
     })
   }
 
   private fun showPassWeakHint() {
     showSnackbar(rootView, getString(R.string.pass_phrase_is_too_weak),
         getString(R.string.change_pass_phrase), Snackbar.LENGTH_LONG, View.OnClickListener {
-      startActivityForResult(ChangePassPhraseActivity.newIntent(this@BackupKeysActivity,
-          account), REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY)
+      startActivityForResult(ChangePassPhraseActivity.newIntent(this@BackupKeysActivity),
+          REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY)
     })
   }
 
@@ -253,11 +249,13 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
    * Start a new Activity with return results to choose a destination for an exported key.
    */
   private fun chooseDestForExportedKey() {
-    val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
-    intent.addCategory(Intent.CATEGORY_OPENABLE)
-    intent.type = Constants.MIME_TYPE_PGP_KEY
-    intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.genPrivateKeyName(account!!.email))
-    startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY)
+    activeAccount?.let {
+      val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
+      intent.addCategory(Intent.CATEGORY_OPENABLE)
+      intent.type = Constants.MIME_TYPE_PGP_KEY
+      intent.putExtra(Intent.EXTRA_TITLE, SecurityUtils.genPrivateKeyName(it.email))
+      startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_PRIVATE_KEY)
+    } ?: ExceptionUtil.handleError(NullPointerException("account is null"))
   }
 
   private fun setupPrivateKeysViewModel() {

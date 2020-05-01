@@ -26,7 +26,6 @@ import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withSecurityTypeOption
@@ -68,7 +67,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(activityTestRule)
 
-  private val authCreds: AuthCredentials = AuthCredentialsManager.getLocalWithOneBackupAuthCreds()
+  private val authCreds: AccountEntity = AuthCredentialsManager.getLocalWithOneBackupAuthCreds()
 
   @Before
   fun setUp() {

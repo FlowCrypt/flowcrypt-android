@@ -21,8 +21,7 @@ import android.widget.Toast
 import androidx.constraintlayout.widget.Group
 import androidx.fragment.app.Fragment
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.service.FeedbackJobIntentService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.dialog.EditScreenshotDialogFragment
@@ -48,7 +47,6 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
   private lateinit var screenShotGroup: Group
   private lateinit var checkBoxScreenshot: CheckBox
 
-  private var account: AccountDao? = null
   private var bitmapRaw: ByteArray? = null
   private var bitmap: Bitmap? = null
 
@@ -60,7 +58,6 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    account = intent?.getParcelableExtra(KEY_ACCOUNT)
     bitmapRaw = intent?.getByteArrayExtra(KEY_BITMAP)
     bitmapRaw?.let { bitmap = BitmapFactory.decodeByteArray(bitmapRaw, 0, bitmapRaw!!.size) }
 
@@ -83,7 +80,7 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       R.id.menuActionSend -> {
-        if (account == null) {
+        if (activeAccount == null) {
           if (editTextUserEmail.text.isEmpty()) {
             editTextUserEmail.requestFocus()
             Toast.makeText(this, getString(R.string.email_must_be_non_empty), Toast
@@ -109,7 +106,8 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
                 null
               }, 100)
 
-          val nonNullAccount = account ?: AccountDao(email = editTextUserEmail.text.toString())
+          val nonNullAccount = activeAccount
+              ?: AccountEntity(email = editTextUserEmail.text.toString())
 
           FeedbackJobIntentService.enqueueWork(this, nonNullAccount,
               editTextUserMsg.text.toString(), screenShotBytes)
@@ -160,22 +158,18 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
     screenShotGroup = findViewById(R.id.screenShotGroup)
     checkBoxScreenshot = findViewById(R.id.checkBoxScreenshot)
     checkBoxScreenshot.setOnCheckedChangeListener(this)
-    account?.let { editTextUserEmail.visibility = View.GONE }
+    activeAccount?.let { editTextUserEmail.visibility = View.GONE }
 
     bitmap?.let { imageButtonScreenshot.setImageBitmap(it) }
   }
 
   companion object {
-    private val KEY_ACCOUNT =
-        GeneralUtil.generateUniqueExtraKey("KEY_ACCOUNT", FeedbackActivity::class.java)
     private val KEY_BITMAP =
         GeneralUtil.generateUniqueExtraKey("KEY_BITMAP", FeedbackActivity::class.java)
 
     fun show(activity: Activity) {
-      val account = AccountDaoSource().getActiveAccountInformation(activity)
       val screenShotByteArray = UIUtil.getScreenShotByteArray(activity)
       val intent = Intent(activity, FeedbackActivity::class.java)
-      intent.putExtra(KEY_ACCOUNT, account)
       intent.putExtra(KEY_BITMAP, screenShotByteArray)
       activity.startActivity(intent)
     }

@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.email.sync.tasks
 
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.FolderNotAvailableException
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.Folder
@@ -34,7 +34,7 @@ class MoveMessagesSyncTask(ownerKey: String,
                            private val destFolder: LocalFolder,
                            private val uids: LongArray) : BaseSyncTask(ownerKey, requestCode) {
 
-  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     val srcFolder = store.getFolder(srcFolder.fullName) as IMAPFolder
     val destFolder = store.getFolder(destFolder.fullName) as IMAPFolder
 

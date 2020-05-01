@@ -44,7 +44,7 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
   val msgStatesLiveData = MutableLiveData<MessageState>()
 
   val accountLiveData: LiveData<AccountEntity?> = liveData {
-    val accountEntity = roomDatabase.accountDao().getActiveAccount()
+    val accountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
     emit(accountEntity)
   }
 
@@ -165,7 +165,7 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
   }
 
   private suspend fun getActiveAccountSuspend(): AccountEntity? {
-    return accountLiveData.value ?: return roomDatabase.accountDao().getActiveAccount()
+    return accountLiveData.value ?: return roomDatabase.accountDao().getActiveAccountSuspend()
   }
 
   private fun prepareCandidates(entities: Iterable<MessageEntity>, newMsgState: MessageState): Iterable<MessageEntity> {

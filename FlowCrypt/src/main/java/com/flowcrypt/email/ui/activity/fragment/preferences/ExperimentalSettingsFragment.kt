@@ -20,6 +20,7 @@ import com.flowcrypt.email.util.GeneralUtil
  * E-mail: DenBond7@gmail.com
  */
 class ExperimentalSettingsFragment : BasePreferenceFragment() {
+
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     setPreferencesFromResource(R.xml.preferences_experimental_settings, rootKey)
 

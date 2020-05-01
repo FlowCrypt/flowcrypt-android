@@ -10,9 +10,8 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.gson.annotations.SerializedName
 import java.util.*
@@ -27,7 +26,7 @@ import java.util.*
  *         E-mail: DenBond7@gmail.com
  */
 data class LoadGmailAliasesAction(override var id: Long = 0,
-                                  override var email: String? = null,
+                                  override val email: String? = null,
                                   override val version: Int = 0) : Action, Parcelable {
 
   @SerializedName(Action.TAG_NAME_ACTION_TYPE)
@@ -40,9 +39,11 @@ data class LoadGmailAliasesAction(override var id: Long = 0,
 
   override fun run(context: Context) {
     try {
-      val account = AccountDaoSource().getAccountInformation(context, email ?: "") ?: return
+      email ?: return
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+      val account = roomDatabase.accountDao().getAccount(email) ?: return
 
-      if (account.accountType != AccountDao.ACCOUNT_TYPE_GOOGLE) {
+      if (account.accountType != AccountEntity.ACCOUNT_TYPE_GOOGLE) {
         return
       }
 
@@ -53,7 +54,7 @@ data class LoadGmailAliasesAction(override var id: Long = 0,
         if (alias.verificationStatus != null) {
           val accountAliasesDao = AccountAliasesEntity(
               email = account.email.toLowerCase(Locale.getDefault()),
-              accountType = account.accountType ?: AccountDao.ACCOUNT_TYPE_GOOGLE,
+              accountType = account.accountType,
               sendAsEmail = alias.sendAsEmail.toLowerCase(Locale.getDefault()),
               displayName = alias.displayName,
               isDefault = alias.isDefault,
@@ -62,7 +63,7 @@ data class LoadGmailAliasesAction(override var id: Long = 0,
         }
       }
 
-      FlowCryptRoomDatabase.getDatabase(context).accountAliasesDao().insertWithReplace(aliases)
+      roomDatabase.accountAliasesDao().insertWithReplace(aliases)
     } catch (e: Exception) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)

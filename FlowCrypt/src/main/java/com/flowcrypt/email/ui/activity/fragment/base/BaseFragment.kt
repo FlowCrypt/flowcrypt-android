@@ -13,10 +13,14 @@ import android.view.ViewGroup
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import com.flowcrypt.email.R
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.UIUtil
@@ -32,6 +36,9 @@ import com.google.android.material.snackbar.Snackbar
  */
 
 abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderResult> {
+  protected val accountViewModel: AccountViewModel by viewModels()
+  protected var account: AccountEntity? = null
+  protected var isAccountInfoReceived = false
 
   /**
    * Get the content view resources id. This method must return an resources id of a layout
@@ -72,6 +79,11 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
     lifecycle.addObserver(connectionLifecycleObserver)
   }
 
+  override fun onActivityCreated(savedInstanceState: Bundle?) {
+    super.onActivityCreated(savedInstanceState)
+    initAccountViewModel()
+  }
+
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
     return if (contentResourceId > 0) {
       inflater.inflate(contentResourceId, container, false)
@@ -87,6 +99,10 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
   }
 
   override fun onLoaderReset(loader: Loader<LoaderResult>) {
+
+  }
+
+  open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
 
   }
 
@@ -189,5 +205,13 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
     } else {
       UIUtil.showInfoSnackbar(requireView(), getString(R.string.error_loader_result_is_empty))
     }
+  }
+
+  private fun initAccountViewModel() {
+    accountViewModel.activeAccountLiveData.observe(viewLifecycleOwner, Observer {
+      account = it
+      isAccountInfoReceived = true
+      onAccountInfoRefreshed(account)
+    })
   }
 }

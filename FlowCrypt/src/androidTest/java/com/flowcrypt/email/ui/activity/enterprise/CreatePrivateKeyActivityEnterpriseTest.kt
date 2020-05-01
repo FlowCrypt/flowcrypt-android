@@ -55,7 +55,7 @@ class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
       object : ActivityTestRule<CreatePrivateKeyActivity>(CreatePrivateKeyActivity::class.java) {
         override fun getActivityIntent(): Intent {
           val result = Intent(getTargetContext(), CreatePrivateKeyActivity::class.java)
-          result.putExtra(BasePassPhraseManagerActivity.KEY_EXTRA_ACCOUNT_DAO, AccountDaoManager
+          result.putExtra(BasePassPhraseManagerActivity.KEY_EXTRA_ACCOUNT, AccountDaoManager
               .getAccountDao("enterprise_account_enforce_attester_submit.json")
               .copy(email = EMAIL_ENFORCE_ATTESTER_SUBMIT))
           return result

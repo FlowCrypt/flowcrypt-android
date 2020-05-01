@@ -11,8 +11,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.FetchProfile
 import javax.mail.Folder
@@ -35,7 +34,7 @@ class LoadMessagesToCacheSyncTask(ownerKey: String,
                                   private val localFolder: LocalFolder,
                                   private val countOfAlreadyLoadedMsgs: Int) : BaseSyncTask(ownerKey, requestCode) {
 
-  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
     listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_opening_store)
     imapFolder.open(Folder.READ_ONLY)
@@ -47,11 +46,11 @@ class LoadMessagesToCacheSyncTask(ownerKey: String,
         }
 
     val context = listener.context
-    val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
+    val isEncryptedModeEnabled = account.isShowOnlyEncrypted
     var foundMsgs: Array<Message> = emptyArray()
     var msgsCount = 0
 
-    if (isEncryptedModeEnabled) {
+    if (isEncryptedModeEnabled == true) {
       foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(account))
       foundMsgs?.let {
         msgsCount = foundMsgs.size
@@ -79,7 +78,7 @@ class LoadMessagesToCacheSyncTask(ownerKey: String,
     if (end < 1) {
       listener.onMsgsReceived(account, localFolder, imapFolder, arrayOf(), ownerKey, requestCode)
     } else {
-      val msgs: Array<Message> = if (isEncryptedModeEnabled) {
+      val msgs: Array<Message> = if (isEncryptedModeEnabled == true) {
         foundMsgs.copyOfRange(start - 1, end)
       } else {
         imapFolder.getMessages(start, end)

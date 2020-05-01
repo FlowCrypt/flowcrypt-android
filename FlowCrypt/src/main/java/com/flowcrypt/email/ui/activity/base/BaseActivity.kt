@@ -24,6 +24,8 @@ import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.Observer
 import androidx.loader.content.Loader
 import com.flowcrypt.email.R
+import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.node.Node
@@ -47,7 +49,10 @@ import java.lang.ref.WeakReference
  */
 abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback {
   protected val roomBasicViewModel: RoomBasicViewModel by viewModels()
+  protected val accountViewModel: AccountViewModel by viewModels()
   protected val tag: String = javaClass.simpleName
+  protected var activeAccount: AccountEntity? = null
+  protected var isAccountInfoReceived = false
 
   @get:VisibleForTesting
   val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
@@ -109,6 +114,20 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
       setContentView(contentViewResourceId)
       initScreenViews()
     }
+
+    initAccountViewModel()
+  }
+
+  open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+
+  }
+
+  private fun initAccountViewModel() {
+    accountViewModel.activeAccountLiveData.observe(this, Observer {
+      activeAccount = it
+      isAccountInfoReceived = true
+      onAccountInfoRefreshed(activeAccount)
+    })
   }
 
   public override fun onStart() {

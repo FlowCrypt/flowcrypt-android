@@ -25,7 +25,7 @@ import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.iap.ConnectionException
@@ -43,7 +43,7 @@ import java.util.concurrent.LinkedBlockingQueue
  *         Time: 3:36 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
+class ConnectionSyncRunnable(account: AccountEntity, syncListener: SyncListener)
   : BaseSyncRunnable(account, syncListener) {
   private val tasksQueue: BlockingQueue<SyncTask> = LinkedBlockingQueue()
   private val tasksExecutorService: ExecutorService = Executors.newFixedThreadPool(MAX_RUNNING_TASKS_COUNT)
@@ -240,7 +240,7 @@ class ConnectionSyncRunnable(account: AccountDao, syncListener: SyncListener)
   }
 
   private fun loadContactsInfoIfNeeded() {
-    if (!account.areContactsLoaded) {
+    if (account.areContactsLoaded == false) {
       //we need to update labels before we can use the SENT folder for retrieve contacts
       updateLabels("", 0)
       try {

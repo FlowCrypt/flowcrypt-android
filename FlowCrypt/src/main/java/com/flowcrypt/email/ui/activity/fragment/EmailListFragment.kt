@@ -40,7 +40,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
@@ -803,7 +803,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       //archive action is enabled only in INBOX folder for GMAIL. While we don't support GMail
       // labels we can't use the archive action in other folders.
       FoldersManager.FolderType.INBOX -> {
-        if (AccountDao.ACCOUNT_TYPE_GOOGLE == listener?.currentAccountDao?.accountType) {
+        if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
           isEnabled = true
         }
       }
@@ -845,7 +845,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   interface OnManageEmailsListener {
-    val currentAccountDao: AccountDao?
     val currentFolder: LocalFolder?
     val msgsLoadingIdlingResource: SingleIdlingResources
     fun onRetryGoogleAuth()

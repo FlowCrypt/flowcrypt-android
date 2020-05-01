@@ -25,8 +25,7 @@ import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.security.SecurityUtils
@@ -116,7 +115,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
             }
           }
 
-          val account = AccountDaoSource().getActiveAccountInformation(context)
+          val account = roomDatabase.accountDao().getActiveAccount()
 
           if (account != null) {
             val newMsgs = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
@@ -161,7 +160,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
       isFailed = values[0]!!
     }
 
-    private fun downloadForwardedAtts(context: Context, account: AccountDao) {
+    private fun downloadForwardedAtts(context: Context, account: AccountEntity) {
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
       while (true) {

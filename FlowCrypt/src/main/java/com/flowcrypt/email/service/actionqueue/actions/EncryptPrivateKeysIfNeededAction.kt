@@ -12,7 +12,6 @@ import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -86,8 +85,8 @@ data class EncryptPrivateKeysIfNeededAction @JvmOverloads constructor(override v
         modifiedKeyEntities.add(modifiedKeyEntity)
       } catch (e: NodeException) {
         if (e.nodeError?.msg == "Error: Pass phrase length seems way too low! Pass phrase strength should be properly checked before encrypting a key.") {
-          val currentAccount = AccountDaoSource().getActiveAccountInformation(context)
-          SystemNotificationManager(context).showPassphraseTooLowNotification(currentAccount)
+          val account = roomDatabase.accountDao().getActiveAccount() ?: return
+          SystemNotificationManager(context).showPassphraseTooLowNotification(account)
         }
       }
     }

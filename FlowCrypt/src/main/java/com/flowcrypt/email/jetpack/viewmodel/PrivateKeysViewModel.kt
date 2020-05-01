@@ -82,7 +82,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     viewModelScope.launch {
       try {
         changePassphraseLiveData.value = Result.loading()
-        val account = roomDatabase.accountDao().getActiveAccount()
+        val account = roomDatabase.accountDao().getActiveAccountSuspend()
         requireNotNull(account)
 
         val longIds = roomDatabase.userIdEmailsKeysDao().getLongIdsByEmailSuspend(account.email)
@@ -120,13 +120,12 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       saveBackupToInboxLiveData.value = Result.loading()
       withContext(Dispatchers.IO) {
         try {
-          val account = roomDatabase.accountDao().getActiveAccount()
+          val account = roomDatabase.accountDao().getActiveAccountSuspend()
           requireNotNull(account)
 
-          val accountDaoCompatibility = account.toAccountDaoCompatibility()
-          val sess = OpenStoreHelper.getAccountSess(getApplication(), accountDaoCompatibility)
-          val transport = SmtpProtocolUtil.prepareSmtpTransport(getApplication(), sess, accountDaoCompatibility)
-          val msg = EmailUtil.genMsgWithAllPrivateKeys(getApplication(), accountDaoCompatibility, sess)
+          val sess = OpenStoreHelper.getAccountSess(getApplication(), account)
+          val transport = SmtpProtocolUtil.prepareSmtpTransport(getApplication(), sess, account)
+          val msg = EmailUtil.genMsgWithAllPrivateKeys(getApplication(), account, sess)
           transport.sendMessage(msg, msg.allRecipients)
           saveBackupToInboxLiveData.postValue(Result.success(true))
         } catch (e: Exception) {
@@ -143,11 +142,10 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       saveBackupAsFileLiveData.value = Result.loading()
       withContext(Dispatchers.IO) {
         try {
-          val account = roomDatabase.accountDao().getActiveAccount()
+          val account = roomDatabase.accountDao().getActiveAccountSuspend()
           requireNotNull(account)
 
-          val accountDaoCompatibility = account.toAccountDaoCompatibility()
-          val backup = SecurityUtils.genPrivateKeysBackup(getApplication(), accountDaoCompatibility)
+          val backup = SecurityUtils.genPrivateKeysBackup(getApplication(), account)
           val result = GeneralUtil.writeFileFromStringToUri(getApplication(), destinationUri, backup) > 0
 
           saveBackupAsFileLiveData.postValue(Result.success(result))

@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.email.sync.tasks
 
 import com.flowcrypt.email.api.email.sync.EmailSyncManager
 import com.flowcrypt.email.api.email.sync.SyncListener
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 
 import javax.mail.Session
 import javax.mail.Store
@@ -73,7 +73,7 @@ interface SyncTask {
    * @param listener The listener of synchronization.
    * @throws Exception Different exceptions can be throw when we work with [Store]
    */
-  fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener)
+  fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener)
 
   /**
    * Run current task in the separate thread.
@@ -84,7 +84,7 @@ interface SyncTask {
    * @param syncListener The listener of synchronization.
    * @throws Exception Different exceptions can be throw when we work with [Session] or [Store]
    */
-  fun runSMTPAction(account: AccountDao, session: Session, store: Store, syncListener: SyncListener)
+  fun runSMTPAction(account: AccountEntity, session: Session, store: Store, syncListener: SyncListener)
 
   /**
    * This method will be called when an exception occurred while current task running.
@@ -93,5 +93,5 @@ interface SyncTask {
    * @param e            The occurred exception.
    * @param syncListener The listener of synchronization.
    */
-  fun handleException(account: AccountDao, e: Exception, syncListener: SyncListener)
+  fun handleException(account: AccountEntity, e: Exception, syncListener: SyncListener)
 }

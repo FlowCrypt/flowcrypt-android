@@ -12,7 +12,7 @@ import androidx.core.app.JobIntentService
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.cache.DiskLruCache
@@ -54,7 +54,7 @@ class FeedbackJobIntentService : JobIntentService() {
   }
 
   private fun addFeedbackFromIntentToCache(intent: Intent) {
-    val account = intent.getParcelableExtra<AccountDao>(EXTRA_KEY_ACCOUNT)
+    val account = intent.getParcelableExtra<AccountEntity>(EXTRA_KEY_ACCOUNT)
     val feedbackMsg = intent.getStringExtra(EXTRA_KEY_FEEDBACK_MSG)
     val screenShotBytes = intent.getByteArrayExtra(EXTRA_KEY_SCREENSHOT_BYTES)
     val screenShotBase64 = Base64.encodeToString(screenShotBytes ?: byteArrayOf(), Base64.DEFAULT)
@@ -123,7 +123,7 @@ class FeedbackJobIntentService : JobIntentService() {
      * @param screenShotBytes  A screenshot bytes array.
      */
     @JvmStatic
-    fun enqueueWork(context: Context, account: AccountDao? = null, userComment: String? = null,
+    fun enqueueWork(context: Context, account: AccountEntity? = null, userComment: String? = null,
                     screenShotBytes: ByteArray? = null) {
       val intent = Intent(context, FeedbackJobIntentService::class.java)
       intent.putExtra(EXTRA_KEY_ACCOUNT, account)

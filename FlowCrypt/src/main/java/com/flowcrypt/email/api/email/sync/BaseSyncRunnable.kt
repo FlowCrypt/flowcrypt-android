@@ -9,10 +9,9 @@ import android.content.Context
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.ManualHandledException
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
@@ -26,7 +25,7 @@ import javax.mail.Store
  *         Time: 3:21 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseSyncRunnable constructor(val account: AccountDao, val syncListener: SyncListener) : Runnable {
+abstract class BaseSyncRunnable constructor(val account: AccountEntity, val syncListener: SyncListener) : Runnable {
   //todo-denbond7 review this class
   protected val tag: String = javaClass.simpleName
 
@@ -50,12 +49,8 @@ abstract class BaseSyncRunnable constructor(val account: AccountDao, val syncLis
       return
     }
 
-    if (account.authCreds != null) {
-      if (!activeStore.urlName.username.equals(account.authCreds.username, ignoreCase = true)) {
-        disconnect(task)
-      }
-    } else {
-      throw ManualHandledException(syncListener.context.getString(R.string.device_not_supported_key_store_error))
+    if (!activeStore.urlName.username.equals(account.username, ignoreCase = true)) {
+      disconnect(task)
     }
   }
 

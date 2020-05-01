@@ -15,7 +15,7 @@ import android.widget.Toast
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.loader.CreatePrivateKeyAsyncTaskLoader
@@ -91,7 +91,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
       R.id.loader_id_create_private_key -> if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
         isBackEnabled = false
         UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
-        CreatePrivateKeyAsyncTaskLoader(this, account!!, editTextKeyPassword.text.toString())
+        CreatePrivateKeyAsyncTaskLoader(this, activeAccount!!, editTextKeyPassword.text.toString())
       } else {
         Loader(this)
       }
@@ -171,9 +171,9 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
     val KEY_CREATED_PRIVATE_KEY_LONG_ID =
         GeneralUtil.generateUniqueExtraKey("KEY_CREATED_PRIVATE_KEY_LONG_ID", CreatePrivateKeyActivity::class.java)
 
-    fun newIntent(context: Context, account: AccountDao?): Intent {
+    fun newIntent(context: Context, account: AccountEntity?): Intent {
       val intent = Intent(context, CreatePrivateKeyActivity::class.java)
-      intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, account)
+      intent.putExtra(KEY_EXTRA_ACCOUNT, account)
       return intent
     }
   }

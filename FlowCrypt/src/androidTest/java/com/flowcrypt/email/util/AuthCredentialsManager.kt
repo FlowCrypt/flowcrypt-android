@@ -5,10 +5,8 @@
 
 package com.flowcrypt.email.util
 
-import com.flowcrypt.email.api.email.model.AuthCredentials
-
 /**
- * This class describes a logic of generation {@link AuthCredentials} from the resources folder.
+ * This class describes a logic of generation {@link AccountEntity} from the resources folder.
  *
  * @author Denis Bondarenko
  * Date: 27.12.2017
@@ -18,8 +16,8 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 class AuthCredentialsManager {
   companion object {
     @JvmStatic
-    fun getLocalWithOneBackupAuthCreds(): AuthCredentials {
-      return TestGeneralUtil.readObjectFromResources("user_with_one_backup.json", AuthCredentials::class.java)
+    fun getLocalWithOneBackupAuthCreds(): AccountEntity {
+      return TestGeneralUtil.readObjectFromResources("user_with_one_backup.json", AccountEntity::class.java)
     }
   }
 }

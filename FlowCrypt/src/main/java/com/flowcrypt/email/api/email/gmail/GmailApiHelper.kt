@@ -8,7 +8,7 @@ package com.flowcrypt.email.api.email.gmail
 import android.accounts.Account
 import android.content.Context
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
@@ -31,14 +31,14 @@ class GmailApiHelper {
     private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)
 
     /**
-     * Generate [Gmail] using incoming [AccountDao]. The [] Gmail is the main point in using Gmail API.
+     * Generate [Gmail] using incoming [AccountEntity]. The [] Gmail is the main point in using Gmail API.
      *
      * @param context    Interface to global information about an application environment.
-     * @param account The [AccountDao] object which contains information about an email account.
+     * @param account The [AccountEntity] object which contains information about an email account.
      * @return Generated [Gmail].
      */
     @JvmStatic
-    fun generateGmailApiService(context: Context, account: AccountDao?): Gmail {
+    fun generateGmailApiService(context: Context, account: AccountEntity?): Gmail {
       requireNotNull(account)
       return generateGmailApiService(context, account.account)
     }

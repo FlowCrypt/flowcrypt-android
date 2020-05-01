@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.email.sync
 
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.iap.ConnectionException
@@ -22,7 +22,7 @@ import javax.mail.Store
  *         Time: 3:27 PM
  *         E-mail: DenBond7@gmail.com
  */
-class SyncTaskRunnable(val accountDao: AccountDao, val synListener: SyncListener,
+class SyncTaskRunnable(val accountEntity: AccountEntity, val synListener: SyncListener,
                        val task: SyncTask, val store: Store, val session: Session) : Runnable {
   private val tag: String = javaClass.simpleName
 
@@ -37,11 +37,11 @@ class SyncTaskRunnable(val accountDao: AccountDao, val synListener: SyncListener
       LogsUtil.d(tag, "Start a new task = " + task.javaClass.simpleName + " for store " + store.toString())
 
       if (task.isSMTPRequired) {
-        synListener.onActionProgress(accountDao, task.ownerKey, task.requestCode, R.id.progress_id_running_smtp_action)
-        task.runSMTPAction(accountDao, session, store, synListener)
+        synListener.onActionProgress(accountEntity, task.ownerKey, task.requestCode, R.id.progress_id_running_smtp_action)
+        task.runSMTPAction(accountEntity, session, store, synListener)
       } else {
-        synListener.onActionProgress(accountDao, task.ownerKey, task.requestCode, R.id.progress_id_running_imap_action)
-        task.runIMAPAction(accountDao, session, store, synListener)
+        synListener.onActionProgress(accountEntity, task.ownerKey, task.requestCode, R.id.progress_id_running_imap_action)
+        task.runIMAPAction(accountEntity, session, store, synListener)
       }
       LogsUtil.d(tag, "The task = " + task.javaClass.simpleName +
           " |requestCode = {${task.requestCode}|ownerKey = ${task.ownerKey} completed ("
@@ -53,11 +53,11 @@ class SyncTaskRunnable(val accountDao: AccountDao, val synListener: SyncListener
           runTask(false)
         } else {
           ExceptionUtil.handleError(e)
-          task.handleException(accountDao, e, synListener)
+          task.handleException(accountEntity, e, synListener)
         }
       } else {
         ExceptionUtil.handleError(e)
-        task.handleException(accountDao, e, synListener)
+        task.handleException(accountEntity, e, synListener)
       }
     }
   }

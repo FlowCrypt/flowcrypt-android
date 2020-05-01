@@ -27,7 +27,7 @@ import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
@@ -61,7 +61,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   protected var keyImportModel: KeyImportModel? = null
   protected var isCheckingClipboardEnabled = true
   protected var isClipboardServiceBound: Boolean = false
-  protected var account: AccountDao? = null
+  protected var tempAccount: AccountEntity? = null
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   private var isCheckingPrivateKeyNow: Boolean = false
@@ -98,7 +98,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
 
     bindService(Intent(this, CheckClipboardToFindKeyService::class.java), clipboardConn, Context.BIND_AUTO_CREATE)
 
-    this.account = intent?.getParcelableExtra(KEY_EXTRA_ACCOUNT)
+    this.tempAccount = intent?.getParcelableExtra(KEY_EXTRA_ACCOUNT)
     this.throwErrorIfDuplicateFound =
         intent?.getBooleanExtra(KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false) ?: false
     this.keyImportModel = intent?.getParcelableExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD)
@@ -384,11 +384,11 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     private const val REQUEST_CODE_SELECT_KEYS_FROM_FILES_SYSTEM = 10
     private const val REQUEST_CODE_PERMISSION_READ_EXTERNAL_STORAGE = 11
 
-    fun newIntent(context: Context?, accountDao: AccountDao, isSyncEnabled: Boolean = false,
+    fun newIntent(context: Context?, accountEntity: AccountEntity?, isSyncEnabled: Boolean = false,
                   title: String, model: KeyImportModel? = null,
                   throwErrorIfDuplicateFoundEnabled: Boolean = false, cls: Class<*>): Intent {
       val intent = Intent(context, cls)
-      intent.putExtra(KEY_EXTRA_ACCOUNT, accountDao)
+      intent.putExtra(KEY_EXTRA_ACCOUNT, accountEntity)
       intent.putExtra(KEY_EXTRA_IS_SYNC_ENABLE, isSyncEnabled)
       intent.putExtra(KEY_EXTRA_TITLE, title)
       intent.putExtra(KEY_EXTRA_PRIVATE_KEY_IMPORT_MODEL_FROM_CLIPBOARD, model)

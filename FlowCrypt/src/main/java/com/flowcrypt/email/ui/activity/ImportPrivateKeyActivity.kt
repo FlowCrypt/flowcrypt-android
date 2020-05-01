@@ -21,7 +21,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
@@ -187,7 +187,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
               unlockedKeys.clear()
               unlockedKeys.addAll(it)
               if (intent?.getBooleanExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, true) == true) {
-                account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
+                activeAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
               } else {
                 privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
                 handleSuccessSubmit()
@@ -224,7 +224,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     if (!areFreshKeysExisted) {
       if (intent?.getBooleanExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, true) == true) {
         unlockedKeys.addAll(keyDetailsList)
-        account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
+        activeAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
         Toast.makeText(this, getString(R.string.key_already_imported_finishing_setup), Toast
             .LENGTH_SHORT).show()
       } else {
@@ -269,7 +269,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG -> {
         when (result) {
           TwoWayDialogFragment.RESULT_OK -> {
-            account?.let { accountDao -> submitPubKeyViewModel.submitPubKey(accountDao, unlockedKeys) }
+            activeAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
           }
 
           TwoWayDialogFragment.RESULT_CANCELED -> {
@@ -391,12 +391,12 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     val KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED", ImportPrivateKeyActivity::class.java)
 
-    fun getIntent(context: Context?, accountDao: AccountDao, isSyncEnabled: Boolean = false,
+    fun getIntent(context: Context?, accountEntity: AccountEntity?, isSyncEnabled: Boolean = false,
                   title: String, model: KeyImportModel? = null,
                   throwErrorIfDuplicateFoundEnabled: Boolean = false, cls: Class<*>,
                   isUseExistingKeysEnabled: Boolean = true,
                   isSubmittingPubKeysEnabled: Boolean = true): Intent {
-      val intent = newIntent(context, accountDao, isSyncEnabled, title, model, throwErrorIfDuplicateFoundEnabled, cls)
+      val intent = newIntent(context, accountEntity, isSyncEnabled, title, model, throwErrorIfDuplicateFoundEnabled, cls)
       intent.putExtra(KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, isUseExistingKeysEnabled)
       intent.putExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, isSubmittingPubKeysEnabled)
       return intent

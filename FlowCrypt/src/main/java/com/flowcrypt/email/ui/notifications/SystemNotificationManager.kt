@@ -13,7 +13,7 @@ import android.graphics.BitmapFactory
 import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 
@@ -34,15 +34,15 @@ class SystemNotificationManager(context: Context) : CustomNotificationManager(co
    *
    * @param account An active account
    */
-  fun showPassphraseTooLowNotification(account: AccountDao?) {
+  fun showPassphraseTooLowNotification(account: AccountEntity?) {
     if (account == null) {
       cancel(NOTIFICATION_ID_PASSPHRASE_TOO_WEAK)
     }
 
-    val intent = if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP) == true) {
+    val intent = if (account?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) == true) {
       Intent(context, EmailManagerActivity::class.java)
     } else {
-      ChangePassPhraseActivity.newIntent(context, account)
+      ChangePassPhraseActivity.newIntent(context)
     }
 
     val pendingIntent = PendingIntent.getActivity(context, System.currentTimeMillis().toInt(), intent, 0)

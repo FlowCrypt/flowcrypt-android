@@ -6,7 +6,6 @@
 package com.flowcrypt.email.rules
 
 import android.content.ContentValues
-import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import org.junit.Rule
 import org.junit.runner.Description
@@ -20,7 +19,7 @@ import org.junit.runners.model.Statement
  * Time: 10:19
  * E-mail: DenBond7@gmail.com
  */
-class UpdateAccountRule(private val account: AccountDao, private val contentValues: ContentValues) : BaseRule() {
+class UpdateAccountRule(private val account: AccountEntity, private val contentValues: ContentValues) : BaseRule() {
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {

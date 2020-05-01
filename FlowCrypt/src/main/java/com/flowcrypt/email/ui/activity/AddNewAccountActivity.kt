@@ -9,19 +9,19 @@ import android.app.Activity
 import android.content.Intent
 import android.view.View
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.base.BaseSignInActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 import java.util.*
 
 /**
@@ -50,24 +50,31 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
       REQUEST_CODE_ADD_OTHER_ACCOUNT -> when (resultCode) {
-        Activity.RESULT_OK -> try {
-          val authCreds = data!!.getParcelableExtra<AuthCredentials>(AddNewAccountManuallyActivity
-              .KEY_EXTRA_AUTH_CREDENTIALS)
-          val accountDaoSource = AccountDaoSource()
-          accountDaoSource.addRow(this, authCreds)
-          accountDaoSource.setActiveAccount(this, authCreds?.email)
+        Activity.RESULT_OK ->
+          lifecycleScope.launch {
+            try {
+              val authCreds = data?.getParcelableExtra<AuthCredentials>(AddNewAccountManuallyActivity
+                  .KEY_EXTRA_AUTH_CREDENTIALS) ?: return@launch
 
-          val intent = Intent()
-          intent.putExtra(KEY_EXTRA_NEW_ACCOUNT, accountDaoSource.getActiveAccountInformation(this))
+              val newAccount = AccountEntity(authCreds, null, null)
+              val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@AddNewAccountActivity)
+              roomDatabase.accountDao().addAccount(newAccount)
 
-          setResult(Activity.RESULT_OK, intent)
-          finish()
-        } catch (e: Exception) {
-          e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          Toast.makeText(this, e.message
-              ?: getString(R.string.error_occurred_during_adding_new_account), Toast.LENGTH_SHORT).show()
-        }
+              val addedAccount = roomDatabase.accountDao().getAccount(newAccount.email)
+
+              val intent = Intent()
+              intent.putExtra(KEY_EXTRA_NEW_ACCOUNT, addedAccount)
+
+              setResult(Activity.RESULT_OK, intent)
+              finish()
+            } catch (e: Exception) {
+              e.printStackTrace()
+              ExceptionUtil.handleError(e)
+              Toast.makeText(this@AddNewAccountActivity, e.message
+                  ?: getString(R.string.error_occurred_during_adding_new_account), Toast.LENGTH_SHORT).show()
+            }
+          }
+
 
         AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL ->
           super.onActivityResult(requestCode, resultCode, data)
@@ -109,26 +116,26 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
   }
 
   override fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?) {
-    if (AccountDaoSource().getAccountInformation(this, this.googleSignInAccount!!.email!!) == null) {
-      if (domainRules?.contains(AccountDao.DomainRule.NO_PRV_BACKUP.name) == true) {
-        val account = AccountDao(googleSignInAccount!!, uuid, domainRules)
+    /*if (AccountDaoSource().getAccountInformation(this, this.googleSignInAccount!!.email!!) == null) {
+      if (domainRules?.contains(AccountEntity.DomainRule.NO_PRV_BACKUP.name) == true) {
+        val account = AccountEntity(googleSignInAccount!!, uuid, domainRules)
         startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
             REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL)
         UIUtil.exchangeViewVisibility(false, progressView, rootView)
       } else {
-        googleSignInAccount?.let { loadPrivateKeysViewModel.fetchAvailableKeys(AccountDao(it, uuid, domainRules)) }
+        googleSignInAccount?.let { loadPrivateKeysViewModel.fetchAvailableKeys(AccountEntity(it, uuid, domainRules)) }
       }
     } else {
       UIUtil.exchangeViewVisibility(false, progressView, rootView)
       showInfoSnackbar(rootView, getString(R.string.template_email_alredy_added,
           this.googleSignInAccount!!.email), Snackbar.LENGTH_LONG)
-    }
+    }*/
   }
 
   override fun onFetchKeysCompleted(keyDetailsList: ArrayList<NodeKeyDetails>?) {
     if (keyDetailsList.isNullOrEmpty()) {
       googleSignInAccount?.let {
-        val account = AccountDao(it, uuid, domainRules)
+        val account = AccountEntity(it, uuid, domainRules)
         startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
             REQUEST_CODE_CREATE_OR_IMPORT_KEY_FOR_GMAIL)
         UIUtil.exchangeViewVisibility(false, progressView, rootView)
@@ -146,7 +153,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
   }
 
   private fun returnResultOk() {
-    val accountDaoSource = saveGmailAccount()
+    /*val accountDaoSource = saveGmailAccount()
     val account = accountDaoSource.getActiveAccountInformation(this)
     roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = account?.email))
 
@@ -154,15 +161,15 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
     intent.putExtra(KEY_EXTRA_NEW_ACCOUNT, account)
 
     setResult(Activity.RESULT_OK, intent)
-    finish()
+    finish()*/
   }
 
-  private fun saveGmailAccount(): AccountDaoSource {
+  /*private fun saveGmailAccount(): AccountDaoSource {
     val accountDaoSource = AccountDaoSource()
     accountDaoSource.addRow(this, googleSignInAccount, uuid, domainRules)
     accountDaoSource.setActiveAccount(this, googleSignInAccount!!.email)
     return accountDaoSource
-  }
+  }*/
 
   companion object {
 

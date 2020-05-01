@@ -5,14 +5,12 @@
 
 package com.flowcrypt.email.api.email.sync.tasks
 
-import android.content.Context
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.gimap.GmailRawSearchTerm
 import com.sun.mail.imap.IMAPFolder
 import java.util.*
@@ -45,7 +43,7 @@ class SearchMessagesSyncTask(ownerKey: String,
                              private val localFolder: LocalFolder,
                              private val countOfAlreadyLoadedMsgs: Int) : BaseSyncTask(ownerKey, requestCode) {
 
-  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     super.runIMAPAction(account, session, store, listener)
     listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_opening_store)
 
@@ -58,7 +56,7 @@ class SearchMessagesSyncTask(ownerKey: String,
           else -> countOfAlreadyLoadedMsgs
         }
 
-    val foundMsgs = imapFolder.search(generateSearchTerm(listener.context, account))
+    val foundMsgs = imapFolder.search(generateSearchTerm(account))
 
     val messagesCount = foundMsgs.size
     val end = messagesCount - countOfLoadedMsgs
@@ -90,26 +88,26 @@ class SearchMessagesSyncTask(ownerKey: String,
   }
 
   /**
-   * Generate a [SearchTerm] depend on an input [AccountDao].
+   * Generate a [SearchTerm] depend on an input [AccountEntity].
    *
    * @param context Interface to global information about an application environment.
-   * @param account An input [AccountDao]
+   * @param account An input [AccountEntity]
    * @return A generated [SearchTerm].
    */
-  private fun generateSearchTerm(context: Context, account: AccountDao): SearchTerm {
-    val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
+  private fun generateSearchTerm(account: AccountEntity): SearchTerm {
+    val isEncryptedModeEnabled = account.isShowOnlyEncrypted
 
-    if (isEncryptedModeEnabled) {
+    if (isEncryptedModeEnabled == true) {
       val searchTerm = EmailUtil.genEncryptedMsgsSearchTerm(account)
 
-      return if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
+      return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
         val stringTerm = searchTerm as StringTerm
         GmailRawSearchTerm(localFolder.searchQuery + " AND (" + stringTerm.pattern + ")")
       } else {
         AndTerm(searchTerm, generateNonGmailSearchTerm())
       }
     } else {
-      return if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
+      return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
         GmailRawSearchTerm(localFolder.searchQuery)
       } else {
         generateNonGmailSearchTerm()

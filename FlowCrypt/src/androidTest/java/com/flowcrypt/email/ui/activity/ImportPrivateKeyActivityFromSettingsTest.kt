@@ -69,7 +69,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
       object : IntentsTestRule<ImportPrivateKeyActivity>(ImportPrivateKeyActivity::class.java) {
         override fun getActivityIntent(): Intent {
           return ImportPrivateKeyActivity.getIntent(context = getTargetContext(),
-              accountDao = addAccountToDatabaseRule.account,
+              accountEntity = addAccountToDatabaseRule.account,
               isSyncEnabled = true,
               title = getTargetContext().getString(R.string.import_private_key),
               throwErrorIfDuplicateFoundEnabled = true,

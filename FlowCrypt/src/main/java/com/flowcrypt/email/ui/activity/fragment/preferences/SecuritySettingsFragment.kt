@@ -12,8 +12,6 @@ import androidx.lifecycle.Observer
 import androidx.preference.Preference
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
@@ -28,7 +26,6 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferenceClickListener {
-  private var account: AccountDao? = null
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private var longIdsOfCurrentAccount: MutableList<String> = mutableListOf()
 
@@ -43,21 +40,17 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     setPreferencesFromResource(R.xml.preferences_security_settings, rootKey)
-
-    account = AccountDaoSource().getActiveAccountInformation(requireContext())
-
     findPreference<Preference>(Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE)?.onPreferenceClickListener = this
   }
 
   override fun onPreferenceClick(preference: Preference): Boolean {
     return when (preference.key) {
       Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE -> {
-
         if (longIdsOfCurrentAccount.isEmpty()) {
           UIUtil.showInfoSnackbar(requireView(), getString(R.string.account_has_no_associated_keys,
               getString(R.string.support_email)))
         } else {
-          startActivity(ChangePassPhraseActivity.newIntent(context, account))
+          startActivity(ChangePassPhraseActivity.newIntent(context))
         }
         true
       }

@@ -11,7 +11,6 @@ import androidx.test.filters.SmallTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.DomainRules
-import com.flowcrypt.email.database.dao.source.AccountDao
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,7 +28,7 @@ class DomainRulesResponseTest {
   @Test
   fun testParcelable() {
     val original = DomainRulesResponse(ApiError(404, "msg", "internal"),
-        DomainRules(listOf(AccountDao.DomainRule.NO_PRV_CREATE.name))
+        DomainRules(listOf(AccountEntity.DomainRule.NO_PRV_CREATE.name))
     )
 
     val parcel = Parcel.obtain()

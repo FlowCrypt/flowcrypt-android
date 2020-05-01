@@ -9,7 +9,6 @@ import android.os.Parcel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.flowcrypt.email.DoesNotNeedMailserver
-import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import org.junit.Assert
 import org.junit.Test
@@ -28,7 +27,7 @@ class AccountDaoTest {
 
   @Test
   fun testParcelable() {
-    val authCredentials = AuthCredentials(
+    val authCredentials = AccountEntity(
         "email",
         "username",
         "password",
@@ -42,7 +41,7 @@ class AccountDaoTest {
         "username",
         "password")
 
-    val original = AccountDao(
+    val original = AccountEntity(
         "email",
         "accountType",
         "displayName",
@@ -52,13 +51,13 @@ class AccountDaoTest {
         true,
         authCredentials,
         "uuid",
-        listOf(AccountDao.DomainRule.NO_PRV_BACKUP.name))
+        listOf(AccountEntity.DomainRule.NO_PRV_BACKUP.name))
 
     val parcel = Parcel.obtain()
     original.writeToParcel(parcel, original.describeContents())
     parcel.setDataPosition(0)
 
-    val createdFromParcel = AccountDao.CREATOR.createFromParcel(parcel)
+    val createdFromParcel = AccountEntity.CREATOR.createFromParcel(parcel)
     Assert.assertTrue(null, original == createdFromParcel)
   }
 }

@@ -14,8 +14,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.CheckGmailTokenViewModel
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
@@ -35,7 +34,6 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
  * E-mail: DenBond7@gmail.com
  */
 class LauncherActivity : BaseActivity() {
-  private var account: AccountDao? = null
   private lateinit var checkGmailTokenViewModel: CheckGmailTokenViewModel
 
   override val isDisplayHomeAsUpEnabled: Boolean
@@ -55,27 +53,30 @@ class LauncherActivity : BaseActivity() {
     FeedbackJobIntentService.enqueueWork(this)
 
     setupCheckGmailTokenViewModel()
-
-    account = AccountDaoSource().getActiveAccountInformation(this)
-    if (account != null && isNodeReady) {
-      if (AccountDao.ACCOUNT_TYPE_GOOGLE == account?.accountType && account?.isRestoreAccessRequired == true) {
-        account?.let { checkGmailTokenViewModel.checkToken(it) }
-      } else {
-        showEmailManagerActivity()
-      }
-    }
   }
 
   override fun onNodeStateChanged(isReady: Boolean) {
     super.onNodeStateChanged(isReady)
-    if (account != null) {
-      if (AccountDao.ACCOUNT_TYPE_GOOGLE == account?.accountType && account?.isRestoreAccessRequired == true) {
-        account?.let { checkGmailTokenViewModel.checkToken(it) }
+    if (isAccountInfoReceived) {
+      if (activeAccount != null) {
+        if (AccountEntity.ACCOUNT_TYPE_GOOGLE == activeAccount?.accountType && activeAccount?.isRestoreAccessRequired == true) {
+          activeAccount?.let { checkGmailTokenViewModel.checkToken(it) }
+        } else {
+          showEmailManagerActivity()
+        }
+      } else {
+        showSignInActivity()
+      }
+    }
+  }
+
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    if (activeAccount != null && isNodeReady) {
+      if (AccountEntity.ACCOUNT_TYPE_GOOGLE == activeAccount?.accountType && activeAccount?.isRestoreAccessRequired == true) {
+        activeAccount?.let { checkGmailTokenViewModel.checkToken(it) }
       } else {
         showEmailManagerActivity()
       }
-    } else {
-      showSignInActivity()
     }
   }
 
@@ -103,7 +104,7 @@ class LauncherActivity : BaseActivity() {
           .getDefaultSharedPreferences(this), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, true)
 
       if (isCheckKeysNeeded) {
-        roomBasicViewModel.addActionToQueue(EncryptPrivateKeysIfNeededAction(0, account!!.email, 0))
+        roomBasicViewModel.addActionToQueue(EncryptPrivateKeysIfNeededAction(0, activeAccount!!.email, 0))
       }
 
       EmailSyncService.startEmailSyncService(this)

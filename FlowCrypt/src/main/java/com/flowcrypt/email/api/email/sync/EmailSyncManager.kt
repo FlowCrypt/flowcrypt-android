@@ -12,7 +12,7 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.util.LogsUtil
@@ -35,7 +35,7 @@ import javax.mail.Store
  * E-mail: DenBond7@gmail.com
  */
 
-class EmailSyncManager(val account: AccountDao, val listener: SyncListener) {
+class EmailSyncManager(val account: AccountEntity, val listener: SyncListener) {
   private val connectionExecutorService: ExecutorService = Executors.newSingleThreadExecutor()
   private val idleExecutorService: ExecutorService = Executors.newSingleThreadExecutor()
   private var connectionFuture: Future<*>? = null
