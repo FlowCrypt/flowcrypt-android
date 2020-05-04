@@ -31,6 +31,7 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.CheckEmailSettingsViewModel
@@ -41,6 +42,7 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.flowcrypt.email.util.idling.SingleIdlingResources
@@ -220,14 +222,9 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       R.id.buttonTryToConnect -> if (isDataCorrect()) {
         authCreds = generateAuthCreds()
         UIUtil.hideSoftInput(this, rootView)
-        if (checkDuplicate()) {
-          authCreds = generateAuthCreds()
-          authCreds?.let {
-            checkEmailSettingsViewModel.check(it)
-          }
-        } else {
-          showInfoSnackbar(rootView, getString(R.string.template_email_alredy_added,
-              authCreds?.email), Snackbar.LENGTH_LONG)
+        authCreds = generateAuthCreds()
+        authCreds?.let {
+          checkEmailSettingsViewModel.check(it)
         }
       }
     }
@@ -279,9 +276,8 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
             val isCorrect = it.data
             if (isCorrect == true) {
               authCreds?.let { authCredentials ->
-                /*val account = AccountDao(authCredentials.email, null, authCredentials.username,
-                    null, null, null, false, authCreds)
-                loadPrivateKeysViewModel.fetchAvailableKeys(account)*/
+                val account = AccountEntity(authCredentials, null, null)
+                loadPrivateKeysViewModel.fetchAvailableKeys(account)
               }
             } else {
               idlingForFetchingPrivateKeys.setIdleState(true)
@@ -299,6 +295,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
             val msg: String? = if (exception.message.isNullOrEmpty()) {
               exception.javaClass.simpleName
             } else exception.message
+
             if (original != null) {
               if (original is AuthenticationFailedException) {
                 val isGmailImapServer = editTextImapServer?.text.toString()
@@ -313,6 +310,9 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
               } else if (original is MailConnectException || original is SocketTimeoutException) {
                 title = getString(R.string.network_error)
               }
+            } else if (exception is AccountAlreadyAddedException) {
+              showInfoSnackbar(rootView, exception.message, Snackbar.LENGTH_LONG)
+              return@Observer
             }
 
             showDialogFragment(TwoWayDialogFragment.newInstance(requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
@@ -341,11 +341,12 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
 
             val keyDetailsList = it.data
             if (CollectionUtils.isEmpty(keyDetailsList)) {
-              /*val account = AccountDao(authCreds!!.email, null, authCreds!!.username, null, null, null,
-                  false, authCreds)
-              startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
-                  REQUEST_CODE_ADD_NEW_ACCOUNT)
-              UIUtil.exchangeViewVisibility(false, progressView, rootView)*/
+              authCreds?.let { authCredentials ->
+                val account = AccountEntity(authCredentials, null, null)
+                startActivityForResult(CreateOrImportKeyActivity.newIntent(this, account, true),
+                    REQUEST_CODE_ADD_NEW_ACCOUNT)
+                UIUtil.exchangeViewVisibility(false, progressView, rootView)
+              }
             } else {
               val subTitle = resources.getQuantityString(R.plurals.found_backup_of_your_account_key,
                   keyDetailsList!!.size, keyDetailsList.size)
@@ -414,15 +415,6 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     intent.putExtra(KEY_EXTRA_AUTH_CREDENTIALS, authCreds)
     setResult(Activity.RESULT_OK, intent)
     finish()
-  }
-
-  /**
-   * Check that current email is not duplicate and not added yet.
-   *
-   * @return true if email not added yet, otherwise false.
-   */
-  private fun checkDuplicate(): Boolean {
-    return false//AccountDaoSource().getAccountInformation(this, authCreds!!.email) == null
   }
 
   private fun initViews(savedInstanceState: Bundle?) {

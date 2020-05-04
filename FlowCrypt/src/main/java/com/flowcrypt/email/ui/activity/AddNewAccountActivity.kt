@@ -60,7 +60,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
               val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@AddNewAccountActivity)
               roomDatabase.accountDao().addAccount(newAccount)
 
-              val addedAccount = roomDatabase.accountDao().getAccount(newAccount.email)
+              val addedAccount = roomDatabase.accountDao().getAccountSuspend(newAccount.email)
 
               val intent = Intent()
               intent.putExtra(KEY_EXTRA_NEW_ACCOUNT, addedAccount)
