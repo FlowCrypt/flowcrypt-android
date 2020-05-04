@@ -779,7 +779,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
   private fun setupMsgsViewModel() {
     msgsViewModel = ViewModelProvider(this).get(MessagesViewModel::class.java)
-    msgsViewModel.accountLiveData.observe(this, Observer { })
     msgsViewModel.msgStatesLiveData.observe(this, Observer {
       val activity = activity as? BaseSyncActivity ?: return@Observer
       with(activity) {

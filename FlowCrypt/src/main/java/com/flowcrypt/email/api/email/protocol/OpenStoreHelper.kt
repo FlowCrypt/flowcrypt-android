@@ -40,7 +40,6 @@ class OpenStoreHelper {
      * @return <tt>GmailSSLStore</tt> A GmailSSLStore object based on properties for
      * gimaps.
      */
-    @JvmStatic
     fun openAndConnectToGimapsStore(context: Context, token: String, accountName: String): GmailSSLStore {
       val gmailSSLStore = getGmailSess(context).getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
       gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountName, token)
@@ -51,13 +50,12 @@ class OpenStoreHelper {
      * Open and connect to the store using gimaps protocol.
      *
      * @param context            Interface to global information about an application environment.
-     * @param session            The sess which will be used for connection.
-     * @param accountEntity            The object which contains information about an email accountEntity.
+     * @param session            The session which will be used for connection.
+     * @param accountEntity      The object which contains information about an account.
      * @param isResetTokenNeeded True if need reset token.
      * @return <tt>GmailSSLStore</tt> A GmailSSLStore object based on properties for
      * gimaps.
      */
-    @JvmStatic
     fun openAndConnectToGimapsStore(context: Context, session: Session, accountEntity: AccountEntity,
                                     isResetTokenNeeded: Boolean): GmailSSLStore {
       val gmailSSLStore: GmailSSLStore = session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
@@ -90,7 +88,6 @@ class OpenStoreHelper {
      * @param context Interface to global information about an application environment;
      * @return <tt>Session</tt> A new sess for gimaps protocol based on properties for gimaps.
      */
-    @JvmStatic
     fun getGmailSess(context: Context): Session {
       val session = Session.getInstance(PropertiesHelper.generateGmailProperties())
       session.debug = EmailUtil.hasEnabledDebug(context)
@@ -104,7 +101,6 @@ class OpenStoreHelper {
      * @param account An input [AccountEntity];
      * @return <tt>Session</tt> A new sess based on for download attachments.
      */
-    @JvmStatic
     fun getAttsSess(context: Context, account: AccountEntity?): Session {
       return if (account != null) {
         when (account.accountType) {
@@ -121,42 +117,24 @@ class OpenStoreHelper {
     }
 
     /**
-     * Generate a sess for gimaps protocol which will be use for download attachments.
-     *
-     * @param context Interface to global information about an application environment;
-     * @return <tt>Session</tt> A new sess for gimaps protocol based on properties for gimaps.
-     */
-    @JvmStatic
-    fun getAttGmailSess(context: Context): Session {
-      val session = Session.getInstance(PropertiesHelper.genGmailAttsProperties())
-      session.debug = EmailUtil.hasEnabledDebug(context)
-      return session
-    }
-
-    /**
      * Prepare [Session] object for the input [AccountEntity].
      *
      * @param context Interface to global information about an application environment;
      * @param account An input [AccountEntity];
      * @return A generated [Session]
      */
-    @JvmStatic
     fun getAccountSess(context: Context, account: AccountEntity): Session {
-      return if (account != null) {
-        when (account.accountType) {
-          AccountEntity.ACCOUNT_TYPE_GOOGLE -> getGmailSess(context)
+      return when (account.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE -> getGmailSess(context)
 
-          else -> {
-            val session = Session.getInstance(PropertiesHelper.genProps(account))
-            session.debug = EmailUtil.hasEnabledDebug(context)
-            session
-          }
+        else -> {
+          val session = Session.getInstance(PropertiesHelper.genProps(account))
+          session.debug = EmailUtil.hasEnabledDebug(context)
+          session
         }
-      } else
-        throw NullPointerException("AccountEntity must not be a null!")
+      }
     }
 
-    @JvmStatic
     fun openStore(context: Context, account: AccountEntity?, session: Session): Store {
       return if (account != null) {
         when (account.accountType) {
@@ -174,6 +152,18 @@ class OpenStoreHelper {
         }
       } else
         throw NullPointerException("AccountEntity must not be a null!")
+    }
+
+    /**
+     * Generate a sess for gimaps protocol which will be use for download attachments.
+     *
+     * @param context Interface to global information about an application environment;
+     * @return <tt>Session</tt> A new sess for gimaps protocol based on properties for gimaps.
+     */
+    private fun getAttGmailSess(context: Context): Session {
+      val session = Session.getInstance(PropertiesHelper.genGmailAttsProperties())
+      session.debug = EmailUtil.hasEnabledDebug(context)
+      return session
     }
   }
 }

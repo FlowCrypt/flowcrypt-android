@@ -14,7 +14,6 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.gmail.Gmail
 import com.google.api.services.gmail.GmailScopes
-import java.util.*
 
 /**
  * This class helps to work with Gmail API.
@@ -31,10 +30,11 @@ class GmailApiHelper {
     private val SCOPES = arrayOf(GmailScopes.MAIL_GOOGLE_COM)
 
     /**
-     * Generate [Gmail] using incoming [AccountEntity]. The [] Gmail is the main point in using Gmail API.
+     * Generate [Gmail] using incoming [AccountEntity]. [Gmail] class is the main point of
+     * Gmail API.
      *
-     * @param context    Interface to global information about an application environment.
-     * @param account The [AccountEntity] object which contains information about an email account.
+     * @param context   Interface to global information about an application environment.
+     * @param account   The [AccountEntity] object which contains information about an account.
      * @return Generated [Gmail].
      */
     @JvmStatic
@@ -62,7 +62,7 @@ class GmailApiHelper {
      * @return Generated [GoogleAccountCredential].
      */
     private fun generateGoogleAccountCredential(context: Context, account: Account?): GoogleAccountCredential {
-      return GoogleAccountCredential.usingOAuth2(context, Arrays.asList(*SCOPES)).setSelectedAccount(account)
+      return GoogleAccountCredential.usingOAuth2(context, listOf(*SCOPES)).setSelectedAccount(account)
     }
   }
 }
