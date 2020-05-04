@@ -29,6 +29,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.DecryptMessageViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
+import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
@@ -88,9 +89,9 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
     super.onDestroy()
   }
 
-  override fun onNodeStateChanged(isReady: Boolean) {
-    super.onNodeStateChanged(isReady)
-    if (isReady) {
+  override fun onNodeStateChanged(nodeInitResult: Node.NodeInitResult) {
+    super.onNodeStateChanged(nodeInitResult)
+    if (nodeInitResult.isReady) {
       if (rawMimeBytesOfOutgoingMsg?.isNotEmpty() == true) {
         decryptMsg()
       }

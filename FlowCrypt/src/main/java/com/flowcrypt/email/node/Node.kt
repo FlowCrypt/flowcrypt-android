@@ -41,7 +41,7 @@ class Node private constructor(app: Application) {
     init(app)
   }
 
-  val liveData: MutableLiveData<Boolean> = MutableLiveData()
+  val liveData: MutableLiveData<NodeInitResult> = MutableLiveData()
 
   private fun init(context: Context) {
     Thread(Runnable {
@@ -61,11 +61,11 @@ class Node private constructor(app: Application) {
         waitUntilReady()
         NodeRetrofitHelper.init(context, nodeSecret!!)
 
-        liveData.postValue(true)
+        liveData.postValue(NodeInitResult(true))
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
-        liveData.postValue(false)
+        liveData.postValue(NodeInitResult(false, e))
       }
     }).start()
   }
@@ -120,6 +120,8 @@ class Node private constructor(app: Application) {
       return null
     }
   }
+
+  data class NodeInitResult(val isReady: Boolean, val e: Exception? = null)
 
   companion object {
     private const val NODE_SECRETS_CACHE_FILENAME = "flowcrypt-node-secrets-cache"

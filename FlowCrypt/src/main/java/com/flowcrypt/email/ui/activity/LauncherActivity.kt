@@ -19,6 +19,7 @@ import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.jetpack.viewmodel.CheckGmailTokenViewModel
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.FeedbackJobIntentService
@@ -66,8 +67,8 @@ class LauncherActivity : BaseActivity() {
     }
   }
 
-  override fun onNodeStateChanged(isReady: Boolean) {
-    super.onNodeStateChanged(isReady)
+  override fun onNodeStateChanged(nodeInitResult: Node.NodeInitResult) {
+    super.onNodeStateChanged(nodeInitResult)
     if (account != null) {
       if (AccountDao.ACCOUNT_TYPE_GOOGLE == account?.accountType && account?.isRestoreAccessRequired == true) {
         account?.let { checkGmailTokenViewModel.checkToken(it) }
