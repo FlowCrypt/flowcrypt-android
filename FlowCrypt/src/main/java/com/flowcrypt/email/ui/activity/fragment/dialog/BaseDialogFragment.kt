@@ -27,7 +27,7 @@ open class BaseDialogFragment : DialogFragment() {
   val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
 
   protected val isNodeReady: Boolean
-    get() = Node.getInstance(requireActivity().application).liveData.value ?: false
+    get() = Node.getInstance(requireActivity().application).liveData.value?.isReady ?: false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -38,14 +38,14 @@ open class BaseDialogFragment : DialogFragment() {
     Toast.makeText(context, string, Toast.LENGTH_SHORT).show()
   }
 
-  protected open fun onNodeStateChanged(newState: Boolean?) {
+  protected open fun onNodeStateChanged(nodeInitResult: Node.NodeInitResult) {
 
   }
 
   private fun registerNodeIdlingResources() {
-    Node.getInstance(requireActivity().application).liveData.observe(this, Observer { aBoolean ->
-      nodeIdlingResource.setIdleState(aBoolean!!)
-      onNodeStateChanged(aBoolean)
+    Node.getInstance(requireActivity().application).liveData.observe(this, Observer { nodeInitResult ->
+      onNodeStateChanged(nodeInitResult)
+      nodeIdlingResource.setIdleState(nodeInitResult.isReady)
     })
   }
 }

@@ -7,9 +7,9 @@ package com.flowcrypt.email.ui.activity
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
-
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.showInfoDialogFragment
+import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 
 /**
@@ -45,12 +45,14 @@ class NodeRunnerActivity : BaseActivity() {
     //disabled
   }
 
-  override fun onNodeStateChanged(isReady: Boolean) {
-    super.onNodeStateChanged(isReady)
-    if (isReady) {
+  override fun onNodeStateChanged(nodeInitResult: Node.NodeInitResult) {
+    super.onNodeStateChanged(nodeInitResult)
+    if (nodeInitResult.isReady) {
       finish()
     } else {
-      Toast.makeText(this, getString(R.string.internal_node_init_error), Toast.LENGTH_LONG).show()
+      showInfoDialogFragment(dialogMsg = nodeInitResult.e?.message
+          ?: nodeInitResult.e?.javaClass?.simpleName
+          ?: getString(R.string.internal_node_init_error))
     }
   }
 }

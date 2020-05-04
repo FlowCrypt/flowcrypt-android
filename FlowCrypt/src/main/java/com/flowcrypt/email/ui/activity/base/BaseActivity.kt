@@ -86,7 +86,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
     get() = if (Node.getInstance(application).liveData.value == null) {
       false
     } else {
-      Node.getInstance(application).liveData.value!!
+      Node.getInstance(application).liveData.value?.isReady ?: false
     }
 
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
@@ -289,14 +289,14 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
     }
   }
 
-  protected open fun onNodeStateChanged(isReady: Boolean) {
+  protected open fun onNodeStateChanged(nodeInitResult: Node.NodeInitResult) {
 
   }
 
   private fun registerNodeIdlingResources() {
-    Node.getInstance(application).liveData.observe(this, Observer { aBoolean ->
-      onNodeStateChanged(aBoolean)
-      nodeIdlingResource.setIdleState(aBoolean!!)
+    Node.getInstance(application).liveData.observe(this, Observer { nodeInitResult ->
+      onNodeStateChanged(nodeInitResult)
+      nodeIdlingResource.setIdleState(nodeInitResult.isReady)
     })
   }
 

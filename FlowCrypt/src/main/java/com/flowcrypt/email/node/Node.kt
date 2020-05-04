@@ -41,7 +41,7 @@ class Node private constructor(app: Application) {
     init(app)
   }
 
-  val liveData: MutableLiveData<Boolean> = MutableLiveData()
+  val liveData: MutableLiveData<NodeInitResult> = MutableLiveData()
 
   private fun init(context: Context) {
     Thread(Runnable {
@@ -61,11 +61,11 @@ class Node private constructor(app: Application) {
         waitUntilReady()
         NodeRetrofitHelper.init(context, nodeSecret!!)
 
-        liveData.postValue(true)
+        liveData.postValue(NodeInitResult(true))
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
-        liveData.postValue(false)
+        liveData.postValue(NodeInitResult(false, e))
       }
     }).start()
   }
@@ -108,29 +108,20 @@ class Node private constructor(app: Application) {
   private fun getCachedNodeSecretCerts(context: Context): NodeSecretCerts? {
     try {
       context.openFileInput(NODE_SECRETS_CACHE_FILENAME).use { inputStream ->
-        val gson = NodeGson.gson
         val rawData = IOUtils.toString(inputStream, StandardCharsets.UTF_8)
-
-        val splitPosition = rawData.indexOf('\n')
-
-        if (splitPosition == -1) {
-          throw IllegalArgumentException("wrong rawData")
-        }
-
-        val decryptedData = try {
-          KeyStoreCryptoManager.decrypt(rawData.substring(splitPosition + 1))
-        } catch (e: Exception) {
-          KeyStoreCryptoManager.decrypt(rawData)
-        }
-        return gson.fromJson(decryptedData, NodeSecretCerts::class.java)
+        val decryptedData = KeyStoreCryptoManager.decrypt(rawData)
+        return NodeGson.gson.fromJson(decryptedData, NodeSecretCerts::class.java)
       }
     } catch (e: FileNotFoundException) {
       e.printStackTrace()
       return null
     } catch (e: Exception) {
-      throw RuntimeException("Could not load certs cache", e)
+      ExceptionUtil.handleError(e)
+      return null
     }
   }
+
+  data class NodeInitResult(val isReady: Boolean, val e: Exception? = null)
 
   companion object {
     private const val NODE_SECRETS_CACHE_FILENAME = "flowcrypt-node-secrets-cache"
