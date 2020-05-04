@@ -196,7 +196,7 @@ class NodeSecret @JvmOverloads internal constructor(writablePath: String,
     val info = SubjectPublicKeyInfo.getInstance(subjectKeyPair.public.encoded)
     val serial = BigInteger.valueOf(System.currentTimeMillis())
 
-    val subjectCertBuilder = X509v3CertificateBuilder(issuer, serial, from, to, subject, info)
+    val subjectCertBuilder = X509v3CertificateBuilder(issuer, serial, from, to, Locale.US, subject, info)
     subjectCertBuilder.addExtension(Extension.keyUsage, true, KeyUsage(keyUsage))
     val signer = JcaContentSignerBuilder("SHA256WithRSAEncryption").build(issuerKeyPair.private)
     val crtHolder = subjectCertBuilder.build(signer)
