@@ -47,7 +47,7 @@ interface AccountDaoSource : BaseDao<AccountEntity> {
   suspend fun getAccounts(): List<AccountEntity>
 
   @Transaction
-  suspend fun addAccount(accountEntity: AccountEntity) {
+  suspend fun addAccountSuspend(accountEntity: AccountEntity) {
     val availableAccounts = getAccounts()
     //mark all accounts as non-active
     updateSuspend(availableAccounts.map { it.copy(isActive = false) })

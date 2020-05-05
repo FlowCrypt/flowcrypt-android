@@ -34,7 +34,7 @@ import java.util.*
     ])
 data class AccountEntity constructor(
     @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = BaseColumns._ID) val id: Long? = 0,
+    @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
     val email: String,
     @ColumnInfo(name = "account_type", defaultValue = "NULL") val accountType: String? = null,
     @ColumnInfo(name = "display_name", defaultValue = "NULL") val displayName: String? = null,
@@ -69,7 +69,6 @@ data class AccountEntity constructor(
   constructor(googleSignInAccount: GoogleSignInAccount, uuid: String? = null,
               domainRules: List<String>? = null) :
       this(
-          id = 0,
           email = googleSignInAccount.email!!,
           accountType = googleSignInAccount.account?.type?.toLowerCase(Locale.getDefault()),
           displayName = googleSignInAccount.displayName,
@@ -129,7 +128,6 @@ data class AccountEntity constructor(
     return contentValues*/
   constructor(authCredentials: AuthCredentials, uuid: String? = null, domainRules: List<String>? = null) :
       this(
-          id = 0,
           email = authCredentials.email,
           accountType = authCredentials.email.substring(authCredentials.email.indexOf('@') + 1).toLowerCase(Locale.getDefault()),
           displayName = null,
@@ -162,7 +160,6 @@ data class AccountEntity constructor(
 
   constructor(email: String) :
       this(
-          id = 0,
           email = email,
           accountType = null,
           displayName = null,

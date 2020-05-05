@@ -58,7 +58,7 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
 
               val newAccount = AccountEntity(authCreds, null, null)
               val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@AddNewAccountActivity)
-              roomDatabase.accountDao().addAccount(newAccount)
+              roomDatabase.accountDao().addAccountSuspend(newAccount)
 
               val addedAccount = roomDatabase.accountDao().getAccountSuspend(newAccount.email)
 
@@ -74,7 +74,6 @@ class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
                   ?: getString(R.string.error_occurred_during_adding_new_account), Toast.LENGTH_SHORT).show()
             }
           }
-
 
         AddNewAccountManuallyActivity.RESULT_CODE_CONTINUE_WITH_GMAIL ->
           super.onActivityResult(requestCode, resultCode, data)
