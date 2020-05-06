@@ -182,7 +182,7 @@ class SignInActivity : BaseSignInActivity() {
   private fun addNewAccount(accountEntity: AccountEntity) {
     lifecycleScope.launch {
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@SignInActivity)
-      roomDatabase.accountDao().insertSuspend(accountEntity.copy(isActive = true))
+      roomDatabase.accountDao().addAccountSuspend(accountEntity)
       EmailSyncService.startEmailSyncService(this@SignInActivity)
 
       val addedAccount = roomDatabase.accountDao().getAccount(accountEntity.email)
@@ -215,7 +215,7 @@ class SignInActivity : BaseSignInActivity() {
 
         insertOrUpdateCandidate?.let {
           if (existedAccount == null) {
-            roomDatabase.accountDao().insertSuspend(insertOrUpdateCandidate)
+            roomDatabase.accountDao().addAccountSuspend(insertOrUpdateCandidate)
           } else {
             roomDatabase.accountDao().updateAccountSuspend(insertOrUpdateCandidate.copy(
                 id = existedAccount.id, uuid = existedAccount.uuid, domainRules = existedAccount.domainRules))

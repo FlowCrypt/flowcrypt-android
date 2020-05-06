@@ -118,18 +118,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
     initAccountViewModel()
   }
 
-  open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
-
-  }
-
-  private fun initAccountViewModel() {
-    accountViewModel.activeAccountLiveData.observe(this, Observer {
-      activeAccount = it
-      isAccountInfoReceived = true
-      onAccountInfoRefreshed(activeAccount)
-    })
-  }
-
   public override fun onStart() {
     super.onStart()
     LogsUtil.d(tag, "onStart")
@@ -310,6 +298,18 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
 
   protected open fun onNodeStateChanged(isReady: Boolean) {
 
+  }
+
+  protected open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+
+  }
+
+  private fun initAccountViewModel() {
+    accountViewModel.activeAccountLiveData.observe(this, Observer {
+      activeAccount = it
+      isAccountInfoReceived = true
+      onAccountInfoRefreshed(activeAccount)
+    })
   }
 
   private fun registerNodeIdlingResources() {

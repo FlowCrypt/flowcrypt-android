@@ -9,13 +9,14 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.activity.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.CheckGmailTokenViewModel
+import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.security.KeysStorageImpl
@@ -34,7 +35,8 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
  * E-mail: DenBond7@gmail.com
  */
 class LauncherActivity : BaseActivity() {
-  private lateinit var checkGmailTokenViewModel: CheckGmailTokenViewModel
+  private val checkGmailTokenViewModel: CheckGmailTokenViewModel by viewModels()
+  private val launcherViewModel: LauncherViewModel by viewModels()
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = false
@@ -46,6 +48,7 @@ class LauncherActivity : BaseActivity() {
     get() = R.layout.activity_launcher
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    setupLauncherViewModel()
     super.onCreate(savedInstanceState)
     PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false)
     ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
@@ -57,31 +60,34 @@ class LauncherActivity : BaseActivity() {
 
   override fun onNodeStateChanged(isReady: Boolean) {
     super.onNodeStateChanged(isReady)
-    if (isAccountInfoReceived) {
-      if (activeAccount != null) {
-        if (AccountEntity.ACCOUNT_TYPE_GOOGLE == activeAccount?.accountType && activeAccount?.isRestoreAccessRequired == true) {
-          activeAccount?.let { checkGmailTokenViewModel.checkToken(it) }
-        } else {
-          showEmailManagerActivity()
-        }
-      } else {
-        showSignInActivity()
-      }
-    }
+    launcherViewModel.isNodeInfoReceivedLiveData.value = true
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
-    if (activeAccount != null && isNodeReady) {
-      if (AccountEntity.ACCOUNT_TYPE_GOOGLE == activeAccount?.accountType && activeAccount?.isRestoreAccessRequired == true) {
-        activeAccount?.let { checkGmailTokenViewModel.checkToken(it) }
-      } else {
-        showEmailManagerActivity()
+    super.onAccountInfoRefreshed(accountEntity)
+    launcherViewModel.isAccountInfoReceivedLiveData.value = true
+  }
+
+  private fun setupLauncherViewModel() {
+    launcherViewModel.mediatorLiveData.observe(this, Observer {
+      if (launcherViewModel.isAccountInfoReceivedLiveData.value == true
+          && launcherViewModel.isNodeInfoReceivedLiveData.value == true) {
+        if (isAccountInfoReceived) {
+          if (activeAccount != null) {
+            if (AccountEntity.ACCOUNT_TYPE_GOOGLE == activeAccount?.accountType && activeAccount?.isRestoreAccessRequired == true) {
+              activeAccount?.let { checkGmailTokenViewModel.checkToken(it) }
+            } else {
+              showEmailManagerActivity()
+            }
+          } else {
+            showSignInActivity()
+          }
+        }
       }
-    }
+    })
   }
 
   private fun setupCheckGmailTokenViewModel() {
-    checkGmailTokenViewModel = ViewModelProvider(this).get(CheckGmailTokenViewModel::class.java)
     checkGmailTokenViewModel.tokenLiveData.observe(this, Observer {
       if (it != null) {
         if (UserRecoverableAuthExceptionActivity.isRunEnabled()) {
