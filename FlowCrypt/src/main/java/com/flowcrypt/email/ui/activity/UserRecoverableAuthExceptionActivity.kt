@@ -69,7 +69,9 @@ class UserRecoverableAuthExceptionActivity : BaseActivity(), View.OnClickListene
           Activity.RESULT_OK -> {
             lifecycleScope.launch {
               val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-              activeAccount?.copy(isRestoreAccessRequired = false)?.let { roomDatabase.accountDao().updateSuspend(it) }
+              activeAccount?.copy(isRestoreAccessRequired = false)?.let {
+                roomDatabase.accountDao().updateAccountSuspend(it)
+              }
               roomDatabase.msgDao().changeMsgsStateSuspend(
                   activeAccount?.email, JavaEmailConstants.FOLDER_OUTBOX, MessageState.AUTH_FAILURE.value,
                   MessageState.QUEUED.value)
@@ -138,11 +140,11 @@ class UserRecoverableAuthExceptionActivity : BaseActivity(), View.OnClickListene
       val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccounts()
       if (nonactiveAccounts.isNotEmpty()) {
         val firstNonactiveAccount = nonactiveAccounts.first()
-        roomDatabase.accountDao().updateSuspend(roomDatabase.accountDao().getAccounts().map { it.copy(isActive = false) })
-        roomDatabase.accountDao().updateSuspend(firstNonactiveAccount.copy(isActive = true))
-        finish()
+        roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
+        roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
         EmailSyncService.switchAccount(applicationContext)
         EmailManagerActivity.runEmailManagerActivity(applicationContext)
+        finish()
       } else {
         stopService(Intent(applicationContext, EmailSyncService::class.java))
         val intent = Intent(applicationContext, SignInActivity::class.java)

@@ -104,6 +104,7 @@ class EmailSyncService : BaseService(), SyncListener {
             if (!::emailSyncManager.isInitialized) {
               emailSyncManager = EmailSyncManager(it, this)
               messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
+              emailSyncManager.beginSync()
             }
           }
         })

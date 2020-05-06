@@ -277,7 +277,7 @@ class EmailUtil {
 
         return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
       } catch (e: UserRecoverableAuthException) {
-        FlowCryptRoomDatabase.getDatabase(context).accountDao().update(accountEntity.copy(isRestoreAccessRequired = true))
+        FlowCryptRoomDatabase.getDatabase(context).accountDao().updateAccount(accountEntity.copy(isRestoreAccessRequired = true))
         context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
         throw e
       }
@@ -367,11 +367,11 @@ class EmailUtil {
 
         return list
       } catch (e: UserRecoverableAuthIOException) {
-        FlowCryptRoomDatabase.getDatabase(context).accountDao().update(account.copy(isRestoreAccessRequired = true))
+        FlowCryptRoomDatabase.getDatabase(context).accountDao().updateAccount(account.copy(isRestoreAccessRequired = true))
         context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
         throw e
       } catch (e: UserRecoverableAuthException) {
-        FlowCryptRoomDatabase.getDatabase(context).accountDao().update(account.copy(isRestoreAccessRequired = true))
+        FlowCryptRoomDatabase.getDatabase(context).accountDao().updateAccount(account.copy(isRestoreAccessRequired = true))
         context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
         throw e
       }

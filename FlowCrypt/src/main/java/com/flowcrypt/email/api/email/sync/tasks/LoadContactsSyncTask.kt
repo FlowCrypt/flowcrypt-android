@@ -47,7 +47,7 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
       imapFolder.fetch(msgs, fetchProfile)
 
       updateContacts(listener, msgs)
-      FlowCryptRoomDatabase.getDatabase(listener.context).accountDao().update(account.copy(areContactsLoaded = true))
+      FlowCryptRoomDatabase.getDatabase(listener.context).accountDao().updateAccount(account.copy(areContactsLoaded = true))
     }
 
     imapFolder.close(false)

@@ -23,44 +23,99 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager
  * E-mail: DenBond7@gmail.com
  */
 @Dao
-interface AccountDaoSource : BaseDao<AccountEntity> {
+abstract class AccountDaoSource : BaseDao<AccountEntity> {
+  @Query("SELECT * FROM accounts WHERE is_active = 1")
+  abstract suspend fun getActiveAccountSuspend(): AccountEntity?
 
   @Query("SELECT * FROM accounts WHERE is_active = 1")
-  suspend fun getActiveAccountSuspend(): AccountEntity?
+  abstract fun getActiveAccount(): AccountEntity?
 
   @Query("SELECT * FROM accounts WHERE is_active = 1")
-  fun getActiveAccount(): AccountEntity?
-
-  @Query("SELECT * FROM accounts WHERE is_active = 1")
-  fun getActiveAccountLD(): LiveData<AccountEntity?>
+  abstract fun getActiveAccountLD(): LiveData<AccountEntity?>
 
   @Query("SELECT * FROM accounts WHERE email = :email")
-  suspend fun getAccountSuspend(email: String): AccountEntity?
+  abstract suspend fun getAccountSuspend(email: String): AccountEntity?
 
   @Query("SELECT * FROM accounts WHERE email = :email")
-  fun getAccount(email: String): AccountEntity?
+  abstract fun getAccount(email: String): AccountEntity?
 
   @Query("SELECT * FROM accounts WHERE is_active = 0")
-  suspend fun getAllNonactiveAccounts(): List<AccountEntity>
+  abstract suspend fun getAllNonactiveAccounts(): List<AccountEntity>
+
+  @Query("SELECT * FROM accounts WHERE is_active = 0")
+  abstract fun getAllNonactiveAccountsLD(): LiveData<List<AccountEntity>>
 
   @Query("SELECT * FROM accounts")
-  suspend fun getAccounts(): List<AccountEntity>
+  abstract suspend fun getAccountsSuspend(): List<AccountEntity>
 
   @Transaction
-  suspend fun addAccountSuspend(accountEntity: AccountEntity) {
-    val availableAccounts = getAccounts()
+  open suspend fun addAccountSuspend(accountEntity: AccountEntity) {
+    val availableAccounts = getAccountsSuspend()
     //mark all accounts as non-active
-    updateSuspend(availableAccounts.map { it.copy(isActive = false) })
+    updateAccountsSuspend(availableAccounts.map { it.copy(isActive = false) })
 
     //encrypt sensitive info
     val encryptedPassword = KeyStoreCryptoManager.encryptSuspend(accountEntity.password)
     val encryptedSmtpPassword = KeyStoreCryptoManager.encryptSuspend(accountEntity.smtpPassword)
     val encryptedUuid = KeyStoreCryptoManager.encryptSuspend(accountEntity.uuid)
 
-    insertSuspend(accountEntity.copy(
-        password = encryptedPassword,
-        smtpPassword = encryptedSmtpPassword,
-        uuid = encryptedUuid,
-        isActive = true))
+    insertSuspend(
+        accountEntity.copy(
+            password = encryptedPassword,
+            smtpPassword = encryptedSmtpPassword,
+            uuid = encryptedUuid,
+            isActive = true))
+  }
+
+  @Transaction
+  open suspend fun switchAccountSuspend(accountEntity: AccountEntity) {
+    val existedAccount = getAccountSuspend(accountEntity.email) ?: return
+    val availableAccounts = getAccountsSuspend()
+    //mark all accounts as non-active
+    updateAccountsSuspend(availableAccounts.map { it.copy(isActive = false) })
+    //mark the given account as active
+    updateAccountSuspend(existedAccount.copy(isActive = true))
+  }
+
+  @Transaction
+  open fun updateAccount(entity: AccountEntity): Int {
+    val existedAccount = getAccount(entity.email) ?: return 0
+    return update(entity.copy(
+        id = existedAccount.id,
+        password = existedAccount.password,
+        smtpPassword = existedAccount.smtpPassword,
+        uuid = existedAccount.uuid))
+  }
+
+  @Transaction
+  open suspend fun updateAccountSuspend(entity: AccountEntity): Int {
+    val existedAccount = getAccountSuspend(entity.email) ?: return 0
+    return updateSuspend(entity.copy(
+        id = existedAccount.id,
+        password = existedAccount.password,
+        smtpPassword = existedAccount.smtpPassword,
+        uuid = existedAccount.uuid))
+  }
+
+  @Transaction
+  open fun updateAccounts(entities: Iterable<AccountEntity>): Int {
+    var result = 0
+
+    for (accountEntity in entities) {
+      result += updateAccount(accountEntity)
+    }
+
+    return result
+  }
+
+  @Transaction
+  open suspend fun updateAccountsSuspend(entities: Iterable<AccountEntity>): Int {
+    var result = 0
+
+    for (accountEntity in entities) {
+      result += updateAccountSuspend(accountEntity)
+    }
+
+    return result
   }
 }

@@ -29,6 +29,20 @@ open class AccountViewModel(application: Application) : BaseAndroidViewModel(app
     }
   }
 
+  private val pureNonActiveAccountsLiveData: LiveData<List<AccountEntity>> = roomDatabase.accountDao().getAllNonactiveAccountsLD()
+  val nonActiveAccountsLiveData: LiveData<List<AccountEntity>> = pureNonActiveAccountsLiveData.switchMap { accountEntities ->
+    liveData {
+      emit(accountEntities.mapNotNull { accountEntity -> getAccountEntityWithDecryptedIfo(accountEntity) })
+    }
+  }
+
+  suspend fun showOnlyEncryptedMsgs(accountEntity: AccountEntity?, showOnlyEncryptedMsgs: Boolean) {
+    accountEntity?.let {
+      roomDatabase.accountDao().updateAccountSuspend(accountEntity.copy(isShowOnlyEncrypted =
+      showOnlyEncryptedMsgs))
+    }
+  }
+
   companion object {
     fun getAccountEntityWithDecryptedIfo(accountEntity: AccountEntity?): AccountEntity? {
       var originalPassword = accountEntity?.password

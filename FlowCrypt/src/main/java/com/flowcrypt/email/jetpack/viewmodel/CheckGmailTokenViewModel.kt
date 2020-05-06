@@ -41,7 +41,7 @@ class CheckGmailTokenViewModel(application: Application) : BaseAndroidViewModel(
         null
       } catch (e: UserRecoverableAuthException) {
         e.printStackTrace()
-        FlowCryptRoomDatabase.getDatabase(getApplication()).accountDao().updateSuspend(accountEntity.copy(isRestoreAccessRequired = true))
+        FlowCryptRoomDatabase.getDatabase(getApplication()).accountDao().updateAccountSuspend(accountEntity.copy(isRestoreAccessRequired = true))
         e.intent
       } catch (e: Exception) {
         null

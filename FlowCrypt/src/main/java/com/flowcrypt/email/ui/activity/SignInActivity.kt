@@ -217,8 +217,8 @@ class SignInActivity : BaseSignInActivity() {
           if (existedAccount == null) {
             roomDatabase.accountDao().insertSuspend(insertOrUpdateCandidate)
           } else {
-            roomDatabase.accountDao().updateSuspend(insertOrUpdateCandidate.copy(id =
-            existedAccount.id, uuid = existedAccount.uuid, domainRules = existedAccount.domainRules))
+            roomDatabase.accountDao().updateAccountSuspend(insertOrUpdateCandidate.copy(
+                id = existedAccount.id, uuid = existedAccount.uuid, domainRules = existedAccount.domainRules))
           }
         }
 
