@@ -143,7 +143,7 @@ class UserRecoverableAuthExceptionActivity : BaseActivity(), View.OnClickListene
         roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
         roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
         EmailSyncService.switchAccount(applicationContext)
-        EmailManagerActivity.runEmailManagerActivity(applicationContext)
+        EmailManagerActivity.runEmailManagerActivity(this@UserRecoverableAuthExceptionActivity)
         finish()
       } else {
         stopService(Intent(applicationContext, EmailSyncService::class.java))

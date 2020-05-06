@@ -400,7 +400,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
           roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
           roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
           EmailSyncService.switchAccount(applicationContext)
-          runEmailManagerActivity(applicationContext)
+          runEmailManagerActivity(this@EmailManagerActivity)
           finish()
         } else {
           stopService(Intent(applicationContext, EmailSyncService::class.java))
@@ -529,6 +529,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
    * @return The generated view.
    */
   private fun genAccountsLayout(accounts: List<AccountEntity>): ViewGroup {
+    accountManagementLayout?.removeAllViews()
     for (account in accounts) {
       accountManagementLayout?.addView(generateAccountItemView(account))
     }
