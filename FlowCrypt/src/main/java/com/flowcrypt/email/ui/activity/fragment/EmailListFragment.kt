@@ -115,6 +115,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
 
     adapter.submitList(it)
+    actionMode?.invalidate()
   }
 
   private val boundaryCallback = object : PagedList.BoundaryCallback<MessageEntity>() {
