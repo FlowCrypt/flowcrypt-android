@@ -21,9 +21,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.LoadingState
@@ -32,13 +32,15 @@ import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
-import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -53,8 +55,7 @@ import java.util.concurrent.TimeUnit
  */
 class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>> {
 
-  private var email: String? = null
-  private var publicKey: String? = null
+  private var contactEntity: ContactEntity? = null
   private var details: NodeKeyDetails? = null
   private var progressBar: View? = null
   private var content: View? = null
@@ -62,18 +63,14 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
   private var layoutLongIdsAndKeyWords: ViewGroup? = null
   private var textViewAlgorithm: TextView? = null
   private var textViewCreated: TextView? = null
-  private val contactsViewModel: ContactsViewModel by viewModels()
 
   override val contentResourceId: Int = R.layout.fragment_public_key_details
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
-
-    publicKey = arguments?.getString(KEY_PUBLIC_KEY)
-    email = arguments?.getString(KEY_EMAIL)
-
-    if (publicKey == null || email == null) {
+    contactEntity = arguments?.getParcelable(KEY_CONTACT)
+    if (contactEntity == null) {
       parentFragmentManager.popBackStack()
     }
   }
@@ -113,8 +110,11 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
       }
 
       R.id.menuActionDelete -> {
-        email?.let { contactsViewModel.deleteContactByEmail(it) }
-        parentFragmentManager.popBackStack()
+        lifecycleScope.launch {
+          val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
+          contactEntity?.let { roomDatabase.contactsDao().deleteSuspend(it) }
+          parentFragmentManager.popBackStack()
+        }
         return true
       }
 
@@ -237,7 +237,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     val viewModel = ViewModelProvider(this).get(ParseKeysViewModel::class.java)
     viewModel.init(NodeRepository())
     viewModel.responsesLiveData.observe(viewLifecycleOwner, this)
-    viewModel.fetchKeys(publicKey)
+    viewModel.fetchKeys(String(contactEntity?.publicKey ?: byteArrayOf()))
   }
 
   private fun chooseDest() {
@@ -245,7 +245,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
     intent.addCategory(Intent.CATEGORY_OPENABLE)
     intent.type = Constants.MIME_TYPE_PGP_KEY
 
-    val sanitizedEmail = email?.replace("[^a-z0-9]".toRegex(), "")
+    val sanitizedEmail = contactEntity?.email?.replace("[^a-z0-9]".toRegex(), "")
     val fileName = "0x" + details?.longId + "-" + sanitizedEmail + "-publickey" + ".asc"
 
     intent.putExtra(Intent.EXTRA_TITLE, fileName)
@@ -253,17 +253,14 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
   }
 
   companion object {
-    private val KEY_PUBLIC_KEY = GeneralUtil.generateUniqueExtraKey("KEY_PUBLIC_KEY",
-        PublicKeyDetailsFragment::class.java)
-    private val KEY_EMAIL = GeneralUtil.generateUniqueExtraKey("KEY_EMAIL",
+    private val KEY_CONTACT = GeneralUtil.generateUniqueExtraKey("KEY_CONTACT",
         PublicKeyDetailsFragment::class.java)
     private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
 
-    fun newInstance(email: String?, publicKey: String?): PublicKeyDetailsFragment {
+    fun newInstance(contactEntity: ContactEntity): PublicKeyDetailsFragment {
       val fragment = PublicKeyDetailsFragment()
       val args = Bundle()
-      args.putString(KEY_EMAIL, email)
-      args.putString(KEY_PUBLIC_KEY, publicKey)
+      args.putParcelable(KEY_CONTACT, contactEntity)
       fragment.arguments = args
       return fragment
     }

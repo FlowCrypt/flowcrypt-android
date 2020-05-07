@@ -71,12 +71,9 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
   }
 
   override fun onContactClick(contactEntity: ContactEntity) {
-    val email = contactEntity.email
-    val publicKey = String(contactEntity.publicKey ?: byteArrayOf())
-
     parentFragmentManager
         .beginTransaction()
-        .replace(R.id.layoutContent, PublicKeyDetailsFragment.newInstance(email, publicKey))
+        .replace(R.id.layoutContent, PublicKeyDetailsFragment.newInstance(contactEntity))
         .addToBackStack(null)
         .commit()
   }
