@@ -754,6 +754,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         val menuActionMarkUnread = menu?.findItem(R.id.menuActionMarkUnread)
         menuActionMarkUnread?.isVisible = isChangeSeenStateActionEnabled()
 
+        val menuActionDeleteMessage = menu?.findItem(R.id.menuActionDeleteMessage)
+        menuActionDeleteMessage?.isVisible = isDeleteActionEnabled()
+
         if (isChangeSeenStateActionEnabled()) {
           val id = tracker?.selection?.first() ?: return true
           val msgEntity = adapter.getMsgEntity(keyProvider?.getPosition(id))
@@ -818,6 +821,18 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private fun isChangeSeenStateActionEnabled(): Boolean {
     return when (FoldersManager.getFolderType(listener?.currentFolder)) {
       FoldersManager.FolderType.OUTBOX -> {
+        false
+      }
+
+      else -> {
+        true
+      }
+    }
+  }
+
+  private fun isDeleteActionEnabled(): Boolean {
+    return when (FoldersManager.getFolderType(listener?.currentFolder)) {
+      FoldersManager.FolderType.TRASH, null -> {
         false
       }
 
