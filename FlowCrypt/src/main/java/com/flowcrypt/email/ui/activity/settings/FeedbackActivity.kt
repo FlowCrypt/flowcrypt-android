@@ -149,6 +149,11 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
     bitmap?.let { imageButtonScreenshot.setImageBitmap(it) }
   }
 
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    activeAccount?.let { editTextUserEmail.visibility = View.GONE }
+  }
+
   private fun initViews() {
     editTextUserMsg = findViewById(R.id.editTextUserMessage)
     editTextUserEmail = findViewById(R.id.editTextUserEmail)
@@ -158,7 +163,6 @@ class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedCh
     screenShotGroup = findViewById(R.id.screenShotGroup)
     checkBoxScreenshot = findViewById(R.id.checkBoxScreenshot)
     checkBoxScreenshot.setOnCheckedChangeListener(this)
-    activeAccount?.let { editTextUserEmail.visibility = View.GONE }
 
     bitmap?.let { imageButtonScreenshot.setImageBitmap(it) }
   }
