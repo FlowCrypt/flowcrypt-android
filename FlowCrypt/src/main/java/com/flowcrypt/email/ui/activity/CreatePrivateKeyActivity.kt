@@ -34,6 +34,7 @@ import com.google.android.material.snackbar.Snackbar
 class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.LoaderCallbacks<LoaderResult> {
 
   private var createdPrivateKeyLongId: String? = null
+  private var tempAccount: AccountEntity? = null
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_pass_phrase_manager
@@ -48,12 +49,14 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    if (savedInstanceState != null) {
-      this.createdPrivateKeyLongId = savedInstanceState.getString(KEY_CREATED_PRIVATE_KEY_LONG_ID)
+    this.tempAccount = intent.getParcelableExtra(KEY_EXTRA_ACCOUNT)
+
+    if (tempAccount == null) {
+      finish()
     }
 
-    if (intent == null) {
-      finish()
+    if (savedInstanceState != null) {
+      this.createdPrivateKeyLongId = savedInstanceState.getString(KEY_CREATED_PRIVATE_KEY_LONG_ID)
     }
   }
 
@@ -167,7 +170,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
   }
 
   companion object {
-
+    val KEY_EXTRA_ACCOUNT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT", BasePassPhraseManagerActivity::class.java)
     val KEY_CREATED_PRIVATE_KEY_LONG_ID =
         GeneralUtil.generateUniqueExtraKey("KEY_CREATED_PRIVATE_KEY_LONG_ID", CreatePrivateKeyActivity::class.java)
 

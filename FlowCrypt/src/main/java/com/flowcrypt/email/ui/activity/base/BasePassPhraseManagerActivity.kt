@@ -34,11 +34,9 @@ import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.response.model.node.Word
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
-import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
-import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.material.snackbar.Snackbar
@@ -72,7 +70,6 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
   protected lateinit var textViewSecondPasswordCheckTitle: TextView
   protected lateinit var btnSuccess: Button
 
-  protected var tempAccount: AccountEntity? = null
   protected var isBackEnabled = true
 
   @get:VisibleForTesting
@@ -93,12 +90,6 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     super.onCreate(savedInstanceState)
 
     if (intent == null) {
-      finish()
-    }
-
-    this.tempAccount = intent.getParcelableExtra(KEY_EXTRA_ACCOUNT)
-
-    if (tempAccount == null) {
       finish()
     }
 
@@ -356,7 +347,6 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
   }
 
   companion object {
-    val KEY_EXTRA_ACCOUNT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT", BasePassPhraseManagerActivity::class.java)
     private const val DELAY: Long = 350
   }
 }
