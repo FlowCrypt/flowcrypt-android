@@ -36,13 +36,6 @@ open class AccountViewModel(application: Application) : BaseAndroidViewModel(app
     }
   }
 
-  suspend fun showOnlyEncryptedMsgs(accountEntity: AccountEntity?, showOnlyEncryptedMsgs: Boolean) {
-    accountEntity?.let {
-      roomDatabase.accountDao().updateAccountSuspend(accountEntity.copy(isShowOnlyEncrypted =
-      showOnlyEncryptedMsgs))
-    }
-  }
-
   companion object {
     fun getAccountEntityWithDecryptedIfo(accountEntity: AccountEntity?): AccountEntity? {
       var originalPassword = accountEntity?.password

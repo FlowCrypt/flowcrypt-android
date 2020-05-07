@@ -165,17 +165,23 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     switchView?.isChecked = activeAccount?.isShowOnlyEncrypted ?: false
     switchView?.setOnCheckedChangeListener { buttonView, isChecked ->
       lifecycleScope.launch {
-        if (GeneralUtil.isConnected(this@EmailManagerActivity.applicationContext)) {
-          buttonView.isEnabled = false
+        activeAccount?.let {
+          if (GeneralUtil.isConnected(this@EmailManagerActivity.applicationContext)) {
+            buttonView.isEnabled = false
+          }
+
+          FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity.applicationContext)
+              .accountDao().updateAccountSuspend(it.copy(isShowOnlyEncrypted = isChecked))
+
+          onShowOnlyEncryptedMsgs(isChecked)
+
+          Toast.makeText(this@EmailManagerActivity, if (isChecked)
+            R.string.showing_only_encrypted_messages
+          else
+            R.string.showing_all_messages, Toast.LENGTH_SHORT).show()
         }
 
-        accountViewModel.showOnlyEncryptedMsgs(activeAccount, isChecked)
-        onShowOnlyEncryptedMsgs(isChecked)
 
-        Toast.makeText(this@EmailManagerActivity, if (isChecked)
-          R.string.showing_only_encrypted_messages
-        else
-          R.string.showing_all_messages, Toast.LENGTH_SHORT).show()
       }
     }
 
