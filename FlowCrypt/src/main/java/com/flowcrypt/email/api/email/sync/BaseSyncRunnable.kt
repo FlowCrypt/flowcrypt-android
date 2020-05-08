@@ -25,7 +25,7 @@ import javax.mail.Store
  *         Time: 3:21 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseSyncRunnable constructor(val account: AccountEntity, val syncListener: SyncListener) : Runnable {
+abstract class BaseSyncRunnable constructor(val syncListener: SyncListener) : Runnable {
   //todo-denbond7 review this class
   protected val tag: String = javaClass.simpleName
 
@@ -41,22 +41,22 @@ abstract class BaseSyncRunnable constructor(val account: AccountEntity, val sync
   internal val isConnected: Boolean
     get() = store?.isConnected == true
 
-  internal fun resetConnIfNeeded(task: SyncTask?) {
+  internal fun resetConnIfNeeded(accountEntity: AccountEntity, isResetConnectionNeeded: Boolean, task: SyncTask?) {
     val activeStore = store ?: return
 
-    if (task?.resetConnection == true) {
-      disconnect(task)
+    if (task?.resetConnection == true || isResetConnectionNeeded) {
+      disconnect(accountEntity, task)
       return
     }
 
-    if (!activeStore.urlName.username.equals(account.username, ignoreCase = true)) {
-      disconnect(task)
+    if (!activeStore.urlName.username.equals(accountEntity.username, ignoreCase = true)) {
+      disconnect(accountEntity, task)
     }
   }
 
-  private fun disconnect(task: SyncTask?) {
+  private fun disconnect(accountEntity: AccountEntity, task: SyncTask?) {
     LogsUtil.d(tag, "Connection was reset!")
-    task?.let { syncListener.onActionProgress(account, it.ownerKey, it.requestCode, R.id.progress_id_resetting_connection) }
+    task?.let { syncListener.onActionProgress(accountEntity, it.ownerKey, it.requestCode, R.id.progress_id_resetting_connection) }
     closeConn()
     sess = null
   }
@@ -73,10 +73,10 @@ abstract class BaseSyncRunnable constructor(val account: AccountEntity, val sync
 
   }
 
-  internal fun openConnToStore() {
+  internal fun openConnToStore(accountEntity: AccountEntity) {
     patchingSecurityProvider(syncListener.context)
-    sess = OpenStoreHelper.getAccountSess(syncListener.context, account)
-    store = OpenStoreHelper.openStore(syncListener.context, account, sess!!)
+    sess = OpenStoreHelper.getAccountSess(syncListener.context, accountEntity)
+    store = OpenStoreHelper.openStore(syncListener.context, accountEntity, sess!!)
   }
 
   /**

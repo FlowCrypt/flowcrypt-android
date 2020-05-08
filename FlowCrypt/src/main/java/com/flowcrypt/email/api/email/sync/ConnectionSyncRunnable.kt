@@ -25,6 +25,7 @@ import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -43,8 +44,7 @@ import java.util.concurrent.LinkedBlockingQueue
  *         Time: 3:36 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ConnectionSyncRunnable(account: AccountEntity, syncListener: SyncListener)
-  : BaseSyncRunnable(account, syncListener) {
+class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(syncListener) {
   private val tasksQueue: BlockingQueue<SyncTask> = LinkedBlockingQueue()
   private val tasksExecutorService: ExecutorService = Executors.newFixedThreadPool(MAX_RUNNING_TASKS_COUNT)
   private val tasksMap = ConcurrentHashMap<String, Future<*>>()
@@ -57,15 +57,23 @@ class ConnectionSyncRunnable(account: AccountEntity, syncListener: SyncListener)
   override fun run() {
     LogsUtil.d(tag, " run!")
     Thread.currentThread().name = javaClass.simpleName
-    while (!Thread.interrupted()) {
-      try {
-        LogsUtil.d(tag, "TasksQueue size = " + tasksQueue.size)
-        runSyncTask(tasksQueue.take(), true)
-      } catch (e: InterruptedException) {
-        e.printStackTrace()
-        tasksQueue.clear()
-        tasksExecutorService.shutdown()
-        break
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(syncListener.context)
+    var lastActiveAccount = roomDatabase.accountDao().getActiveAccount()
+    if (lastActiveAccount != null) {
+      while (!Thread.interrupted()) {
+        try {
+          LogsUtil.d(tag, "TasksQueue size = " + tasksQueue.size)
+          val refreshedActiveAccount = roomDatabase.accountDao().getActiveAccount()
+              ?: throw InterruptedException()
+          val isResetConnectionNeeded = !refreshedActiveAccount.email.equals(lastActiveAccount?.email, true)
+          lastActiveAccount = refreshedActiveAccount
+          runSyncTask(lastActiveAccount, tasksQueue.take(), true, isResetConnectionNeeded)
+        } catch (e: InterruptedException) {
+          e.printStackTrace()
+          tasksQueue.clear()
+          tasksExecutorService.shutdown()
+          break
+        }
       }
     }
 
@@ -170,7 +178,7 @@ class ConnectionSyncRunnable(account: AccountEntity, syncListener: SyncListener)
 
   fun loadNextMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
     try {
-      syncListener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_adding_task_to_queue)
+      syncListener.onActionProgress(null, ownerKey, requestCode, R.id.progress_id_adding_task_to_queue)
       removeOldTasks(LoadMessagesToCacheSyncTask::class.java, tasksQueue)
       tasksQueue.put(LoadMessagesToCacheSyncTask(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount))
     } catch (e: InterruptedException) {
@@ -224,7 +232,7 @@ class ConnectionSyncRunnable(account: AccountEntity, syncListener: SyncListener)
 
   fun searchMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
     try {
-      syncListener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_adding_task_to_queue)
+      syncListener.onActionProgress(null, ownerKey, requestCode, R.id.progress_id_adding_task_to_queue)
       removeOldTasks(SearchMessagesSyncTask::class.java, tasksQueue)
       tasksQueue.put(SearchMessagesSyncTask(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount))
     } catch (e: InterruptedException) {
@@ -240,29 +248,24 @@ class ConnectionSyncRunnable(account: AccountEntity, syncListener: SyncListener)
   }
 
   private fun loadContactsInfoIfNeeded() {
-    if (account.areContactsLoaded == false) {
-      //we need to update labels before we can use the SENT folder for retrieve contacts
-      updateLabels("", 0)
-      try {
-        tasksQueue.put(LoadContactsSyncTask())
-      } catch (e: InterruptedException) {
-        e.printStackTrace()
-      }
+    try {
+      tasksQueue.put(LoadContactsSyncTask())
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 
-  private fun runSyncTask(task: SyncTask?, isRetryEnabled: Boolean) {
-
+  private fun runSyncTask(accountEntity: AccountEntity, task: SyncTask?, isRetryEnabled: Boolean, isResetConnectionNeeded: Boolean) {
     task?.let {
       try {
-        syncListener.onActionProgress(account, task.ownerKey, task.requestCode, R.id.progress_id_running_task)
+        syncListener.onActionProgress(accountEntity, task.ownerKey, task.requestCode, R.id.progress_id_running_task)
 
-        resetConnIfNeeded(task)
+        resetConnIfNeeded(accountEntity, isResetConnectionNeeded, task)
 
         if (!isConnected) {
           LogsUtil.d(tag, "Not connected. Start a reconnection ...")
-          syncListener.onActionProgress(account, task.ownerKey, task.requestCode, R.id.progress_id_connecting_to_email_server)
-          openConnToStore()
+          syncListener.onActionProgress(accountEntity, task.ownerKey, task.requestCode, R.id.progress_id_connecting_to_email_server)
+          openConnToStore(accountEntity)
           LogsUtil.d(tag, "Reconnection done")
         }
 
@@ -278,7 +281,7 @@ class ConnectionSyncRunnable(account: AccountEntity, syncListener: SyncListener)
         }
 
         if (!tasksExecutorService.isShutdown) {
-          tasksMap[task.uniqueId] = tasksExecutorService.submit(SyncTaskRunnable(account, syncListener,
+          tasksMap[task.uniqueId] = tasksExecutorService.submit(SyncTaskRunnable(accountEntity, syncListener,
               task, activeStore, activeSess))
         }
 
@@ -286,14 +289,14 @@ class ConnectionSyncRunnable(account: AccountEntity, syncListener: SyncListener)
         e.printStackTrace()
         if (e is ConnectionException) {
           if (isRetryEnabled) {
-            runSyncTask(task, false)
+            runSyncTask(accountEntity, task, false, isResetConnectionNeeded)
           } else {
             ExceptionUtil.handleError(e)
-            task.handleException(account, e, syncListener)
+            task.handleException(accountEntity, e, syncListener)
           }
         } else {
           ExceptionUtil.handleError(e)
-          task.handleException(account, e, syncListener)
+          task.handleException(accountEntity, e, syncListener)
         }
       }
     }

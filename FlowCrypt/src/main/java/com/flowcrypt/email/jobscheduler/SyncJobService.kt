@@ -172,7 +172,7 @@ class SyncJobService : JobService(), SyncListener {
 
   }
 
-  override fun onActionProgress(account: AccountEntity, ownerKey: String, requestCode: Int,
+  override fun onActionProgress(account: AccountEntity?, ownerKey: String, requestCode: Int,
                                 resultCode: Int, value: Int) {
 
   }

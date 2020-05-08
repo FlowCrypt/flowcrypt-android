@@ -19,8 +19,6 @@ import android.os.Messenger
 import android.os.RemoteException
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
-import androidx.lifecycle.liveData
-import androidx.lifecycle.switchMap
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
@@ -36,7 +34,6 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -93,21 +90,8 @@ class EmailSyncService : BaseService(), SyncListener {
     }
     registerReceiver(connectionBroadcastReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
 
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(this)
-    roomDatabase.accountDao().getActiveAccountLD()
-        .switchMap { accountEntity ->
-          liveData {
-            emit(AccountViewModel.getAccountEntityWithDecryptedIfo(accountEntity))
-          }
-        }.observe(this, androidx.lifecycle.Observer {
-          it?.let {
-            if (!::emailSyncManager.isInitialized) {
-              emailSyncManager = EmailSyncManager(it, this)
-              messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
-              emailSyncManager.beginSync()
-            }
-          }
-        })
+    emailSyncManager = EmailSyncManager(this)
+    messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -534,14 +518,13 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onActionProgress(account: AccountEntity, ownerKey: String, requestCode: Int,
+  override fun onActionProgress(account: AccountEntity?, ownerKey: String, requestCode: Int,
                                 resultCode: Int, value: Int) {
     LogsUtil.d(TAG,
         "onActionProgress: account$account| ownerKey =$ownerKey| requestCode =$requestCode")
     try {
       if (replyToMessengers.containsKey(ownerKey)) {
-        val messenger = replyToMessengers[ownerKey]
-        messenger!!.send(Message.obtain(null, REPLY_ACTION_PROGRESS, requestCode, resultCode, value))
+        replyToMessengers[ownerKey]?.send(Message.obtain(null, REPLY_ACTION_PROGRESS, requestCode, resultCode, value))
       }
     } catch (e: RemoteException) {
       e.printStackTrace()
@@ -763,21 +746,6 @@ class EmailSyncService : BaseService(), SyncListener {
 
           MESSAGE_MOVE_MESSAGE -> if (emailSyncManager != null && action != null) {
             val localFolders = action.`object` as Array<LocalFolder?>
-
-            val emailDomain = emailSyncManager.account.accountType
-
-            if (localFolders.size != 2) {
-              throw IllegalArgumentException(emailDomain!! + "|Can't move the message. Folders are null.")
-            }
-
-            if (localFolders[0] == null) {
-              throw IllegalArgumentException(emailDomain!! + "|Can't move the message. The source folder is null.")
-            }
-
-            if (localFolders[1] == null) {
-              throw IllegalArgumentException(emailDomain!! + "|Cannot move the message. The dest folder is null.")
-            }
-
             emailSyncManager.moveMsg(ownerKey!!, requestCode, localFolders[0]!!, localFolders[1]!!, msg.arg1)
           }
 

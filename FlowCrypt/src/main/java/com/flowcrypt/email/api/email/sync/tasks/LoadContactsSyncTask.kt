@@ -32,6 +32,8 @@ import javax.mail.internet.InternetAddress
 class LoadContactsSyncTask : BaseSyncTask("", 0) {
 
   override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
+    if (account.areContactsLoaded == true) return
+
     val foldersManager = FoldersManager.fromDatabase(listener.context, account.email)
     val folderSent = foldersManager.folderSent ?: return
     val imapFolder = store.getFolder(folderSent.fullName) as IMAPFolder

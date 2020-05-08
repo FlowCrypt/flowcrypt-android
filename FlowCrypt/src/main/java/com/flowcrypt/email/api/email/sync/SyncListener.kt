@@ -290,7 +290,7 @@ interface SyncListener {
    * @param value       The value of the happened action.
    */
   fun onActionProgress(
-      account: AccountEntity,
+      account: AccountEntity?,
       ownerKey: String,
       requestCode: Int,
       resultCode: Int,

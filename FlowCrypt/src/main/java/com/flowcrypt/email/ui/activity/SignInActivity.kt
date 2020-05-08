@@ -196,8 +196,6 @@ class SignInActivity : BaseSignInActivity() {
   }
 
   private fun runEmailManagerActivity() {
-    EmailSyncService.startEmailSyncService(this)
-
     if (googleSignInAccount == null) {
       ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
       Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
@@ -222,6 +220,7 @@ class SignInActivity : BaseSignInActivity() {
           }
         }
 
+        EmailSyncService.startEmailSyncService(this@SignInActivity)
         roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = googleSignInAccount?.email))
         EmailManagerActivity.runEmailManagerActivity(this@SignInActivity)
         finish()
