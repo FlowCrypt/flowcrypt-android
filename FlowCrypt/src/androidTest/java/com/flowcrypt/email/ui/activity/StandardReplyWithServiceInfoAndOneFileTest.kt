@@ -29,7 +29,6 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -175,7 +174,8 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   private fun generateContentValues(): ContentValues {
     val contentValues = ContentValues()
-    contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true)
+    //todo-denbond7 fix me
+    //contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true)
     return contentValues
   }
 

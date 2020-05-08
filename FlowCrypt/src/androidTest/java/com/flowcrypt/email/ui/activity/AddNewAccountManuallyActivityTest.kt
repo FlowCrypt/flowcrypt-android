@@ -26,6 +26,7 @@ import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withSecurityTypeOption
@@ -58,6 +59,7 @@ import java.util.concurrent.TimeUnit
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("fix me")
 class AddNewAccountManuallyActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(AddNewAccountManuallyActivity::class.java)
@@ -67,7 +69,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(activityTestRule)
 
-  private val authCreds: AccountEntity = AuthCredentialsManager.getLocalWithOneBackupAuthCreds()
+  private val authCreds: AuthCredentials = AuthCredentialsManager.getLocalWithOneBackupAuthCreds().getAuthCredentials()
 
   @Before
   fun setUp() {

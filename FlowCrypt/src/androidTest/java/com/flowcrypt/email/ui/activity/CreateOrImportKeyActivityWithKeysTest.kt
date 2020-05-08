@@ -15,7 +15,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.ActivityResultMatchers
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
-import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtraWithKey
 import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -25,10 +24,9 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.base.BaseCreateOrImportKeyActivityTest
-import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.util.AccountDaoManager
+import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.allOf
-import org.junit.Assert.assertThat
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -62,8 +60,7 @@ class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest(
 
   @Test
   fun testClickOnButtonCreateNewKey() {
-    intending(allOf(hasComponent(ComponentName(getTargetContext(), CreatePrivateKeyActivity::class.java)),
-        hasExtraWithKey(BasePassPhraseManagerActivity.KEY_EXTRA_ACCOUNT)))
+    intending(allOf(hasComponent(ComponentName(getTargetContext(), CreatePrivateKeyActivity::class.java))))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     onView(withId(R.id.buttonCreateNewKey))
         .check(matches(ViewMatchers.isDisplayed()))

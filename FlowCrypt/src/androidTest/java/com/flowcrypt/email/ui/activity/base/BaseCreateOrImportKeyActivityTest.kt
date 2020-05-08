@@ -23,8 +23,8 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
+import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.allOf
-import org.junit.Assert.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 

@@ -1,12 +1,10 @@
 {
   "email": "user_with_one_backup@denbond7.com",
   "imapPort": 143,
-  "imapOpt": "NONE",
   "imapServer": "imap.denbond7.com",
   "hasCustomSignInForSmtp": false,
   "password": "qwerty1234",
   "smtpPort": 25,
-  "smtpOpt": "NONE",
   "smtpServer": "smtp.denbond7.com",
   "username": "user_with_one_backup@denbond7.com"
 }

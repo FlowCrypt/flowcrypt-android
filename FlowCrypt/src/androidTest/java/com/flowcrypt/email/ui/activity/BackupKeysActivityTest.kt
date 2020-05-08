@@ -60,6 +60,7 @@ import java.io.File
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("fix me")
 class BackupKeysActivityTest : BaseTest() {
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(BackupKeysActivity::class.java)
 

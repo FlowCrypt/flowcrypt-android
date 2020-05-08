@@ -44,7 +44,7 @@ class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
   override val activityTestRule: ActivityTestRule<*>? =
       object : IntentsTestRule<ChangePassPhraseActivity>(ChangePassPhraseActivity::class.java) {
         override fun getActivityIntent(): Intent {
-          return ChangePassPhraseActivity.newIntent(getTargetContext(), addAccountToDatabaseRule.account)
+          return ChangePassPhraseActivity.newIntent(getTargetContext())
         }
       }
 

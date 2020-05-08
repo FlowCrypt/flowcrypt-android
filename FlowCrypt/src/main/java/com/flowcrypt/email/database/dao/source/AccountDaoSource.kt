@@ -48,6 +48,9 @@ abstract class AccountDaoSource : BaseDao<AccountEntity> {
   @Query("SELECT * FROM accounts")
   abstract suspend fun getAccountsSuspend(): List<AccountEntity>
 
+  @Query("SELECT * FROM accounts")
+  abstract fun getAccounts(): List<AccountEntity>
+
   @Transaction
   open suspend fun addAccountSuspend(accountEntity: AccountEntity) {
     val availableAccounts = getAccountsSuspend()
@@ -60,6 +63,25 @@ abstract class AccountDaoSource : BaseDao<AccountEntity> {
     val encryptedUuid = KeyStoreCryptoManager.encryptSuspend(accountEntity.uuid)
 
     insertSuspend(
+        accountEntity.copy(
+            password = encryptedPassword,
+            smtpPassword = encryptedSmtpPassword,
+            uuid = encryptedUuid,
+            isActive = true))
+  }
+
+  @Transaction
+  open fun addAccount(accountEntity: AccountEntity) {
+    val availableAccounts = getAccounts()
+    //mark all accounts as non-active
+    updateAccounts(availableAccounts.map { it.copy(isActive = false) })
+
+    //encrypt sensitive info
+    val encryptedPassword = KeyStoreCryptoManager.encrypt(accountEntity.password)
+    val encryptedSmtpPassword = KeyStoreCryptoManager.encrypt(accountEntity.smtpPassword)
+    val encryptedUuid = KeyStoreCryptoManager.encrypt(accountEntity.uuid)
+
+    insert(
         accountEntity.copy(
             password = encryptedPassword,
             smtpPassword = encryptedSmtpPassword,

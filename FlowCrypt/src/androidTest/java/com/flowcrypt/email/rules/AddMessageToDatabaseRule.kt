@@ -8,6 +8,7 @@ package com.flowcrypt.email.rules
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.google.android.gms.auth.GoogleAuthException
 import com.sun.mail.imap.IMAPFolder

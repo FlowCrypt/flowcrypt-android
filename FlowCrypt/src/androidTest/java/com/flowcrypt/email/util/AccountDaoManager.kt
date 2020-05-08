@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.util
 
+import com.flowcrypt.email.database.entity.AccountEntity
+
 /**
  * @author Denis Bondarenko
  * Date: 15.01.2018

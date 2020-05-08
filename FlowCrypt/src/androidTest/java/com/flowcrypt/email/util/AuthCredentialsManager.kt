@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.util
 
+import com.flowcrypt.email.database.entity.AccountEntity
+
 /**
  * This class describes a logic of generation {@link AccountEntity} from the resources folder.
  *

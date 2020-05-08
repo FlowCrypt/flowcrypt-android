@@ -30,7 +30,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -158,7 +157,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
 
   @Test
   fun testClearSearchView() {
-    onView(allOf<View>(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
         .perform(click())
     onView(withId(androidx.appcompat.R.id.search_close_btn))
@@ -170,7 +169,8 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
 
   private fun generateContentValues(): ContentValues {
     val contentValues = ContentValues()
-    contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true)
+    //todo-denbond7 fix me
+    //contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true)
     return contentValues
   }
 

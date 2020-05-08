@@ -5,7 +5,8 @@
 
 package com.flowcrypt.email.rules
 
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.AccountDaoManager
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
@@ -30,8 +31,6 @@ class AddAccountToDatabaseRule constructor(val account: AccountEntity) : BaseRul
   }
 
   private fun saveAccountToDatabase() {
-    val accountDaoSource = AccountDaoSource()
-    accountDaoSource.addRow(targetContext, account)
-    accountDaoSource.setActiveAccount(targetContext, account.email)
+    FlowCryptRoomDatabase.getDatabase(targetContext).accountDao().addAccount(account)
   }
 }
