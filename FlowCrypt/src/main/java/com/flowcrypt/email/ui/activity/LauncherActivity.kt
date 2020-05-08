@@ -19,6 +19,7 @@ import com.flowcrypt.email.jetpack.viewmodel.CheckGmailTokenViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.FeedbackJobIntentService
@@ -58,8 +59,8 @@ class LauncherActivity : BaseActivity() {
     setupCheckGmailTokenViewModel()
   }
 
-  override fun onNodeStateChanged(isReady: Boolean) {
-    super.onNodeStateChanged(isReady)
+  override fun onNodeStateChanged(nodeInitResult: Node.NodeInitResult) {
+    super.onNodeStateChanged(nodeInitResult)
     launcherViewModel.isNodeInfoReceivedLiveData.value = true
   }
 
