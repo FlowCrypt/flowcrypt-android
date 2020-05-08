@@ -11,7 +11,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.Transformations
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Config
 import androidx.paging.PagedList
@@ -20,7 +19,6 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -37,17 +35,10 @@ import java.io.IOException
  *         Time: 4:37 PM
  *         E-mail: DenBond7@gmail.com
  */
-class MessagesViewModel(application: Application) : BaseAndroidViewModel(application) {
+class MessagesViewModel(application: Application) : AccountViewModel(application) {
   private var currentLocalFolder: LocalFolder? = null
-  private val roomDatabase = FlowCryptRoomDatabase.getDatabase(application)
 
   val msgStatesLiveData = MutableLiveData<MessageState>()
-
-  val accountLiveData: LiveData<AccountEntity?> = liveData {
-    val accountEntity = roomDatabase.accountDao().getActiveAccount()
-    emit(accountEntity)
-  }
-
   var msgsLiveData: LiveData<PagedList<MessageEntity>>? = null
 
   fun loadMsgs(lifecycleOwner: LifecycleOwner, localFolder: LocalFolder?,
@@ -79,7 +70,7 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
       }
 
       if (resetObserver()) {
-        msgsLiveData = Transformations.switchMap(accountLiveData) {
+        msgsLiveData = Transformations.switchMap(activeAccountLiveData) {
           val account = it?.email ?: ""
           roomDatabase.msgDao().getMessagesDataSourceFactory(account, label)
               .toLiveData(
@@ -165,7 +156,7 @@ class MessagesViewModel(application: Application) : BaseAndroidViewModel(applica
   }
 
   private suspend fun getActiveAccountSuspend(): AccountEntity? {
-    return accountLiveData.value ?: return roomDatabase.accountDao().getActiveAccount()
+    return activeAccountLiveData.value ?: return roomDatabase.accountDao().getActiveAccountSuspend()
   }
 
   private fun prepareCandidates(entities: Iterable<MessageEntity>, newMsgState: MessageState): Iterable<MessageEntity> {

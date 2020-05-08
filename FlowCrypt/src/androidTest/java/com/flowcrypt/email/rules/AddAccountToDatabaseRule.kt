@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.rules
 
-import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.util.AccountDaoManager
 import org.junit.runner.Description
@@ -17,7 +16,7 @@ import org.junit.runners.model.Statement
  * Time: 17:54
  * E-mail: DenBond7@gmail.com
  */
-class AddAccountToDatabaseRule constructor(val account: AccountDao) : BaseRule() {
+class AddAccountToDatabaseRule constructor(val account: AccountEntity) : BaseRule() {
 
   constructor() : this(AccountDaoManager.getDefaultAccountDao())
 

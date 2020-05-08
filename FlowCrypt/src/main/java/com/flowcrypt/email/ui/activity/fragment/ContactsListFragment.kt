@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.ui.activity.ImportPgpContactActivity
@@ -72,12 +71,9 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
   }
 
   override fun onContactClick(contactEntity: ContactEntity) {
-    val email = contactEntity.email
-    val publicKey = String(contactEntity.publicKey ?: byteArrayOf())
-
     parentFragmentManager
         .beginTransaction()
-        .replace(R.id.layoutContent, PublicKeyDetailsFragment.newInstance(email, publicKey))
+        .replace(R.id.layoutContent, PublicKeyDetailsFragment.newInstance(contactEntity))
         .addToBackStack(null)
         .commit()
   }
@@ -102,8 +98,7 @@ class ContactsListFragment : BaseFragment(), ContactsRecyclerViewAdapter.OnDelet
 
     root.findViewById<View>(R.id.floatActionButtonImportPublicKey)?.setOnClickListener {
       context?.let {
-        val accountDao = AccountDaoSource().getActiveAccountInformation(it) ?: return@let
-        startActivityForResult(ImportPgpContactActivity.newIntent(it, accountDao),
+        startActivityForResult(ImportPgpContactActivity.newIntent(it, account),
             REQUEST_CODE_START_IMPORT_PUB_KEY_ACTIVITY)
       }
     }

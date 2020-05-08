@@ -18,7 +18,7 @@ import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
@@ -43,7 +43,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 class CreatePrivateKeyAsyncTaskLoader(context: Context,
-                                      private val account: AccountDao,
+                                      private val account: AccountEntity,
                                       private val passphrase: String) : AsyncTaskLoader<LoaderResult>(context) {
   private var isActionStarted: Boolean = false
   private var data: LoaderResult? = null
@@ -82,21 +82,21 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
             UserIdEmailsKeysEntity(longId = it, userIdEmail = nodeKeyDetails.primaryPgpContact.email))
       }
 
-      if (account.isRuleExist(AccountDao.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
+      if (account.isRuleExist(AccountEntity.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
         val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
         val model = InitialLegacySubmitModel(account.email, nodeKeyDetails.publicKey!!)
         val response = apiService.postInitialLegacySubmit(model).execute()
         val body = response.body()
         body?.apiError?.let { throw ApiException(body.apiError) }
 
-        if (!account.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP)) {
+        if (!account.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
           if (!saveCreatedPrivateKeyAsBackupToInbox(nodeKeyDetails)) {
             val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.longId!!))
             backupAction?.let { action -> roomDatabase.actionQueueDao().insert(action) }
           }
         }
       } else {
-        if (!account.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP)) {
+        if (!account.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
           if (!saveCreatedPrivateKeyAsBackupToInbox(nodeKeyDetails)) {
             val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0, email, 0, nodeKeyDetails.longId!!))
             backupAction?.let { action -> roomDatabase.actionQueueDao().insert(action) }
@@ -158,7 +158,7 @@ class CreatePrivateKeyAsyncTaskLoader(context: Context,
     val contacts = ArrayList<PgpContact>()
 
     when (account.accountType) {
-      AccountDao.ACCOUNT_TYPE_GOOGLE -> {
+      AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
         contacts.add(pgpContactMain)
         val gmail = GmailApiHelper.generateGmailApiService(context, account)
         val aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()

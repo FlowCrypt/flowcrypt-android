@@ -23,8 +23,7 @@ import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.EncryptFileRequest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
@@ -44,7 +43,6 @@ import java.io.File
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.util.*
-import javax.mail.Session
 import javax.mail.internet.MimeMessage
 
 /**
@@ -57,16 +55,11 @@ import javax.mail.internet.MimeMessage
  */
 
 class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
-
-  private var sess: Session? = null
-  private var account: AccountDao? = null
   private var attsCacheDir: File? = null
 
   override fun onCreate() {
     super.onCreate()
     LogsUtil.d(TAG, "onCreate")
-    account = AccountDaoSource().getActiveAccountInformation(applicationContext)
-    sess = OpenStoreHelper.getAccountSess(applicationContext, account)
   }
 
   override fun onDestroy() {
@@ -82,11 +75,12 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
   override fun onHandleWork(intent: Intent) {
     LogsUtil.d(TAG, "onHandleWork")
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-    val accountDao = account ?: return
+    val accountEntity = roomDatabase.accountDao().getActiveAccount() ?: return
+    val sess = OpenStoreHelper.getAccountSess(applicationContext, accountEntity)
     val outgoingMsgInfo =
         intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO) ?: return
     val uid = outgoingMsgInfo.uid
-    val email = accountDao.email
+    val email = accountEntity.email
     val label = JavaEmailConstants.FOLDER_OUTBOX
 
     if (roomDatabase.msgDao().getMsg(email, label, uid) != null) {
@@ -104,7 +98,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
         val senderEmail = outgoingMsgInfo.from
         pubKeys = SecurityUtils.getRecipientsPubKeys(this,
-            outgoingMsgInfo.getAllRecipients().toMutableList(), accountDao, senderEmail)
+            outgoingMsgInfo.getAllRecipients().toMutableList(), accountEntity, senderEmail)
       }
 
       val rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys)
@@ -112,7 +106,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
       val msgAttsCacheDir = File(attsCacheDir, UUID.randomUUID().toString())
 
-      val msgEntity = prepareMessageEntity(outgoingMsgInfo, uid, mimeMsg, rawMsg, msgAttsCacheDir)
+      val msgEntity = prepareMessageEntity(accountEntity, outgoingMsgInfo, uid, mimeMsg, rawMsg, msgAttsCacheDir)
       newMsgId = roomDatabase.msgDao().insert(msgEntity)
 
       if (newMsgId > 0) {
@@ -130,7 +124,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             }
           }
 
-          addAttsToCache(roomDatabase, outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir)
+          addAttsToCache(roomDatabase, accountEntity, outgoingMsgInfo, uid, pubKeys, msgAttsCacheDir)
         }
 
         if (outgoingMsgInfo.forwardedAtts?.isEmpty() == true) {
@@ -179,10 +173,10 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     }
   }
 
-  private fun prepareMessageEntity(msgInfo: OutgoingMessageInfo, generatedUID: Long, mimeMsg: MimeMessage,
-                                   rawMsg: String, attsCacheDir: File): MessageEntity {
+  private fun prepareMessageEntity(accountEntity: AccountEntity, msgInfo: OutgoingMessageInfo, generatedUID: Long,
+                                   mimeMsg: MimeMessage, rawMsg: String, attsCacheDir: File): MessageEntity {
 
-    val messageEntity = MessageEntity.genMsgEntity(account!!.email,
+    val messageEntity = MessageEntity.genMsgEntity(accountEntity.email,
         JavaEmailConstants.FOLDER_OUTBOX, mimeMsg, generatedUID, false)
 
     val hasAtts = msgInfo.atts?.isNotEmpty() == true || msgInfo.forwardedAtts?.isNotEmpty() == true
@@ -199,7 +193,8 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     )
   }
 
-  private fun addAttsToCache(roomDatabase: FlowCryptRoomDatabase, msgInfo: OutgoingMessageInfo,
+  private fun addAttsToCache(roomDatabase: FlowCryptRoomDatabase, accountEntity: AccountEntity,
+                             msgInfo: OutgoingMessageInfo,
                              uid: Long, pubKeys: List<String>?, attsCacheDir: File) {
     val cachedAtts = ArrayList<AttachmentInfo>()
 
@@ -207,7 +202,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     if (msgInfo.atts?.isNotEmpty() == true) {
       val outgoingAtts = msgInfo.atts.map {
         it.apply {
-          this.email = account?.email
+          this.email = accountEntity.email
           this.folder = JavaEmailConstants.FOLDER_OUTBOX
           this.uid = uid.toInt()
         }

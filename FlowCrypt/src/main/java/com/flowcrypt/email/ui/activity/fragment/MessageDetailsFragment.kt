@@ -51,8 +51,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
@@ -461,12 +460,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
    */
   private fun updateActionsVisibility(localFolder: LocalFolder?, foldersManager: FoldersManager?) {
     folderType = FoldersManager.getFolderType(localFolder)
-    val account = AccountDaoSource().getActiveAccountInformation(context)
-
     if (folderType != null) {
       when (folderType) {
         FoldersManager.FolderType.INBOX -> {
-          if (AccountDao.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
+          if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
             isArchiveActionEnabled = true
           }
           isDeleteActionEnabled = true
@@ -935,15 +932,14 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
     val buttonImportPrivateKey = viewGroup.findViewById<Button>(R.id.buttonImportPrivateKey)
     buttonImportPrivateKey.setOnClickListener {
-      val account = AccountDaoSource().getActiveAccountInformation(context)
-          ?: return@setOnClickListener
       startActivityForResult(ImportPrivateKeyActivity.getIntent(
-          context = context, accountDao = account,
+          context = context,
           title = getString(R.string.import_private_key),
           throwErrorIfDuplicateFoundEnabled = true,
           cls = ImportPrivateKeyActivity::class.java,
           isUseExistingKeysEnabled = false,
-          isSubmittingPubKeysEnabled = false),
+          isSubmittingPubKeysEnabled = false,
+          accountEntity = account),
           REQUEST_CODE_START_IMPORT_KEY_ACTIVITY)
     }
 

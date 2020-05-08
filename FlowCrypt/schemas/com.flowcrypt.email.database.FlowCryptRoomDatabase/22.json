@@ -231,7 +231,7 @@
             "notNull": false
           },
           {
-            "fieldPath": "smtpIsUseCustomSign",
+            "fieldPath": "useCustomSignForSmtp",
             "columnName": "smtp_is_use_custom_sign",
             "affinity": "INTEGER",
             "notNull": false,

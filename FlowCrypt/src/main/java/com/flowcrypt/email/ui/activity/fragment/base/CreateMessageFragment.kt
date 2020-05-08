@@ -53,8 +53,7 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
@@ -118,7 +117,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private var folderType: FoldersManager.FolderType? = null
   private var msgInfo: IncomingMessageInfo? = null
   private var serviceInfo: ServiceInfo? = null
-  private var account: AccountDao? = null
   private var fromAddrs: FromAddressesAdapter<String>? = null
   private var pgpContactWithNoPublicKey: PgpContact? = null
   private var extraActionInfo: ExtraActionInfo? = null
@@ -301,14 +299,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
 
-    account = AccountDaoSource().getActiveAccountInformation(context)
     context?.let {
       fromAddrs = FromAddressesAdapter(it, android.R.layout.simple_list_item_1, android.R.id
           .text1, ArrayList())
     }
     fromAddrs?.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
     fromAddrs?.setUseKeysInfo(listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED)
-    account?.email?.let { fromAddrs?.add(it) }
 
     initExtras(activity?.intent)
   }
@@ -354,10 +350,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           val pgpContact = data.getParcelableExtra<PgpContact>(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
 
           if (pgpContact != null) {
-            account?.let {
-              startActivityForResult(ImportPublicKeyActivity.newIntent(context, it,
-                  getString(R.string.import_public_key), pgpContact), REQUEST_CODE_IMPORT_PUBLIC_KEY)
-            }
+            startActivityForResult(ImportPublicKeyActivity.newIntent(context, account,
+                getString(R.string.import_public_key), pgpContact), REQUEST_CODE_IMPORT_PUBLIC_KEY)
           }
         }
 
@@ -593,6 +587,15 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   override fun onChipLongClick(nachoTextView: NachoTextView, chip: Chip, event: MotionEvent) {}
+
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    accountEntity?.email?.let { email ->
+      if (fromAddrs?.objects?.contains(email) == false) {
+        fromAddrs?.add(email)
+      }
+    }
+  }
 
   fun onMsgEncryptionTypeChange(messageEncryptionType: MessageEncryptionType?) {
     var emailMassageHint: String? = null
@@ -1133,7 +1136,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
       if (msgInfo?.getTo()?.isNotEmpty() == true) {
         for (address in msgInfo!!.getTo()!!) {
-          if (!account!!.email.equals(address.address, ignoreCase = true)) {
+          if (!account?.email.equals(address.address, ignoreCase = true)) {
             ccSet.add(address)
           }
         }
@@ -1153,7 +1156,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
       if (msgInfo?.getCc()?.isNotEmpty() == true) {
         for (address in msgInfo!!.getCc()!!) {
-          if (!account!!.email.equals(address.address, ignoreCase = true)) {
+          if (!account?.email.equals(address.address, ignoreCase = true)) {
             ccSet.add(address)
           }
         }

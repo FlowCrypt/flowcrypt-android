@@ -6,28 +6,23 @@
 package com.flowcrypt.email.ui.activity
 
 import android.app.Activity
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.provider.FlowcryptContract
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 /**
@@ -38,8 +33,7 @@ import kotlinx.coroutines.launch
  *         Time: 3:39 PM
  *         E-mail: DenBond7@gmail.com
  */
-class UserRecoverableAuthExceptionActivity : AppCompatActivity(), View.OnClickListener {
-  private val account: AccountDao? by lazy { AccountDaoSource().getActiveAccountInformation(this) }
+class UserRecoverableAuthExceptionActivity : BaseActivity(), View.OnClickListener {
   private val recoverableIntent: Intent? by lazy { intent.getParcelableExtra<Intent>(EXTRA_KEY_RECOVERABLE_INTENT) }
   private lateinit var textViewExplanation: TextView
 
@@ -48,9 +42,17 @@ class UserRecoverableAuthExceptionActivity : AppCompatActivity(), View.OnClickLi
     isRunEnabled = false
   }
 
+  override val isDisplayHomeAsUpEnabled: Boolean
+    get() = false
+
+  override val contentViewResourceId: Int
+    get() = R.layout.activity_user_recoverable_auth_exception
+
+  override val rootView: View
+    get() = findViewById(R.id.layoutContentView)
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_user_recoverable_auth_exception)
     initViews()
   }
 
@@ -65,11 +67,13 @@ class UserRecoverableAuthExceptionActivity : AppCompatActivity(), View.OnClickLi
       REQUEST_CODE_RUN_RECOVERABLE_INTENT -> {
         when (resultCode) {
           Activity.RESULT_OK -> {
-            AccountDaoSource().updateAccountInformation(this, account, ContentValues()
-                .apply { put(AccountDaoSource.COL_IS_RESTORE_ACCESS_REQUIRED, false) })
-            GlobalScope.launch {
-              FlowCryptRoomDatabase.getDatabase(applicationContext).msgDao().changeMsgsStateSuspend(
-                  account?.email, JavaEmailConstants.FOLDER_OUTBOX, MessageState.AUTH_FAILURE.value,
+            lifecycleScope.launch {
+              val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+              activeAccount?.copy(isRestoreAccessRequired = false)?.let {
+                roomDatabase.accountDao().updateAccountSuspend(it)
+              }
+              roomDatabase.msgDao().changeMsgsStateSuspend(
+                  activeAccount?.email, JavaEmailConstants.FOLDER_OUTBOX, MessageState.AUTH_FAILURE.value,
                   MessageState.QUEUED.value)
               MessagesSenderJobService.schedule(applicationContext)
               EmailManagerActivity.runEmailManagerActivity(this@UserRecoverableAuthExceptionActivity)
@@ -111,7 +115,7 @@ class UserRecoverableAuthExceptionActivity : AppCompatActivity(), View.OnClickLi
   private fun initViews() {
     textViewExplanation = findViewById(R.id.textViewExplanation)
     textViewExplanation.text = getString(R.string.reconnect_your_account, getString(R.string
-        .app_name), account?.email ?: "")
+        .app_name), activeAccount?.email ?: "")
     findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener(this)
     findViewById<View>(R.id.buttonLogout)?.setOnClickListener(this)
     findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener(this)
@@ -121,26 +125,33 @@ class UserRecoverableAuthExceptionActivity : AppCompatActivity(), View.OnClickLi
   }
 
   private fun logout() {
-    val nonNullAccount = account ?: return
+    val activeAccount = activeAccount ?: return
+    lifecycleScope.launch {
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
-    val accountDaoSource = AccountDaoSource()
-    val accountDaoList = accountDaoSource.getAccountsWithoutActive(this, nonNullAccount.email)
+      //remove all info about the given account from the local db
+      roomDatabase.accountDao().deleteSuspend(activeAccount)
+      //todo-denbond7 Improve this via onDelete = ForeignKey.CASCADE
+      roomDatabase.labelDao().deleteByEmailSuspend(activeAccount.email)
+      roomDatabase.msgDao().deleteByEmailSuspend(activeAccount.email)
+      roomDatabase.attachmentDao().deleteByEmailSuspend(activeAccount.email)
+      roomDatabase.accountAliasesDao().deleteByEmailSuspend(activeAccount.email)
 
-    val uri = Uri.parse(FlowcryptContract.AUTHORITY_URI.toString() + "/" + FlowcryptContract.CLEAN_DATABASE)
-    contentResolver.delete(uri, null, arrayOf(nonNullAccount.email))
-
-    if (accountDaoList.isNotEmpty()) {
-      val (email) = accountDaoList[0]
-      AccountDaoSource().setActiveAccount(this, email)
-      finish()
-      EmailSyncService.switchAccount(this)
-      EmailManagerActivity.runEmailManagerActivity(this)
-    } else {
-      stopService(Intent(this, EmailSyncService::class.java))
-      val intent = Intent(this, SignInActivity::class.java)
-      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-      startActivity(intent)
-      finish()
+      val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccounts()
+      if (nonactiveAccounts.isNotEmpty()) {
+        val firstNonactiveAccount = nonactiveAccounts.first()
+        roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
+        roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
+        EmailSyncService.switchAccount(applicationContext)
+        EmailManagerActivity.runEmailManagerActivity(this@UserRecoverableAuthExceptionActivity)
+        finish()
+      } else {
+        stopService(Intent(applicationContext, EmailSyncService::class.java))
+        val intent = Intent(applicationContext, SignInActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        startActivity(intent)
+        finish()
+      }
     }
   }
 

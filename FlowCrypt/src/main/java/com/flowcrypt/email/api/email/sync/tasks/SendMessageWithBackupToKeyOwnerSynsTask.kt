@@ -7,7 +7,7 @@ package com.flowcrypt.email.api.email.sync.tasks
 
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.sync.SyncListener
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import javax.mail.Session
 import javax.mail.Store
 
@@ -25,7 +25,7 @@ class SendMessageWithBackupToKeyOwnerSynsTask(ownerKey: String,
   override val isSMTPRequired: Boolean
     get() = true
 
-  override fun runSMTPAction(account: AccountDao, session: Session, store: Store, syncListener: SyncListener) {
+  override fun runSMTPAction(account: AccountEntity, session: Session, store: Store, syncListener: SyncListener) {
     super.runSMTPAction(account, session, store, syncListener)
 
     val transport = prepareSmtpTransport(syncListener.context, session, account)

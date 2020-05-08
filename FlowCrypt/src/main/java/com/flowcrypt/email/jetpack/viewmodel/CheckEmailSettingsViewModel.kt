@@ -6,14 +6,18 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.protocol.PropertiesHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,9 +39,17 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
 
   fun check(authCreds: AuthCredentials) {
     viewModelScope.launch {
-      checkEmailSettingsLiveData.postValue(Result.loading())
-      val result = checkAuthCreds(authCreds)
-      checkEmailSettingsLiveData.postValue(result)
+      val context: Context = getApplication()
+      val existedAccount = FlowCryptRoomDatabase.getDatabase(context).accountDao().getAccountSuspend(authCreds.email)
+
+      if (existedAccount == null) {
+        checkEmailSettingsLiveData.postValue(Result.loading())
+        val result = checkAuthCreds(authCreds)
+        checkEmailSettingsLiveData.postValue(result)
+      } else {
+        checkEmailSettingsLiveData.postValue(Result.exception(
+            AccountAlreadyAddedException(context.getString(R.string.template_email_alredy_added, authCreds.email))))
+      }
     }
   }
 

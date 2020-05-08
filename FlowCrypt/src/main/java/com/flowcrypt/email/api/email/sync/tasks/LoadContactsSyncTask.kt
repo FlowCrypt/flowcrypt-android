@@ -5,13 +5,11 @@
 
 package com.flowcrypt.email.api.email.sync.tasks
 
-import android.content.ContentValues
 import android.text.TextUtils
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.sun.mail.imap.IMAPFolder
@@ -33,7 +31,9 @@ import javax.mail.internet.InternetAddress
  */
 class LoadContactsSyncTask : BaseSyncTask("", 0) {
 
-  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
+    if (account.areContactsLoaded == true) return
+
     val foldersManager = FoldersManager.fromDatabase(listener.context, account.email)
     val folderSent = foldersManager.folderSent ?: return
     val imapFolder = store.getFolder(folderSent.fullName) as IMAPFolder
@@ -49,11 +49,7 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
       imapFolder.fetch(msgs, fetchProfile)
 
       updateContacts(listener, msgs)
-
-      val contentValues = ContentValues()
-      contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true)
-
-      AccountDaoSource().updateAccountInformation(listener.context, account, contentValues)
+      FlowCryptRoomDatabase.getDatabase(listener.context).accountDao().updateAccount(account.copy(areContactsLoaded = true))
     }
 
     imapFolder.close(false)

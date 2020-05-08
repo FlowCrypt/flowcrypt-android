@@ -25,7 +25,7 @@ import org.junit.runner.RunWith
 class AuthCredentialsTest {
   @Test
   fun testParcelable() {
-    val original = AuthCredentials(
+    val original = AccountEntity(
         "email",
         "username",
         "password",
@@ -43,7 +43,7 @@ class AuthCredentialsTest {
     original.writeToParcel(parcel, original.describeContents())
     parcel.setDataPosition(0)
 
-    val createdFromParcel = AuthCredentials.CREATOR.createFromParcel(parcel)
+    val createdFromParcel = AccountEntity.CREATOR.createFromParcel(parcel)
     Assert.assertTrue(null, original == createdFromParcel)
   }
 }

@@ -9,17 +9,16 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.activity.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.CheckGmailTokenViewModel
+import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
-import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.FeedbackJobIntentService
@@ -36,8 +35,8 @@ import com.flowcrypt.email.util.SharedPreferencesHelper
  * E-mail: DenBond7@gmail.com
  */
 class LauncherActivity : BaseActivity() {
-  private var account: AccountDao? = null
-  private lateinit var checkGmailTokenViewModel: CheckGmailTokenViewModel
+  private val checkGmailTokenViewModel: CheckGmailTokenViewModel by viewModels()
+  private val launcherViewModel: LauncherViewModel by viewModels()
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = false
@@ -49,6 +48,7 @@ class LauncherActivity : BaseActivity() {
     get() = R.layout.activity_launcher
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    setupLauncherViewModel()
     super.onCreate(savedInstanceState)
     PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false)
     ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
@@ -56,32 +56,38 @@ class LauncherActivity : BaseActivity() {
     FeedbackJobIntentService.enqueueWork(this)
 
     setupCheckGmailTokenViewModel()
-
-    account = AccountDaoSource().getActiveAccountInformation(this)
-    if (account != null && isNodeReady) {
-      if (AccountDao.ACCOUNT_TYPE_GOOGLE == account?.accountType && account?.isRestoreAccessRequired == true) {
-        account?.let { checkGmailTokenViewModel.checkToken(it) }
-      } else {
-        showEmailManagerActivity()
-      }
-    }
   }
 
-  override fun onNodeStateChanged(nodeInitResult: Node.NodeInitResult) {
-    super.onNodeStateChanged(nodeInitResult)
-    if (account != null) {
-      if (AccountDao.ACCOUNT_TYPE_GOOGLE == account?.accountType && account?.isRestoreAccessRequired == true) {
-        account?.let { checkGmailTokenViewModel.checkToken(it) }
-      } else {
-        showEmailManagerActivity()
+  override fun onNodeStateChanged(isReady: Boolean) {
+    super.onNodeStateChanged(isReady)
+    launcherViewModel.isNodeInfoReceivedLiveData.value = true
+  }
+
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    launcherViewModel.isAccountInfoReceivedLiveData.value = true
+  }
+
+  private fun setupLauncherViewModel() {
+    launcherViewModel.mediatorLiveData.observe(this, Observer {
+      if (launcherViewModel.isAccountInfoReceivedLiveData.value == true
+          && launcherViewModel.isNodeInfoReceivedLiveData.value == true) {
+        if (isAccountInfoReceived) {
+          if (activeAccount != null) {
+            if (AccountEntity.ACCOUNT_TYPE_GOOGLE == activeAccount?.accountType && activeAccount?.isRestoreAccessRequired == true) {
+              activeAccount?.let { checkGmailTokenViewModel.checkToken(it) }
+            } else {
+              showEmailManagerActivity()
+            }
+          } else {
+            showSignInActivity()
+          }
+        }
       }
-    } else {
-      showSignInActivity()
-    }
+    })
   }
 
   private fun setupCheckGmailTokenViewModel() {
-    checkGmailTokenViewModel = ViewModelProvider(this).get(CheckGmailTokenViewModel::class.java)
     checkGmailTokenViewModel.tokenLiveData.observe(this, Observer {
       if (it != null) {
         if (UserRecoverableAuthExceptionActivity.isRunEnabled()) {
@@ -104,7 +110,7 @@ class LauncherActivity : BaseActivity() {
           .getDefaultSharedPreferences(this), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, true)
 
       if (isCheckKeysNeeded) {
-        roomBasicViewModel.addActionToQueue(EncryptPrivateKeysIfNeededAction(0, account!!.email, 0))
+        roomBasicViewModel.addActionToQueue(EncryptPrivateKeysIfNeededAction(0, activeAccount!!.email, 0))
       }
 
       EmailSyncService.startEmailSyncService(this)

@@ -63,7 +63,7 @@ class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest(
   @Test
   fun testClickOnButtonCreateNewKey() {
     intending(allOf(hasComponent(ComponentName(getTargetContext(), CreatePrivateKeyActivity::class.java)),
-        hasExtraWithKey(BasePassPhraseManagerActivity.KEY_EXTRA_ACCOUNT_DAO)))
+        hasExtraWithKey(BasePassPhraseManagerActivity.KEY_EXTRA_ACCOUNT)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     onView(withId(R.id.buttonCreateNewKey))
         .check(matches(ViewMatchers.isDisplayed()))

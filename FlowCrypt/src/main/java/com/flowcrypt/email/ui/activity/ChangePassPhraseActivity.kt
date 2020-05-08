@@ -16,7 +16,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
@@ -138,13 +138,13 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
 
           Result.Status.SUCCESS -> {
             if (it.data == true) {
-              if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP) == true) {
+              if (activeAccount?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) == true) {
                 isBackEnabled = true
                 Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
                 setResult(Activity.RESULT_OK)
                 finish()
               } else {
-                account?.let { loadPrivateKeysViewModel.fetchAvailableKeys(it) }
+                activeAccount?.let { loadPrivateKeysViewModel.fetchAvailableKeys(it) }
               }
             }
           }
@@ -186,10 +186,8 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
 
     const val REQUEST_CODE_BACKUP_WITH_OPTION = 100
 
-    fun newIntent(context: Context?, account: AccountDao?): Intent {
-      val intent = Intent(context, ChangePassPhraseActivity::class.java)
-      intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, account)
-      return intent
+    fun newIntent(context: Context?): Intent {
+      return Intent(context, ChangePassPhraseActivity::class.java)
     }
   }
 }

@@ -35,7 +35,6 @@ import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -81,6 +80,7 @@ class AttachmentDownloadManagerService : Service() {
 
   @Volatile
   private var looper: Looper? = null
+
   @Volatile
   private lateinit var workerHandler: ServiceWorkerHandler
 
@@ -248,6 +248,7 @@ class AttachmentDownloadManagerService : Service() {
 
     @Volatile
     private var attsInfoMap: HashMap<String, AttachmentInfo> = HashMap()
+
     @Volatile
     private var futureMap: HashMap<String, Future<*>> = HashMap()
 
@@ -388,6 +389,7 @@ class AttachmentDownloadManagerService : Service() {
       internal const val MESSAGE_CANCEL_DOWNLOAD = 2
       internal const val MESSAGE_RELEASE_RESOURCES = 3
       internal const val MESSAGE_CHECK_AND_STOP_IF_NEEDED = 4
+
       /**
        * Maximum number of simultaneous downloads
        */
@@ -424,8 +426,8 @@ class AttachmentDownloadManagerService : Service() {
           }
         }
 
-        val source = AccountDaoSource()
-        val account = source.getAccountInformation(context, att.email!!)
+        val email = att.email ?: return
+        val account = roomDatabase.accountDao().getAccount(email)
 
         if (account == null) {
           listener?.onCanceled(this.att)
@@ -435,8 +437,8 @@ class AttachmentDownloadManagerService : Service() {
         val session = OpenStoreHelper.getAttsSess(context, account)
         val store = OpenStoreHelper.openStore(context, account, session)
 
-        val label = roomDatabase.labelDao().getLabel(att.email, att.folder!!)
-            ?: if (source.getAccountInformation(context, att.email!!) == null) {
+        val label = roomDatabase.labelDao().getLabel(email, att.folder!!)
+            ?: if (roomDatabase.accountDao().getAccount(email) == null) {
               listener?.onCanceled(this.att)
               store.close()
               return

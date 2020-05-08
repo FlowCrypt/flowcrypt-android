@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.email
 import android.accounts.Account
 import android.annotation.SuppressLint
 import android.content.ContentResolver
-import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -29,8 +28,8 @@ import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.ComposeEmailRequest
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.broadcastreceivers.UserRecoverableAuthExceptionBroadcastReceiver
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -207,7 +206,7 @@ class EmailUtil {
      * @throws Exception will occur when generate this [BodyPart].
      */
     @JvmStatic
-    fun genBodyPartWithPrivateKey(account: AccountDao, armoredPrKey: String): MimeBodyPart {
+    fun genBodyPartWithPrivateKey(account: AccountEntity, armoredPrKey: String): MimeBodyPart {
       val part = MimeBodyPart()
       val dataSource = ByteArrayDataSource(armoredPrKey, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)
       part.dataHandler = DataHandler(dataSource)
@@ -225,7 +224,7 @@ class EmailUtil {
      * @throws Exception will occur when generate this message.
      */
     @JvmStatic
-    fun genMsgWithAllPrivateKeys(context: Context, account: AccountDao, session: Session): Message {
+    fun genMsgWithAllPrivateKeys(context: Context, account: AccountEntity, session: Session): Message {
       val keys = SecurityUtils.genPrivateKeysBackup(context, account)
 
       val multipart = MimeMultipart()
@@ -250,7 +249,7 @@ class EmailUtil {
      * @throws Exception will occur when generate this message.
      */
     @JvmStatic
-    fun genMsgWithPrivateKeys(context: Context, account: AccountDao, sess: Session, bodyPart: MimeBodyPart): Message {
+    fun genMsgWithPrivateKeys(context: Context, account: AccountEntity, sess: Session, bodyPart: MimeBodyPart): Message {
       val multipart = MimeMultipart()
       multipart.addBodyPart(getBodyPartWithBackupText(context))
       bodyPart.contentID = generateContentId()
@@ -271,14 +270,14 @@ class EmailUtil {
      * result from client errors (e.g. providing an invalid scope).
      */
     @JvmStatic
-    fun getGmailAccountToken(context: Context, accountDao: AccountDao?): String {
+    fun getGmailAccountToken(context: Context, accountEntity: AccountEntity): String {
       try {
-        val account: Account? = accountDao?.account
+        val account: Account? = accountEntity.account
             ?: throw NullPointerException("Account can't be a null!")
 
         return GoogleAuthUtil.getToken(context, account, JavaEmailConstants.OAUTH2 + GmailScopes.MAIL_GOOGLE_COM)
       } catch (e: UserRecoverableAuthException) {
-        AccountDaoSource().updateAccountInformation(context, accountDao, ContentValues().apply { put(AccountDaoSource.COL_IS_RESTORE_ACCESS_REQUIRED, true) })
+        FlowCryptRoomDatabase.getDatabase(context).accountDao().updateAccount(accountEntity.copy(isRestoreAccessRequired = true))
         context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
         throw e
       }
@@ -301,14 +300,14 @@ class EmailUtil {
      * Get a list of [NodeKeyDetails] using the **Gmail API**
      *
      * @param context context Interface to global information about an application environment;
-     * @param account An [AccountDao] object.
+     * @param account An [AccountEntity] object.
      * @param sess A [Session] object.
      * @return A list of [NodeKeyDetails]
      * @throws MessagingException
      * @throws IOException
      */
     @JvmStatic
-    fun getPrivateKeyBackupsViaGmailAPI(context: Context, account: AccountDao, sess: Session):
+    fun getPrivateKeyBackupsViaGmailAPI(context: Context, account: AccountEntity, sess: Session):
         Collection<NodeKeyDetails> {
       try {
         val list = mutableListOf<NodeKeyDetails>()
@@ -368,11 +367,11 @@ class EmailUtil {
 
         return list
       } catch (e: UserRecoverableAuthIOException) {
-        AccountDaoSource().updateAccountInformation(context, account, ContentValues().apply { put(AccountDaoSource.COL_IS_RESTORE_ACCESS_REQUIRED, true) })
+        FlowCryptRoomDatabase.getDatabase(context).accountDao().updateAccount(account.copy(isRestoreAccessRequired = true))
         context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
         throw e
       } catch (e: UserRecoverableAuthException) {
-        AccountDaoSource().updateAccountInformation(context, account, ContentValues().apply { put(AccountDaoSource.COL_IS_RESTORE_ACCESS_REQUIRED, true) })
+        FlowCryptRoomDatabase.getDatabase(context).accountDao().updateAccount(account.copy(isRestoreAccessRequired = true))
         context.sendBroadcast(UserRecoverableAuthExceptionBroadcastReceiver.newIntent(context, e.intent))
         throw e
       }
@@ -668,14 +667,14 @@ class EmailUtil {
     }
 
     /**
-     * Generate a [SearchTerm] for encrypted messages which depends on an input [AccountDao].
+     * Generate a [SearchTerm] for encrypted messages which depends on an input [AccountEntity].
      *
-     * @param account An input [AccountDao]
+     * @param account An input [AccountEntity]
      * @return A generated [SearchTerm].
      */
     @JvmStatic
-    fun genEncryptedMsgsSearchTerm(account: AccountDao): SearchTerm {
-      return if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
+    fun genEncryptedMsgsSearchTerm(account: AccountEntity): SearchTerm {
+      return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
         GmailRawSearchTerm(
             "PGP OR GPG OR OpenPGP OR filename:asc OR filename:message OR filename:pgp OR filename:gpg")
       } else {
@@ -737,10 +736,10 @@ class EmailUtil {
      * @throws MessagingException
      */
     @JvmStatic
-    fun getMsgsEncryptionInfo(onlyEncrypted: Boolean, folder: IMAPFolder, newMsgs: Array<Message>):
+    fun getMsgsEncryptionInfo(onlyEncrypted: Boolean?, folder: IMAPFolder, newMsgs: Array<Message>):
         Map<Long, Boolean> {
       val array: HashMap<Long, Boolean> = HashMap()
-      return if (onlyEncrypted) {
+      return if (onlyEncrypted == true) {
         for (msg in newMsgs) {
           array[folder.getUID(msg)] = true
         }
@@ -766,7 +765,7 @@ class EmailUtil {
     }
 
     @JvmStatic
-    private fun genMsgWithBackupTemplate(context: Context, account: AccountDao, session: Session): Message {
+    private fun genMsgWithBackupTemplate(context: Context, account: AccountEntity, session: Session): Message {
       val msg = MimeMessage(session)
 
       msg.setFrom(InternetAddress(account.email))

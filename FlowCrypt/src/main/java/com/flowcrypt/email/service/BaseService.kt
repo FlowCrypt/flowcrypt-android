@@ -7,6 +7,7 @@ package com.flowcrypt.email.service
 
 import android.app.Service
 import android.os.Messenger
+import androidx.lifecycle.LifecycleService
 
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import java.util.*
@@ -20,7 +21,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 
-abstract class BaseService : Service() {
+abstract class BaseService : LifecycleService() {
   interface OnServiceCallback {
     /**
      * In this method we can handle response after run some action via [BaseService]

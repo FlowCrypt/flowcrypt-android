@@ -15,7 +15,7 @@ import android.widget.Toast
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.loader.CreatePrivateKeyAsyncTaskLoader
@@ -34,6 +34,7 @@ import com.google.android.material.snackbar.Snackbar
 class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.LoaderCallbacks<LoaderResult> {
 
   private var createdPrivateKeyLongId: String? = null
+  private var tempAccount: AccountEntity? = null
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_pass_phrase_manager
@@ -48,12 +49,14 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    if (savedInstanceState != null) {
-      this.createdPrivateKeyLongId = savedInstanceState.getString(KEY_CREATED_PRIVATE_KEY_LONG_ID)
+    this.tempAccount = intent.getParcelableExtra(KEY_EXTRA_ACCOUNT)
+
+    if (tempAccount == null) {
+      finish()
     }
 
-    if (intent == null) {
-      finish()
+    if (savedInstanceState != null) {
+      this.createdPrivateKeyLongId = savedInstanceState.getString(KEY_CREATED_PRIVATE_KEY_LONG_ID)
     }
   }
 
@@ -91,7 +94,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
       R.id.loader_id_create_private_key -> if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
         isBackEnabled = false
         UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
-        CreatePrivateKeyAsyncTaskLoader(this, account!!, editTextKeyPassword.text.toString())
+        CreatePrivateKeyAsyncTaskLoader(this, activeAccount!!, editTextKeyPassword.text.toString())
       } else {
         Loader(this)
       }
@@ -167,13 +170,13 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
   }
 
   companion object {
-
+    val KEY_EXTRA_ACCOUNT = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT", BasePassPhraseManagerActivity::class.java)
     val KEY_CREATED_PRIVATE_KEY_LONG_ID =
         GeneralUtil.generateUniqueExtraKey("KEY_CREATED_PRIVATE_KEY_LONG_ID", CreatePrivateKeyActivity::class.java)
 
-    fun newIntent(context: Context, account: AccountDao?): Intent {
+    fun newIntent(context: Context, account: AccountEntity?): Intent {
       val intent = Intent(context, CreatePrivateKeyActivity::class.java)
-      intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, account)
+      intent.putExtra(KEY_EXTRA_ACCOUNT, account)
       return intent
     }
   }

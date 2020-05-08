@@ -9,7 +9,6 @@ import android.os.Parcel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.flowcrypt.email.DoesNotNeedMailserver
-import com.flowcrypt.email.database.dao.source.AccountDao
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,7 +25,7 @@ import org.junit.runner.RunWith
 class DomainRulesTest {
   @Test
   fun testParcelable() {
-    val original = DomainRules(listOf(AccountDao.DomainRule.NO_PRV_CREATE.name))
+    val original = DomainRules(listOf(AccountEntity.DomainRule.NO_PRV_CREATE.name))
 
     val parcel = Parcel.obtain()
     original.writeToParcel(parcel, original.describeContents())

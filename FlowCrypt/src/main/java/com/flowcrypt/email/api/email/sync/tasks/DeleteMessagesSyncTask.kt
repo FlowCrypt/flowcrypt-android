@@ -10,7 +10,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.Folder
 import javax.mail.Message
@@ -30,7 +30,7 @@ import javax.mail.Store
 class DeleteMessagesSyncTask(ownerKey: String,
                              requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
 
-  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
     val foldersManager = FoldersManager.fromDatabase(context, account.email)
     val trash = foldersManager.folderTrash ?: return

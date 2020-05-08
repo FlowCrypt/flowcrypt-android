@@ -9,7 +9,6 @@ import android.app.Activity
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -31,6 +30,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.bumptech.glide.request.RequestOptions
@@ -39,9 +39,8 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
-import com.flowcrypt.email.database.provider.FlowcryptContract
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -65,6 +64,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
 import com.sun.mail.imap.protocol.SearchSequence
+import kotlinx.coroutines.launch
 
 /**
  * This activity used to show messages list.
@@ -81,7 +81,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   private val labelsViewModel: LabelsViewModel by viewModels()
   private val actionsViewModel: ActionsViewModel by viewModels()
 
-  override var currentAccountDao: AccountDao? = null
   private var foldersManager: FoldersManager? = null
   override var currentFolder: LocalFolder? = null
 
@@ -111,38 +110,42 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    initViews()
     setupLabelsViewModel()
+    client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
 
-    currentAccountDao = AccountDaoSource().getActiveAccountInformation(this)
-
-    if (currentAccountDao != null) {
-      currentAccountDao?.let {
-        client = GoogleSignIn.getClient(this, GoogleApiClientHelper.generateGoogleSignInOptions())
-
-        actionsViewModel.checkAndAddActionsToQueue(it)
-
-        countingIdlingResourceForLabel = CountingIdlingResource(
-            GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java), GeneralUtil.isDebugBuild())
-        countingIdlingResourceForLabel!!.increment()
-
-        initViews()
-      }
-    } else {
-      finish()
-    }
+    accountViewModel.nonActiveAccountsLiveData.observe(this, Observer {
+      genAccountsLayout(it)
+    })
   }
 
   override fun onResume() {
     super.onResume()
-
-    val account = currentAccountDao ?: return
+    val nonNullAccount = activeAccount ?: return
     val manager = foldersManager ?: return
-    MessagesNotificationManager(this).cancelAll(this, account, manager)
+    MessagesNotificationManager(this).cancelAll(this, nonNullAccount, manager)
   }
 
   override fun onDestroy() {
     super.onDestroy()
-    drawerLayout?.removeDrawerListener(actionBarDrawerToggle!!)
+    actionBarDrawerToggle?.let { drawerLayout?.removeDrawerListener(it) }
+  }
+
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    if (accountEntity != null) {
+      actionsViewModel.checkAndAddActionsToQueue(accountEntity)
+
+      countingIdlingResourceForLabel = CountingIdlingResource(
+          GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java), GeneralUtil.isDebugBuild())
+      countingIdlingResourceForLabel?.increment()
+
+      switchView?.isChecked = activeAccount?.isShowOnlyEncrypted ?: false
+      invalidateOptionsMenu()
+      navigationView?.getHeaderView(0)?.let { initUserProfileView(it) }
+    } else {
+      finish()
+    }
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -159,20 +162,27 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     val item = menu.findItem(R.id.menuSwitch)
     switchView = item.actionView.findViewById(R.id.switchShowOnlyEncryptedMessages)
-
-    switchView?.isChecked = AccountDaoSource().isEncryptedModeEnabled(this, currentAccountDao?.email)
+    switchView?.isChecked = activeAccount?.isShowOnlyEncrypted ?: false
     switchView?.setOnCheckedChangeListener { buttonView, isChecked ->
-      if (GeneralUtil.isConnected(this@EmailManagerActivity.applicationContext)) {
-        buttonView.isEnabled = false
+      lifecycleScope.launch {
+        activeAccount?.let {
+          if (GeneralUtil.isConnected(this@EmailManagerActivity.applicationContext)) {
+            buttonView.isEnabled = false
+          }
+
+          FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity.applicationContext)
+              .accountDao().updateAccountSuspend(it.copy(isShowOnlyEncrypted = isChecked))
+
+          onShowOnlyEncryptedMsgs(isChecked)
+
+          Toast.makeText(this@EmailManagerActivity, if (isChecked)
+            R.string.showing_only_encrypted_messages
+          else
+            R.string.showing_all_messages, Toast.LENGTH_SHORT).show()
+        }
+
+
       }
-
-      AccountDaoSource().setShowOnlyEncryptedMsgs(this@EmailManagerActivity, currentAccountDao?.email, isChecked)
-      onShowOnlyEncryptedMsgs(isChecked)
-
-      Toast.makeText(this@EmailManagerActivity, if (isChecked)
-        R.string.showing_only_encrypted_messages
-      else
-        R.string.showing_all_messages, Toast.LENGTH_SHORT).show()
     }
 
     return true
@@ -183,10 +193,9 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     val itemSearch = menu.findItem(R.id.menuSearch)
 
     if (currentFolder != null) {
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder!!.fullName, ignoreCase = true)) {
+      if (JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true)) {
         itemSwitch.isVisible = false
-        itemSearch.isVisible = AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!,
-            ignoreCase = true)
+        itemSearch.isVisible = AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(activeAccount?.accountType, ignoreCase = true)
       } else {
         itemSwitch.isVisible = true
         itemSearch.isVisible = true
@@ -219,8 +228,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
             fragment?.reloadMsgs()
           } else {
-            if (signInResult?.status?.statusMessage?.isNotEmpty() == true) {
-              UIUtil.showInfoSnackbar(rootView, signInResult.status.statusMessage!!)
+            if (!signInResult?.status?.statusMessage.isNullOrEmpty()) {
+              signInResult?.status?.statusMessage?.let { UIUtil.showInfoSnackbar(rootView, it) }
             }
           }
         }
@@ -245,8 +254,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
       R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> {
-        if (!countingIdlingResourceForLabel!!.isIdleNow) {
-          countingIdlingResourceForLabel!!.decrement()
+        if (countingIdlingResourceForLabel?.isIdleNow == false) {
+          countingIdlingResourceForLabel?.decrement()
         }
       }
 
@@ -277,8 +286,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
       R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> {
         onErrorOccurred(requestCode, errorType, e)
-        if (!countingIdlingResourceForLabel!!.isIdleNow) {
-          countingIdlingResourceForLabel!!.decrement()
+        if (countingIdlingResourceForLabel?.isIdleNow == false) {
+          countingIdlingResourceForLabel?.decrement()
         }
       }
 
@@ -314,9 +323,9 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       R.id.navMenuActionReportProblem -> FeedbackActivity.show(this)
 
       Menu.NONE -> {
-        val newLocalFolder = foldersManager!!.getFolderByAlias(item.title.toString())
+        val newLocalFolder = foldersManager?.getFolderByAlias(item.title.toString())
         if (newLocalFolder != null) {
-          if (currentFolder == null || currentFolder!!.fullName != newLocalFolder.fullName) {
+          if (currentFolder == null || currentFolder?.fullName != newLocalFolder.fullName) {
             this.currentFolder = newLocalFolder
             onFolderChanged()
             invalidateOptionsMenu()
@@ -344,14 +353,14 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   override fun onQueryTextSubmit(query: String): Boolean {
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao?.accountType, ignoreCase = true)
+    if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(activeAccount?.accountType, ignoreCase = true)
         && !SearchSequence.isAscii(query)) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show()
       return true
     }
 
     menuItemSearch?.collapseActionView()
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao?.accountType, ignoreCase = true)) {
+    if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(activeAccount?.accountType, ignoreCase = true)) {
       val allMail = foldersManager?.folderAll
       if (allMail != null) {
         startActivity(SearchMessagesActivity.newIntent(this, query, allMail))
@@ -375,31 +384,38 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   private fun logout() {
-    val accountDaoSource = AccountDaoSource()
-    val accountDaoList = accountDaoSource.getAccountsWithoutActive(this, currentAccountDao!!.email)
+    lifecycleScope.launch {
+      activeAccount?.let { accountEntity ->
+        when (accountEntity.accountType) {
+          AccountEntity.ACCOUNT_TYPE_GOOGLE -> client.signOut()
+        }
 
-    when (currentAccountDao!!.accountType) {
-      AccountDao.ACCOUNT_TYPE_GOOGLE -> client.signOut()
-    }
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+        //remove all info about the given account from the local db
+        roomDatabase.accountDao().deleteSuspend(accountEntity)
+        //todo-denbond7 Improve this via onDelete = ForeignKey.CASCADE
+        roomDatabase.labelDao().deleteByEmailSuspend(accountEntity.email)
+        roomDatabase.msgDao().deleteByEmailSuspend(accountEntity.email)
+        roomDatabase.attachmentDao().deleteByEmailSuspend(accountEntity.email)
+        roomDatabase.accountAliasesDao().deleteByEmailSuspend(accountEntity.email)
 
-    if (currentAccountDao != null) {
-      val uri = Uri.parse(FlowcryptContract.AUTHORITY_URI.toString() + "/" + FlowcryptContract.CLEAN_DATABASE)
-      contentResolver.delete(uri, null, arrayOf(currentAccountDao!!.email))
-    }
-
-    if (accountDaoList.isNotEmpty()) {
-      val (email) = accountDaoList[0]
-      disconnectFromSyncService()
-      AccountDaoSource().setActiveAccount(this@EmailManagerActivity, email)
-      finish()
-      EmailSyncService.switchAccount(this@EmailManagerActivity)
-      runEmailManagerActivity(this@EmailManagerActivity)
-    } else {
-      stopService(Intent(this, EmailSyncService::class.java))
-      val intent = Intent(this, SignInActivity::class.java)
-      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-      startActivity(intent)
-      finish()
+        val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccounts()
+        if (nonactiveAccounts.isNotEmpty()) {
+          disconnectFromSyncService()
+          val firstNonactiveAccount = nonactiveAccounts.first()
+          roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
+          roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
+          EmailSyncService.switchAccount(applicationContext)
+          runEmailManagerActivity(this@EmailManagerActivity)
+          finish()
+        } else {
+          stopService(Intent(applicationContext, EmailSyncService::class.java))
+          val intent = Intent(applicationContext, SignInActivity::class.java)
+          intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+          startActivity(intent)
+          finish()
+        }
+      }
     }
   }
 
@@ -443,18 +459,20 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     drawerLayout = findViewById(R.id.drawer_layout)
     actionBarDrawerToggle = CustomDrawerToggle(this, drawerLayout, toolbar,
         R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-    drawerLayout?.addDrawerListener(actionBarDrawerToggle!!)
-    actionBarDrawerToggle!!.syncState()
+    actionBarDrawerToggle?.let { drawerLayout?.addDrawerListener(it) }
+    actionBarDrawerToggle?.syncState()
 
     navigationView = findViewById(R.id.navigationView)
-    navigationView!!.setNavigationItemSelectedListener(this)
-    navigationView!!.addHeaderView(genAccountManagementLayout())
+    navigationView?.setNavigationItemSelectedListener(this)
+    accountManagementLayout = LinearLayout(this)
+    accountManagementLayout?.orientation = LinearLayout.VERTICAL
+    accountManagementLayout?.layoutParams = ViewGroup.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+    accountManagementLayout?.visibility = View.GONE
+    accountManagementLayout?.let { navigationView?.addHeaderView(it) }
 
-    if (findViewById<View>(R.id.floatActionButtonCompose) != null) {
-      findViewById<View>(R.id.floatActionButtonCompose).setOnClickListener(this)
-    }
-
-    initUserProfileView(navigationView!!.getHeaderView(0))
+    findViewById<View>(R.id.floatActionButtonCompose)?.setOnClickListener(this)
+    activeAccount?.let { navigationView?.getHeaderView(0)?.let { view -> initUserProfileView(view) } }
   }
 
   /**
@@ -467,17 +485,17 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     val textViewUserDisplayName = view.findViewById<TextView>(R.id.textViewActiveUserDisplayName)
     val textViewUserEmail = view.findViewById<TextView>(R.id.textViewActiveUserEmail)
 
-    if (currentAccountDao != null) {
-      if (TextUtils.isEmpty(currentAccountDao!!.displayName)) {
+    activeAccount?.let {
+      if (it.displayName.isNullOrEmpty()) {
         textViewUserDisplayName.visibility = View.GONE
       } else {
-        textViewUserDisplayName.text = currentAccountDao!!.displayName
+        textViewUserDisplayName.text = it.displayName
       }
-      textViewUserEmail.text = currentAccountDao!!.email
+      textViewUserEmail.text = it.email
 
-      if (!TextUtils.isEmpty(currentAccountDao!!.photoUrl)) {
+      if (it.photoUrl?.isNotEmpty() == true) {
         GlideApp.with(this)
-            .load(currentAccountDao!!.photoUrl)
+            .load(it.photoUrl)
             .apply(RequestOptions()
                 .centerCrop()
                 .transform(CircleTransformation())
@@ -488,9 +506,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     currentAccountDetailsItem = view.findViewById(R.id.layoutUserDetails)
     val imageView = view.findViewById<ImageView>(R.id.imageViewExpandAccountManagement)
-    if (currentAccountDetailsItem != null) {
-      accountManagementButtonClicked(currentAccountDetailsItem!!, imageView)
-    }
+    currentAccountDetailsItem?.let { accountManagementButtonClicked(it, imageView) }
   }
 
   private fun accountManagementButtonClicked(view: View, imageView: ImageView) {
@@ -500,12 +516,12 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       override fun onClick(v: View) {
         if (isExpanded) {
           imageView.setImageResource(R.mipmap.ic_arrow_drop_down)
-          navigationView!!.menu.setGroupVisible(0, true)
-          accountManagementLayout!!.visibility = View.GONE
+          navigationView?.menu?.setGroupVisible(0, true)
+          accountManagementLayout?.visibility = View.GONE
         } else {
           imageView.setImageResource(R.mipmap.ic_arrow_drop_up)
-          navigationView!!.menu.setGroupVisible(0, false)
-          accountManagementLayout!!.visibility = View.VISIBLE
+          navigationView?.menu?.setGroupVisible(0, false)
+          accountManagementLayout?.visibility = View.VISIBLE
         }
 
         isExpanded = !isExpanded
@@ -518,26 +534,20 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
    *
    * @return The generated view.
    */
-  private fun genAccountManagementLayout(): ViewGroup {
-    accountManagementLayout = LinearLayout(this)
-    accountManagementLayout!!.orientation = LinearLayout.VERTICAL
-    accountManagementLayout!!.layoutParams = ViewGroup.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-    accountManagementLayout!!.visibility = View.GONE
-
-    val accountDaoList = AccountDaoSource().getAccountsWithoutActive(this, currentAccountDao!!.email)
-    for (account in accountDaoList) {
-      accountManagementLayout!!.addView(generateAccountItemView(account))
+  private fun genAccountsLayout(accounts: List<AccountEntity>): ViewGroup {
+    accountManagementLayout?.removeAllViews()
+    for (account in accounts) {
+      accountManagementLayout?.addView(generateAccountItemView(account))
     }
 
     val addNewAccountView = LayoutInflater.from(this).inflate(R.layout.add_account, accountManagementLayout, false)
     addNewAccountView.setOnClickListener(this)
-    accountManagementLayout!!.addView(addNewAccountView)
+    accountManagementLayout?.addView(addNewAccountView)
 
     return accountManagementLayout as LinearLayout
   }
 
-  private fun generateAccountItemView(account: AccountDao?): View {
+  private fun generateAccountItemView(account: AccountEntity): View {
     val view = LayoutInflater.from(this).inflate(R.layout.nav_menu_account_item, accountManagementLayout, false)
     view.tag = account
 
@@ -545,33 +555,32 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     val textViewName = view.findViewById<TextView>(R.id.textViewUserDisplayName)
     val textViewEmail = view.findViewById<TextView>(R.id.textViewUserEmail)
 
-    if (account != null) {
-      if (TextUtils.isEmpty(account.displayName)) {
-        textViewName.visibility = View.GONE
-      } else {
-        textViewName.text = account.displayName
-      }
-      textViewEmail.text = account.email
+    if (TextUtils.isEmpty(account.displayName)) {
+      textViewName.visibility = View.GONE
+    } else {
+      textViewName.text = account.displayName
+    }
+    textViewEmail.text = account.email
 
-      if (!TextUtils.isEmpty(account.photoUrl)) {
-        GlideApp.with(this)
-            .load(account.photoUrl)
-            .apply(RequestOptions()
-                .centerCrop()
-                .transform(CircleTransformation())
-                .error(R.mipmap.ic_account_default_photo))
-            .into(imageViewActiveUserPhoto)
-      }
+    if (!TextUtils.isEmpty(account.photoUrl)) {
+      GlideApp.with(this)
+          .load(account.photoUrl)
+          .apply(RequestOptions()
+              .centerCrop()
+              .transform(CircleTransformation())
+              .error(R.mipmap.ic_account_default_photo))
+          .into(imageViewActiveUserPhoto)
     }
 
     view.setOnClickListener {
-      finish()
-      if (account != null) {
+      lifecycleScope.launch {
         disconnectFromSyncService()
-        AccountDaoSource().setActiveAccount(this@EmailManagerActivity, account.email)
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity)
+        roomDatabase.accountDao().switchAccountSuspend(account)
         EmailSyncService.switchAccount(this@EmailManagerActivity)
         runEmailManagerActivity(this@EmailManagerActivity)
       }
+      finish()
     }
 
     return view
@@ -658,15 +667,15 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       super.onDrawerOpened(drawerView)
 
       if (GeneralUtil.isConnected(this@EmailManagerActivity)) {
-        countingIdlingResourceForLabel!!.increment()
+        countingIdlingResourceForLabel?.increment()
         updateLabels(R.id.syns_request_code_update_label_passive)
       }
     }
 
     override fun onDrawerClosed(drawerView: View) {
       super.onDrawerClosed(drawerView)
-      if (!navigationView!!.menu.getItem(0).isVisible) {
-        currentAccountDetailsItem!!.performClick()
+      if (navigationView?.menu?.getItem(0)?.isVisible == false) {
+        currentAccountDetailsItem?.performClick()
       }
     }
 

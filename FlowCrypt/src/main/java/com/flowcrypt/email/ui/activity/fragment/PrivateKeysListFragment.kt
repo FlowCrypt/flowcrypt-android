@@ -20,7 +20,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -115,12 +114,13 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
   }
 
   private fun runCreateOrImportKeyActivity() {
-    val account = AccountDaoSource().getActiveAccountInformation(context) ?: return
-    startActivityForResult(ImportPrivateKeyActivity.getIntent(context = requireContext(), accountDao = account,
+    startActivityForResult(ImportPrivateKeyActivity.getIntent(
+        context = requireContext(),
         title = getString(R.string.import_private_key),
         throwErrorIfDuplicateFoundEnabled = true,
         cls = ImportPrivateKeyActivity::class.java,
-        isSubmittingPubKeysEnabled = false),
+        isSubmittingPubKeysEnabled = false,
+        accountEntity = account),
         REQUEST_CODE_START_IMPORT_KEY_ACTIVITY)
   }
 

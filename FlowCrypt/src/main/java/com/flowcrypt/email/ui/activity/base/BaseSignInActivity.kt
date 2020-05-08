@@ -67,7 +67,6 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
 
   abstract val progressView: View?
 
-  @JvmField
   protected var googleSignInAccount: GoogleSignInAccount? = null
 
   abstract fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?)

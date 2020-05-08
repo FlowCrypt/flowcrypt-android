@@ -8,13 +8,14 @@ package com.flowcrypt.email.api.email.sync
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.util.MailConnectException
 import java.io.IOException
+import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.mail.FolderClosedException
 import javax.mail.MessagingException
@@ -34,11 +35,12 @@ import javax.mail.search.SubjectTerm
  *         Time: 3:33 PM
  *         E-mail: DenBond7@gmail.com
  */
-class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListener,
-                                   val emailSyncManager: EmailSyncManager) :
-    BaseSyncRunnable(account, syncListener), MessageCountListener, MessageChangedListener {
+class IdleSyncRunnable constructor(syncListener: SyncListener,
+                                   private val emailSyncManager: EmailSyncManager) :
+    BaseSyncRunnable(syncListener), MessageCountListener, MessageChangedListener {
   private var localFolder: LocalFolder? = null
   private var remoteFolder: IMAPFolder? = null
+
   /**
    * here we can have a lot of checks which help us decide can we run idling(wifi, 3G, a battery level and etc.)
    */
@@ -49,11 +51,14 @@ class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListen
     LogsUtil.d(tag, " run!")
     Thread.currentThread().name = javaClass.simpleName
 
-    val foldersManager = FoldersManager.fromDatabase(syncListener.context, account.email)
-    localFolder = foldersManager.findInboxFolder() ?: return
+    val activeAccount = FlowCryptRoomDatabase.getDatabase(syncListener.context).accountDao().getActiveAccount()
+    activeAccount?.let {
+      val foldersManager = FoldersManager.fromDatabase(syncListener.context, activeAccount.email)
+      localFolder = foldersManager.findInboxFolder() ?: return
 
-    idle()
-    closeConn()
+      idle(it)
+      closeConn()
+    }
 
     LogsUtil.d(tag, " stopped!")
   }
@@ -77,6 +82,8 @@ class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListen
     if (msg != null && e.messageChangeType == MessageChangedEvent.FLAGS_CHANGED) {
       try {
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(syncListener.context)
+        val userName = msg.folder.store.urlName.username?.toLowerCase(Locale.getDefault()) ?: return
+        val account = roomDatabase.accountDao().getAccount(userName) ?: return
         roomDatabase.msgDao().updateLocalMsgFlags(account.email, local.fullName, remote.getUID(msg), msg.flags)
         syncListener.onMsgChanged(account, local, remote, msg, "", 0)
       } catch (msgException: MessagingException) {
@@ -100,9 +107,9 @@ class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListen
     }).start()
   }
 
-  internal fun idle() {
+  internal fun idle(accountEntity: AccountEntity) {
     try {
-      resetConnIfNeeded(null)
+      resetConnIfNeeded(accountEntity, false, null)
       while (!GeneralUtil.isConnected(syncListener.context)) {
         try {
           //wait while a connection will be established
@@ -114,7 +121,7 @@ class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListen
 
       if (!isConnected) {
         LogsUtil.d(tag, "Not connected. Start a reconnection ...")
-        openConnToStore()
+        openConnToStore(accountEntity)
         LogsUtil.d(tag, "Reconnection done")
       }
 
@@ -136,7 +143,7 @@ class IdleSyncRunnable constructor(account: AccountDao, syncListener: SyncListen
     } catch (e: Exception) {
       e.printStackTrace()
       if (e is FolderClosedException || e is MailConnectException || e is IOException) {
-        idle()
+        idle(accountEntity)
       } else if (e is MessagingException) {
         if ("IDLE not supported" == e.message) {
           LogsUtil.d(tag, "IDLE not supported!")

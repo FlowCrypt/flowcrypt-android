@@ -17,7 +17,6 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.dao.AccountAliasesDao
-import com.flowcrypt.email.database.dao.AccountDao
 import com.flowcrypt.email.database.dao.ActionQueueDao
 import com.flowcrypt.email.database.dao.AttachmentDao
 import com.flowcrypt.email.database.dao.ContactsDao
@@ -62,7 +61,7 @@ import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun msgDao(): MessageDao
 
-  abstract fun accountDao(): AccountDao
+  abstract fun accountDao(): AccountDaoSource
 
   abstract fun attachmentDao(): AttachmentDao
 
@@ -92,12 +91,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
         database.beginTransaction()
         try {
           database.execSQL("ALTER TABLE messages ADD COLUMN is_message_has_attachments INTEGER DEFAULT 0;")
-
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_IS_ENABLE + " INTEGER DEFAULT 1;")
-
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_IS_ACTIVE + " INTEGER DEFAULT 0;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN is_enable INTEGER DEFAULT 1;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN is_active INTEGER DEFAULT 0;")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -108,36 +103,21 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_USERNAME + " TEXT NOT NULL DEFAULT '';")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_PASSWORD + " TEXT NOT NULL DEFAULT '';")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_IMAP_SERVER + " TEXT NOT NULL DEFAULT '';")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_IMAP_PORT + " INTEGER DEFAULT 143;")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_IMAP_IS_USE_SSL_TLS + " INTEGER DEFAULT 0;")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_IMAP_IS_USE_STARTTLS + " INTEGER DEFAULT 0;")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_IMAP_AUTH_MECHANISMS + " TEXT;")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_SMTP_SERVER + " TEXT NOT NULL DEFAULT '';")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_SMTP_PORT + " INTEGER DEFAULT 25;")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_SMTP_IS_USE_SSL_TLS + " INTEGER DEFAULT 0;")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_SMTP_IS_USE_STARTTLS + " INTEGER DEFAULT 0;")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_SMTP_AUTH_MECHANISMS + " TEXT;")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_SMTP_IS_USE_CUSTOM_SIGN + " INTEGER DEFAULT 0;")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_SMTP_USERNAME + " TEXT DEFAULT NULL;")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_SMTP_PASSWORD + " TEXT DEFAULT NULL;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN username TEXT NOT NULL DEFAULT '';")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN password TEXT NOT NULL DEFAULT '';")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN imap_server TEXT NOT NULL DEFAULT '';")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN imap_port INTEGER DEFAULT 143;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN imap_is_use_ssl_tls INTEGER DEFAULT 0;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN imap_is_use_starttls INTEGER DEFAULT 0;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN imap_auth_mechanisms TEXT;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN smtp_server TEXT NOT NULL DEFAULT '';")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN smtp_port INTEGER DEFAULT 25;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN smtp_is_use_ssl_tls INTEGER DEFAULT 0;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN smtp_is_use_starttls INTEGER DEFAULT 0;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN smtp_auth_mechanisms TEXT;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN smtp_is_use_custom_sign INTEGER DEFAULT 0;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN smtp_username TEXT DEFAULT NULL;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN smtp_password TEXT DEFAULT NULL;")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -187,8 +167,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_IS_CONTACTS_LOADED + " INTEGER DEFAULT 0;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN ic_contacts_loaded INTEGER DEFAULT 0;")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -204,8 +183,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           database.execSQL("ALTER TABLE messages ADD COLUMN cc_address TEXT DEFAULT NULL;")
           database.execSQL("ALTER TABLE messages ADD COLUMN is_new INTEGER DEFAULT 0;")
 
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_IS_SHOW_ONLY_ENCRYPTED + " INTEGER DEFAULT 0;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN is_show_only_encrypted INTEGER DEFAULT 0;")
 
           database.execSQL("CREATE TABLE user_id_emails_and_keys (_id INTEGER PRIMARY KEY AUTOINCREMENT, long_id TEXT NOT NULL, user_id_email TEXT NOT NULL )")
           database.execSQL("CREATE UNIQUE INDEX long_id_user_id_email_in_user_id_emails_and_keys ON user_id_emails_and_keys (long_id, user_id_email)")
@@ -326,10 +304,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_UUID + " TEXT DEFAULT NULL;")
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_DOMAIN_RULES + " TEXT DEFAULT NULL;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN uuid TEXT DEFAULT NULL;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN domain_rules TEXT DEFAULT NULL;")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()
@@ -341,8 +317,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       override fun migrate(database: SupportSQLiteDatabase) {
         database.beginTransaction()
         try {
-          database.execSQL("ALTER TABLE " + AccountDaoSource.TABLE_NAME_ACCOUNTS +
-              " ADD COLUMN " + AccountDaoSource.COL_IS_RESTORE_ACCESS_REQUIRED + " INTEGER DEFAULT 0;")
+          database.execSQL("ALTER TABLE accounts ADD COLUMN is_restore_access_required INTEGER DEFAULT 0;")
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()

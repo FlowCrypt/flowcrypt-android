@@ -30,8 +30,7 @@ import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -84,20 +83,15 @@ class EmailSyncService : BaseService(), SyncListener {
     LogsUtil.d(TAG, "onCreate")
 
     notificationManager = MessagesNotificationManager(this)
-
-    val account: AccountDao? = AccountDaoSource().getActiveAccountInformation(this)
-    account?.let {
-      emailSyncManager = EmailSyncManager(it, this)
-      messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
-    }
-
     connectionBroadcastReceiver = object : BroadcastReceiver() {
       override fun onReceive(context: Context, intent: Intent) {
         handleConnectivityAction(context, intent)
       }
     }
-
     registerReceiver(connectionBroadcastReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+
+    emailSyncManager = EmailSyncManager(this)
+    messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -139,6 +133,7 @@ class EmailSyncService : BaseService(), SyncListener {
   }
 
   override fun onBind(intent: Intent): IBinder? {
+    super.onBind(intent)
     LogsUtil.d(TAG, "onBind:$intent")
 
     if (!isServiceStarted) {
@@ -147,7 +142,7 @@ class EmailSyncService : BaseService(), SyncListener {
     return messenger?.binder
   }
 
-  override fun onMsgWithBackupToKeyOwnerSent(account: AccountDao, ownerKey: String, requestCode: Int, isSent: Boolean) {
+  override fun onMsgWithBackupToKeyOwnerSent(account: AccountEntity, ownerKey: String, requestCode: Int, isSent: Boolean) {
     try {
       if (isSent) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
@@ -162,7 +157,7 @@ class EmailSyncService : BaseService(), SyncListener {
 
   }
 
-  override fun onPrivateKeysFound(account: AccountDao, keys: List<NodeKeyDetails>, ownerKey: String, requestCode: Int) {
+  override fun onPrivateKeysFound(account: AccountEntity, keys: List<NodeKeyDetails>, ownerKey: String, requestCode: Int) {
     try {
       sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, keys)
     } catch (e: RemoteException) {
@@ -171,7 +166,7 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onMsgSent(account: AccountDao, ownerKey: String, requestCode: Int, isSent: Boolean) {
+  override fun onMsgSent(account: AccountEntity, ownerKey: String, requestCode: Int, isSent: Boolean) {
     try {
       if (isSent) {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
@@ -186,12 +181,12 @@ class EmailSyncService : BaseService(), SyncListener {
 
   }
 
-  override fun onMsgsMoved(account: AccountDao, srcFolder: IMAPFolder, destFolder: IMAPFolder,
+  override fun onMsgsMoved(account: AccountEntity, srcFolder: IMAPFolder, destFolder: IMAPFolder,
                            msgs: List<javax.mail.Message>, ownerKey: String, requestCode: Int) {
     //Todo-denbond7 Not implemented yet.
   }
 
-  override fun onMsgMoved(account: AccountDao, srcFolder: IMAPFolder, destFolder: IMAPFolder,
+  override fun onMsgMoved(account: AccountEntity, srcFolder: IMAPFolder, destFolder: IMAPFolder,
                           msg: javax.mail.Message?, ownerKey: String, requestCode: Int) {
     try {
       if (msg != null) {
@@ -206,7 +201,7 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onMsgDetailsReceived(account: AccountDao, localFolder: LocalFolder,
+  override fun onMsgDetailsReceived(account: AccountEntity, localFolder: LocalFolder,
                                     remoteFolder: IMAPFolder, uid: Long, id: Long, msg: javax.mail.Message?,
                                     ownerKey: String, requestCode: Int) {
     try {
@@ -230,7 +225,7 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onMsgsReceived(account: AccountDao, localFolder: LocalFolder,
+  override fun onMsgsReceived(account: AccountEntity, localFolder: LocalFolder,
                               remoteFolder: IMAPFolder, msgs: Array<javax.mail.Message>, ownerKey: String,
                               requestCode: Int) {
     LogsUtil.d(TAG, "onMessagesReceived: imapFolder = " + remoteFolder.fullName + " message count: " + msgs.size)
@@ -239,7 +234,7 @@ class EmailSyncService : BaseService(), SyncListener {
       val folder = localFolder.fullName
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailSyncService)
 
-      val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(this, email)
+      val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
       val msgEntities = MessageEntity.genMessageEntities(
           context = this,
           email = email,
@@ -296,7 +291,7 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onNewMsgsReceived(account: AccountDao, localFolder: LocalFolder,
+  override fun onNewMsgsReceived(account: AccountEntity, localFolder: LocalFolder,
                                  remoteFolder: IMAPFolder, newMsgs: Array<javax.mail.Message>,
                                  msgsEncryptionStates: Map<Long, Boolean>, ownerKey: String,
                                  requestCode: Int) {
@@ -344,12 +339,12 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onSearchMsgsReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
+  override fun onSearchMsgsReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                                     msgs: Array<javax.mail.Message>, ownerKey: String, requestCode: Int) {
     LogsUtil.d(TAG, "onSearchMessagesReceived: message count: " + msgs.size)
     val email = account.email
     try {
-      val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(this, email)
+      val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
       val searchLabel = SearchMessagesActivity.SEARCH_FOLDER_NAME
 
       val msgEntities = MessageEntity.genMessageEntities(
@@ -386,7 +381,7 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onRefreshMsgsReceived(account: AccountDao, localFolder: LocalFolder,
+  override fun onRefreshMsgsReceived(account: AccountEntity, localFolder: LocalFolder,
                                      remoteFolder: IMAPFolder, newMsgs: Array<javax.mail.Message>,
                                      updateMsgs: Array<javax.mail.Message>, ownerKey: String, requestCode: Int) {
     LogsUtil.d(TAG, "onRefreshMessagesReceived: imapFolder = " + remoteFolder.fullName + " newMessages " +
@@ -418,7 +413,7 @@ class EmailSyncService : BaseService(), SyncListener {
 
       val newCandidates = EmailUtil.genNewCandidates(msgsUIDs, remoteFolder, newMsgs)
 
-      val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(this, email)
+      val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
       val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
 
       val msgEntities = MessageEntity.genMessageEntities(
@@ -469,7 +464,7 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onFoldersInfoReceived(account: AccountDao, folders: Array<Folder>, ownerKey: String, requestCode: Int) {
+  override fun onFoldersInfoReceived(account: AccountEntity, folders: Array<Folder>, ownerKey: String, requestCode: Int) {
     LogsUtil.d(TAG, "onFoldersInfoReceived:" + folders.contentToString())
     val email = account.email
 
@@ -510,7 +505,7 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onError(account: AccountDao, errorType: Int, e: Exception, ownerKey: String, requestCode: Int) {
+  override fun onError(account: AccountEntity, errorType: Int, e: Exception, ownerKey: String, requestCode: Int) {
     Log.e(TAG, "onError: errorType$errorType| e =$e")
     try {
       if (replyToMessengers.containsKey(ownerKey)) {
@@ -523,14 +518,13 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onActionProgress(account: AccountDao, ownerKey: String, requestCode: Int,
+  override fun onActionProgress(account: AccountEntity?, ownerKey: String, requestCode: Int,
                                 resultCode: Int, value: Int) {
     LogsUtil.d(TAG,
         "onActionProgress: account$account| ownerKey =$ownerKey| requestCode =$requestCode")
     try {
       if (replyToMessengers.containsKey(ownerKey)) {
-        val messenger = replyToMessengers[ownerKey]
-        messenger!!.send(Message.obtain(null, REPLY_ACTION_PROGRESS, requestCode, resultCode, value))
+        replyToMessengers[ownerKey]?.send(Message.obtain(null, REPLY_ACTION_PROGRESS, requestCode, resultCode, value))
       }
     } catch (e: RemoteException) {
       e.printStackTrace()
@@ -538,7 +532,7 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onMsgChanged(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder,
+  override fun onMsgChanged(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                             msg: javax.mail.Message, ownerKey: String, requestCode: Int) {
     val email = account.email
     val folderName = localFolder.fullName
@@ -563,7 +557,7 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onIdentificationToEncryptionCompleted(account: AccountDao, localFolder: LocalFolder,
+  override fun onIdentificationToEncryptionCompleted(account: AccountEntity, localFolder: LocalFolder,
                                                      remoteFolder: IMAPFolder, ownerKey: String, requestCode: Int) {
     val email = account.email
     val folderName = localFolder.fullName
@@ -579,7 +573,7 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onAttsInfoReceived(account: AccountDao, localFolder: LocalFolder, remoteFolder: IMAPFolder, uid: Long,
+  override fun onAttsInfoReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, uid: Long,
                                   ownerKey: String, requestCode: Int) {
     try {
       sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
@@ -752,21 +746,6 @@ class EmailSyncService : BaseService(), SyncListener {
 
           MESSAGE_MOVE_MESSAGE -> if (emailSyncManager != null && action != null) {
             val localFolders = action.`object` as Array<LocalFolder?>
-
-            val emailDomain = emailSyncManager.account.accountType
-
-            if (localFolders.size != 2) {
-              throw IllegalArgumentException(emailDomain!! + "|Can't move the message. Folders are null.")
-            }
-
-            if (localFolders[0] == null) {
-              throw IllegalArgumentException(emailDomain!! + "|Can't move the message. The source folder is null.")
-            }
-
-            if (localFolders[1] == null) {
-              throw IllegalArgumentException(emailDomain!! + "|Cannot move the message. The dest folder is null.")
-            }
-
             emailSyncManager.moveMsg(ownerKey!!, requestCode, localFolders[0]!!, localFolders[1]!!, msg.arg1)
           }
 

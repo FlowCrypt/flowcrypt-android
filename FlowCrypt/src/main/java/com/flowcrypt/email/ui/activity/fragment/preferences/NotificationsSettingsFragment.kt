@@ -15,7 +15,7 @@ import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -36,33 +36,6 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     setPreferencesFromResource(R.xml.preferences_notifications_settings, rootKey)
-
-    val accountDaoSource = AccountDaoSource()
-    val account = accountDaoSource.getActiveAccountInformation(requireContext())
-
-    if (account != null) {
-      val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(requireContext(), account.email)
-
-      if (isEncryptedModeEnabled) {
-        levels = arrayOf(
-            NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
-            NOTIFICATION_LEVEL_NEVER)
-        entries = resources.getStringArray(R.array.notification_level_encrypted_entries)
-      } else {
-        levels = arrayOf(
-            NOTIFICATION_LEVEL_ALL_MESSAGES,
-            NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
-            NOTIFICATION_LEVEL_NEVER)
-        entries = resources.getStringArray(R.array.notification_level_entries)
-      }
-
-      initPreferences(isEncryptedModeEnabled)
-    } else {
-      val intent = Intent(context, SignInActivity::class.java)
-      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-      startActivity(intent)
-      requireActivity().finish()
-    }
   }
 
   override fun onPreferenceClick(preference: Preference?): Boolean {
@@ -91,6 +64,32 @@ open class NotificationsSettingsFragment : BasePreferenceFragment(), Preference.
       }
 
       else -> false
+    }
+  }
+
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    if (accountEntity != null) {
+      val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted
+
+      if (isEncryptedModeEnabled == true) {
+        levels = arrayOf(
+            NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
+            NOTIFICATION_LEVEL_NEVER)
+        entries = resources.getStringArray(R.array.notification_level_encrypted_entries)
+      } else {
+        levels = arrayOf(
+            NOTIFICATION_LEVEL_ALL_MESSAGES,
+            NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY,
+            NOTIFICATION_LEVEL_NEVER)
+        entries = resources.getStringArray(R.array.notification_level_entries)
+      }
+
+      initPreferences(isEncryptedModeEnabled == true)
+    } else {
+      val intent = Intent(context, SignInActivity::class.java)
+      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+      startActivity(intent)
+      requireActivity().finish()
     }
   }
 

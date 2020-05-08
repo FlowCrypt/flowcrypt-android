@@ -11,7 +11,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity
@@ -28,7 +28,7 @@ import com.flowcrypt.email.util.GeneralUtil
  */
 class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.OnClickListener {
   private var isShowAnotherAccountBtnEnabled = true
-  private lateinit var account: AccountDao
+  private lateinit var tempAccount: AccountEntity
 
   override val rootView: View
     get() = findViewById(R.id.layoutContent)
@@ -46,19 +46,19 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
     super.onCreate(savedInstanceState)
     this.isShowAnotherAccountBtnEnabled =
         intent?.getBooleanExtra(KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, true) ?: true
-    val account: AccountDao? = intent.getParcelableExtra(EXTRA_KEY_ACCOUNT_DAO)
+    val accountEntity: AccountEntity? = intent.getParcelableExtra(EXTRA_KEY_ACCOUNT)
 
-    if (account == null) {
+    if (accountEntity == null) {
       finish()
     } else {
-      this.account = account
+      this.tempAccount = accountEntity
       initViews()
     }
   }
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.buttonCreateNewKey -> startActivityForResult(CreatePrivateKeyActivity.newIntent(this, account),
+      R.id.buttonCreateNewKey -> startActivityForResult(CreatePrivateKeyActivity.newIntent(this, tempAccount),
           REQUEST_CODE_CREATE_KEY_ACTIVITY)
 
       R.id.buttonImportMyKey -> {
@@ -67,14 +67,14 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
           keyImportModel = service.keyImportModel
         }
 
-        startActivityForResult(BaseImportKeyActivity.newIntent(this, account, false,
+        startActivityForResult(BaseImportKeyActivity.newIntent(this, tempAccount, false,
             getString(R.string.import_private_key), keyImportModel, true,
             ImportPrivateKeyActivity::class.java), REQUEST_CODE_IMPORT_ACTIVITY)
       }
 
       R.id.buttonSelectAnotherAccount -> {
         val intent = Intent()
-        intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, account)
+        intent.putExtra(EXTRA_KEY_ACCOUNT, tempAccount)
         setResult(RESULT_CODE_USE_ANOTHER_ACCOUNT, intent)
         finish()
       }
@@ -102,7 +102,7 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
   private fun initViews() {
     findViewById<View>(R.id.buttonImportMyKey)?.setOnClickListener(this)
 
-    if (account.isRuleExist(AccountDao.DomainRule.NO_PRV_CREATE)) {
+    if (tempAccount.isRuleExist(AccountEntity.DomainRule.NO_PRV_CREATE)) {
       findViewById<View>(R.id.buttonCreateNewKey)?.visibility = View.GONE
     } else {
       findViewById<View>(R.id.buttonCreateNewKey)?.setOnClickListener(this)
@@ -117,7 +117,7 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
     }
 
     val buttonSkipSetup = findViewById<View>(R.id.buttonSkipSetup)
-    if (account.isRuleExist(AccountDao.DomainRule.NO_PRV_CREATE)) {
+    if (tempAccount.isRuleExist(AccountEntity.DomainRule.NO_PRV_CREATE)) {
       buttonSkipSetup.visibility = View.GONE
     } else {
       if (KeysStorageImpl.getInstance(application).hasKeys()) {
@@ -131,8 +131,8 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
 
   companion object {
     const val RESULT_CODE_USE_ANOTHER_ACCOUNT = 10
-    val EXTRA_KEY_ACCOUNT_DAO =
-        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT_DAO", CreateOrImportKeyActivity::class.java)
+    val EXTRA_KEY_ACCOUNT =
+        GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT", CreateOrImportKeyActivity::class.java)
 
     private const val REQUEST_CODE_IMPORT_ACTIVITY = 11
     private const val REQUEST_CODE_CREATE_KEY_ACTIVITY = 12
@@ -140,9 +140,9 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
         GeneralUtil.generateUniqueExtraKey("KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED",
             CreateOrImportKeyActivity::class.java)
 
-    fun newIntent(context: Context, account: AccountDao, isShowAnotherAccountBtnEnabled: Boolean): Intent {
+    fun newIntent(context: Context, accountEntity: AccountEntity, isShowAnotherAccountBtnEnabled: Boolean): Intent {
       val intent = Intent(context, CreateOrImportKeyActivity::class.java)
-      intent.putExtra(EXTRA_KEY_ACCOUNT_DAO, account)
+      intent.putExtra(EXTRA_KEY_ACCOUNT, accountEntity)
       intent.putExtra(KEY_IS_SHOW_ANOTHER_ACCOUNT_BUTTON_ENABLED, isShowAnotherAccountBtnEnabled)
       return intent
     }
