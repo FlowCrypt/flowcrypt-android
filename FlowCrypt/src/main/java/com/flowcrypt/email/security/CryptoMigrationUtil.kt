@@ -15,19 +15,14 @@ import android.security.keystore.KeyProperties
 import android.text.TextUtils
 import android.util.Base64
 import androidx.preference.PreferenceManager
-import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.broadcastreceivers.CorruptedStorageBroadcastReceiver
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.node.NodeSecretCerts
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import org.apache.commons.io.IOUtils
-import java.io.FileNotFoundException
 import java.nio.charset.StandardCharsets
 import java.security.GeneralSecurityException
 import java.security.Key
 import java.security.KeyStore
 import java.security.PrivateKey
-import java.util.*
 import javax.crypto.BadPaddingException
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
@@ -59,7 +54,6 @@ class CryptoMigrationUtil {
     private const val TRANSFORMATION_AES_CBC_PKCS5_PADDING = "AES/CBC/PKCS5Padding"
     private const val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
     private const val ANDROID_KEY_STORE_RSA_ALIAS = "flowcrypt_main"
-    private const val NODE_SECRETS_CACHE_FILENAME = "flowcrypt-node-secrets-cache"
 
     /**
      * Here we check is "flowcrypt_main" alias exist in AndroidKeyStore. If yes we do the
@@ -88,7 +82,6 @@ class CryptoMigrationUtil {
           val databaseOpenHelper = FlowCryptSQLiteOpenHelper(globalContext)
           val database = databaseOpenHelper.writableDatabase
 
-          updateNodeUsage(globalContext, secretKey)
           updateKeysUsage(database, secretKey)
           updateAccountsUsage(globalContext, database, privateKey)
 
@@ -99,52 +92,6 @@ class CryptoMigrationUtil {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
         }
-      }
-    }
-
-    private fun updateNodeUsage(context: Context, secretKey: SecretKeySpec) {
-      getCachedNodeSecretCerts(context, secretKey)?.let {
-        saveNodeSecretCertsToCache(context, it)
-      }
-    }
-
-    private fun saveNodeSecretCertsToCache(context: Context, nodeSecretCerts: NodeSecretCerts) {
-      val gson = NodeGson.gson
-      val data = gson.toJson(nodeSecretCerts)
-      try {
-        context.openFileOutput(NODE_SECRETS_CACHE_FILENAME, Context.MODE_PRIVATE).use { outputStream ->
-          val spec = UUID.randomUUID().toString()
-          outputStream.write(spec.toByteArray())
-          outputStream.write('\n'.toInt())
-          outputStream.write(KeyStoreCryptoManager.encrypt(data).toByteArray())
-        }
-      } catch (e: Exception) {
-        throw RuntimeException("Could not save certs cache", e)
-      }
-    }
-
-    private fun getCachedNodeSecretCerts(context: Context, secretKey: Key): NodeSecretCerts? {
-      try {
-        context.openFileInput(NODE_SECRETS_CACHE_FILENAME).use { inputStream ->
-          val gson = NodeGson.gson
-          val rawData = IOUtils.toString(inputStream, StandardCharsets.UTF_8)
-
-          val splitPosition = rawData.indexOf('\n')
-
-          if (splitPosition == -1) {
-            throw IllegalArgumentException("wrong rawData")
-          }
-
-          val spec = rawData.substring(0, splitPosition)
-
-          val decryptedData = decrypt(rawData.substring(splitPosition + 1), secretKey, spec)
-          return gson.fromJson(decryptedData, NodeSecretCerts::class.java)
-        }
-      } catch (e: FileNotFoundException) {
-        e.printStackTrace()
-        return null
-      } catch (e: Exception) {
-        throw RuntimeException("Could not load certs cache", e)
       }
     }
 
