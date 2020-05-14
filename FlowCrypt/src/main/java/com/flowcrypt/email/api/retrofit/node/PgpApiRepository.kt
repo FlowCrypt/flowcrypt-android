@@ -14,9 +14,11 @@ import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
+import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
+import com.flowcrypt.email.model.PgpContact
 
 /**
  * It's an entry point of all requests to work with PGP actions.
@@ -64,6 +66,14 @@ interface PgpApiRepository : BaseApiRepository {
   MutableLiveData<NodeResponseWrapper<*>>,
                               request: ZxcvbnStrengthBarRequest)
 
-  suspend fun decryptKey(context: Context, armoredKey: String, passphrases: List<String>):
-      Result<DecryptKeyResult>
+  suspend fun decryptKey(context: Context, armoredKey: String, passphrases: List<String>): Result<DecryptKeyResult>
+
+  /**
+   * Generate a private key using the given parameters.
+   *
+   * @param passphrase  The given passphrase.
+   * @param pgpContacts A list of contacts.
+   * @return A result with an instance of [GenerateKeyResult]
+   */
+  suspend fun createPrivateKey(context: Context, passphrase: String, pgpContacts: List<PgpContact>): Result<GenerateKeyResult?>
 }

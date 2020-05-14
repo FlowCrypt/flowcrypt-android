@@ -11,11 +11,13 @@ import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
+import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
+import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -57,5 +59,17 @@ class FlowcryptApiRepository : ApiRepository {
       withContext(Dispatchers.IO) {
         val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
         getResult { apiService.postLookUpEmail(model) }
+      }
+
+  override suspend fun postInitialLegacySubmit(context: Context, model: InitialLegacySubmitModel): Result<InitialLegacySubmitResponse> =
+      withContext(Dispatchers.IO) {
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        getResult { apiService.postInitialLegacySubmitSuspend(model) }
+      }
+
+  override suspend fun postTestWelcome(context: Context, model: TestWelcomeModel): Result<TestWelcomeResponse> =
+      withContext(Dispatchers.IO) {
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        getResult { apiService.postTestWelcomeSuspend(model) }
       }
 }

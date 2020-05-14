@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.email.sync.tasks.SyncTask
 import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.iap.ConnectionException
@@ -58,12 +59,12 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
     LogsUtil.d(tag, " run!")
     Thread.currentThread().name = javaClass.simpleName
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(syncListener.context)
-    var lastActiveAccount = roomDatabase.accountDao().getActiveAccount()
+    var lastActiveAccount = AccountViewModel.getAccountEntityWithDecryptedInfo(roomDatabase.accountDao().getActiveAccount())
     if (lastActiveAccount != null) {
       while (!Thread.interrupted()) {
         try {
           LogsUtil.d(tag, "TasksQueue size = " + tasksQueue.size)
-          val refreshedActiveAccount = roomDatabase.accountDao().getActiveAccount()
+          val refreshedActiveAccount = AccountViewModel.getAccountEntityWithDecryptedInfo(roomDatabase.accountDao().getActiveAccount())
               ?: throw InterruptedException()
           val isResetConnectionNeeded = !refreshedActiveAccount.email.equals(lastActiveAccount?.email, true)
           lastActiveAccount = refreshedActiveAccount

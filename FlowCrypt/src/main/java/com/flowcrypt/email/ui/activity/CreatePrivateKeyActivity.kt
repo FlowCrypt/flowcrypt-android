@@ -12,13 +12,14 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
 import android.widget.Toast
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.Loader
+import androidx.activity.viewModels
+import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.model.results.LoaderResult
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
-import com.flowcrypt.email.ui.loader.CreatePrivateKeyAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ApiException
@@ -31,8 +32,8 @@ import com.google.android.material.snackbar.Snackbar
  * E-mail: DenBond7@gmail.com
  */
 
-class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.LoaderCallbacks<LoaderResult> {
-
+class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
+  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private var createdPrivateKeyLongId: String? = null
   private var tempAccount: AccountEntity? = null
 
@@ -43,7 +44,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
     get() = findViewById(R.id.layoutContent)
 
   override fun onConfirmPassPhraseSuccess() {
-    LoaderManager.getInstance(this).restartLoader(R.id.loader_id_create_private_key, null, this)
+    tempAccount?.let { privateKeysViewModel.createPrivateKey(it, editTextKeyPassword.text.toString()) }
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,6 +59,8 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
     if (savedInstanceState != null) {
       this.createdPrivateKeyLongId = savedInstanceState.getString(KEY_CREATED_PRIVATE_KEY_LONG_ID)
     }
+
+    setupPrivateKeyViewModel()
   }
 
   override fun onBackPressed() {
@@ -89,67 +92,6 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
     }
   }
 
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
-    return when (id) {
-      R.id.loader_id_create_private_key -> if (TextUtils.isEmpty(createdPrivateKeyLongId)) {
-        isBackEnabled = false
-        UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
-        CreatePrivateKeyAsyncTaskLoader(this, activeAccount!!, editTextKeyPassword.text.toString())
-      } else {
-        Loader(this)
-      }
-
-      else -> Loader(this)
-    }
-  }
-
-  override fun onLoadFinished(loader: Loader<LoaderResult>, loaderResult: LoaderResult) {
-    handleLoaderResult(loader, loaderResult)
-  }
-
-  override fun onLoaderReset(loader: Loader<LoaderResult>) {
-    when (loader.id) {
-      R.id.loader_id_create_private_key -> isBackEnabled = true
-    }
-  }
-
-  override fun onSuccess(loaderId: Int, result: Any?) {
-    when (loaderId) {
-      R.id.loader_id_create_private_key -> {
-        isBackEnabled = true
-        createdPrivateKeyLongId = result as String?
-        layoutSecondPasswordCheck.visibility = View.GONE
-        layoutSuccess.visibility = View.VISIBLE
-        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-      }
-
-      else -> super.onSuccess(loaderId, result)
-    }
-  }
-
-  override fun onError(loaderId: Int, e: Exception?) {
-    when (loaderId) {
-      R.id.loader_id_create_private_key -> {
-        isBackEnabled = true
-        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-
-        e?.let {
-          if (it is ApiException) {
-            showSnackbar(rootView, it.apiError.msg ?: it.javaClass.simpleName,
-                getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener {
-              onConfirmPassPhraseSuccess()
-            })
-          } else {
-            editTextKeyPasswordSecond.text = null
-            showInfoSnackbar(rootView, e.message)
-          }
-        }
-      }
-
-      else -> super.onError(loaderId, e)
-    }
-  }
-
   override fun initViews() {
     super.initViews()
 
@@ -167,6 +109,45 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity(), LoaderManager.
       layoutSuccess.visibility = View.VISIBLE
       layoutContentView.visibility = View.VISIBLE
     }
+  }
+
+  private fun setupPrivateKeyViewModel() {
+    privateKeysViewModel.createPrivateKeyLiveData.observe(this, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            isBackEnabled = false
+            UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
+          }
+
+          Result.Status.SUCCESS -> {
+            isBackEnabled = true
+            val nodeKeyDetails: NodeKeyDetails? = it.data
+            createdPrivateKeyLongId = nodeKeyDetails?.longId
+            layoutSecondPasswordCheck.visibility = View.GONE
+            layoutSuccess.visibility = View.VISIBLE
+            UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            isBackEnabled = true
+            UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+
+            it.exception?.let { exception ->
+              if (exception is ApiException) {
+                showSnackbar(rootView, exception.apiError.msg ?: it.javaClass.simpleName,
+                    getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener {
+                  onConfirmPassPhraseSuccess()
+                })
+              } else {
+                editTextKeyPasswordSecond.text = null
+                showInfoSnackbar(rootView, exception.message)
+              }
+            }
+          }
+        }
+      }
+    })
   }
 
   companion object {

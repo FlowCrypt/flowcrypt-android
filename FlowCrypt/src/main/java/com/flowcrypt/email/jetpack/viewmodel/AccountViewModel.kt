@@ -12,6 +12,8 @@ import androidx.lifecycle.switchMap
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * @author Denis Bondarenko
@@ -25,19 +27,19 @@ open class AccountViewModel(application: Application) : BaseAndroidViewModel(app
   private val pureActiveAccountLiveData: LiveData<AccountEntity?> = roomDatabase.accountDao().getActiveAccountLD()
   val activeAccountLiveData: LiveData<AccountEntity?> = pureActiveAccountLiveData.switchMap { accountEntity ->
     liveData {
-      emit(getAccountEntityWithDecryptedIfo(accountEntity))
+      emit(getAccountEntityWithDecryptedInfoSuspend(accountEntity))
     }
   }
 
   private val pureNonActiveAccountsLiveData: LiveData<List<AccountEntity>> = roomDatabase.accountDao().getAllNonactiveAccountsLD()
   val nonActiveAccountsLiveData: LiveData<List<AccountEntity>> = pureNonActiveAccountsLiveData.switchMap { accountEntities ->
     liveData {
-      emit(accountEntities.mapNotNull { accountEntity -> getAccountEntityWithDecryptedIfo(accountEntity) })
+      emit(accountEntities.mapNotNull { accountEntity -> getAccountEntityWithDecryptedInfoSuspend(accountEntity) })
     }
   }
 
   companion object {
-    fun getAccountEntityWithDecryptedIfo(accountEntity: AccountEntity?): AccountEntity? {
+    fun getAccountEntityWithDecryptedInfo(accountEntity: AccountEntity?): AccountEntity? {
       var originalPassword = accountEntity?.password
 
       //fixed a bug when try to decrypting the template password.
@@ -51,5 +53,21 @@ open class AccountViewModel(application: Application) : BaseAndroidViewModel(app
           smtpPassword = KeyStoreCryptoManager.decrypt(accountEntity.smtpPassword),
           uuid = KeyStoreCryptoManager.decrypt(accountEntity.uuid))
     }
+
+    suspend fun getAccountEntityWithDecryptedInfoSuspend(accountEntity: AccountEntity?): AccountEntity? =
+        withContext(Dispatchers.IO) {
+          var originalPassword = accountEntity?.password
+
+          //fixed a bug when try to decrypting the template password.
+          // See https://github.com/FlowCrypt/flowcrypt-android/issues/168
+          if ("password".equals(originalPassword, ignoreCase = true)) {
+            originalPassword = ""
+          }
+
+          return@withContext accountEntity?.copy(
+              password = KeyStoreCryptoManager.decryptSuspend(originalPassword),
+              smtpPassword = KeyStoreCryptoManager.decryptSuspend(accountEntity.smtpPassword),
+              uuid = KeyStoreCryptoManager.decryptSuspend(accountEntity.uuid))
+        }
   }
 }

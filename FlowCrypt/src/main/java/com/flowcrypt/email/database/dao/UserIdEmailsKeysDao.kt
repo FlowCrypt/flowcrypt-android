@@ -56,13 +56,22 @@ interface UserIdEmailsKeysDao : BaseDao<UserIdEmailsKeysEntity> {
   fun getLongIdsByEmailLD(account: String): LiveData<List<String>>
 
   /**
-   * Delete information about a private by longid.
+   * Delete information about a private key by longid.
    *
    * @param longId The key longid.
    * @return The count of deleted rows. Will be 1 if information about the key was deleted or -1 otherwise.
    */
   @Query("DELETE FROM user_id_emails_and_keys WHERE long_id = :longId")
   fun deleteByLongId(longId: String): Int
+
+  /**
+   * Delete information about a private key by longid.
+   *
+   * @param longId The key longid.
+   * @return The count of deleted rows. Will be 1 if information about the key was deleted or -1 otherwise.
+   */
+  @Query("DELETE FROM user_id_emails_and_keys WHERE long_id = :longId")
+  suspend fun deleteByLongIdSuspend(longId: String): Int
 
   companion object {
     suspend fun genEntities(context: Context, keyDetails: NodeKeyDetails,

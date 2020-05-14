@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -103,12 +104,12 @@ class SignInActivity : BaseSignInActivity() {
 
       REQUEST_CODE_ADD_OTHER_ACCOUNT -> when (resultCode) {
         Activity.RESULT_OK -> try {
-          val authCreds = data?.getParcelableExtra<AccountEntity>(
+          val authCreds = data?.getParcelableExtra<AuthCredentials>(
               AddNewAccountManuallyActivity.KEY_EXTRA_AUTH_CREDENTIALS)
           if (authCreds != null) {
-            addNewAccount(authCreds)
+            addNewAccount(AccountEntity(authCreds))
           } else {
-            ExceptionUtil.handleError(NullPointerException("AccountEntity is null!"))
+            ExceptionUtil.handleError(NullPointerException("AuthCredentials is null!"))
             Toast.makeText(this, R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
           }
         } catch (e: Exception) {
@@ -185,7 +186,7 @@ class SignInActivity : BaseSignInActivity() {
       roomDatabase.accountDao().addAccountSuspend(accountEntity)
       EmailSyncService.startEmailSyncService(this@SignInActivity)
 
-      val addedAccount = roomDatabase.accountDao().getAccount(accountEntity.email)
+      val addedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email)
       if (addedAccount != null) {
         EmailManagerActivity.runEmailManagerActivity(this@SignInActivity)
         finish()

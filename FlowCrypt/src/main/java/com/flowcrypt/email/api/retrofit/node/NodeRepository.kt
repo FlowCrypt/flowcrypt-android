@@ -10,6 +10,7 @@ import android.os.AsyncTask
 import androidx.lifecycle.MutableLiveData
 import com.flowcrypt.email.api.retrofit.LoadingState
 import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest
+import com.flowcrypt.email.api.retrofit.request.node.GenerateKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequestWrapper
 import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
@@ -18,9 +19,11 @@ import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
+import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
+import com.flowcrypt.email.model.PgpContact
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -59,6 +62,12 @@ class NodeRepository : PgpApiRepository {
                                        request: ZxcvbnStrengthBarRequest) {
     load(requestCode, liveData, request)
   }
+
+  override suspend fun createPrivateKey(context: Context, passphrase: String, pgpContacts: List<PgpContact>): Result<GenerateKeyResult?> =
+      withContext(Dispatchers.IO) {
+        val apiService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
+        getResult(call = { apiService.generateKeySuspend(GenerateKeyRequest(passphrase, pgpContacts)) })
+      }
 
   /**
    * It's a base method for all requests to Node.js

@@ -91,5 +91,8 @@ interface NodeService {
   fun generateKey(@Body request: GenerateKeyRequest): Call<GenerateKeyResult>
 
   @POST("/")
+  suspend fun generateKeySuspend(@Body request: GenerateKeyRequest): Response<GenerateKeyResult>
+
+  @POST("/")
   fun zxcvbnStrengthBar(@Body request: ZxcvbnStrengthBarRequest): Call<ZxcvbnStrengthBarResult>
 }

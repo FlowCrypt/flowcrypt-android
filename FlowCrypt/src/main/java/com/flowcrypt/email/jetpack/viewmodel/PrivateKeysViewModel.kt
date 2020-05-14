@@ -17,24 +17,35 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
+import com.flowcrypt.email.api.retrofit.ApiRepository
+import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
+import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
+import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.database.dao.UserIdEmailsKeysDao
-import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
+import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.service.actionqueue.actions.BackupPrivateKeyToInboxAction
+import com.flowcrypt.email.service.actionqueue.actions.RegisterUserPublicKeyAction
+import com.flowcrypt.email.service.actionqueue.actions.SendWelcomeTestEmailAction
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.exception.ApiException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
@@ -42,6 +53,7 @@ import com.google.android.gms.common.util.CollectionUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.*
 
 /**
  * This [ViewModel] implementation can be used to fetch details about imported keys.
@@ -53,13 +65,15 @@ import kotlinx.coroutines.withContext
  */
 class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(getApplication())
-  private val apiRepository: PgpApiRepository = NodeRepository()
+  private val nodeRepository: PgpApiRepository = NodeRepository()
+  private val apiRepository: ApiRepository = FlowcryptApiRepository()
 
   val changePassphraseLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupToInboxLiveData = MutableLiveData<Result<Boolean>>()
   val saveBackupAsFileLiveData = MutableLiveData<Result<Boolean>>()
   val savePrivateKeysLiveData = MutableLiveData<Result<Boolean>>()
   val parseKeysLiveData = MutableLiveData<Result<ParseKeysResult?>>()
+  val createPrivateKeyLiveData = MutableLiveData<Result<NodeKeyDetails?>>()
 
   val longIdsOfCurrentAccountLiveData: LiveData<List<String>> = Transformations.switchMap(activeAccountLiveData) {
     roomDatabase.userIdEmailsKeysDao().getLongIdsByEmailLD(it?.email ?: "")
@@ -74,7 +88,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           } else {
             ParseKeysRequest(null)
           }
-          emit(apiRepository.fetchKeyDetails(request))
+          emit(nodeRepository.fetchKeyDetails(request))
         }
       }
 
@@ -170,7 +184,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           if (roomDatabase.keysDao().getKeyByLongIdSuspend(longId) == null) {
             val passphrase = if (keyDetails.isFullyDecrypted == true) "" else keyDetails.passphrase
                 ?: ""
-            val keyEntity = KeyEntity.fromNodeKeyDetails(keyDetails)
+            val keyEntity = keyDetails.toKeyEntity()
                 .copy(source = type.toPrivateKeySourceTypeString(),
                     privateKey = KeyStoreCryptoManager.encryptSuspend(keyDetails.privateKey).toByteArray(),
                     passphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
@@ -226,12 +240,123 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           else -> throw IllegalStateException("Unsupported : ${keyImportModel.type}")
         }
 
-        parseKeysLiveData.value = apiRepository.fetchKeyDetails(ParseKeysRequest(armoredSource))
+        parseKeysLiveData.value = nodeRepository.fetchKeyDetails(ParseKeysRequest(armoredSource))
       } catch (e: Exception) {
         e.printStackTrace()
         ExceptionUtil.handleError(e)
         parseKeysLiveData.value = Result.exception(e)
       }
+    }
+  }
+
+  fun createPrivateKey(accountEntity: AccountEntity, passphrase: String) {
+    viewModelScope.launch {
+      createPrivateKeyLiveData.value = Result.loading()
+      var nodeKeyDetails: NodeKeyDetails? = null
+      try {
+        nodeKeyDetails = genPrivateKeyViaNode(passphrase, accountEntity)
+        requireNotNull(nodeKeyDetails)
+
+        savePrivateKeyToDatabase(nodeKeyDetails, passphrase)
+        doAdditionalOperationsAfterKeyCreation(accountEntity, nodeKeyDetails)
+        createPrivateKeyLiveData.value = Result.success(nodeKeyDetails)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        nodeKeyDetails?.longId?.let {
+          roomDatabase.keysDao().deleteByLongIdSuspend(it)
+          roomDatabase.userIdEmailsKeysDao().deleteByLongIdSuspend(it)
+        }
+        createPrivateKeyLiveData.value = Result.exception(e)
+        ExceptionUtil.handleError(e)
+      }
+    }
+  }
+
+  private suspend fun genPrivateKeyViaNode(passphrase: String, accountEntity: AccountEntity): NodeKeyDetails? {
+    val generateKeyResult = nodeRepository.createPrivateKey(getApplication(), passphrase, genContacts(accountEntity))
+    when (generateKeyResult.status) {
+      Result.Status.SUCCESS -> {
+        return generateKeyResult.data?.key
+      }
+
+      Result.Status.EXCEPTION -> {
+        generateKeyResult.exception?.let { exception -> throw exception }
+      }
+
+      Result.Status.ERROR -> {
+        generateKeyResult.data?.apiError?.let { apiError -> throw ApiException(apiError) }
+      }
+
+      else -> {
+        // all looks well
+      }
+    }
+    return null
+  }
+
+  private suspend fun savePrivateKeyToDatabase(nodeKeyDetails: NodeKeyDetails, passphrase: String) {
+    val keyEntity = nodeKeyDetails.toKeyEntity().copy(
+        source = KeyDetails.Type.NEW.toPrivateKeySourceTypeString(),
+        privateKey = KeyStoreCryptoManager.encryptSuspend(nodeKeyDetails.privateKey).toByteArray(),
+        passphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
+
+    if (roomDatabase.keysDao().insertSuspend(keyEntity) != 1L) {
+      throw NullPointerException("Cannot save a generated private key")
+    }
+
+    //update "user_id_emails_and_keys" table
+    nodeKeyDetails.longId?.let {
+      roomDatabase.userIdEmailsKeysDao().insertWithReplaceSuspend(
+          UserIdEmailsKeysEntity(longId = it, userIdEmail = nodeKeyDetails.primaryPgpContact.email))
+    }
+  }
+
+  private suspend fun doAdditionalOperationsAfterKeyCreation(accountEntity: AccountEntity, nodeKeyDetails: NodeKeyDetails) {
+    if (accountEntity.isRuleExist(AccountEntity.DomainRule.ENFORCE_ATTESTER_SUBMIT)) {
+      val model = InitialLegacySubmitModel(accountEntity.email, nodeKeyDetails.publicKey!!)
+      val initialLegacySubmitResult = apiRepository.postInitialLegacySubmit(getApplication(), model)
+
+      when (initialLegacySubmitResult.status) {
+        Result.Status.EXCEPTION -> {
+          initialLegacySubmitResult.exception?.let { exception -> throw exception }
+        }
+
+        Result.Status.ERROR -> {
+          initialLegacySubmitResult.data?.apiError?.let { apiError -> throw ApiException(apiError) }
+        }
+
+        else -> {
+          // all looks well
+        }
+      }
+
+      if (!accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
+        if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, nodeKeyDetails)) {
+          val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0,
+              accountEntity.email, 0, nodeKeyDetails.longId!!))
+          backupAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
+        }
+      }
+    } else {
+      if (!accountEntity.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP)) {
+        if (!saveCreatedPrivateKeyAsBackupToInbox(accountEntity, nodeKeyDetails)) {
+          val backupAction = ActionQueueEntity.fromAction(BackupPrivateKeyToInboxAction(0,
+              accountEntity.email, 0, nodeKeyDetails.longId!!))
+          backupAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
+        }
+      }
+
+      if (!registerUserPublicKey(accountEntity, nodeKeyDetails)) {
+        val registerAction = ActionQueueEntity.fromAction(RegisterUserPublicKeyAction(0,
+            accountEntity.email, 0, nodeKeyDetails.publicKey!!))
+        registerAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
+      }
+    }
+
+    if (!requestingTestMsgWithNewPublicKey(accountEntity, nodeKeyDetails)) {
+      val welcomeEmailAction = ActionQueueEntity.fromAction(SendWelcomeTestEmailAction(0,
+          accountEntity.email, 0, nodeKeyDetails.publicKey!!))
+      welcomeEmailAction?.let { action -> roomDatabase.actionQueueDao().insertSuspend(action) }
     }
   }
 
@@ -280,6 +405,107 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   private fun isKeyTooBig(fileUri: Uri?): Boolean {
     return GeneralUtil.getFileSizeFromUri(getApplication(), fileUri) > MAX_SIZE_IN_BYTES
   }
+
+  /**
+   * Perform a backup of the armored key in INBOX.
+   *
+   * @return true if message was send.
+   */
+  private suspend fun saveCreatedPrivateKeyAsBackupToInbox(accountEntity: AccountEntity, keyDetails: NodeKeyDetails): Boolean =
+      withContext(Dispatchers.IO) {
+        try {
+          val context: Context = getApplication()
+          val session = OpenStoreHelper.getAccountSess(context, accountEntity)
+          val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, accountEntity)
+          val msg = EmailUtil.genMsgWithPrivateKeys(context, accountEntity, session,
+              EmailUtil.genBodyPartWithPrivateKey(accountEntity, keyDetails.privateKey!!))
+          transport.sendMessage(msg, msg.allRecipients)
+        } catch (e: Exception) {
+          e.printStackTrace()
+          return@withContext false
+        }
+
+        return@withContext true
+      }
+
+  private suspend fun genContacts(accountEntity: AccountEntity): List<PgpContact> = withContext(Dispatchers.IO) {
+    val pgpContactMain = PgpContact(accountEntity.email, accountEntity.displayName)
+    val contacts = ArrayList<PgpContact>()
+
+    when (accountEntity.accountType) {
+      AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+        contacts.add(pgpContactMain)
+        val gmail = GmailApiHelper.generateGmailApiService(getApplication(), accountEntity)
+        val aliases = gmail.users().settings().sendAs().list(GmailApiHelper.DEFAULT_USER_ID).execute()
+        for (alias in aliases.sendAs) {
+          if (alias.verificationStatus != null) {
+            contacts.add(PgpContact(alias.sendAsEmail, alias.displayName))
+          }
+        }
+      }
+
+      else -> contacts.add(pgpContactMain)
+    }
+
+    return@withContext contacts
+  }
+
+  /**
+   * Registering a key with attester API.
+   * Note: this will only be successful if it's the first time submitting a key for this email address, or if the
+   * key being submitted has the same fingerprint as the one already recorded. If it's an error due to key
+   * conflict, ignore the error.
+   *
+   * @param accountEntity [AccountEntity] which will be used for registration.
+   * @param keyDetails Details of the created key.
+   * @return true if no errors.
+   */
+  private suspend fun registerUserPublicKey(accountEntity: AccountEntity, keyDetails: NodeKeyDetails): Boolean = withContext(Dispatchers.IO) {
+    return@withContext try {
+      val model = InitialLegacySubmitModel(accountEntity.email, keyDetails.publicKey!!)
+      val initialLegacySubmitResult = apiRepository.postInitialLegacySubmit(getApplication(), model)
+      when (initialLegacySubmitResult.status) {
+        Result.Status.SUCCESS -> {
+          val body = initialLegacySubmitResult.data
+          body != null && (body.apiError == null || body.apiError.code !in 400..499)
+        }
+
+        else -> {
+          false
+        }
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      false
+    }
+  }
+
+  /**
+   * Request a test email from FlowCrypt.
+   *
+   * @param keyDetails Details of the created key.
+   * @return true if no errors.
+   */
+  private suspend fun requestingTestMsgWithNewPublicKey(accountEntity: AccountEntity, keyDetails: NodeKeyDetails): Boolean =
+      withContext(Dispatchers.IO) {
+        return@withContext try {
+          val model = TestWelcomeModel(accountEntity.email, keyDetails.publicKey!!)
+          val testWelcomeResult = apiRepository.postTestWelcome(getApplication(), model)
+          when (testWelcomeResult.status) {
+            Result.Status.SUCCESS -> {
+              val testWelcomeResponse = testWelcomeResult.data
+              testWelcomeResponse != null && testWelcomeResponse.isSent
+            }
+
+            else -> {
+              false
+            }
+          }
+        } catch (e: Exception) {
+          e.printStackTrace()
+          false
+        }
+      }
 
   companion object {
     /**
