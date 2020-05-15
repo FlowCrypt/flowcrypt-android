@@ -21,7 +21,7 @@ interface BaseApiRepository {
   /**
    * Base implementation for the API calls
    */
-  suspend fun <T> getResult(call: suspend () -> Response<T>): Result<T> {
+  suspend fun <T> getResult(requestCode: Long = 0L, call: suspend () -> Response<T>): Result<T> {
     return try {
       val response = call()
       if (response.isSuccessful) {
@@ -29,22 +29,22 @@ interface BaseApiRepository {
         if (body != null) {
           if (body is ApiResponse) {
             return if (body.apiError != null) {
-              Result.error(body)
+              Result.error(data = body, requestCode = requestCode)
             } else {
-              Result.success(body)
+              Result.success(data = body, requestCode = requestCode)
             }
           } else {
-            Result.success(body)
+            Result.success(data = body, requestCode = requestCode)
           }
         } else {
-          Result.exception(ApiException(ApiError(response.code(), response.message())))
+          Result.exception(error = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
         }
       } else {
-        Result.exception(ApiException(ApiError(response.code(), response.message())))
+        Result.exception(error = ApiException(ApiError(response.code(), response.message())), requestCode = requestCode)
       }
     } catch (e: Exception) {
       e.printStackTrace()
-      Result.exception(e)
+      Result.exception(error = e, requestCode = requestCode)
     }
   }
 }

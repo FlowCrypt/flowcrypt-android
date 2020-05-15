@@ -18,6 +18,7 @@ import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
+import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 
@@ -71,4 +72,10 @@ interface ApiRepository : BaseApiRepository {
    * @param model An instance of [TestWelcomeModel].
    */
   suspend fun postTestWelcome(context: Context, model: TestWelcomeModel): Result<TestWelcomeResponse>
+
+  /**
+   * @param context Interface to global information about an application environment.
+   * @param keyIdOrEmail A key id or the user email.
+   */
+  suspend fun getPub(requestCode: Long = 0L, context: Context, keyIdOrEmail: String): Result<PubResponse>
 }

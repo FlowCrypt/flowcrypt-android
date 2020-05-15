@@ -17,20 +17,17 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import androidx.loader.app.LoaderManager
-import androidx.loader.content.Loader
+import androidx.activity.viewModels
+import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.ApiName
-import com.flowcrypt.email.api.retrofit.BaseResponse
-import com.flowcrypt.email.api.retrofit.request.attester.PubRequest
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
-import com.flowcrypt.email.ui.loader.ApiServiceAsyncTaskLoader
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import java.util.*
@@ -44,17 +41,23 @@ import java.util.*
  * Time: 17:07
  * E-mail: DenBond7@gmail.com
  */
-class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActionListener,
-    LoaderManager.LoaderCallbacks<LoaderResult> {
+class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActionListener {
+  private val contactsViewModel: ContactsViewModel by viewModels()
   private var editTextEmailOrId: EditText? = null
 
   private var isSearchingActiveNow: Boolean = false
+  private var fetchPubKeysRequestCode = 0L
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_import_public_keys
 
   override val isPrivateKeyMode: Boolean
     get() = false
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setupContactsViewModel()
+  }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
     menuInflater.inflate(R.menu.activity_import_public_keys, menu)
@@ -69,7 +72,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
   override fun onBackPressed() {
     if (isSearchingActiveNow) {
       this.isSearchingActiveNow = false
-      LoaderManager.getInstance(this).destroyLoader(R.id.loader_id_search_public_key)
+      fetchPubKeysRequestCode = 0L
       UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
     } else {
       super.onBackPressed()
@@ -114,48 +117,6 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
     startActivityForResult(PreviewImportPgpContactActivity.newIntent(this, uri), REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
   }
 
-  override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
-    return when (id) {
-      R.id.loader_id_search_public_key -> {
-        this.isSearchingActiveNow = true
-        UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
-        val lookUpRequest = PubRequest(ApiName.GET_PUB, editTextEmailOrId!!.text.toString())
-        ApiServiceAsyncTaskLoader(applicationContext, lookUpRequest)
-      }
-      else -> Loader(this)
-    }
-  }
-
-  override fun onLoadFinished(loader: Loader<LoaderResult>, data: LoaderResult?) {
-    handleLoaderResult(loader, data)
-  }
-
-  override fun onLoaderReset(loader: Loader<LoaderResult>) {
-  }
-
-  override fun onSuccess(loaderId: Int, result: Any?) {
-    when (loaderId) {
-      R.id.loader_id_search_public_key -> {
-        this.isSearchingActiveNow = false
-        val baseResponse = result as BaseResponse<*>?
-        if (baseResponse != null) {
-          if (baseResponse.responseModel != null) {
-            val pubResponse = baseResponse.responseModel as PubResponse?
-            handlePubResponse(pubResponse!!)
-          } else {
-            UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-            UIUtil.showInfoSnackbar(rootView, getString(R.string.api_error))
-          }
-        } else {
-          UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-          UIUtil.showInfoSnackbar(rootView, getString(R.string.internal_error))
-        }
-      }
-
-      else -> super.onSuccess(loaderId, result)
-    }
-  }
-
   override fun onEditorAction(v: TextView?, actionId: Int, event: KeyEvent?): Boolean {
     when (actionId) {
       EditorInfo.IME_ACTION_SEARCH -> {
@@ -167,8 +128,10 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
         }
 
         if (GeneralUtil.isConnected(this)) {
-          LoaderManager.getInstance(this).restartLoader(R.id.loader_id_search_public_key, null,
-              this@ImportPgpContactActivity)
+          editTextEmailOrId?.text?.toString()?.let {
+            fetchPubKeysRequestCode = System.currentTimeMillis()
+            contactsViewModel.fetchPubKeys(it, fetchPubKeysRequestCode)
+          }
         } else {
           showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
         }
@@ -178,23 +141,38 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
     return true
   }
 
-  override fun onError(loaderId: Int, e: Exception?) {
-    when (loaderId) {
-      R.id.loader_id_search_public_key -> {
-        UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-        Toast.makeText(this, if (e?.message.isNullOrEmpty()) {
-          e?.javaClass?.simpleName ?: getString(R.string.unknown_error)
-        } else e?.message, Toast.LENGTH_SHORT).show()
-      }
-
-      else -> super.onError(loaderId, e)
-    }
-  }
-
   override fun initViews() {
     super.initViews()
     this.editTextEmailOrId = findViewById(R.id.editTextKeyIdOrEmail)
-    this.editTextEmailOrId!!.setOnEditorActionListener(this)
+    this.editTextEmailOrId?.setOnEditorActionListener(this)
+  }
+
+  private fun setupContactsViewModel() {
+    contactsViewModel.pubKeysFromAttesterLiveData.observe(this, Observer {
+      if (it.requestCode != fetchPubKeysRequestCode) return@Observer
+
+      when (it.status) {
+        Result.Status.LOADING -> {
+          this.isSearchingActiveNow = true
+          UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
+        }
+
+        Result.Status.SUCCESS -> {
+          this.isSearchingActiveNow = false
+          it.data?.let { pubResponse -> handlePubResponse(pubResponse) }
+        }
+
+        Result.Status.EXCEPTION, Result.Status.ERROR -> {
+          this.isSearchingActiveNow = false
+          UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+
+          val exception = it.exception ?: return@Observer
+          Toast.makeText(this, if (exception.message.isNullOrEmpty()) {
+            exception.javaClass.simpleName
+          } else exception.message, Toast.LENGTH_SHORT).show()
+        }
+      }
+    })
   }
 
   private fun handlePubResponse(pubResponse: PubResponse) {
