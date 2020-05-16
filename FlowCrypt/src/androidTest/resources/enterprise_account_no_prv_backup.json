@@ -7,7 +7,7 @@
   "photoUrl": "photoUrl",
   "imapPort": 143,
   "imapServer": "imap.denbond7.com",
-  "hasCustomSignInForSmtp": false,
+  "useCustomSignForSmtp": false,
   "password": "qwerty1234",
   "smtpPort": 25,
   "smtpServer": "smtp.denbond7.com",

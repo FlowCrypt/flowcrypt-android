@@ -8,7 +8,7 @@
   "imapPort": 143,
   "imapOpt": "NONE",
   "imapServer": "imap.denbond7.com",
-  "hasCustomSignInForSmtp": false,
+  "useCustomSignForSmtp": false,
   "password": "qwerty1234",
   "smtpPort": 25,
   "smtpOpt": "NONE",

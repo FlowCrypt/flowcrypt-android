@@ -60,7 +60,6 @@ import java.io.File
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
 class BackupKeysActivityTest : BaseTest() {
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(BackupKeysActivity::class.java)
 
@@ -231,7 +230,7 @@ class BackupKeysActivityTest : BaseTest() {
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
-    assertFalse(activityTestRule?.activity!!.isFinishing)
+    assertTrue(activityTestRule?.activity?.isFinishing == false)
   }
 
   @Test
