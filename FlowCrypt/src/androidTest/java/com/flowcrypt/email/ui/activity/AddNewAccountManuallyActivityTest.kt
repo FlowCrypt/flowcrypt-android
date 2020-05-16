@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.view.View
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingPolicies
@@ -16,6 +15,7 @@ import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -41,7 +41,6 @@ import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.startsWith
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -59,7 +58,6 @@ import java.util.concurrent.TimeUnit
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
 class AddNewAccountManuallyActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(AddNewAccountManuallyActivity::class.java)
@@ -69,7 +67,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(activityTestRule)
 
-  private val authCreds: AuthCredentials = AuthCredentialsManager.getLocalWithOneBackupAuthCreds().getAuthCredentials()
+  private val authCreds: AuthCredentials = AuthCredentialsManager.getLocalWithOneBackupAuthCreds()
 
   @Before
   fun setUp() {
@@ -174,17 +172,17 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
         .perform(scrollTo(), clearText(), typeText(text), closeSoftKeyboard())
     onView(withId(R.id.editTextUserName))
         .perform(scrollTo())
-        .check(matches(not<View>(withText(authCreds.username))))
+        .check(matches(not(withText(authCreds.username))))
     onView(withId(R.id.editTextUserName))
         .check(matches(withText(newUserName)))
     onView(withId(R.id.editTextImapServer))
         .perform(scrollTo())
-        .check(matches(not<View>(withText(authCreds.imapServer))))
+        .check(matches(not(withText(authCreds.imapServer))))
     onView(withId(R.id.editTextImapServer))
         .check(matches(withText(IMAP_SERVER_PREFIX + newHost)))
     onView(withId(R.id.editTextSmtpServer))
         .perform(scrollTo())
-        .check(matches(not<View>(withText(authCreds.smtpServer))))
+        .check(matches(not(withText(authCreds.smtpServer))))
     onView(withId(R.id.editTextSmtpServer))
         .check(matches(withText(SMTP_SERVER_PREFIX + newHost)))
     onView(withId(R.id.checkBoxRequireSignInForSmtp))
@@ -209,9 +207,9 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
     onView(withId(R.id.checkBoxRequireSignInForSmtp))
         .perform(scrollTo(), click())
     onView(withId(R.id.editTextSmtpUsername))
-        .check(matches(not<View>(isDisplayed())))
+        .check(matches(not(isDisplayed())))
     onView(withId(R.id.editTextSmtpPassword))
-        .check(matches(not<View>(isDisplayed())))
+        .check(matches(not(isDisplayed())))
   }
 
   @Test
@@ -272,11 +270,8 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
     }
   }
 
-  @Ignore("need to think about it")//todo-denbond7
   @Test
-  @DoesNotNeedMailserver
   fun testShowWarningIfAuthFail() {
-    IdlingPolicies.setMasterPolicyTimeout(5, TimeUnit.MINUTES)
     fillAllFields()
     val someFailTextToChangeRightValue = "123"
 
@@ -300,9 +295,16 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
       onView(withId(R.id.buttonTryToConnect))
           .perform(scrollTo(), click())
 
-      onView(anyOf<View>(withText(startsWith(TestConstants.IMAP)), withText(startsWith(TestConstants.SMTP))))
+      onView(anyOf(withText(startsWith(TestConstants.IMAP)), withText(startsWith(TestConstants.SMTP))))
           .check(matches(isDisplayed()))
-      onView(withId(com.google.android.material.R.id.snackbar_action))
+
+      if (i in intArrayOf(R.id.editTextImapServer, R.id.editTextImapPort, R.id.editTextSmtpServer, R.id.editTextSmtpPort)) {
+        onView(withText(getResString(R.string.network_error)))
+            .check(matches(isDisplayed()))
+      }
+
+      onView(withText(getResString(R.string.cancel)))
+          .inRoot(isDialog())
           .check(matches(isDisplayed()))
           .perform(click())
 
