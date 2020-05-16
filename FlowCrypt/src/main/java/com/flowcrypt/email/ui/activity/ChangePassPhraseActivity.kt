@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -21,6 +22,7 @@ import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.idling.SingleIdlingResources
 
@@ -38,6 +40,9 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
 
   @get:VisibleForTesting
   val idlingForFetchingKeys: SingleIdlingResources = SingleIdlingResources()
+
+  @get:VisibleForTesting
+  var changePassphraseIdlingResource = CountingIdlingResource(ChangePassPhraseActivity::class.java.simpleName, GeneralUtil.isDebugBuild())
 
   override fun onConfirmPassPhraseSuccess() {
     privateKeysViewModel.changePassphrase(editTextKeyPassword.text.toString())
@@ -132,6 +137,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
+            changePassphraseIdlingResource.increment()
             isBackEnabled = false
             UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
           }
@@ -144,8 +150,12 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
                 setResult(Activity.RESULT_OK)
                 finish()
               } else {
-                activeAccount?.let { loadPrivateKeysViewModel.fetchAvailableKeys(it) }
+                activeAccount?.let { accountEntity -> loadPrivateKeysViewModel.fetchAvailableKeys(accountEntity) }
               }
+            }
+
+            if (!changePassphraseIdlingResource.isIdleNow) {
+              changePassphraseIdlingResource.decrement()
             }
           }
 
@@ -154,6 +164,10 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
             editTextKeyPasswordSecond.text = null
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
             showInfoSnackbar(rootView, it.exception?.message ?: getString(R.string.unknown_error))
+
+            if (!changePassphraseIdlingResource.isIdleNow) {
+              changePassphraseIdlingResource.decrement()
+            }
           }
         }
       }

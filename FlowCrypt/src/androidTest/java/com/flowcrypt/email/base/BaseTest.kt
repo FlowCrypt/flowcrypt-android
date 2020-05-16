@@ -18,7 +18,9 @@ import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -170,6 +172,13 @@ abstract class BaseTest {
     } else {
       Html.fromHtml(html).toString()
     }
+  }
+
+  protected fun assertResultAfterFinish(resultCode: Int) {
+    //todo-denbond7 need to improve this one in the future when we have a better approach. Maybe
+    // https://github.com/Kotlin/kotlinx.coroutines/issues/242 will resolve this
+    Thread.sleep(2000)
+    ViewMatchers.assertThat(activityTestRule?.activityResult, hasResultCode(resultCode))
   }
 
   fun getTargetContext(): Context {

@@ -153,9 +153,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
       R.id.buttonConfirmPassPhrases -> if (TextUtils.isEmpty(editTextKeyPasswordSecond.text.toString())) {
         showInfoSnackbar(rootView, getString(R.string.passphrase_must_be_non_empty), Snackbar.LENGTH_LONG)
       } else {
-        if (snackBar != null) {
-          snackBar!!.dismiss()
-        }
+        snackBar?.dismiss()
 
         if (editTextKeyPassword.text.toString() == editTextKeyPasswordSecond.text.toString()) {
           onConfirmPassPhraseSuccess()

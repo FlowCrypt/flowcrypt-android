@@ -5,8 +5,10 @@
 
 package com.flowcrypt.email.ui.activity
 
+import android.app.Activity
 import android.content.Intent
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
@@ -22,8 +24,8 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
-import org.junit.Assert.assertTrue
-import org.junit.Ignore
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -55,8 +57,23 @@ class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
       .around(AddPrivateKeyToDatabaseRule())
       .around(activityTestRule)
 
+  @Before
+  fun registerChangePassphraseIdlingResource() {
+    val activity = activityTestRule?.activity ?: return
+    if (activity is ChangePassPhraseActivity) {
+      IdlingRegistry.getInstance().register(activity.changePassphraseIdlingResource)
+    }
+  }
+
+  @After
+  fun unregisterChangePassphraseIdlingResource() {
+    val activity = activityTestRule?.activity ?: return
+    if (activity is ChangePassPhraseActivity) {
+      IdlingRegistry.getInstance().unregister(activity.changePassphraseIdlingResource)
+    }
+  }
+
   @Test
-  @Ignore("need to fix that after moving to coroutines")
   fun testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
         .check(matches(isDisplayed()))
@@ -70,6 +87,7 @@ class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
     onView(withId(R.id.buttonConfirmPassPhrases))
         .check(matches(isDisplayed()))
         .perform(click())
-    assertTrue(activityTestRule?.activity!!.isFinishing)
+
+    assertResultAfterFinish(Activity.RESULT_OK)
   }
 }
