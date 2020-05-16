@@ -9,6 +9,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.iap.ConnectionException
@@ -32,8 +33,9 @@ class SyncTaskRunnable(val accountEntity: AccountEntity, val syncListener: SyncL
   }
 
   private fun runTask(isRetryEnabled: Boolean) {
-    val refreshedAccount = FlowCryptRoomDatabase.getDatabase(syncListener.context).accountDao()
-        .getAccount(accountEntity.email) ?: return
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(syncListener.context)
+    val refreshedAccount = AccountViewModel.getAccountEntityWithDecryptedInfo(
+        roomDatabase.accountDao().getAccount(accountEntity.email)) ?: return
 
     try {
       val time = System.currentTimeMillis()
