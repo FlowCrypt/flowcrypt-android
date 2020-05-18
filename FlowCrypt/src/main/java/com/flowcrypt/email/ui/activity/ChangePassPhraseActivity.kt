@@ -18,6 +18,8 @@ import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
@@ -137,7 +139,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            changePassphraseIdlingResource.increment()
+            changePassphraseIdlingResource.incrementSafely()
             isBackEnabled = false
             UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
           }
@@ -154,9 +156,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
               }
             }
 
-            if (!changePassphraseIdlingResource.isIdleNow) {
-              changePassphraseIdlingResource.decrement()
-            }
+            changePassphraseIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
