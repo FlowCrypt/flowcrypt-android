@@ -5,12 +5,11 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.view.View
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -20,15 +19,14 @@ import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyListView
+import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity
-import org.hamcrest.Matchers.anything
+import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
 import org.hamcrest.Matchers.not
 import org.junit.AfterClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -42,7 +40,6 @@ import org.junit.runner.RunWith
  * E-mail: DenBond7@gmail.com
  */
 @LargeTest
-@Ignore("fix me")
 @RunWith(AndroidJUnit4::class)
 class ContactsSettingsActivityTest : BaseTest() {
 
@@ -62,7 +59,7 @@ class ContactsSettingsActivityTest : BaseTest() {
   @Test
   fun testEmptyList() {
     onView(withId(R.id.recyclerViewContacts))
-        .check(matches(withEmptyListView())).check(matches(not<View>(isDisplayed())))
+        .check(matches(withEmptyRecyclerView())).check(matches(not(isDisplayed())))
     onView(withId(R.id.emptyView))
         .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
   }
@@ -71,13 +68,11 @@ class ContactsSettingsActivityTest : BaseTest() {
   fun testDeleteContacts() {
     addContactsToDatabase()
     for (ignored in EMAILS) {
-      onData(anything())
-          .inAdapterView(withId(R.id.recyclerViewContacts))
-          .onChildView(withId(R.id.imageButtonDeleteContact))
-          .atPosition(0)
-          .perform(click())
+      onView(withId(R.id.recyclerViewContacts))
+          .perform(actionOnItemAtPosition<RecyclerView.ViewHolder>(0, ClickOnViewInRecyclerViewItem(R.id.imageButtonDeleteContact)))
     }
-    testEmptyList()
+    onView(withId(R.id.emptyView))
+        .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
     clearContactsFromDatabase()
   }
 
