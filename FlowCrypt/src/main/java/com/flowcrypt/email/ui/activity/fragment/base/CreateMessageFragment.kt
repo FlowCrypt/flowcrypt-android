@@ -56,6 +56,8 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -148,6 +150,11 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private var isIncomingMsgInfoUsed: Boolean = false
   private var isMsgSentToQueue: Boolean = false
   private var originalColor: Int = 0
+
+  private val hostActivity: CreateMessageActivity?
+    get() {
+      return activity as? CreateMessageActivity
+    }
 
   override val contentResourceId: Int = R.layout.fragment_create_message
 
@@ -1460,6 +1467,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     contactsViewModel.contactsToLiveData.observe(viewLifecycleOwner, Observer {
       when (it.status) {
         Result.Status.LOADING -> {
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.incrementSafely()
           pgpContactsTo?.clear()
           progressBarTo?.visibility = View.VISIBLE
           isUpdateToCompleted = false
@@ -1473,12 +1481,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           if (pgpContactsTo?.isNotEmpty() == true) {
             updateChips(recipientsTo, pgpContactsTo)
           }
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           isUpdateToCompleted = true
           progressBarTo?.visibility = View.INVISIBLE
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
         }
       }
     })
@@ -1488,6 +1498,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     contactsViewModel.contactsCcLiveData.observe(viewLifecycleOwner, Observer {
       when (it.status) {
         Result.Status.LOADING -> {
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.incrementSafely()
           pgpContactsCc?.clear()
           progressBarCc?.visibility = View.VISIBLE
           isUpdateCcCompleted = false
@@ -1501,12 +1512,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           if (pgpContactsCc?.isNotEmpty() == true) {
             updateChips(recipientsCc, pgpContactsCc)
           }
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           isUpdateCcCompleted = true
           progressBarCc?.visibility = View.INVISIBLE
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
         }
       }
     })
@@ -1516,6 +1529,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     contactsViewModel.contactsBccLiveData.observe(viewLifecycleOwner, Observer {
       when (it.status) {
         Result.Status.LOADING -> {
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.incrementSafely()
           pgpContactsBcc?.clear()
           progressBarBcc?.visibility = View.VISIBLE
           isUpdateBccCompleted = false
@@ -1529,12 +1543,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           if (pgpContactsBcc?.isNotEmpty() == true) {
             updateChips(recipientsBcc, pgpContactsBcc)
           }
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           isUpdateBccCompleted = true
           progressBarBcc?.visibility = View.INVISIBLE
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
         }
       }
     })

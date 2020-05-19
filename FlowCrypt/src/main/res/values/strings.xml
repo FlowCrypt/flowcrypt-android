@@ -126,7 +126,6 @@
     <string name="switch_to_standard_email">Switch to standard email</string>
     <string name="switch_to_secure_email">Switch to secure email</string>
     <string name="this_message_will_not_be_encrypted">This message will not be encrypted</string>
-    <string name="please_update_information_about_contacts">Need to update recipient information</string>
     <string name="import_their_public_key">Import their Public Key</string>
     <string name="copy_from_other_contact">Copy from other contact</string>
     <string name="template_remove_recipient">Remove %1$s</string>

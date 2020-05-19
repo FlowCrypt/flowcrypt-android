@@ -14,16 +14,22 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -39,10 +45,18 @@ import com.flowcrypt.email.util.UIUtil
  */
 
 class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment.OnMessageSendListener,
-    OnChangeMessageEncryptionTypeListener {
+    OnChangeMessageEncryptionTypeListener, ChoosePublicKeyDialogFragment.OnLoadKeysProgressListener {
 
   private var nonEncryptedHintView: View? = null
   override lateinit var rootView: View
+
+  @get:VisibleForTesting
+  var fetchInfoAboutContactsIdlingResource =
+      CountingIdlingResource(CreateMessageActivity::class.java.simpleName + "fetchInfoAboutContactsIdlingResource", GeneralUtil.isDebugBuild())
+
+  @get:VisibleForTesting
+  var fetchAvailablePubKeysIdlingResource =
+      CountingIdlingResource(CreateMessageActivity::class.java.simpleName + "fetchAvailablePubKeysIdlingResource", GeneralUtil.isDebugBuild())
 
   override var msgEncryptionType = MessageEncryptionType.ENCRYPTED
     private set
@@ -148,6 +162,14 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
     if (activeAccount == null) {
       Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show()
       finish()
+    }
+  }
+
+  override fun onLoadKeysProgress(status: Result.Status) {
+    if (status == Result.Status.LOADING) {
+      fetchAvailablePubKeysIdlingResource.incrementSafely()
+    } else {
+      fetchAvailablePubKeysIdlingResource.decrementSafely()
     }
   }
 

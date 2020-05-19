@@ -10,10 +10,10 @@ import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
-import android.view.View
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
+import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -67,9 +67,10 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
+import org.junit.After
 import org.junit.AfterClass
+import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -89,7 +90,6 @@ import java.io.File
 @LargeTest
 @RunWith(AndroidJUnit4::class)
 class CreateMessageActivityTest : BaseTest() {
-
   override val activityTestRule: ActivityTestRule<*>? =
       IntentsTestRule(CreateMessageActivity::class.java, false, false)
 
@@ -113,13 +113,32 @@ class CreateMessageActivityTest : BaseTest() {
       return details.primaryPgpContact
     }
 
+  @Before
+  fun registerIdlingResources() {
+    val activity = activityTestRule?.activity ?: return
+    if (activity is CreateMessageActivity) {
+      IdlingRegistry.getInstance().register(activity.fetchInfoAboutContactsIdlingResource)
+      IdlingRegistry.getInstance().register(activity.fetchAvailablePubKeysIdlingResource)
+    }
+  }
+
+  @After
+  fun unregisterIdlingResources() {
+    val activity = activityTestRule?.activity ?: return
+    if (activity is CreateMessageActivity) {
+      IdlingRegistry.getInstance().unregister(activity.fetchInfoAboutContactsIdlingResource)
+      IdlingRegistry.getInstance().unregister(activity.fetchAvailablePubKeysIdlingResource)
+    }
+  }
+
   @Test
   @DoesNotNeedMailserver
   fun testEmptyRecipient() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
     onView(withId(R.id.editTextRecipientTo))
-        .check(matches(isDisplayed())).check(matches(withText(isEmptyString())))
+        .check(matches(withText(isEmptyString())))
     onView(withId(R.id.menuActionSend))
         .check(matches(isDisplayed()))
         .perform(click())
@@ -132,6 +151,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testEmptyEmailSubject() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed()))
@@ -152,6 +172,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testEmptyEmailMsg() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed()))
@@ -173,6 +194,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testUsingStandardMsgEncryptionType() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     if (defaultMsgEncryptionType != MessageEncryptionType.STANDARD) {
       openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -189,6 +211,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testUsingSecureMsgEncryptionType() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     if (defaultMsgEncryptionType != MessageEncryptionType.ENCRYPTED) {
       openActionBarOverflowOrOptionsMenu(getTargetContext())
@@ -204,6 +227,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testSwitchBetweenEncryptionTypes() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     val messageEncryptionType = defaultMsgEncryptionType
 
@@ -229,6 +253,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testShowHelpScreen() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     onView(withId(R.id.menuActionHelp))
         .check(matches(isDisplayed()))
@@ -245,6 +270,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testIsScreenOfComposeNewMsg() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     onView(withText(R.string.compose))
         .check(matches(isDisplayed()))
@@ -261,6 +287,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testWrongFormatOfRecipientEmailAddress() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     val invalidEmailAddresses = arrayOf("test", "test@", "test@@denbond7.com", "@denbond7.com")
 
@@ -280,36 +307,10 @@ class CreateMessageActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
-  @Ignore("fix me")
-  fun testShowMsgAboutUpdateRecipientInformation() {
-    activityTestRule?.launchActivity(intent)
-    registerNodeIdling()
-
-    onView(withId(R.id.editTextEmailSubject))
-        .check(matches(isDisplayed()))
-        .perform(typeText(EMAIL_SUBJECT), closeSoftKeyboard())
-    onView(withId(R.id.editTextEmailMessage))
-        .check(matches(isDisplayed()))
-        .perform(typeText(EMAIL_MESSAGE), closeSoftKeyboard())
-    onView(withId(R.id.editTextRecipientTo))
-        .check(matches(isDisplayed()))
-        .perform(typeText(TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER))
-    onView(withId(R.id.menuActionSend))
-        .check(matches(isDisplayed())).perform(click())
-
-    onView(withText(getResString(R.string
-        .please_update_information_about_contacts)))
-        .check(matches(isDisplayed()))
-    onView(withId(com.google.android.material.R.id.snackbar_action))
-        .check(matches(isDisplayed()))
-        .perform(click())
-  }
-
-  @Test
-  @DoesNotNeedMailserver
   fun testAddingAtts() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed()))
@@ -325,6 +326,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testDeletingAtts() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed()))
@@ -347,10 +349,10 @@ class CreateMessageActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
-  @Ignore("fix me")
   fun testSelectImportPublicKeyFromPopUp() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
     intending(hasComponent(ComponentName(getTargetContext(), ImportPublicKeyActivity::class.java)))
@@ -366,10 +368,10 @@ class CreateMessageActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
-  @Ignore("fix me")
   fun testSelectedStandardEncryptionTypeFromPopUp() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
     onView(withId(R.id.menuActionSend))
@@ -383,10 +385,10 @@ class CreateMessageActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
-  @Ignore("fix me")
   fun testSelectedRemoveRecipientFromPopUp() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed()))
@@ -409,14 +411,14 @@ class CreateMessageActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
-  @Ignore("fix me")
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     fillInAllFields(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER)
     val result = Intent()
-    result.putExtra(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT, pgpContact)
+    result.putExtra(SelectContactsActivity.KEY_EXTRA_PGP_CONTACT, pgpContact.toContactEntity())
     intending(hasComponent(ComponentName(getTargetContext(), SelectContactsActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, result))
     onView(withId(R.id.menuActionSend))
@@ -432,6 +434,7 @@ class CreateMessageActivityTest : BaseTest() {
   fun testSharePubKeySingle() {
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.include_public_key))
@@ -440,7 +443,7 @@ class CreateMessageActivityTest : BaseTest() {
 
     val att = EmailUtil.genAttInfoFromPubKey(addPrivateKeyToDatabaseRule.nodeKeyDetails)
 
-    onView(withText(att!!.name))
+    onView(withText(att?.name))
         .check(matches(isDisplayed()))
   }
 
@@ -453,13 +456,14 @@ class CreateMessageActivityTest : BaseTest() {
 
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.include_public_key))
         .check(matches(isDisplayed()))
         .perform(click())
 
-    onData(withPubKeyName(att!!.name!!))
+    onData(withPubKeyName(att?.name))
         .inAdapterView(withId(R.id.listViewKeys))
         .perform(click())
 
@@ -467,7 +471,7 @@ class CreateMessageActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-    onView(withText(att.name))
+    onView(withText(att?.name))
         .check(matches(isDisplayed()))
   }
 
@@ -480,6 +484,7 @@ class CreateMessageActivityTest : BaseTest() {
 
     activityTestRule?.launchActivity(intent)
     registerNodeIdling()
+    registerIdlingResources()
 
     openActionBarOverflowOrOptionsMenu(getTargetContext())
     onView(withText(R.string.include_public_key))
@@ -488,7 +493,7 @@ class CreateMessageActivityTest : BaseTest() {
 
     val att = EmailUtil.genAttInfoFromPubKey(keyDetails)
 
-    onView(withText(att!!.name))
+    onView(withText(att?.name))
         .check(matches(isDisplayed()))
   }
 
@@ -504,8 +509,8 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   private fun deleteAtt(att: File) {
-    onView(allOf<View>(withId(R.id.imageButtonClearAtt), ViewMatchers.withParent(
-        allOf<View>(withId(R.id.actionButtons), hasSibling(withText(att.name))))))
+    onView(allOf(withId(R.id.imageButtonClearAtt), ViewMatchers.withParent(
+        allOf(withId(R.id.actionButtons), hasSibling(withText(att.name))))))
         .check(matches(isDisplayed()))
         .perform(click())
     onView(withText(att.name))
@@ -548,7 +553,7 @@ class CreateMessageActivityTest : BaseTest() {
   /**
    * Match an item in an adapter which has the given name
    */
-  private fun withPubKeyName(attName: String): Matcher<Any> {
+  private fun withPubKeyName(attName: String?): Matcher<Any> {
     return object : BoundedMatcher<Any, AttachmentInfo>(AttachmentInfo::class.java) {
       public override fun matchesSafely(att: AttachmentInfo): Boolean {
         return att.name == attName
@@ -564,7 +569,6 @@ class CreateMessageActivityTest : BaseTest() {
 
     private const val ATTACHMENTS_COUNT = 3
     private const val EMAIL_SUBJECT = "Test subject"
-    private const val EMAIL_MESSAGE = "Test message"
 
     private var atts: MutableList<File> = mutableListOf()
 
