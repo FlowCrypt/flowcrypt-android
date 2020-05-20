@@ -9,6 +9,7 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -51,7 +52,8 @@ class IdleSyncRunnable constructor(syncListener: SyncListener,
     LogsUtil.d(tag, " run!")
     Thread.currentThread().name = javaClass.simpleName
 
-    val activeAccount = FlowCryptRoomDatabase.getDatabase(syncListener.context).accountDao().getActiveAccount()
+    val activeAccount = AccountViewModel.getAccountEntityWithDecryptedInfo(FlowCryptRoomDatabase
+        .getDatabase(syncListener.context).accountDao().getActiveAccount())
     activeAccount?.let {
       val foldersManager = FoldersManager.fromDatabase(syncListener.context, activeAccount.email)
       localFolder = foldersManager.findInboxFolder() ?: return
