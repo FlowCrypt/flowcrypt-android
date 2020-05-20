@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -20,6 +21,8 @@ import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -31,7 +34,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
-import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -63,7 +65,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   @get:VisibleForTesting
-  val idlingForFetchingKeys: SingleIdlingResources = SingleIdlingResources()
+  val idlingForFetchingKeys: CountingIdlingResource = CountingIdlingResource("idlingForFetchingKeys", GeneralUtil.isDebugBuild())
 
   abstract val progressView: View?
 
@@ -207,18 +209,16 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            idlingForFetchingKeys.setIdleState(false)
+            idlingForFetchingKeys.incrementSafely()
             UIUtil.exchangeViewVisibility(true, progressView, rootView)
           }
 
           Result.Status.SUCCESS -> {
-            idlingForFetchingKeys.setIdleState(true)
             onFetchKeysCompleted(it.data)
+            idlingForFetchingKeys.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            idlingForFetchingKeys.setIdleState(true)
-
             UIUtil.exchangeViewVisibility(false, progressView, rootView)
 
             if (it.exception is UserRecoverableAuthIOException) {
@@ -228,6 +228,8 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
                   it.exception?.message ?: it.exception?.javaClass?.simpleName
                   ?: getString(R.string.unknown_error))
             }
+
+            idlingForFetchingKeys.decrementSafely()
           }
         }
       }

@@ -10,7 +10,6 @@ import android.content.Intent
 import android.view.View
 import android.widget.EditText
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
@@ -40,8 +39,6 @@ import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
-import org.junit.After
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -78,22 +75,6 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
       .around(accountRule)
       .around(UpdateAccountRule(AccountDaoManager.getDefaultAccountDao(), generateContentValues()))
       .around(activityTestRule)
-
-  @Before
-  fun registerIdlingResource() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is SearchMessagesActivity) {
-      IdlingRegistry.getInstance().register(activity.msgsIdlingResource)
-    }
-  }
-
-  @After
-  fun unregisterIdlingResource() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is SearchMessagesActivity) {
-      IdlingRegistry.getInstance().unregister(activity.msgsIdlingResource)
-    }
-  }
 
   @Test
   fun testDefaultSearchQueryAtStart() {

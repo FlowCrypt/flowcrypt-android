@@ -11,7 +11,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode
@@ -41,9 +40,7 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
-import org.junit.After
 import org.junit.AfterClass
-import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Rule
@@ -84,22 +81,6 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
       .around(addAccountToDatabaseRule)
       .around(GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE))
       .around(activityTestRule)
-
-  @Before
-  fun registerIdlingResource() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is ImportPrivateKeyActivity) {
-      IdlingRegistry.getInstance().register(activity.countingIdlingResource)
-    }
-  }
-
-  @After
-  fun unregisterIdlingResource() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is ImportPrivateKeyActivity) {
-      IdlingRegistry.getInstance().unregister(activity.countingIdlingResource)
-    }
-  }
 
   @Test
   fun testImportKeyFromBackup() {

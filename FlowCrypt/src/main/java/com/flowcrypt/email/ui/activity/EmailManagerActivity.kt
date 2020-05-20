@@ -23,7 +23,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
-import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
@@ -32,7 +31,6 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.bumptech.glide.request.RequestOptions
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -84,9 +82,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   private var foldersManager: FoldersManager? = null
   override var currentFolder: LocalFolder? = null
 
-  @get:VisibleForTesting
-  var countingIdlingResourceForLabel: CountingIdlingResource? = null
-    private set
   private var menuItemSearch: MenuItem? = null
 
   private var drawerLayout: DrawerLayout? = null
@@ -135,11 +130,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     super.onAccountInfoRefreshed(accountEntity)
     if (accountEntity != null) {
       actionsViewModel.checkAndAddActionsToQueue(accountEntity)
-
-      countingIdlingResourceForLabel = CountingIdlingResource(
-          GeneralUtil.genIdlingResourcesName(EmailManagerActivity::class.java), GeneralUtil.isDebugBuild())
-      countingIdlingResourceForLabel?.increment()
-
       switchView?.isChecked = activeAccount?.isShowOnlyEncrypted ?: false
       invalidateOptionsMenu()
       navigationView?.getHeaderView(0)?.let { initUserProfileView(it) }
@@ -253,26 +243,21 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
-      R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> {
-        if (countingIdlingResourceForLabel?.isIdleNow == false) {
-          countingIdlingResourceForLabel?.decrement()
-        }
-      }
-
       R.id.syns_request_code_refresh_msgs -> {
         switchView?.isEnabled = true
         onRefreshMsgsCompleted()
-        msgsIdlingResource.setIdleState(true)
       }
 
       R.id.syns_request_code_load_next_messages -> {
         switchView?.isEnabled = true
         onFetchMsgsCompleted()
-        super.onReplyReceived(requestCode, resultCode, obj)
       }
 
-      else -> super.onReplyReceived(requestCode, resultCode, obj)
+      else -> {
+      }
     }
+
+    super.onReplyReceived(requestCode, resultCode, obj)
   }
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
@@ -281,24 +266,22 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         switchView?.isEnabled = true
         onErrorOccurred(requestCode, errorType, e)
         onRefreshMsgsCompleted()
-        msgsIdlingResource.setIdleState(true)
       }
 
       R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> {
         onErrorOccurred(requestCode, errorType, e)
-        if (countingIdlingResourceForLabel?.isIdleNow == false) {
-          countingIdlingResourceForLabel?.decrement()
-        }
       }
 
       R.id.syns_request_code_load_next_messages -> {
         switchView?.isEnabled = true
         onFetchMsgsCompleted()
-        super.onErrorHappened(requestCode, errorType, e)
       }
 
-      else -> super.onErrorHappened(requestCode, errorType, e)
+      else -> {
+      }
     }
+
+    super.onErrorHappened(requestCode, errorType, e)
   }
 
   override fun onSyncServiceConnected() {
@@ -667,7 +650,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       super.onDrawerOpened(drawerView)
 
       if (GeneralUtil.isConnected(this@EmailManagerActivity)) {
-        countingIdlingResourceForLabel?.increment()
         updateLabels(R.id.syns_request_code_update_label_passive)
       }
     }

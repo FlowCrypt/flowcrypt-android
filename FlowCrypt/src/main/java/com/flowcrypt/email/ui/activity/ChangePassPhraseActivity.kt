@@ -26,7 +26,6 @@ import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
-import com.flowcrypt.email.util.idling.SingleIdlingResources
 
 /**
  * This activity describes a logic of changing the pass phrase of all imported private keys of an active account.
@@ -41,10 +40,10 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   @get:VisibleForTesting
-  val idlingForFetchingKeys: SingleIdlingResources = SingleIdlingResources()
+  val idlingForFetchingKeys: CountingIdlingResource = CountingIdlingResource("idlingForFetchingKeys", GeneralUtil.isDebugBuild())
 
   @get:VisibleForTesting
-  var changePassphraseIdlingResource = CountingIdlingResource(ChangePassPhraseActivity::class.java.simpleName, GeneralUtil.isDebugBuild())
+  var changePassphraseIdlingResource = CountingIdlingResource("changePassphraseIdlingResource", GeneralUtil.isDebugBuild())
 
   override fun onConfirmPassPhraseSuccess() {
     privateKeysViewModel.changePassphrase(editTextKeyPassword.text.toString())
@@ -111,23 +110,22 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            idlingForFetchingKeys.setIdleState(false)
+            idlingForFetchingKeys.incrementSafely()
           }
 
           Result.Status.SUCCESS -> {
-            idlingForFetchingKeys.setIdleState(true)
-
             val keyDetailsList = it.data
             if (keyDetailsList?.isEmpty() == true) {
               runBackupKeysActivity()
             } else {
               privateKeysViewModel.saveBackupsToInbox()
             }
+            idlingForFetchingKeys.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            idlingForFetchingKeys.setIdleState(true)
             runBackupKeysActivity()
+            idlingForFetchingKeys.decrementSafely()
           }
         }
       }

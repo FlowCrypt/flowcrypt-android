@@ -124,6 +124,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
         }
       }
     }
+
+    super.onReplyReceived(requestCode, resultCode, obj)
   }
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
@@ -136,6 +138,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
 
       else -> onErrorOccurred(requestCode, errorType, e)
     }
+
+    super.onErrorHappened(requestCode, errorType, e)
   }
 
   override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {

@@ -9,10 +9,8 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.Intent
-import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.swipeDown
@@ -47,9 +45,6 @@ import com.flowcrypt.email.viewaction.CustomViewActions.Companion.navigateToItem
 import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
-import org.junit.After
-import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -65,7 +60,6 @@ import java.util.*
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
 class EmailManagerActivityTest : BaseEmailListActivityTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(EmailManagerActivity::class.java)
@@ -82,27 +76,13 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
       .around(AddMessageToDatabaseRule(userWithMoreThan21LettersAccount, INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT))
       .around(activityTestRule)
 
-  @Before
-  fun registerIdlingResource() {
-    //IdlingRegistry.getInstance().register((activityTestRule?.activity as EmailManagerActivity).msgsIdlingResource)
-    IdlingRegistry.getInstance().register((activityTestRule?.activity as EmailManagerActivity)
-        .countingIdlingResourceForLabel)
-  }
-
-  @After
-  fun unregisterIdlingResource() {
-    for (idlingResource in IdlingRegistry.getInstance().resources) {
-      IdlingRegistry.getInstance().unregister(idlingResource)
-    }
-  }
-
   @Test
   fun testComposeFloatButton() {
     onView(withId(R.id.floatActionButtonCompose))
         .check(matches(isDisplayed()))
         .perform(click())
     intended(hasComponent(CreateMessageActivity::class.java.name))
-    onView(allOf<View>(withText(R.string.compose), withParent(withId(R.id.toolbar))))
+    onView(allOf(withText(R.string.compose), withParent(withId(R.id.toolbar))))
         .check(matches(isDisplayed()))
   }
 
@@ -112,8 +92,6 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
-  //todo-denbond7 fix me
   fun testForceLoadMsgs() {
     onView(withId(R.id.recyclerViewMsgs))
         .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, scrollTo()))
@@ -121,7 +99,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
         .check(matches(isDisplayed()))
         .perform(swipeDown())
     onView(withId(R.id.recyclerViewMsgs))
-        .check(matches(not<View>(withEmptyRecyclerView())))
+        .check(matches(not(withEmptyRecyclerView())))
         .check(matches(isDisplayed()))
   }
 
@@ -163,7 +141,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   @Test
   fun testSwitchLabels() {
     val menuItem = "Sent"
-    onView(withId(R.id.toolbar)).check(matches(anyOf<View>(
+    onView(withId(R.id.toolbar)).check(matches(anyOf(
         withToolBarText("INBOX"),
         withToolBarText(InstrumentationRegistry.getInstrumentation().targetContext.getString(R
             .string.loading)))))
@@ -177,7 +155,6 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testAddNewAccount() {
     val targetContext = InstrumentationRegistry.getInstrumentation().targetContext
     val account = AccountDaoManager.getDefaultAccountDao()
@@ -210,7 +187,6 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-
   fun testChooseAnotherAccount() {
     onView(withId(R.id.drawer_layout))
         .perform(open())

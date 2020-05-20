@@ -35,6 +35,8 @@ class ChangeMsgsReadStateSyncTask(ownerKey: String, requestCode: Int) : BaseSync
 
     changeMsgsReadState(context, account, store, MessageState.PENDING_MARK_UNREAD)
     changeMsgsReadState(context, account, store, MessageState.PENDING_MARK_READ)
+
+    listener.onActionCompleted(account, ownerKey, requestCode)
   }
 
   private fun changeMsgsReadState(context: Context, account: AccountEntity, store: Store, state: MessageState) {

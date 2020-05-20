@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity
 
 import android.view.View
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
@@ -24,8 +23,6 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.settings.SearchBackupsInEmailActivity
 import org.hamcrest.Matchers.not
-import org.junit.After
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -52,22 +49,6 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
       .around(AddAccountToDatabaseRule())
       .around(AddPrivateKeyToDatabaseRule())
       .around(activityTestRule)
-
-  @Before
-  override fun registerNodeIdling() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is SearchBackupsInEmailActivity) {
-      IdlingRegistry.getInstance().register(activity.countingIdlingResource)
-    }
-  }
-
-  @After
-  override fun unregisterNodeIdling() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is SearchBackupsInEmailActivity) {
-      IdlingRegistry.getInstance().unregister(activity.countingIdlingResource)
-    }
-  }
 
   @Test
   fun testShowHelpScreen() {

@@ -14,9 +14,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -45,9 +43,6 @@ import com.google.android.material.snackbar.Snackbar
  */
 
 class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.OnTwoWayDialogListener {
-  @get:VisibleForTesting
-  var countingIdlingResource: CountingIdlingResource? = null
-    private set
   private var privateKeysFromEmailBackups: ArrayList<NodeKeyDetails>? = null
   private val unlockedKeys: MutableList<NodeKeyDetails> = ArrayList()
   private var keyDetailsType: KeyDetails.Type = KeyDetails.Type.EMAIL
@@ -70,8 +65,6 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     if (isSyncEnabled && GeneralUtil.isConnected(this)) {
       textViewProgressText.setText(R.string.loading_backups)
       UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
-      countingIdlingResource = CountingIdlingResource(
-          GeneralUtil.genIdlingResourcesName(ImportPrivateKeyActivity::class.java), GeneralUtil.isDebugBuild())
     } else {
       hideImportButton()
       UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
@@ -92,8 +85,6 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     if (!isLoadPrivateKeysRequestSent) {
       isLoadPrivateKeysRequestSent = true
       loadPrivateKeys(R.id.syns_load_private_keys)
-
-      countingIdlingResource?.increment()
     }
   }
 
@@ -125,11 +116,10 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
           }
           UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
         }
-        if (countingIdlingResource?.isIdleNow == false) {
-          countingIdlingResource?.decrement()
-        }
       }
     }
+
+    super.onReplyReceived(requestCode, resultCode, obj)
   }
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
@@ -143,12 +133,10 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
           UIUtil.exchangeViewVisibility(
               false, layoutProgress, layoutContentView)
         })
-
-        if (countingIdlingResource?.isIdleNow == false) {
-          countingIdlingResource?.decrement()
-        }
       }
     }
+
+    super.onErrorHappened(requestCode, errorType, e)
   }
 
   override fun onClick(v: View) {

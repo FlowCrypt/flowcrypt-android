@@ -163,6 +163,7 @@ class EmailSyncService : BaseService(), SyncListener {
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
+      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
     }
   }
 
@@ -178,12 +179,12 @@ class EmailSyncService : BaseService(), SyncListener {
       ExceptionUtil.handleError(e)
       onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
     }
-
   }
 
   override fun onMsgsMoved(account: AccountEntity, srcFolder: IMAPFolder, destFolder: IMAPFolder,
                            msgs: List<javax.mail.Message>, ownerKey: String, requestCode: Int) {
     //Todo-denbond7 Not implemented yet.
+    sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
   }
 
   override fun onMsgMoved(account: AccountEntity, srcFolder: IMAPFolder, destFolder: IMAPFolder,
@@ -448,18 +449,24 @@ class EmailSyncService : BaseService(), SyncListener {
       ExceptionUtil.handleError(e)
       if (e is StoreClosedException || e is FolderClosedException) {
         onError(account, SyncErrorTypes.ACTION_FAILED_SHOW_TOAST, e, ownerKey, requestCode)
+      } else {
+        onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
       }
     } catch (e: MessagingException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
       if (e is StoreClosedException || e is FolderClosedException) {
         onError(account, SyncErrorTypes.ACTION_FAILED_SHOW_TOAST, e, ownerKey, requestCode)
+      } else {
+        onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
       }
     } catch (e: OperationApplicationException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
       if (e is StoreClosedException || e is FolderClosedException) {
         onError(account, SyncErrorTypes.ACTION_FAILED_SHOW_TOAST, e, ownerKey, requestCode)
+      } else {
+        onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
       }
     }
   }
@@ -502,6 +509,7 @@ class EmailSyncService : BaseService(), SyncListener {
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
+      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
     }
   }
 
@@ -525,6 +533,31 @@ class EmailSyncService : BaseService(), SyncListener {
     try {
       if (replyToMessengers.containsKey(ownerKey)) {
         replyToMessengers[ownerKey]?.send(Message.obtain(null, REPLY_ACTION_PROGRESS, requestCode, resultCode, value))
+      }
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  override fun onActionCanceled(account: AccountEntity?, ownerKey: String, requestCode: Int, resultCode: Int, value: Int) {
+    LogsUtil.d(TAG,
+        "onActionCanceled: account$account| ownerKey =$ownerKey| requestCode =$requestCode")
+    try {
+      if (replyToMessengers.containsKey(ownerKey)) {
+        replyToMessengers[ownerKey]?.send(Message.obtain(null, REPLY_ACTION_CANCELED, requestCode, resultCode, value))
+      }
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  override fun onActionCompleted(account: AccountEntity?, ownerKey: String, requestCode: Int, resultCode: Int, value: Int) {
+    LogsUtil.d(TAG, "onActionCompleted: account$account| ownerKey =$ownerKey| requestCode =$requestCode")
+    try {
+      if (replyToMessengers.containsKey(ownerKey)) {
+        replyToMessengers[ownerKey]?.send(Message.obtain(null, REPLY_OK, requestCode, resultCode, value))
       }
     } catch (e: RemoteException) {
       e.printStackTrace()
@@ -775,13 +808,15 @@ class EmailSyncService : BaseService(), SyncListener {
             uniqueId?.let { emailSyncManager?.cancelLoadMsgDetails(it) }
           }
 
-          MESSAGE_DELETE_MSGS -> emailSyncManager?.deleteMsgs()
+          MESSAGE_DELETE_MSGS -> emailSyncManager?.deleteMsgs(ownerKey ?: "", requestCode)
 
-          MESSAGE_ARCHIVE_MSGS -> emailSyncManager?.archiveMsgs()
+          MESSAGE_ARCHIVE_MSGS -> emailSyncManager?.archiveMsgs(ownerKey ?: "", requestCode)
 
-          MESSAGE_CHANGE_MSGS_READ_STATE -> emailSyncManager?.changeMsgsReadState()
+          MESSAGE_CHANGE_MSGS_READ_STATE -> emailSyncManager?.changeMsgsReadState(ownerKey
+              ?: "", requestCode)
 
-          MESSAGE_MOVE_MSGS_TO_INBOX -> emailSyncManager?.moveMsgsToINBOX()
+          MESSAGE_MOVE_MSGS_TO_INBOX -> emailSyncManager?.moveMsgsToINBOX(ownerKey
+              ?: "", requestCode)
 
           else -> super.handleMessage(msg)
         }

@@ -16,9 +16,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.IdRes
-import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -49,9 +47,6 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private var longIdsOfCurrentAccount: MutableList<String> = mutableListOf()
 
-  @get:VisibleForTesting
-  var countingIdlingResource: CountingIdlingResource? = null
-    private set
   private var progressBar: View? = null
   override lateinit var rootView: View
   private var layoutSyncStatus: View? = null
@@ -70,9 +65,6 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     initViews()
-    countingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(BackupKeysActivity::class.java),
-        GeneralUtil.isDebugBuild())
-
     setupPrivateKeysViewModel()
   }
 
@@ -80,23 +72,17 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     when (requestCode) {
       R.id.syns_send_backup_with_private_key_to_key_owner -> {
         isPrivateKeySendingNow = false
-        if (countingIdlingResource?.isIdleNow == false) {
-          countingIdlingResource?.decrement()
-        }
         setResult(Activity.RESULT_OK)
         finish()
       }
     }
+    super.onReplyReceived(requestCode, resultCode, obj)
   }
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
       R.id.syns_send_backup_with_private_key_to_key_owner -> {
         isPrivateKeySendingNow = false
-        if (countingIdlingResource?.isIdleNow == false) {
-          countingIdlingResource?.decrement()
-        }
-
         when (e) {
           is PrivateKeyStrengthException -> {
             UIUtil.exchangeViewVisibility(false, progressBar, rootView)
@@ -120,6 +106,8 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
         }
       }
     }
+
+    super.onErrorHappened(requestCode, errorType, e)
   }
 
   override fun onClick(v: View) {
@@ -133,7 +121,6 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
             R.id.radioButtonEmail -> {
               dismissSnackBar()
               if (GeneralUtil.isConnected(this)) {
-                countingIdlingResource?.increment()
                 isPrivateKeySendingNow = true
                 UIUtil.exchangeViewVisibility(true, progressBar, rootView)
                 sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner)

@@ -11,8 +11,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.VisibleForTesting
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.ui.activity.BackupKeysActivity
@@ -37,8 +35,6 @@ import java.util.*
 
 class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener {
 
-  @get:VisibleForTesting
-  lateinit var countingIdlingResource: CountingIdlingResource
   private lateinit var progressBar: View
   override lateinit var rootView: View
   private lateinit var layoutSyncStatus: View
@@ -63,9 +59,6 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
       Toast.makeText(this, R.string.internet_connection_is_not_available, Toast.LENGTH_SHORT).show()
       finish()
     }
-    countingIdlingResource = CountingIdlingResource(
-        GeneralUtil.genIdlingResourcesName(SearchBackupsInEmailActivity::class.java), GeneralUtil.isDebugBuild())
-    countingIdlingResource.increment()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -94,20 +87,15 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
             showBackupFoundView()
           }
         }
-        if (!countingIdlingResource.isIdleNow) {
-          countingIdlingResource.decrement()
-        }
       }
     }
+    super.onReplyReceived(requestCode, resultCode, obj)
   }
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
       R.id.syns_load_private_keys -> {
         UIUtil.exchangeViewVisibility(false, progressBar, layoutSyncStatus)
-        if (!countingIdlingResource.isIdleNow) {
-          countingIdlingResource.decrement()
-        }
         UIUtil.showSnackbar(rootView, getString(R.string.error_occurred_while_receiving_private_keys),
             getString(R.string.retry), View.OnClickListener {
           layoutSyncStatus.visibility = View.GONE
@@ -116,6 +104,8 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
         })
       }
     }
+
+    super.onErrorHappened(requestCode, errorType, e)
   }
 
   override fun onSyncServiceConnected() {

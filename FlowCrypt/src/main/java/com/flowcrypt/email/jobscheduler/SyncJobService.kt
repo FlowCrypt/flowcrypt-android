@@ -178,6 +178,14 @@ class SyncJobService : JobService(), SyncListener {
 
   }
 
+  override fun onActionCanceled(account: AccountEntity?, ownerKey: String, requestCode: Int, resultCode: Int, value: Int) {
+
+  }
+
+  override fun onActionCompleted(account: AccountEntity?, ownerKey: String, requestCode: Int, resultCode: Int, value: Int) {
+
+  }
+
   override fun onMsgChanged(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, msg: Message,
                             ownerKey: String, requestCode: Int) {
 

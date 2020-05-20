@@ -33,7 +33,13 @@ class DeleteMessagesSyncTask(ownerKey: String,
   override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
     val foldersManager = FoldersManager.fromDatabase(context, account.email)
-    val trash = foldersManager.folderTrash ?: return
+    val trash = foldersManager.folderTrash
+
+    if (trash == null) {
+      listener.onActionCompleted(account, ownerKey, requestCode)
+      return
+    }
+
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
     while (true) {
@@ -52,7 +58,7 @@ class DeleteMessagesSyncTask(ownerKey: String,
             continue
           }
 
-          val uidList = filteredMsgs.map { it.uid.toLong() }
+          val uidList = filteredMsgs.map { it.uid }
           val remoteSrcFolder = store.getFolder(folder) as IMAPFolder
           val remoteDestFolder = store.getFolder(trash.fullName) as IMAPFolder
           remoteSrcFolder.open(Folder.READ_WRITE)
@@ -68,5 +74,7 @@ class DeleteMessagesSyncTask(ownerKey: String,
         }
       }
     }
+
+    listener.onActionCompleted(account, ownerKey, requestCode)
   }
 }

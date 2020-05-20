@@ -23,6 +23,7 @@ import androidx.activity.viewModels
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -32,6 +33,8 @@ import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.CheckEmailSettingsViewModel
@@ -45,7 +48,6 @@ import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
-import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
@@ -93,7 +95,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   @get:VisibleForTesting
-  val idlingForFetchingPrivateKeys: SingleIdlingResources = SingleIdlingResources()
+  val idlingForFetchingPrivateKeys: CountingIdlingResource = CountingIdlingResource("idlingForFetchingPrivateKeys", GeneralUtil.isDebugBuild())
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = true
@@ -268,7 +270,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            idlingForFetchingPrivateKeys.setIdleState(false)
+            idlingForFetchingPrivateKeys.incrementSafely()
             UIUtil.exchangeViewVisibility(true, progressView, rootView)
           }
 
@@ -280,14 +282,13 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
                 loadPrivateKeysViewModel.fetchAvailableKeys(account)
               }
             } else {
-              idlingForFetchingPrivateKeys.setIdleState(true)
+              idlingForFetchingPrivateKeys.decrementSafely()
               UIUtil.exchangeViewVisibility(false, progressView, rootView)
               showInfoSnackbar(rootView, getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG)
             }
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            idlingForFetchingPrivateKeys.setIdleState(true)
             UIUtil.exchangeViewVisibility(false, progressView, rootView)
             val exception = it.exception ?: return@let
             val original = it.exception.cause
@@ -321,6 +322,8 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
                 positiveButtonTitle = getString(R.string.retry),
                 negativeButtonTitle = getString(R.string.cancel),
                 isCancelable = true))
+
+            idlingForFetchingPrivateKeys.decrementSafely()
           }
         }
       }
@@ -332,11 +335,11 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
+            idlingForFetchingPrivateKeys.incrementSafely()
             UIUtil.exchangeViewVisibility(true, progressView, rootView)
           }
 
           Result.Status.SUCCESS -> {
-            idlingForFetchingPrivateKeys.setIdleState(true)
             dismissSnackBar()
 
             val keyDetailsList = it.data
@@ -354,14 +357,15 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
                   positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R.string.use_another_account))
               startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL)
             }
+            idlingForFetchingPrivateKeys.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            idlingForFetchingPrivateKeys.setIdleState(true)
             UIUtil.exchangeViewVisibility(false, progressView, rootView)
             showInfoDialogFragment(dialogMsg = it.exception?.message
                 ?: it.exception?.javaClass?.simpleName
                 ?: getString(R.string.could_not_load_private_keys))
+            idlingForFetchingPrivateKeys.decrementSafely()
           }
         }
       }

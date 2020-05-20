@@ -18,9 +18,12 @@ import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.CheckPrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
@@ -29,7 +32,6 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
-import com.flowcrypt.email.util.idling.SingleIdlingResources
 import org.apache.commons.io.IOUtils
 import java.io.IOException
 import java.nio.charset.StandardCharsets
@@ -51,7 +53,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   private lateinit var checkPrivateKeysViewModel: CheckPrivateKeysViewModel
 
   @VisibleForTesting
-  val idlingForKeyChecking: SingleIdlingResources = SingleIdlingResources()
+  val idlingForKeyChecking: CountingIdlingResource = CountingIdlingResource("idlingForKeyChecking", GeneralUtil.isDebugBuild())
 
   private var editTextKeyPassword: EditText? = null
   private var textViewSubTitle: TextView? = null
@@ -230,12 +232,11 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            idlingForKeyChecking.setIdleState(false)
+            idlingForKeyChecking.incrementSafely()
             progressBar?.visibility = View.VISIBLE
           }
 
           else -> {
-            idlingForKeyChecking.setIdleState(true)
             progressBar?.visibility = View.GONE
             when (it.status) {
               Result.Status.SUCCESS -> {
@@ -276,6 +277,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
               else -> {
               }
             }
+            idlingForKeyChecking.decrementSafely()
           }
         }
       }

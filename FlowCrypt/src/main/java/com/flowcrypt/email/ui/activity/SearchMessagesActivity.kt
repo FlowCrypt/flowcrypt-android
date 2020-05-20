@@ -80,17 +80,21 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
       R.id.sync_request_code_search_messages ->
         super.onReplyReceived(R.id.syns_request_code_load_next_messages, resultCode, obj)
 
-      else -> super.onReplyReceived(requestCode, resultCode, obj)
+      else -> {
+      }
     }
+
+    super.onReplyReceived(requestCode, resultCode, obj)
   }
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
       R.id.sync_request_code_search_messages -> {
         onErrorOccurred(requestCode, errorType, e)
-        msgsIdlingResource.setIdleState(true)
       }
     }
+
+    super.onErrorHappened(requestCode, errorType, e)
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {

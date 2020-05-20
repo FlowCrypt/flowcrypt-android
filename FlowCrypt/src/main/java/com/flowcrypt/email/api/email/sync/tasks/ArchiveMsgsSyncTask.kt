@@ -29,8 +29,20 @@ class ArchiveMsgsSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(own
   override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
     val foldersManager = FoldersManager.fromDatabase(context, account.email)
-    val inboxFolder = foldersManager.findInboxFolder() ?: return
-    val allMailFolder = foldersManager.folderAll ?: return
+    val inboxFolder = foldersManager.findInboxFolder()
+
+    if (inboxFolder == null) {
+      listener.onActionCompleted(account, ownerKey, requestCode)
+      return
+    }
+
+    val allMailFolder = foldersManager.folderAll
+
+    if (allMailFolder == null) {
+      listener.onActionCompleted(account, ownerKey, requestCode)
+      return
+    }
+
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
     while (true) {
@@ -54,5 +66,7 @@ class ArchiveMsgsSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(own
         remoteSrcFolder.close()
       }
     }
+
+    listener.onActionCompleted(account, ownerKey, requestCode)
   }
 }

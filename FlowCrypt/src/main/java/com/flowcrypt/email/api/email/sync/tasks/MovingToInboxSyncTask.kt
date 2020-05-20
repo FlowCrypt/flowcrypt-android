@@ -30,7 +30,13 @@ class MovingToInboxSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(o
   override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
     val foldersManager = FoldersManager.fromDatabase(context, account.email)
-    val inboxFolder = foldersManager.findInboxFolder() ?: return
+    val inboxFolder = foldersManager.findInboxFolder()
+
+    if (inboxFolder == null) {
+      listener.onActionCompleted(account, ownerKey, requestCode)
+      return
+    }
+
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
     while (true) {
@@ -65,5 +71,7 @@ class MovingToInboxSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(o
         }
       }
     }
+
+    listener.onActionCompleted(account, ownerKey, requestCode)
   }
 }

@@ -90,6 +90,9 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
         if (syncTask == null || (item.requestCode == syncTask.requestCode && item.ownerKey == syncTask.ownerKey)) {
           item.isCancelled = true
           iterator.remove()
+          //todo-denbond7 Need to improve this code to use an account
+          syncTask ?: continue
+          syncListener.onActionCanceled(null, syncTask.ownerKey, syncTask.requestCode, -1)
         }
       }
     }

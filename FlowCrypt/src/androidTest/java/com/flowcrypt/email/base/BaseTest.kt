@@ -73,6 +73,16 @@ abstract class BaseTest {
     }
   }
 
+  @Before
+  fun registerCountingIdlingResource() {
+    IdlingRegistry.getInstance().register((activityTestRule?.activity as BaseActivity).syncServiceCountingIdlingResource)
+  }
+
+  @After
+  fun unregisterCountingIdlingResource() {
+    IdlingRegistry.getInstance().unregister((activityTestRule?.activity as BaseActivity).syncServiceCountingIdlingResource)
+  }
+
   /**
    * Check is [Toast] displayed. This method can be used only with activity. It doesn't work if a toast is displayed
    * when some dialog is displayed.

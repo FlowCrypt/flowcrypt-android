@@ -219,14 +219,6 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
     }
   }
 
-  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
-
-  }
-
-  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
-
-  }
-
   /**
    * Handle a selected file.
    *

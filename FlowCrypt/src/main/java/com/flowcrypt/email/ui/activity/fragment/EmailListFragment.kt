@@ -54,7 +54,6 @@ import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
-import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
@@ -488,7 +487,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
    * Try to load a new messages from an IMAP server.
    */
   private fun refreshMsgs() {
-    listener?.msgsLoadingIdlingResource?.setIdleState(false)
     listener?.currentFolder?.let {
       baseSyncActivity.refreshMsgs(R.id.syns_request_code_refresh_msgs, it)
     }
@@ -517,7 +515,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
 
       footerProgressView?.visibility = View.VISIBLE
-      listener?.msgsLoadingIdlingResource?.setIdleState(false)
       localFolder?.let {
         adapter.changeProgress(true)
         if (it.searchQuery.isNullOrEmpty()) {
@@ -861,7 +858,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
   interface OnManageEmailsListener {
     val currentFolder: LocalFolder?
-    val msgsLoadingIdlingResource: SingleIdlingResources
     fun onRetryGoogleAuth()
   }
 

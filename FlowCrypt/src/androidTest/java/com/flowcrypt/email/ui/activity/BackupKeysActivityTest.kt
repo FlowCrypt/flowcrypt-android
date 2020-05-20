@@ -11,7 +11,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intending
@@ -40,10 +39,8 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
-import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -67,16 +64,6 @@ class BackupKeysActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
       .around(activityTestRule)
-
-  @Before
-  fun registerIdlingResource() {
-    IdlingRegistry.getInstance().register((activityTestRule?.activity as BackupKeysActivity).countingIdlingResource)
-  }
-
-  @After
-  fun unregisterIdlingResource() {
-    IdlingRegistry.getInstance().unregister((activityTestRule?.activity as BackupKeysActivity).countingIdlingResource)
-  }
 
   @Test
   @DoesNotNeedMailserver
