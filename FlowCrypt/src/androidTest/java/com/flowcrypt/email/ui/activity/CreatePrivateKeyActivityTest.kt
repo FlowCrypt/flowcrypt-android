@@ -7,6 +7,7 @@ package com.flowcrypt.email.ui.activity
 
 import android.content.Intent
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
@@ -19,7 +20,9 @@ import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
-import org.junit.Ignore
+import com.flowcrypt.email.util.AccountDaoManager
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -36,13 +39,12 @@ import org.junit.runner.RunWith
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
 class CreatePrivateKeyActivityTest : BasePassphraseActivityTest() {
 
   override val activityTestRule: ActivityTestRule<*>? =
       object : ActivityTestRule<CreatePrivateKeyActivity>(CreatePrivateKeyActivity::class.java) {
         override fun getActivityIntent(): Intent {
-          return Intent(this@CreatePrivateKeyActivityTest.getTargetContext(), CreatePrivateKeyActivity::class.java)
+          return CreatePrivateKeyActivity.newIntent(this@CreatePrivateKeyActivityTest.getTargetContext(), AccountDaoManager.getUserWitMoreThan21Letters())
         }
       }
 
@@ -50,6 +52,22 @@ class CreatePrivateKeyActivityTest : BasePassphraseActivityTest() {
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(activityTestRule)
+
+  @Before
+  fun registerCreatePrivateKeyIdlingResource() {
+    val activity = activityTestRule?.activity ?: return
+    if (activity is CreatePrivateKeyActivity) {
+      IdlingRegistry.getInstance().register(activity.createPrivateKeyIdlingResource)
+    }
+  }
+
+  @After
+  fun unregisterCreatePrivateKeyIdlingResource() {
+    val activity = activityTestRule?.activity ?: return
+    if (activity is CreatePrivateKeyActivity) {
+      IdlingRegistry.getInstance().unregister(activity.createPrivateKeyIdlingResource)
+    }
+  }
 
   @Test
   fun testUseCorrectPassPhrase() {

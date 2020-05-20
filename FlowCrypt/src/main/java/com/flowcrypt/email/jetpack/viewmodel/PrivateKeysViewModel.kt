@@ -300,7 +300,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         privateKey = KeyStoreCryptoManager.encryptSuspend(nodeKeyDetails.privateKey).toByteArray(),
         passphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
 
-    if (roomDatabase.keysDao().insertSuspend(keyEntity) != 1L) {
+    if (roomDatabase.keysDao().insertSuspend(keyEntity) == -1L) {
       throw NullPointerException("Cannot save a generated private key")
     }
 

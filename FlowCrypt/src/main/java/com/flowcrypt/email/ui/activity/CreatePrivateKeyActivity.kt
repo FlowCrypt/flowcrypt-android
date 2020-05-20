@@ -13,11 +13,15 @@ import android.text.TextUtils
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -36,6 +40,9 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private var createdPrivateKeyLongId: String? = null
   private var tempAccount: AccountEntity? = null
+
+  @get:VisibleForTesting
+  var createPrivateKeyIdlingResource = CountingIdlingResource(CreatePrivateKeyActivity::class.java.simpleName, GeneralUtil.isDebugBuild())
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_pass_phrase_manager
@@ -116,6 +123,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
+            createPrivateKeyIdlingResource.incrementSafely()
             isBackEnabled = false
             UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
           }
@@ -127,6 +135,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
             layoutSecondPasswordCheck.visibility = View.GONE
             layoutSuccess.visibility = View.VISIBLE
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
+            createPrivateKeyIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -144,6 +153,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
                 showInfoSnackbar(rootView, exception.message)
               }
             }
+            createPrivateKeyIdlingResource.decrementSafely()
           }
         }
       }
