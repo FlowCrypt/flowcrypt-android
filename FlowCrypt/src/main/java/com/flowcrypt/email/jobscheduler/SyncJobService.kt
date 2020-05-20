@@ -26,6 +26,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -256,7 +257,8 @@ class SyncJobService : JobService(), SyncListener {
       try {
         if (weakRef.get() != null) {
           val context = weakRef.get()!!.applicationContext
-          val account = FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccount()
+          val account = AccountViewModel.getAccountEntityWithDecryptedInfo(FlowCryptRoomDatabase
+              .getDatabase(context).accountDao().getActiveAccount())
 
           if (account != null) {
             val foldersManager = FoldersManager.fromDatabase(context, account.email)
