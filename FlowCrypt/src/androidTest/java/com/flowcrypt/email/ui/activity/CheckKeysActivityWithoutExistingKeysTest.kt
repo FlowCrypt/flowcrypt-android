@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.Intent
-import android.view.View
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -30,7 +29,6 @@ import com.flowcrypt.email.ui.activity.base.BaseCheckKeysActivityTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -99,11 +97,10 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseCheckKeysActivityTest() {
   }
 
   @Test
-  @Ignore("Need to fix this via idling")
   fun testCheckClickButtonNeutral() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonUseExistingKeys))
-        .check(matches(not<View>(isDisplayed())))
+        .check(matches(not(isDisplayed())))
   }
 
   @Test
