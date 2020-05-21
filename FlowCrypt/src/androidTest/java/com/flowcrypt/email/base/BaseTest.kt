@@ -11,7 +11,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import android.text.Html
-import android.view.View
 import android.widget.Toast
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
@@ -96,14 +95,28 @@ abstract class BaseTest {
 
   /**
    * Check is [Toast] displayed. This method can be used only with activity. It doesn't work if a toast is displayed
-   * when some dialog is displayed.
+   * when some toast is displayed.
    *
    * @param activity A root [Activity]
    * @param message  A message which was displayed.
    */
   protected fun isToastDisplayed(activity: Activity?, message: String) {
     onView(withText(message))
-        .inRoot(withDecorView(not<View>(`is`<View>(activity?.window!!.decorView))))
+        .inRoot(withDecorView(not(`is`(activity?.window?.decorView))))
+        .check(matches(isDisplayed()))
+  }
+
+  /**
+   * Check is [Dialog] displayed. This method can be used only with activity. It doesn't work if a
+   * dialog is displayed
+   * when some toast is displayed.
+   *
+   * @param activity A root [Activity]
+   * @param message  A message which was displayed.
+   */
+  protected fun isDialogWithTextDisplayed(activity: Activity?, message: String) {
+    onView(withText(message))
+        .inRoot(withDecorView(not(`is`(activity?.window?.decorView))))
         .check(matches(isDisplayed()))
   }
 

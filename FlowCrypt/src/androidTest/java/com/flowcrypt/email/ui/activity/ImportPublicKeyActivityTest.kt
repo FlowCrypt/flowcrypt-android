@@ -41,7 +41,6 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -58,7 +57,6 @@ import java.io.File
 @LargeTest
 @RunWith(AndroidJUnit4::class)
 @DoesNotNeedMailserver
-@Ignore("Temporary excluded")
 class ImportPublicKeyActivityTest : BaseTest() {
 
   override val activityTestRule: IntentsTestRule<*>? =
@@ -105,8 +103,8 @@ class ImportPublicKeyActivityTest : BaseTest() {
     onView(withId(R.id.buttonLoadFromFile))
         .check(matches(isDisplayed()))
         .perform(click())
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.file_has_wrong_pgp_structure,
-        getResString(R.string.public_)))
+    isDialogWithTextDisplayed(activityTestRule?.activity, getResString(R.string
+        .file_has_wrong_pgp_structure, getResString(R.string.public_)))
   }
 
   @Test
@@ -124,7 +122,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
     onView(withId(R.id.buttonLoadFromClipboard))
         .check(matches(isDisplayed()))
         .perform(click())
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.clipboard_has_wrong_structure,
+    isDialogWithTextDisplayed(activityTestRule?.activity, getResString(R.string.clipboard_has_wrong_structure,
         getResString(R.string.public_)))
   }
 
