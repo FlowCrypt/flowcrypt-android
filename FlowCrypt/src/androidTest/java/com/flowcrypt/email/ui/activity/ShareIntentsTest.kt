@@ -30,7 +30,6 @@ import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -51,7 +50,6 @@ import java.util.*
 @LargeTest
 @RunWith(AndroidJUnit4::class)
 @DoesNotNeedMailserver
-@Ignore("fix me")
 class ShareIntentsTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(CreateMessageActivity::class.java,
@@ -70,6 +68,7 @@ class ShareIntentsTest : BaseTest() {
   @Test
   fun testEmptyUri() {
     activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, null))
+    registerIdlingResources()
     checkViewsOnScreen(0, null, null, 0)
   }
 
@@ -77,6 +76,7 @@ class ShareIntentsTest : BaseTest() {
   fun testToSubjectBody() {
     activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
         + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    registerIdlingResources()
     checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
@@ -84,6 +84,7 @@ class ShareIntentsTest : BaseTest() {
   fun testToParamSubjectBody() {
     activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:?to=" + recipients[0]
         + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    registerIdlingResources()
     checkViewsOnScreen(1, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
@@ -91,6 +92,7 @@ class ShareIntentsTest : BaseTest() {
   fun testToToParamSubjectBody() {
     activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
         + "?to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    registerIdlingResources()
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
@@ -98,6 +100,7 @@ class ShareIntentsTest : BaseTest() {
   fun testToParamToSubjectBody() {
     activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:?to=" + recipients[0]
         + "," + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    registerIdlingResources()
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
@@ -105,6 +108,7 @@ class ShareIntentsTest : BaseTest() {
   fun testMultiToSubjectBody() {
     activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
         + "," + recipients[1] + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    registerIdlingResources()
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
@@ -112,36 +116,42 @@ class ShareIntentsTest : BaseTest() {
   fun testMultiToParamSubjectBody() {
     activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:?to=" + recipients[0]
         + "&to=" + recipients[1] + "&subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
+    registerIdlingResources()
     checkViewsOnScreen(2, ENCODED_SUBJECT, ENCODED_BODY, 0)
   }
 
   @Test
   fun testEmptyMailToSchema() {
     activityTestRule?.launchActivity(genIntentForUri(randomActionForRFC6068, "mailto:"))
+    registerIdlingResources()
     checkViewsOnScreen(0, null, null, 0)
   }
 
   @Test
   fun testSendEmptyExtras() {
     activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null, null, 0))
+    registerIdlingResources()
     checkViewsOnScreen(0, null, null, 0)
   }
 
   @Test
   fun testSendExtSubject() {
     activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT, null, 0))
+    registerIdlingResources()
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, null, 0)
   }
 
   @Test
   fun testSendExtBody() {
     activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null, Intent.EXTRA_TEXT, 0))
+    registerIdlingResources()
     checkViewsOnScreen(0, null, Intent.EXTRA_TEXT, 0)
   }
 
   @Test
   fun testSendAtt() {
     activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null, null, 1))
+    registerIdlingResources()
     checkViewsOnScreen(0, null, null, 1)
   }
 
@@ -149,18 +159,21 @@ class ShareIntentsTest : BaseTest() {
   fun testSendExtSubjectExtBody() {
     activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
         Intent.EXTRA_TEXT, 0))
+    registerIdlingResources()
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 0)
   }
 
   @Test
   fun testSendExtSubjectAtt() {
     activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT, null, 1))
+    registerIdlingResources()
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, null, 1)
   }
 
   @Test
   fun testSendExtBodyAtt() {
     activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, null, Intent.EXTRA_TEXT, 1))
+    registerIdlingResources()
     checkViewsOnScreen(0, null, Intent.EXTRA_TEXT, 1)
   }
 
@@ -168,12 +181,14 @@ class ShareIntentsTest : BaseTest() {
   fun testSendExtSubjectExtBodyAtt() {
     activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
         Intent.EXTRA_TEXT, 1))
+    registerIdlingResources()
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 1)
   }
 
   @Test
   fun testSendMultipleMultiAtt() {
     activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, null, null, atts.size))
+    registerIdlingResources()
     checkViewsOnScreen(0, null, null, atts.size)
   }
 
@@ -181,7 +196,13 @@ class ShareIntentsTest : BaseTest() {
   fun testSendMultipleExtSubjectExtBodyMultiAtt() {
     activityTestRule?.launchActivity(generateIntentWithExtras(Intent.ACTION_SEND_MULTIPLE, Intent.EXTRA_SUBJECT,
         Intent.EXTRA_TEXT, atts.size))
+    registerIdlingResources()
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, atts.size)
+  }
+
+  private fun registerIdlingResources() {
+    registerNodeIdling()
+    registerCountingIdlingResource()
   }
 
   private fun genIntentForUri(action: String?, stringUri: String?): Intent {
