@@ -21,6 +21,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
 import com.flowcrypt.email.ui.adapter.ContactsRecyclerViewAdapter
@@ -106,17 +108,23 @@ class SelectContactsActivity : BaseBackStackActivity(),
 
   override fun onQueryTextSubmit(query: String): Boolean {
     searchPattern = query
+    countingIdlingResource.incrementSafely()
     contactsViewModel.filterContacts(searchPattern)
     return true
   }
 
   override fun onQueryTextChange(newText: String): Boolean {
     searchPattern = newText
+    countingIdlingResource.incrementSafely()
     contactsViewModel.filterContacts(searchPattern)
     return true
   }
 
   private fun setupContactsViewModel() {
+    contactsViewModel.allContactsLiveData.observe(this, Observer {
+      contactsViewModel.filterContacts(searchPattern)
+    })
+
     contactsViewModel.contactsWithPgpSearchLiveData.observe(this, Observer {
       when (it.status) {
         Result.Status.LOADING -> {
@@ -131,13 +139,16 @@ class SelectContactsActivity : BaseBackStackActivity(),
             contactsRecyclerViewAdapter.swap(it.data)
             UIUtil.exchangeViewVisibility(false, emptyView, recyclerViewContacts)
           }
+          countingIdlingResource.decrementSafely()
         }
 
         else -> {
+          countingIdlingResource.decrementSafely()
         }
       }
     })
 
+    countingIdlingResource.incrementSafely()
     contactsViewModel.filterContacts(searchPattern)
   }
 
