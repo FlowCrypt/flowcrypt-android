@@ -42,7 +42,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
   private var tempAccount: AccountEntity? = null
 
   @get:VisibleForTesting
-  var createPrivateKeyIdlingResource = CountingIdlingResource(CreatePrivateKeyActivity::class.java.simpleName, GeneralUtil.isDebugBuild())
+  var createPrivateKeyIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_pass_phrase_manager

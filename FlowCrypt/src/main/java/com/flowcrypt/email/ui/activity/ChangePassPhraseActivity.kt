@@ -40,10 +40,10 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   @get:VisibleForTesting
-  val idlingForFetchingKeys: CountingIdlingResource = CountingIdlingResource("idlingForFetchingKeys", GeneralUtil.isDebugBuild())
+  val idlingForFetchingKeys: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   @get:VisibleForTesting
-  var changePassphraseIdlingResource = CountingIdlingResource("changePassphraseIdlingResource", GeneralUtil.isDebugBuild())
+  var changePassphraseIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override fun onConfirmPassPhraseSuccess() {
     privateKeysViewModel.changePassphrase(editTextKeyPassword.text.toString())

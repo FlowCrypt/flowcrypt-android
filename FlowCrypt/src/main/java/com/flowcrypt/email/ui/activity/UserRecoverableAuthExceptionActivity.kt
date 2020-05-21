@@ -137,7 +137,7 @@ class UserRecoverableAuthExceptionActivity : BaseActivity(), View.OnClickListene
       roomDatabase.attachmentDao().deleteByEmailSuspend(activeAccount.email)
       roomDatabase.accountAliasesDao().deleteByEmailSuspend(activeAccount.email)
 
-      val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccounts()
+      val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccountsSuspend()
       if (nonactiveAccounts.isNotEmpty()) {
         val firstNonactiveAccount = nonactiveAccounts.first()
         roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })

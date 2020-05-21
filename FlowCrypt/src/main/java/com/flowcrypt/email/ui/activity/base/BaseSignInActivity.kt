@@ -65,7 +65,7 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   @get:VisibleForTesting
-  val idlingForFetchingKeys: CountingIdlingResource = CountingIdlingResource("idlingForFetchingKeys", GeneralUtil.isDebugBuild())
+  val idlingForFetchingKeys: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   abstract val progressView: View?
 

@@ -39,6 +39,8 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -202,10 +204,12 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     when (requestCode) {
       REQUEST_CODE_ADD_NEW_ACCOUNT -> when (resultCode) {
         Activity.RESULT_OK -> {
+          countingIdlingResource.incrementSafely()
           disconnectFromSyncService()
           finish()
           EmailSyncService.switchAccount(this@EmailManagerActivity)
           runEmailManagerActivity(this@EmailManagerActivity)
+          countingIdlingResource.decrementSafely()
         }
       }
 
@@ -369,6 +373,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   private fun logout() {
     lifecycleScope.launch {
       activeAccount?.let { accountEntity ->
+        countingIdlingResource.incrementSafely()
+
         when (accountEntity.accountType) {
           AccountEntity.ACCOUNT_TYPE_GOOGLE -> client.signOut()
         }
@@ -382,7 +388,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         roomDatabase.attachmentDao().deleteByEmailSuspend(accountEntity.email)
         roomDatabase.accountAliasesDao().deleteByEmailSuspend(accountEntity.email)
 
-        val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccounts()
+        val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccountsSuspend()
         if (nonactiveAccounts.isNotEmpty()) {
           disconnectFromSyncService()
           val firstNonactiveAccount = nonactiveAccounts.first()
@@ -398,6 +404,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
           startActivity(intent)
           finish()
         }
+
+        countingIdlingResource.decrementSafely()
       }
     }
   }

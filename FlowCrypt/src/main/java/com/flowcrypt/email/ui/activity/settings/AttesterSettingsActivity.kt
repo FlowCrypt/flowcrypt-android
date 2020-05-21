@@ -30,5 +30,5 @@ class AttesterSettingsActivity : BaseBackStackActivity() {
     get() = findViewById(R.id.attesterSettingsFragment)
 
   @get:VisibleForTesting
-  val idlingForAttester: CountingIdlingResource = CountingIdlingResource("idlingForAttester", GeneralUtil.isDebugBuild())
+  val idlingForAttester: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 }

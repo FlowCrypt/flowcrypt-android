@@ -95,7 +95,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   @get:VisibleForTesting
-  val idlingForFetchingPrivateKeys: CountingIdlingResource = CountingIdlingResource("idlingForFetchingPrivateKeys", GeneralUtil.isDebugBuild())
+  val idlingForFetchingPrivateKeys: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = true

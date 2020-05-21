@@ -40,7 +40,10 @@ abstract class AccountDaoSource : BaseDao<AccountEntity> {
   abstract fun getAccount(email: String): AccountEntity?
 
   @Query("SELECT * FROM accounts WHERE is_active = 0")
-  abstract suspend fun getAllNonactiveAccounts(): List<AccountEntity>
+  abstract fun getAllNonactiveAccounts(): List<AccountEntity>
+
+  @Query("SELECT * FROM accounts WHERE is_active = 0")
+  abstract suspend fun getAllNonactiveAccountsSuspend(): List<AccountEntity>
 
   @Query("SELECT * FROM accounts WHERE is_active = 0")
   abstract fun getAllNonactiveAccountsLD(): LiveData<List<AccountEntity>>

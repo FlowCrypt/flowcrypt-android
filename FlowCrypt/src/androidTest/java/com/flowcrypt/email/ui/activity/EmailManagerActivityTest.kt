@@ -5,10 +5,6 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.app.Activity
-import android.app.Instrumentation
-import android.content.ComponentName
-import android.content.Intent
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -19,7 +15,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.DrawerActions.open
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents.intended
-import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -32,6 +27,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withToolBarText
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
@@ -112,18 +108,12 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-
   fun testShowSplashActivityAfterLogout() {
-    clickLogOut()
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
+    val nonActiveAccounts = roomDatabase.accountDao().getAllNonactiveAccounts()
+    roomDatabase.accountDao().delete(nonActiveAccounts)
     clickLogOut()
     intended(hasComponent(SignInActivity::class.java.name))
-  }
-
-  @Test
-  fun testClickLogOutIfMoreAccounts() {
-    clickLogOut()
-    onView(withId(R.id.floatActionButtonCompose))
-        .check(matches(isDisplayed()))
   }
 
   @Test
@@ -155,38 +145,6 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  fun testAddNewAccount() {
-    val targetContext = InstrumentationRegistry.getInstrumentation().targetContext
-    val account = AccountDaoManager.getDefaultAccountDao()
-    val result = Intent()
-    result.putExtra(AddNewAccountActivity.KEY_EXTRA_NEW_ACCOUNT, account)
-    intending(hasComponent(ComponentName(targetContext, AddNewAccountActivity::class.java)))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, result))
-
-    onView(withId(R.id.drawer_layout))
-        .perform(open())
-    onView(withId(R.id.layoutUserDetails))
-        .check(matches(isDisplayed()))
-        .perform(click())
-
-    /*try {
-      val accountDaoSource = AccountDaoSource()
-      accountDaoSource.addRow(targetContext, account.authCreds)
-      accountDaoSource.setActiveAccount(targetContext, account.email)
-    } catch (e: Exception) {
-      e.printStackTrace()
-    }*/
-
-    onView(withId(R.id.viewIdAddNewAccount))
-        .check(matches(isDisplayed())).perform(click())
-
-    onView(withId(R.id.drawer_layout))
-        .perform(open())
-    onView(withId(R.id.textViewActiveUserEmail))
-        .check(matches(isDisplayed())).check(matches(withText(account.email)))
-  }
-
-  @Test
   fun testChooseAnotherAccount() {
     onView(withId(R.id.drawer_layout))
         .perform(open())
@@ -209,8 +167,8 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
         .perform(open())
     onView(withId(R.id.navigationView))
         .perform(swipeUp())
-    onView(withText(R.string.log_out)
-    ).check(matches(isDisplayed()))
+    onView(withText(R.string.log_out))
+        .check(matches(isDisplayed()))
         .perform(click())
   }
 

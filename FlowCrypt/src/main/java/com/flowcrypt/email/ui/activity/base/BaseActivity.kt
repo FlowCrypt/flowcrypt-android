@@ -26,7 +26,6 @@ import androidx.loader.content.Loader
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
@@ -58,7 +57,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
   protected var isAccountInfoReceived = false
 
   @get:VisibleForTesting
-  val syncServiceCountingIdlingResource: CountingIdlingResource = CountingIdlingResource("CountingIdlingResource:$this", GeneralUtil.isDebugBuild())
+  val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   @get:VisibleForTesting
   val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
@@ -101,7 +100,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
     }
 
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
-    syncServiceCountingIdlingResource.decrementSafely(requestCode.toString())
+
   }
 
   override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
@@ -109,11 +108,11 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
   }
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
-    syncServiceCountingIdlingResource.decrementSafely(requestCode.toString())
+
   }
 
   override fun onCanceled(requestCode: Int, resultCode: Int, obj: Any?) {
-    syncServiceCountingIdlingResource.decrementSafely(requestCode.toString())
+
   }
 
   public override fun onCreate(savedInstanceState: Bundle?) {
@@ -146,7 +145,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
   public override fun onDestroy() {
     super.onDestroy()
     LogsUtil.d(tag, "onDestroy")
-    syncServiceCountingIdlingResource.shutdown()
+    countingIdlingResource.shutdown()
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {

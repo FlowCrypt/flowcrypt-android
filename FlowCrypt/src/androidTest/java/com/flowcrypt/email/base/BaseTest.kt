@@ -33,6 +33,7 @@ import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
 import org.hamcrest.MatcherAssert.assertThat
@@ -74,13 +75,23 @@ abstract class BaseTest {
   }
 
   @Before
+  fun registerSyncServiceCountingIdlingResource() {
+    (activityTestRule?.activity as? BaseSyncActivity)?.syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+  }
+
+  @After
+  fun unregisterSyncServiceCountingIdlingResource() {
+    (activityTestRule?.activity as? BaseSyncActivity)?.syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+  }
+
+  @Before
   fun registerCountingIdlingResource() {
-    IdlingRegistry.getInstance().register((activityTestRule?.activity as BaseActivity).syncServiceCountingIdlingResource)
+    (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
   }
 
   @After
   fun unregisterCountingIdlingResource() {
-    IdlingRegistry.getInstance().unregister((activityTestRule?.activity as BaseActivity).syncServiceCountingIdlingResource)
+    (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
   /**

@@ -12,12 +12,17 @@ import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
+import androidx.annotation.VisibleForTesting
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.service.BaseService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.BaseNodeActivity
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 
@@ -34,6 +39,9 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   // Messengers for communicating with the service.
   protected var syncMessenger: Messenger? = null
   protected val syncReplyMessenger: Messenger = Messenger(ReplyHandler(this))
+
+  @get:VisibleForTesting
+  val syncServiceCountingIdlingResource: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   /**
    * Flag indicating whether we have called bind on the [EmailSyncService].
@@ -77,6 +85,23 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   override fun onDestroy() {
     super.onDestroy()
     disconnectFromSyncService()
+    syncServiceCountingIdlingResource.shutdown()
+  }
+
+  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
+    syncServiceCountingIdlingResource.decrementSafely(requestCode.toString())
+  }
+
+  override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
+
+  }
+
+  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
+    syncServiceCountingIdlingResource.decrementSafely(requestCode.toString())
+  }
+
+  override fun onCanceled(requestCode: Int, resultCode: Int, obj: Any?) {
+    syncServiceCountingIdlingResource.decrementSafely(requestCode.toString())
   }
 
   protected fun disconnectFromSyncService() {

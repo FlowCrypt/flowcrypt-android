@@ -53,7 +53,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   private lateinit var checkPrivateKeysViewModel: CheckPrivateKeysViewModel
 
   @VisibleForTesting
-  val idlingForKeyChecking: CountingIdlingResource = CountingIdlingResource("idlingForKeyChecking", GeneralUtil.isDebugBuild())
+  val idlingForKeyChecking: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   private var editTextKeyPassword: EditText? = null
   private var textViewSubTitle: TextView? = null

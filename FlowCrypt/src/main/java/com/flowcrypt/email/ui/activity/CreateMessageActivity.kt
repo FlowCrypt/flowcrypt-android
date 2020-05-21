@@ -51,12 +51,10 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
   override lateinit var rootView: View
 
   @get:VisibleForTesting
-  var fetchInfoAboutContactsIdlingResource =
-      CountingIdlingResource(CreateMessageActivity::class.java.simpleName + "fetchInfoAboutContactsIdlingResource", GeneralUtil.isDebugBuild())
+  var fetchInfoAboutContactsIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   @get:VisibleForTesting
-  var fetchAvailablePubKeysIdlingResource =
-      CountingIdlingResource(CreateMessageActivity::class.java.simpleName + "fetchAvailablePubKeysIdlingResource", GeneralUtil.isDebugBuild())
+  var fetchAvailablePubKeysIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override var msgEncryptionType = MessageEncryptionType.ENCRYPTED
     private set
