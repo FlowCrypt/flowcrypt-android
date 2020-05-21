@@ -12,12 +12,13 @@ import android.database.Cursor
 import android.os.Environment
 import android.text.format.DateFormat
 import androidx.core.content.FileProvider
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.intent.rule.IntentsTestRule
@@ -45,9 +46,9 @@ import org.hamcrest.CoreMatchers
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
+import org.hamcrest.Matchers.not
 import org.hamcrest.core.AllOf
 import org.junit.AfterClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -81,16 +82,15 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
       .around(activityTestRule)
 
   @Test
-  @Ignore("fix me")
   fun testPubKeyDetails() {
     chooseContact()
 
-    keyDetails.users!!.forEachIndexed { index, s ->
+    keyDetails.users?.forEachIndexed { index, s ->
       onView(withText(getResString(R.string.template_user, index + 1, s)))
           .check(matches(isDisplayed()))
     }
 
-    keyDetails.ids!!.forEachIndexed { index, s ->
+    keyDetails.ids?.forEachIndexed { index, s ->
       onView(withText(getResString(R.string.template_long_id, index + 1, s.longId!!)))
           .check(matches(isDisplayed()))
 
@@ -107,7 +107,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testActionCopy() {
     chooseContact()
 
@@ -121,7 +120,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testActionSave() {
     chooseContact()
 
@@ -151,7 +149,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testActionDelete() {
     chooseContact()
 
@@ -160,8 +157,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-    isToastDisplayed(activityTestRule?.activity, getResString(R.string.the_contact_was_deleted,
-        EMAIL_DENBOND7))
+    onView(withText(EMAIL_DENBOND7)).check(matches(not(isDisplayed())))
 
     onView(withText(R.string.no_results))
         .check(matches(isDisplayed()))
@@ -173,9 +169,8 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   private fun chooseContact() {
-    onData(withItemContent(EMAIL_DENBOND7))
-        .inAdapterView(withId(R.id.recyclerViewContacts))
-        .perform(click())
+    onView(withId(R.id.recyclerViewContacts))
+        .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
   }
 
   /**
