@@ -29,8 +29,10 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -223,10 +225,18 @@ abstract class BaseTest {
     return InstrumentationRegistry.getInstrumentation().context
   }
 
-  fun getMsgInfo(path: String, mimeMsgPath: String): IncomingMessageInfo? {
+  fun getMsgInfo(path: String, mimeMsgPath: String, vararg atts: AttachmentInfo?): IncomingMessageInfo? {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
     incomingMsgInfo?.msgEntity?.let {
       val uri = roomDatabase.msgDao().insert(it)
+      val attEntities = mutableListOf<AttachmentEntity>()
+
+      for (attInfo in atts) {
+        attInfo?.let { info -> AttachmentEntity.fromAttInfo(info)?.let { candidate -> attEntities.add(candidate) } }
+      }
+
+      roomDatabase.attachmentDao().insert(attEntities)
+
       MsgsCacheManager.addMsg(uri.toString(), getContext().assets.open(mimeMsgPath))
     }
     return incomingMsgInfo

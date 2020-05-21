@@ -9,7 +9,6 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.text.format.Formatter
-import android.view.View
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingPolicies
@@ -49,7 +48,6 @@ import com.flowcrypt.email.matchers.CustomMatchers
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withDrawable
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
-import com.flowcrypt.email.rules.AddAttachmentToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.base.BaseActivity
@@ -62,7 +60,6 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -78,33 +75,20 @@ import java.util.concurrent.TimeUnit
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
-//todo-denbond7 need to fix that
 class MessageDetailsActivityTest : BaseTest() {
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(MessageDetailsActivity::class.java,
       false, false)
   private val accountRule = AddAccountToDatabaseRule()
 
-  private val simpleAttachmentRule =
-      AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/simple_att.json",
-          AttachmentInfo::class.java)!!)
-
-  private val encryptedAttachmentRule =
-      AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/encrypted_att.json",
-          AttachmentInfo::class.java)!!)
-
-  private val pubKeyAttachmentRule =
-      AddAttachmentToDatabaseRule(TestGeneralUtil.getObjectFromJson("messages/attachments/pub_key.json",
-          AttachmentInfo::class.java)!!)
+  private val simpleAttInfo = TestGeneralUtil.getObjectFromJson("messages/attachments/simple_att.json", AttachmentInfo::class.java)
+  private val encryptedAttInfo = TestGeneralUtil.getObjectFromJson("messages/attachments/encrypted_att.json", AttachmentInfo::class.java)
+  private val pubKeyAttInfo = TestGeneralUtil.getObjectFromJson("messages/attachments/pub_key.json", AttachmentInfo::class.java)
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(accountRule)
       .around(AddPrivateKeyToDatabaseRule())
-      .around(simpleAttachmentRule)
-      .around(encryptedAttachmentRule)
-      .around(pubKeyAttachmentRule)
       .around(activityTestRule)
 
   private val localFolder: LocalFolder = LocalFolder(
@@ -169,7 +153,7 @@ class MessageDetailsActivityTest : BaseTest() {
   @Test
   fun testStandardMsgPlaneTextWithOneAttachment() {
     baseCheckWithAtt(getMsgInfo("messages/info/standard_msg_info_plain_text_with_one_att.json",
-        "messages/mime/standard_msg_info_plain_text_with_one_att.txt"), simpleAttachmentRule)
+        "messages/mime/standard_msg_info_plain_text_with_one_att.txt", simpleAttInfo), simpleAttInfo)
   }
 
   @Test
@@ -294,15 +278,15 @@ class MessageDetailsActivityTest : BaseTest() {
   @Test
   fun testEncryptedMsgPlaneTextWithOneAttachment() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_one_att.json",
-        "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt")
-    baseCheckWithAtt(msgInfo, encryptedAttachmentRule)
+        "messages/mime/encrypted_msg_info_plain_text_with_one_att.txt", encryptedAttInfo)
+    baseCheckWithAtt(msgInfo, encryptedAttInfo)
   }
 
   @Test
   fun testEncryptedMsgPlaneTextWithPubKey() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_pub_key.json",
-        "messages/mime/encrypted_msg_info_plain_text_with_pub_key.txt")
-    baseCheckWithAtt(msgInfo, pubKeyAttachmentRule)
+        "messages/mime/encrypted_msg_info_plain_text_with_pub_key.txt", pubKeyAttInfo)
+    baseCheckWithAtt(msgInfo, pubKeyAttInfo)
 
     val nodeKeyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/denbond7@denbond7.com_pub.json")
     val pgpContact = nodeKeyDetails.primaryPgpContact
@@ -321,9 +305,9 @@ class MessageDetailsActivityTest : BaseTest() {
     val block = msgInfo?.msgBlocks?.get(1) as PublicKeyMsgBlock
 
     onView(withId(R.id.textViewPgpPublicKey))
-        .check(matches(not<View>(isDisplayed())))
+        .check(matches(not(isDisplayed())))
     onView(withId(R.id.switchShowPublicKey))
-        .check(matches(not<View>(isChecked())))
+        .check(matches(not(isChecked())))
         .perform(scrollTo(), click())
     onView(withId(R.id.textViewPgpPublicKey))
         .check(matches(isDisplayed()))
@@ -333,13 +317,13 @@ class MessageDetailsActivityTest : BaseTest() {
         .check(matches(isChecked()))
         .perform(scrollTo(), click())
     onView(withId(R.id.textViewPgpPublicKey))
-        .check(matches(not<View>(isDisplayed())))
+        .check(matches(not(isDisplayed())))
 
     onView(withId(R.id.buttonKeyAction))
         .check(matches(isDisplayed()))
         .perform(scrollTo(), click())
     onView(withId(R.id.buttonKeyAction))
-        .check(matches(not<View>(isDisplayed())))
+        .check(matches(not(isDisplayed())))
   }
 
   @Test
@@ -368,9 +352,9 @@ class MessageDetailsActivityTest : BaseTest() {
 
   private fun testSwitch(content: String) {
     onView(withId(R.id.textViewOrigPgpMsg))
-        .check(matches(not<View>(isDisplayed())))
+        .check(matches(not(isDisplayed())))
     onView(withId(R.id.switchShowOrigMsg))
-        .check(matches(not<View>(isChecked())))
+        .check(matches(not(isChecked())))
         .perform(scrollTo(), click())
     onView(withId(R.id.textViewOrigPgpMsg))
         .check(matches(isDisplayed()))
@@ -380,7 +364,7 @@ class MessageDetailsActivityTest : BaseTest() {
         .check(matches(isChecked()))
         .perform(scrollTo(), click())
     onView(withId(R.id.textViewOrigPgpMsg))
-        .check(matches(not<View>(isDisplayed())))
+        .check(matches(not(isDisplayed())))
   }
 
   private fun baseCheck(incomingMsgInfo: IncomingMessageInfo?) {
@@ -397,7 +381,7 @@ class MessageDetailsActivityTest : BaseTest() {
     matchReplyButtons(details)
   }
 
-  private fun baseCheckWithAtt(incomingMsgInfo: IncomingMessageInfo?, rule: AddAttachmentToDatabaseRule) {
+  private fun baseCheckWithAtt(incomingMsgInfo: IncomingMessageInfo?, att: AttachmentInfo?) {
     assertThat(incomingMsgInfo, notNullValue())
 
     val msgEntity = incomingMsgInfo!!.msgEntity
@@ -410,7 +394,7 @@ class MessageDetailsActivityTest : BaseTest() {
         .check(webMatches(getText(), equalTo(incomingMsgInfo.text)))
     onView(withId(R.id.layoutAtt))
         .check(matches(isDisplayed()))
-    matchAtt(rule.attInfo)
+    matchAtt(att)
     matchReplyButtons(msgEntity)
   }
 
@@ -423,7 +407,8 @@ class MessageDetailsActivityTest : BaseTest() {
         .check(matches(withText(msgEntity.subject)))
   }
 
-  private fun matchAtt(att: AttachmentInfo) {
+  private fun matchAtt(att: AttachmentInfo?) {
+    requireNotNull(att)
     onView(withId(R.id.textViewAttachmentName))
         .check(matches(withText(att.name)))
     onView(withId(R.id.textViewAttSize))
