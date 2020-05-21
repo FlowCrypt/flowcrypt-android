@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity
 
 import android.content.Intent
-import android.view.View
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -22,7 +21,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -38,7 +36,6 @@ import org.junit.runner.RunWith
 @LargeTest
 @RunWith(AndroidJUnit4::class)
 @DoesNotNeedMailserver
-@Ignore("fix me") //todo-denbond7 fix me
 class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(HtmlViewFromAssetsRawActivity::class.java,
       false, false)
@@ -51,21 +48,21 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   @Test
   fun testShowPrivacyTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.privacy))
-    onView(allOf<View>(withText(R.string.privacy), withParent(withId(R.id.toolbar))))
+    onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar))))
         .check(matches(isDisplayed()))
   }
 
   @Test
   fun testShowTermsTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.terms))
-    onView(allOf<View>(withText(R.string.terms), withParent(withId(R.id.toolbar))))
+    onView(allOf(withText(R.string.terms), withParent(withId(R.id.toolbar))))
         .check(matches(isDisplayed()))
   }
 
   @Test
   fun testShowSecurityTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.security))
-    onView(allOf<View>(withText(R.string.security), withParent(withId(R.id.toolbar))))
+    onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar))))
         .check(matches(isDisplayed()))
   }
 
@@ -75,6 +72,8 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
     intent.putExtra(HtmlViewFromAssetsRawActivity.EXTRA_KEY_ACTIVITY_TITLE, title)
     intent.putExtra(HtmlViewFromAssetsRawActivity.EXTRA_KEY_HTML_RESOURCES_ID, "html/privacy.htm")
     activityTestRule?.launchActivity(intent)
+    registerNodeIdling()
+    registerCountingIdlingResource()
   }
 }
 
