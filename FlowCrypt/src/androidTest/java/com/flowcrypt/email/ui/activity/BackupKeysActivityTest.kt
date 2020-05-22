@@ -127,7 +127,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testSuccessDownloadOption() {
     addFirstKeyWithStrongPassword()
     onView(withId(R.id.radioButtonDownload))
