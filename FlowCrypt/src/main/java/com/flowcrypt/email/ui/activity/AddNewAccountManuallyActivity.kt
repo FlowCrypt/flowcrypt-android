@@ -20,10 +20,8 @@ import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -93,9 +91,6 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
   private val checkEmailSettingsViewModel: CheckEmailSettingsViewModel by viewModels()
   private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
-
-  @get:VisibleForTesting
-  val idlingForFetchingPrivateKeys: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = true
@@ -270,7 +265,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            idlingForFetchingPrivateKeys.incrementSafely()
+            countingIdlingResource.incrementSafely()
             UIUtil.exchangeViewVisibility(true, progressView, rootView)
           }
 
@@ -282,10 +277,10 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
                 loadPrivateKeysViewModel.fetchAvailableKeys(account)
               }
             } else {
-              idlingForFetchingPrivateKeys.decrementSafely()
               UIUtil.exchangeViewVisibility(false, progressView, rootView)
               showInfoSnackbar(rootView, getString(R.string.settings_not_valid), Snackbar.LENGTH_LONG)
             }
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -323,7 +318,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
                 negativeButtonTitle = getString(R.string.cancel),
                 isCancelable = true))
 
-            idlingForFetchingPrivateKeys.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
         }
       }
@@ -335,7 +330,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            idlingForFetchingPrivateKeys.incrementSafely()
+            countingIdlingResource.incrementSafely()
             UIUtil.exchangeViewVisibility(true, progressView, rootView)
           }
 
@@ -357,7 +352,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
                   positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R.string.use_another_account))
               startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL)
             }
-            idlingForFetchingPrivateKeys.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -365,7 +360,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
             showInfoDialogFragment(dialogMsg = it.exception?.message
                 ?: it.exception?.javaClass?.simpleName
                 ?: getString(R.string.could_not_load_private_keys))
-            idlingForFetchingPrivateKeys.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
         }
       }
@@ -454,9 +449,7 @@ class AddNewAccountManuallyActivity : BaseNodeActivity(), CompoundButton.OnCheck
     spinnerImapSecurityType!!.onItemSelectedListener = this
     spinnerSmtpSecurityType!!.onItemSelectedListener = this
 
-    if (findViewById<View>(R.id.buttonTryToConnect) != null) {
-      findViewById<View>(R.id.buttonTryToConnect).setOnClickListener(this)
-    }
+    findViewById<View>(R.id.buttonTryToConnect)?.setOnClickListener(this)
 
     if (savedInstanceState == null) {
       updateView()
