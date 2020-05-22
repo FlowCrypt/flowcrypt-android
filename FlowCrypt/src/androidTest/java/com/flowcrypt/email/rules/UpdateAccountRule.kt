@@ -19,7 +19,7 @@ import org.junit.runners.model.Statement
  * Time: 10:19
  * E-mail: DenBond7@gmail.com
  */
-class UpdateAccountRule(private val account: AccountEntity, private val contentValues: ContentValues) : BaseRule() {
+class UpdateAccountRule(private val account: AccountEntity) : BaseRule() {
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {

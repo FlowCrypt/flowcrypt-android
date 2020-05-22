@@ -163,9 +163,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
             showInfoSnackbar(rootView, it.exception?.message ?: getString(R.string.unknown_error))
 
-            if (!changePassphraseIdlingResource.isIdleNow) {
-              changePassphraseIdlingResource.decrement()
-            }
+            changePassphraseIdlingResource.decrementSafely()
           }
         }
       }

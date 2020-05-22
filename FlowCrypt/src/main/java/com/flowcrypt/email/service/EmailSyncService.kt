@@ -810,7 +810,9 @@ class EmailSyncService : BaseService(), SyncListener {
 
           MESSAGE_DELETE_MSGS -> emailSyncManager?.deleteMsgs(ownerKey ?: "", requestCode)
 
-          MESSAGE_ARCHIVE_MSGS -> emailSyncManager?.archiveMsgs(ownerKey ?: "", requestCode)
+          MESSAGE_ARCHIVE_MSGS -> {
+            emailSyncManager?.archiveMsgs(ownerKey ?: "", requestCode)
+          }
 
           MESSAGE_CHANGE_MSGS_READ_STATE -> emailSyncManager?.changeMsgsReadState(ownerKey
               ?: "", requestCode)

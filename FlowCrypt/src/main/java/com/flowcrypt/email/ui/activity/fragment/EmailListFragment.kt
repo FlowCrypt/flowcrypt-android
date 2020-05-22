@@ -97,7 +97,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
 
   private val msgsObserver = Observer<PagedList<MessageEntity>> {
-    if (it.size == 0) {
+    if (it?.size ?: 0 == 0) {
       if (isEmptyViewAvailable || isOutboxFolder) {
         progressView?.visibility = View.GONE
         statusView?.visibility = View.GONE

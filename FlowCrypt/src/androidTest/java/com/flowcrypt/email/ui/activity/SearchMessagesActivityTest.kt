@@ -5,9 +5,7 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.content.ContentValues
 import android.content.Intent
-import android.view.View
 import android.widget.EditText
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
@@ -33,13 +31,11 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerVi
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.UpdateAccountRule
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -54,10 +50,9 @@ import org.junit.runner.RunWith
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
 class SearchMessagesActivityTest : BaseEmailListActivityTest() {
 
-  private val accountRule = AddAccountToDatabaseRule()
+  private val accountRule = AddAccountToDatabaseRule(AccountDaoManager.getDefaultAccountDao().copy(areContactsLoaded = true))
 
   override val activityTestRule: ActivityTestRule<*>? =
       object : IntentsTestRule<SearchMessagesActivity>(SearchMessagesActivity::class.java) {
@@ -73,17 +68,16 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(accountRule)
-      .around(UpdateAccountRule(AccountDaoManager.getDefaultAccountDao(), generateContentValues()))
       .around(activityTestRule)
 
   @Test
   fun testDefaultSearchQueryAtStart() {
-    onView(allOf<View>(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
     onView(withId(R.id.recyclerViewMsgs))
-        .check(matches(withRecyclerViewItemCount(1))).check(matches(isDisplayed()))
+        .check(matches(not(withEmptyRecyclerView())))
   }
 
   @Test
@@ -91,7 +85,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     onView(withId(R.id.recyclerViewMsgs))
         .check(matches(withRecyclerViewItemCount(1))).check(matches(isDisplayed()))
 
-    onView(allOf<View>(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
@@ -102,7 +96,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
 
   @Test
   fun testSearchOverSubjectBodyFrom() {
-    onView(allOf<View>(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(DEFAULT_QUERY_TEXT)))
@@ -116,7 +110,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     onView(withId(R.id.recyclerViewMsgs))
         .check(matches(isDisplayed()))
     onView(withId(R.id.recyclerViewMsgs))
-        .check(matches(not<View>(withEmptyRecyclerView())))
+        .check(matches(not(withEmptyRecyclerView())))
   }
 
   @Test
@@ -127,7 +121,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
 
   @Test
   fun testCheckNoResults() {
-    onView(allOf<View>(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
         .perform(click())
     onView(isAssignableFrom(EditText::class.java))
@@ -146,13 +140,6 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
     onView(isAssignableFrom(EditText::class.java))
         .check(matches(withText(isEmptyString())))
         .check(matches(withHint(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.search))))
-  }
-
-  private fun generateContentValues(): ContentValues {
-    val contentValues = ContentValues()
-    //todo-denbond7 fix me
-    //contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true)
-    return contentValues
   }
 
   companion object {

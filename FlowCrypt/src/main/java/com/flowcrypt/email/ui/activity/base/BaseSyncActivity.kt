@@ -121,8 +121,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param requestCode The unique request code for identify the current action.
    */
   fun sendMsgWithPrivateKeyBackup(requestCode: Int) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -142,8 +142,9 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param requestCode The unique request code for identify the current action.
    */
   fun loadPrivateKeys(requestCode: Int) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
+
     try {
       val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -166,8 +167,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param end         The position of the end.
    */
   fun loadMsgs(requestCode: Int, localFolder: LocalFolder, start: Int, end: Int) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
 
@@ -189,8 +190,9 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param alreadyLoadedMsgsCount The count of already loaded messages in the localFolder.
    */
   open fun loadNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
+
     onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, Any())
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
@@ -213,9 +215,9 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param alreadyLoadedMsgsCount The count of already loaded messages in the localFolder.
    */
   fun searchNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-    onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, Any())
     if (checkServiceBound(isSyncServiceBound)) return
+    onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, Any())
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
 
@@ -235,8 +237,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param requestCode    The unique request code for identify the current action.
    */
   fun updateLabels(requestCode: Int) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -256,8 +258,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param requestCode    The unique request code for identify the current action.
    */
   fun deleteMsgs(requestCode: Int = -1) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -277,8 +279,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param requestCode    The unique request code for identify the current action.
    */
   fun archiveMsgs(requestCode: Int = -1) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -298,8 +300,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param requestCode    The unique request code for identify the current action.
    */
   fun changeMsgsReadState(requestCode: Int = -1) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -319,8 +321,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param requestCode    The unique request code for identify the current action.
    */
   fun moveMsgsToINBOX(requestCode: Int = -1) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -341,8 +343,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param currentLocalFolder [LocalFolder] object.
    */
   open fun refreshMsgs(requestCode: Int, currentLocalFolder: LocalFolder) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, currentLocalFolder)
 
@@ -368,8 +370,9 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun loadMsgDetails(requestCode: Int, uniqueId: String, localFolder: LocalFolder, uid: Int,
                      id: Int, resetConnection: Boolean = false) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     onProgressReplyReceived(requestCode, R.id.progress_id_connecting, 5)
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder, resetConnection, uniqueId)
@@ -391,8 +394,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * stopped
    */
   fun cancelLoadMsgDetails(uniqueId: String) {
-    syncServiceCountingIdlingResource.incrementSafely()
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely()
 
     val action = BaseService.Action(replyMessengerName, -1, null, false, uniqueId)
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS, action)
@@ -415,8 +418,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun moveMsg(requestCode: Int, sourcesLocalFolder: LocalFolder,
               destinationLocalFolder: LocalFolder, uid: Int) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val localFolders = arrayOf(sourcesLocalFolder, destinationLocalFolder)
     val action = BaseService.Action(replyMessengerName, requestCode, localFolders)
@@ -437,8 +440,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param requestCode The unique request code for identify the current action.
    */
   fun cancelAllSyncTasks(requestCode: Int) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -460,8 +463,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param uid         The [com.sun.mail.imap.protocol.UID] of [javax.mail.Message]
    */
   fun loadAttsInfo(requestCode: Int, localFolder: LocalFolder, uid: Int) {
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
 
