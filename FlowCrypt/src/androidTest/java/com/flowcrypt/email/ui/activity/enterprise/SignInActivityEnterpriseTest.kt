@@ -34,7 +34,6 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -51,7 +50,6 @@ import java.io.InputStreamReader
 @DoesNotNeedMailserverEnterprise
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
 class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(SignInActivity::class.java)
 
