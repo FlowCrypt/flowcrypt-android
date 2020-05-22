@@ -88,7 +88,6 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testCheckSearchExistingContact() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))
@@ -104,7 +103,6 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testNoResults() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))

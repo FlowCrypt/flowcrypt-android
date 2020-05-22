@@ -65,7 +65,6 @@ import java.util.concurrent.TimeUnit
  *         E-mail: DenBond7@gmail.com
  */
 @LargeTest
-@DoesNotNeedMailserver
 @RunWith(AndroidJUnit4::class)
 class PublicKeyDetailsFragmentTest : BaseTest() {
 
@@ -82,6 +81,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
       .around(activityTestRule)
 
   @Test
+  @DoesNotNeedMailserver
   fun testPubKeyDetails() {
     chooseContact()
 
@@ -107,6 +107,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testActionCopy() {
     chooseContact()
 
@@ -120,6 +121,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testActionSave() {
     chooseContact()
 
@@ -164,6 +166,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testActionHelp() {
     testHelpScreen()
   }
