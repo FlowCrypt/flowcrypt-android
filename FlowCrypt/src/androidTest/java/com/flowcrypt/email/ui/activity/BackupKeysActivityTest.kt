@@ -26,7 +26,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
@@ -66,7 +65,6 @@ class BackupKeysActivityTest : BaseTest() {
       .around(activityTestRule)
 
   @Test
-  @DoesNotNeedMailserver
   fun testEmailOptionHint() {
     onView(withId(R.id.radioButtonEmail))
         .check(matches(isDisplayed()))
@@ -76,7 +74,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testDownloadOptionHint() {
     onView(withId(R.id.radioButtonDownload))
         .check(matches(isDisplayed()))
@@ -86,7 +83,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testNoKeysEmailOption() {
     onView(withId(R.id.radioButtonEmail))
         .check(matches(isDisplayed()))
@@ -99,7 +95,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testNoKeysDownloadOption() {
     onView(withId(R.id.radioButtonDownload))
         .check(matches(isDisplayed()))
@@ -178,7 +173,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testFixWeakPasswordForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
