@@ -56,7 +56,6 @@ import java.io.File
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class ImportPublicKeyActivityTest : BaseTest() {
 
   override val activityTestRule: IntentsTestRule<*>? =
@@ -81,6 +80,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
       .around(activityTestRule)
 
   @Test
+  @DoesNotNeedMailserver
   fun testImportKeyFromFile() {
     val resultData = Intent()
     resultData.data = Uri.fromFile(fileWithPublicKey)
@@ -94,6 +94,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowErrorWhenImportingKeyFromFile() {
     val resultData = Intent()
     resultData.data = Uri.fromFile(fileWithoutPublicKey)
@@ -108,6 +109,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testImportKeyFromClipboard() {
     addTextToClipboard("public key", publicKey)
     onView(withId(R.id.buttonLoadFromClipboard))

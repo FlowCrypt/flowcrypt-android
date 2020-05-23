@@ -148,14 +148,12 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testSuccessWithTwoKeysDownloadOption() {
     addSecondKeyWithStrongPassword()
     testSuccessDownloadOption()
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testShowWeakPasswordHintForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -222,7 +220,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testDiffPassphrasesForDownloadOption() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()
