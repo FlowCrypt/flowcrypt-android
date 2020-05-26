@@ -22,7 +22,6 @@ import com.flowcrypt.email.model.DialogItem
  * Time: 11:29
  * E-mail: DenBond7@gmail.com
  */
-
 class DialogItemAdapter(context: Context,
                         val items: List<DialogItem> = emptyList()) : BaseAdapter() {
   private val inflater: LayoutInflater = LayoutInflater.from(context)

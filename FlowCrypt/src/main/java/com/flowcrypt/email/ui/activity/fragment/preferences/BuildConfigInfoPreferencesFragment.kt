@@ -47,8 +47,8 @@ class BuildConfigInfoPreferencesFragment : PreferenceDialogFragmentCompat() {
 
   override fun onPrepareDialogBuilder(builder: AlertDialog.Builder?) {
     super.onPrepareDialogBuilder(builder)
-    builder!!.setMessage(msg)
-    builder.setNegativeButton(null, null)
+    builder?.setMessage(msg)
+    builder?.setNegativeButton(null, null)
   }
 
   override fun onDialogClosed(positiveResult: Boolean) {
@@ -56,8 +56,6 @@ class BuildConfigInfoPreferencesFragment : PreferenceDialogFragmentCompat() {
   }
 
   companion object {
-
-    @JvmStatic
     fun newInstance(key: String): BuildConfigInfoPreferencesFragment {
       val fragment = BuildConfigInfoPreferencesFragment()
       val bundle = Bundle(1)

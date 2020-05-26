@@ -33,7 +33,6 @@ import com.google.android.material.tabs.TabLayout
  * Time: 13:27
  * E-mail: DenBond7@gmail.com
  */
-
 class LegalSettingsActivity : BaseSettingsActivity() {
 
   private var tabPagerAdapter: TabPagerAdapter = TabPagerAdapter(supportFragmentManager)

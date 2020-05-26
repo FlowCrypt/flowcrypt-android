@@ -47,7 +47,6 @@ import java.util.*
  * Time: 14:15
  * E-mail: DenBond7@gmail.com
  */
-//todo-DenBond7 it would be great to improve this fragment
 class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
     ImportPgpContactsRecyclerViewAdapter.ContactActionsListener {
 
@@ -446,7 +445,6 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_PUBLIC_KEYS_FILE_URI",
             PreviewImportPgpContactFragment::class.java)
 
-    @JvmStatic
     fun newInstance(stringExtra: String?, fileUri: Parcelable?): PreviewImportPgpContactFragment {
       val args = Bundle()
       args.putString(KEY_EXTRA_PUBLIC_KEY_STRING, stringExtra)

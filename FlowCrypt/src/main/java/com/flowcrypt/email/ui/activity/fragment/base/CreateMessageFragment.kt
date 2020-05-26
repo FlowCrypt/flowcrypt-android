@@ -100,7 +100,7 @@ import javax.mail.internet.InternetAddress
  * Time: 11:27
  * E-mail: DenBond7@gmail.com
  */
-
+//todo-denbond7 exlude from the base package
 class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, AdapterView.OnItemSelectedListener,
     View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
 
@@ -718,7 +718,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
             FileUtils.copyInputStreamToFile(inputStream, draftAtt)
             val uri = FileProvider.getUriForFile(requireContext(), Constants.FILE_PROVIDER_AUTHORITY, draftAtt)
             attachmentInfo.uri = uri
-            atts!!.add(attachmentInfo)
+            atts?.add(attachmentInfo)
           }
         } catch (e: IOException) {
           e.printStackTrace()
@@ -1307,7 +1307,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    * @return true if the attachment can be added, otherwise false.
    */
   private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
-    return atts!!.map { it.encodedSize.toInt() }.sum() + (newAttInfo?.encodedSize?.toInt()
+    return atts?.map { it.encodedSize.toInt() }?.sum() ?: 0 + (newAttInfo?.encodedSize?.toInt()
         ?: 0) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
   }
 
@@ -1374,10 +1374,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         } else {
           imageButtonDownloadAtt.visibility = View.INVISIBLE
         }
-        layoutAtts!!.addView(rootView)
+        layoutAtts?.addView(rootView)
       }
     } else {
-      layoutAtts!!.removeAllViews()
+      layoutAtts?.removeAllViews()
     }
   }
 

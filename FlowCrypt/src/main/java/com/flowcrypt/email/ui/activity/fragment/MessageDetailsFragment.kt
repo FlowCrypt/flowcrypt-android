@@ -71,7 +71,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
-import com.google.android.gms.common.util.CollectionUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
 
@@ -173,7 +172,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           val atts: List<AttachmentInfo> = data?.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment
               .KEY_ATTACHMENT_INFO_LIST) ?: emptyList()
 
-          if (!CollectionUtils.isEmpty(atts)) {
+          if (atts.isNotEmpty()) {
             makeAttsProtected(atts)
             sendTemplateMsgWithPublicKey(atts[0])
           }

@@ -34,7 +34,6 @@ import java.util.*
  * Time: 10:34
  * E-mail: DenBond7@gmail.com
  */
-
 class AddNewAccountActivity : BaseSignInActivity(), View.OnClickListener {
 
   override val isDisplayHomeAsUpEnabled: Boolean

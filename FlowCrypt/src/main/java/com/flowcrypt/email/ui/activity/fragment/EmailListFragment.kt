@@ -292,7 +292,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
 
       R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active ->
-        if (listener!!.currentFolder == null) {
+        if (listener?.currentFolder == null) {
           var errorMsg = getString(R.string.failed_load_labels_from_email_server)
 
           if (e is AuthenticationFailedException) {

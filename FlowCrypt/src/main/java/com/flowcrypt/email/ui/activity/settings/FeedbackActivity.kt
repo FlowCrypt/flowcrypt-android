@@ -37,7 +37,6 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 9:56
  * E-mail: DenBond7@gmail.com
  */
-
 class FeedbackActivity : BaseBackStackSyncActivity(), CompoundButton.OnCheckedChangeListener,
     View.OnClickListener, EditScreenshotDialogFragment.OnScreenshotChangeListener {
   override lateinit var rootView: View

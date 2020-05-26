@@ -26,7 +26,6 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 17:34
  * E-mail: DenBond7@gmail.com
  */
-
 class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
 
   private var dialogTitle: String? = null

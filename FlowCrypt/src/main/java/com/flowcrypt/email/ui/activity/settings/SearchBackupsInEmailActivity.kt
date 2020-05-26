@@ -32,7 +32,6 @@ import java.util.*
  * Time: 15:27
  * E-mail: DenBond7@gmail.com
  */
-
 class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener {
 
   private lateinit var progressBar: View

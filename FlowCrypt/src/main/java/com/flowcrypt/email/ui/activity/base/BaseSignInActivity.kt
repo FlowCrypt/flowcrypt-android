@@ -52,7 +52,6 @@ import java.util.*
  * Time: 10:38
  * E-mail: DenBond7@gmail.com
  */
-
 abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
 
   protected lateinit var client: GoogleSignInClient
@@ -131,13 +130,8 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
   }
 
   private fun initViews() {
-    if (findViewById<View>(R.id.buttonSignInWithGmail) != null) {
-      findViewById<View>(R.id.buttonSignInWithGmail).setOnClickListener(this)
-    }
-
-    if (findViewById<View>(R.id.buttonOtherEmailProvider) != null) {
-      findViewById<View>(R.id.buttonOtherEmailProvider).setOnClickListener(this)
-    }
+    findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener(this)
+    findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener(this)
   }
 
   private fun handleSignInResult(resultCode: Int, task: Task<GoogleSignInAccount>) {

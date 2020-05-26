@@ -183,7 +183,6 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
             ExceptionUtil.handleError(e)
             UIUtil.showInfoSnackbar(rootView, e.message ?: "")
           }
-
         }
       }
 

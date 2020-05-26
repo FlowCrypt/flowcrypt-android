@@ -20,7 +20,6 @@ import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
  * Time: 10:13
  * E-mail: DenBond7@gmail.com
  */
-
 class MainSettingsFragment : BasePreferenceFragment() {
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

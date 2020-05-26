@@ -161,7 +161,6 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
     private const val REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 0
 
-    @JvmStatic
     fun newInstance(): PrivateKeysListFragment {
       return PrivateKeysListFragment()
     }

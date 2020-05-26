@@ -18,7 +18,6 @@ import com.hootsuite.nachos.chip.ChipSpan
  * Time: 16:28
  * E-mail: DenBond7@gmail.com
  */
-
 class PGPContactChipSpan : ChipSpan {
   private var hasPgp: Boolean? = null
 

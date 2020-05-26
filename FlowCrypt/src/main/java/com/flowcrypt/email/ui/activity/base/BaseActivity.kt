@@ -22,14 +22,12 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.Observer
-import androidx.loader.content.Loader
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
-import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.service.BaseService
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
@@ -178,7 +176,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
    * @param messageText The text to show.  Can be formatted text.
    * @param duration    How long to display the message.
    */
-  @JvmOverloads
   fun showInfoSnackbar(view: View?, messageText: String?, duration: Int = Snackbar.LENGTH_INDEFINITE) {
     view?.let {
       snackBar = Snackbar.make(it, messageText ?: "", duration).setAction(android.R.string.ok) { }
@@ -216,26 +213,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
 
   fun dismissSnackBar() {
     snackBar?.dismiss()
-  }
-
-  fun handleLoaderResult(loader: Loader<*>, loaderResult: LoaderResult?) {
-    if (loaderResult != null) {
-      when {
-        loaderResult.result != null -> onSuccess(loader.id, loaderResult.result)
-        loaderResult.exception != null -> onError(loader.id, loaderResult.exception)
-        else -> showInfoSnackbar(rootView, getString(R.string.unknown_error))
-      }
-    } else {
-      showInfoSnackbar(rootView, getString(R.string.error_loader_result_is_empty))
-    }
-  }
-
-  open fun onError(loaderId: Int, e: Exception?) {
-
-  }
-
-  open fun onSuccess(loaderId: Int, result: Any?) {
-
   }
 
   /**

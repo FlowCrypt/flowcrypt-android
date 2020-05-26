@@ -43,7 +43,6 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 11:43
  * E-mail: DenBond7@gmail.com
  */
-
 class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment.OnMessageSendListener,
     OnChangeMessageEncryptionTypeListener, ChoosePublicKeyDialogFragment.OnLoadKeysProgressListener {
 
@@ -94,14 +93,12 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
           .switch_to_standard_email
     menuActionSwitchType.setTitle(titleRes)
 
-    if (serviceInfo != null) {
-      if (!serviceInfo!!.isMsgTypeSwitchable) {
-        menu.removeItem(R.id.menuActionSwitchType)
-      }
+    if (serviceInfo?.isMsgTypeSwitchable == false) {
+      menu.removeItem(R.id.menuActionSwitchType)
+    }
 
-      if (serviceInfo?.hasAbilityToAddNewAtt == false) {
-        menu.removeItem(R.id.menuActionAttachFile)
-      }
+    if (serviceInfo?.hasAbilityToAddNewAtt == false) {
+      menu.removeItem(R.id.menuActionAttachFile)
     }
 
     return true
@@ -140,13 +137,13 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
     this.msgEncryptionType = messageEncryptionType
     when (messageEncryptionType) {
       MessageEncryptionType.ENCRYPTED -> {
-        appBarLayout!!.setBackgroundColor(UIUtil.getColor(this, R.color.colorPrimary))
-        appBarLayout!!.removeView(nonEncryptedHintView)
+        appBarLayout?.setBackgroundColor(UIUtil.getColor(this, R.color.colorPrimary))
+        appBarLayout?.removeView(nonEncryptedHintView)
       }
 
       MessageEncryptionType.STANDARD -> {
-        appBarLayout!!.setBackgroundColor(UIUtil.getColor(this, R.color.red))
-        appBarLayout!!.addView(nonEncryptedHintView)
+        appBarLayout?.setBackgroundColor(UIUtil.getColor(this, R.color.red))
+        appBarLayout?.addView(nonEncryptedHintView)
       }
     }
 
@@ -178,10 +175,10 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
 
         msgType?.let {
           when (it) {
-            MessageType.NEW -> supportActionBar!!.setTitle(R.string.compose)
-            MessageType.REPLY -> supportActionBar!!.setTitle(R.string.reply)
-            MessageType.REPLY_ALL -> supportActionBar!!.setTitle(R.string.reply_all)
-            MessageType.FORWARD -> supportActionBar!!.setTitle(R.string.forward)
+            MessageType.NEW -> supportActionBar?.setTitle(R.string.compose)
+            MessageType.REPLY -> supportActionBar?.setTitle(R.string.reply)
+            MessageType.REPLY_ALL -> supportActionBar?.setTitle(R.string.reply_all)
+            MessageType.FORWARD -> supportActionBar?.setTitle(R.string.forward)
           }
         }
       } else {
@@ -226,7 +223,6 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
       return generateIntent(context, msgInfo, MessageType.NEW, msgEncryptionType)
     }
 
-    @JvmOverloads
     fun generateIntent(context: Context?, msgInfo: IncomingMessageInfo?, messageType: MessageType?,
                        msgEncryptionType: MessageEncryptionType?, serviceInfo: ServiceInfo? = null): Intent {
 

@@ -34,7 +34,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
  * Time: 11:30
  * E-mail: DenBond7@gmail.com
  */
-
+//todo-denbond7 need to refactor this class, too many duplicate code
 abstract class BaseSyncActivity : BaseNodeActivity() {
   // Messengers for communicating with the service.
   protected var syncMessenger: Messenger? = null

@@ -11,7 +11,7 @@ import com.flowcrypt.email.ui.activity.BaseNodeActivity
 
 /**
  * The base back stack activity. In this activity we add the back stack functionality. The
- * extended class must implement [BaseBackStackActivity.getContentViewResourceId] method
+ * extended class must implement [BaseBackStackActivity.contentViewResourceId] method
  * to define the content view resources id. And the in [Activity.onCreate] method
  * we setup the toolbar if it exist in the contents and call
  * [androidx.appcompat.app.ActionBar.setDisplayHomeAsUpEnabled] to implement the
@@ -22,7 +22,6 @@ import com.flowcrypt.email.ui.activity.BaseNodeActivity
  * Time: 10:03
  * E-mail: DenBond7@gmail.com
  */
-
 abstract class BaseBackStackActivity : BaseNodeActivity() {
 
   override val isDisplayHomeAsUpEnabled: Boolean

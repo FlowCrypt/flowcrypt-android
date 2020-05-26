@@ -179,7 +179,6 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
             PrivateKeyDetailsFragment::class.java)
     private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
 
-    @JvmStatic
     fun newInstance(details: NodeKeyDetails): PrivateKeyDetailsFragment {
       val keyDetailsFragment = PrivateKeyDetailsFragment()
       val args = Bundle()

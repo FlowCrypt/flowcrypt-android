@@ -29,7 +29,6 @@ import java.util.*
  * Time: 12:35
  * E-mail: DenBond7@gmail.com
  */
-
 class ImportPublicKeyActivity : BaseImportKeyActivity() {
 
   private var pgpContact: PgpContact? = null

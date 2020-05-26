@@ -28,7 +28,6 @@ import com.flowcrypt.email.ui.activity.CreateMessageActivity
  * Time: 12:19
  * E-mail: DenBond7@gmail.com
  */
-
 class EmailWebView : WebView {
   private var onPageFinishedListener: OnPageFinishedListener? = null
 

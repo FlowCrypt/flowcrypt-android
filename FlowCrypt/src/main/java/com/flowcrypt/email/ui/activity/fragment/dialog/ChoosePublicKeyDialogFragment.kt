@@ -208,7 +208,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     val intent = Intent()
     intent.putParcelableArrayListExtra(KEY_ATTACHMENT_INFO_LIST, ArrayList(atts))
 
-    targetFragment!!.onActivityResult(targetRequestCode, Activity.RESULT_OK, intent)
+    targetFragment?.onActivityResult(targetRequestCode, Activity.RESULT_OK, intent)
   }
 
   /**
@@ -252,7 +252,6 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
         GeneralUtil.generateUniqueExtraKey("KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE",
             ChoosePublicKeyDialogFragment::class.java)
 
-    @JvmStatic
     fun newInstance(email: String, choiceMode: Int,
                     titleResourceId: Int?,
                     returnResultImmediatelyIfSingle: Boolean = false): ChoosePublicKeyDialogFragment {

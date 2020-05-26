@@ -15,7 +15,6 @@ import android.view.MenuItem
  * Time: 13:26
  * E-mail: DenBond7@gmail.com
  */
-
 abstract class BaseBackStackSyncActivity : BaseSyncActivity() {
   override val isDisplayHomeAsUpEnabled: Boolean = true
 

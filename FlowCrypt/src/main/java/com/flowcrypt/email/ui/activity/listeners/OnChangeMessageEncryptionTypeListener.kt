@@ -15,7 +15,6 @@ import com.flowcrypt.email.model.MessageEncryptionType
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-
 interface OnChangeMessageEncryptionTypeListener {
 
   val msgEncryptionType: MessageEncryptionType

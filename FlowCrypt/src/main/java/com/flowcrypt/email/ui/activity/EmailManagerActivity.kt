@@ -172,8 +172,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
           else
             R.string.showing_all_messages, Toast.LENGTH_SHORT).show()
         }
-
-
       }
     }
 

@@ -25,7 +25,6 @@ import java.util.*
  * Time: 13:09
  * E-mail: DenBond7@gmail.com
  */
-
 class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSpan> {
   private val backgroundColorPgpExists: Int = UIUtil.getColor(context, R.color.colorPrimary)
   private val backgroundColorPgpNotExists: Int = UIUtil.getColor(context, R.color.aluminum)

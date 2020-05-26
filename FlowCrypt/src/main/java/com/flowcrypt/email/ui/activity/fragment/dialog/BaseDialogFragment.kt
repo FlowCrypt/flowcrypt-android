@@ -21,7 +21,6 @@ import com.flowcrypt.email.util.idling.NodeIdlingResource
  * Time: 10:04
  * E-mail: DenBond7@gmail.com
  */
-
 open class BaseDialogFragment : DialogFragment() {
   @get:VisibleForTesting
   val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()

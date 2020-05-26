@@ -49,7 +49,6 @@ import java.io.FileNotFoundException
  * Time: 12:35
  * E-mail: DenBond7@gmail.com
  */
-
 abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClickListener {
   protected lateinit var checkClipboardToFindKeyService: CheckClipboardToFindKeyService
   protected lateinit var layoutContentView: View

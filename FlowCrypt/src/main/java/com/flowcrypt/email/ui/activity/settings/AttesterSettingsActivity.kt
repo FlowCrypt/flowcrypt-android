@@ -18,7 +18,6 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
  * Time: 15:07
  * E-mail: DenBond7@gmail.com
  */
-
 class AttesterSettingsActivity : BaseBackStackActivity() {
   override val contentViewResourceId: Int
     get() = R.layout.activity_attester_settings

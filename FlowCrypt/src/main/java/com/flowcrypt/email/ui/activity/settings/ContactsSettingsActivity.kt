@@ -22,7 +22,6 @@ import com.flowcrypt.email.ui.activity.fragment.ContactsListFragment
  * Time: 17:35
  * E-mail: DenBond7@gmail.com
  */
-
 class ContactsSettingsActivity : BaseSettingsActivity() {
   private var contactsListFragment: ContactsListFragment? = null
 

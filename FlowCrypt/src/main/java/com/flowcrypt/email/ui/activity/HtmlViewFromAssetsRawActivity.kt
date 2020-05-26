@@ -23,7 +23,6 @@ import com.flowcrypt.email.util.GeneralUtil
  * Time: 18:13
  * E-mail: DenBond7@gmail.com
  */
-
 class HtmlViewFromAssetsRawActivity : BaseBackStackActivity() {
 
   override val contentViewResourceId: Int

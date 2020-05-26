@@ -41,7 +41,6 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 16:59
  * E-mail: DenBond7@gmail.com
  */
-
 class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.OnTwoWayDialogListener {
   private var privateKeysFromEmailBackups: ArrayList<NodeKeyDetails>? = null
   private val unlockedKeys: MutableList<NodeKeyDetails> = ArrayList()

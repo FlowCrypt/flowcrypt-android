@@ -34,7 +34,6 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:39
  * E-mail: DenBond7@gmail.com
  */
-
 abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderResult> {
   protected val accountViewModel: AccountViewModel by viewModels()
   protected var account: AccountEntity? = null
@@ -56,7 +55,6 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
    *
    * @return true if a back press action enable at current moment, false otherwise.
    */
-  @JvmField
   var isBackPressedEnabled = true
   var snackBar: Snackbar? = null
     private set

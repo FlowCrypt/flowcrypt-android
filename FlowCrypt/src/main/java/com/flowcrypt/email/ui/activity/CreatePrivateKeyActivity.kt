@@ -35,7 +35,6 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 15:58
  * E-mail: DenBond7@gmail.com
  */
-
 class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private var createdPrivateKeyLongId: String? = null

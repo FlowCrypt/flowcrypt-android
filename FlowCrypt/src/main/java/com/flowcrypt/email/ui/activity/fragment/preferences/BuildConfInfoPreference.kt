@@ -10,7 +10,6 @@ import android.util.AttributeSet
 
 import androidx.preference.DialogPreference
 
-
 /**
  * A custom [androidx.preference.Preference]
  *

@@ -21,7 +21,6 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
  * Time: 10:16
  * E-mail: DenBond7@gmail.com
  */
-
 abstract class BasePreferenceFragment : PreferenceFragmentCompat() {
   protected val accountViewModel: AccountViewModel by viewModels()
   protected var account: AccountEntity? = null

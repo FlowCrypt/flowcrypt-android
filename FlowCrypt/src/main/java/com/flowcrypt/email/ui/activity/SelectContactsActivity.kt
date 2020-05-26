@@ -38,7 +38,6 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 17:23
  * E-mail: DenBond7@gmail.com
  */
-
 class SelectContactsActivity : BaseBackStackActivity(),
     ContactsRecyclerViewAdapter.OnContactClickListener, SearchView.OnQueryTextListener {
 
