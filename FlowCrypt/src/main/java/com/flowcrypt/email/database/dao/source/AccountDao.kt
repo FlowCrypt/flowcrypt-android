@@ -23,7 +23,7 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager
  * E-mail: DenBond7@gmail.com
  */
 @Dao
-abstract class AccountDaoSource : BaseDao<AccountEntity> {
+abstract class AccountDao : BaseDao<AccountEntity> {
   @Query("SELECT * FROM accounts WHERE is_active = 1")
   abstract suspend fun getActiveAccountSuspend(): AccountEntity?
 

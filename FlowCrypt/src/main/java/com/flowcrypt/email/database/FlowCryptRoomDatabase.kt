@@ -24,7 +24,7 @@ import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.LabelDao
 import com.flowcrypt.email.database.dao.MessageDao
 import com.flowcrypt.email.database.dao.UserIdEmailsKeysDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
@@ -61,7 +61,7 @@ import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun msgDao(): MessageDao
 
-  abstract fun accountDao(): AccountDaoSource
+  abstract fun accountDao(): AccountDao
 
   abstract fun attachmentDao(): AttachmentDao
 
