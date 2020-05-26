@@ -16,7 +16,6 @@ import android.os.Parcelable
  * Time: 15:41
  * E-mail: DenBond7@gmail.com
  */
-
 enum class MessageEncryptionType : Parcelable {
   ENCRYPTED, STANDARD;
 

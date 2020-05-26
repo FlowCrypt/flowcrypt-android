@@ -26,7 +26,6 @@ import java.security.MessageDigest
  * Time: 15:59
  * E-mail: DenBond7@gmail.com
  */
-
 class CircleTransformation : BitmapTransformation() {
 
   val id: String

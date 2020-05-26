@@ -36,6 +36,7 @@ import javax.crypto.spec.SecretKeySpec
  *         Time: 11:49 AM
  *         E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 remove this in 2022 as redundant
 class CryptoMigrationUtil {
   class FlowCryptSQLiteOpenHelper(context: Context) : SQLiteOpenHelper(context, FlowCryptRoomDatabase.DB_NAME, null, FlowCryptRoomDatabase.DB_VERSION) {
     override fun onCreate(db: SQLiteDatabase?) {

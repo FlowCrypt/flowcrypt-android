@@ -48,6 +48,7 @@ import javax.mail.Store
  * Time: 12:40
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 need to investigate this https://developer.android.com/topic/libraries/architecture/workmanager
 class SyncJobService : JobService(), SyncListener {
   private var messagesNotificationManager: MessagesNotificationManager? = null
 

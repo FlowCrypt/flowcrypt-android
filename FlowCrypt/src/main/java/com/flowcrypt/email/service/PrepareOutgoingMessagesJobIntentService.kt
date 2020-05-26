@@ -53,7 +53,6 @@ import javax.mail.internet.MimeMessage
  * Time: 22:25
  * E-mail: DenBond7@gmail.com
  */
-
 class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
   private var attsCacheDir: File? = null
 
@@ -330,7 +329,6 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
      * @param context         Interface to global information about an application environment.
      * @param outgoingMsgInfo [OutgoingMessageInfo] which contains information about an outgoing message.
      */
-    @JvmStatic
     fun enqueueWork(context: Context, outgoingMsgInfo: OutgoingMessageInfo?) {
       if (outgoingMsgInfo != null) {
         val intent = Intent(context, PrepareOutgoingMessagesJobIntentService::class.java)

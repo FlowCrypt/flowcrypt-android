@@ -69,6 +69,7 @@ import javax.net.ssl.SSLException
  * Time: 18:43
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 need to investigate this https://developer.android.com/topic/libraries/architecture/workmanager
 class MessagesSenderJobService : JobService() {
 
   override fun onCreate() {

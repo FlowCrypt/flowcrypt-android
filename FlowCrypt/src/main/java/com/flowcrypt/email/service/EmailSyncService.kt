@@ -88,6 +88,7 @@ class EmailSyncService : BaseService(), SyncListener {
         handleConnectivityAction(context, intent)
       }
     }
+    //todo-denbond7 need to fix this deprecation
     registerReceiver(connectionBroadcastReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
 
     emailSyncManager = EmailSyncManager(this)
@@ -154,7 +155,6 @@ class EmailSyncService : BaseService(), SyncListener {
       ExceptionUtil.handleError(e)
       onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
     }
-
   }
 
   override fun onPrivateKeysFound(account: AccountEntity, keys: List<NodeKeyDetails>, ownerKey: String, requestCode: Int) {
@@ -618,6 +618,7 @@ class EmailSyncService : BaseService(), SyncListener {
   }
 
   fun handleConnectivityAction(context: Context, intent: Intent) {
+    //todo-denbond7 need to fix deprecation
     if (ConnectivityManager.CONNECTIVITY_ACTION.equals(intent.action!!, ignoreCase = true)) {
       val connectivityManager = context.getSystemService(Context
           .CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -795,10 +796,6 @@ class EmailSyncService : BaseService(), SyncListener {
             emailSyncManager.searchMsgs(ownerKey!!, requestCode, localFolderWhereWeDoSearch, msg.arg1)
           }
 
-          MESSAGE_CANCEL_ALL_TASKS -> if (emailSyncManager != null && action != null) {
-            //emailSyncManager.cancelAllSyncTasks()
-          }
-
           MESSAGE_LOAD_ATTS_INFO -> if (emailSyncManager != null && action != null) {
             val localFolder = action.`object` as LocalFolder
             emailSyncManager.loadAttsInfo(ownerKey!!, requestCode, localFolder, msg.arg1)
@@ -845,7 +842,6 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_LOAD_PRIVATE_KEYS = 9
     const val MESSAGE_SEND_MESSAGE_WITH_BACKUP = 10
     const val MESSAGE_SEARCH_MESSAGES = 11
-    const val MESSAGE_CANCEL_ALL_TASKS = 12
     const val MESSAGE_LOAD_ATTS_INFO = 13
     const val MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS = 14
     const val MESSAGE_DELETE_MSGS = 15
@@ -860,7 +856,6 @@ class EmailSyncService : BaseService(), SyncListener {
      *
      * @param context Interface to global information about an application environment.
      */
-    @JvmStatic
     fun startEmailSyncService(context: Context) {
       val startEmailServiceIntent = Intent(context, EmailSyncService::class.java)
       context.startService(startEmailServiceIntent)
@@ -871,7 +866,6 @@ class EmailSyncService : BaseService(), SyncListener {
      *
      * @param context Interface to global information about an application environment.
      */
-    @JvmStatic
     fun switchAccount(context: Context) {
       NotificationManagerCompat.from(context).cancelAll()
       val intent = Intent(context, EmailSyncService::class.java)

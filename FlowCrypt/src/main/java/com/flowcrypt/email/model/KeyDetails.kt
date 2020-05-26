@@ -23,7 +23,6 @@ import com.flowcrypt.email.security.model.PrivateKeySourceType
  * Time: 12:56
  * E-mail: DenBond7@gmail.com
  */
-
 data class KeyDetails constructor(val keyName: String? = null,
                                   val value: String,
                                   val bornType: Type,

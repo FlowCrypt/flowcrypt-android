@@ -10,6 +10,9 @@ import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 
 /**
+ * This [androidx.lifecycle.ViewModel] helps indicate when the app is ready to continue the init
+ * launch
+ *
  * @author Denis Bondarenko
  *         Date: 5/6/20
  *         Time: 4:22 PM

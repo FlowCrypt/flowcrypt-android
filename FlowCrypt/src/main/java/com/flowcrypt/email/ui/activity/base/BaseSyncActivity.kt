@@ -435,27 +435,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   }
 
   /**
-   * Cancel all sync tasks which are waiting for executing.
-   *
-   * @param requestCode The unique request code for identify the current action.
-   */
-  fun cancelAllSyncTasks(requestCode: Int) {
-    if (checkServiceBound(isSyncServiceBound)) return
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-
-    val action = BaseService.Action(replyMessengerName, requestCode, null)
-
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_CANCEL_ALL_TASKS, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  /**
    * Start a job to load attachments info.
    *
    * @param requestCode The unique request code for identify the current action.

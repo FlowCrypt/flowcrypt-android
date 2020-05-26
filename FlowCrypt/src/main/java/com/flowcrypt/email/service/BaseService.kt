@@ -20,7 +20,6 @@ import java.util.*
  * Time: 16:30
  * E-mail: DenBond7@gmail.com
  */
-
 abstract class BaseService : LifecycleService() {
   interface OnServiceCallback {
     /**

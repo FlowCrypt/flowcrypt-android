@@ -44,6 +44,7 @@ open class AccountViewModel(application: Application) : BaseAndroidViewModel(app
 
       //fixed a bug when try to decrypting the template password.
       // See https://github.com/FlowCrypt/flowcrypt-android/issues/168
+      //todo-denbond7 remove this in 2022
       if ("password".equals(originalPassword, ignoreCase = true)) {
         originalPassword = ""
       }
@@ -60,6 +61,7 @@ open class AccountViewModel(application: Application) : BaseAndroidViewModel(app
 
           //fixed a bug when try to decrypting the template password.
           // See https://github.com/FlowCrypt/flowcrypt-android/issues/168
+          //todo-denbond7 remove this in 2022
           if ("password".equals(originalPassword, ignoreCase = true)) {
             originalPassword = ""
           }

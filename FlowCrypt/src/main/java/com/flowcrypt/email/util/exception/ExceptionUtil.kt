@@ -23,7 +23,6 @@ class ExceptionUtil {
      *
      * @param e An input [Exception]
      */
-    @JvmStatic
     fun handleError(e: Throwable) {
       if (ExceptionResolver.isHandlingNeeded(e)) {
         if (ACRA.isInitialised()) {

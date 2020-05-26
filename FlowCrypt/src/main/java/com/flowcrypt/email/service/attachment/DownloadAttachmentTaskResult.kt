@@ -16,7 +16,6 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
  * Time: 16:22
  * E-mail: DenBond7@gmail.com
  */
-
 data class DownloadAttachmentTaskResult constructor(
     val attInfo: AttachmentInfo? = null,
     val exception: Exception? = null,

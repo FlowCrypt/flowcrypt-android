@@ -13,7 +13,6 @@ package com.flowcrypt.email.util.exception
  * Time: 12:17
  * E-mail: DenBond7@gmail.com
  */
-
 class ManualHandledException : FlowCryptException {
   constructor(message: String) : super(message)
 

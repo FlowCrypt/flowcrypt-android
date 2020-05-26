@@ -17,7 +17,6 @@ import android.os.Parcelable
  * Time: 16:56
  * E-mail: DenBond7@gmail.com
  */
-
 interface Action : Parcelable {
   var id: Long
   val email: String?

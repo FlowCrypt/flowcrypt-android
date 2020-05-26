@@ -30,7 +30,6 @@ import java.util.*
  * Time: 17:30
  * E-mail: DenBond7@gmail.com
  */
-
 class AttachmentNotificationManager(context: Context) : CustomNotificationManager(context) {
 
   override val groupName: String = GROUP_NAME_ATTACHMENTS

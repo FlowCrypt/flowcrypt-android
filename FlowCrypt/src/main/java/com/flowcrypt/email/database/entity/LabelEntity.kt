@@ -19,6 +19,7 @@ import com.google.android.gms.common.util.CollectionUtils
  *         Time: 5:57 PM
  *         E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 need to add ForeignKey on account table
 @Entity(tableName = "imap_labels")
 data class LabelEntity(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,

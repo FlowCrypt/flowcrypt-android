@@ -75,7 +75,6 @@ import javax.mail.Folder
  * Time: 10:29
  * E-mail: DenBond7@gmail.com
  */
-
 class AttachmentDownloadManagerService : Service() {
 
   @Volatile
@@ -336,7 +335,6 @@ class AttachmentDownloadManagerService : Service() {
       } catch (remoteException: RemoteException) {
         remoteException.printStackTrace()
       }
-
     }
 
     override fun onProgress(attInfo: AttachmentInfo, progressInPercentage: Int, timeLeft: Long) {
@@ -347,7 +345,6 @@ class AttachmentDownloadManagerService : Service() {
       } catch (remoteException: RemoteException) {
         remoteException.printStackTrace()
       }
-
     }
 
     override fun onAttDownloaded(attInfo: AttachmentInfo, uri: Uri) {
@@ -359,7 +356,6 @@ class AttachmentDownloadManagerService : Service() {
       } catch (remoteException: RemoteException) {
         remoteException.printStackTrace()
       }
-
     }
 
     override fun onCanceled(attInfo: AttachmentInfo) {
@@ -381,7 +377,6 @@ class AttachmentDownloadManagerService : Service() {
       } catch (e: RemoteException) {
         e.printStackTrace()
       }
-
     }
 
     companion object {

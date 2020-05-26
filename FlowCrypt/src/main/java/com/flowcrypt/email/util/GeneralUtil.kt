@@ -44,7 +44,6 @@ import java.util.*
  * Time: 16:55
  * E-mail: DenBond7@gmail.com
  */
-
 class GeneralUtil {
   companion object {
     /**
@@ -52,7 +51,6 @@ class GeneralUtil {
      *
      * @return true if the app is foregrounded or visible.
      */
-    @JvmStatic
     fun isAppForegrounded(): Boolean {
       val appProcessInfo = ActivityManager.RunningAppProcessInfo()
       ActivityManager.getMyMemoryState(appProcessInfo)
@@ -64,7 +62,6 @@ class GeneralUtil {
      *
      * @return true - if the current build is a debug build.
      */
-    @JvmStatic
     fun isDebugBuild(): Boolean = "debug" == BuildConfig.BUILD_TYPE
 
     /**
@@ -75,7 +72,7 @@ class GeneralUtil {
      * @param context Interface to global information about an application environment.
      * @return <tt>boolean</tt> true - a connection available, false if otherwise.
      */
-    @JvmStatic
+    //todo-denbond7 Need to fix deprecation
     fun isConnected(context: Context?): Boolean {
       val cm = context?.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
       val activeNetwork = cm?.activeNetworkInfo
@@ -87,7 +84,6 @@ class GeneralUtil {
      *
      * @param context Interface to global information about an application environment.
      */
-    @JvmStatic
     fun showAppSettingScreen(context: Context) {
       val intent = Intent()
       intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
@@ -103,7 +99,6 @@ class GeneralUtil {
      * @return <tt>[String]</tt> which contains a file.
      * @throws IOException will thrown for example if the file not found
      */
-    @JvmStatic
     fun readFileFromUriToString(context: Context, uri: Uri): String? {
       val inputStream = context.contentResolver.openInputStream(uri)
       return if (inputStream != null) IOUtils.toString(inputStream, StandardCharsets.UTF_8) else null
@@ -115,7 +110,6 @@ class GeneralUtil {
      * @param text The given string.
      * @return <tt>[String]</tt> which doesn't contain HTML comments.
      */
-    @JvmStatic
     fun removeAllComments(text: String): String {
       return if (TextUtils.isEmpty(text)) text else text.replace("<!--[\\s\\S]*?-->".toRegex(), "")
     }
@@ -126,7 +120,6 @@ class GeneralUtil {
      * @param fileUri The [Uri] of the file.
      * @return The size of the file in bytes.
      */
-    @JvmStatic
     fun getFileSizeFromUri(context: Context, fileUri: Uri?): Long {
       var fileSize: Long = -1
 
@@ -160,7 +153,6 @@ class GeneralUtil {
      * @param fileUri The [Uri] of the file.
      * @return The file name.
      */
-    @JvmStatic
     fun getFileNameFromUri(context: Context, fileUri: Uri?): String? {
       var fileName: String? = null
       fileUri?.let {
@@ -196,7 +188,6 @@ class GeneralUtil {
      * @return the number of bytes copied, or -1 if &gt; Integer.MAX_VALUE
      * @throws IOException if an I/O error occurs
      */
-    @JvmStatic
     fun writeFileFromStringToUri(context: Context, uri: Uri, data: String): Int {
       val inputStream = IOUtils.toInputStream(data, StandardCharsets.UTF_8)
       val outputStream = context.contentResolver.openOutputStream(uri)
@@ -210,7 +201,6 @@ class GeneralUtil {
      * @param c   The class where a new extra key will be created.
      * @return The new extra key.
      */
-    @JvmStatic
     fun generateUniqueExtraKey(key: String, c: Class<*>): String {
       return BuildConfig.APPLICATION_ID + "." + c.simpleName + "." + key
     }
@@ -223,7 +213,6 @@ class GeneralUtil {
      * @param groupSize      Group size
      * @return The formatted string.
      */
-    @JvmStatic
     fun doSectionsInText(template: String?, originalString: String?, groupSize: Int): String? {
 
       if (template == null || originalString == null || groupSize <= 0 || originalString.length <= groupSize) {
@@ -258,7 +247,6 @@ class GeneralUtil {
      * @param uri     The [Uri] of the file.
      * @return A mime type of of the [Uri].
      */
-    @JvmStatic
     fun getFileMimeTypeFromUri(context: Context, uri: Uri): String {
       return if (ContentResolver.SCHEME_CONTENT.equals(uri.scheme, ignoreCase = true)) {
         val contentResolver = context.contentResolver
@@ -276,7 +264,6 @@ class GeneralUtil {
      * @param aClass The class where we will use [androidx.test.espresso.IdlingResource]
      * @return A generated name.
      */
-    @JvmStatic
     fun genIdlingResourcesName(aClass: Class<*>): String {
       return aClass.javaClass.toString() + "-" + UUID.randomUUID()
     }
@@ -298,7 +285,6 @@ class GeneralUtil {
      * @param context Interface to global information about an application environment.
      * @return The generated order number.
      */
-    @JvmStatic
     fun genAttOrderId(context: Context): Int {
       var lastId = SharedPreferencesHelper.getInt(PreferenceManager.getDefaultSharedPreferences(context),
           Constants.PREF_KEY_LAST_ATT_ORDER_ID, 0)
@@ -330,7 +316,6 @@ class GeneralUtil {
         }
       }
     }
-
 
     /**
      * This function helps to get [Bitmap] from the given [Drawable]

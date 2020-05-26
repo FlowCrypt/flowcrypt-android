@@ -19,7 +19,6 @@ import android.widget.TextView
 import com.google.android.material.snackbar.Snackbar
 import java.io.ByteArrayOutputStream
 
-
 /**
  * User interface util methods.
  *
@@ -28,7 +27,6 @@ import java.io.ByteArrayOutputStream
  * Time: 14:40
  * E-mail: DenBond7@gmail.com
  */
-
 class UIUtil {
   companion object {
     /**
@@ -37,7 +35,6 @@ class UIUtil {
      * @param view    The view to find a parent from.
      * @param msgText The text to show.  Can be formatted text..
      */
-    @JvmStatic
     fun showInfoSnackbar(view: View, msgText: String): Snackbar {
       val snackbar = Snackbar.make(view, msgText, Snackbar.LENGTH_INDEFINITE)
           .setAction(android.R.string.ok) { }
@@ -55,7 +52,6 @@ class UIUtil {
      * @param onClickListener The Snackbar button click listener.
      * @param duration        How long to display the message. Either [Snackbar.LENGTH_SHORT] or [Snackbar.LENGTH_LONG]
      */
-    @JvmStatic
     @JvmOverloads
     fun showSnackbar(view: View, msgText: String, buttonName: String,
                      onClickListener: View.OnClickListener, duration: Int = Snackbar.LENGTH_INDEFINITE): Snackbar {
@@ -72,7 +68,6 @@ class UIUtil {
      * @param context Interface to global information about an application environment.
      * @param view
      */
-    @JvmStatic
     fun hideSoftInput(context: Context?, view: View?) {
       val inputMethodManager = context?.getSystemService(Activity.INPUT_METHOD_SERVICE) as?
           InputMethodManager
@@ -88,7 +83,6 @@ class UIUtil {
      * @param first   The first view;
      * @param second  The second view.
      */
-    @JvmStatic
     fun exchangeViewVisibility(show: Boolean, first: View?, second: View?) {
       first?.visibility = if (show) View.VISIBLE else View.GONE
       second?.visibility = if (show) View.GONE else View.VISIBLE
@@ -100,7 +94,6 @@ class UIUtil {
      * @param text     The text which will be set to the current textView.
      * @param textView The textView where we will set the HTML text.
      */
-    @JvmStatic
     @Suppress("DEPRECATION")
     fun setHtmlTextToTextView(text: String, textView: TextView?) {
       if (textView != null && !TextUtils.isEmpty(text)) {
@@ -117,7 +110,6 @@ class UIUtil {
      *
      * @param text The text which contains HTML.
      */
-    @JvmStatic
     @Suppress("DEPRECATION")
     fun getHtmlSpannedFromText(text: String?): CharSequence? {
       return if (text?.isNotEmpty() == true) {
@@ -137,7 +129,6 @@ class UIUtil {
      * @param colorResourcesId The resources id of the needed color.
      * @return The int value of the color.
      */
-    @JvmStatic
     fun getColor(context: Context, colorResourcesId: Int): Int {
       return context.resources.getColor(colorResourcesId, context.theme)
     }

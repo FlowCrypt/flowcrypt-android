@@ -26,7 +26,6 @@ import java.lang.reflect.Type
  * Time: 11:58
  * E-mail: DenBond7@gmail.com
  */
-
 class ActionJsonDeserializer : JsonDeserializer<Action> {
 
   override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): Action {

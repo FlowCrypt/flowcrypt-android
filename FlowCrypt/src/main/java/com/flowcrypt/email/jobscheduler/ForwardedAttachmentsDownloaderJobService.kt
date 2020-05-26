@@ -55,6 +55,7 @@ import javax.mail.Store
  * Time: 11:48
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 need to investigate this https://developer.android.com/topic/libraries/architecture/workmanager
 class ForwardedAttachmentsDownloaderJobService : JobService() {
   override fun onCreate() {
     super.onCreate()

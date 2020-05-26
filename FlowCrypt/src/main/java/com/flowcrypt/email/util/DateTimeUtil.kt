@@ -18,7 +18,6 @@ import java.util.*
  * Time: 15:52
  * E-mail: DenBond7@gmail.com
  */
-
 class DateTimeUtil {
   companion object {
     /**
@@ -36,7 +35,6 @@ class DateTimeUtil {
      * @param date    This is the date, which we want to format.
      * @return The formatted date.
      */
-    @JvmStatic
     fun formatSameDayTime(context: Context?, date: Long?): String {
       val calendarOfDate = GregorianCalendar()
       calendarOfDate.timeInMillis = date ?: return ""

@@ -15,7 +15,6 @@ import androidx.core.content.FileProvider
  * Time: 11:35
  * E-mail: DenBond7@gmail.com
  */
-
 class Constants {
   companion object {
     const val FLOWCRYPT_PRIVACY_URL = "https://flowcrypt.com/privacy"

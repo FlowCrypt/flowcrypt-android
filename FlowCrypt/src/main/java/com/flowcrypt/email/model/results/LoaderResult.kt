@@ -13,7 +13,7 @@ package com.flowcrypt.email.model.results
  * Time: 16:02
  * E-mail: DenBond7@gmail.com
  */
-
+//todo-denbond7 need to remove this class in the near future. Refactor code and remove this
 data class LoaderResult constructor(
     /**
      * Some result which will be returned by loader.

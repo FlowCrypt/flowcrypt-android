@@ -21,7 +21,6 @@ import com.flowcrypt.email.util.GeneralUtil
  * Time: 10:11
  * E-mail: DenBond7@gmail.com
  */
-
 class ActionResultReceiver
 /**
  * Create a new ResultReceive to receive results.  Your
@@ -30,7 +29,7 @@ class ActionResultReceiver
  *
  * @param handler It will receive results from the [IntentService]
  */
-(handler: Handler) : ResultReceiver(handler) {
+constructor(handler: Handler) : ResultReceiver(handler) {
 
   private var resultReceiverCallBack: ResultReceiverCallBack? = null
 
@@ -81,14 +80,12 @@ class ActionResultReceiver
     private val EXTRA_KEY_EXCEPTION = GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_EXCEPTION",
         ActionResultReceiver::class.java)
 
-    @JvmStatic
     fun generateSuccessBundle(action: Action): Bundle {
       val bundle = Bundle()
       bundle.putParcelable(EXTRA_KEY_ACTION, action)
       return bundle
     }
 
-    @JvmStatic
     fun generateErrorBundle(action: Action, e: Exception): Bundle {
       val bundle = generateSuccessBundle(action)
       bundle.putSerializable(EXTRA_KEY_EXCEPTION, e)
