@@ -27,7 +27,6 @@ import javax.mail.Store
  * Time: 15:20
  * E-mail: DenBond7@gmail.com
  */
-
 class MoveMessagesSyncTask(ownerKey: String,
                            requestCode: Int,
                            private val srcFolder: LocalFolder,

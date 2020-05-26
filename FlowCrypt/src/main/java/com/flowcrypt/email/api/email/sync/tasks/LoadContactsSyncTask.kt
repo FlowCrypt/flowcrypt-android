@@ -107,7 +107,7 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
 
   /**
    * Generate an array of [EmailAndNamePair] objects from the input message.
-   * This information will be retrieved from "to" , "cc" or "bcc" headers.
+   * This information will be retrieved from "to", "cc" or "bcc" headers.
    *
    * @param msg           The input [Message].
    * @param recipientType The input [Message.RecipientType].

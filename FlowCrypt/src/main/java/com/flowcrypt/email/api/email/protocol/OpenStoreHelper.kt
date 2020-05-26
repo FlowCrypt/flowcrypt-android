@@ -26,7 +26,6 @@ import javax.mail.Store
  * Time: 18:00
  * E-mail: DenBond7@gmail.com
  */
-
 class OpenStoreHelper {
   companion object {
     private val TAG = OpenStoreHelper::class.java.simpleName
@@ -83,7 +82,7 @@ class OpenStoreHelper {
     }
 
     /**
-     * Generate a sess for gimaps protocol.
+     * Generate a session for gimaps protocol.
      *
      * @param context Interface to global information about an application environment;
      * @return <tt>Session</tt> A new sess for gimaps protocol based on properties for gimaps.
@@ -95,7 +94,7 @@ class OpenStoreHelper {
     }
 
     /**
-     * Generate a sess which will be use for download attachments.
+     * Generate a session which will be use to download attachments.
      *
      * @param context Interface to global information about an application environment;
      * @param account An input [AccountEntity];

@@ -28,7 +28,6 @@ import javax.mail.UIDFolder
  * Time: 11:26
  * E-mail: DenBond7@gmail.com
  */
-
 class LoadMessagesToCacheSyncTask(ownerKey: String,
                                   requestCode: Int,
                                   private val localFolder: LocalFolder,

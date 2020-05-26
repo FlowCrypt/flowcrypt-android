@@ -19,7 +19,6 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
  * Time: 14:35
  * E-mail: DenBond7@gmail.com
  */
-
 data class SecurityType constructor(val name: String = "",
                                     val opt: Option = Option.NONE,
                                     val defImapPort: Int = 0,
@@ -80,7 +79,6 @@ data class SecurityType constructor(val name: String = "",
      *
      * @return The list of all available [SecurityType].
      */
-    @JvmStatic
     fun generateSecurityTypes(context: Context): MutableList<SecurityType> {
       val securityTypes = mutableListOf<SecurityType>()
       securityTypes.add(SecurityType(context.getString(R.string.none), Option.NONE,

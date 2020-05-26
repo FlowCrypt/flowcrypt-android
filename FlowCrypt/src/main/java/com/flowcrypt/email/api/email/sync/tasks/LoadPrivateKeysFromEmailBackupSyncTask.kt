@@ -33,7 +33,6 @@ import javax.mail.Store
  * Time: 10:27
  * E-mail: DenBond7@gmail.com
  */
-
 class LoadPrivateKeysFromEmailBackupSyncTask(ownerKey: String,
                                              requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
 

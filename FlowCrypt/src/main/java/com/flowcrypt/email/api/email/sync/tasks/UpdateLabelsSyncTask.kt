@@ -18,7 +18,6 @@ import javax.mail.Store
  * Time: 13:34
  * E-mail: DenBond7@gmail.com
  */
-
 class UpdateLabelsSyncTask(ownerKey: String,
                            requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
 

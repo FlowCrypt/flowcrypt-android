@@ -20,7 +20,6 @@ import javax.mail.Store
  * Time: 16:12
  * E-mail: DenBond7@gmail.com
  */
-
 interface SyncTask {
   /**
    * Check is this task use the SMTP protocol to communicate with a server.

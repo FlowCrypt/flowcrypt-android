@@ -83,10 +83,9 @@ import kotlin.collections.HashSet
  * Time: 15:31
  * E-mail: DenBond7@gmail.com
  */
-
 class EmailUtil {
   companion object {
-    const val PATTERN_FORWARDED_DATE = "EEE, MMM d, yyyy HH:mm:ss"
+    private const val PATTERN_FORWARDED_DATE = "EEE, MMM d, yyyy HH:mm:ss"
     private const val HTML_EMAIL_INTRO_TEMPLATE_HTM = "html/email_intro.template.htm"
 
     /**
@@ -94,7 +93,6 @@ class EmailUtil {
      *
      * @return A generated unique content id.
      */
-    @JvmStatic
     fun generateContentId(prefix: String = ""): String {
       return "<$prefix" + UUID.randomUUID().toString() + "@flowcrypt" + ">"
     }
@@ -108,7 +106,6 @@ class EmailUtil {
      * [JavaEmailConstants.FOLDER_ATTRIBUTE_NO_SELECT], false otherwise.
      * @throws MessagingException
      */
-    @JvmStatic
     fun containsNoSelectAttr(folder: IMAPFolder): Boolean {
       return folder.attributes.contains(JavaEmailConstants.FOLDER_ATTRIBUTE_NO_SELECT)
     }
@@ -118,7 +115,6 @@ class EmailUtil {
      *
      * @return The domain of some email.
      */
-    @JvmStatic
     fun getDomain(email: String): String {
       return when {
         TextUtils.isEmpty(email) -> ""
@@ -133,7 +129,6 @@ class EmailUtil {
      * @param uri The file [Uri]
      * @return Generated [AttachmentInfo].
      */
-    @JvmStatic
     fun getAttInfoFromUri(context: Context?, uri: Uri?): AttachmentInfo? {
       if (context != null && uri != null) {
         val attInfo = AttachmentInfo()
@@ -172,12 +167,11 @@ class EmailUtil {
      * @param nodeKeyDetails The key details
      * @return A generated [AttachmentInfo].
      */
-    @JvmStatic
     fun genAttInfoFromPubKey(nodeKeyDetails: NodeKeyDetails?): AttachmentInfo? {
       if (nodeKeyDetails != null) {
         val fileName = "0x" + nodeKeyDetails.longId!!.toUpperCase(Locale.getDefault()) + ".asc"
 
-        if (!TextUtils.isEmpty(nodeKeyDetails.publicKey)) {
+        return if (!TextUtils.isEmpty(nodeKeyDetails.publicKey)) {
           val attachmentInfo = AttachmentInfo()
 
           attachmentInfo.name = fileName
@@ -188,9 +182,9 @@ class EmailUtil {
           attachmentInfo.id = generateContentId()
           attachmentInfo.isEncryptionAllowed = false
 
-          return attachmentInfo
+          attachmentInfo
         } else {
-          return null
+          null
         }
       } else {
         return null
@@ -205,7 +199,6 @@ class EmailUtil {
      * @return [BodyPart] with private key as an attachment.
      * @throws Exception will occur when generate this [BodyPart].
      */
-    @JvmStatic
     fun genBodyPartWithPrivateKey(account: AccountEntity, armoredPrKey: String): MimeBodyPart {
       val part = MimeBodyPart()
       val dataSource = ByteArrayDataSource(armoredPrKey, JavaEmailConstants.MIME_TYPE_TEXT_PLAIN)
@@ -223,7 +216,6 @@ class EmailUtil {
      * @return Generated [Message] object.
      * @throws Exception will occur when generate this message.
      */
-    @JvmStatic
     fun genMsgWithAllPrivateKeys(context: Context, account: AccountEntity, session: Session): Message {
       val keys = SecurityUtils.genPrivateKeysBackup(context, account)
 
@@ -248,7 +240,6 @@ class EmailUtil {
      * @return Generated [Message] object.
      * @throws Exception will occur when generate this message.
      */
-    @JvmStatic
     fun genMsgWithPrivateKeys(context: Context, account: AccountEntity, sess: Session, bodyPart: MimeBodyPart): Message {
       val multipart = MimeMultipart()
       multipart.addBodyPart(getBodyPartWithBackupText(context))
@@ -269,7 +260,6 @@ class EmailUtil {
      * @throws GoogleAuthException Signaling an unrecoverable authentication error. These errors will typically
      * result from client errors (e.g. providing an invalid scope).
      */
-    @JvmStatic
     fun getGmailAccountToken(context: Context, accountEntity: AccountEntity): String {
       try {
         val account: Account? = accountEntity.account
@@ -289,7 +279,6 @@ class EmailUtil {
      * @param context Interface to global information about an application environment;
      * @return true if debug enable, false - otherwise.
      */
-    @JvmStatic
     fun hasEnabledDebug(context: Context): Boolean {
       return GeneralUtil.isDebugBuild() && SharedPreferencesHelper.getBoolean(
           PreferenceManager.getDefaultSharedPreferences(context.applicationContext),
@@ -306,7 +295,6 @@ class EmailUtil {
      * @throws MessagingException
      * @throws IOException
      */
-    @JvmStatic
     fun getPrivateKeyBackupsViaGmailAPI(context: Context, account: AccountEntity, sess: Session):
         Collection<NodeKeyDetails> {
       try {
@@ -385,7 +373,6 @@ class EmailUtil {
      * @throws MessagingException
      * @throws IOException
      */
-    @JvmStatic
     fun getKeyFromMimeMsg(msg: Message): String {
       if (msg.isMimeType(JavaEmailConstants.MIME_TYPE_MULTIPART)) {
         val multipart = msg.content as Multipart
@@ -408,7 +395,6 @@ class EmailUtil {
      *
      * @return A generated formatted date string.
      */
-    @JvmStatic
     fun genForwardedMsgDate(date: Date?): String {
       if (date == null) {
         return ""
@@ -426,7 +412,6 @@ class EmailUtil {
      * @param msgs      The array of incoming messages.
      * @return A list of UID of the local messages which will be removed.
      */
-    @JvmStatic
     fun genDeleteCandidates(localUIDs: Collection<Long>, folder: IMAPFolder, msgs: Array<Message>): Collection<Long> {
       val uidListDeleteCandidates = HashSet(localUIDs)
       val uidList = HashSet<Long>()
@@ -453,7 +438,6 @@ class EmailUtil {
      * @param msgs      The array of incoming messages.
      * @return The generated array.
      */
-    @JvmStatic
     fun genNewCandidates(localUIDs: Collection<Long>, folder: IMAPFolder, msgs: Array<Message>): Array<Message> {
       val newCandidates = mutableListOf<Message>()
       try {
@@ -480,7 +464,6 @@ class EmailUtil {
      * @param msgs   The array of incoming messages.
      * @return An array of the messages which are candidates for updating iin the local database.
      */
-    @JvmStatic
     fun genUpdateCandidates(map: Map<Long, String?>, folder: IMAPFolder, msgs: Array<Message>):
         Array<Message> {
       val updateCandidates = mutableListOf<Message>()
@@ -512,7 +495,6 @@ class EmailUtil {
      * @param addresses An array of [InternetAddress]
      * @return The first address as a human readable string or email.
      */
-    @JvmStatic
     fun getFirstAddressString(addresses: List<InternetAddress>?): String {
       if (addresses == null || addresses.isEmpty()) {
         return ""
@@ -534,7 +516,6 @@ class EmailUtil {
      * @return A list of messages which already exist in the local database.
      * @throws MessagingException for other failures.
      */
-    @JvmStatic
     fun getUpdatedMsgs(folder: IMAPFolder, loadedMsgsCount: Int, newMsgsCount: Int): Array<Message> {
       val end = folder.messageCount - newMsgsCount
       var start = end - loadedMsgsCount + 1
@@ -567,7 +548,6 @@ class EmailUtil {
      * @return A list of messages which already exist in the local database.
      * @throws MessagingException for other failures.
      */
-    @JvmStatic
     fun getUpdatedMsgsByUID(folder: IMAPFolder, first: Long, end: Long): Array<Message> {
       return if (end <= first) {
         arrayOf()
@@ -592,7 +572,6 @@ class EmailUtil {
      * @return New messages from a server which not exist in a local database.
      * @throws MessagingException for other failures.
      */
-    @JvmStatic
     fun fetchMsgs(folder: IMAPFolder, msgs: Array<Message>): Array<Message> {
       if (msgs.isNotEmpty()) {
         val fetchProfile = FetchProfile()
@@ -614,7 +593,6 @@ class EmailUtil {
      * @param uidList The array of messages [UID] values.
      * @return [SparseArray] as results of the checking.
      */
-    @JvmStatic
     @Suppress("UNCHECKED_CAST")
     fun getMsgsEncryptionStates(folder: IMAPFolder, uidList: List<Long>): Map<Long, Boolean> {
       if (CollectionUtils.isEmpty(uidList)) {
@@ -672,7 +650,6 @@ class EmailUtil {
      * @param account An input [AccountEntity]
      * @return A generated [SearchTerm].
      */
-    @JvmStatic
     fun genEncryptedMsgsSearchTerm(account: AccountEntity): SearchTerm {
       return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
         GmailRawSearchTerm(
@@ -690,7 +667,6 @@ class EmailUtil {
      * @param pubKeys The public keys which will be used to generate an encrypted part.
      * @return The generated raw MIME message.
      */
-    @JvmStatic
     fun genRawMsgWithoutAtts(info: OutgoingMessageInfo, pubKeys: List<String>?): String {
 
       val retrofit = NodeRetrofitHelper.getRetrofit() ?: return ""
@@ -735,7 +711,6 @@ class EmailUtil {
      * @return An array which contains information about the encryption state of the given messages.
      * @throws MessagingException
      */
-    @JvmStatic
     fun getMsgsEncryptionInfo(onlyEncrypted: Boolean?, folder: IMAPFolder, newMsgs: Array<Message>):
         Map<Long, Boolean> {
       val array: HashMap<Long, Boolean> = HashMap()
@@ -756,7 +731,6 @@ class EmailUtil {
       }
     }
 
-    @JvmStatic
     private fun getBodyPartWithBackupText(context: Context): BodyPart {
       val messageBodyPart = MimeBodyPart()
       messageBodyPart.setContent(GeneralUtil.removeAllComments(IOUtils.toString(context.assets
@@ -764,7 +738,6 @@ class EmailUtil {
       return messageBodyPart
     }
 
-    @JvmStatic
     private fun genMsgWithBackupTemplate(context: Context, account: AccountEntity, session: Session): Message {
       val msg = MimeMessage(session)
 

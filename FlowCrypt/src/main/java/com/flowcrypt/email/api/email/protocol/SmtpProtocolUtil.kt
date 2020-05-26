@@ -24,7 +24,6 @@ import javax.mail.Transport
  * Time: 13:12
  * E-mail: DenBond7@gmail.com
  */
-
 class SmtpProtocolUtil {
 
   companion object {
@@ -39,7 +38,6 @@ class SmtpProtocolUtil {
      * @throws IOException
      * @throws GoogleAuthException
      */
-    @JvmStatic
     fun prepareSmtpTransport(context: Context, session: Session, accountEntity: AccountEntity): Transport {
       val transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP)
 

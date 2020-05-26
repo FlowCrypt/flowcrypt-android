@@ -46,7 +46,6 @@ import javax.mail.internet.MimeMultipart
  * Time: 17:41
  * E-mail: DenBond7@gmail.com
  */
-
 class LoadMessageDetailsSyncTask(ownerKey: String,
                                  requestCode: Int,
                                  uniqueId: String,

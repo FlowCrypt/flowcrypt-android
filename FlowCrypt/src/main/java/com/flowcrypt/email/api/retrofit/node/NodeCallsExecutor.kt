@@ -39,7 +39,6 @@ class NodeCallsExecutor {
      * @throws IOException   Such exceptions can occur during network calls.
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
-    @JvmStatic
     fun parseKeys(key: String?): List<NodeKeyDetails> {
       key ?: return emptyList()
 
@@ -64,7 +63,6 @@ class NodeCallsExecutor {
      * @throws IOException   Such exceptions can occur during network calls.
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
-    @JvmStatic
     fun getGmailBackupSearch(email: String): String? {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = GmailBackupSearchRequest(email)
@@ -86,7 +84,6 @@ class NodeCallsExecutor {
      * @throws IOException   Such exceptions can occur during network calls.
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
-    @JvmStatic
     fun decryptKey(key: String, passphrase: String): DecryptKeyResult {
       return decryptKey(key, listOf(passphrase))
     }
@@ -100,7 +97,6 @@ class NodeCallsExecutor {
      * @throws IOException   Such exceptions can occur during network calls.
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
-    @JvmStatic
     fun decryptKey(key: String, passphrases: List<String>): DecryptKeyResult {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = DecryptKeyRequest(key, passphrases)
@@ -122,7 +118,6 @@ class NodeCallsExecutor {
      * @throws IOException   Such exceptions can occur during network calls.
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
-    @JvmStatic
     fun encryptKey(key: String, passphrase: String): EncryptKeyResult {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = EncryptKeyRequest(key, passphrase)
@@ -143,7 +138,6 @@ class NodeCallsExecutor {
      * @throws IOException   Such exceptions can occur during network calls.
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
-    @JvmStatic
     fun zxcvbnStrengthBar(guesses: Double): ZxcvbnStrengthBarResult {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = ZxcvbnStrengthBarRequest(guesses)
@@ -156,7 +150,6 @@ class NodeCallsExecutor {
       return result!!
     }
 
-    @JvmStatic
     private fun checkResult(result: BaseNodeResponse?) {
       if (result == null) {
         throw NullPointerException("Result is null")

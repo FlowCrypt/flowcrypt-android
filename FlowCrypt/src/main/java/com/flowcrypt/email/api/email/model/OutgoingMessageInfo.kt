@@ -17,7 +17,6 @@ import com.flowcrypt.email.model.MessageEncryptionType
  * Time: 11:20
  * E-mail: DenBond7@gmail.com
  */
-
 data class OutgoingMessageInfo constructor(val subject: String,
                                            val msg: String? = null,
                                            val toRecipients: List<String>? = null,

@@ -17,7 +17,7 @@ import com.flowcrypt.email.api.retrofit.request.model.RequestModel
  * Time: 14:46
  * E-mail: DenBond7@gmail.com
  */
-
+//todo-denbond7 this class is redundant. We can refactor code and delete this
 class PubRequest @JvmOverloads constructor(override val apiName: ApiName = ApiName.GET_PUB,
                                            val query: String) : BaseRequest<RequestModel> {
   override val requestModel: RequestModel = object : RequestModel {}

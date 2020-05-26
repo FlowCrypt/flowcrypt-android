@@ -17,7 +17,6 @@ import com.google.gson.annotations.SerializedName
  * Time: 12:42
  * E-mail: DenBond7@gmail.com
  */
-
 data class PostHelpFeedbackModel(@Expose val email: String,
                                  @Expose val logs: String? = null,
                                  @Expose val screenshot: String? = null,

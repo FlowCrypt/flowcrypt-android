@@ -18,7 +18,6 @@ import com.google.gson.GsonBuilder
  * E-mail: DenBond7@gmail.com
  */
 object NodeGson {
-  @JvmStatic
   val gson: Gson = GsonBuilder()
       .registerTypeAdapter(MsgBlock::class.java, MsgBlockDeserializer())
       .excludeFieldsWithoutExposeAnnotation()

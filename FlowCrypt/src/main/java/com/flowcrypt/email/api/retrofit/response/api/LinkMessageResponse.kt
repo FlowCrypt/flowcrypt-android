@@ -28,7 +28,6 @@ import com.google.gson.annotations.SerializedName
  * Time: 15:16
  * E-mail: DenBond7@gmail.com
  */
-
 data class LinkMessageResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
                                            @Expose val url: String?,
                                            @Expose val isDeleted: Boolean,

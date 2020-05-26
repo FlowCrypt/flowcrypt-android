@@ -33,7 +33,6 @@ import javax.mail.Store
  * Time: 10:31
  * E-mail: DenBond7@gmail.com
  */
-
 class EmailSyncManager(val listener: SyncListener) {
   private val connectionExecutorService: ExecutorService = Executors.newSingleThreadExecutor()
   private val idleExecutorService: ExecutorService = Executors.newSingleThreadExecutor()
@@ -296,7 +295,6 @@ class EmailSyncManager(val listener: SyncListener) {
   }
 
   companion object {
-    private const val MAX_RUNNING_TASKS_COUNT = 5
     private val TAG = EmailSyncManager::class.java.simpleName
   }
 }

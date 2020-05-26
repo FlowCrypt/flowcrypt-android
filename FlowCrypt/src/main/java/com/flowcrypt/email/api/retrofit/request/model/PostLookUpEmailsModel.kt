@@ -17,5 +17,4 @@ import com.google.gson.annotations.SerializedName
  * Time: 15:16
  * E-mail: DenBond7@gmail.com
  */
-
 data class PostLookUpEmailsModel(@SerializedName("email") @Expose val emails: List<String>) : RequestModel

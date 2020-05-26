@@ -26,7 +26,7 @@ import javax.mail.Store
  *         E-mail: DenBond7@gmail.com
  */
 abstract class BaseSyncRunnable constructor(val syncListener: SyncListener) : Runnable {
-  //todo-denbond7 review this class
+  //todo-denbond7 review this class, maybe will be better to use coroutines
   protected val tag: String = javaClass.simpleName
 
   protected var sess: Session? = null

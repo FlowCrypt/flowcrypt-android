@@ -43,7 +43,7 @@ class ComposeEmailRequest(info: OutgoingMessageInfo?,
 
   @Expose
   private var replyToMimeMsg: String? = null
-  //todo-tomholub Maybe we have to rename this field for better understanding. It contains only headers (not whole MIME)
+  //todo-denbond7 Ask Tom. Maybe we have to rename this field for better understanding. It contains only headers (not whole MIME)
 
   override val endpoint: String = "composeEmail"
 

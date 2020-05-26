@@ -36,6 +36,7 @@ import javax.mail.search.SubjectTerm
  *         Time: 3:33 PM
  *         E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 need to refactor this class to use a better notifying about changes, we have to exclude [emailSyncManager] variables
 class IdleSyncRunnable constructor(syncListener: SyncListener,
                                    private val emailSyncManager: EmailSyncManager) :
     BaseSyncRunnable(syncListener), MessageCountListener, MessageChangedListener {

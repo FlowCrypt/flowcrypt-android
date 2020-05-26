@@ -16,7 +16,6 @@ import android.os.Parcelable
  * Time: 10:57
  * E-mail: DenBond7@gmail.com
  */
-
 data class ServiceInfo constructor(val isToFieldEditable: Boolean = false,
                                    val isFromFieldEditable: Boolean = false,
                                    val isMsgEditable: Boolean = false,

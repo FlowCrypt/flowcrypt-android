@@ -44,7 +44,7 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
   fun getCc(): List<InternetAddress>? = msgEntity.cc
 
   fun getHtmlMsgBlock(): MsgBlock? {
-    for (part in msgBlocks!!) {
+    for (part in msgBlocks ?: emptyList()) {
       if (part.type == MsgBlock.Type.PLAIN_HTML || part.type == MsgBlock.Type.DECRYPTED_HTML) {
         return part
       }
@@ -110,6 +110,7 @@ data class IncomingMessageInfo constructor(val msgEntity: MessageEntity,
 
   companion object {
     @JvmField
+    @Suppress("unused")
     val CREATOR: Parcelable.Creator<IncomingMessageInfo> = object : Parcelable.Creator<IncomingMessageInfo> {
       override fun createFromParcel(source: Parcel): IncomingMessageInfo = IncomingMessageInfo(source)
       override fun newArray(size: Int): Array<IncomingMessageInfo?> = arrayOfNulls(size)

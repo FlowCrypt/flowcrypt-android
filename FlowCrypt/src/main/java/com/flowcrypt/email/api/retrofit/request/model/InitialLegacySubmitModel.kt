@@ -17,6 +17,5 @@ import com.google.gson.annotations.SerializedName
  * Time: 16:37
  * E-mail: DenBond7@gmail.com
  */
-
 data class InitialLegacySubmitModel(@Expose val email: String,
                                     @SerializedName("pubkey") @Expose val pubKey: String) : RequestModel

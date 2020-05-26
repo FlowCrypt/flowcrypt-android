@@ -52,7 +52,7 @@ class ArchiveMsgsSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(own
       if (candidatesForArchiving.isEmpty()) {
         break
       } else {
-        val uidList = candidatesForArchiving.map { it.uid.toLong() }
+        val uidList = candidatesForArchiving.map { it.uid }
         val remoteSrcFolder = store.getFolder(inboxFolder.fullName) as IMAPFolder
         val remoteDestFolder = store.getFolder(allMailFolder.fullName) as IMAPFolder
         remoteSrcFolder.open(Folder.READ_WRITE)

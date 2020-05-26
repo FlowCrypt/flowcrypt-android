@@ -23,7 +23,6 @@ import com.google.gson.annotations.SerializedName
  * Time: 15:15
  * E-mail: DenBond7@gmail.com
  */
-
 data class LookUpEmailsResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
                                             @Expose val results: List<LookUpEmailResponse>?) : ApiResponse {
   constructor(source: Parcel) : this(

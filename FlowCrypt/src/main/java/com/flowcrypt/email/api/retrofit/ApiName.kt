@@ -13,6 +13,7 @@ package com.flowcrypt.email.api.retrofit
  * Time: 13:51
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 need to remove this class after refactoring
 enum class ApiName {
   /*flowcrypt.com/attester*/
   GET_PUB,

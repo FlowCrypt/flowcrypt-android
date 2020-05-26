@@ -37,7 +37,6 @@ class GmailApiHelper {
      * @param account   The [AccountEntity] object which contains information about an account.
      * @return Generated [Gmail].
      */
-    @JvmStatic
     fun generateGmailApiService(context: Context, account: AccountEntity?): Gmail {
       requireNotNull(account)
       return generateGmailApiService(context, account.account)

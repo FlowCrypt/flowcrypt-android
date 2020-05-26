@@ -37,7 +37,6 @@ import javax.mail.search.SubjectTerm
  * Time: 14:20
  * E-mail: DenBond7@gmail.com
  */
-
 class SearchMessagesSyncTask(ownerKey: String,
                              requestCode: Int,
                              private val localFolder: LocalFolder,
@@ -90,7 +89,6 @@ class SearchMessagesSyncTask(ownerKey: String,
   /**
    * Generate a [SearchTerm] depend on an input [AccountEntity].
    *
-   * @param context Interface to global information about an application environment.
    * @param account An input [AccountEntity]
    * @return A generated [SearchTerm].
    */

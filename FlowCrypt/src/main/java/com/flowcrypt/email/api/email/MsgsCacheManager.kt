@@ -14,7 +14,6 @@ import okio.source
 import java.io.File
 import java.io.InputStream
 
-
 /**
  * This class describes a logic of caching massages. Here we use [DiskLruCache] to store and retrieve raw MIME messages.
  *
@@ -24,8 +23,8 @@ import java.io.InputStream
  *         E-mail: DenBond7@gmail.com
  */
 object MsgsCacheManager {
-  const val CACHE_VERSION = 1
-  const val CACHE_SIZE: Long = 1024 * 1000 * 50 //50Mb
+  private const val CACHE_VERSION = 1
+  private const val CACHE_SIZE: Long = 1024 * 1000 * 50 //50Mb
   const val CACHE_DIR_NAME = "emails"
   lateinit var diskLruCache: DiskLruCache
 

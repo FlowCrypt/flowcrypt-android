@@ -28,6 +28,7 @@ import com.flowcrypt.email.model.PgpContact
  * Time: 10:25 AM
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 need to review this class. Maybe some things can be migrated to use coroutines
 interface PgpApiRepository : BaseApiRepository {
   /**
    * Parse the given raw string and fetch a list of [NodeKeyDetails].
@@ -62,9 +63,7 @@ interface PgpApiRepository : BaseApiRepository {
    * @param liveData    An instance of [MutableLiveData] which will be used for the result delivering.
    * @param request     An instance of [ZxcvbnStrengthBarRequest].
    */
-  fun checkPassphraseStrength(requestCode: Int = 0, liveData:
-  MutableLiveData<NodeResponseWrapper<*>>,
-                              request: ZxcvbnStrengthBarRequest)
+  fun checkPassphraseStrength(requestCode: Int = 0, liveData: MutableLiveData<NodeResponseWrapper<*>>, request: ZxcvbnStrengthBarRequest)
 
   suspend fun decryptKey(context: Context, armoredKey: String, passphrases: List<String>): Result<DecryptKeyResult>
 

@@ -28,7 +28,6 @@ import javax.mail.UIDFolder
  * Time: 17:12
  * E-mail: DenBond7@gmail.com
  */
-
 class RefreshMessagesSyncTask(ownerKey: String,
                               requestCode: Int,
                               val localFolder: LocalFolder) : BaseSyncTask(ownerKey, requestCode) {
@@ -72,13 +71,12 @@ class RefreshMessagesSyncTask(ownerKey: String,
       }
     }
 
-    val updatedMsgs: Array<Message>
-    if (isEncryptedModeEnabled == true) {
+    val updatedMsgs = if (isEncryptedModeEnabled == true) {
       val oldestCachedUID = roomDatabase.msgDao().getOldestUIDOfMsgForLabel(account.email, folderName)
-      updatedMsgs = EmailUtil.getUpdatedMsgsByUID(imapFolder, oldestCachedUID.toLong(), newestCachedUID.toLong())
+      EmailUtil.getUpdatedMsgsByUID(imapFolder, oldestCachedUID.toLong(), newestCachedUID.toLong())
     } else {
       val countOfNewMsgs = newMsgs.size
-      updatedMsgs = EmailUtil.getUpdatedMsgs(imapFolder, countOfLoadedMsgs, countOfNewMsgs)
+      EmailUtil.getUpdatedMsgs(imapFolder, countOfLoadedMsgs, countOfNewMsgs)
     }
 
     listener.onRefreshMsgsReceived(account, localFolder, imapFolder, newMsgs, updatedMsgs, ownerKey, requestCode)

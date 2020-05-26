@@ -23,7 +23,6 @@ import javax.mail.internet.MimePart
  * Time: 14:57
  * E-mail: DenBond7@gmail.com
  */
-
 class ImapProtocolUtil {
 
   companion object {

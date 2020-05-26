@@ -20,7 +20,6 @@ import java.util.*
  * Time: 18:12
  * E-mail: DenBond7@gmail.com
  */
-
 class PropertiesHelper {
 
   companion object {

@@ -29,14 +29,11 @@ import javax.mail.Transport
  * Time: 15:59
  * E-mail: DenBond7@gmail.com
  */
-
 abstract class BaseSyncTask constructor(override var ownerKey: String,
                                         override var requestCode: Int,
                                         override val uniqueId: String = UUID.randomUUID().toString(),
                                         override val resetConnection: Boolean = false) : SyncTask {
-  override val isSMTPRequired: Boolean
-    get() = false
-
+  override val isSMTPRequired: Boolean = false
   override var isCancelled: Boolean = false
 
   override fun runSMTPAction(account: AccountEntity, session: Session, store: Store, syncListener: SyncListener) {

@@ -19,7 +19,6 @@ import javax.mail.Store
  * Time: 14:08
  * E-mail: DenBond7@gmail.com
  */
-
 class SendMessageWithBackupToKeyOwnerSynsTask(ownerKey: String,
                                               requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
   override val isSMTPRequired: Boolean

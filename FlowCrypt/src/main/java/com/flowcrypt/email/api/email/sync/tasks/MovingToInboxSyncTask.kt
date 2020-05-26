@@ -55,7 +55,7 @@ class MovingToInboxSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(o
             continue
           }
 
-          val uidList = filteredMsgs.map { it.uid.toLong() }
+          val uidList = filteredMsgs.map { it.uid }
           val remoteSrcFolder = store.getFolder(folder) as IMAPFolder
           val remoteDestFolder = store.getFolder(inboxFolder.fullName) as IMAPFolder
           remoteSrcFolder.open(Folder.READ_WRITE)

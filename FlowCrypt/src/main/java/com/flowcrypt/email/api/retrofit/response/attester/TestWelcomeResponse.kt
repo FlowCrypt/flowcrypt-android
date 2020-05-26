@@ -28,7 +28,6 @@ import com.google.gson.annotations.SerializedName
  * Time: 14:38
  * E-mail: DenBond7@gmail.com
  */
-
 data class TestWelcomeResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
                                            @Expose val isSent: Boolean) : ApiResponse {
 

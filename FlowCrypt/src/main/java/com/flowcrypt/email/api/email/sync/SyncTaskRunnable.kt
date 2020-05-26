@@ -18,7 +18,7 @@ import javax.mail.Store
 
 /**
  * This class runs [SyncTask] in a separate thread
- *;
+ *
  * @author Denis Bondarenko
  *         Date: 10/17/19
  *         Time: 3:27 PM

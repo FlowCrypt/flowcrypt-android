@@ -22,7 +22,6 @@ import javax.mail.Message
  * Time: 13:35
  * E-mail: DenBond7@gmail.com
  */
-
 interface SyncListener {
 
   /**
@@ -79,7 +78,7 @@ interface SyncListener {
   )
 
   /**
-   * This method called when a new messages received from the some folder.
+   * This method called when new messages received from some folder.
    *
    * @param account     The [AccountEntity] object which contains information about an email account.
    * @param srcFolder   The source folder where the messages exist.
@@ -99,7 +98,7 @@ interface SyncListener {
   )
 
   /**
-   * This method called when a new messages received from the some folder.
+   * This method called when new messages received from some folder.
    *
    * @param account     The [AccountEntity] object which contains information about an email account.
    * @param srcFolder   The source folder where the messages exist.
@@ -119,7 +118,7 @@ interface SyncListener {
   )
 
   /**
-   * This method called when a new messages received from the some folder.
+   * This method called when new messages received from some folder.
    *
    * @param account           The [AccountEntity] object which contains information about an email
    * account;
@@ -144,7 +143,7 @@ interface SyncListener {
   )
 
   /**
-   * This method called when a new messages received from the some folder.
+   * This method called when new messages received from some folder.
    *
    * @param account           The [AccountEntity] object which contains information about an email
    * account;
@@ -165,7 +164,7 @@ interface SyncListener {
   )
 
   /**
-   * This method called when a new messages received from the some folder.
+   * This method called when new messages received from some folder.
    *
    * @param account      The [AccountEntity] object which contains information about an
    * email account.
@@ -207,7 +206,7 @@ interface SyncListener {
   )
 
   /**
-   * This method called when a new messages received from the some folder.
+   * This method called when new messages received from some folder.
    *
    * @param account      The [AccountEntity] object which contains information about an
    * email account.

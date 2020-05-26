@@ -25,7 +25,6 @@ import javax.mail.UIDFolder
  * Time: 15:06
  * E-mail: DenBond7@gmail.com
  */
-
 class LoadMessagesSyncTask(ownerKey: String,
                            requestCode: Int,
                            private val localFolder: LocalFolder,
