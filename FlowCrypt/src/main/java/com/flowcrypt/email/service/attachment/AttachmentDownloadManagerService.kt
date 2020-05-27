@@ -35,6 +35,7 @@ import com.flowcrypt.email.api.retrofit.node.NodeService
 import com.flowcrypt.email.api.retrofit.request.node.DecryptFileRequest
 import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -422,7 +423,7 @@ class AttachmentDownloadManagerService : Service() {
         }
 
         val email = att.email ?: return
-        val account = roomDatabase.accountDao().getAccount(email)
+        val account = AccountViewModel.getAccountEntityWithDecryptedInfo(roomDatabase.accountDao().getAccount(email))
 
         if (account == null) {
           listener?.onCanceled(this.att)

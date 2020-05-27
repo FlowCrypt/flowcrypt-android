@@ -29,6 +29,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -111,7 +112,8 @@ class MessagesSenderJobService : JobService() {
         if (weakRef.get() != null) {
           val context = weakRef.get()!!.applicationContext
           val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-          val account = roomDatabase.accountDao().getActiveAccount()
+          val account = AccountViewModel.getAccountEntityWithDecryptedInfo(
+              roomDatabase.accountDao().getActiveAccount())
 
           val attsCacheDir = File(context.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
 

@@ -28,6 +28,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -116,7 +117,8 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
             }
           }
 
-          val account = roomDatabase.accountDao().getActiveAccount()
+          val account = AccountViewModel.getAccountEntityWithDecryptedInfo(
+              roomDatabase.accountDao().getActiveAccount())
 
           if (account != null) {
             val newMsgs = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
