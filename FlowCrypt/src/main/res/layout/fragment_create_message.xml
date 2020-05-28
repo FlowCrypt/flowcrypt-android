@@ -243,6 +243,12 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <com.flowcrypt.email.ui.widget.EmailWebView
+                android:id="@+id/emailWebView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
             <LinearLayout
                 android:id="@+id/layoutAtts"
                 android:layout_width="match_parent"

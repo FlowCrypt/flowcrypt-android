@@ -52,12 +52,14 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -73,6 +75,7 @@ import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeLi
 import com.flowcrypt.email.ui.adapter.FromAddressesAdapter
 import com.flowcrypt.email.ui.adapter.PgpContactAdapter
 import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
+import com.flowcrypt.email.ui.widget.EmailWebView
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer
@@ -89,6 +92,7 @@ import com.hootsuite.nachos.validator.ChipifyingNachoValidator
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.io.IOException
+import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 import javax.mail.internet.InternetAddress
 
@@ -142,6 +146,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private var progressBarAndButtonLayout: LinearLayout? = null
   private var imageButtonAliases: ImageButton? = null
   private var imageButtonAdditionalRecipientsVisibility: View? = null
+  private var emailWebView: EmailWebView? = null
 
   private var isContactsUpdateEnabled = true
   private var isUpdateToCompleted = true
@@ -1004,6 +1009,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     editTextEmailMsg = view.findViewById(R.id.editTextEmailMessage)
     editTextEmailMsg?.onFocusChangeListener = this
     textInputLayoutMsg = view.findViewById(R.id.textInputLayoutEmailMessage)
+    emailWebView = view.findViewById(R.id.emailWebView)
 
     progressBarTo = view.findViewById(R.id.progressBarTo)
     progressBarCc = view.findViewById(R.id.progressBarCc)
@@ -1064,6 +1070,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
 
     editTextEmailMsg?.requestFocus()
+    editTextEmailMsg?.showKeyboard()
   }
 
   private fun updateViewsFromServiceInfo() {
@@ -1093,6 +1100,22 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       else -> {
       }
     }
+
+    msgInfo?.getHtmlMsgBlock()?.let { setupWebView(it) }
+  }
+
+  private fun setupWebView(block: MsgBlock) {
+    emailWebView?.loadUrl("about:blank")
+    emailWebView?.configure()
+
+    val text = block.content?.replace("<body>".toRegex(), "<body contenteditable=\"true\">")
+
+    emailWebView?.loadDataWithBaseURL(null, text, "text/html", StandardCharsets.UTF_8.displayName(), null)
+    emailWebView?.setOnPageFinishedListener(object : EmailWebView.OnPageFinishedListener {
+      override fun onPageFinished() {
+        emailWebView?.visibility = View.VISIBLE
+      }
+    })
   }
 
   private fun updateViewsIfFwdMode() {
@@ -1178,6 +1201,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
     if (recipientsTo?.text?.isNotEmpty() == true || recipientsCc?.text?.isNotEmpty() == true) {
       editTextEmailMsg?.requestFocus()
+      editTextEmailMsg?.showKeyboard()
     }
   }
 
@@ -1187,12 +1211,15 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         FoldersManager.FolderType.SENT,
         FoldersManager.FolderType.OUTBOX -> recipientsTo!!.setText(prepareRecipients(msgInfo!!.getTo()))
 
-        else -> recipientsTo!!.setText(prepareRecipients(
-            if (msgInfo?.getReplyTo().isNullOrEmpty()) {
-              msgInfo?.getFrom()
-            } else {
-              msgInfo?.getReplyTo()
-            }))
+        else -> recipientsTo?.setText(
+            prepareRecipients(
+                if (msgInfo?.getReplyTo().isNullOrEmpty()) {
+                  msgInfo?.getFrom()
+                } else {
+                  msgInfo?.getReplyTo()
+                }
+            )
+        )
       }
     } else {
       recipientsTo?.setText(prepareRecipients(msgInfo?.getFrom()))
@@ -1200,7 +1227,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
     if (recipientsTo?.text?.isNotEmpty() == true) {
       editTextEmailMsg?.requestFocus()
+      editTextEmailMsg?.showKeyboard()
     }
+
+
   }
 
   private fun setupPgpFromExtraActionInfo(pgpContactsNachoTextView: PgpContactsNachoTextView?,

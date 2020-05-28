@@ -45,6 +45,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
+import com.flowcrypt.email.api.retrofit.response.model.node.BaseMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
@@ -978,7 +979,20 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
    * To prevent TransactionTooLargeException we have to remove large objects from [IncomingMessageInfo]
    */
   private fun prepareMsgInfoForReply(): IncomingMessageInfo? {
-    return msgInfo?.copy(msgBlocks = emptyList(), text = clipLargeText(msgInfo?.text))
+    val htmlBlocks = msgInfo?.msgBlocks?.filter {
+      it.type in listOf(MsgBlock.Type.DECRYPTED_HTML, MsgBlock.Type.PLAIN_HTML)
+    } ?: emptyList()
+
+    val modifiedBlocks = htmlBlocks.map {
+      if (it is BaseMsgBlock) {
+        it.copy(content = clipLargeText(it.content))
+      } else it
+    }
+
+    return msgInfo?.copy(
+        msgBlocks = modifiedBlocks,
+        text = clipLargeText(msgInfo?.text)
+    )
   }
 
   private fun setupLabelsViewModel() {
