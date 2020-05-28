@@ -17,6 +17,7 @@ import android.text.SpannableStringBuilder
 import android.text.TextUtils
 import android.text.format.Formatter
 import android.util.Log
+import android.view.ContextMenu
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.Menu
@@ -58,6 +59,7 @@ import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -142,6 +144,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private var progressBarAndButtonLayout: LinearLayout? = null
   private var imageButtonAliases: ImageButton? = null
   private var imageButtonAdditionalRecipientsVisibility: View? = null
+  private var iBShowQuotedText: View? = null
 
   private var isContactsUpdateEnabled = true
   private var isUpdateToCompleted = true
@@ -170,7 +173,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private fun getOutgoingMsgInfo(): OutgoingMessageInfo {
     var msg = editTextEmailMsg?.text.toString()
     if (messageType == MessageType.REPLY || messageType == MessageType.REPLY_ALL) {
-      msg += EmailUtil.prepareReplyQuotes(msgInfo)
+      if (iBShowQuotedText?.visibility == View.VISIBLE) {
+        msg += EmailUtil.prepareReplyQuotes(msgInfo)
+      }
     }
 
     val attachments = atts?.minus(forwardedAtts)
@@ -498,6 +503,28 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
   }
 
+  override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?) {
+    super.onCreateContextMenu(menu, v, menuInfo)
+    when (v.id) {
+      R.id.iBShowQuotedText -> {
+        val inflater: MenuInflater = requireActivity().menuInflater
+        inflater.inflate(R.menu.context_menu_delete_quoted_text, menu)
+      }
+    }
+  }
+
+  override fun onContextItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
+      R.id.menuDeleteQuotedText -> {
+        iBShowQuotedText?.visibility = View.GONE
+        msgInfo?.text = ""
+        true
+      }
+
+      else -> super.onContextItemSelected(item)
+    }
+  }
+
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
     when (requestCode) {
       REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE ->
@@ -589,6 +616,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         progressBarAndButtonLayout?.layoutParams = layoutParams
         v.visibility = View.GONE
         recipientsCc?.requestFocus()
+      }
+
+      R.id.iBShowQuotedText -> {
+        val currentCursorPosition = editTextEmailMsg?.selectionStart ?: 0
+        if (editTextEmailMsg?.text?.isNotEmpty() == true) {
+          editTextEmailMsg?.append("\n" + EmailUtil.prepareReplyQuotes(msgInfo))
+        } else {
+          editTextEmailMsg?.append(EmailUtil.prepareReplyQuotes(msgInfo))
+        }
+        editTextEmailMsg?.setSelection(currentCursorPosition)
+        v.visibility = View.GONE
       }
     }
   }
@@ -1004,6 +1042,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     editTextEmailMsg = view.findViewById(R.id.editTextEmailMessage)
     editTextEmailMsg?.onFocusChangeListener = this
     textInputLayoutMsg = view.findViewById(R.id.textInputLayoutEmailMessage)
+    iBShowQuotedText = view.findViewById(R.id.iBShowQuotedText)
+    iBShowQuotedText?.setOnClickListener(this)
 
     progressBarTo = view.findViewById(R.id.progressBarTo)
     progressBarCc = view.findViewById(R.id.progressBarCc)
@@ -1064,6 +1104,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
 
     editTextEmailMsg?.requestFocus()
+    editTextEmailMsg?.showKeyboard()
   }
 
   private fun updateViewsFromServiceInfo() {
@@ -1083,6 +1124,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   private fun updateViewsFromIncomingMsgInfo() {
+    iBShowQuotedText?.visibility = View.VISIBLE
+    iBShowQuotedText?.let { registerForContextMenu(it) }
+
     when (messageType) {
       MessageType.REPLY -> updateViewsIfReplyMode()
 
@@ -1178,6 +1222,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
     if (recipientsTo?.text?.isNotEmpty() == true || recipientsCc?.text?.isNotEmpty() == true) {
       editTextEmailMsg?.requestFocus()
+      editTextEmailMsg?.showKeyboard()
     }
   }
 
@@ -1185,14 +1230,17 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     if (folderType != null) {
       when (folderType) {
         FoldersManager.FolderType.SENT,
-        FoldersManager.FolderType.OUTBOX -> recipientsTo!!.setText(prepareRecipients(msgInfo!!.getTo()))
+        FoldersManager.FolderType.OUTBOX -> recipientsTo?.setText(prepareRecipients(msgInfo?.getTo()))
 
-        else -> recipientsTo!!.setText(prepareRecipients(
-            if (msgInfo?.getReplyTo().isNullOrEmpty()) {
-              msgInfo?.getFrom()
-            } else {
-              msgInfo?.getReplyTo()
-            }))
+        else -> recipientsTo?.setText(
+            prepareRecipients(
+                if (msgInfo?.getReplyTo().isNullOrEmpty()) {
+                  msgInfo?.getFrom()
+                } else {
+                  msgInfo?.getReplyTo()
+                }
+            )
+        )
       }
     } else {
       recipientsTo?.setText(prepareRecipients(msgInfo?.getFrom()))
@@ -1200,6 +1248,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
     if (recipientsTo?.text?.isNotEmpty() == true) {
       editTextEmailMsg?.requestFocus()
+      editTextEmailMsg?.showKeyboard()
     }
   }
 
