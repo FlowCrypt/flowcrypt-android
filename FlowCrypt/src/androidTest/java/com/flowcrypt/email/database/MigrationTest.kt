@@ -26,7 +26,7 @@ import java.io.IOException
  */
 @SmallTest
 @RunWith(AndroidJUnit4::class)
-@Ignore
+@Ignore("it doesn't allow to run all tests")
 class MigrationTest {
   // Array of all migrations which we are going to test
   private val arrayOfMigrations = arrayOf(
