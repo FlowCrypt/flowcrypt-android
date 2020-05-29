@@ -9,7 +9,7 @@ import android.content.Context
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.google.android.gms.auth.GoogleAuthException
 import java.io.IOException
 import javax.mail.MessagingException
@@ -24,7 +24,6 @@ import javax.mail.Transport
  * Time: 13:12
  * E-mail: DenBond7@gmail.com
  */
-
 class SmtpProtocolUtil {
 
   companion object {
@@ -33,38 +32,36 @@ class SmtpProtocolUtil {
      *
      * @param context Interface to global information about an application environment.
      * @param session The [Session] object.
-     * @param accountDao The accountDao information which will be used of connection.
+     * @param accountEntity [AccountEntity] information which will be used of connection.
      * @return Generated [Transport]
      * @throws MessagingException
      * @throws IOException
      * @throws GoogleAuthException
      */
-    @JvmStatic
-    fun prepareSmtpTransport(context: Context, session: Session, accountDao: AccountDao?): Transport {
+    fun prepareSmtpTransport(context: Context, session: Session, accountEntity: AccountEntity): Transport {
       val transport = session.getTransport(JavaEmailConstants.PROTOCOL_SMTP)
 
-      when (accountDao?.accountType) {
-        AccountDao.ACCOUNT_TYPE_GOOGLE -> {
-          val userName = accountDao.email
-          val password = EmailUtil.getGmailAccountToken(context, accountDao)
+      when (accountEntity.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+          val userName = accountEntity.email
+          val password = EmailUtil.getGmailAccountToken(context, accountEntity)
           transport.connect(GmailConstants.GMAIL_SMTP_SERVER, GmailConstants.GMAIL_SMTP_PORT, userName, password)
         }
 
         else -> {
-          val authCreds = accountDao?.authCreds
-              ?: throw NullPointerException("The AuthCredentials can't be a null!")
           val userName: String?
           val password: String?
 
-          if (authCreds.hasCustomSignInForSmtp) {
-            userName = authCreds.smtpSigInUsername
-            password = authCreds.smtpSignInPassword
+          if (accountEntity.useCustomSignForSmtp == true) {
+            userName = accountEntity.smtpUsername
+            password = accountEntity.smtpPassword
           } else {
-            userName = authCreds.username
-            password = authCreds.password
+            userName = accountEntity.username
+            password = accountEntity.password
           }
 
-          transport.connect(authCreds.smtpServer, authCreds.smtpPort, userName, password)
+          transport.connect(accountEntity.smtpServer, accountEntity.smtpPort
+              ?: 0, userName, password)
         }
       }
 

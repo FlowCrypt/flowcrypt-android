@@ -27,7 +27,6 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.ui.activity.CreatePrivateKeyActivity
-import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
 import okhttp3.mockwebserver.Dispatcher
@@ -55,7 +54,7 @@ class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
       object : ActivityTestRule<CreatePrivateKeyActivity>(CreatePrivateKeyActivity::class.java) {
         override fun getActivityIntent(): Intent {
           val result = Intent(getTargetContext(), CreatePrivateKeyActivity::class.java)
-          result.putExtra(BasePassPhraseManagerActivity.KEY_EXTRA_ACCOUNT_DAO, AccountDaoManager
+          result.putExtra(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT, AccountDaoManager
               .getAccountDao("enterprise_account_enforce_attester_submit.json")
               .copy(email = EMAIL_ENFORCE_ATTESTER_SUBMIT))
           return result

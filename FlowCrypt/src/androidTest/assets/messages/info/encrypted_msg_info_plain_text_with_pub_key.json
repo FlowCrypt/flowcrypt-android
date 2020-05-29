@@ -79,7 +79,8 @@
       }
     ],
     "toAddress": "First \u003cdefault@denbond7.com\u003e",
-    "uid": 242
+    "uid": 242,
+    "isEncrypted": true
   },
   "origMsgHeaders": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 237CA20301\r\n\tfor \u003cdefault@denbond7.com\u003e; Sat, 16 Mar 2019 14:31:20 +0000 (UTC)\r\nX-Virus-Scanned: Debian amavisd-new at mail.denbond7.com\r\nReceived: from mail.denbond7.com ([127.0.0.1])\r\n\tby mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10024)\r\n\twith ESMTP id TVwTqMHwVNg6 for \u003cdefault@denbond7.com\u003e;\r\n\tSat, 16 Mar 2019 14:31:10 +0000 (UTC)\r\nReceived: from localhost (MiA1 [192.168.3.6])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 2150A202D9\r\n\tfor \u003cdefault@denbond7.com\u003e; Sat, 16 Mar 2019 14:31:10 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-15527466683370.009536026417065857\"\r\nIn-Reply-To: \u003c\u003e\r\nReferences: \u003c\u003e\r\nTo: First \u003cdefault@denbond7.com\u003e\r\nFrom: denbond7@denbond7.com\r\nSubject: Simple encrypted message + pub key\r\nDate: Sat, 16 Mar 2019 14:31:08 +0000\r\nMessage-Id: \u003c263945111.0.1552746671123@localhost\u003e\r\nMIME-Version: 1.0",
   "text": "It\u0027s an encrypted message with my pub key"

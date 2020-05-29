@@ -7,7 +7,7 @@ package com.flowcrypt.email.rules
 
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
@@ -18,7 +18,7 @@ import org.junit.runners.model.Statement
  * Time: 09:19
  * E-mail: DenBond7@gmail.com
  */
-class AddLabelsToDatabaseRule(private val account: AccountDao, private val folders: List<LocalFolder>) : BaseRule() {
+class AddLabelsToDatabaseRule(private val account: AccountEntity, private val folders: List<LocalFolder>) : BaseRule() {
 
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {

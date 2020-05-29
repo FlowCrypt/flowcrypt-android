@@ -21,6 +21,9 @@ abstract class KeysDao : BaseDao<KeyEntity> {
   @Query("DELETE FROM keys WHERE long_id = :longId")
   abstract fun deleteByLongId(longId: String): Int
 
+  @Query("DELETE FROM keys WHERE long_id = :longId")
+  abstract suspend fun deleteByLongIdSuspend(longId: String): Int
+
   @Query("SELECT * FROM keys")
   abstract fun getAllKeys(): List<KeyEntity>
 

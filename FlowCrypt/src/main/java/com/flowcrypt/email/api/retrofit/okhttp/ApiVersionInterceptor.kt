@@ -17,7 +17,6 @@ import okhttp3.Response
  * Time: 13:40
  * E-mail: DenBond7@gmail.com
  */
-
 class ApiVersionInterceptor : Interceptor {
 
   override fun intercept(chain: Interceptor.Chain): Response {

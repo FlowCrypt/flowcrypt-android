@@ -17,7 +17,6 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
  * Time: 16:04
  * E-mail: DenBond7@gmail.com
  */
-
 class DownloadAttachmentTaskRequest(context: Context, val attInfo: AttachmentInfo) {
   val context: Context = context.applicationContext
 }

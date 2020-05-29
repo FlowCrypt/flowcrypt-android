@@ -32,6 +32,7 @@ class PasswordStrengthViewModel(application: Application) : BaseNodeApiViewModel
   fun check(passphrase: String) {
     val measure = zxcvbn.measure(passphrase, arrayListOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
 
+    //todo-denbond7 need to change it to use the common approach with LiveData
     apiRepository!!.checkPassphraseStrength(R.id.live_data_id_check_passphrase_strength, responsesLiveData,
         ZxcvbnStrengthBarRequest(measure))
   }

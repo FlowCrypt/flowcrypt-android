@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.retrofit.Status
 /**
  * @author DenBond7
  */
+//todo-denbond7 It's old code. Need to remove this after refactoring and migration to coroutines
 class NodeResponseWrapper<T : BaseNodeResponse>(val requestCode: Int, val status: Status, val result: T?,
                                                 val exception: Throwable?, val executionTime:
                                                 Long, val loadingState: LoadingState? = null) {

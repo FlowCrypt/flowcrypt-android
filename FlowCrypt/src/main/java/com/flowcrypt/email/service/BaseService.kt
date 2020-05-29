@@ -7,6 +7,7 @@ package com.flowcrypt.email.service
 
 import android.app.Service
 import android.os.Messenger
+import androidx.lifecycle.LifecycleService
 
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import java.util.*
@@ -19,8 +20,7 @@ import java.util.*
  * Time: 16:30
  * E-mail: DenBond7@gmail.com
  */
-
-abstract class BaseService : Service() {
+abstract class BaseService : LifecycleService() {
   interface OnServiceCallback {
     /**
      * In this method we can handle response after run some action via [BaseService]
@@ -41,6 +41,16 @@ abstract class BaseService : Service() {
      * @param obj         The object which returned from the service.
      */
     fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?)
+
+    /**
+     * In this method we can handle a result that some action was canceled
+     *
+     * @param requestCode The unique request code for identifies the some action. Must be unique
+     * over all project.
+     * @param resultCode  The result code of a run action.
+     * @param obj         The object which returned from the service.
+     */
+    fun onCanceled(requestCode: Int, resultCode: Int, obj: Any?)
 
     /**
      * In this method we can handle en error after run some action via [BaseService]
@@ -84,5 +94,6 @@ abstract class BaseService : Service() {
     const val REPLY_OK = 0
     const val REPLY_ERROR = 1
     const val REPLY_ACTION_PROGRESS = 2
+    const val REPLY_ACTION_CANCELED = 3
   }
 }

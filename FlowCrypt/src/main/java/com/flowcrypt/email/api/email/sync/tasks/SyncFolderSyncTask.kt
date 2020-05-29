@@ -9,8 +9,7 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.FetchProfile
 import javax.mail.Message
@@ -30,10 +29,10 @@ class SyncFolderSyncTask(ownerKey: String,
                          requestCode: Int,
                          private val localFolder: LocalFolder) : BaseSyncTask(ownerKey, requestCode) {
 
-  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
     val folderName = localFolder.fullName
-    val isEncryptedModeEnabled = AccountDaoSource().isEncryptedModeEnabled(context, account.email)
+    val isEncryptedModeEnabled = account.isShowOnlyEncrypted
 
     val folder = store.getFolder(folderName) as IMAPFolder
     folder.open(javax.mail.Folder.READ_ONLY)
@@ -47,7 +46,7 @@ class SyncFolderSyncTask(ownerKey: String,
     var newMsgs = emptyArray<Message>()
 
     if (newestCachedUID > 1 && newestCachedUID < nextUID - 1) {
-      if (isEncryptedModeEnabled) {
+      if (isEncryptedModeEnabled == true) {
         val foundMsgs = folder.search(EmailUtil.genEncryptedMsgsSearchTerm(account))
 
         val fetchProfile = FetchProfile()
@@ -71,7 +70,7 @@ class SyncFolderSyncTask(ownerKey: String,
     }
 
     val updatedMsgs: Array<Message>
-    updatedMsgs = if (isEncryptedModeEnabled) {
+    updatedMsgs = if (isEncryptedModeEnabled == true) {
       val oldestCachedUID = roomDatabase.msgDao().getOldestUIDOfMsgForLabel(account.email, folderName)
       EmailUtil.getUpdatedMsgsByUID(folder, oldestCachedUID.toLong(), newestCachedUID.toLong())
     } else {

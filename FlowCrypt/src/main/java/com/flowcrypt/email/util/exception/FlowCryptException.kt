@@ -17,7 +17,6 @@ import androidx.annotation.RequiresApi
  * Time: 12:16
  * E-mail: DenBond7@gmail.com
  */
-
 abstract class FlowCryptException : Exception {
   constructor()
 

@@ -28,12 +28,12 @@ interface AccountAliasesDao : BaseDao<AccountAliasesEntity> {
   fun getAliasesLD(account: String): LiveData<List<AccountAliasesEntity>>
 
   @Query("DELETE FROM accounts_aliases WHERE email = :email")
-  suspend fun deleteByEmail(email: String?): Int
+  suspend fun deleteByEmailSuspend(email: String?): Int
 
   @Transaction
   suspend fun updateAliases(email: String?, newAliases: Collection<AccountAliasesEntity>) {
     email?.let {
-      deleteByEmail(it)
+      deleteByEmailSuspend(it)
       insertWithReplaceSuspend(newAliases)
     }
   }

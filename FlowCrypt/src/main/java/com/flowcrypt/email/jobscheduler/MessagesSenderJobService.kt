@@ -26,10 +26,10 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -70,6 +70,7 @@ import javax.net.ssl.SSLException
  * Time: 18:43
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 need to investigate this https://developer.android.com/topic/libraries/architecture/workmanager
 class MessagesSenderJobService : JobService() {
 
   override fun onCreate() {
@@ -111,7 +112,8 @@ class MessagesSenderJobService : JobService() {
         if (weakRef.get() != null) {
           val context = weakRef.get()!!.applicationContext
           val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-          val account = AccountDaoSource().getActiveAccountInformation(context)
+          val account = AccountViewModel.getAccountEntityWithDecryptedInfo(
+              roomDatabase.accountDao().getActiveAccount())
 
           val attsCacheDir = File(context.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
 
@@ -147,8 +149,8 @@ class MessagesSenderJobService : JobService() {
       } catch (e: UserRecoverableAuthException) {
         val context = weakRef.get()?.applicationContext
         context?.let {
-          val account = AccountDaoSource().getActiveAccountInformation(context)
           val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+          val account = roomDatabase.accountDao().getActiveAccount()
           roomDatabase.msgDao().changeMsgsState(account?.email, JavaEmailConstants
               .FOLDER_OUTBOX, MessageState.QUEUED.value, MessageState.AUTH_FAILURE.value)
         }
@@ -177,7 +179,7 @@ class MessagesSenderJobService : JobService() {
       isFailed = values[0]!!
     }
 
-    private fun sendQueuedMsgs(context: Context, account: AccountDao, attsCacheDir: File) {
+    private fun sendQueuedMsgs(context: Context, account: AccountEntity, attsCacheDir: File) {
       var list: List<MessageEntity>
       var lastMsgUID = 0L
       val email = account.email
@@ -274,7 +276,7 @@ class MessagesSenderJobService : JobService() {
       }
     }
 
-    private fun saveCopyOfAlreadySentMsgs(context: Context, account: AccountDao, attsCacheDir: File) {
+    private fun saveCopyOfAlreadySentMsgs(context: Context, account: AccountEntity, attsCacheDir: File) {
       var list: List<MessageEntity>
       val email = account.email
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
@@ -324,18 +326,18 @@ class MessagesSenderJobService : JobService() {
       }
     }
 
-    private fun deleteMsgAtts(roomDatabase: FlowCryptRoomDatabase, account: AccountDao, attsCacheDir: File,
+    private fun deleteMsgAtts(roomDatabase: FlowCryptRoomDatabase, account: AccountEntity, attsCacheDir: File,
                               details: MessageEntity) {
       roomDatabase.attachmentDao().delete(account.email, JavaEmailConstants.FOLDER_OUTBOX, details.uid)
       details.attachmentsDirectory?.let { FileAndDirectoryUtils.deleteDir(File(attsCacheDir, it)) }
     }
 
-    private fun sendMsg(context: Context, account: AccountDao, msgEntity: MessageEntity, atts: List<AttachmentEntity>): Boolean {
+    private fun sendMsg(context: Context, account: AccountEntity, msgEntity: MessageEntity, atts: List<AttachmentEntity>): Boolean {
       val mimeMsg = createMimeMsg(context, sess, msgEntity, atts)
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
       when (account.accountType) {
-        AccountDao.ACCOUNT_TYPE_GOOGLE -> {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
           if (account.email.equals(msgEntity.from.firstOrNull()?.address, ignoreCase = true)) {
             val transport = SmtpProtocolUtil.prepareSmtpTransport(context, sess!!, account)
             transport.sendMessage(mimeMsg, mimeMsg.allRecipients)
@@ -372,7 +374,7 @@ class MessagesSenderJobService : JobService() {
           //Gmail automatically save a copy of the sent message.
         }
 
-        AccountDao.ACCOUNT_TYPE_OUTLOOK -> {
+        AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
           val outlookTransport = SmtpProtocolUtil.prepareSmtpTransport(context, sess!!, account)
           outlookTransport.sendMessage(mimeMsg, mimeMsg.allRecipients)
           roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT.value))
@@ -468,7 +470,7 @@ class MessagesSenderJobService : JobService() {
      * @param context Interface to global information about an application environment.
      * @param mimeMsg The original [MimeMessage] which will be saved to the SENT folder.
      */
-    private fun saveCopyOfSentMsg(account: AccountDao, store: Store?, context: Context, mimeMsg: MimeMessage): Boolean {
+    private fun saveCopyOfSentMsg(account: AccountEntity, store: Store?, context: Context, mimeMsg: MimeMessage): Boolean {
       val foldersManager = FoldersManager.fromDatabase(context, account.email)
       val sentLocalFolder = foldersManager.folderSent
 
@@ -486,8 +488,8 @@ class MessagesSenderJobService : JobService() {
           sentRemoteFolder.close(false)
           return true
         } else {
-          val accountDao = AccountDaoSource().getAccountInformation(context, account.email)
-          if (accountDao == null) {
+          val accountEntity = FlowCryptRoomDatabase.getDatabase(context).accountDao().getAccount(account.email)
+          if (accountEntity == null) {
             throw IllegalArgumentException("The SENT folder is not defined. The account is null!")
           } else {
             throw IllegalArgumentException("An error occurred during saving a copy of the outgoing message. " +
@@ -545,7 +547,7 @@ class MessagesSenderJobService : JobService() {
       context ?: return
 
       val jobInfoBuilder = JobInfo.Builder(JobIdManager.JOB_TYPE_SEND_MESSAGES,
-              ComponentName(context, MessagesSenderJobService::class.java))
+          ComponentName(context, MessagesSenderJobService::class.java))
           .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
           .setPersisted(true)
 

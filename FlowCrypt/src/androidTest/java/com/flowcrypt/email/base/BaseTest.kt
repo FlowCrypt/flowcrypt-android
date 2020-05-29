@@ -11,14 +11,15 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import android.text.Html
-import android.view.View
 import android.widget.Toast
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -28,9 +29,12 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.google.android.material.snackbar.Snackbar
 import org.hamcrest.MatcherAssert.assertThat
@@ -71,16 +75,50 @@ abstract class BaseTest {
     }
   }
 
+  @Before
+  fun registerSyncServiceCountingIdlingResource() {
+    (activityTestRule?.activity as? BaseSyncActivity)?.syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+  }
+
+  @After
+  fun unregisterSyncServiceCountingIdlingResource() {
+    (activityTestRule?.activity as? BaseSyncActivity)?.syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+  }
+
+  @Before
+  fun registerCountingIdlingResource() {
+    (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+  }
+
+  @After
+  fun unregisterCountingIdlingResource() {
+    (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+  }
+
   /**
    * Check is [Toast] displayed. This method can be used only with activity. It doesn't work if a toast is displayed
-   * when some dialog is displayed.
+   * when some toast is displayed.
    *
    * @param activity A root [Activity]
    * @param message  A message which was displayed.
    */
   protected fun isToastDisplayed(activity: Activity?, message: String) {
     onView(withText(message))
-        .inRoot(withDecorView(not<View>(`is`<View>(activity?.window!!.decorView))))
+        .inRoot(withDecorView(not(`is`(activity?.window?.decorView))))
+        .check(matches(isDisplayed()))
+  }
+
+  /**
+   * Check is [Dialog] displayed. This method can be used only with activity. It doesn't work if a
+   * dialog is displayed
+   * when some toast is displayed.
+   *
+   * @param activity A root [Activity]
+   * @param message  A message which was displayed.
+   */
+  protected fun isDialogWithTextDisplayed(activity: Activity?, message: String) {
+    onView(withText(message))
+        .inRoot(withDecorView(not(`is`(activity?.window?.decorView))))
         .check(matches(isDisplayed()))
   }
 
@@ -172,6 +210,13 @@ abstract class BaseTest {
     }
   }
 
+  protected fun assertResultAfterFinish(resultCode: Int) {
+    //todo-denbond7 need to improve this one in the future when we have a better approach. Maybe
+    // https://github.com/Kotlin/kotlinx.coroutines/issues/242 will resolve this
+    Thread.sleep(2000)
+    ViewMatchers.assertThat(activityTestRule?.activityResult, hasResultCode(resultCode))
+  }
+
   fun getTargetContext(): Context {
     return InstrumentationRegistry.getInstrumentation().targetContext
   }
@@ -180,10 +225,18 @@ abstract class BaseTest {
     return InstrumentationRegistry.getInstrumentation().context
   }
 
-  fun getMsgInfo(path: String, mimeMsgPath: String): IncomingMessageInfo? {
+  fun getMsgInfo(path: String, mimeMsgPath: String, vararg atts: AttachmentInfo?): IncomingMessageInfo? {
     val incomingMsgInfo = TestGeneralUtil.getObjectFromJson(path, IncomingMessageInfo::class.java)
     incomingMsgInfo?.msgEntity?.let {
       val uri = roomDatabase.msgDao().insert(it)
+      val attEntities = mutableListOf<AttachmentEntity>()
+
+      for (attInfo in atts) {
+        attInfo?.let { info -> AttachmentEntity.fromAttInfo(info)?.let { candidate -> attEntities.add(candidate) } }
+      }
+
+      roomDatabase.attachmentDao().insert(attEntities)
+
       MsgsCacheManager.addMsg(uri.toString(), getContext().assets.open(mimeMsgPath))
     }
     return incomingMsgInfo

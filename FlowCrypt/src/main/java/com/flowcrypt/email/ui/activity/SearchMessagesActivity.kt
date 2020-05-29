@@ -16,8 +16,7 @@ import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.sun.mail.imap.protocol.SearchSequence
@@ -33,7 +32,6 @@ import com.sun.mail.imap.protocol.SearchSequence
 class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextListener,
     MenuItem.OnActionExpandListener {
 
-  override var currentAccountDao: AccountDao? = null
   private var initQuery: String? = null
   override var currentFolder: LocalFolder? = null
 
@@ -53,7 +51,6 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
     super.onCreate(savedInstanceState)
 
     //// TODO-denbond7: 26.04.2018 Need to add saving the query and restoring it
-    this.currentAccountDao = AccountDaoSource().getActiveAccountInformation(this)
     if (intent != null && intent.hasExtra(EXTRA_KEY_FOLDER)) {
       this.initQuery = intent.getStringExtra(EXTRA_KEY_QUERY)
       val incomingFolder: LocalFolder? = intent.getParcelableExtra(EXTRA_KEY_FOLDER)
@@ -83,17 +80,21 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
       R.id.sync_request_code_search_messages ->
         super.onReplyReceived(R.id.syns_request_code_load_next_messages, resultCode, obj)
 
-      else -> super.onReplyReceived(requestCode, resultCode, obj)
+      else -> {
+      }
     }
+
+    super.onReplyReceived(requestCode, resultCode, obj)
   }
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
       R.id.sync_request_code_search_messages -> {
         onErrorOccurred(requestCode, errorType, e)
-        msgsIdlingResource.setIdleState(true)
       }
     }
+
+    super.onErrorHappened(requestCode, errorType, e)
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -120,7 +121,7 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
   override fun onQueryTextSubmit(query: String): Boolean {
     this.initQuery = query
 
-    if (AccountDao.ACCOUNT_TYPE_GOOGLE.equals(currentAccountDao!!.accountType!!, ignoreCase = true)
+    if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(activeAccount?.accountType, ignoreCase = true)
         && !SearchSequence.isAscii(query)) {
       Toast.makeText(this, R.string.cyrillic_search_not_support_yet, Toast.LENGTH_SHORT).show()
       return true

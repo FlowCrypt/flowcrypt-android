@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.retrofit.ApiName
  * Time: 13:41
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 It's old code. Need to remove this after refactoring
 interface BaseRequest<T> {
   val apiName: ApiName
 

@@ -23,13 +23,11 @@ import com.google.android.material.snackbar.Snackbar
  * Time: 12:25
  * E-mail: DenBond7@gmail.com
  */
-
 class GoogleApiClientHelper {
 
   companion object {
     private const val SERVER_CLIENT_ID = "374364070962-n83b6asllhfkhij6slijr61576lqqi3v.apps.googleusercontent.com"
 
-    @JvmStatic
     fun generateGoogleSignInOptions(): GoogleSignInOptions {
       val builder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
 
@@ -48,7 +46,6 @@ class GoogleApiClientHelper {
      * @param rootView        A view which will be used for showing an info [Snackbar]
      * @param requestCode     A request code for handling the result.
      */
-    @JvmStatic
     fun signInWithGmailUsingOAuth2(activity: BaseActivity, client: GoogleSignInClient,
                                    rootView: View, requestCode: Int) {
       if (GeneralUtil.isConnected(activity)) {

@@ -26,6 +26,8 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.DecryptMessageViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.factory.MsgDetailsViewModelFactory
@@ -124,6 +126,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
         }
       }
     }
+
+    super.onReplyReceived(requestCode, resultCode, obj)
   }
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
@@ -136,6 +140,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
 
       else -> onErrorOccurred(requestCode, errorType, e)
     }
+
+    super.onErrorHappened(requestCode, errorType, e)
   }
 
   override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
@@ -164,7 +170,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
   }
 
   fun decryptMsg() {
-    idlingForDecryption?.increment()
+    idlingForDecryption?.incrementSafely()
     onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id.progress_id_processing, 65)
     when {
       rawMimeBytesOfOutgoingMsg?.isNotEmpty() == true -> rawMimeBytesOfOutgoingMsg?.let { decryptMsgViewModel.decryptMessage(it) }
@@ -382,9 +388,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
           val result = it.data
           if (result == null) {
             Toast.makeText(this, getString(R.string.internal_api_error), Toast.LENGTH_LONG).show()
-            if (!idlingForDecryption!!.isIdleNow) {
-              idlingForDecryption?.decrement()
-            }
+            idlingForDecryption?.decrementSafely()
           } else {
             val msgInfo = IncomingMessageInfo(messageEntity, result.text,
                 result.subject, result.msgBlocks!!, decryptMsgViewModel.headersLiveData.value, result.getMsgEncryptionType())
@@ -393,9 +397,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
 
             fragment?.showIncomingMsgInfo(msgInfo)
 
-            if (!idlingForDecryption!!.isIdleNow) {
-              idlingForDecryption?.decrement()
-            }
+            idlingForDecryption?.decrementSafely()
           }
         }
 
@@ -403,9 +405,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
           idlingForWebView.setIdleState(true)
           updateActionProgressState(100, null)
           showErrorInfo(it.data?.apiError, null)
-          if (!idlingForDecryption!!.isIdleNow) {
-            idlingForDecryption!!.decrement()
-          }
+          idlingForDecryption?.decrementSafely()
           ExceptionUtil.handleError(ManualHandledException("" + it.data?.apiError))
         }
 
@@ -414,7 +414,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
           updateActionProgressState(100, null)
           showErrorInfo(null, it.exception)
           if (!idlingForDecryption!!.isIdleNow) {
-            idlingForDecryption!!.decrement()
+            idlingForDecryption!!.decrementSafely()
           }
           ExceptionUtil.handleError(it.exception!!)
         }

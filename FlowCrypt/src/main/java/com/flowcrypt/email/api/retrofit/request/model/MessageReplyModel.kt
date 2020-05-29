@@ -16,7 +16,6 @@ import com.google.gson.annotations.SerializedName
  * Time: 16:32
  * E-mail: DenBond7@gmail.com
  */
-
 data class MessageReplyModel(@SerializedName("short") @Expose val shortValue: String,
                              @SerializedName("token") @Expose val token: String,
                              @SerializedName("message") @Expose val message: String,

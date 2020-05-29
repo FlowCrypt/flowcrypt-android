@@ -47,6 +47,7 @@ import javax.net.ssl.X509TrustManager
  * This class describes a logic where we create some security things for communication between the Node.js server and
  * the app.
  */
+// todo - one of the main class which should be reviewed
 class NodeSecret @JvmOverloads internal constructor(writablePath: String,
                                                     nodeSecretCertsCache: NodeSecretCerts? = null) {
 

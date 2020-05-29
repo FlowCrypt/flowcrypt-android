@@ -5,19 +5,14 @@
   "givenName": "givenName",
   "familyName": "familyName",
   "photoUrl": "photoUrl",
-  "authCreds": {
-    "email": "default@denbond7.com",
-    "imapPort": 143,
-    "imapOpt": "NONE",
-    "imapServer": "imap.denbond7.com",
-    "hasCustomSignInForSmtp": false,
-    "password": "qwerty1234",
-    "smtpPort": 25,
-    "smtpOpt": "NONE",
-    "smtpServer": "smtp.denbond7.com",
-    "username": "default@denbond7.com"
-  },
-  "domainRules": [
-    "ENFORCE_ATTESTER_SUBMIT"
-  ]
+  "imapPort": 143,
+  "imapOpt": "NONE",
+  "imapServer": "imap.denbond7.com",
+  "useCustomSignForSmtp": false,
+  "password": "qwerty1234",
+  "smtpPort": 25,
+  "smtpOpt": "NONE",
+  "smtpServer": "smtp.denbond7.com",
+  "username": "default@denbond7.com",
+  "domainRules": "ENFORCE_ATTESTER_SUBMIT"
 }

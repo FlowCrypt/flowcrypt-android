@@ -37,7 +37,6 @@ import java.util.*
  * Time: 22:25
  * E-mail: DenBond7@gmail.com
  */
-
 class EmailAndNameUpdaterService : JobIntentService() {
   private var contactsDao: ContactsDao = FlowCryptRoomDatabase.getDatabase(this).contactsDao()
 
@@ -46,7 +45,7 @@ class EmailAndNameUpdaterService : JobIntentService() {
         ?: return
 
     for (pair in pairs) {
-      val email = pair.email ?: continue
+      val email = pair.email?.toLowerCase(Locale.getDefault()) ?: continue
       val contactEntity = contactsDao.getContactByEmails(email)
       if (contactEntity != null) {
         if (contactEntity.name.isNullOrEmpty()) {
@@ -68,9 +67,8 @@ class EmailAndNameUpdaterService : JobIntentService() {
      * @param context           Interface to global information about an application environment.
      * @param emailAndNamePairs A list of EmailAndNamePair objects.
      */
-    @JvmStatic
     fun enqueueWork(context: Context, emailAndNamePairs: ArrayList<EmailAndNamePair>?) {
-      if (emailAndNamePairs != null && !emailAndNamePairs.isEmpty()) {
+      if (emailAndNamePairs != null && emailAndNamePairs.isNotEmpty()) {
         val intent = Intent(context, EmailAndNameUpdaterService::class.java)
         intent.putExtra(EXTRA_KEY_LIST_OF_PAIRS_EMAIL_NAME, emailAndNamePairs)
 

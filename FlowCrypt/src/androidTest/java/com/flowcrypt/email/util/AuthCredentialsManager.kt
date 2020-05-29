@@ -8,7 +8,7 @@ package com.flowcrypt.email.util
 import com.flowcrypt.email.api.email.model.AuthCredentials
 
 /**
- * This class describes a logic of generation {@link AuthCredentials} from the resources folder.
+ * This class describes a logic of generation {@link AccountEntity} from the resources folder.
  *
  * @author Denis Bondarenko
  * Date: 27.12.2017

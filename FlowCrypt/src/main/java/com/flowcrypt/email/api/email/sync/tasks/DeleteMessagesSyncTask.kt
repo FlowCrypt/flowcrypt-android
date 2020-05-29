@@ -10,7 +10,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.Folder
 import javax.mail.Message
@@ -30,10 +30,16 @@ import javax.mail.Store
 class DeleteMessagesSyncTask(ownerKey: String,
                              requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
 
-  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
     val foldersManager = FoldersManager.fromDatabase(context, account.email)
-    val trash = foldersManager.folderTrash ?: return
+    val trash = foldersManager.folderTrash
+
+    if (trash == null) {
+      listener.onActionCompleted(account, ownerKey, requestCode)
+      return
+    }
+
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
     while (true) {
@@ -52,7 +58,7 @@ class DeleteMessagesSyncTask(ownerKey: String,
             continue
           }
 
-          val uidList = filteredMsgs.map { it.uid.toLong() }
+          val uidList = filteredMsgs.map { it.uid }
           val remoteSrcFolder = store.getFolder(folder) as IMAPFolder
           val remoteDestFolder = store.getFolder(trash.fullName) as IMAPFolder
           remoteSrcFolder.open(Folder.READ_WRITE)
@@ -68,5 +74,7 @@ class DeleteMessagesSyncTask(ownerKey: String,
         }
       }
     }
+
+    listener.onActionCompleted(account, ownerKey, requestCode)
   }
 }

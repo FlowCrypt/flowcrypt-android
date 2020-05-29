@@ -18,7 +18,6 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackActivity
  * Time: 9:05
  * E-mail: DenBond7@gmail.com
  */
-
 abstract class BaseSettingsActivity : BaseBackStackActivity() {
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
     menuInflater.inflate(R.menu.activity_settings, menu)

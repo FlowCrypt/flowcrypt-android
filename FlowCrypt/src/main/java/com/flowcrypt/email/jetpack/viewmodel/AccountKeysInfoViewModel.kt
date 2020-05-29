@@ -19,7 +19,6 @@ import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import kotlinx.coroutines.Dispatchers
@@ -58,9 +57,9 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
   }
 
   /**
-   * Get available Gmail aliases for an input [AccountDao].
+   * Get available Gmail aliases for an input [AccountEntity].
    *
-   * @param account The [AccountDao] object which contains information about an email account.
+   * @param account The [AccountEntity] object which contains information about an email account.
    * @return The list of available Gmail aliases.
    */
   private suspend fun getAvailableGmailAliases(account: Account): Collection<String> = withContext(Dispatchers.IO) {
@@ -87,7 +86,7 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
       withContext(Dispatchers.IO) {
         refreshingLiveData.postValue(Result.loading())
         val accountEntity = activeAccountLiveData.value
-            ?: roomDatabase.accountDao().getActiveAccount()
+            ?: roomDatabase.accountDao().getActiveAccountSuspend()
         refreshingLiveData.postValue(getResult(accountEntity))
       }
     }
@@ -98,13 +97,13 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
       val emails = ArrayList<String>()
       emails.add(accountEntity.email)
 
-      if (accountEntity.account?.type == AccountDao.ACCOUNT_TYPE_GOOGLE) {
+      if (accountEntity.account?.type == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
         emails.addAll(getAvailableGmailAliases(accountEntity.account))
       }
 
       repository.postLookUpEmails(getApplication(), PostLookUpEmailsModel(emails))
     } else {
-      Result.exception(NullPointerException("AccountDao is null!"))
+      Result.exception(NullPointerException("AccountEntity is null!"))
     }
   }
 }

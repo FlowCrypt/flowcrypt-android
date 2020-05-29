@@ -7,6 +7,7 @@ package com.flowcrypt.email.ui.activity
 
 import android.content.Intent
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
@@ -18,9 +19,10 @@ import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -42,9 +44,7 @@ class CreatePrivateKeyActivityTest : BasePassphraseActivityTest() {
   override val activityTestRule: ActivityTestRule<*>? =
       object : ActivityTestRule<CreatePrivateKeyActivity>(CreatePrivateKeyActivity::class.java) {
         override fun getActivityIntent(): Intent {
-          val result = Intent(getTargetContext(), CreatePrivateKeyActivity::class.java)
-          result.putExtra(BasePassPhraseManagerActivity.KEY_EXTRA_ACCOUNT_DAO, AccountDaoManager.getDefaultAccountDao())
-          return result
+          return CreatePrivateKeyActivity.newIntent(this@CreatePrivateKeyActivityTest.getTargetContext(), AccountDaoManager.getUserWitMoreThan21Letters())
         }
       }
 
@@ -52,6 +52,22 @@ class CreatePrivateKeyActivityTest : BasePassphraseActivityTest() {
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(activityTestRule)
+
+  @Before
+  fun registerCreatePrivateKeyIdlingResource() {
+    val activity = activityTestRule?.activity ?: return
+    if (activity is CreatePrivateKeyActivity) {
+      IdlingRegistry.getInstance().register(activity.createPrivateKeyIdlingResource)
+    }
+  }
+
+  @After
+  fun unregisterCreatePrivateKeyIdlingResource() {
+    val activity = activityTestRule?.activity ?: return
+    if (activity is CreatePrivateKeyActivity) {
+      IdlingRegistry.getInstance().unregister(activity.createPrivateKeyIdlingResource)
+    }
+  }
 
   @Test
   fun testUseCorrectPassPhrase() {

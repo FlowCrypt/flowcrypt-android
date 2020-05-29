@@ -13,7 +13,6 @@ package com.flowcrypt.email.api.email
  * Time: 9:40
  * E-mail: DenBond7@gmail.com
  */
-
 class JavaEmailConstants {
   companion object {
 

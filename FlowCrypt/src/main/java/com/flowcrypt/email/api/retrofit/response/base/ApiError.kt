@@ -19,7 +19,6 @@ import com.google.gson.annotations.SerializedName
  * Time: 9:26
  * E-mail: DenBond7@gmail.com
  */
-
 data class ApiError constructor(@Expose val code: Int? = null,
                                 @SerializedName("message") @Expose val msg: String? = null,
                                 @Expose val internal: String? = null,

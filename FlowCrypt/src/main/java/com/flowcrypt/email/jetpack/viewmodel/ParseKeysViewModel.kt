@@ -29,6 +29,7 @@ class ParseKeysViewModel(application: Application) : BaseNodeApiViewModel(applic
   }
 
   fun fetchKeys(rawKey: String?) {
+    //todo-denbond7 need to change it to use the common approach with LiveData
     apiRepository.fetchKeyDetails(R.id.live_data_id_fetch_keys, responsesLiveData, rawKey)
   }
 }

@@ -17,5 +17,6 @@ import com.flowcrypt.email.api.retrofit.request.model.LoginModel
  *         Time: 3:53 PM
  *         E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 this class is redundant. We can refactor code and delete this
 class LoginRequest(override val apiName: ApiName = ApiName.POST_LOGIN,
                    override val requestModel: LoginModel, val tokenId: String) : BaseRequest<LoginModel>

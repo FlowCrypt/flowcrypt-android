@@ -37,6 +37,9 @@ interface LabelDao : BaseDao<LabelEntity> {
   @Query("SELECT * FROM imap_labels WHERE email = :account")
   suspend fun getLabelsSuspend(account: String): List<LabelEntity>
 
+  @Query("DELETE FROM imap_labels WHERE email = :email")
+  suspend fun deleteByEmailSuspend(email: String?): Int
+
   @Transaction
   fun update(existedLabels: Collection<LabelEntity>, freshLabels: Collection<LabelEntity>) {
     val deleteCandidates = mutableListOf<LabelEntity>()

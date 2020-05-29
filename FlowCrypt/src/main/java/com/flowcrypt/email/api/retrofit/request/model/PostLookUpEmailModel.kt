@@ -19,7 +19,6 @@ import java.util.*
  * Time: 13:27
  * E-mail: DenBond7@gmail.com
  */
-
 data class PostLookUpEmailModel(@SerializedName("email") @Expose var email: String) : RequestModel {
   init {
     if (!TextUtils.isEmpty(email)) {

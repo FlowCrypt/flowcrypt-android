@@ -16,5 +16,4 @@ import com.google.gson.annotations.SerializedName
  * Time: 15:12
  * E-mail: DenBond7@gmail.com
  */
-
 data class LinkMessageModel(@SerializedName("short") @Expose val shortValue: String) : RequestModel

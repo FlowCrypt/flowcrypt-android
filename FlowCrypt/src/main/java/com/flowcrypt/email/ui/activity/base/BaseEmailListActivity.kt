@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.base
 
-import androidx.annotation.VisibleForTesting
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
@@ -13,7 +12,6 @@ import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
-import com.flowcrypt.email.util.idling.SingleIdlingResources
 
 /**
  * The base [android.app.Activity] for displaying messages.
@@ -24,14 +22,6 @@ import com.flowcrypt.email.util.idling.SingleIdlingResources
  * E-mail: DenBond7@gmail.com
  */
 abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnManageEmailsListener {
-  @JvmField
-  @VisibleForTesting
-  val msgsIdlingResource = SingleIdlingResources()
-
-  @VisibleForTesting
-  override val msgsLoadingIdlingResource: SingleIdlingResources
-    get() = msgsIdlingResource
-
   override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
     when (requestCode) {
       R.id.syns_request_code_load_next_messages -> {
@@ -44,19 +34,19 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
             onNextMsgsLoaded()
           }
         }
-
-        msgsIdlingResource.setIdleState(true)
       }
     }
+
+    super.onReplyReceived(requestCode, resultCode, obj)
   }
 
   override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
     when (requestCode) {
       R.id.syns_request_code_load_next_messages -> {
         onErrorOccurred(requestCode, errorType, e)
-        msgsIdlingResource.setIdleState(true)
       }
     }
+    super.onErrorHappened(requestCode, errorType, e)
   }
 
   override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {

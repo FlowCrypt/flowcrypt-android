@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.retrofit.node
 
 import com.flowcrypt.email.api.retrofit.request.node.DecryptKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.EncryptKeyRequest
-import com.flowcrypt.email.api.retrofit.request.node.GenerateKeyRequest
 import com.flowcrypt.email.api.retrofit.request.node.GmailBackupSearchRequest
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
@@ -15,9 +14,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.node.BaseNodeResponse
 import com.flowcrypt.email.api.retrofit.response.node.DecryptKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.EncryptKeyResult
-import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
-import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.common.util.CollectionUtils
 import java.io.IOException
@@ -42,7 +39,6 @@ class NodeCallsExecutor {
      * @throws IOException   Such exceptions can occur during network calls.
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
-    @JvmStatic
     fun parseKeys(key: String?): List<NodeKeyDetails> {
       key ?: return emptyList()
 
@@ -67,7 +63,6 @@ class NodeCallsExecutor {
      * @throws IOException   Such exceptions can occur during network calls.
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
-    @JvmStatic
     fun getGmailBackupSearch(email: String): String? {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = GmailBackupSearchRequest(email)
@@ -89,7 +84,6 @@ class NodeCallsExecutor {
      * @throws IOException   Such exceptions can occur during network calls.
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
-    @JvmStatic
     fun decryptKey(key: String, passphrase: String): DecryptKeyResult {
       return decryptKey(key, listOf(passphrase))
     }
@@ -103,7 +97,6 @@ class NodeCallsExecutor {
      * @throws IOException   Such exceptions can occur during network calls.
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
-    @JvmStatic
     fun decryptKey(key: String, passphrases: List<String>): DecryptKeyResult {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = DecryptKeyRequest(key, passphrases)
@@ -125,34 +118,11 @@ class NodeCallsExecutor {
      * @throws IOException   Such exceptions can occur during network calls.
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
-    @JvmStatic
     fun encryptKey(key: String, passphrase: String): EncryptKeyResult {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = EncryptKeyRequest(key, passphrase)
 
       val response = service.encryptKey(request).execute()
-      val result = response.body()
-
-      checkResult(result)
-
-      return result!!
-    }
-
-    /**
-     * Generate a private key using the given parameters.
-     *
-     * @param passphrase  The given passphrase.
-     * @param pgpContacts A list of contacts.
-     * @return An instance of [GenerateKeyResult]
-     * @throws IOException   Such exceptions can occur during network calls.
-     * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
-     */
-    @JvmStatic
-    fun genKey(passphrase: String, pgpContacts: List<PgpContact>): GenerateKeyResult {
-      val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
-      val request = GenerateKeyRequest(passphrase, pgpContacts)
-
-      val response = service.generateKey(request).execute()
       val result = response.body()
 
       checkResult(result)
@@ -168,7 +138,6 @@ class NodeCallsExecutor {
      * @throws IOException   Such exceptions can occur during network calls.
      * @throws NodeException If Node.js server will return any errors we will throw such type of errors.
      */
-    @JvmStatic
     fun zxcvbnStrengthBar(guesses: Double): ZxcvbnStrengthBarResult {
       val service = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
       val request = ZxcvbnStrengthBarRequest(guesses)
@@ -181,7 +150,6 @@ class NodeCallsExecutor {
       return result!!
     }
 
-    @JvmStatic
     private fun checkResult(result: BaseNodeResponse?) {
       if (result == null) {
         throw NullPointerException("Result is null")

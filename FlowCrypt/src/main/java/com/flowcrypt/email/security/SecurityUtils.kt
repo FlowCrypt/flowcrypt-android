@@ -11,7 +11,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
@@ -30,7 +30,6 @@ import java.util.*
  * Time: 13:08
  * E-mail: DenBond7@gmail.com
  */
-
 class SecurityUtils {
   companion object {
     /**
@@ -52,7 +51,7 @@ class SecurityUtils {
      * @param account The given account
      * @return A string which includes private keys
      */
-    fun genPrivateKeysBackup(context: Context, account: AccountDao): String {
+    fun genPrivateKeysBackup(context: Context, account: AccountEntity): String {
       val builder = StringBuilder()
       val longIdsByEmail = FlowCryptRoomDatabase.getDatabase(context).userIdEmailsKeysDao().getLongIdsByEmail(account.email)
       val longids = longIdsByEmail.toTypedArray()
@@ -125,7 +124,7 @@ class SecurityUtils {
      */
     @JvmStatic
     fun getRecipientsPubKeys(context: Context, emails: MutableList<String>,
-                             account: AccountDao, senderEmail: String): List<String> {
+                             account: AccountEntity, senderEmail: String): List<String> {
       val publicKeys = ArrayList<String>()
       val contacts = FlowCryptRoomDatabase.getDatabase(context).contactsDao()
           .getContactsByEmails(emails)
@@ -151,7 +150,7 @@ class SecurityUtils {
      * @throws NoKeyAvailableException
      */
     @JvmStatic
-    fun getSenderPublicKey(context: Context, account: AccountDao, senderEmail: String): String? {
+    fun getSenderPublicKey(context: Context, account: AccountEntity, senderEmail: String): String? {
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       var longIds = roomDatabase.userIdEmailsKeysDao().getLongIdsByEmail(senderEmail)
 

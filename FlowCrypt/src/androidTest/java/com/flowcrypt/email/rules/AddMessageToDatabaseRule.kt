@@ -8,7 +8,7 @@ package com.flowcrypt.email.rules
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.google.android.gms.auth.GoogleAuthException
 import com.sun.mail.imap.IMAPFolder
@@ -26,7 +26,7 @@ import javax.mail.UIDFolder
  * Time: 09:48
  * E-mail: DenBond7@gmail.com
  */
-class AddMessageToDatabaseRule(val account: AccountDao, val localFolder: LocalFolder) : BaseRule() {
+class AddMessageToDatabaseRule(val account: AccountEntity, val localFolder: LocalFolder) : BaseRule() {
   private var message: Message? = null
 
   init {

@@ -24,7 +24,6 @@ import javax.mail.MessagingException
  * Time: 14:37
  * E-mail: DenBond7@gmail.com
  */
-
 class FoldersManager constructor(val account: String) {
   private var folders: LinkedHashMap<String, LocalFolder> = LinkedHashMap()
 
@@ -267,7 +266,6 @@ class FoldersManager constructor(val account: String) {
      * @return
      * @throws MessagingException
      */
-    @JvmStatic
     fun generateFolder(account: String, imapFolder: IMAPFolder, folderAlias: String?): LocalFolder {
       return LocalFolder(account, imapFolder.fullName, folderAlias, Arrays.asList(*imapFolder
           .attributes), isCustom(imapFolder), 0, "")
@@ -281,7 +279,6 @@ class FoldersManager constructor(val account: String) {
      * @return true if this label is a custom, false otherwise.
      * @throws MessagingException
      */
-    @JvmStatic
     fun isCustom(folder: IMAPFolder): Boolean {
       val attr = folder.attributes
       val folderTypes = FolderType.values()
@@ -303,7 +300,6 @@ class FoldersManager constructor(val account: String) {
      * @param localFolder Some [javax.mail.Folder].
      * @return [FolderType].
      */
-    @JvmStatic
     fun getFolderType(localFolder: LocalFolder?): FolderType? {
       val folderTypes = FolderType.values()
 

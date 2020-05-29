@@ -11,7 +11,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intending
@@ -27,7 +26,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
@@ -40,11 +38,8 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
-import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -69,18 +64,7 @@ class BackupKeysActivityTest : BaseTest() {
       .around(AddAccountToDatabaseRule())
       .around(activityTestRule)
 
-  @Before
-  fun registerIdlingResource() {
-    IdlingRegistry.getInstance().register((activityTestRule?.activity as BackupKeysActivity).countingIdlingResource)
-  }
-
-  @After
-  fun unregisterIdlingResource() {
-    IdlingRegistry.getInstance().unregister((activityTestRule?.activity as BackupKeysActivity).countingIdlingResource)
-  }
-
   @Test
-  @DoesNotNeedMailserver
   fun testEmailOptionHint() {
     onView(withId(R.id.radioButtonEmail))
         .check(matches(isDisplayed()))
@@ -90,7 +74,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testDownloadOptionHint() {
     onView(withId(R.id.radioButtonDownload))
         .check(matches(isDisplayed()))
@@ -100,7 +83,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testNoKeysEmailOption() {
     onView(withId(R.id.radioButtonEmail))
         .check(matches(isDisplayed()))
@@ -113,7 +95,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testNoKeysDownloadOption() {
     onView(withId(R.id.radioButtonDownload))
         .check(matches(isDisplayed()))
@@ -141,8 +122,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
-  @Ignore("fix me")
   fun testSuccessDownloadOption() {
     addFirstKeyWithStrongPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -155,19 +134,21 @@ class BackupKeysActivityTest : BaseTest() {
     onView(withId(R.id.buttonBackupAction))
         .check(matches(isDisplayed()))
         .perform(click())
-    assertTrue(activityTestRule?.activity!!.isFinishing)
+
+    //need some time to finish an activity
+    Thread.sleep(1000)
+
+    assertTrue(activityTestRule?.activity?.isDestroyed == true)
     TestGeneralUtil.deleteFiles(listOf(file))
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testSuccessWithTwoKeysDownloadOption() {
     addSecondKeyWithStrongPassword()
     testSuccessDownloadOption()
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testShowWeakPasswordHintForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -192,7 +173,6 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testFixWeakPasswordForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -230,11 +210,10 @@ class BackupKeysActivityTest : BaseTest() {
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
-    assertFalse(activityTestRule?.activity!!.isFinishing)
+    assertTrue(activityTestRule?.activity?.isFinishing == false)
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testDiffPassphrasesForDownloadOption() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()

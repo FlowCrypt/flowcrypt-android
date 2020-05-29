@@ -31,7 +31,6 @@ import javax.net.ssl.SSLProtocolException
  * Time: 10:22
  * E-mail: DenBond7@gmail.com
  */
-
 object ExceptionResolver {
 
   /**

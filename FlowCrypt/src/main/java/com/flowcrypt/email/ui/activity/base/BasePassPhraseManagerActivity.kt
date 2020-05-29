@@ -34,11 +34,9 @@ import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.response.model.node.Word
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
-import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
-import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.material.snackbar.Snackbar
@@ -72,9 +70,6 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
   protected lateinit var textViewSecondPasswordCheckTitle: TextView
   protected lateinit var btnSuccess: Button
 
-  @JvmField
-  protected var account: AccountDao? = null
-  @JvmField
   protected var isBackEnabled = true
 
   @get:VisibleForTesting
@@ -95,12 +90,6 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     super.onCreate(savedInstanceState)
 
     if (intent == null) {
-      finish()
-    }
-
-    this.account = intent.getParcelableExtra(KEY_EXTRA_ACCOUNT_DAO)
-
-    if (account == null) {
       finish()
     }
 
@@ -164,9 +153,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
       R.id.buttonConfirmPassPhrases -> if (TextUtils.isEmpty(editTextKeyPasswordSecond.text.toString())) {
         showInfoSnackbar(rootView, getString(R.string.passphrase_must_be_non_empty), Snackbar.LENGTH_LONG)
       } else {
-        if (snackBar != null) {
-          snackBar!!.dismiss()
-        }
+        snackBar?.dismiss()
 
         if (editTextKeyPassword.text.toString() == editTextKeyPasswordSecond.text.toString()) {
           onConfirmPassPhraseSuccess()
@@ -358,8 +345,6 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
   }
 
   companion object {
-    @JvmField
-    val KEY_EXTRA_ACCOUNT_DAO = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_ACCOUNT_DAO", BasePassPhraseManagerActivity::class.java)
     private const val DELAY: Long = 350
   }
 }

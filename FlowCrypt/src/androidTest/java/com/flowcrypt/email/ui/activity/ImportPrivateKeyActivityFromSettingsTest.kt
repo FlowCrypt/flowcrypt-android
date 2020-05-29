@@ -11,7 +11,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode
@@ -41,11 +40,8 @@ import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
-import org.junit.After
 import org.junit.AfterClass
-import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -61,7 +57,6 @@ import java.io.File
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("Temporary excluded")
 class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
   val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
@@ -69,7 +64,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
       object : IntentsTestRule<ImportPrivateKeyActivity>(ImportPrivateKeyActivity::class.java) {
         override fun getActivityIntent(): Intent {
           return ImportPrivateKeyActivity.getIntent(context = getTargetContext(),
-              accountDao = addAccountToDatabaseRule.account,
+              accountEntity = addAccountToDatabaseRule.account,
               isSyncEnabled = true,
               title = getTargetContext().getString(R.string.import_private_key),
               throwErrorIfDuplicateFoundEnabled = true,
@@ -84,22 +79,6 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
       .around(addAccountToDatabaseRule)
       .around(GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE))
       .around(activityTestRule)
-
-  @Before
-  fun registerIdlingResource() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is ImportPrivateKeyActivity) {
-      IdlingRegistry.getInstance().register(activity.countingIdlingResource)
-    }
-  }
-
-  @After
-  fun unregisterIdlingResource() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is ImportPrivateKeyActivity) {
-      IdlingRegistry.getInstance().unregister(activity.countingIdlingResource)
-    }
-  }
 
   @Test
   fun testImportKeyFromBackup() {
@@ -129,8 +108,8 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
     onView(withId(R.id.buttonLoadFromFile))
         .check(matches(isDisplayed()))
         .perform(click())
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.file_has_wrong_pgp_structure,
-        getResString(R.string.private_)))
+    isDialogWithTextDisplayed(activityTestRule?.activity, getResString(R.string
+        .file_has_wrong_pgp_structure, getResString(R.string.private_)))
   }
 
   @Test
@@ -150,8 +129,8 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
     onView(withId(R.id.buttonLoadFromClipboard))
         .check(matches(isDisplayed()))
         .perform(click())
-    checkIsSnackbarDisplayedAndClick(getResString(R.string.clipboard_has_wrong_structure,
-        getResString(R.string.private_)))
+    isDialogWithTextDisplayed(activityTestRule?.activity, getResString(R.string
+        .clipboard_has_wrong_structure, getResString(R.string.private_)))
   }
 
   private fun useIntentionToRunActivityToSelectFile(file: File?) {

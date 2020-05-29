@@ -14,15 +14,18 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
-import com.flowcrypt.email.util.idling.SingleIdlingResources
 
 /**
  * This activity describes a logic of changing the pass phrase of all imported private keys of an active account.
@@ -37,7 +40,10 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   @get:VisibleForTesting
-  val idlingForFetchingKeys: SingleIdlingResources = SingleIdlingResources()
+  val idlingForFetchingKeys: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
+
+  @get:VisibleForTesting
+  var changePassphraseIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override fun onConfirmPassPhraseSuccess() {
     privateKeysViewModel.changePassphrase(editTextKeyPassword.text.toString())
@@ -104,23 +110,22 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            idlingForFetchingKeys.setIdleState(false)
+            idlingForFetchingKeys.incrementSafely()
           }
 
           Result.Status.SUCCESS -> {
-            idlingForFetchingKeys.setIdleState(true)
-
             val keyDetailsList = it.data
             if (keyDetailsList?.isEmpty() == true) {
               runBackupKeysActivity()
             } else {
               privateKeysViewModel.saveBackupsToInbox()
             }
+            idlingForFetchingKeys.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            idlingForFetchingKeys.setIdleState(true)
             runBackupKeysActivity()
+            idlingForFetchingKeys.decrementSafely()
           }
         }
       }
@@ -132,21 +137,24 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
+            changePassphraseIdlingResource.incrementSafely()
             isBackEnabled = false
             UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
           }
 
           Result.Status.SUCCESS -> {
             if (it.data == true) {
-              if (account?.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP) == true) {
+              if (activeAccount?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) == true) {
                 isBackEnabled = true
                 Toast.makeText(this, R.string.pass_phrase_changed, Toast.LENGTH_SHORT).show()
                 setResult(Activity.RESULT_OK)
                 finish()
               } else {
-                account?.let { loadPrivateKeysViewModel.fetchAvailableKeys(it) }
+                activeAccount?.let { accountEntity -> loadPrivateKeysViewModel.fetchAvailableKeys(accountEntity) }
               }
             }
+
+            changePassphraseIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -154,6 +162,8 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
             editTextKeyPasswordSecond.text = null
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
             showInfoSnackbar(rootView, it.exception?.message ?: getString(R.string.unknown_error))
+
+            changePassphraseIdlingResource.decrementSafely()
           }
         }
       }
@@ -186,10 +196,8 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
 
     const val REQUEST_CODE_BACKUP_WITH_OPTION = 100
 
-    fun newIntent(context: Context?, account: AccountDao?): Intent {
-      val intent = Intent(context, ChangePassPhraseActivity::class.java)
-      intent.putExtra(KEY_EXTRA_ACCOUNT_DAO, account)
-      return intent
+    fun newIntent(context: Context?): Intent {
+      return Intent(context, ChangePassPhraseActivity::class.java)
     }
   }
 }

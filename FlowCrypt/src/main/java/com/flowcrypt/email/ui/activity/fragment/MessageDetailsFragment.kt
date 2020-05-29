@@ -51,8 +51,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.DecryptedAttMsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
@@ -72,7 +71,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
-import com.google.android.gms.common.util.CollectionUtils
 import java.io.File
 import java.nio.charset.StandardCharsets
 
@@ -174,7 +172,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           val atts: List<AttachmentInfo> = data?.getParcelableArrayListExtra(ChoosePublicKeyDialogFragment
               .KEY_ATTACHMENT_INFO_LIST) ?: emptyList()
 
-          if (!CollectionUtils.isEmpty(atts)) {
+          if (atts.isNotEmpty()) {
             makeAttsProtected(atts)
             sendTemplateMsgWithPublicKey(atts[0])
           }
@@ -461,12 +459,10 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
    */
   private fun updateActionsVisibility(localFolder: LocalFolder?, foldersManager: FoldersManager?) {
     folderType = FoldersManager.getFolderType(localFolder)
-    val account = AccountDaoSource().getActiveAccountInformation(context)
-
     if (folderType != null) {
       when (folderType) {
         FoldersManager.FolderType.INBOX -> {
-          if (AccountDao.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
+          if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
             isArchiveActionEnabled = true
           }
           isDeleteActionEnabled = true
@@ -935,15 +931,14 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
     val buttonImportPrivateKey = viewGroup.findViewById<Button>(R.id.buttonImportPrivateKey)
     buttonImportPrivateKey.setOnClickListener {
-      val account = AccountDaoSource().getActiveAccountInformation(context)
-          ?: return@setOnClickListener
       startActivityForResult(ImportPrivateKeyActivity.getIntent(
-          context = context, accountDao = account,
+          context = context,
           title = getString(R.string.import_private_key),
           throwErrorIfDuplicateFoundEnabled = true,
           cls = ImportPrivateKeyActivity::class.java,
           isUseExistingKeysEnabled = false,
-          isSubmittingPubKeysEnabled = false),
+          isSubmittingPubKeysEnabled = false,
+          accountEntity = account),
           REQUEST_CODE_START_IMPORT_KEY_ACTIVITY)
     }
 

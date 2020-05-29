@@ -14,16 +14,22 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.VisibleForTesting
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.service.PrepareOutgoingMessagesJobIntentService
 import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.listeners.OnChangeMessageEncryptionTypeListener
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -37,12 +43,17 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 11:43
  * E-mail: DenBond7@gmail.com
  */
-
 class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment.OnMessageSendListener,
-    OnChangeMessageEncryptionTypeListener {
+    OnChangeMessageEncryptionTypeListener, ChoosePublicKeyDialogFragment.OnLoadKeysProgressListener {
 
   private var nonEncryptedHintView: View? = null
   override lateinit var rootView: View
+
+  @get:VisibleForTesting
+  var fetchInfoAboutContactsIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
+
+  @get:VisibleForTesting
+  var fetchAvailablePubKeysIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override var msgEncryptionType = MessageEncryptionType.ENCRYPTED
     private set
@@ -52,12 +63,6 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
     get() = R.layout.activity_create_message
 
   override fun onCreate(savedInstanceState: Bundle?) {
-    val account = AccountDaoSource().getActiveAccountInformation(this)
-    if (account == null) {
-      Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show()
-      finish()
-    }
-
     if (intent != null) {
       serviceInfo = intent.getParcelableExtra(EXTRA_KEY_SERVICE_INFO)
       msgEncryptionType = intent.getParcelableExtra(EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE)
@@ -88,14 +93,12 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
           .switch_to_standard_email
     menuActionSwitchType.setTitle(titleRes)
 
-    if (serviceInfo != null) {
-      if (!serviceInfo!!.isMsgTypeSwitchable) {
-        menu.removeItem(R.id.menuActionSwitchType)
-      }
+    if (serviceInfo?.isMsgTypeSwitchable == false) {
+      menu.removeItem(R.id.menuActionSwitchType)
+    }
 
-      if (serviceInfo?.hasAbilityToAddNewAtt == false) {
-        menu.removeItem(R.id.menuActionAttachFile)
-      }
+    if (serviceInfo?.hasAbilityToAddNewAtt == false) {
+      menu.removeItem(R.id.menuActionAttachFile)
     }
 
     return true
@@ -134,18 +137,35 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
     this.msgEncryptionType = messageEncryptionType
     when (messageEncryptionType) {
       MessageEncryptionType.ENCRYPTED -> {
-        appBarLayout!!.setBackgroundColor(UIUtil.getColor(this, R.color.colorPrimary))
-        appBarLayout!!.removeView(nonEncryptedHintView)
+        appBarLayout?.setBackgroundColor(UIUtil.getColor(this, R.color.colorPrimary))
+        appBarLayout?.removeView(nonEncryptedHintView)
       }
 
       MessageEncryptionType.STANDARD -> {
-        appBarLayout!!.setBackgroundColor(UIUtil.getColor(this, R.color.red))
-        appBarLayout!!.addView(nonEncryptedHintView)
+        appBarLayout?.setBackgroundColor(UIUtil.getColor(this, R.color.red))
+        appBarLayout?.addView(nonEncryptedHintView)
       }
     }
 
     invalidateOptionsMenu()
     notifyFragmentAboutChangeMsgEncryptionType(messageEncryptionType)
+  }
+
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    //check create a message from extra info when account didn't setup
+    if (activeAccount == null) {
+      Toast.makeText(this, R.string.setup_app, Toast.LENGTH_LONG).show()
+      finish()
+    }
+  }
+
+  override fun onLoadKeysProgress(status: Result.Status) {
+    if (status == Result.Status.LOADING) {
+      fetchAvailablePubKeysIdlingResource.incrementSafely()
+    } else {
+      fetchAvailablePubKeysIdlingResource.decrementSafely()
+    }
   }
 
   private fun prepareActionBarTitle() {
@@ -155,10 +175,10 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
 
         msgType?.let {
           when (it) {
-            MessageType.NEW -> supportActionBar!!.setTitle(R.string.compose)
-            MessageType.REPLY -> supportActionBar!!.setTitle(R.string.reply)
-            MessageType.REPLY_ALL -> supportActionBar!!.setTitle(R.string.reply_all)
-            MessageType.FORWARD -> supportActionBar!!.setTitle(R.string.forward)
+            MessageType.NEW -> supportActionBar?.setTitle(R.string.compose)
+            MessageType.REPLY -> supportActionBar?.setTitle(R.string.reply)
+            MessageType.REPLY_ALL -> supportActionBar?.setTitle(R.string.reply_all)
+            MessageType.FORWARD -> supportActionBar?.setTitle(R.string.forward)
           }
         }
       } else {
@@ -203,7 +223,6 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
       return generateIntent(context, msgInfo, MessageType.NEW, msgEncryptionType)
     }
 
-    @JvmOverloads
     fun generateIntent(context: Context?, msgInfo: IncomingMessageInfo?, messageType: MessageType?,
                        msgEncryptionType: MessageEncryptionType?, serviceInfo: ServiceInfo? = null): Intent {
 

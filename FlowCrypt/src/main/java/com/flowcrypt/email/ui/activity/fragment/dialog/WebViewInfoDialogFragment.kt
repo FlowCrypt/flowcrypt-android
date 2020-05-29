@@ -25,7 +25,6 @@ import java.nio.charset.StandardCharsets
  * Time: 15:56
  * E-mail: DenBond7@gmail.com
  */
-
 class WebViewInfoDialogFragment : DialogFragment(), View.OnClickListener {
 
   protected var dialogTitle: String? = null
@@ -70,8 +69,6 @@ class WebViewInfoDialogFragment : DialogFragment(), View.OnClickListener {
     private val KEY_INFO_IS_CANCELABLE =
         GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_CANCELABLE", WebViewInfoDialogFragment::class.java)
 
-    @JvmOverloads
-    @JvmStatic
     fun newInstance(dialogTitle: String, dialogMsg: String, isCancelable: Boolean = true): WebViewInfoDialogFragment {
       val infoDialogFragment = WebViewInfoDialogFragment()
 

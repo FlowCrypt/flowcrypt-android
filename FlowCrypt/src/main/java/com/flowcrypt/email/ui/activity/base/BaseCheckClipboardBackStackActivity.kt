@@ -24,9 +24,7 @@ import com.flowcrypt.email.service.CheckClipboardToFindKeyService
  * Time: 11:13
  * E-mail: DenBond7@gmail.com
  */
-
 abstract class BaseCheckClipboardBackStackActivity : BaseBackStackActivity(), ServiceConnection {
-  @JvmField
   protected var isBound: Boolean = false
   protected lateinit var service: CheckClipboardToFindKeyService
 

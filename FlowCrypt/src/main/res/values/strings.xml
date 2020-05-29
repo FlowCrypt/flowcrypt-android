@@ -126,7 +126,6 @@
     <string name="switch_to_standard_email">Switch to standard email</string>
     <string name="switch_to_secure_email">Switch to secure email</string>
     <string name="this_message_will_not_be_encrypted">This message will not be encrypted</string>
-    <string name="please_update_information_about_contacts">Need to update recipient information</string>
     <string name="import_their_public_key">Import their Public Key</string>
     <string name="copy_from_other_contact">Copy from other contact</string>
     <string name="template_remove_recipient">Remove %1$s</string>
@@ -266,15 +265,12 @@
     <string name="add_contact">Add Contact</string>
     <string name="add_public_keys_of_your_contacts">Add public keys of your contacts to send them encrypted messages.</string>
     <string name="search_by_key_id_or_email">Search by key id or email</string>
-    <string name="api_error">API error</string>
-    <string name="internal_error">An internal error</string>
     <string name="import_all">Import all</string>
     <string name="no_public_key_found">No public key found</string>
     <string name="already_imported">Already imported</string>
     <string name="success">Success</string>
     <string name="parsing_public_keys">Parsing public keys</string>
     <string name="importing_public_keys">Importing public keys</string>
-    <string name="device_not_supported_key_store_error">Your device is currently not supported: KeystoreService not available.</string>
     <string name="showing_only_encrypted_messages">Showing only encrypted messages</string>
     <string name="showing_all_messages">Showing all messages</string>
     <string name="no_encrypted_messages">No encrypted messages</string>

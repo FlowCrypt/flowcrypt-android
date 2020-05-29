@@ -16,7 +16,6 @@ import android.os.Parcelable
  * Time: 11:29
  * E-mail: DenBond7@gmail.com
  */
-
 data class DialogItem constructor(val iconResourceId: Int = 0,
                                   val title: String = "",
                                   val id: Int = 0) : Parcelable {

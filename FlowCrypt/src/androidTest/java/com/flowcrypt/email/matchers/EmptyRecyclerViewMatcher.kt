@@ -26,6 +26,6 @@ class EmptyRecyclerViewMatcher<T : View> : BaseMatcher<T>() {
   }
 
   override fun describeTo(description: Description) {
-    description.appendText("List is not empty")
+    description.appendText("RecyclerView is not empty")
   }
 }

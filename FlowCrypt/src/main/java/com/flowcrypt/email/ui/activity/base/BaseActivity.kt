@@ -22,10 +22,12 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.Observer
-import androidx.loader.content.Loader
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
+import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.shutdown
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
-import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.service.BaseService
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
@@ -47,7 +49,13 @@ import java.lang.ref.WeakReference
  */
 abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback {
   protected val roomBasicViewModel: RoomBasicViewModel by viewModels()
+  protected val accountViewModel: AccountViewModel by viewModels()
   protected val tag: String = javaClass.simpleName
+  protected var activeAccount: AccountEntity? = null
+  protected var isAccountInfoReceived = false
+
+  @get:VisibleForTesting
+  val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   @get:VisibleForTesting
   val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
@@ -101,6 +109,10 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
 
   }
 
+  override fun onCanceled(requestCode: Int, resultCode: Int, obj: Any?) {
+
+  }
+
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     registerNodeIdlingResources()
@@ -109,6 +121,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
       setContentView(contentViewResourceId)
       initScreenViews()
     }
+
+    initAccountViewModel()
   }
 
   public override fun onStart() {
@@ -129,6 +143,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
   public override fun onDestroy() {
     super.onDestroy()
     LogsUtil.d(tag, "onDestroy")
+    countingIdlingResource.shutdown()
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -161,7 +176,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
    * @param messageText The text to show.  Can be formatted text.
    * @param duration    How long to display the message.
    */
-  @JvmOverloads
   fun showInfoSnackbar(view: View?, messageText: String?, duration: Int = Snackbar.LENGTH_INDEFINITE) {
     view?.let {
       snackBar = Snackbar.make(it, messageText ?: "", duration).setAction(android.R.string.ok) { }
@@ -199,26 +213,6 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
 
   fun dismissSnackBar() {
     snackBar?.dismiss()
-  }
-
-  fun handleLoaderResult(loader: Loader<*>, loaderResult: LoaderResult?) {
-    if (loaderResult != null) {
-      when {
-        loaderResult.result != null -> onSuccess(loader.id, loaderResult.result)
-        loaderResult.exception != null -> onError(loader.id, loaderResult.exception)
-        else -> showInfoSnackbar(rootView, getString(R.string.unknown_error))
-      }
-    } else {
-      showInfoSnackbar(rootView, getString(R.string.error_loader_result_is_empty))
-    }
-  }
-
-  open fun onError(loaderId: Int, e: Exception?) {
-
-  }
-
-  open fun onSuccess(loaderId: Int, result: Any?) {
-
   }
 
   /**
@@ -293,6 +287,18 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
 
   }
 
+  protected open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+
+  }
+
+  private fun initAccountViewModel() {
+    accountViewModel.activeAccountLiveData.observe(this, Observer {
+      activeAccount = it
+      isAccountInfoReceived = true
+      onAccountInfoRefreshed(activeAccount)
+    })
+  }
+
   private fun registerNodeIdlingResources() {
     Node.getInstance(application).liveData.observe(this, Observer { nodeInitResult ->
       onNodeStateChanged(nodeInitResult)
@@ -333,8 +339,9 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
             weakRef.get()?.onErrorHappened(message.arg1, message.arg2, exception!!)
           }
 
-          BaseService.REPLY_ACTION_PROGRESS -> weakRef.get()?.onProgressReplyReceived(message.arg1, message.arg2,
-              message.obj)
+          BaseService.REPLY_ACTION_PROGRESS -> weakRef.get()?.onProgressReplyReceived(message.arg1, message.arg2, message.obj)
+
+          BaseService.REPLY_ACTION_CANCELED -> weakRef.get()?.onCanceled(message.arg1, message.arg2, message.obj)
         }
       }
     }

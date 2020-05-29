@@ -33,9 +33,11 @@ import javax.net.ssl.HostnameVerifier
  * Time: 3:28 PM
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 We still receive ACRA reports that retrofit: Retrofit? = null, need to fix this issue
 object NodeRetrofitHelper {
   private const val TIMEOUT = 90
   private var okHttpClient: OkHttpClient? = null
+
   @Volatile
   private var retrofit: Retrofit? = null
   var gson: Gson = NodeGson.gson

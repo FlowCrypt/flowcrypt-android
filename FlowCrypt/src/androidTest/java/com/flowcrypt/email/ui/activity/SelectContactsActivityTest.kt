@@ -5,16 +5,16 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.view.View
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.closeSoftKeyboard
-import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItem
+import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -25,14 +25,13 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyListView
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddContactsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import org.hamcrest.Matchers.anything
+import com.flowcrypt.email.viewaction.CustomActions.Companion.doNothing
+import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -47,10 +46,8 @@ import java.util.*
  * Time: 10:34
  * E-mail: DenBond7@gmail.com
  */
-
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
 class SelectContactsActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(SelectContactsActivity::class.java)
@@ -69,8 +66,6 @@ class SelectContactsActivityTest : BaseTest() {
     //Need to wait a little while data will be updated
     Thread.sleep(2000)
 
-    onView(withId(R.id.recyclerViewContacts))
-        .check(matches(withEmptyListView())).check(matches(not<View>(isDisplayed())))
     onView(withId(R.id.emptyView))
         .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
   }
@@ -78,22 +73,21 @@ class SelectContactsActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   fun testShowListContacts() {
-    onView(withId(R.id.recyclerViewContacts))
-        .check(matches(isDisplayed())).check(matches(not<View>(withEmptyListView())))
     onView(withId(R.id.emptyView))
-        .check(matches(not<View>(isDisplayed())))
+        .check(matches(not(isDisplayed())))
 
     for (i in EMAILS.indices) {
       if (i % 2 == 0) {
-        checkIsDataItemDisplayed(i, R.id.textViewName, getUserName(EMAILS[i]))
+        onView(withId(R.id.recyclerViewContacts)).perform(actionOnItem<RecyclerView.ViewHolder>
+        (hasDescendant(allOf(withId(R.id.textViewName), withText(getUserName(EMAILS[i])))), doNothing()))
       } else {
-        checkIsDataItemDisplayed(i, R.id.textViewOnlyEmail, EMAILS[i])
+        onView(withId(R.id.recyclerViewContacts)).perform(actionOnItem<RecyclerView.ViewHolder>
+        (hasDescendant(allOf(withId(R.id.textViewOnlyEmail), withText(EMAILS[i]))), doNothing()))
       }
     }
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testCheckSearchExistingContact() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))
@@ -109,7 +103,6 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testNoResults() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))
@@ -117,8 +110,6 @@ class SelectContactsActivityTest : BaseTest() {
     onView(withId(com.google.android.material.R.id.search_src_text))
         .perform(clearText(), typeText("some email"))
     closeSoftKeyboard()
-    onView(withId(R.id.recyclerViewContacts))
-        .check(matches(withEmptyListView()))
     onView(withId(R.id.emptyView))
         .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
   }
@@ -139,14 +130,6 @@ class SelectContactsActivityTest : BaseTest() {
         .check(matches(isDisplayed())).check(matches(withText(viewText)))
   }
 
-  private fun checkIsDataItemDisplayed(index: Int, viewId: Int, viewText: String) {
-    onData(anything())
-        .inAdapterView(withId(R.id.recyclerViewContacts))
-        .onChildView(withChild(withId(viewId)))
-        .atPosition(index)
-        .check(matches(withChild(withText(viewText))))
-  }
-
   companion object {
     private val EMAILS = arrayOf(
         "contact_0@denbond7.com",
@@ -158,11 +141,10 @@ class SelectContactsActivityTest : BaseTest() {
     init {
       for (i in EMAILS.indices) {
         val email = EMAILS[i]
-        val pgpContact: PgpContact
-        if (i % 2 == 0) {
-          pgpContact = PgpContact(email, getUserName(email), "publicKey", true, null, null, null, null, 0)
+        val pgpContact = if (i % 2 == 0) {
+          PgpContact(email, getUserName(email), "publicKey", true, null, null, null, null, 0)
         } else {
-          pgpContact = PgpContact(email, null, "publicKey", true, null, null, null, null, 0)
+          PgpContact(email, null, "publicKey", true, null, null, null, null, 0)
         }
         CONTACTS.add(pgpContact)
       }

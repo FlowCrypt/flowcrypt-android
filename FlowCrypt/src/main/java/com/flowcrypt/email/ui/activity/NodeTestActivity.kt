@@ -29,6 +29,7 @@ import com.flowcrypt.email.security.KeysStorageImpl
 import org.apache.commons.io.IOUtils
 import java.util.*
 
+//todo-denbond7 Need to refactor this class
 class NodeTestActivity : AppCompatActivity(), View.OnClickListener, Observer<NodeResponseWrapper<*>> {
 
   private var resultText = ""

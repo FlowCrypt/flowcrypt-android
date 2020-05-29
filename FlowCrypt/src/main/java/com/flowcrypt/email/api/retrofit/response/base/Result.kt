@@ -13,7 +13,7 @@ package com.flowcrypt.email.api.retrofit.response.base
  *         Time: 3:42 PM
  *         E-mail: DenBond7@gmail.com
  */
-class Result<out T>(val status: Status, val data: T?, val exception: Throwable?) {
+class Result<out T>(val status: Status, val data: T?, val exception: Throwable?, val requestCode: Long = 0) {
 
   enum class Status {
     SUCCESS,
@@ -23,20 +23,20 @@ class Result<out T>(val status: Status, val data: T?, val exception: Throwable?)
   }
 
   companion object {
-    fun <T> success(data: T): Result<T> {
-      return Result(Status.SUCCESS, data, null)
+    fun <T> success(data: T, requestCode: Long = 0): Result<T> {
+      return Result(status = Status.SUCCESS, data = data, exception = null, requestCode = requestCode)
     }
 
-    fun <T> exception(error: Throwable, data: T? = null): Result<T> {
-      return Result(Status.EXCEPTION, data, error)
+    fun <T> exception(error: Throwable, data: T? = null, requestCode: Long = 0): Result<T> {
+      return Result(status = Status.EXCEPTION, data = data, exception = error, requestCode = requestCode)
     }
 
-    fun <T> error(data: T? = null): Result<T> {
-      return Result(Status.ERROR, data, null)
+    fun <T> error(data: T? = null, requestCode: Long = 0): Result<T> {
+      return Result(status = Status.ERROR, data = data, exception = null, requestCode = requestCode)
     }
 
-    fun <T> loading(data: T? = null): Result<T> {
-      return Result(Status.LOADING, data, null)
+    fun <T> loading(data: T? = null, requestCode: Long = 0): Result<T> {
+      return Result(status = Status.LOADING, data = data, exception = null, requestCode = requestCode)
     }
   }
 }

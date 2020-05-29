@@ -19,7 +19,6 @@ import java.util.regex.Pattern
  * Time: 14:20
  * E-mail: DenBond7@gmail.com
  */
-
 class FileAndDirectoryUtils {
   companion object {
     /**
@@ -28,7 +27,6 @@ class FileAndDirectoryUtils {
      * @param dir The directory which will be cleaned.
      * @throws IOException An error can occur while cleaning the directory.
      */
-    @JvmStatic
     fun deleteDir(dir: File) {
       cleanDir(dir)
       deleteFile(dir)
@@ -40,7 +38,6 @@ class FileAndDirectoryUtils {
      * @param directory The directory which will be cleaned.
      * @throws IOException An error can occur while cleaning the directory.
      */
-    @JvmStatic
     fun cleanDir(directory: File?) {
       if (directory == null || !directory.exists() || !directory.isDirectory) {
         return
@@ -59,7 +56,6 @@ class FileAndDirectoryUtils {
      * @param file The input file.
      * @throws IOException An error can occur while deleting the file.
      */
-    @JvmStatic
     fun deleteFile(file: File?) {
       if (file != null && file.exists()) {
         if (file.isDirectory) {

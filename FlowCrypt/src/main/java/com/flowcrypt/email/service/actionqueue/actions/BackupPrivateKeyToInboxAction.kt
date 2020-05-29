@@ -13,7 +13,8 @@ import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.google.gson.annotations.SerializedName
 
@@ -33,10 +34,12 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
   override val type: Action.Type = Action.Type.BACKUP_PRIVATE_KEY_TO_INBOX
 
   override fun run(context: Context) {
-    val account = AccountDaoSource().getAccountInformation(context, email)
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+    val encryptedAccount = roomDatabase.accountDao().getAccount(email) ?: return
+    val account = AccountViewModel.getAccountEntityWithDecryptedInfo(encryptedAccount) ?: return
     val keysStorage = KeysStorageImpl.getInstance(context)
-    val keyEntity = keysStorage.getPgpPrivateKey(privateKeyLongId)
-    if (account != null && keyEntity != null && !TextUtils.isEmpty(keyEntity.privateKeyAsString)) {
+    val keyEntity = keysStorage.getPgpPrivateKey(privateKeyLongId) ?: return
+    if (!TextUtils.isEmpty(keyEntity.privateKeyAsString)) {
       val session = OpenStoreHelper.getAccountSess(context, account)
       val transport = SmtpProtocolUtil.prepareSmtpTransport(context, session, account)
 
@@ -47,8 +50,8 @@ data class BackupPrivateKeyToInboxAction @JvmOverloads constructor(override var 
         throw IllegalStateException("An error occurred during encrypting some key")
       }
 
-      val mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(account, encryptedKey!!)
-      val message = EmailUtil.genMsgWithPrivateKeys(context, account, session, mimeBodyPart)
+      val mimeBodyPart = EmailUtil.genBodyPartWithPrivateKey(encryptedAccount, encryptedKey!!)
+      val message = EmailUtil.genMsgWithPrivateKeys(context, encryptedAccount, session, mimeBodyPart)
       transport.sendMessage(message, message.allRecipients)
     }
   }

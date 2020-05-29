@@ -23,7 +23,6 @@ import com.google.gson.annotations.SerializedName
  * Time: 18:10
  * E-mail: DenBond7@gmail.com
  */
-
 data class SendWelcomeTestEmailAction @JvmOverloads constructor(override var id: Long = 0,
                                                                 override var email: String? = null,
                                                                 override val version: Int = 0,

@@ -5,10 +5,8 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.content.ContentValues
 import android.content.Intent
 import android.text.TextUtils
-import android.view.View
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
@@ -29,19 +27,16 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.UpdateAccountRule
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -59,12 +54,11 @@ import java.util.*
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
 class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   private lateinit var serviceInfo: ServiceInfo
   private lateinit var incomingMsgInfo: IncomingMessageInfo
 
-  val addAccountToDatabaseRule: AddAccountToDatabaseRule = AddAccountToDatabaseRule()
+  val addAccountToDatabaseRule: AddAccountToDatabaseRule = AddAccountToDatabaseRule(AccountDaoManager.getDefaultAccountDao().copy(areContactsLoaded = true))
 
   override val activityTestRule: ActivityTestRule<*>? =
       object : IntentsTestRule<CreateMessageActivity>(CreateMessageActivity::class.java) {
@@ -84,14 +78,14 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
           val attachmentInfoList = ArrayList<AttachmentInfo>()
           attachmentInfoList.add(attachmentInfo)
 
-          serviceInfo = ServiceInfo(false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              getResString(R.string.message_was_encrypted_for_wrong_key),
-              attachmentInfoList)
+          serviceInfo = ServiceInfo(isToFieldEditable = false,
+              isFromFieldEditable = false,
+              isMsgEditable = false,
+              isSubjectEditable = false,
+              isMsgTypeSwitchable = false,
+              hasAbilityToAddNewAtt = false,
+              systemMsg = getResString(R.string.message_was_encrypted_for_wrong_key),
+              atts = attachmentInfoList)
 
           return CreateMessageActivity.generateIntent(getTargetContext(), incomingMsgInfo, MessageType.REPLY,
               MessageEncryptionType.STANDARD, serviceInfo)
@@ -101,22 +95,21 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
-      .around(UpdateAccountRule(AccountDaoManager.getDefaultAccountDao(), generateContentValues()))
+      .around(addAccountToDatabaseRule)
       .around(activityTestRule)
 
   @Test
   fun testFrom() {
     onView(withId(R.id.editTextFrom))
         .perform(scrollTo())
-        .check(matches(allOf<View>(isDisplayed(),
-            if (serviceInfo.isFromFieldEditable) isFocusable() else not<View>(isFocusable()))))
+        .check(matches(allOf(isDisplayed(),
+            if (serviceInfo.isFromFieldEditable) isFocusable() else not(isFocusable()))))
   }
 
   @Test
   fun testToRecipients() {
-    val chipSeparator = Character.toString(SpanChipTokenizer.CHIP_SPAN_SEPARATOR)
-    val autoCorrectSeparator = Character.toString(SpanChipTokenizer.AUTOCORRECT_SEPARATOR)
+    val chipSeparator = SpanChipTokenizer.CHIP_SPAN_SEPARATOR.toString()
+    val autoCorrectSeparator = SpanChipTokenizer.AUTOCORRECT_SEPARATOR.toString()
     val textWithSeparator = (autoCorrectSeparator
         + chipSeparator
         + incomingMsgInfo.getFrom()?.first()?.address
@@ -125,24 +118,24 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
     onView(withId(R.id.editTextRecipientTo))
         .perform(scrollTo())
-        .check(matches(allOf<View>(isDisplayed(), withText(textWithSeparator),
-            if (serviceInfo.isToFieldEditable) isFocusable() else not<View>(isFocusable()))))
+        .check(matches(allOf(isDisplayed(), withText(textWithSeparator),
+            if (serviceInfo.isToFieldEditable) isFocusable() else not(isFocusable()))))
   }
 
   @Test
   fun testSubject() {
     onView(withId(R.id.editTextEmailSubject))
-        .check(matches(allOf<View>(isDisplayed(),
-            if (serviceInfo.isSubjectEditable) isFocusable() else not<View>(isFocusable()))))
+        .check(matches(allOf(isDisplayed(),
+            if (serviceInfo.isSubjectEditable) isFocusable() else not(isFocusable()))))
   }
 
   @Test
   fun testEmailMsg() {
     onView(withId(R.id.editTextEmailMessage))
-        .check(matches(allOf<View>(isDisplayed(),
+        .check(matches(allOf(isDisplayed(),
             if (TextUtils.isEmpty(serviceInfo.systemMsg)) withText(isEmptyString())
             else withText(serviceInfo.systemMsg),
-            if (serviceInfo.isMsgEditable) isFocusable() else not<View>(isFocusable()))))
+            if (serviceInfo.isMsgEditable) isFocusable() else not(isFocusable()))))
 
     if (serviceInfo.isMsgEditable) {
       onView(withId(R.id.editTextEmailMessage))
@@ -171,12 +164,6 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   @Test
   fun testShowHelpScreen() {
     testHelpScreen()
-  }
-
-  private fun generateContentValues(): ContentValues {
-    val contentValues = ContentValues()
-    contentValues.put(AccountDaoSource.COL_IS_CONTACTS_LOADED, true)
-    return contentValues
   }
 
   companion object {

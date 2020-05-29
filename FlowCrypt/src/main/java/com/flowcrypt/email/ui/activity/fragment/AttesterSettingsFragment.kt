@@ -15,12 +15,12 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.AccountKeysInfoViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ListProgressBehaviour
-import com.flowcrypt.email.ui.activity.settings.AttesterSettingsActivity
 import com.flowcrypt.email.ui.adapter.AttesterKeyAdapter
-import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.material.snackbar.Snackbar
 
 /**
@@ -44,11 +44,6 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
   private var sRL: SwipeRefreshLayout? = null
   private val accountKeysInfoViewModel: AccountKeysInfoViewModel by viewModels()
   private val attesterKeyAdapter: AttesterKeyAdapter = AttesterKeyAdapter()
-
-  private val idlingForAttester: SingleIdlingResources?
-    get() {
-      return (activity as? AttesterSettingsActivity)?.idlingForAttester
-    }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
@@ -80,14 +75,13 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            idlingForAttester?.setIdleState(false)
+            baseActivity.countingIdlingResource.incrementSafely()
             if (sRL?.isRefreshing != true) {
               showProgress()
             } else return@let
           }
 
           Result.Status.SUCCESS -> {
-            idlingForAttester?.setIdleState(true)
             sRL?.isRefreshing = false
             it.data?.results?.let { responses ->
               if (responses.isNotEmpty()) {
@@ -97,20 +91,20 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
               }
             }
             showContent()
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR -> {
-            idlingForAttester?.setIdleState(true)
             sRL?.isRefreshing = false
             showStatus(it.data?.apiError?.msg ?: getString(R.string.unknown_error))
             showSnackbar(contentView, getString(R.string.an_error_has_occurred),
                 getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener {
               accountKeysInfoViewModel.refreshData()
             })
+            baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.EXCEPTION -> {
-            idlingForAttester?.setIdleState(true)
             sRL?.isRefreshing = false
             showStatus(it.exception?.message ?: it.exception?.javaClass?.simpleName ?: getString(R
                 .string.unknown_error))
@@ -118,6 +112,8 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
                 getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener {
               accountKeysInfoViewModel.refreshData()
             })
+
+            baseActivity.countingIdlingResource.decrementSafely()
           }
         }
       }

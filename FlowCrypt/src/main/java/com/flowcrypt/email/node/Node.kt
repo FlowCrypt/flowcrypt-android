@@ -116,7 +116,7 @@ class Node private constructor(app: Application) {
       e.printStackTrace()
       return null
     } catch (e: Exception) {
-      ExceptionUtil.handleError(e)
+      e.printStackTrace()
       return null
     }
   }

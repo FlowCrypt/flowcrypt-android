@@ -28,7 +28,6 @@ import com.google.gson.annotations.SerializedName
  * Time: 16:30
  * E-mail: DenBond7@gmail.com
  */
-
 data class InitialLegacySubmitResponse constructor(@SerializedName("error") @Expose override val
                                                    apiError: ApiError? = null,
                                                    @Expose val isSaved: Boolean) : ApiResponse {

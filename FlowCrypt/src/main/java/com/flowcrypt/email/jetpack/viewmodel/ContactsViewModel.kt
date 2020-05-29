@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
+import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.ContactEntity
@@ -36,7 +37,7 @@ import java.util.*
  *         E-mail: DenBond7@gmail.com
  */
 class ContactsViewModel(application: Application) : AccountViewModel(application) {
-  private val repository: ApiRepository = FlowcryptApiRepository()
+  private val apiRepository: ApiRepository = FlowcryptApiRepository()
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
 
   val allContactsLiveData: LiveData<List<ContactEntity>> = roomDatabase.contactsDao().getAllContactsLD()
@@ -60,6 +61,8 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   val contactsToLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
   val contactsCcLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
   val contactsBccLiveData: MutableLiveData<Result<List<ContactEntity>>> = MutableLiveData()
+
+  val pubKeysFromAttesterLiveData: MutableLiveData<Result<PubResponse?>> = MutableLiveData()
 
   fun updateContactPgpInfo(pgpContact: PgpContact, pgpContactFromKey: PgpContact) {
     viewModelScope.launch {
@@ -163,22 +166,6 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  private fun setResultForRemoteContactsLiveData(type: ContactEntity.Type, result: Result<List<ContactEntity>>) {
-    when (type) {
-      ContactEntity.Type.TO -> {
-        contactsToLiveData.value = result
-      }
-
-      ContactEntity.Type.CC -> {
-        contactsCcLiveData.value = result
-      }
-
-      ContactEntity.Type.BCC -> {
-        contactsBccLiveData.value = result
-      }
-    }
-  }
-
   fun deleteContact(contactEntity: ContactEntity) {
     viewModelScope.launch {
       roomDatabase.contactsDao().deleteSuspend(contactEntity)
@@ -204,6 +191,41 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
+  fun filterContacts(searchPattern: String?) {
+    searchPatternLiveData.value = searchPattern
+  }
+
+  fun deleteContactByEmail(email: String) {
+    viewModelScope.launch {
+      roomDatabase.contactsDao().getContactByEmailSuspend(email)?.let {
+        roomDatabase.contactsDao().deleteSuspend(it)
+      }
+    }
+  }
+
+  fun fetchPubKeys(keyIdOrEmail: String, requestCode: Long) {
+    viewModelScope.launch {
+      pubKeysFromAttesterLiveData.value = Result.loading(requestCode = requestCode)
+      pubKeysFromAttesterLiveData.value = apiRepository.getPub(requestCode = requestCode, context = getApplication(), keyIdOrEmail = keyIdOrEmail)
+    }
+  }
+
+  private fun setResultForRemoteContactsLiveData(type: ContactEntity.Type, result: Result<List<ContactEntity>>) {
+    when (type) {
+      ContactEntity.Type.TO -> {
+        contactsToLiveData.value = result
+      }
+
+      ContactEntity.Type.CC -> {
+        contactsCcLiveData.value = result
+      }
+
+      ContactEntity.Type.BCC -> {
+        contactsBccLiveData.value = result
+      }
+    }
+  }
+
   /**
    * Get information about [PgpContact] from the remote server.
    *
@@ -213,7 +235,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
    */
   private suspend fun getPgpContactInfoFromServer(email: String): PgpContact? =
       withContext(Dispatchers.IO) {
-        val response = repository.postLookUpEmail(getApplication(), PostLookUpEmailModel(email))
+        val response = apiRepository.postLookUpEmail(getApplication(), PostLookUpEmailModel(email))
         when (response.status) {
           Result.Status.SUCCESS -> {
             if (response.data?.pubKey?.isNotEmpty() == true) {
@@ -243,16 +265,4 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
 
         null
       }
-
-  fun filterContacts(searchPattern: String?) {
-    searchPatternLiveData.value = searchPattern
-  }
-
-  fun deleteContactByEmail(email: String) {
-    viewModelScope.launch {
-      roomDatabase.contactsDao().getContactByEmailSuspend(email)?.let {
-        roomDatabase.contactsDao().deleteSuspend(it)
-      }
-    }
-  }
 }

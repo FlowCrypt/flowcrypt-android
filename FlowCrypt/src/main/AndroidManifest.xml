@@ -239,12 +239,6 @@
 
         <!-- Providers -->
         <provider
-            android:name=".database.provider.SecurityContentProvider"
-            android:authorities="${applicationId}.SecurityContentProvider"
-            android:enabled="true"
-            android:exported="false" />
-
-        <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"

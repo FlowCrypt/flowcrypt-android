@@ -40,6 +40,7 @@ import kotlin.collections.HashMap
  *         Time: 6:30 PM
  *         E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 need to add ForeignKey on account table
 @Entity(tableName = "messages",
     indices = [
       Index(name = "email_in_messages", value = ["email"]),

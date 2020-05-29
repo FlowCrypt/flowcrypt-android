@@ -65,6 +65,15 @@ interface ApiService {
   fun postInitialLegacySubmit(@Body body: InitialLegacySubmitModel): Call<InitialLegacySubmitResponse>
 
   /**
+   * This method create a [Response] object for the API "https://flowcrypt.com/attester/initial/legacy_submit"
+   *
+   * @param body POJO model for requests
+   * @return [<]
+   */
+  @POST("initial/legacy_submit")
+  suspend fun postInitialLegacySubmitSuspend(@Body body: InitialLegacySubmitModel): Response<InitialLegacySubmitResponse>
+
+  /**
    * This method create a [Call] object for the API "https://flowcrypt.com/attester/test/welcome"
    *
    * @param body POJO model for requests
@@ -72,6 +81,15 @@ interface ApiService {
    */
   @POST("test/welcome")
   fun postTestWelcome(@Body body: TestWelcomeModel): Call<TestWelcomeResponse>
+
+  /**
+   * This method create a [Response] object for the API "https://flowcrypt.com/attester/test/welcome"
+   *
+   * @param body POJO model for requests
+   * @return [<]
+   */
+  @POST("test/welcome")
+  suspend fun postTestWelcomeSuspend(@Body body: TestWelcomeModel): Response<TestWelcomeResponse>
 
   /**
    * This method create a [Call] object for the API "https://flowcrypt.com/api/help/feedback"
@@ -88,7 +106,7 @@ interface ApiService {
    * @return [<]
    */
   @GET("pub/{keyIdOrEmail}")
-  fun getPub(@Path("keyIdOrEmail") keyIdOrEmail: String): Call<String>
+  suspend fun getPub(@Path("keyIdOrEmail") keyIdOrEmail: String): Response<String>
 
   /**
    * This method calls the API "https://flowcrypt.com/api/account/login"

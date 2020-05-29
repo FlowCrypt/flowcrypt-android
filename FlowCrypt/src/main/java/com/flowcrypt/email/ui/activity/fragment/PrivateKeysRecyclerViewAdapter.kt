@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit
  * Time: 6:24 PM
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 move it to adapters folder
 class PrivateKeysRecyclerViewAdapter(context: Context,
                                      private val listener: OnKeySelectedListener?)
   : RecyclerView.Adapter<PrivateKeysRecyclerViewAdapter.ViewHolder>() {

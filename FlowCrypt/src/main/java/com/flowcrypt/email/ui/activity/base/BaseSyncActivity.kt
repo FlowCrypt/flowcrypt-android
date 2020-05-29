@@ -12,11 +12,17 @@ import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
+import androidx.annotation.VisibleForTesting
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.service.BaseService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.BaseNodeActivity
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 
@@ -28,11 +34,14 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
  * Time: 11:30
  * E-mail: DenBond7@gmail.com
  */
-
+//todo-denbond7 need to refactor this class, too many duplicate code
 abstract class BaseSyncActivity : BaseNodeActivity() {
   // Messengers for communicating with the service.
   protected var syncMessenger: Messenger? = null
   protected val syncReplyMessenger: Messenger = Messenger(ReplyHandler(this))
+
+  @get:VisibleForTesting
+  val syncServiceCountingIdlingResource: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   /**
    * Flag indicating whether we have called bind on the [EmailSyncService].
@@ -76,6 +85,23 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   override fun onDestroy() {
     super.onDestroy()
     disconnectFromSyncService()
+    syncServiceCountingIdlingResource.shutdown()
+  }
+
+  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
+    syncServiceCountingIdlingResource.decrementSafely(requestCode.toString())
+  }
+
+  override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
+
+  }
+
+  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
+    syncServiceCountingIdlingResource.decrementSafely(requestCode.toString())
+  }
+
+  override fun onCanceled(requestCode: Int, resultCode: Int, obj: Any?) {
+    syncServiceCountingIdlingResource.decrementSafely(requestCode.toString())
   }
 
   protected fun disconnectFromSyncService() {
@@ -96,13 +122,14 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun sendMsgWithPrivateKeyBackup(requestCode: Int) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_SEND_MESSAGE_WITH_BACKUP, action)
     msg.replyTo = syncReplyMessenger
     try {
-      syncMessenger!!.send(msg)
+      syncMessenger?.send(msg)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
@@ -116,13 +143,15 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun loadPrivateKeys(requestCode: Int) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
+
     try {
       val action = BaseService.Action(replyMessengerName, requestCode, null)
 
       val msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_PRIVATE_KEYS, action)
       msg.replyTo = syncReplyMessenger
 
-      syncMessenger!!.send(msg)
+      syncMessenger?.send(msg)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
@@ -139,13 +168,14 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun loadMsgs(requestCode: Int, localFolder: LocalFolder, start: Int, end: Int) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
 
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, start, end, action)
     msg.replyTo = syncReplyMessenger
     try {
-      syncMessenger!!.send(msg)
+      syncMessenger?.send(msg)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
@@ -161,6 +191,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   open fun loadNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
+
     onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, Any())
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
@@ -168,7 +200,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEXT_MESSAGES, alreadyLoadedMsgsCount, 0, action)
     msg.replyTo = syncReplyMessenger
     try {
-      syncMessenger!!.send(msg)
+      syncMessenger?.send(msg)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
@@ -183,15 +215,16 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * @param alreadyLoadedMsgsCount The count of already loaded messages in the localFolder.
    */
   fun searchNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
-    onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, Any())
     if (checkServiceBound(isSyncServiceBound)) return
+    onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, Any())
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
 
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_SEARCH_MESSAGES, alreadyLoadedMsgsCount, 0, action)
     msg.replyTo = syncReplyMessenger
     try {
-      syncMessenger!!.send(msg)
+      syncMessenger?.send(msg)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
@@ -205,6 +238,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun updateLabels(requestCode: Int) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -225,6 +259,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun deleteMsgs(requestCode: Int = -1) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -245,6 +280,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun archiveMsgs(requestCode: Int = -1) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -265,6 +301,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun changeMsgsReadState(requestCode: Int = -1) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -285,6 +322,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun moveMsgsToINBOX(requestCode: Int = -1) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
@@ -306,13 +344,14 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   open fun refreshMsgs(requestCode: Int, currentLocalFolder: LocalFolder) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, currentLocalFolder)
 
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_REFRESH_MESSAGES, action)
     msg.replyTo = syncReplyMessenger
     try {
-      syncMessenger!!.send(msg)
+      syncMessenger?.send(msg)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
@@ -332,6 +371,8 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   fun loadMsgDetails(requestCode: Int, uniqueId: String, localFolder: LocalFolder, uid: Int,
                      id: Int, resetConnection: Boolean = false) {
     if (checkServiceBound(isSyncServiceBound)) return
+
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
     onProgressReplyReceived(requestCode, R.id.progress_id_connecting, 5)
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder, resetConnection, uniqueId)
@@ -354,6 +395,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun cancelLoadMsgDetails(uniqueId: String) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely()
 
     val action = BaseService.Action(replyMessengerName, -1, null, false, uniqueId)
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS, action)
@@ -377,6 +419,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   fun moveMsg(requestCode: Int, sourcesLocalFolder: LocalFolder,
               destinationLocalFolder: LocalFolder, uid: Int) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val localFolders = arrayOf(sourcesLocalFolder, destinationLocalFolder)
     val action = BaseService.Action(replyMessengerName, requestCode, localFolders)
@@ -384,27 +427,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_MOVE_MESSAGE, uid, 0, action)
     msg.replyTo = syncReplyMessenger
     try {
-      syncMessenger!!.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  /**
-   * Cancel all sync tasks which are waiting for executing.
-   *
-   * @param requestCode The unique request code for identify the current action.
-   */
-  fun cancelAllSyncTasks(requestCode: Int) {
-    if (checkServiceBound(isSyncServiceBound)) return
-
-    val action = BaseService.Action(replyMessengerName, requestCode, null)
-
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_CANCEL_ALL_TASKS, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger!!.send(msg)
+      syncMessenger?.send(msg)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
@@ -420,13 +443,14 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun loadAttsInfo(requestCode: Int, localFolder: LocalFolder, uid: Int) {
     if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
 
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_ATTS_INFO, uid, 0, action)
     msg.replyTo = syncReplyMessenger
     try {
-      syncMessenger!!.send(msg)
+      syncMessenger?.send(msg)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)

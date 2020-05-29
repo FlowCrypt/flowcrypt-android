@@ -21,7 +21,6 @@ import com.flowcrypt.email.R
  * Time: 12:12
  * E-mail: DenBond7@gmail.com
  */
-
 object NotificationChannelManager {
   const val CHANNEL_ID_ATTACHMENTS = "Attachments"
   const val CHANNEL_ID_MESSAGES = "Messages"

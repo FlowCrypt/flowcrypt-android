@@ -16,7 +16,6 @@ import android.os.Parcelable
  * Time: 22:31
  * E-mail: DenBond7@gmail.com
  */
-
 data class EmailAndNamePair constructor(val email: String? = null, val name: String? = null) : Parcelable {
   constructor(source: Parcel) : this(
       source.readString(),

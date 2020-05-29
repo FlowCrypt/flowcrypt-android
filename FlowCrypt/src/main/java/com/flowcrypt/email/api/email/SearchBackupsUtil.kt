@@ -22,7 +22,6 @@ import javax.mail.search.SubjectTerm
  * Time: 10:02
  * E-mail: DenBond7@gmail.com
  */
-
 class SearchBackupsUtil {
   companion object {
     /**
@@ -31,7 +30,6 @@ class SearchBackupsUtil {
      * @param email The email which will be used to generate [SearchTerm].
      * @return Generated [SearchTerm].
      */
-    @JvmStatic
     fun genSearchTerms(email: String): SearchTerm {
       val subjectTerms = OrTerm(arrayOf(
           SubjectTerm("Your CryptUp Backup"),

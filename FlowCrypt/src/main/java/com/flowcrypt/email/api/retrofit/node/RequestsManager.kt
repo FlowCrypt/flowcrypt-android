@@ -25,6 +25,8 @@ import com.flowcrypt.email.node.TestData
 /**
  * @author DenBond7
  */
+//todo-denbond7 It's old code. Need to remove this and replace with a better approach. We use it
+// only for debugging
 object RequestsManager {
   private var data: SingleLiveEvent<NodeResponseWrapper<*>> = SingleLiveEvent()
 

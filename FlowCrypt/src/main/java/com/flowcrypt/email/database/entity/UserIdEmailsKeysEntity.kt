@@ -17,6 +17,7 @@ import androidx.room.PrimaryKey
  *         Time: 5:02 PM
  *         E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 need to add ForeignKey on account table
 @Entity(tableName = "user_id_emails_and_keys",
     indices = [Index(name = "long_id_user_id_email_in_user_id_emails_and_keys", value = ["long_id", "user_id_email"], unique = true)]
 )

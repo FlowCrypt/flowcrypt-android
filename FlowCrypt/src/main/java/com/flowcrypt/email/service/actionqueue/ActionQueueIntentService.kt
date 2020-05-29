@@ -87,7 +87,6 @@ class ActionQueueIntentService : JobIntentService() {
      * @param resultReceiverCallBack An implementation of [android.os.ResultReceiver].
      * @see IntentService
      */
-    @JvmStatic
     fun appendActionsToQueue(context: Context, actions: ArrayList<Action>,
                              resultReceiverCallBack: ActionResultReceiver.ResultReceiverCallBack) {
       val resultReceiver = ActionResultReceiver(Handler(context.mainLooper))

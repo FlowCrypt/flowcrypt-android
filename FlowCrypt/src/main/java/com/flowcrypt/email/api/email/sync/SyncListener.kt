@@ -9,7 +9,7 @@ import android.content.Context
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.Folder
 import javax.mail.Message
@@ -22,7 +22,6 @@ import javax.mail.Message
  * Time: 13:35
  * E-mail: DenBond7@gmail.com
  */
-
 interface SyncListener {
 
   /**
@@ -35,14 +34,14 @@ interface SyncListener {
   /**
    * This method called when a message with a backup to the key owner was sent.
    *
-   * @param account     The [AccountDao] object which contains information about an email account.
+   * @param account     The [AccountEntity] object which contains information about an email account.
    * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for the reply to
    * [android.os.Messenger].
    * @param isSent      true if the message was sent, false otherwise.
    */
   fun onMsgWithBackupToKeyOwnerSent(
-      account: AccountDao,
+      account: AccountEntity,
       ownerKey: String,
       requestCode: Int,
       isSent: Boolean)
@@ -50,14 +49,14 @@ interface SyncListener {
   /**
    * This method called when the private keys found.
    *
-   * @param account     The [AccountDao] object which contains information about an email account.
+   * @param account     The [AccountEntity] object which contains information about an email account.
    * @param keys        The private keys list.
    * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for the reply to
    * [android.os.Messenger].
    */
   fun onPrivateKeysFound(
-      account: AccountDao,
+      account: AccountEntity,
       keys: List<NodeKeyDetails>,
       ownerKey: String,
       requestCode: Int)
@@ -65,23 +64,23 @@ interface SyncListener {
   /**
    * This method called when a message was sent.
    *
-   * @param account     The [AccountDao] object which contains information about an email account.
+   * @param account     The [AccountEntity] object which contains information about an email account.
    * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for the reply to
    * [android.os.Messenger].
    * @param isSent      true if the message was sent, false otherwise.
    */
   fun onMsgSent(
-      account: AccountDao,
+      account: AccountEntity,
       ownerKey: String,
       requestCode: Int,
       isSent: Boolean
   )
 
   /**
-   * This method called when a new messages received from the some folder.
+   * This method called when new messages received from some folder.
    *
-   * @param account     The [AccountDao] object which contains information about an email account.
+   * @param account     The [AccountEntity] object which contains information about an email account.
    * @param srcFolder   The source folder where the messages exist.
    * @param destFolder  The destination folder where the messages were moved.
    * @param msgs        The moved messages.
@@ -90,7 +89,7 @@ interface SyncListener {
    * [android.os.Messenger].
    */
   fun onMsgsMoved(
-      account: AccountDao,
+      account: AccountEntity,
       srcFolder: IMAPFolder,
       destFolder: IMAPFolder,
       msgs: List<Message>,
@@ -99,9 +98,9 @@ interface SyncListener {
   )
 
   /**
-   * This method called when a new messages received from the some folder.
+   * This method called when new messages received from some folder.
    *
-   * @param account     The [AccountDao] object which contains information about an email account.
+   * @param account     The [AccountEntity] object which contains information about an email account.
    * @param srcFolder   The source folder where the messages exist.
    * @param destFolder  The destination folder where the messages were moved.
    * @param msg         The moved message.
@@ -110,7 +109,7 @@ interface SyncListener {
    * [android.os.Messenger].
    */
   fun onMsgMoved(
-      account: AccountDao,
+      account: AccountEntity,
       srcFolder: IMAPFolder,
       destFolder: IMAPFolder,
       msg: Message?,
@@ -119,9 +118,9 @@ interface SyncListener {
   )
 
   /**
-   * This method called when a new messages received from the some folder.
+   * This method called when new messages received from some folder.
    *
-   * @param account           The [AccountDao] object which contains information about an email
+   * @param account           The [AccountEntity] object which contains information about an email
    * account;
    * @param localFolder       The local implementation of the remote folder;
    * @param remoteFolder      The folder where the new messages exist;
@@ -133,7 +132,7 @@ interface SyncListener {
    * [android.os.Messenger].
    */
   fun onMsgDetailsReceived(
-      account: AccountDao,
+      account: AccountEntity,
       localFolder: LocalFolder,
       remoteFolder: IMAPFolder,
       uid: Long,
@@ -144,9 +143,9 @@ interface SyncListener {
   )
 
   /**
-   * This method called when a new messages received from the some folder.
+   * This method called when new messages received from some folder.
    *
-   * @param account           The [AccountDao] object which contains information about an email
+   * @param account           The [AccountEntity] object which contains information about an email
    * account;
    * @param localFolder       The local implementation of the remote folder;
    * @param remoteFolder      The folder where the new messages exist;
@@ -156,7 +155,7 @@ interface SyncListener {
    * [android.os.Messenger].
    */
   fun onAttsInfoReceived(
-      account: AccountDao,
+      account: AccountEntity,
       localFolder: LocalFolder,
       remoteFolder: IMAPFolder,
       uid: Long,
@@ -165,9 +164,9 @@ interface SyncListener {
   )
 
   /**
-   * This method called when a new messages received from the some folder.
+   * This method called when new messages received from some folder.
    *
-   * @param account      The [AccountDao] object which contains information about an
+   * @param account      The [AccountEntity] object which contains information about an
    * email account.
    * @param localFolder  The local implementation of the remote folder
    * @param remoteFolder The remote folder where the new messages exist.
@@ -177,7 +176,7 @@ interface SyncListener {
    * [android.os.Messenger].
    */
   fun onMsgsReceived(
-      account: AccountDao,
+      account: AccountEntity,
       localFolder: LocalFolder,
       remoteFolder: IMAPFolder,
       msgs: Array<Message>,
@@ -188,7 +187,7 @@ interface SyncListener {
   /**
    * This method called when received information about new messages in some folder.
    *
-   * @param account              The [AccountDao] object which contains information about an email account.
+   * @param account              The [AccountEntity] object which contains information about an email account.
    * @param localFolder          The local implementation of the remote folder.
    * @param remoteFolder         The folder where the new  messages exist.
    * @param newMsgs              The new messages.
@@ -197,7 +196,7 @@ interface SyncListener {
    * @param requestCode          The unique request code for the reply to [android.os.Messenger].
    */
   fun onNewMsgsReceived(
-      account: AccountDao,
+      account: AccountEntity,
       localFolder: LocalFolder,
       remoteFolder: IMAPFolder,
       newMsgs: Array<Message>,
@@ -207,9 +206,9 @@ interface SyncListener {
   )
 
   /**
-   * This method called when a new messages received from the some folder.
+   * This method called when new messages received from some folder.
    *
-   * @param account      The [AccountDao] object which contains information about an
+   * @param account      The [AccountEntity] object which contains information about an
    * email account.
    * @param localFolder  The local implementation of the remote folder.
    * @param remoteFolder The folder where the messages exist.
@@ -219,7 +218,7 @@ interface SyncListener {
    * [android.os.Messenger].
    */
   fun onSearchMsgsReceived(
-      account: AccountDao,
+      account: AccountEntity,
       localFolder: LocalFolder,
       remoteFolder: IMAPFolder,
       msgs: Array<Message>,
@@ -230,7 +229,7 @@ interface SyncListener {
   /**
    * This method called when received information about messages which already exist in the local database.
    *
-   * @param account      The [AccountDao] object which contains information about an email account.
+   * @param account      The [AccountEntity] object which contains information about an email account.
    * @param localFolder  The local implementation of the remote folder.
    * @param remoteFolder The folder where the messages exist.
    * @param newMsgs      The refreshed messages.
@@ -239,7 +238,7 @@ interface SyncListener {
    * @param requestCode  The unique request code for the reply to [android.os.Messenger].
    */
   fun onRefreshMsgsReceived(
-      account: AccountDao,
+      account: AccountEntity,
       localFolder: LocalFolder,
       remoteFolder: IMAPFolder,
       newMsgs: Array<Message>,
@@ -251,13 +250,13 @@ interface SyncListener {
   /**
    * This method called when new folders list received.
    *
-   * @param account     The [AccountDao] object which contains information about an email account.
+   * @param account     The [AccountEntity] object which contains information about an email account.
    * @param folders     The new folders list.
    * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for the reply to [android.os.Messenger].
    */
   fun onFoldersInfoReceived(
-      account: AccountDao,
+      account: AccountEntity,
       folders: Array<Folder>,
       ownerKey: String,
       requestCode: Int
@@ -266,14 +265,14 @@ interface SyncListener {
   /**
    * Handle an error of synchronization.
    *
-   * @param account     The [AccountDao] object which contains information about an email account.
+   * @param account     The [AccountEntity] object which contains information about an email account.
    * @param errorType   The error type code.
    * @param e           The exception that occurred during synchronization.
    * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for the reply to [android.os.Messenger].
    */
   fun onError(
-      account: AccountDao,
+      account: AccountEntity,
       errorType: Int,
       e: Exception,
       ownerKey: String,
@@ -283,14 +282,14 @@ interface SyncListener {
   /**
    * This method can be used for debugging. Using this method we can identify a progress of some operation.
    *
-   * @param account     The [AccountDao] object which contains information about an email account.
+   * @param account     The [AccountEntity] object which contains information about an email account.
    * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for the reply to [android.os.Messenger].
    * @param resultCode  The unique result code for the reply which identifies the progress of some request.
    * @param value       The value of the happened action.
    */
   fun onActionProgress(
-      account: AccountDao,
+      account: AccountEntity?,
       ownerKey: String,
       requestCode: Int,
       resultCode: Int,
@@ -298,9 +297,45 @@ interface SyncListener {
   )
 
   /**
+   * This method can be used for debugging. Using this method we can notify listeners that this
+   * action was cancelled.
+   *
+   * @param account     The [AccountEntity] object which contains information about an email account.
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
+   * @param resultCode  The unique result code for the reply which identifies the progress of some request.
+   * @param value       The value of the happened action.
+   */
+  fun onActionCanceled(
+      account: AccountEntity?,
+      ownerKey: String,
+      requestCode: Int,
+      resultCode: Int,
+      value: Int = 0
+  )
+
+  /**
+   * This method can be used for debugging. Using this method we can notify listeners that this
+   * action was completed.
+   *
+   * @param account     The [AccountEntity] object which contains information about an email account.
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
+   * @param resultCode  The unique result code for the reply which identifies the progress of some request.
+   * @param value       The value of the happened action.
+   */
+  fun onActionCompleted(
+      account: AccountEntity?,
+      ownerKey: String,
+      requestCode: Int,
+      resultCode: Int = 0,
+      value: Int = 0
+  )
+
+  /**
    * This method will be called when some message was changed.
    *
-   * @param account      The [AccountDao] object which contains information about an email account.
+   * @param account      The [AccountEntity] object which contains information about an email account.
    * @param localFolder  The local implementation of the remote folder
    * @param remoteFolder The remote folder where the new messages exist.
    * @param msg          The message which was changed.
@@ -308,7 +343,7 @@ interface SyncListener {
    * @param requestCode  The unique request code for the reply to [android.os.Messenger].
    */
   fun onMsgChanged(
-      account: AccountDao,
+      account: AccountEntity,
       localFolder: LocalFolder,
       remoteFolder: IMAPFolder,
       msg: Message,
@@ -319,7 +354,7 @@ interface SyncListener {
   /**
    * This method called when [CheckIsLoadedMessagesEncryptedSyncTask] was completed.
    *
-   * @param account      The [AccountDao] object which contains information about an email account.
+   * @param account      The [AccountEntity] object which contains information about an email account.
    * @param localFolder  The local implementation of the remote folder
    * @param remoteFolder The remote folder where the new messages exist.
    * @param ownerKey     The name of the reply to [android.os.Messenger].
@@ -327,7 +362,7 @@ interface SyncListener {
    * [android.os.Messenger].
    */
   fun onIdentificationToEncryptionCompleted(
-      account: AccountDao,
+      account: AccountEntity,
       localFolder: LocalFolder,
       remoteFolder: IMAPFolder,
       ownerKey: String,

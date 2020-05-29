@@ -23,7 +23,6 @@ import com.flowcrypt.email.util.GeneralUtil
  * Time: 18:13
  * E-mail: DenBond7@gmail.com
  */
-
 class HtmlViewFromAssetsRawActivity : BaseBackStackActivity() {
 
   override val contentViewResourceId: Int
@@ -35,13 +34,11 @@ class HtmlViewFromAssetsRawActivity : BaseBackStackActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    if (intent != null && intent.hasExtra(EXTRA_KEY_HTML_RESOURCES_ID)) {
+    if (intent?.hasExtra(EXTRA_KEY_HTML_RESOURCES_ID) == true) {
+      supportActionBar?.title = intent.getStringExtra(EXTRA_KEY_ACTIVITY_TITLE)
+
       val webView = findViewById<WebView>(R.id.webView)
       webView.loadUrl("file:///android_asset/" + intent.getStringExtra(EXTRA_KEY_HTML_RESOURCES_ID))
-
-      if (supportActionBar != null) {
-        supportActionBar!!.title = intent.getStringExtra(EXTRA_KEY_ACTIVITY_TITLE)
-      }
     }
   }
 

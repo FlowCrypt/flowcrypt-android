@@ -11,5 +11,4 @@ package com.flowcrypt.email.api.retrofit.request.model
  * Time: 13:28
  * E-mail: DenBond7@gmail.com
  */
-
 interface RequestModel

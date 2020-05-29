@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Dialog
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -49,6 +50,16 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
   private var choiceMode: Int = ListView.CHOICE_MODE_NONE
   private var returnResultImmediatelyIfSingle: Boolean = false
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
+  private var onLoadKeysProgressListener: OnLoadKeysProgressListener? = null
+
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
+
+    if (context is OnLoadKeysProgressListener) {
+      onLoadKeysProgressListener = context
+      onLoadKeysProgressListener?.onLoadKeysProgress(Result.Status.LOADING)
+    }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -151,16 +162,19 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
               }
             }
           }
+          onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
         }
 
         Result.Status.ERROR -> {
           UIUtil.exchangeViewVisibility(false, progressBar, textViewMsg)
           textViewMsg?.text = it.data?.apiError?.toString()
+          onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
         }
 
         Result.Status.EXCEPTION -> {
           UIUtil.exchangeViewVisibility(false, progressBar, textViewMsg)
           textViewMsg?.text = it.exception?.message
+          onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
         }
       }
     })
@@ -194,7 +208,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     val intent = Intent()
     intent.putParcelableArrayListExtra(KEY_ATTACHMENT_INFO_LIST, ArrayList(atts))
 
-    targetFragment!!.onActivityResult(targetRequestCode, Activity.RESULT_OK, intent)
+    targetFragment?.onActivityResult(targetRequestCode, Activity.RESULT_OK, intent)
   }
 
   /**
@@ -216,6 +230,10 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
     return keyDetails
   }
 
+  interface OnLoadKeysProgressListener {
+    fun onLoadKeysProgress(status: Result.Status)
+  }
+
   companion object {
     val KEY_ATTACHMENT_INFO_LIST =
         GeneralUtil.generateUniqueExtraKey("KEY_ATTACHMENT_INFO_LIST",
@@ -234,7 +252,6 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
         GeneralUtil.generateUniqueExtraKey("KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE",
             ChoosePublicKeyDialogFragment::class.java)
 
-    @JvmStatic
     fun newInstance(email: String, choiceMode: Int,
                     titleResourceId: Int?,
                     returnResultImmediatelyIfSingle: Boolean = false): ChoosePublicKeyDialogFragment {

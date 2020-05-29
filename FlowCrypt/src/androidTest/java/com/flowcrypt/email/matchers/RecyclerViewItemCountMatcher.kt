@@ -16,10 +16,10 @@ import org.hamcrest.Description
  *         Time: 3:47 PM
  *         E-mail: DenBond7@gmail.com
  */
-class RecyclerViewItemCountMatcher<T : View>(val itemCount: Int) : BaseMatcher<T>() {
+class RecyclerViewItemCountMatcher<T : View>(private val itemCount: Int) : BaseMatcher<T>() {
   override fun matches(item: Any): Boolean {
     return if (item is RecyclerView) {
-      item.adapter == null || item.adapter!!.itemCount == itemCount
+      item.adapter?.itemCount == itemCount
     } else {
       false
     }

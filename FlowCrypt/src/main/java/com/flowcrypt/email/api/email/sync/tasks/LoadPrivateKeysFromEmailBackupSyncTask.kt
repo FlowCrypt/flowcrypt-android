@@ -13,7 +13,7 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NodeException
 import com.google.android.gms.auth.GoogleAuthException
@@ -33,18 +33,17 @@ import javax.mail.Store
  * Time: 10:27
  * E-mail: DenBond7@gmail.com
  */
-
 class LoadPrivateKeysFromEmailBackupSyncTask(ownerKey: String,
                                              requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
 
-  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     super.runIMAPAction(account, session, store, listener)
 
     val context = listener.context
     val keyDetailsList = ArrayList<NodeKeyDetails>()
 
     when (account.accountType) {
-      AccountDao.ACCOUNT_TYPE_GOOGLE ->
+      AccountEntity.ACCOUNT_TYPE_GOOGLE ->
         keyDetailsList.addAll(EmailUtil.getPrivateKeyBackupsViaGmailAPI(context, account, session))
 
       else -> keyDetailsList.addAll(getPrivateKeyBackupsUsingJavaMailAPI(context, account, session))
@@ -62,7 +61,7 @@ class LoadPrivateKeysFromEmailBackupSyncTask(ownerKey: String,
    * @throws IOException
    * @throws GoogleAuthException
    */
-  private fun getPrivateKeyBackupsUsingJavaMailAPI(context: Context, account: AccountDao,
+  private fun getPrivateKeyBackupsUsingJavaMailAPI(context: Context, account: AccountEntity,
                                                    session: Session): MutableList<NodeKeyDetails> {
     val keyDetailsList = mutableListOf<NodeKeyDetails>()
     var store: Store? = null

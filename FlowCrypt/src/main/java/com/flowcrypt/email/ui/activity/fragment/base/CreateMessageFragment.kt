@@ -53,10 +53,11 @@ import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
@@ -99,7 +100,7 @@ import javax.mail.internet.InternetAddress
  * Time: 11:27
  * E-mail: DenBond7@gmail.com
  */
-
+//todo-denbond7 exlude from the base package
 class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, AdapterView.OnItemSelectedListener,
     View.OnClickListener, PgpContactsNachoTextView.OnChipLongClickListener {
 
@@ -118,7 +119,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private var folderType: FoldersManager.FolderType? = null
   private var msgInfo: IncomingMessageInfo? = null
   private var serviceInfo: ServiceInfo? = null
-  private var account: AccountDao? = null
   private var fromAddrs: FromAddressesAdapter<String>? = null
   private var pgpContactWithNoPublicKey: PgpContact? = null
   private var extraActionInfo: ExtraActionInfo? = null
@@ -150,6 +150,11 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private var isIncomingMsgInfoUsed: Boolean = false
   private var isMsgSentToQueue: Boolean = false
   private var originalColor: Int = 0
+
+  private val hostActivity: CreateMessageActivity?
+    get() {
+      return activity as? CreateMessageActivity
+    }
 
   override val contentResourceId: Int = R.layout.fragment_create_message
 
@@ -301,14 +306,12 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
 
-    account = AccountDaoSource().getActiveAccountInformation(context)
     context?.let {
       fromAddrs = FromAddressesAdapter(it, android.R.layout.simple_list_item_1, android.R.id
           .text1, ArrayList())
     }
     fromAddrs?.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
     fromAddrs?.setUseKeysInfo(listener.msgEncryptionType === MessageEncryptionType.ENCRYPTED)
-    account?.email?.let { fromAddrs?.add(it) }
 
     initExtras(activity?.intent)
   }
@@ -354,10 +357,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           val pgpContact = data.getParcelableExtra<PgpContact>(NoPgpFoundDialogFragment.EXTRA_KEY_PGP_CONTACT)
 
           if (pgpContact != null) {
-            account?.let {
-              startActivityForResult(ImportPublicKeyActivity.newIntent(context, it,
-                  getString(R.string.import_public_key), pgpContact), REQUEST_CODE_IMPORT_PUBLIC_KEY)
-            }
+            startActivityForResult(ImportPublicKeyActivity.newIntent(context, account,
+                getString(R.string.import_public_key), pgpContact), REQUEST_CODE_IMPORT_PUBLIC_KEY)
           }
         }
 
@@ -594,6 +595,15 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   override fun onChipLongClick(nachoTextView: NachoTextView, chip: Chip, event: MotionEvent) {}
 
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
+    accountEntity?.email?.let { email ->
+      if (fromAddrs?.objects?.contains(email) == false) {
+        fromAddrs?.add(email)
+      }
+    }
+  }
+
   fun onMsgEncryptionTypeChange(messageEncryptionType: MessageEncryptionType?) {
     var emailMassageHint: String? = null
     if (messageEncryptionType != null) {
@@ -708,7 +718,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
             FileUtils.copyInputStreamToFile(inputStream, draftAtt)
             val uri = FileProvider.getUriForFile(requireContext(), Constants.FILE_PROVIDER_AUTHORITY, draftAtt)
             attachmentInfo.uri = uri
-            atts!!.add(attachmentInfo)
+            atts?.add(attachmentInfo)
           }
         } catch (e: IOException) {
           e.printStackTrace()
@@ -1009,6 +1019,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
 
     showAtts()
+    baseActivity.countingIdlingResource.decrementSafely()
   }
 
   /**
@@ -1133,7 +1144,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
       if (msgInfo?.getTo()?.isNotEmpty() == true) {
         for (address in msgInfo!!.getTo()!!) {
-          if (!account!!.email.equals(address.address, ignoreCase = true)) {
+          if (!account?.email.equals(address.address, ignoreCase = true)) {
             ccSet.add(address)
           }
         }
@@ -1153,7 +1164,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
       if (msgInfo?.getCc()?.isNotEmpty() == true) {
         for (address in msgInfo!!.getCc()!!) {
-          if (!account!!.email.equals(address.address, ignoreCase = true)) {
+          if (!account?.email.equals(address.address, ignoreCase = true)) {
             ccSet.add(address)
           }
         }
@@ -1296,7 +1307,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    * @return true if the attachment can be added, otherwise false.
    */
   private fun hasAbilityToAddAtt(newAttInfo: AttachmentInfo?): Boolean {
-    return atts!!.map { it.encodedSize.toInt() }.sum() + (newAttInfo?.encodedSize?.toInt()
+    return atts?.map { it.encodedSize.toInt() }?.sum() ?: 0 + (newAttInfo?.encodedSize?.toInt()
         ?: 0) < Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES
   }
 
@@ -1363,10 +1374,10 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         } else {
           imageButtonDownloadAtt.visibility = View.INVISIBLE
         }
-        layoutAtts!!.addView(rootView)
+        layoutAtts?.addView(rootView)
       }
     } else {
-      layoutAtts!!.removeAllViews()
+      layoutAtts?.removeAllViews()
     }
   }
 
@@ -1384,6 +1395,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   private fun setupAccountAliasesViewModel() {
     accountAliasesViewModel.fetchUpdates(viewLifecycleOwner)
+    baseActivity.countingIdlingResource.incrementSafely()
     accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner, Observer {
       val aliases = ArrayList<String>()
       accountAliasesViewModel.activeAccountLiveData.value?.let { accountEntity ->
@@ -1457,6 +1469,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     contactsViewModel.contactsToLiveData.observe(viewLifecycleOwner, Observer {
       when (it.status) {
         Result.Status.LOADING -> {
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.incrementSafely()
           pgpContactsTo?.clear()
           progressBarTo?.visibility = View.VISIBLE
           isUpdateToCompleted = false
@@ -1470,12 +1483,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           if (pgpContactsTo?.isNotEmpty() == true) {
             updateChips(recipientsTo, pgpContactsTo)
           }
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           isUpdateToCompleted = true
           progressBarTo?.visibility = View.INVISIBLE
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
         }
       }
     })
@@ -1485,6 +1500,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     contactsViewModel.contactsCcLiveData.observe(viewLifecycleOwner, Observer {
       when (it.status) {
         Result.Status.LOADING -> {
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.incrementSafely()
           pgpContactsCc?.clear()
           progressBarCc?.visibility = View.VISIBLE
           isUpdateCcCompleted = false
@@ -1498,12 +1514,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           if (pgpContactsCc?.isNotEmpty() == true) {
             updateChips(recipientsCc, pgpContactsCc)
           }
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           isUpdateCcCompleted = true
           progressBarCc?.visibility = View.INVISIBLE
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
         }
       }
     })
@@ -1513,6 +1531,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     contactsViewModel.contactsBccLiveData.observe(viewLifecycleOwner, Observer {
       when (it.status) {
         Result.Status.LOADING -> {
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.incrementSafely()
           pgpContactsBcc?.clear()
           progressBarBcc?.visibility = View.VISIBLE
           isUpdateBccCompleted = false
@@ -1526,12 +1545,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           if (pgpContactsBcc?.isNotEmpty() == true) {
             updateChips(recipientsBcc, pgpContactsBcc)
           }
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           isUpdateBccCompleted = true
           progressBarBcc?.visibility = View.INVISIBLE
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
+          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
         }
       }
     })

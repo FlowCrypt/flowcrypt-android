@@ -11,11 +11,14 @@ import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
+import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
+import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
+import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -57,5 +60,35 @@ class FlowcryptApiRepository : ApiRepository {
       withContext(Dispatchers.IO) {
         val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
         getResult { apiService.postLookUpEmail(model) }
+      }
+
+  override suspend fun postInitialLegacySubmit(context: Context, model: InitialLegacySubmitModel): Result<InitialLegacySubmitResponse> =
+      withContext(Dispatchers.IO) {
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        getResult { apiService.postInitialLegacySubmitSuspend(model) }
+      }
+
+  override suspend fun postTestWelcome(context: Context, model: TestWelcomeModel): Result<TestWelcomeResponse> =
+      withContext(Dispatchers.IO) {
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        getResult { apiService.postTestWelcomeSuspend(model) }
+      }
+
+  //todo-denbond7 need to ask Tom to improve https://flowcrypt.com/attester/pub to use the common
+  // API  response ([ApiResponse])
+  override suspend fun getPub(requestCode: Long, context: Context, keyIdOrEmail: String): Result<PubResponse> =
+      withContext(Dispatchers.IO) {
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        val result = getResult(requestCode = requestCode) { apiService.getPub(keyIdOrEmail) }
+        when (result.status) {
+          Result.Status.SUCCESS -> Result.success(requestCode = requestCode, data = PubResponse(null, result.data))
+
+          Result.Status.ERROR -> Result.error(requestCode = requestCode, data = PubResponse(null, null))
+
+          Result.Status.EXCEPTION -> Result.exception(requestCode = requestCode, error = result.exception
+              ?: Exception())
+
+          Result.Status.LOADING -> Result.loading(requestCode = requestCode)
+        }
       }
 }

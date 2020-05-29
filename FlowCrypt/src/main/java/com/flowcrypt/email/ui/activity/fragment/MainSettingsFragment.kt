@@ -8,10 +8,8 @@ package com.flowcrypt.email.ui.activity.fragment
 import android.os.Bundle
 import androidx.preference.Preference
 import com.flowcrypt.email.Constants
-
 import com.flowcrypt.email.R
-import com.flowcrypt.email.database.dao.source.AccountDao
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 
 /**
@@ -22,15 +20,15 @@ import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
  * Time: 10:13
  * E-mail: DenBond7@gmail.com
  */
-
 class MainSettingsFragment : BasePreferenceFragment() {
 
   override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
     addPreferencesFromResource(R.xml.preferences_main_settings)
+  }
 
-    val account = AccountDaoSource().getActiveAccountInformation(context)
-
+  override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
+    super.onAccountInfoRefreshed(accountEntity)
     findPreference<Preference>(Constants.PREF_KEY_BACKUPS)?.isVisible =
-        !(account?.isRuleExist(AccountDao.DomainRule.NO_PRV_BACKUP) ?: false)
+        !(accountEntity?.isRuleExist(AccountEntity.DomainRule.NO_PRV_BACKUP) ?: false)
   }
 }

@@ -15,8 +15,8 @@ import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
-import com.flowcrypt.email.database.dao.source.AccountDao
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
+import com.flowcrypt.email.database.entity.AccountEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -65,7 +65,7 @@ class AccountAliasesViewModel(application: Application) : AccountViewModel(appli
             if (alias.verificationStatus != null) {
               val accountAliasesDao = AccountAliasesEntity(
                   email = account.name.toLowerCase(Locale.getDefault()),
-                  accountType = account.type ?: AccountDao.ACCOUNT_TYPE_GOOGLE,
+                  accountType = account.type ?: AccountEntity.ACCOUNT_TYPE_GOOGLE,
                   sendAsEmail = alias.sendAsEmail.toLowerCase(Locale.getDefault()),
                   displayName = alias.displayName,
                   isDefault = alias.isDefault,

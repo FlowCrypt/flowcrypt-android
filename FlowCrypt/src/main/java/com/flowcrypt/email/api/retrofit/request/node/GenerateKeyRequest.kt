@@ -34,7 +34,8 @@ class GenerateKeyRequest(@Expose val passphrase: String,
     this.variant = KEY_VARIANT_CURVE25519 // default, not yet configurable
     this.userIds = ArrayList()
     for ((email, name) in pgpContacts) {
-      userIds.add(UserId(email, name ?: email)) // todo - fix https://github.com/FlowCrypt/flowcrypt-android/issues/591
+      userIds.add(UserId(email, name ?: email))
+      // todo - fix https://github.com/FlowCrypt/flowcrypt-android/issues/591
     }
   }
 

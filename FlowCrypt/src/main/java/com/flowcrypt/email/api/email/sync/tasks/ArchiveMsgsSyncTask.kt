@@ -9,7 +9,7 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
 import javax.mail.Folder
 import javax.mail.Message
@@ -26,11 +26,23 @@ import javax.mail.Store
  */
 class ArchiveMsgsSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
 
-  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     val context = listener.context
     val foldersManager = FoldersManager.fromDatabase(context, account.email)
-    val inboxFolder = foldersManager.findInboxFolder() ?: return
-    val allMailFolder = foldersManager.folderAll ?: return
+    val inboxFolder = foldersManager.findInboxFolder()
+
+    if (inboxFolder == null) {
+      listener.onActionCompleted(account, ownerKey, requestCode)
+      return
+    }
+
+    val allMailFolder = foldersManager.folderAll
+
+    if (allMailFolder == null) {
+      listener.onActionCompleted(account, ownerKey, requestCode)
+      return
+    }
+
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
     while (true) {
@@ -40,7 +52,7 @@ class ArchiveMsgsSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(own
       if (candidatesForArchiving.isEmpty()) {
         break
       } else {
-        val uidList = candidatesForArchiving.map { it.uid.toLong() }
+        val uidList = candidatesForArchiving.map { it.uid }
         val remoteSrcFolder = store.getFolder(inboxFolder.fullName) as IMAPFolder
         val remoteDestFolder = store.getFolder(allMailFolder.fullName) as IMAPFolder
         remoteSrcFolder.open(Folder.READ_WRITE)
@@ -54,5 +66,7 @@ class ArchiveMsgsSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(own
         remoteSrcFolder.close()
       }
     }
+
+    listener.onActionCompleted(account, ownerKey, requestCode)
   }
 }

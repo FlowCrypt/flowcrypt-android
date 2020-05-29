@@ -9,7 +9,9 @@ import android.os.Parcel
 import android.os.Parcelable
 import android.text.TextUtils
 import android.util.Patterns
+import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.model.PrivateKeySourceType
 import com.flowcrypt.email.util.exception.FlowCryptException
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
@@ -133,6 +135,17 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
     }
 
     return pgpContacts
+  }
+
+  fun toKeyEntity(): KeyEntity {
+    return KeyEntity(
+        longId = longId ?: throw NullPointerException("nodeKeyDetails.longId == null"),
+        source = PrivateKeySourceType.BACKUP.toString(),
+        publicKey = publicKey?.toByteArray()
+            ?: throw NullPointerException("nodeKeyDetails.publicKey == null"),
+        privateKey = privateKey?.toByteArray()
+            ?: throw NullPointerException("nodeKeyDetails.privateKey == null"),
+        passphrase = passphrase)
   }
 
   companion object {

@@ -21,16 +21,10 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 10:29
  * E-mail: DenBond7@gmail.com
  */
-
 abstract class BaseSyncFragment : BaseFragment() {
 
-  @JvmField
   protected var progressView: View? = null
-
-  @JvmField
   protected var statusView: View? = null
-
-  @JvmField
   protected var textViewStatusInfo: TextView? = null
 
   protected val baseSyncActivity: BaseSyncActivity
@@ -45,18 +39,6 @@ abstract class BaseSyncFragment : BaseFragment() {
    * @return <tt>View</tt> Return a progress view.
    */
   abstract val contentView: View?
-
-  /**
-   * Check is we connected to the sync service.
-   *
-   * @return true if we connected, otherwise false.
-   */
-  val isSyncServiceConnected: Boolean
-    get() {
-      val baseSyncActivity = activity as BaseSyncActivity?
-      return baseSyncActivity?.isSyncServiceBound
-          ?: throw NullPointerException("BaseSyncActivity is null!")
-    }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
@@ -89,8 +71,6 @@ abstract class BaseSyncFragment : BaseFragment() {
     }
 
     UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
-    if (snackBar != null) {
-      snackBar!!.dismiss()
-    }
+    snackBar?.dismiss()
   }
 }

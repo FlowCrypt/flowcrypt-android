@@ -30,8 +30,6 @@ import org.hamcrest.Matchers.not
 abstract class BaseEmailListActivityTest : BaseTest() {
 
   protected fun testRunMsgDetailsActivity(position: Int) {
-    //todo-denbond7 Use idling instead of this
-    Thread.sleep(2000)
     onView(withId(R.id.recyclerViewMsgs))
         .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(position, click()))
 

@@ -17,7 +17,6 @@ import com.flowcrypt.email.R
  * Time: 9:15
  * E-mail: DenBond7@gmail.com
  */
-
 class SettingsActivity : BaseSettingsActivity() {
 
   override val contentViewResourceId: Int

@@ -15,5 +15,4 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
  * Time: 14:09
  * E-mail: DenBond7@gmail.com
  */
-
 class KeyAlreadyAddedException(val keyDetails: NodeKeyDetails, errorMsg: String) : Exception(errorMsg)

@@ -30,4 +30,7 @@ interface AttachmentDao : BaseDao<AttachmentEntity> {
 
   @Query("DELETE FROM attachment WHERE email = :account AND folder = :label AND uid = :uid")
   fun delete(account: String, label: String, uid: Long): Int
+
+  @Query("DELETE FROM attachment WHERE email = :email")
+  suspend fun deleteByEmailSuspend(email: String?): Int
 }

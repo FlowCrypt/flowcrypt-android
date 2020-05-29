@@ -23,7 +23,6 @@ import java.util.*
  * Time: 14:41
  * E-mail: DenBond7@gmail.com
  */
-
 class RFC6068Parser {
   companion object {
     private const val MAILTO_SCHEME = "mailto"
@@ -33,12 +32,10 @@ class RFC6068Parser {
     private const val BCC = "bcc"
     private const val SUBJECT = "subject"
 
-    @JvmStatic
     fun isMailTo(uri: Uri?): Boolean {
       return uri != null && MAILTO_SCHEME == uri.scheme
     }
 
-    @JvmStatic
     fun parse(uri: Uri?): ExtraActionInfo {
       if (uri == null) {
         throw NullPointerException("Argument 'uri' must not be null")

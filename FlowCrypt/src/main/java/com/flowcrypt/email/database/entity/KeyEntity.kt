@@ -11,8 +11,6 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.security.model.PrivateKeySourceType
 
 /**
  * @author Denis Bondarenko
@@ -66,19 +64,5 @@ data class KeyEntity(
   override fun toString(): String {
     return "KeyEntity(id=$id, longId='$longId', source='$source', publicKey=${publicKey
         .contentToString()}, privateKey=${privateKey.contentToString()}, passphrase=(hidden))"
-  }
-
-  companion object {
-    fun fromNodeKeyDetails(nodeKeyDetails: NodeKeyDetails): KeyEntity {
-      return KeyEntity(
-          longId = nodeKeyDetails.longId
-              ?: throw NullPointerException("nodeKeyDetails.longId == null"),
-          source = PrivateKeySourceType.BACKUP.toString(),
-          publicKey = nodeKeyDetails.publicKey?.toByteArray()
-              ?: throw NullPointerException("nodeKeyDetails.publicKey == null"),
-          privateKey = nodeKeyDetails.privateKey?.toByteArray()
-              ?: throw NullPointerException("nodeKeyDetails.privateKey == null"),
-          passphrase = nodeKeyDetails.passphrase)
-    }
   }
 }

@@ -15,7 +15,6 @@ import android.util.Log
  */
 class LogsUtil {
   companion object {
-    @JvmStatic
     fun d(tag: String, msg: String) {
       if (GeneralUtil.isDebugBuild()) {
         Log.d(tag, msg)

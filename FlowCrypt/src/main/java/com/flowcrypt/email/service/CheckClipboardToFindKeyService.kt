@@ -35,7 +35,6 @@ import java.lang.ref.WeakReference
  * Time: 9:07
  * E-mail: DenBond7@gmail.com
  */
-
 class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClipChangedListener {
 
   @Volatile
@@ -114,11 +113,7 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
    */
   private class ReplyHandler internal constructor(checkClipboardToFindKeyService: CheckClipboardToFindKeyService)
     : Handler() {
-    private val weakRef: WeakReference<CheckClipboardToFindKeyService>
-
-    init {
-      this.weakRef = WeakReference(checkClipboardToFindKeyService)
-    }
+    private val weakRef: WeakReference<CheckClipboardToFindKeyService> = WeakReference(checkClipboardToFindKeyService)
 
     override fun handleMessage(message: Message) {
       when (message.what) {
@@ -135,7 +130,7 @@ class CheckClipboardToFindKeyService : Service(), ClipboardManager.OnPrimaryClip
     }
 
     companion object {
-      internal val MESSAGE_WHAT = 1
+      internal const val MESSAGE_WHAT = 1
     }
   }
 

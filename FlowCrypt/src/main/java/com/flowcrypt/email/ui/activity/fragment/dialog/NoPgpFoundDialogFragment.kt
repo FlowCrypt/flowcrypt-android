@@ -25,7 +25,6 @@ import java.util.*
  * Time: 10:04
  * E-mail: DenBond7@gmail.com
  */
-
 class NoPgpFoundDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener {
 
   private var pgpContact: PgpContact? = null

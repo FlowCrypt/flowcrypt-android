@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity
 
 import android.content.Intent
 import android.os.Bundle
-
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 
 /**

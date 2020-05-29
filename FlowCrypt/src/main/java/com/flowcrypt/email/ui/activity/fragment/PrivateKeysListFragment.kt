@@ -20,7 +20,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.dao.source.AccountDaoSource
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
@@ -91,6 +92,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
     privateKeysViewModel.privateKeyDetailsLiveData.observe(viewLifecycleOwner, Observer {
       when (it.status) {
         Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
           emptyView?.visibility = View.GONE
           UIUtil.exchangeViewVisibility(true, progressBar, content)
         }
@@ -105,22 +107,30 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
             recyclerViewAdapter.swap(detailsList)
             UIUtil.exchangeViewVisibility(false, progressBar, content)
           }
+          baseActivity.countingIdlingResource.decrementSafely()
         }
 
-        Result.Status.ERROR -> Toast.makeText(context, it.data?.apiError?.toString(), Toast.LENGTH_SHORT).show()
+        Result.Status.ERROR -> {
+          Toast.makeText(context, it.data?.apiError?.toString(), Toast.LENGTH_SHORT).show()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
 
-        Result.Status.EXCEPTION -> Toast.makeText(context, it.exception?.message, Toast.LENGTH_SHORT).show()
+        Result.Status.EXCEPTION -> {
+          Toast.makeText(context, it.exception?.message, Toast.LENGTH_SHORT).show()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
       }
     })
   }
 
   private fun runCreateOrImportKeyActivity() {
-    val account = AccountDaoSource().getActiveAccountInformation(context) ?: return
-    startActivityForResult(ImportPrivateKeyActivity.getIntent(context = requireContext(), accountDao = account,
+    startActivityForResult(ImportPrivateKeyActivity.getIntent(
+        context = requireContext(),
         title = getString(R.string.import_private_key),
         throwErrorIfDuplicateFoundEnabled = true,
         cls = ImportPrivateKeyActivity::class.java,
-        isSubmittingPubKeysEnabled = false),
+        isSubmittingPubKeysEnabled = false,
+        accountEntity = account),
         REQUEST_CODE_START_IMPORT_KEY_ACTIVITY)
   }
 
@@ -151,7 +161,6 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
     private const val REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 0
 
-    @JvmStatic
     fun newInstance(): PrivateKeysListFragment {
       return PrivateKeysListFragment()
     }

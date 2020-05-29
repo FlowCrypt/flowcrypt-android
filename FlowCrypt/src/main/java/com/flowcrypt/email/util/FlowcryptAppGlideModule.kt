@@ -17,6 +17,5 @@ import com.bumptech.glide.module.AppGlideModule
  * Time: 16:47
  * E-mail: DenBond7@gmail.com
  */
-
 @GlideModule
 class FlowcryptAppGlideModule : AppGlideModule()

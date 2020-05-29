@@ -65,7 +65,7 @@ data class ExtraActionInfo constructor(var atts: List<AttachmentInfo> = emptyLis
     }
 
     /**
-     * Parse an incoming information from the intent which has next actions:
+     * Parse incoming information from the intent which can have the next actions:
      *
      *  * [Intent.ACTION_VIEW]
      *  * [Intent.ACTION_SENDTO]
@@ -75,7 +75,6 @@ data class ExtraActionInfo constructor(var atts: List<AttachmentInfo> = emptyLis
      *
      * @param intent An incoming intent.
      */
-    @JvmStatic
     fun parseExtraActionInfo(context: Context, intent: Intent): ExtraActionInfo {
       var info: ExtraActionInfo? = null
 

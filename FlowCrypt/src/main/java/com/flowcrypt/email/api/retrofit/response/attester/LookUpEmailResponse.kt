@@ -22,7 +22,6 @@ import com.google.gson.annotations.SerializedName
  * Time: 13:20
  * E-mail: DenBond7@gmail.com
  */
-
 data class LookUpEmailResponse constructor(@SerializedName("error") @Expose override val apiError: ApiError?,
                                            @SerializedName("has_cryptup") @Expose val hasCryptup: Boolean,
                                            @SerializedName("pubkey") @Expose val pubKey: String?,

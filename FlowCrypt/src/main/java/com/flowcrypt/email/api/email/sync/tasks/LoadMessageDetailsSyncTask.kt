@@ -11,7 +11,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
@@ -46,7 +46,6 @@ import javax.mail.internet.MimeMultipart
  * Time: 17:41
  * E-mail: DenBond7@gmail.com
  */
-
 class LoadMessageDetailsSyncTask(ownerKey: String,
                                  requestCode: Int,
                                  uniqueId: String,
@@ -59,12 +58,12 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
   private var msgSize: Int = 0
   private var downloadedMsgSize: Int = 0
   private var listener: SyncListener? = null
-  private var account: AccountDao? = null
+  private var account: AccountEntity? = null
   private var lastPercentage = 0
   private var currentPercentage = 0
   private var lastUpdateTime = System.currentTimeMillis()
 
-  override fun runIMAPAction(account: AccountDao, session: Session, store: Store, listener: SyncListener) {
+  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
     this.account = account
     this.listener = listener
     val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder

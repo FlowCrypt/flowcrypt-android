@@ -16,5 +16,4 @@ import com.google.gson.annotations.SerializedName
  * Time: 11:50
  * E-mail: DenBond7@gmail.com
  */
-
 data class ReplaceConfirmModel(@SerializedName("signed_message") @Expose val signedMsg: String) : RequestModel

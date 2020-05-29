@@ -51,7 +51,6 @@ import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.hamcrest.core.AllOf.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -69,7 +68,6 @@ import java.util.concurrent.TimeUnit
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("Temporary excluded")
 class KeysSettingsActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(KeysSettingsActivity::class.java)
@@ -85,6 +83,8 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   fun testAddNewKeys() {
+    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
+    Thread.sleep(1000)
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
 
@@ -102,6 +102,8 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   fun testKeyExists() {
+    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
+    Thread.sleep(1000)
     onView(withId(R.id.recyclerViewKeys))
         .check(matches(not<View>(withEmptyRecyclerView()))).check(matches(isDisplayed()))
     onView(withId(R.id.emptyView))
@@ -111,12 +113,16 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   fun testShowKeyDetailsScreen() {
+    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
+    Thread.sleep(1000)
     selectFirstKey()
   }
 
   @Test
   @DoesNotNeedMailserver
   fun testKeyDetailsShowPubKey() {
+    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
+    Thread.sleep(1000)
     selectFirstKey()
     val keyDetails = addPrivateKeyToDatabaseRule.nodeKeyDetails
     onView(withId(R.id.btnShowPubKey))
@@ -128,6 +134,8 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   fun testKeyDetailsCopyToClipBoard() {
+    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
+    Thread.sleep(1000)
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
     onView(withId(R.id.btnCopyToClipboard))
@@ -139,6 +147,8 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Test
   fun testKeyDetailsShowPrivateKey() {
+    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
+    Thread.sleep(1000)
     selectFirstKey()
     onView(withId(R.id.btnShowPrKey))
         .check(matches(isDisplayed()))
@@ -149,6 +159,8 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   fun testKeyDetailsCheckDetails() {
+    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
+    Thread.sleep(2000)
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
     onView(withId(R.id.textViewKeyWords))
@@ -180,6 +192,8 @@ class KeysSettingsActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
+    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
+    Thread.sleep(1000)
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
 

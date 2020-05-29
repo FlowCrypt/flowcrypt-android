@@ -9,6 +9,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
+import com.flowcrypt.email.database.entity.AccountEntity
 import java.util.*
 
 /**
@@ -19,7 +20,6 @@ import java.util.*
  * Time: 18:12
  * E-mail: DenBond7@gmail.com
  */
-
 class PropertiesHelper {
 
   companion object {
@@ -30,7 +30,6 @@ class PropertiesHelper {
      *
      * @return <tt>Properties</tt> New properties with setup gimaps connection;
      */
-    @JvmStatic
     fun generateGmailProperties(): Properties {
       val prop = Properties()
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE] = BOOLEAN_VALUE_TRUE
@@ -46,7 +45,6 @@ class PropertiesHelper {
      *
      * @return <tt>Properties</tt> New properties with setup gimaps connection;
      */
-    @JvmStatic
     fun genGmailAttsProperties(): Properties {
       val properties = generateGmailProperties()
       properties[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE] = 1024 * 256
@@ -58,9 +56,8 @@ class PropertiesHelper {
      *
      * @return <tt>Properties</tt> New properties with setup imap connection;
      */
-    @JvmStatic
-    fun genDownloadAttsProps(authCreds: AuthCredentials?): Properties {
-      val properties = genProps(authCreds)
+    fun genDownloadAttsProps(accountEntity: AccountEntity): Properties {
+      val properties = genProps(accountEntity)
       properties[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE] = 1024 * 256
       return properties
     }
@@ -80,6 +77,26 @@ class PropertiesHelper {
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = it.hasCustomSignInForSmtp
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = it.smtpOpt === SecurityType.Option.SSL_TLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] = it.smtpOpt === SecurityType.Option.STARTLS
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE] = 1024 * 128
+      }
+
+      return prop
+    }
+
+    /**
+     * Generate properties.
+     *
+     * @param accountEntity The object which contains information about settings for a connection.
+     * @return <tt>Properties</tt> New properties.
+     */
+    fun genProps(accountEntity: AccountEntity?): Properties {
+      val prop = Properties()
+      accountEntity?.let {
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE] = it.imapOpt() === SecurityType.Option.SSL_TLS
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE] = it.imapOpt() === SecurityType.Option.STARTLS
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = it.useCustomSignForSmtp
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = it.smtpOpt() === SecurityType.Option.SSL_TLS
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] = it.smtpOpt() === SecurityType.Option.STARTLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE] = 1024 * 128
       }
 

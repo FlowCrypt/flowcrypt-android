@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets
  *
  * @see [Node.js for Mobile Apps](https://code.janeasystems.com/nodejs-mobile/getting-started-android)
  */
+//todo-denbond7 Update Node usage https://github.com/janeasystems/nodejs-mobile/releases/
 internal class NativeNode private constructor(private val isDebugEnabled: Boolean, private val nodeSecret: NodeSecret) {
 
   private var isRunning: Boolean = false

@@ -13,7 +13,6 @@ package com.flowcrypt.email.api.email.sync
  * Time: 9:18
  * E-mail: DenBond7@gmail.com
  */
-
 class SyncErrorTypes {
   companion object {
     const val UNKNOWN_ERROR = 0

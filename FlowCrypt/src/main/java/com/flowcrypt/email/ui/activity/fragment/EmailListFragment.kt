@@ -40,7 +40,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.dao.source.AccountDao
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
@@ -54,7 +54,6 @@ import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
-import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
@@ -98,7 +97,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
 
   private val msgsObserver = Observer<PagedList<MessageEntity>> {
-    if (it.size == 0) {
+    if (it?.size ?: 0 == 0) {
       if (isEmptyViewAvailable || isOutboxFolder) {
         progressView?.visibility = View.GONE
         statusView?.visibility = View.GONE
@@ -115,6 +114,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
 
     adapter.submitList(it)
+    actionMode?.invalidate()
   }
 
   private val boundaryCallback = object : PagedList.BoundaryCallback<MessageEntity>() {
@@ -292,7 +292,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
 
       R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active ->
-        if (listener!!.currentFolder == null) {
+        if (listener?.currentFolder == null) {
           var errorMsg = getString(R.string.failed_load_labels_from_email_server)
 
           if (e is AuthenticationFailedException) {
@@ -487,7 +487,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
    * Try to load a new messages from an IMAP server.
    */
   private fun refreshMsgs() {
-    listener?.msgsLoadingIdlingResource?.setIdleState(false)
     listener?.currentFolder?.let {
       baseSyncActivity.refreshMsgs(R.id.syns_request_code_refresh_msgs, it)
     }
@@ -516,7 +515,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
 
       footerProgressView?.visibility = View.VISIBLE
-      listener?.msgsLoadingIdlingResource?.setIdleState(false)
       localFolder?.let {
         adapter.changeProgress(true)
         if (it.searchQuery.isNullOrEmpty()) {
@@ -754,6 +752,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         val menuActionMarkUnread = menu?.findItem(R.id.menuActionMarkUnread)
         menuActionMarkUnread?.isVisible = isChangeSeenStateActionEnabled()
 
+        val menuActionDeleteMessage = menu?.findItem(R.id.menuActionDeleteMessage)
+        menuActionDeleteMessage?.isVisible = isDeleteActionEnabled()
+
         if (isChangeSeenStateActionEnabled()) {
           val id = tracker?.selection?.first() ?: return true
           val msgEntity = adapter.getMsgEntity(keyProvider?.getPosition(id))
@@ -779,7 +780,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
   private fun setupMsgsViewModel() {
     msgsViewModel = ViewModelProvider(this).get(MessagesViewModel::class.java)
-    msgsViewModel.accountLiveData.observe(this, Observer { })
     msgsViewModel.msgStatesLiveData.observe(this, Observer {
       val activity = activity as? BaseSyncActivity ?: return@Observer
       with(activity) {
@@ -803,7 +803,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       //archive action is enabled only in INBOX folder for GMAIL. While we don't support GMail
       // labels we can't use the archive action in other folders.
       FoldersManager.FolderType.INBOX -> {
-        if (AccountDao.ACCOUNT_TYPE_GOOGLE == listener?.currentAccountDao?.accountType) {
+        if (AccountEntity.ACCOUNT_TYPE_GOOGLE == account?.accountType) {
           isEnabled = true
         }
       }
@@ -819,6 +819,18 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private fun isChangeSeenStateActionEnabled(): Boolean {
     return when (FoldersManager.getFolderType(listener?.currentFolder)) {
       FoldersManager.FolderType.OUTBOX -> {
+        false
+      }
+
+      else -> {
+        true
+      }
+    }
+  }
+
+  private fun isDeleteActionEnabled(): Boolean {
+    return when (FoldersManager.getFolderType(listener?.currentFolder)) {
+      FoldersManager.FolderType.TRASH, null -> {
         false
       }
 
@@ -845,9 +857,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   interface OnManageEmailsListener {
-    val currentAccountDao: AccountDao?
     val currentFolder: LocalFolder?
-    val msgsLoadingIdlingResource: SingleIdlingResources
     fun onRetryGoogleAuth()
   }
 

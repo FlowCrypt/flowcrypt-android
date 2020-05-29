@@ -16,7 +16,6 @@ import android.os.Parcelable
  * Time: 12:55
  * E-mail: DenBond7@gmail.com
  */
-
 enum class MessageType : Parcelable {
   NEW, REPLY, REPLY_ALL, FORWARD;
 
