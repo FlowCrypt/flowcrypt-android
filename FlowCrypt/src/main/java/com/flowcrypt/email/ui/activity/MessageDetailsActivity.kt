@@ -10,7 +10,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.espresso.idling.CountingIdlingResource
@@ -57,7 +56,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
   private lateinit var decryptMsgViewModel: DecryptMessageViewModel
   private lateinit var label: String
 
-  @get:VisibleForTesting
   var idlingForDecryption: CountingIdlingResource? = null
     private set
   val idlingForWebView: SingleIdlingResources = SingleIdlingResources(false)

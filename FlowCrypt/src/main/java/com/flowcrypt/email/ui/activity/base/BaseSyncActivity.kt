@@ -12,7 +12,6 @@ import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
-import androidx.annotation.VisibleForTesting
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -40,7 +39,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   protected var syncMessenger: Messenger? = null
   protected val syncReplyMessenger: Messenger = Messenger(ReplyHandler(this))
 
-  @get:VisibleForTesting
   val syncServiceCountingIdlingResource: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   /**

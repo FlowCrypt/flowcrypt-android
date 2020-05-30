@@ -12,7 +12,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
@@ -39,10 +38,8 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
-  @get:VisibleForTesting
   val idlingForFetchingKeys: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
-  @get:VisibleForTesting
   var changePassphraseIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override fun onConfirmPassPhraseSuccess() {

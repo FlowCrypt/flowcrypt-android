@@ -301,8 +301,6 @@
 
         <receiver android:name=".broadcastreceivers.CorruptedStorageBroadcastReceiver" />
 
-        <receiver android:name=".broadcastreceivers.UpdateStorageConnectorBroadcastReceiver" />
-
         <receiver android:name=".broadcastreceivers.AppUpdateBroadcastReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />

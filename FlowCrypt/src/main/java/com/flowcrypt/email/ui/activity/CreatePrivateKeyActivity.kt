@@ -13,7 +13,6 @@ import android.text.TextUtils
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
@@ -40,7 +39,6 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
   private var createdPrivateKeyLongId: String? = null
   private var tempAccount: AccountEntity? = null
 
-  @get:VisibleForTesting
   var createPrivateKeyIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override val contentViewResourceId: Int

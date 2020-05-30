@@ -21,7 +21,6 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
@@ -72,7 +71,6 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
 
   protected var isBackEnabled = true
 
-  @get:VisibleForTesting
   var idlingForPassphraseChecking: SingleIdlingResources? = null
     private set
   private lateinit var viewModel: PasswordStrengthViewModel
