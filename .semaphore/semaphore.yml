@@ -39,6 +39,8 @@ blocks:
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
             # run JUnit tests first
             - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-junit-tests.sh )
+            # run Lint checks
+            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-lint.sh )
             # Run an emulator and instrumentation tests
             - ~/Android/Sdk/emulator/emulator -accel-check # debug
             - echo -ne '\n' | ~/Android/Sdk/tools/bin/avdmanager -v create avd --name ci-test-pixel-x86-64-api29 --package "system-images;android-29;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
