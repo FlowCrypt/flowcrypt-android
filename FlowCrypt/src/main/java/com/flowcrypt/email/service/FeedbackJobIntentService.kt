@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Base64
 import androidx.core.app.JobIntentService
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
@@ -88,7 +89,12 @@ class FeedbackJobIntentService : JobIntentService() {
 
       val response = with(feedBackItem) {
         apiService
-            .postHelpFeedback(PostHelpFeedbackModel(email ?: "", "", screenShot, feedbackMsg))
+            .postHelpFeedback(PostHelpFeedbackModel(
+                email = email ?: "",
+                logs = "",
+                screenshot = screenShot,
+                msg = "$feedbackMsg\n\nversion: Android ${BuildConfig.VERSION_NAME}"
+            ))
             .execute()
       }
 
