@@ -11,6 +11,9 @@ import android.util.Base64OutputStream
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
+import okio.buffer
 import org.apache.commons.io.IOUtils
 import org.junit.After
 import org.junit.Assert.assertTrue
@@ -77,6 +80,60 @@ class KeyStoreCryptoManagerTest {
 
     val cipherForDecryption = KeyStoreCryptoManager.getCipherForDecryption(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS))
     val byteArrayInputStream = ByteArrayInputStream(byteArrayOutputStream.toByteArray())
+    val base64InputStream = Base64InputStream(byteArrayInputStream, KeyStoreCryptoManager.BASE64_FLAGS)
+    val inputStream = CipherInputStream(base64InputStream, cipherForDecryption)
+
+    val outputStreamFoResult = ByteArrayOutputStream()
+
+    while (true) {
+      val c = byteArrayInputStream.read()
+
+      if (c == -1 || c == '\n'.toInt()) {
+        break
+      }
+    }
+
+    inputStream.copyTo(outputStreamFoResult)
+
+    val decodedDataAsString = String(outputStreamFoResult.toByteArray())
+    assertTrue(originalMsgText.replace("\r\n".toRegex(), "\n") == decodedDataAsString.replace("\r\n".toRegex(), "\n"))
+  }
+
+  @Test
+  fun testDataAsStreamFromCacheManager() {
+    val originalMsgText = IOUtils.toString(InstrumentationRegistry
+        .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plain_text" +
+            ".txt"), StandardCharsets.UTF_8).replace("\n".toRegex(), "\r\n")
+    val msg = MimeMessage(Session.getInstance(Properties()), InstrumentationRegistry
+        .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plain_text.txt"))
+    val key = "temp"
+    val editor = MsgsCacheManager.diskLruCache.edit(key) ?: return
+
+    val bufferedSink = editor.newSink(0).buffer()
+    val outputStreamOfBufferedSink = bufferedSink.outputStream()
+    val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
+    val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
+    val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
+
+    try {
+      outputStream.use {
+        outputStreamOfBufferedSink.write(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
+        outputStreamOfBufferedSink.write("\n".toByteArray())
+        msg.writeTo(it)
+        bufferedSink.flush()
+        editor.commit()
+      }
+    } catch (e: SyncTaskTerminatedException) {
+      e.printStackTrace()
+      editor.abort()
+    }
+
+    val snapshot = MsgsCacheManager.getMsgSnapshot(key) ?: throw IllegalArgumentException()
+    val inputStreamFromUri = InstrumentationRegistry.getInstrumentation().targetContext?.contentResolver?.openInputStream(snapshot.getUri(0)
+        ?: throw NullPointerException()) ?: throw   java.lang.NullPointerException()
+
+    val cipherForDecryption = KeyStoreCryptoManager.getCipherForDecryption(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS))
+    val byteArrayInputStream = ByteArrayInputStream(inputStreamFromUri.readBytes())
     val base64InputStream = Base64InputStream(byteArrayInputStream, KeyStoreCryptoManager.BASE64_FLAGS)
     val inputStream = CipherInputStream(base64InputStream, cipherForDecryption)
 
