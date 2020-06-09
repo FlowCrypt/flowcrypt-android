@@ -81,7 +81,8 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
           parseMimeAndDecrypt(context, uri, list)
         } else {
           apiRepository.parseDecryptMsg(
-              request = ParseDecryptMsgRequest(context = context, uri = uri, keyEntities = list, isEmail = true))
+              request = ParseDecryptMsgRequest(context = context, uri = uri, keyEntities = list,
+                  isEmail = true, hasEncryptedDataInUri = true))
         }
 
         modifyMsgBlocksIfNeeded(result)
