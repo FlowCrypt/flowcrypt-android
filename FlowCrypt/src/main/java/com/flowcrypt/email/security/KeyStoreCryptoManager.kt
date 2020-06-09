@@ -37,10 +37,10 @@ import javax.crypto.spec.IvParameterSpec
  * AndroidKeyStore for storing keys. Improved and simplified the code.
  */
 object KeyStoreCryptoManager {
+  const val BASE64_FLAGS = Base64.DEFAULT
   private const val TRANSFORMATION_AES_CBC_PKCS7_PADDING = "AES/CBC/PKCS7Padding"
   private const val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
   private const val ANDROID_KEY_STORE_AES_ALIAS = "flowcrypt_main_aes"
-  private const val BASE64_FLAGS = Base64.DEFAULT
 
   private val keyStore: KeyStore = KeyStore.getInstance(PROVIDER_ANDROID_KEY_STORE)
   private var secretKey: SecretKey? = null
@@ -73,9 +73,14 @@ object KeyStoreCryptoManager {
   @WorkerThread
   fun encrypt(plainData: String?): String {
     val input = (plainData ?: "").toByteArray(StandardCharsets.UTF_8)
-    val cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply { init(Cipher.ENCRYPT_MODE, secretKey) }
+    val cipher = getCipherForEncryption()
     val encryptedBytes = cipher.doFinal(input)
     return Base64.encodeToString(cipher.iv, BASE64_FLAGS) + "\n" + Base64.encodeToString(encryptedBytes, BASE64_FLAGS)
+  }
+
+  @WorkerThread
+  fun getCipherForEncryption(): Cipher {
+    return Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply { init(Cipher.ENCRYPT_MODE, secretKey) }
   }
 
   /**
@@ -110,11 +115,16 @@ object KeyStoreCryptoManager {
       }
 
       val iv = encryptedData.substring(0, splitPosition)
-      val cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply {
-        init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(Base64.decode(iv, BASE64_FLAGS)))
-      }
+      val cipher = getCipherForDecryption(iv)
       val decodedBytes = cipher.doFinal(Base64.decode(encryptedData.substring(splitPosition + 1), BASE64_FLAGS))
       String(decodedBytes, StandardCharsets.UTF_8)
+    }
+  }
+
+  @WorkerThread
+  fun getCipherForDecryption(iv: String): Cipher {
+    return Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply {
+      init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(Base64.decode(iv, BASE64_FLAGS)))
     }
   }
 
