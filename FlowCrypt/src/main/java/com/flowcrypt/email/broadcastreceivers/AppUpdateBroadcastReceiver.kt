@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.util.SharedPreferencesHelper
 
 /**
@@ -26,6 +27,7 @@ class AppUpdateBroadcastReceiver : BroadcastReceiver() {
     if (intent != null && Intent.ACTION_MY_PACKAGE_REPLACED == intent.action) {
       SharedPreferencesHelper.setBoolean(PreferenceManager
           .getDefaultSharedPreferences(context), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, true)
+      MsgsCacheManager.diskLruCache.delete()
     }
   }
 }
