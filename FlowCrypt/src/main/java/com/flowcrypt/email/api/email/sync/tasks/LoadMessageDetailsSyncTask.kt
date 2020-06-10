@@ -6,6 +6,8 @@
 package com.flowcrypt.email.api.email.sync.tasks
 
 import android.text.TextUtils
+import android.util.Base64
+import android.util.Base64OutputStream
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
@@ -20,11 +22,11 @@ import okio.buffer
 import org.apache.commons.io.FilenameUtils
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
+import javax.crypto.CipherOutputStream
 import javax.mail.BodyPart
 import javax.mail.FetchProfile
 import javax.mail.Folder
@@ -211,23 +213,23 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     return result
   }
 
-  //todo-denbond7 improve this code to use streams
   private fun storeMsg(key: String, msg: MimeMessage) {
     val editor = MsgsCacheManager.diskLruCache.edit(key) ?: return
 
     val bufferedSink = editor.newSink(0).buffer()
-    val outputStream = bufferedSink.outputStream()
-    val progressOutputStream = ProgressOutputStream(outputStream)
+    val outputStreamOfBufferedSink = bufferedSink.outputStream()
+    val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
+    val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
+    val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
+
     try {
-      val byteArrayOutputStream = ByteArrayOutputStream()
-
-      msg.writeTo(byteArrayOutputStream)
-
-      val encryptedData = KeyStoreCryptoManager.encrypt(String(byteArrayOutputStream.toByteArray()))
-      progressOutputStream.write(encryptedData.toByteArray())
-
-      bufferedSink.flush()
-      editor.commit()
+      outputStream.use {
+        outputStreamOfBufferedSink.write(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
+        outputStreamOfBufferedSink.write("\n".toByteArray())
+        msg.writeTo(it)
+        bufferedSink.flush()
+        editor.commit()
+      }
 
       MsgsCacheManager.diskLruCache[key] ?: throw IOException("No space left on device")
     } catch (e: SyncTaskTerminatedException) {
