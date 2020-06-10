@@ -21,6 +21,7 @@ import com.sun.mail.imap.IMAPFolder
 import okio.buffer
 import org.apache.commons.io.FilenameUtils
 import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -217,7 +218,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     val editor = MsgsCacheManager.diskLruCache.edit(key) ?: return
 
     val bufferedSink = editor.newSink(0).buffer()
-    val outputStreamOfBufferedSink = bufferedSink.outputStream()
+    val outputStreamOfBufferedSink = ProgressOutputStream(bufferedSink.outputStream())
     val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
     val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
     val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
@@ -276,12 +277,12 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
    * This class itself simply overrides all methods of [OutputStream] with versions that pass
    * all requests to the underlying output stream.
    */
-  inner class ProgressOutputStream(val out: OutputStream) : OutputStream() {
+  inner class ProgressOutputStream(val out: OutputStream) : BufferedOutputStream(out) {
     override fun write(b: ByteArray) {
       if (Thread.interrupted()) {
         throw SyncTaskTerminatedException()
       }
-      out.write(b)
+      super.write(b)
     }
 
     override fun write(b: Int) {
@@ -289,7 +290,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
         throw SyncTaskTerminatedException()
       }
 
-      out.write(b)
+      super.write(b)
     }
 
     override fun write(b: ByteArray, off: Int, len: Int) {
@@ -297,7 +298,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
         throw SyncTaskTerminatedException()
       }
 
-      out.write(b, off, len)
+      super.write(b, off, len)
     }
   }
 
