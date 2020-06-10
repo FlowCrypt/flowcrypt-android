@@ -38,7 +38,9 @@ import javax.mail.internet.MimeMessage
 @SmallTest
 @RunWith(AndroidJUnit4::class)
 class KeyStoreCryptoManagerTest {
-  private val originalData = "It's a simple text for testing"
+  private val originalData = IOUtils.toString(InstrumentationRegistry
+      .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plain_text" +
+          ".txt"), StandardCharsets.UTF_8)
 
   @Before
   fun setUp() {
@@ -59,9 +61,6 @@ class KeyStoreCryptoManagerTest {
 
   @Test
   fun testDataAsStream() {
-    val originalMsgText = IOUtils.toString(InstrumentationRegistry
-        .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plain_text" +
-            ".txt"), StandardCharsets.UTF_8).replace("\n".toRegex(), "\r\n")
     val msg = MimeMessage(Session.getInstance(Properties()), InstrumentationRegistry
         .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plain_text.txt"))
 
@@ -96,14 +95,11 @@ class KeyStoreCryptoManagerTest {
     inputStream.copyTo(outputStreamFoResult)
 
     val decodedDataAsString = String(outputStreamFoResult.toByteArray())
-    assertTrue(originalMsgText.replace("\r\n".toRegex(), "\n") == decodedDataAsString.replace("\r\n".toRegex(), "\n"))
+    assertTrue(originalData.replace("\r\n".toRegex(), "\n") == decodedDataAsString.replace("\r\n".toRegex(), "\n"))
   }
 
   @Test
   fun testDataAsStreamFromCacheManager() {
-    val originalMsgText = IOUtils.toString(InstrumentationRegistry
-        .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plain_text" +
-            ".txt"), StandardCharsets.UTF_8).replace("\n".toRegex(), "\r\n")
     val msg = MimeMessage(Session.getInstance(Properties()), InstrumentationRegistry
         .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plain_text.txt"))
     val key = "temp"
@@ -150,6 +146,6 @@ class KeyStoreCryptoManagerTest {
     inputStream.copyTo(outputStreamFoResult)
 
     val decodedDataAsString = String(outputStreamFoResult.toByteArray())
-    assertTrue(originalMsgText.replace("\r\n".toRegex(), "\n") == decodedDataAsString.replace("\r\n".toRegex(), "\n"))
+    assertTrue(originalData.replace("\r\n".toRegex(), "\n") == decodedDataAsString.replace("\r\n".toRegex(), "\n"))
   }
 }
