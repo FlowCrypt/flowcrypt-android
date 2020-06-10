@@ -57,4 +57,10 @@ object MsgsCacheManager {
     val snapshot = diskLruCache[key] ?: return false
     return snapshot.getLength(0) > 0
   }
+
+  fun dropAndInit(context: Context?) {
+    context ?: return
+    diskLruCache.delete()
+    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.filesDir, CACHE_DIR_NAME), CACHE_VERSION, 1, CACHE_SIZE)
+  }
 }

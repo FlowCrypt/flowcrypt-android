@@ -5,8 +5,11 @@
 
 package com.flowcrypt.email.api.retrofit.node
 
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.util.exception.CorruptedMsgInCacheException
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okhttp3.internal.closeQuietly
@@ -58,10 +61,17 @@ class NodeRequestBody constructor(private val nodeRequest: NodeRequest,
       var uriSource: Source? = null
       try {
         nodeRequest.context?.contentResolver?.openInputStream(uri)?.let { inputStream ->
-          if (nodeRequest.hasEncryptedDataInUri) {
-            uriSource = KeyStoreCryptoManager.getCipherInputStream(inputStream).source()
+          uriSource = if (nodeRequest.hasEncryptedDataInUri) {
+            try {
+              KeyStoreCryptoManager.getCipherInputStream(inputStream).source()
+            } catch (e: Exception) {
+              e.printStackTrace()
+              ExceptionUtil.handleError(e)
+              MsgsCacheManager.dropAndInit(nodeRequest.context)
+              throw CorruptedMsgInCacheException()
+            }
           } else {
-            uriSource = BufferedInputStream(inputStream).source()
+            BufferedInputStream(inputStream).source()
           }
 
           uriSource?.let {

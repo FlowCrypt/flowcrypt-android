@@ -24,6 +24,7 @@ import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.cache.DiskLruCache
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.util.ASCIIUtility
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -60,7 +61,9 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
   fun decryptMessage(rawMimeBytes: ByteArray) {
     viewModelScope.launch {
       decryptLiveData.value = Result.loading()
-      headersLiveData.postValue(getHeaders(ByteArrayInputStream(rawMimeBytes)))
+      ByteArrayInputStream(rawMimeBytes).use {
+        headersLiveData.postValue(getHeaders(it))
+      }
       val list = keysStorage.getAllPgpPrivateKeys()
       val result = apiRepository.parseDecryptMsg(
           request = ParseDecryptMsgRequest(data = rawMimeBytes, keyEntities = list, isEmail = true))
@@ -188,10 +191,15 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
                                  isDataEncrypted: Boolean = false): String = withContext(Dispatchers.IO) {
     inputStream ?: return@withContext ""
     val d = ByteArray(50000)
-    if (isDataEncrypted) {
-      IOUtils.read(KeyStoreCryptoManager.getCipherInputStream(inputStream), d)
-    } else {
-      IOUtils.read(inputStream, d)
+    try {
+      if (isDataEncrypted) {
+        IOUtils.read(KeyStoreCryptoManager.getCipherInputStream(inputStream), d)
+      } else {
+        IOUtils.read(inputStream, d)
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
     }
     EmailUtil.getHeadersFromRawMIME(ASCIIUtility.toString(d))
   }
