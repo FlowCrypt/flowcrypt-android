@@ -5,20 +5,17 @@
 
 package com.flowcrypt.email.api.retrofit.node
 
-import android.util.Base64InputStream
 import com.flowcrypt.email.api.retrofit.request.node.NodeRequest
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okhttp3.internal.closeQuietly
-import okio.Buffer
 import okio.BufferedSink
 import okio.ByteString
 import okio.Source
 import okio.source
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
-import javax.crypto.CipherInputStream
 
 /**
  * This is a custom realization of [RequestBody] which will be used by [NodeRequestBodyConverter].
@@ -62,24 +59,7 @@ class NodeRequestBody constructor(private val nodeRequest: NodeRequest,
       try {
         nodeRequest.context?.contentResolver?.openInputStream(uri)?.let { inputStream ->
           if (nodeRequest.hasEncryptedDataInUri) {
-            val bufferedInputStream = BufferedInputStream(inputStream)
-            val buffer = Buffer()
-
-            val bufferedInputStreamSource = bufferedInputStream.source()
-            while (true) {
-              if (bufferedInputStreamSource.read(buffer, 1) != -1L) {
-                val b = buffer[buffer.size - 1]
-                if (b == (-1).toByte() || b == '\n'.toByte()) {
-                  break
-                }
-              } else break
-            }
-
-            val iv = String(buffer.readByteArray(buffer.size - 1))
-
-            val cipherForDecryption = KeyStoreCryptoManager.getCipherForDecryption(iv)
-            val base64InputStream = Base64InputStream(bufferedInputStream, KeyStoreCryptoManager.BASE64_FLAGS)
-            uriSource = CipherInputStream(base64InputStream, cipherForDecryption).source()
+            uriSource = KeyStoreCryptoManager.getCipherInputStream(inputStream).source()
           } else {
             uriSource = BufferedInputStream(inputStream).source()
           }

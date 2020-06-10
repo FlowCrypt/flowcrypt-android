@@ -8,12 +8,18 @@ package com.flowcrypt.email.security
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Base64InputStream
 import androidx.annotation.WorkerThread
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okio.Buffer
+import okio.source
+import java.io.BufferedInputStream
+import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.security.KeyStore
 import javax.crypto.Cipher
+import javax.crypto.CipherInputStream
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
@@ -126,6 +132,26 @@ object KeyStoreCryptoManager {
     return Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply {
       init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(Base64.decode(iv, BASE64_FLAGS)))
     }
+  }
+
+  @WorkerThread
+  fun getCipherInputStream(inputStream: InputStream): CipherInputStream {
+    val bufferedInputStream = BufferedInputStream(inputStream)
+    val buffer = Buffer()
+
+    val bufferedInputStreamSource = bufferedInputStream.source()
+    while (true) {
+      if (bufferedInputStreamSource.read(buffer, 1) != -1L) {
+        val b = buffer[buffer.size - 1]
+        if (b == (-1).toByte() || b == '\n'.toByte()) {
+          break
+        }
+      } else break
+    }
+
+    val iv = String(buffer.readByteArray(buffer.size - 1))
+    val base64InputStream = Base64InputStream(bufferedInputStream, BASE64_FLAGS)
+    return CipherInputStream(base64InputStream, getCipherForDecryption(iv))
   }
 
   /**
