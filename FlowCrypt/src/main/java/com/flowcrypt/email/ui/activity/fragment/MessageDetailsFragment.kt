@@ -570,7 +570,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         }
 
         val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttachmentName)
-        textViewAttName.text = att.name
+        textViewAttName.text = att.getSafeName()
 
         val textViewAttSize = rootView.findViewById<TextView>(R.id.textViewAttSize)
         textViewAttSize.text = Formatter.formatFileSize(context, att.encodedSize)

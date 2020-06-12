@@ -169,13 +169,13 @@ class EmailUtil {
      */
     fun genAttInfoFromPubKey(nodeKeyDetails: NodeKeyDetails?): AttachmentInfo? {
       if (nodeKeyDetails != null) {
-        val fileName = "0x" + nodeKeyDetails.longId!!.toUpperCase(Locale.getDefault()) + ".asc"
+        val fileName = "0x" + nodeKeyDetails.longId?.toUpperCase(Locale.getDefault()) + ".asc"
 
         return if (!TextUtils.isEmpty(nodeKeyDetails.publicKey)) {
           val attachmentInfo = AttachmentInfo()
 
           attachmentInfo.name = fileName
-          attachmentInfo.encodedSize = nodeKeyDetails.publicKey!!.length.toLong()
+          attachmentInfo.encodedSize = nodeKeyDetails.publicKey?.length?.toLong() ?: 0
           attachmentInfo.rawData = nodeKeyDetails.publicKey
           attachmentInfo.type = Constants.MIME_TYPE_PGP_KEY
           attachmentInfo.email = nodeKeyDetails.primaryPgpContact.email

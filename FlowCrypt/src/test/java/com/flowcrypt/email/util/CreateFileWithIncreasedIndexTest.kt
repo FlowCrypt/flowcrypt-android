@@ -22,9 +22,9 @@ class CreateFileWithIncreasedIndexTest {
 
   @Test
   fun normalizeFileNameTest() {
-    val fileName = ".**/../#./%%./../sy-s/bla_   _b_l.a?"
+    val fileName = ".**/../#./%%./../sy-s/русский/українська/汉语/漢語/Hànyǔ/中文/Zhōngwé/bla_   _b_l.a?"
     val normalizedFileName = FileAndDirectoryUtils.normalizeFileName(fileName)
-    val theoreticalFileName = ".......sy-sbla__b_l.a"
+    val theoreticalFileName = ".......sy-sHnyZhngwbla__b_l.a"
     Assert.assertEquals(theoreticalFileName, normalizedFileName)
   }
 

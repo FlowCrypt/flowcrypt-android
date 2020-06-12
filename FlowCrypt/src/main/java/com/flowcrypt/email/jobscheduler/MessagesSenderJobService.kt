@@ -438,7 +438,7 @@ class MessagesSenderJobService : JobService() {
       val attBodyPart = MimeBodyPart()
       val attInfo = att.toAttInfo()
       attBodyPart.dataHandler = DataHandler(AttachmentInfoDataSource(context, attInfo))
-      attBodyPart.fileName = attInfo.name
+      attBodyPart.fileName = attInfo.getSafeName()
       attBodyPart.contentID = attInfo.id
 
       return attBodyPart
@@ -538,7 +538,7 @@ class MessagesSenderJobService : JobService() {
     }
 
     override fun getName(): String? {
-      return att.name
+      return att.getSafeName()
     }
   }
 

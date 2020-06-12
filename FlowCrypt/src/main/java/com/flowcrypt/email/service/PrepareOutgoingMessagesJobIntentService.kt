@@ -32,11 +32,13 @@ import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import org.apache.commons.io.FileUtils
+import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -227,8 +229,14 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
           if (att.isEncryptionAllowed &&
               msgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
-            val encryptedTempFile = File(attsCacheDir, att.name!! + Constants.PGP_FILE_EXT)
-            val request = EncryptFileRequest(this, origFileUri, att.name!!, pubKeys!!)
+            val fileName = att.getSafeName() + Constants.PGP_FILE_EXT
+            var encryptedTempFile = File(attsCacheDir, fileName)
+
+            if (encryptedTempFile.exists()) {
+              encryptedTempFile = FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, encryptedTempFile.name)
+            }
+
+            val request = EncryptFileRequest(this, origFileUri, FilenameUtils.getBaseName(encryptedTempFile.name), pubKeys!!)
 
             val response = nodeService.encryptFile(request).execute()
             val encryptedFileResult = response.body()
@@ -249,7 +257,11 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             att.uri = uri
             att.name = encryptedTempFile.name
           } else {
-            val cachedAtt = File(attsCacheDir, att.name ?: UUID.randomUUID().toString())
+            var cachedAtt = File(attsCacheDir, att.getSafeName())
+            if (cachedAtt.exists()) {
+              cachedAtt = FileAndDirectoryUtils.createFileWithIncreasedIndex(attsCacheDir, cachedAtt.name)
+            }
+
             FileUtils.copyInputStreamToFile(inputStream, cachedAtt)
             val uri = FileProvider.getUriForFile(this, Constants.FILE_PROVIDER_AUTHORITY, cachedAtt)
             att.uri = uri

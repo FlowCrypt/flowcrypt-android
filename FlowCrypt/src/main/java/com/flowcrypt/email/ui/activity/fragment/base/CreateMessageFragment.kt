@@ -78,6 +78,7 @@ import com.flowcrypt.email.ui.widget.CustomChipSpanChipCreator
 import com.flowcrypt.email.ui.widget.PGPContactChipSpan
 import com.flowcrypt.email.ui.widget.PgpContactsNachoTextView
 import com.flowcrypt.email.ui.widget.SingleCharacterSpanChipTokenizer
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -746,8 +747,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           return
         }
 
-        val fileName = attachmentInfo.name ?: return
-        val draftAtt = File(draftCacheDir, fileName)
+        val fileName = attachmentInfo.getSafeName()
+        var draftAtt = File(draftCacheDir, fileName)
+
+        draftAtt = if (draftAtt.exists()) {
+          FileAndDirectoryUtils.createFileWithIncreasedIndex(draftCacheDir, fileName)
+        } else {
+          draftAtt
+        }
 
         try {
           val inputStream = requireContext().contentResolver.openInputStream(attachmentInfo.uri!!)

@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.security.SecurityUtils
 
 /**
  * Simple POJO which defines information about email attachments.
@@ -135,6 +136,10 @@ data class AttachmentInfo constructor(var rawData: String? = null,
     result = 31 * result + isEncryptionAllowed.hashCode()
     result = 31 * result + orderNumber
     return result
+  }
+
+  fun getSafeName(): String {
+    return SecurityUtils.sanitizeFileName(name)
   }
 
 
