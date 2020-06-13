@@ -174,7 +174,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
               unlockedKeys.clear()
               unlockedKeys.addAll(it)
               if (intent?.getBooleanExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, true) == true) {
-                activeAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
+                tempAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
               } else {
                 privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
                 handleSuccessSubmit()
@@ -211,7 +211,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     if (!areFreshKeysExisted) {
       if (intent?.getBooleanExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, true) == true) {
         unlockedKeys.addAll(keyDetailsList)
-        activeAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
+        tempAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
         Toast.makeText(this, getString(R.string.key_already_imported_finishing_setup), Toast
             .LENGTH_SHORT).show()
       } else {
@@ -256,7 +256,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG -> {
         when (result) {
           TwoWayDialogFragment.RESULT_OK -> {
-            activeAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
+            tempAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
           }
 
           TwoWayDialogFragment.RESULT_CANCELED -> {
