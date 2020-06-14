@@ -22,7 +22,7 @@ import java.util.*
  */
 class PropertiesHelper {
 
-  // todo - this class should be refactored to have less repetition:
+  // todo-denbond7 - this class should be refactored to have less repetition:
   //  genProps(authCreds: AuthCredentials?) and genProps(accountEntity: AccountEntity?)
   //  are very similar
 
@@ -38,11 +38,12 @@ class PropertiesHelper {
       val prop = Properties()
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE] = BOOLEAN_VALUE_TRUE
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
+      prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_CHECK_SERVER_IDENTITY] = BOOLEAN_VALUE_TRUE
+
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = BOOLEAN_VALUE_TRUE
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = BOOLEAN_VALUE_TRUE
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] = BOOLEAN_VALUE_TRUE
-      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_CHECK_SERVER_IDENTITY] = BOOLEAN_VALUE_TRUE
       return prop
     }
 
@@ -80,12 +81,13 @@ class PropertiesHelper {
       authCreds?.let {
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE] = it.imapOpt === SecurityType.Option.SSL_TLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE] = it.imapOpt === SecurityType.Option.STARTLS
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_CHECK_SERVER_IDENTITY] = it.imapOpt === SecurityType.Option.SSL_TLS
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE] = 1024 * 128
+
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = it.hasCustomSignInForSmtp
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = it.smtpOpt === SecurityType.Option.SSL_TLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] = it.smtpOpt === SecurityType.Option.STARTLS
-        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE] = 1024 * 128
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] = it.smtpOpt === SecurityType.Option.SSL_TLS
-        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_CHECK_SERVER_IDENTITY] = it.imapOpt === SecurityType.Option.SSL_TLS
       }
 
       return prop
@@ -102,12 +104,13 @@ class PropertiesHelper {
       accountEntity?.let {
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE] = it.imapOpt() === SecurityType.Option.SSL_TLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE] = it.imapOpt() === SecurityType.Option.STARTLS
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE] = 1024 * 128
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_CHECK_SERVER_IDENTITY] = it.imapOpt() === SecurityType.Option.SSL_TLS
+
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = it.useCustomSignForSmtp
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = it.smtpOpt() === SecurityType.Option.SSL_TLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] = it.smtpOpt() === SecurityType.Option.STARTLS
-        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE] = 1024 * 128
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] = it.smtpOpt() === SecurityType.Option.SSL_TLS
-        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_CHECK_SERVER_IDENTITY] = it.imapOpt() === SecurityType.Option.SSL_TLS
       }
 
       return prop
