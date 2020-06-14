@@ -183,6 +183,13 @@ class SecurityUtils {
     }
 
     /**
+     * Filter an input file name to use only a safe part.
+     */
+    fun sanitizeFileName(originalFileName: String?): String {
+      return originalFileName?.split("/")?.lastOrNull()?.replace("\\", "") ?: "unnamed"
+    }
+
+    /**
      * Generate uuid which is 40 characters long, containing only lowercase hex
      * characters 0-9a-f. Example: 8d43af.................................93. It uses [UUID] to generate these.
      */

@@ -37,6 +37,7 @@ import com.flowcrypt.email.api.retrofit.response.node.DecryptedFileResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -201,7 +202,7 @@ class AttachmentDownloadManagerService : Service() {
 
           MESSAGE_ATTACHMENT_DOWNLOAD -> {
             notificationManager?.downloadCompleted(attDownloadManagerService, attInfo!!, uri!!)
-            LogsUtil.d(TAG, attInfo!!.name!! + " is downloaded")
+            LogsUtil.d(TAG, attInfo?.getSafeName() + " is downloaded")
           }
 
           MESSAGE_ATTACHMENT_ADDED_TO_QUEUE ->
@@ -214,7 +215,7 @@ class AttachmentDownloadManagerService : Service() {
 
           MESSAGE_DOWNLOAD_CANCELED -> {
             notificationManager?.loadingCanceledByUser(attInfo!!)
-            LogsUtil.d(TAG, attInfo!!.name!! + " was canceled")
+            LogsUtil.d(TAG, attInfo?.getSafeName() + " was canceled")
           }
 
           MESSAGE_STOP_SERVICE -> attDownloadManagerService?.stopService()
@@ -399,7 +400,7 @@ class AttachmentDownloadManagerService : Service() {
 
     override fun run() {
       if (GeneralUtil.isDebugBuild()) {
-        Thread.currentThread().name = AttDownloadRunnable::class.java.simpleName + "|" + att.name
+        Thread.currentThread().name = AttDownloadRunnable::class.java.simpleName + "|" + att.getSafeName()
       }
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
@@ -484,7 +485,7 @@ class AttachmentDownloadManagerService : Service() {
         val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
 
         val contentValues = ContentValues().apply {
-          put(MediaStore.DownloadColumns.DISPLAY_NAME, att.name)
+          put(MediaStore.DownloadColumns.DISPLAY_NAME, att.getSafeName())
           put(MediaStore.DownloadColumns.SIZE, attFile.length())
           put(MediaStore.DownloadColumns.MIME_TYPE, mimeType)
         }
@@ -501,7 +502,7 @@ class AttachmentDownloadManagerService : Service() {
             val nameIndex = cursor.getColumnIndex(MediaStore.DownloadColumns.DISPLAY_NAME)
             if (nameIndex != -1) {
               val nameFromSystem = cursor.getString(nameIndex)
-              if (nameFromSystem != att.name) {
+              if (nameFromSystem != att.getSafeName()) {
                 att.name = nameFromSystem
               }
             }
@@ -512,8 +513,16 @@ class AttachmentDownloadManagerService : Service() {
         IOUtils.copy(attFile.inputStream(), resolver.openOutputStream(imageUri))
         return imageUri
       } else {
-        val sharedFile = File(Environment.getExternalStoragePublicDirectory(
-            Environment.DIRECTORY_DOWNLOADS), att.name ?: UUID.randomUUID().toString())
+        val fileName = att.getSafeName()
+        val fileDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        var sharedFile = File(fileDir, fileName)
+        sharedFile = if (sharedFile.exists()) {
+          FileAndDirectoryUtils.createFileWithIncreasedIndex(fileDir, fileName)
+        } else {
+          sharedFile
+        }
+
+        att.name = sharedFile.name
         IOUtils.copy(attFile.inputStream(), FileUtils.openOutputStream(sharedFile))
         return FileProvider.getUriForFile(context, Constants.FILE_PROVIDER_AUTHORITY, sharedFile)
       }
@@ -602,7 +611,7 @@ class AttachmentDownloadManagerService : Service() {
         val decryptedFileResult = getDecryptedFileResult(context, inputStream)
 
         val decryptedFile = createTempFile(directory = context.externalCacheDir)
-        att.name = att.name?.substring(0, att.name?.lastIndexOf(".") ?: -1)
+        att.name = FilenameUtils.getBaseName(att.name)
 
         FileUtils.openOutputStream(decryptedFile).use { outputStream ->
           IOUtils.write(decryptedFileResult.decryptedBytes, outputStream)

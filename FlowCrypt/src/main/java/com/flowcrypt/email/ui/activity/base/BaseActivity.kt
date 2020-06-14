@@ -18,7 +18,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.activity.viewModels
-import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.Observer
@@ -54,10 +53,8 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
   protected var activeAccount: AccountEntity? = null
   protected var isAccountInfoReceived = false
 
-  @get:VisibleForTesting
   val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
-  @get:VisibleForTesting
   val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
 
   var snackBar: Snackbar? = null

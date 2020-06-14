@@ -25,6 +25,9 @@ interface NodeRequest {
 
   val uri: Uri?
 
+  val hasEncryptedDataInUri: Boolean
+    get() = false
+
   val context: Context?
 
   fun getResponse(nodeService: NodeService): Response<*>

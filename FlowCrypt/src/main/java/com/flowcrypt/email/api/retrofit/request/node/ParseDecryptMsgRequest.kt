@@ -25,6 +25,7 @@ class ParseDecryptMsgRequest @JvmOverloads constructor(
     context: Context? = null,
     override val data: ByteArray = ByteArray(0),
     override val uri: Uri? = null,
+    override val hasEncryptedDataInUri: Boolean = false,
     keyEntities: List<KeyEntity>,
     @Expose val isEmail: Boolean = false) : BaseNodeRequest(context, uri) {
 

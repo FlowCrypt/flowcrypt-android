@@ -20,9 +20,11 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.database.entity.KeyEntity
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.cache.DiskLruCache
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.util.ASCIIUtility
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -59,7 +61,9 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
   fun decryptMessage(rawMimeBytes: ByteArray) {
     viewModelScope.launch {
       decryptLiveData.value = Result.loading()
-      headersLiveData.value = getHeaders(ByteArrayInputStream(rawMimeBytes))
+      ByteArrayInputStream(rawMimeBytes).use {
+        headersLiveData.postValue(getHeaders(it))
+      }
       val list = keysStorage.getAllPgpPrivateKeys()
       val result = apiRepository.parseDecryptMsg(
           request = ParseDecryptMsgRequest(data = rawMimeBytes, keyEntities = list, isEmail = true))
@@ -74,14 +78,20 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
       decryptLiveData.value = Result.loading()
       val uri = msgSnapshot.getUri(0)
       if (uri != null) {
-        headersLiveData.value = getHeaders(context.contentResolver.openInputStream(uri))
+        withContext(Dispatchers.IO) {
+          context.contentResolver.openInputStream(uri)?.use { uriInputStream ->
+            headersLiveData.postValue(getHeaders(uriInputStream, true))
+          }
+        }
+
         val list = keysStorage.getAllPgpPrivateKeys()
         val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
         val result = if (largerThan1Mb) {
           parseMimeAndDecrypt(context, uri, list)
         } else {
           apiRepository.parseDecryptMsg(
-              request = ParseDecryptMsgRequest(context = context, uri = uri, keyEntities = list, isEmail = true))
+              request = ParseDecryptMsgRequest(context = context, uri = uri, keyEntities = list,
+                  isEmail = true, hasEncryptedDataInUri = true))
         }
 
         modifyMsgBlocksIfNeeded(result)
@@ -177,10 +187,20 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
   /**
    * We fetch the first 50Kb from the given input stream and extract headers.
    */
-  private suspend fun getHeaders(inputStream: InputStream?): String = withContext(Dispatchers.IO) {
+  private suspend fun getHeaders(inputStream: InputStream?,
+                                 isDataEncrypted: Boolean = false): String = withContext(Dispatchers.IO) {
     inputStream ?: return@withContext ""
     val d = ByteArray(50000)
-    IOUtils.read(inputStream, d)
+    try {
+      if (isDataEncrypted) {
+        IOUtils.read(KeyStoreCryptoManager.getCipherInputStream(inputStream), d)
+      } else {
+        IOUtils.read(inputStream, d)
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
     EmailUtil.getHeadersFromRawMIME(ASCIIUtility.toString(d))
   }
 

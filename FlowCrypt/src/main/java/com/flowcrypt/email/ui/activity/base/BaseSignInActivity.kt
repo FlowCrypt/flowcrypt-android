@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
@@ -63,7 +62,6 @@ abstract class BaseSignInActivity : BaseNodeActivity(), View.OnClickListener {
   protected val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
   protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
-  @get:VisibleForTesting
   val idlingForFetchingKeys: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   abstract val progressView: View?

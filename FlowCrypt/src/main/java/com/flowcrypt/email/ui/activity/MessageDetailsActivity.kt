@@ -10,7 +10,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
-import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.espresso.idling.CountingIdlingResource
@@ -37,6 +36,7 @@ import com.flowcrypt.email.ui.activity.base.BaseBackStackSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.cache.DiskLruCache
+import com.flowcrypt.email.util.exception.CorruptedMsgInCacheException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
 import com.flowcrypt.email.util.idling.SingleIdlingResources
@@ -57,7 +57,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
   private lateinit var decryptMsgViewModel: DecryptMessageViewModel
   private lateinit var label: String
 
-  @get:VisibleForTesting
   var idlingForDecryption: CountingIdlingResource? = null
     private set
   val idlingForWebView: SingleIdlingResources = SingleIdlingResources(false)
@@ -410,13 +409,19 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
         }
 
         Result.Status.EXCEPTION -> {
-          idlingForWebView.setIdleState(true)
-          updateActionProgressState(100, null)
-          showErrorInfo(null, it.exception)
-          if (!idlingForDecryption!!.isIdleNow) {
-            idlingForDecryption!!.decrementSafely()
+          if (it.exception is CorruptedMsgInCacheException) {
+            idlingForDecryption?.decrementSafely()
+            isRetrieveIncomingMsgNeeded = true
+            isReceiveMsgBodyNeeded = true
+            msgSnapshot = null
+            loadMsgDetails()
+          } else {
+            idlingForWebView.setIdleState(true)
+            updateActionProgressState(100, null)
+            showErrorInfo(null, it.exception)
+            idlingForDecryption?.decrementSafely()
+            ExceptionUtil.handleError(it.exception)
           }
-          ExceptionUtil.handleError(it.exception!!)
         }
       }
     })

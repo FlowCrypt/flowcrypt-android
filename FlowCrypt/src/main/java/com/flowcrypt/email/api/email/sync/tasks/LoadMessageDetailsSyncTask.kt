@@ -6,23 +6,28 @@
 package com.flowcrypt.email.api.email.sync.tasks
 
 import android.text.TextUtils
+import android.util.Base64
+import android.util.Base64OutputStream
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
 import okio.buffer
 import org.apache.commons.io.FilenameUtils
 import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
+import javax.crypto.CipherOutputStream
 import javax.mail.BodyPart
 import javax.mail.FetchProfile
 import javax.mail.Folder
@@ -213,14 +218,21 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     val editor = MsgsCacheManager.diskLruCache.edit(key) ?: return
 
     val bufferedSink = editor.newSink(0).buffer()
-    val outputStream = bufferedSink.outputStream()
-    val progressOutputStream = ProgressOutputStream(outputStream)
-    try {
-      msg.writeTo(progressOutputStream)
-      bufferedSink.flush()
-      editor.commit()
+    val outputStreamOfBufferedSink = ProgressOutputStream(bufferedSink.outputStream())
+    val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
+    val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
+    val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
 
-      MsgsCacheManager.diskLruCache.get(key) ?: throw IOException("No space left on device")
+    try {
+      outputStream.use {
+        outputStreamOfBufferedSink.write(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
+        outputStreamOfBufferedSink.write("\n".toByteArray())
+        msg.writeTo(it)
+        bufferedSink.flush()
+        editor.commit()
+      }
+
+      MsgsCacheManager.diskLruCache[key] ?: throw IOException("No space left on device")
     } catch (e: SyncTaskTerminatedException) {
       e.printStackTrace()
       editor.abort()
@@ -265,12 +277,12 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
    * This class itself simply overrides all methods of [OutputStream] with versions that pass
    * all requests to the underlying output stream.
    */
-  inner class ProgressOutputStream(val out: OutputStream) : OutputStream() {
+  inner class ProgressOutputStream(val out: OutputStream) : BufferedOutputStream(out) {
     override fun write(b: ByteArray) {
       if (Thread.interrupted()) {
         throw SyncTaskTerminatedException()
       }
-      out.write(b)
+      super.write(b)
     }
 
     override fun write(b: Int) {
@@ -278,7 +290,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
         throw SyncTaskTerminatedException()
       }
 
-      out.write(b)
+      super.write(b)
     }
 
     override fun write(b: ByteArray, off: Int, len: Int) {
@@ -286,7 +298,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
         throw SyncTaskTerminatedException()
       }
 
-      out.write(b, off, len)
+      super.write(b, off, len)
     }
   }
 

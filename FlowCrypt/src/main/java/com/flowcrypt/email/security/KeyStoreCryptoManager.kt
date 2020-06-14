@@ -8,12 +8,18 @@ package com.flowcrypt.email.security
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import android.util.Base64InputStream
 import androidx.annotation.WorkerThread
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okio.Buffer
+import okio.source
+import java.io.BufferedInputStream
+import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.security.KeyStore
 import javax.crypto.Cipher
+import javax.crypto.CipherInputStream
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.IvParameterSpec
@@ -37,10 +43,10 @@ import javax.crypto.spec.IvParameterSpec
  * AndroidKeyStore for storing keys. Improved and simplified the code.
  */
 object KeyStoreCryptoManager {
+  const val BASE64_FLAGS = Base64.DEFAULT
   private const val TRANSFORMATION_AES_CBC_PKCS7_PADDING = "AES/CBC/PKCS7Padding"
   private const val PROVIDER_ANDROID_KEY_STORE = "AndroidKeyStore"
   private const val ANDROID_KEY_STORE_AES_ALIAS = "flowcrypt_main_aes"
-  private const val BASE64_FLAGS = Base64.DEFAULT
 
   private val keyStore: KeyStore = KeyStore.getInstance(PROVIDER_ANDROID_KEY_STORE)
   private var secretKey: SecretKey? = null
@@ -73,9 +79,14 @@ object KeyStoreCryptoManager {
   @WorkerThread
   fun encrypt(plainData: String?): String {
     val input = (plainData ?: "").toByteArray(StandardCharsets.UTF_8)
-    val cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply { init(Cipher.ENCRYPT_MODE, secretKey) }
+    val cipher = getCipherForEncryption()
     val encryptedBytes = cipher.doFinal(input)
     return Base64.encodeToString(cipher.iv, BASE64_FLAGS) + "\n" + Base64.encodeToString(encryptedBytes, BASE64_FLAGS)
+  }
+
+  @WorkerThread
+  fun getCipherForEncryption(): Cipher {
+    return Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply { init(Cipher.ENCRYPT_MODE, secretKey) }
   }
 
   /**
@@ -110,12 +121,37 @@ object KeyStoreCryptoManager {
       }
 
       val iv = encryptedData.substring(0, splitPosition)
-      val cipher = Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply {
-        init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(Base64.decode(iv, BASE64_FLAGS)))
-      }
+      val cipher = getCipherForDecryption(iv)
       val decodedBytes = cipher.doFinal(Base64.decode(encryptedData.substring(splitPosition + 1), BASE64_FLAGS))
       String(decodedBytes, StandardCharsets.UTF_8)
     }
+  }
+
+  @WorkerThread
+  fun getCipherForDecryption(iv: String): Cipher {
+    return Cipher.getInstance(TRANSFORMATION_AES_CBC_PKCS7_PADDING).apply {
+      init(Cipher.DECRYPT_MODE, secretKey, IvParameterSpec(Base64.decode(iv, BASE64_FLAGS)))
+    }
+  }
+
+  @WorkerThread
+  fun getCipherInputStream(inputStream: InputStream): CipherInputStream {
+    val bufferedInputStream = BufferedInputStream(inputStream)
+    val buffer = Buffer()
+
+    val bufferedInputStreamSource = bufferedInputStream.source()
+    while (true) {
+      if (bufferedInputStreamSource.read(buffer, 1) != -1L) {
+        val b = buffer[buffer.size - 1]
+        if (b == (-1).toByte() || b == '\n'.toByte()) {
+          break
+        }
+      } else break
+    }
+
+    val iv = String(buffer.readByteArray(buffer.size - 1))
+    val base64InputStream = Base64InputStream(bufferedInputStream, BASE64_FLAGS)
+    return CipherInputStream(base64InputStream, getCipherForDecryption(iv))
   }
 
   /**

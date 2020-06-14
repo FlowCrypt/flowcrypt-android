@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 
 import android.os.Bundle
 import android.widget.Toast
-import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
 import com.flowcrypt.email.node.Node
@@ -22,7 +21,6 @@ import com.flowcrypt.email.util.idling.NodeIdlingResource
  * E-mail: DenBond7@gmail.com
  */
 open class BaseDialogFragment : DialogFragment() {
-  @get:VisibleForTesting
   val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
 
   protected val isNodeReady: Boolean

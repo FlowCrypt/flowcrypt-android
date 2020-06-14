@@ -14,7 +14,6 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.VisibleForTesting
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
@@ -49,10 +48,8 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
   private var nonEncryptedHintView: View? = null
   override lateinit var rootView: View
 
-  @get:VisibleForTesting
   var fetchInfoAboutContactsIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
-  @get:VisibleForTesting
   var fetchAvailablePubKeysIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override var msgEncryptionType = MessageEncryptionType.ENCRYPTED

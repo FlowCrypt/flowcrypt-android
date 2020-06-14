@@ -64,7 +64,7 @@ class EmailWebView : WebView {
     webSettings.builtInZoomControls = true
     webSettings.displayZoomControls = false
     webSettings.loadsImagesAutomatically = true
-    webSettings.loadsImagesAutomatically = true
+    webSettings.blockNetworkLoads = true
     webSettings.javaScriptEnabled = false
   }
 

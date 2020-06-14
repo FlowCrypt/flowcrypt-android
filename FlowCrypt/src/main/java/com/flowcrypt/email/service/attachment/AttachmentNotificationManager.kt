@@ -182,8 +182,8 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
    * @return The prepared title.
    */
   private fun prepareContentTitle(attachmentInfo: AttachmentInfo): String? {
-    var contentTitle = attachmentInfo.name
-    if (!TextUtils.isEmpty(contentTitle) && contentTitle!!.length > MAX_CONTENT_TITLE_LENGTH) {
+    var contentTitle = attachmentInfo.getSafeName()
+    if (!TextUtils.isEmpty(contentTitle) && contentTitle.length > MAX_CONTENT_TITLE_LENGTH) {
       contentTitle = contentTitle.substring(0, MAX_CONTENT_TITLE_LENGTH) + "..."
     }
     return contentTitle

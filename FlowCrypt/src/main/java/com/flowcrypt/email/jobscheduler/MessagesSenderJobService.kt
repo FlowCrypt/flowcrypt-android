@@ -16,6 +16,7 @@ import android.os.AsyncTask
 import android.text.TextUtils
 import android.util.Base64
 import android.util.Log
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -406,6 +407,9 @@ class MessagesSenderJobService : JobService() {
       val stream = IOUtils.toInputStream(details.rawMessageWithoutAttachments, StandardCharsets.UTF_8)
       val mimeMsg = MimeMessage(sess, stream)
 
+      //https://tools.ietf.org/html/draft-melnikov-email-user-agent-00#:~:text=User%2DAgent%20and%20X%2DMailer%20are%20common%20Email%20header%20fields,use%20of%20different%20email%20clients.
+      mimeMsg.addHeader("User-Agent", "FlowCrypt_Android_" + BuildConfig.VERSION_NAME)
+
       if (mimeMsg.content is MimeMultipart && !CollectionUtils.isEmpty(atts)) {
         val mimeMultipart = mimeMsg.content as MimeMultipart
 
@@ -434,7 +438,7 @@ class MessagesSenderJobService : JobService() {
       val attBodyPart = MimeBodyPart()
       val attInfo = att.toAttInfo()
       attBodyPart.dataHandler = DataHandler(AttachmentInfoDataSource(context, attInfo))
-      attBodyPart.fileName = attInfo.name
+      attBodyPart.fileName = attInfo.getSafeName()
       attBodyPart.contentID = attInfo.id
 
       return attBodyPart
@@ -534,7 +538,7 @@ class MessagesSenderJobService : JobService() {
     }
 
     override fun getName(): String? {
-      return att.name
+      return att.getSafeName()
     }
   }
 

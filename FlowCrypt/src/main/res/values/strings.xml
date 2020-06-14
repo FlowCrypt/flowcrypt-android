@@ -426,4 +426,6 @@
     <string name="contact_for_updating_is_not_found">Contact for updating is not found</string>
     <string name="contact_for_replacing_is_not_found">Contact for replacing is not found</string>
     <string name="error_could_not_save_private_keys">Error: couldn\'t save private keys</string>
+    <string name="show_more">Show more</string>
+    <string name="delete_quoted_text">Delete quoted text</string>
 </resources>

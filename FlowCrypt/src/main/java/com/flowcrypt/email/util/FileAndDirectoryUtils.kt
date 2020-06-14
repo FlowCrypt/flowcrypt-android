@@ -133,7 +133,7 @@ class FileAndDirectoryUtils {
     }
 
     /**
-     * Normalize the given filename. We leave only letters, digits and chars: '.', '_', '-'
+     * Normalize the given filename. We leave only Latin letters, digits and chars: '.', '_', '-'
      *
      * @param fileName The input filename.
      * @return normalized file name.
