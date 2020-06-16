@@ -68,7 +68,7 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
 
     super.onCreate(savedInstanceState)
 
-    rootView = findViewById(R.id.layoutContent)
+    rootView = findViewById(R.id.createMessageFragment)
     initNonEncryptedHintView()
 
     prepareActionBarTitle()

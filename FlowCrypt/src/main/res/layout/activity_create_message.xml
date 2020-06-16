@@ -12,8 +12,12 @@
 
     <include layout="@layout/toolbar" />
 
-    <include
-        android:id="@+id/layoutContent"
-        layout="@layout/content_create_message" />
+    <androidx.fragment.app.FragmentContainerView xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/createMessageFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.base.CreateMessageFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:layout="@layout/fragment_create_message" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -22,5 +22,5 @@ class NotificationsSettingsActivity : BaseSettingsActivity() {
     get() = R.layout.activity_notifications_settings
 
   override val rootView: View
-    get() = findViewById(R.id.layoutContent)
+    get() = findViewById(R.id.notificationsSettingsFragment)
 }
