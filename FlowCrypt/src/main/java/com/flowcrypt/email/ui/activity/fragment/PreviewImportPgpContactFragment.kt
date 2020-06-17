@@ -20,6 +20,7 @@ import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
@@ -251,10 +252,10 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
       for (i in 0 until blocksCount) {
         val nodeKeyDetails = details[i]
-        val publicKeyInfo = getPublicKeyInfo(nodeKeyDetails, emails)
-
-        if (publicKeyInfo != null) {
-          publicKeyInfoList.add(publicKeyInfo)
+        getPublicKeyInfo(nodeKeyDetails, emails)?.let {
+          if (it.publicKey.length <= Constants.MAX_PUB_KEY_SIZE) {
+            publicKeyInfoList.add(it)
+          }
         }
 
         progress = i * 100f / blocksCount
