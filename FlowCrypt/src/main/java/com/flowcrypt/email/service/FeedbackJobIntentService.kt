@@ -43,7 +43,7 @@ class FeedbackJobIntentService : JobIntentService() {
   }
 
   private fun initFeedbackCache(context: Context) {
-    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.cacheDir, CACHE_DIR_NAME), CACHE_VERSION, 1, CACHE_SIZE)
+    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.cacheDir, CACHE_DIR_NAME), CACHE_VERSION, CACHE_SIZE)
   }
 
   override fun onHandleWork(intent: Intent) {
@@ -69,7 +69,7 @@ class FeedbackJobIntentService : JobIntentService() {
   private fun addFeedbackToCache(key: String, feedBackItem: FeedBackItem) {
     val editor = diskLruCache.edit(key) ?: return
 
-    val bufferedSink = editor.newSink(0).buffer()
+    val bufferedSink = editor.newSink().buffer()
     bufferedSink.writeString(gson.toJson(feedBackItem), StandardCharsets.UTF_8)
     bufferedSink.flush()
     editor.commit()

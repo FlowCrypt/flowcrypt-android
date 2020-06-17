@@ -217,7 +217,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
   private fun storeMsg(key: String, msg: MimeMessage) {
     val editor = MsgsCacheManager.diskLruCache.edit(key) ?: return
 
-    val bufferedSink = editor.newSink(0).buffer()
+    val bufferedSink = editor.newSink().buffer()
     val outputStreamOfBufferedSink = ProgressOutputStream(bufferedSink.outputStream())
     val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
     val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)

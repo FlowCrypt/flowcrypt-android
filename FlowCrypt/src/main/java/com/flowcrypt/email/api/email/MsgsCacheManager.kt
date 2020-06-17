@@ -30,7 +30,7 @@ object MsgsCacheManager {
   lateinit var diskLruCache: DiskLruCache
 
   fun init(context: Context) {
-    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.filesDir, CACHE_DIR_NAME), CACHE_VERSION, 1, CACHE_SIZE)
+    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.filesDir, CACHE_DIR_NAME), CACHE_VERSION, CACHE_SIZE)
   }
 
   fun addMsg(key: String, inputStream: InputStream) {
@@ -59,9 +59,8 @@ object MsgsCacheManager {
     return snapshot.getLength(0) > 0
   }
 
-  fun dropAndInit(context: Context?) {
+  fun evictAll(context: Context?) {
     context ?: return
-    diskLruCache.delete()
-    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.filesDir, CACHE_DIR_NAME), CACHE_VERSION, 1, CACHE_SIZE)
+    diskLruCache.evictAll()
   }
 }
