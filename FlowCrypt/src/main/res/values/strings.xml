@@ -428,4 +428,5 @@
     <string name="error_could_not_save_private_keys">Error: couldn\'t save private keys</string>
     <string name="show_more">Show more</string>
     <string name="delete_quoted_text">Delete quoted text</string>
+    <string name="cannot_save_copy_in_sent_folder">Cannot save a copy in SENT folder</string>
 </resources>

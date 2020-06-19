@@ -121,8 +121,10 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
               roomDatabase.accountDao().getActiveAccount())
 
           if (account != null) {
-            val newMsgs = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
-                msgStateValue = MessageState.NEW_FORWARDED.value)
+            val newMsgs = roomDatabase.msgDao().getOutboxMsgsByStates(
+                account = account.email,
+                msgStates = listOf(MessageState.NEW_FORWARDED.value)
+            )
 
             if (!CollectionUtils.isEmpty(newMsgs)) {
               sess = OpenStoreHelper.getAccountSess(context, account)
@@ -167,8 +169,10 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
 
       while (true) {
-        val detailsList = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
-            msgStateValue = MessageState.NEW_FORWARDED.value)
+        val detailsList = roomDatabase.msgDao().getOutboxMsgsByStates(
+            account = account.email,
+            msgStates = listOf(MessageState.NEW_FORWARDED.value)
+        )
 
         if (CollectionUtils.isEmpty(detailsList)) {
           break

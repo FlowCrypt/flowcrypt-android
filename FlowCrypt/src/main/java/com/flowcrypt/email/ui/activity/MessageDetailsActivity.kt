@@ -348,7 +348,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
       when (messageEntity.msgState) {
         MessageState.NEW, MessageState.NEW_FORWARDED -> actionBarSubTitle = getString(R.string.preparing)
 
-        MessageState.QUEUED -> actionBarSubTitle = getString(R.string.queued)
+        MessageState.QUEUED, MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER -> actionBarSubTitle = getString(R.string.queued)
 
         MessageState.SENDING -> actionBarSubTitle = getString(R.string.sending)
 
@@ -359,7 +359,8 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
         MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
         MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
         MessageState.ERROR_SENDING_FAILED,
-        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> actionBarSubTitle = getString(R.string.an_error_has_occurred)
+        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
+        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> actionBarSubTitle = getString(R.string.an_error_has_occurred)
 
         else -> {
         }

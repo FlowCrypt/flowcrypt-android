@@ -20,7 +20,6 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -118,7 +117,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       }
 
       if (needUpdateOutboxLabel) {
-        updateOutboxMsgsCount()
+        updateOutboxMsgsCount(getActiveAccountSuspend())
       }
     }
   }
@@ -144,26 +143,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     }
   }
 
-  private suspend fun updateOutboxMsgsCount() {
-    val account = getActiveAccountSuspend()
-    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsExceptSentSuspend(account?.email).size
-    val outboxLabel = roomDatabase.labelDao().getLabelSuspend(account?.email,
-        JavaEmailConstants.FOLDER_OUTBOX)
-
-    outboxLabel?.let {
-      roomDatabase.labelDao().updateSuspend(it.copy(msgsCount = outgoingMsgCount))
-    }
-  }
-
-  private suspend fun getActiveAccountSuspend(): AccountEntity? {
-    return activeAccountLiveData.value ?: return roomDatabase.accountDao().getActiveAccountSuspend()
-  }
-
   private fun prepareCandidates(entities: Iterable<MessageEntity>, newMsgState: MessageState): Iterable<MessageEntity> {
     val candidates = mutableListOf<MessageEntity>()
 
     for (msgEntity in entities) {
-      if (msgEntity.msgState == MessageState.SENDING || msgEntity.msgState == MessageState.SENT_WITHOUT_LOCAL_COPY) {
+      if (msgEntity.msgState in listOf(MessageState.SENDING, MessageState.SENT_WITHOUT_LOCAL_COPY, MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER)) {
         continue
       }
 

@@ -18,6 +18,7 @@ import android.util.Base64
 import android.util.Log
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
@@ -34,6 +35,7 @@ import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.exception.CopyNotSavedInSentFolderException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.gms.common.util.CollectionUtils
@@ -121,11 +123,11 @@ class MessagesSenderJobService : JobService() {
           if (account != null) {
             roomDatabase.msgDao().resetMsgsWithSendingState(account.email)
 
-            val queuedMsgs = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
-                msgStateValue = MessageState.QUEUED.value)
+            val queuedMsgs = roomDatabase.msgDao().getOutboxMsgsByStates(account = account.email,
+                msgStates = listOf(MessageState.QUEUED.value))
 
-            val sentButNotSavedMsgs = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
-                msgStateValue = MessageState.SENT_WITHOUT_LOCAL_COPY.value)
+            val sentButNotSavedMsgs = roomDatabase.msgDao().getOutboxMsgsByStates(account = account.email,
+                msgStates = listOf(MessageState.SENT_WITHOUT_LOCAL_COPY.value, MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER.value))
 
             if (!CollectionUtils.isEmpty(queuedMsgs) || !CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
               sess = OpenStoreHelper.getAccountSess(context, account)
@@ -140,8 +142,8 @@ class MessagesSenderJobService : JobService() {
               saveCopyOfAlreadySentMsgs(context, account, attsCacheDir)
             }
 
-            if (store != null && store!!.isConnected) {
-              store!!.close()
+            if (store?.isConnected == true) {
+              store?.close()
             }
           }
         }
@@ -186,8 +188,10 @@ class MessagesSenderJobService : JobService() {
       val email = account.email
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       while (true) {
-        list = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
-            msgStateValue = MessageState.QUEUED.value)
+        list = roomDatabase.msgDao().getOutboxMsgsByStates(
+            account = account.email,
+            msgStates = listOf(MessageState.QUEUED.value)
+        )
 
         if (CollectionUtils.isEmpty(list)) {
           break
@@ -252,23 +256,30 @@ class MessagesSenderJobService : JobService() {
 
             break
           } else {
-            var newMsgState = MessageState.ERROR_SENDING_FAILED
+            val newMsgState = when (e) {
+              is MailConnectException -> {
+                MessageState.QUEUED
+              }
 
-            if (e is MailConnectException) {
-              newMsgState = MessageState.QUEUED
-            }
+              is MessagingException -> {
+                if (e.cause is SSLException || e.cause is SocketException) {
+                  MessageState.QUEUED
+                } else {
+                  MessageState.ERROR_SENDING_FAILED
+                }
+              }
 
-            if (e is MessagingException && e.cause != null) {
-              if (e.cause is SSLException || e.cause is SocketException) {
-                newMsgState = MessageState.QUEUED
+              is CopyNotSavedInSentFolderException -> MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER
+
+              else -> {
+                when (e.cause) {
+                  is FileNotFoundException -> MessageState.ERROR_CACHE_PROBLEM
+
+                  else -> MessageState.ERROR_SENDING_FAILED
+                }
               }
             }
 
-            if (e.cause != null) {
-              if (e.cause is FileNotFoundException) {
-                newMsgState = MessageState.ERROR_CACHE_PROBLEM
-              }
-            }
             roomDatabase.msgDao().update(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
           }
 
@@ -282,8 +293,10 @@ class MessagesSenderJobService : JobService() {
       val email = account.email
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       while (true) {
-        list = roomDatabase.msgDao().getOutboxMsgsByState(account = account.email,
-            msgStateValue = MessageState.SENT_WITHOUT_LOCAL_COPY.value)
+        list = roomDatabase.msgDao().getOutboxMsgsByStates(
+            account = account.email,
+            msgStates = listOf(MessageState.SENT_WITHOUT_LOCAL_COPY.value, MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER.value)
+        )
         if (CollectionUtils.isEmpty(list)) {
           break
         }
@@ -293,6 +306,11 @@ class MessagesSenderJobService : JobService() {
               .getAttachments(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
 
           val mimeMsg = createMimeMsg(context, sess, msgEntity, attachments)
+
+          roomDatabase.msgDao().resetMsgsWithSendingState(account.email)
+          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENDING.value))
+          Thread.sleep(2000)
+
           val isMsgSaved = saveCopyOfSentMsg(account, store, context, mimeMsg)
 
           if (!isMsgSaved) {
@@ -314,14 +332,27 @@ class MessagesSenderJobService : JobService() {
             break
           }
 
-          if (e.cause != null) {
-            if (e.cause is FileNotFoundException) {
-              roomDatabase.msgDao().delete(msgEntity)
-            } else {
-              roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT_WITHOUT_LOCAL_COPY.value))
+          when (e) {
+            is CopyNotSavedInSentFolderException -> {
+              roomDatabase.msgDao().update(msgEntity.copy(
+                  state = MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value,
+                  errorMsg = e.message))
             }
-          } else {
-            roomDatabase.msgDao().delete(msgEntity)
+
+            else -> {
+              when (e.cause) {
+                is FileNotFoundException -> {
+                  roomDatabase.msgDao().delete(msgEntity)
+                }
+
+                else -> {
+                  roomDatabase.msgDao().update(msgEntity.copy(
+                      state = MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value,
+                      errorMsg = e.message
+                  ))
+                }
+              }
+            }
           }
         }
       }
@@ -476,35 +507,26 @@ class MessagesSenderJobService : JobService() {
      */
     private fun saveCopyOfSentMsg(account: AccountEntity, store: Store?, context: Context, mimeMsg: MimeMessage): Boolean {
       val foldersManager = FoldersManager.fromDatabase(context, account.email)
-      val sentLocalFolder = foldersManager.folderSent
+      val sentLocalFolder = foldersManager.findSentFolder()
 
-      try {
-        if (sentLocalFolder != null) {
-          val sentRemoteFolder = store!!.getFolder(sentLocalFolder.fullName) as IMAPFolder
+      if (sentLocalFolder != null) {
+        val sentRemoteFolder = store!!.getFolder(sentLocalFolder.fullName) as IMAPFolder
 
-          if (!sentRemoteFolder.exists()) {
-            throw IllegalArgumentException("The SENT folder doesn't exists. Can't create a copy of the sent message!")
-          }
-
-          sentRemoteFolder.open(Folder.READ_WRITE)
-          mimeMsg.setFlag(Flags.Flag.SEEN, true)
-          sentRemoteFolder.appendMessages(arrayOf<Message>(mimeMsg))
-          sentRemoteFolder.close(false)
-          return true
-        } else {
-          val accountEntity = FlowCryptRoomDatabase.getDatabase(context).accountDao().getAccount(account.email)
-          if (accountEntity == null) {
-            throw IllegalArgumentException("The SENT folder is not defined. The account is null!")
-          } else {
-            throw IllegalArgumentException("An error occurred during saving a copy of the outgoing message. " +
-                "Provider: " + account.email.substring(account.email.indexOf("@")))
-          }
+        if (!sentRemoteFolder.exists()) {
+          throw IllegalArgumentException("The SENT folder doesn't exists. Can't create a copy of the sent message!")
         }
-      } catch (e: MessagingException) {
-        e.printStackTrace()
-      }
 
-      return false
+        sentRemoteFolder.open(Folder.READ_WRITE)
+        mimeMsg.setFlag(Flags.Flag.SEEN, true)
+        sentRemoteFolder.appendMessages(arrayOf<Message>(mimeMsg))
+        sentRemoteFolder.close(false)
+        return true
+      } else {
+        throw CopyNotSavedInSentFolderException("An error occurred during saving a copy of the outgoing message. " +
+            "The SENT folder is not defined. Please contact the support: " +
+            context.getString(R.string.support_email) + "\n\nProvider: "
+            + account.email.substring(account.email.indexOf("@") + 1))
+      }
     }
   }
 

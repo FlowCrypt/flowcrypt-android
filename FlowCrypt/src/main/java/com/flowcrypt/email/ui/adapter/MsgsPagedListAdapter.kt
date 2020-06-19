@@ -302,7 +302,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         stateTextColor = ContextCompat.getColor(context, R.color.colorAccent)
       }
 
-      MessageState.QUEUED -> {
+      MessageState.QUEUED, MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER -> {
         state = context.getString(R.string.queued)
         stateTextColor = ContextCompat.getColor(context, R.color.colorAccent)
       }
@@ -318,6 +318,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
       MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
       MessageState.ERROR_SENDING_FAILED,
       MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
+      MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER,
       MessageState.AUTH_FAILURE -> {
         stateTextColor = ContextCompat.getColor(context, R.color.red)
 
@@ -335,6 +336,9 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
 
           MessageState.ERROR_PRIVATE_KEY_NOT_FOUND ->
             state = context.getString(R.string.could_not_create_no_key_available)
+
+          MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER ->
+            state = context.getString(R.string.cannot_save_copy_in_sent_folder)
 
           MessageState.AUTH_FAILURE ->
             state = context.getString(R.string.can_not_send_due_to_auth_failure)
