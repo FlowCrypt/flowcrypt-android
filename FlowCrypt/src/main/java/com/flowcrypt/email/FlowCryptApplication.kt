@@ -9,6 +9,7 @@ import android.app.Application
 import android.app.job.JobScheduler
 import android.content.Context
 import androidx.preference.PreferenceManager
+import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -68,7 +69,7 @@ import java.util.concurrent.TimeUnit
   ReportField.USER_CRASH_DATE,
   ReportField.USER_EMAIL]
     , httpMethod = HttpSender.Method.POST, reportType = HttpSender.Type.JSON, buildConfigClass = BuildConfig::class)
-class FlowCryptApplication : Application() {
+class FlowCryptApplication : Application(), Configuration.Provider {
 
   override fun onCreate() {
     super.onCreate()
@@ -92,6 +93,11 @@ class FlowCryptApplication : Application() {
     super.attachBaseContext(base)
     initACRA()
   }
+
+  override fun getWorkManagerConfiguration() =
+      Configuration.Builder()
+          .setJobSchedulerJobIdRange(JobIdManager.JOB_MAX_ID, JobIdManager.JOB_MAX_ID + 10000)
+          .build()
 
   private fun initACRA() {
     if (!GeneralUtil.isDebugBuild()) {

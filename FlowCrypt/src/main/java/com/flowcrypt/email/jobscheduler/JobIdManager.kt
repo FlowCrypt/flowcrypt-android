@@ -17,6 +17,11 @@ import android.app.job.JobInfo
  */
 class JobIdManager {
   companion object {
+    /**
+     * Note: increase this field if you are modifying this file
+     */
+    const val JOB_MAX_ID = 10
+
     const val JOB_TYPE_SYNC = 1
     const val JOB_TYPE_ACTION_QUEUE = 2
     const val JOB_TYPE_EMAIL_AND_NAME_UPDATE = 3
