@@ -9,8 +9,10 @@ import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
+import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.database.entity.LabelEntity
+import kotlinx.coroutines.launch
 
 /**
  * @author Denis Bondarenko
@@ -30,6 +32,12 @@ class LabelsViewModel(application: Application) : AccountViewModel(application) 
       } ?: FoldersManager("")
 
       emit(foldersManager)
+    }
+  }
+
+  fun updateOutboxMsgsCount() {
+    viewModelScope.launch {
+      updateOutboxMsgsCount(getActiveAccountSuspend())
     }
   }
 }

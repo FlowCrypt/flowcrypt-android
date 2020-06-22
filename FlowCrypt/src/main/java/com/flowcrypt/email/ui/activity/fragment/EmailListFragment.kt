@@ -204,7 +204,13 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     when (requestCode) {
       REQUEST_CODE_RETRY_TO_SEND_MESSAGES -> when (resultCode) {
         TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
-          msgsViewModel.changeMsgsState(listOf(activeMsgEntity?.id ?: -1), it, MessageState.QUEUED)
+          val newMsgState = when (activeMsgEntity?.msgState) {
+            MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER
+
+            else -> MessageState.QUEUED
+          }
+          msgsViewModel.changeMsgsState(listOf(activeMsgEntity?.id ?: -1), it, newMsgState)
+          MessagesSenderJobService.schedule(requireContext())
         }
       }
 
@@ -380,7 +386,8 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         MessageState.ERROR_CACHE_PROBLEM,
         MessageState.ERROR_DURING_CREATION,
         MessageState.ERROR_SENDING_FAILED,
-        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> handleOutgoingMsgWhichHasSomeError(msgEntity)
+        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
+        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> handleOutgoingMsgWhichHasSomeError(msgEntity)
         else -> {
           startActivityForResult(MessageDetailsActivity.getIntent(context,
               listener?.currentFolder, msgEntity), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
@@ -453,7 +460,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         }
       }
 
-      MessageState.ERROR_SENDING_FAILED -> {
+      MessageState.ERROR_SENDING_FAILED, MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> {
         val twoWayDialogFragment = TwoWayDialogFragment.newInstance(dialogTitle = "",
             dialogMsg = getString(R.string.message_failed_to_send, message),
             positiveButtonTitle = getString(R.string.retry),

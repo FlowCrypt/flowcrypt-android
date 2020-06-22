@@ -9,7 +9,12 @@ import android.app.Application
 import android.app.job.JobScheduler
 import android.content.Context
 import androidx.preference.PreferenceManager
+import androidx.work.Configuration
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.flowcrypt.email.api.email.MsgsCacheManager
+import com.flowcrypt.email.jetpack.workmanager.MsgsCacheCleanerWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.jobscheduler.SyncJobService
 import com.flowcrypt.email.security.CryptoMigrationUtil
@@ -25,6 +30,7 @@ import org.acra.ReportField
 import org.acra.annotation.ReportsCrashes
 import org.acra.sender.HttpSender
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * The application class for FlowCrypt. Base class for maintaining global application state. The production version.
@@ -63,7 +69,7 @@ import java.util.*
   ReportField.USER_CRASH_DATE,
   ReportField.USER_EMAIL]
     , httpMethod = HttpSender.Method.POST, reportType = HttpSender.Type.JSON, buildConfigClass = BuildConfig::class)
-class FlowCryptApplication : Application() {
+class FlowCryptApplication : Application(), Configuration.Provider {
 
   override fun onCreate() {
     super.onCreate()
@@ -79,12 +85,19 @@ class FlowCryptApplication : Application() {
     val scheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
     scheduler.cancel(JobIdManager.JOB_TYPE_SYNC)
     SyncJobService.schedule(this)
+
+    enqueueMsgsCacheCleanerWorker()
   }
 
   override fun attachBaseContext(base: Context) {
     super.attachBaseContext(base)
     initACRA()
   }
+
+  override fun getWorkManagerConfiguration() =
+      Configuration.Builder()
+          .setJobSchedulerJobIdRange(JobIdManager.JOB_MAX_ID, JobIdManager.JOB_MAX_ID + 10000)
+          .build()
 
   private fun initACRA() {
     if (!GeneralUtil.isDebugBuild()) {
@@ -127,5 +140,23 @@ class FlowCryptApplication : Application() {
             .apply()
       }
     }
+  }
+
+  private fun enqueueMsgsCacheCleanerWorker() {
+    val periodicWorkRequestBuilder =
+        PeriodicWorkRequestBuilder<MsgsCacheCleanerWorker>(1, TimeUnit.DAYS)
+
+    val calendar = Calendar.getInstance().apply {
+      add(Calendar.DAY_OF_YEAR, 1)
+      set(Calendar.HOUR_OF_DAY, 0)
+      set(Calendar.MINUTE, 5)
+    }
+
+    val workRequest = periodicWorkRequestBuilder
+        .setInitialDelay(calendar.timeInMillis, TimeUnit.MILLISECONDS)
+        .build()
+
+    WorkManager.getInstance(this).enqueueUniquePeriodicWork(MsgsCacheCleanerWorker.NAME,
+        ExistingPeriodicWorkPolicy.REPLACE, workRequest)
   }
 }

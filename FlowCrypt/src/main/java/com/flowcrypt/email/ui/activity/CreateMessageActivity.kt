@@ -68,7 +68,7 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
 
     super.onCreate(savedInstanceState)
 
-    rootView = findViewById(R.id.layoutContent)
+    rootView = findViewById(R.id.createMessageFragment)
     initNonEncryptedHintView()
 
     prepareActionBarTitle()
@@ -190,7 +190,7 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
 
   private fun notifyFragmentAboutChangeMsgEncryptionType(messageEncryptionType: MessageEncryptionType) {
     val fragment = supportFragmentManager.findFragmentById(R.id
-        .composeFragment) as CreateMessageFragment?
+        .createMessageFragment) as CreateMessageFragment?
 
     fragment?.onMsgEncryptionTypeChange(messageEncryptionType)
   }

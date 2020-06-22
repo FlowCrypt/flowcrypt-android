@@ -8,7 +8,9 @@ package com.flowcrypt.email.jetpack.viewmodel
 import android.app.Application
 import androidx.lifecycle.viewModelScope
 import androidx.room.RoomDatabase
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
 import com.flowcrypt.email.service.actionqueue.actions.Action
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +34,16 @@ open class RoomBasicViewModel(application: Application) : BaseAndroidViewModel(a
         val entity = ActionQueueEntity.fromAction(action) ?: return@withContext
         roomDatabase.actionQueueDao().insertSuspend(entity)
       }
+    }
+  }
+
+  protected suspend fun updateOutboxMsgsCount(accountEntity: AccountEntity?) {
+    val account = accountEntity ?: return
+    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsExceptSentSuspend(account.email).size
+    val outboxLabel = roomDatabase.labelDao().getLabelSuspend(account.email, JavaEmailConstants.FOLDER_OUTBOX)
+
+    outboxLabel?.let {
+      roomDatabase.labelDao().updateSuspend(it.copy(msgsCount = outgoingMsgCount))
     }
   }
 }

@@ -67,7 +67,7 @@ class NodeRequestBody constructor(private val nodeRequest: NodeRequest,
             } catch (e: Exception) {
               e.printStackTrace()
               ExceptionUtil.handleError(e)
-              MsgsCacheManager.dropAndInit(nodeRequest.context)
+              MsgsCacheManager.evictAll(nodeRequest.context)
               throw CorruptedMsgInCacheException()
             }
           } else {

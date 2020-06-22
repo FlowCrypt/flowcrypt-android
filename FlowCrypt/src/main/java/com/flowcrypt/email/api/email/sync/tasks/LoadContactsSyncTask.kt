@@ -35,7 +35,7 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
     if (account.areContactsLoaded == true) return
 
     val foldersManager = FoldersManager.fromDatabase(listener.context, account.email)
-    val folderSent = foldersManager.folderSent ?: return
+    val folderSent = foldersManager.findSentFolder() ?: return
     val imapFolder = store.getFolder(folderSent.fullName) as IMAPFolder
     imapFolder.open(Folder.READ_ONLY)
 

@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email
 
 import android.content.Context
 import android.net.Uri
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.util.cache.DiskLruCache
 import okhttp3.internal.io.FileSystem
 import okio.buffer
@@ -23,13 +24,13 @@ import java.io.InputStream
  *         E-mail: DenBond7@gmail.com
  */
 object MsgsCacheManager {
-  private const val CACHE_VERSION = 2
+  private const val CACHE_VERSION = BuildConfig.VERSION_CODE
   private const val CACHE_SIZE: Long = 1024 * 1000 * 50 //50Mb
   const val CACHE_DIR_NAME = "emails"
   lateinit var diskLruCache: DiskLruCache
 
   fun init(context: Context) {
-    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.filesDir, CACHE_DIR_NAME), CACHE_VERSION, 1, CACHE_SIZE)
+    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.filesDir, CACHE_DIR_NAME), CACHE_VERSION, CACHE_SIZE)
   }
 
   fun addMsg(key: String, inputStream: InputStream) {
@@ -58,9 +59,8 @@ object MsgsCacheManager {
     return snapshot.getLength(0) > 0
   }
 
-  fun dropAndInit(context: Context?) {
+  fun evictAll(context: Context?) {
     context ?: return
-    diskLruCache.delete()
-    diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.filesDir, CACHE_DIR_NAME), CACHE_VERSION, 1, CACHE_SIZE)
+    diskLruCache.evictAll()
   }
 }

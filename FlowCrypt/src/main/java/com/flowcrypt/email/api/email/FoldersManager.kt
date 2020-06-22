@@ -173,6 +173,24 @@ class FoldersManager constructor(val account: String) {
   }
 
   /**
+   * We use this method instead of use [folderSent] because some email providers don't have the
+   * Sent folder with right attributes.
+   */
+  fun findSentFolder(): LocalFolder? {
+    var sentFolder = folderSent
+
+    sentFolder?.let { return it }
+
+    for (localFolder in allFolders) {
+      if (localFolder.fullName.toUpperCase(Locale.US) in arrayOf("INBOX/SENT", "SENT")) {
+        sentFolder = localFolder
+      }
+    }
+
+    return sentFolder
+  }
+
+  /**
    * Sort the server folders for a better user experience.
    *
    * @return The sorted labels list.

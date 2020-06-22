@@ -9,7 +9,6 @@ import android.app.Application
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import kotlinx.coroutines.Dispatchers
@@ -21,9 +20,7 @@ import kotlinx.coroutines.withContext
  *         Time: 10:21 AM
  *         E-mail: DenBond7@gmail.com
  */
-open class AccountViewModel(application: Application) : BaseAndroidViewModel(application) {
-  protected val roomDatabase = FlowCryptRoomDatabase.getDatabase(application)
-
+open class AccountViewModel(application: Application) : RoomBasicViewModel(application) {
   private val pureActiveAccountLiveData: LiveData<AccountEntity?> = roomDatabase.accountDao().getActiveAccountLD()
   val activeAccountLiveData: LiveData<AccountEntity?> = pureActiveAccountLiveData.switchMap { accountEntity ->
     liveData {
@@ -36,6 +33,10 @@ open class AccountViewModel(application: Application) : BaseAndroidViewModel(app
     liveData {
       emit(accountEntities.mapNotNull { accountEntity -> getAccountEntityWithDecryptedInfoSuspend(accountEntity) })
     }
+  }
+
+  suspend fun getActiveAccountSuspend(): AccountEntity? {
+    return activeAccountLiveData.value ?: return roomDatabase.accountDao().getActiveAccountSuspend()
   }
 
   companion object {

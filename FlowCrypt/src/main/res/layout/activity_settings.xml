@@ -4,13 +4,17 @@
   -->
 
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <include layout="@layout/toolbar" />
 
-    <include
-        android:id="@+id/layoutContent"
-        layout="@layout/content_main_preferences" />
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/mainSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.MainSettingsFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

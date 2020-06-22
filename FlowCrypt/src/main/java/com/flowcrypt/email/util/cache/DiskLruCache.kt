@@ -89,14 +89,14 @@ class DiskLruCache internal constructor(
 
     private val appVersion: Int,
 
-    internal val valueCount: Int,
-
     /** Returns the maximum number of bytes that this cache should use to store its data. */
     maxSize: Long,
 
     /** Used for asynchronous journal rebuilds. */
     taskRunner: TaskRunner = TaskRunner.INSTANCE
 ) : Closeable, Flushable {
+  internal val valueCount: Int = 1
+
   /** The maximum number of bytes that this cache should use to store its data. */
   @get:Synchronized
   @set:Synchronized
@@ -334,7 +334,9 @@ class DiskLruCache internal constructor(
             .split(' ')
         entry.readable = true
         entry.currentEditor = null
-        entry.setLengths(parts)
+        entry.setLengths(parts.filterIndexed { index, _ -> index == 0 })
+        entry.setCreatingDate(parts.filterIndexed { index, _ -> index == 1 }
+            .firstOrNull()?.toLongOrNull() ?: 0L)
       }
 
       secondSpace == -1 && firstSpace == DIRTY.length && line.startsWith(DIRTY) -> {
@@ -541,12 +543,13 @@ class DiskLruCache internal constructor(
 
     redundantOpCount++
     entry.currentEditor = null
-    journalWriter!!.apply {
+    journalWriter?.apply {
       if (entry.readable || success) {
         entry.readable = true
         writeUtf8(CLEAN).writeByte(' '.toInt())
         writeUtf8(entry.key)
         entry.writeLengths(this)
+        entry.writeCreationDate(this)
         writeByte('\n'.toInt())
         if (success) {
           entry.sequenceNumber = nextSequenceNumber++
@@ -772,7 +775,8 @@ class DiskLruCache internal constructor(
       private val key: String,
       private val sequenceNumber: Long,
       private val sources: List<Source>,
-      private val lengths: LongArray
+      private val lengths: LongArray,
+      val creationDateInMilliseconds: Long
   ) : Closeable {
     fun key(): String = key
 
@@ -810,6 +814,14 @@ class DiskLruCache internal constructor(
         source.closeQuietly()
       }
     }
+
+    override fun toString(): String {
+      return "Snapshot(key='$key'," +
+          " sequenceNumber=$sequenceNumber, " +
+          "sources=$sources, " +
+          "lengths=${lengths.contentToString()}, " +
+          "creationDateInMilliseconds=$creationDateInMilliseconds)"
+    }
   }
 
   /** Edits the values for an entry. */
@@ -840,7 +852,7 @@ class DiskLruCache internal constructor(
      * Returns an unbuffered input stream to read the last committed value, or null if no value has
      * been committed.
      */
-    fun newSource(index: Int): Source? {
+    fun newSource(index: Int = 0): Source? {
       synchronized(this@DiskLruCache) {
         check(!done)
         if (!entry.readable || entry.currentEditor != this) {
@@ -859,7 +871,7 @@ class DiskLruCache internal constructor(
      * output stream encounters errors when writing to the filesystem, this edit will be aborted
      * when [commit] is called. The returned output stream does not throw IOExceptions.
      */
-    fun newSink(index: Int): Sink {
+    fun newSink(index: Int = 0): Sink {
       synchronized(this@DiskLruCache) {
         check(!done)
         if (entry.currentEditor != this) {
@@ -923,6 +935,8 @@ class DiskLruCache internal constructor(
     internal val cleanFiles = mutableListOf<File>()
     internal val dirtyFiles = mutableListOf<File>()
 
+    internal var creatingDateInMilliseconds = System.currentTimeMillis()
+
     /** True if this entry has ever been published. */
     internal var readable: Boolean = false
 
@@ -961,12 +975,22 @@ class DiskLruCache internal constructor(
       }
     }
 
+    fun setCreatingDate(creatingDateInMilliseconds: Long) {
+      this.creatingDateInMilliseconds = creatingDateInMilliseconds
+    }
+
     /** Append space-prefixed lengths to [writer]. */
     @Throws(IOException::class)
     internal fun writeLengths(writer: BufferedSink) {
       for (length in lengths) {
         writer.writeByte(' '.toInt()).writeDecimalLong(length)
       }
+    }
+
+    /** Append space-prefixed creation date in milliseconds to [writer]. */
+    @Throws(IOException::class)
+    internal fun writeCreationDate(writer: BufferedSink) {
+      writer.writeByte(' '.toInt()).writeDecimalLong(creatingDateInMilliseconds)
     }
 
     @Throws(IOException::class)
@@ -988,7 +1012,7 @@ class DiskLruCache internal constructor(
         for (i in 0 until valueCount) {
           sources += fileSystem.source(cleanFiles[i])
         }
-        return Snapshot(key, sequenceNumber, sources, lengths)
+        return Snapshot(key, sequenceNumber, sources, lengths, creatingDateInMilliseconds)
       } catch (_: FileNotFoundException) {
         // A file must have been deleted manually!
         for (source in sources) {
@@ -1012,6 +1036,7 @@ class DiskLruCache internal constructor(
     const val MAGIC = "libcore.io.DiskLruCache"
     const val VERSION_1 = "1"
     const val ANY_SEQUENCE_NUMBER: Long = -1
+
     @JvmField
     val LEGAL_KEY_PATTERN = "[a-z0-9_-]{1,120}".toRegex()
     const val CLEAN = "CLEAN"

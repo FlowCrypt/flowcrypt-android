@@ -658,6 +658,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       if (GeneralUtil.isConnected(this@EmailManagerActivity)) {
         updateLabels(R.id.syns_request_code_update_label_passive)
       }
+
+      labelsViewModel.updateOutboxMsgsCount()
     }
 
     override fun onDrawerClosed(drawerView: View) {

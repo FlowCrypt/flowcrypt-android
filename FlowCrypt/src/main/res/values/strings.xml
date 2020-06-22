@@ -266,7 +266,7 @@
     <string name="add_public_keys_of_your_contacts">Add public keys of your contacts to send them encrypted messages.</string>
     <string name="search_by_key_id_or_email">Search by key id or email</string>
     <string name="import_all">Import all</string>
-    <string name="no_public_key_found">No public key found</string>
+    <string name="supported_public_key_not_found">Supported public key not found</string>
     <string name="already_imported">Already imported</string>
     <string name="success">Success</string>
     <string name="parsing_public_keys">Parsing public keys</string>
@@ -428,4 +428,5 @@
     <string name="error_could_not_save_private_keys">Error: couldn\'t save private keys</string>
     <string name="show_more">Show more</string>
     <string name="delete_quoted_text">Delete quoted text</string>
+    <string name="cannot_save_copy_in_sent_folder">Cannot save a copy in SENT folder</string>
 </resources>

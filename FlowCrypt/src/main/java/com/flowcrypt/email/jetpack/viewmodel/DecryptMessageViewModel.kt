@@ -124,13 +124,16 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
           request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, keyEntities = list, isEmail = false))
     } else {
       apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(context = context, uri = uriOfEncryptedPart, keyEntities = list, isEmail = true))
+          request = ParseDecryptMsgRequest(context = context, uri = uri, keyEntities = list, isEmail = true, hasEncryptedDataInUri = true))
     }
   }
 
   private suspend fun getMimeMessageFromInputStream(context: Context, uri: Uri) =
       withContext(Dispatchers.IO) {
-        MimeMessage(null, context.contentResolver.openInputStream(uri))
+        val inputStream = context.contentResolver.openInputStream(uri)
+        if (inputStream != null) {
+          MimeMessage(null, KeyStoreCryptoManager.getCipherInputStream(inputStream))
+        } else throw NullPointerException("Stream is empty")
       }
 
   private suspend fun getUriOfEncryptedPart(context: Context, uri: Uri): Uri? {

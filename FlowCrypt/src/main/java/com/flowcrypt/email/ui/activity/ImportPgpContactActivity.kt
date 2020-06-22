@@ -186,7 +186,7 @@ class ImportPgpContactActivity : BaseImportKeyActivity(), TextView.OnEditorActio
             REQUEST_CODE_RUN_PREVIEW_ACTIVITY)
       } else {
         UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-        Toast.makeText(this, R.string.no_public_key_found, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, R.string.supported_public_key_not_found, Toast.LENGTH_SHORT).show()
       }
     }
   }
