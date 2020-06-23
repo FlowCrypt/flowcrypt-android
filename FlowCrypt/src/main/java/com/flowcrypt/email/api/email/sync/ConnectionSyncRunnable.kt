@@ -265,11 +265,10 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
 
         resetConnIfNeeded(accountEntity, isResetConnectionNeeded, task)
 
-        if (!isConnected) {
-          LogsUtil.d(tag, "Not connected. Start a reconnection ...")
+        if (sess == null || store == null) {
           syncListener.onActionProgress(accountEntity, task.ownerKey, task.requestCode, R.id.progress_id_connecting_to_email_server)
           openConnToStore(accountEntity)
-          LogsUtil.d(tag, "Reconnection done")
+          LogsUtil.d(tag, "Connected!")
         }
 
         val activeStore = store ?: return
@@ -284,8 +283,8 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
         }
 
         if (!tasksExecutorService.isShutdown) {
-          tasksMap[task.uniqueId] = tasksExecutorService.submit(SyncTaskRunnable(accountEntity, syncListener,
-              task, activeStore, activeSess))
+          tasksMap[task.uniqueId] = tasksExecutorService.submit(
+              SyncTaskRunnable(accountEntity, syncListener, task, activeStore, activeSess))
         }
 
       } catch (e: Exception) {

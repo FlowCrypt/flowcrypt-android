@@ -39,7 +39,7 @@ class EmailSyncManager(val listener: SyncListener) {
   private var connectionFuture: Future<*>? = null
   private var idleFuture: Future<*>? = null
   private val connectionRunnable = ConnectionSyncRunnable(listener)
-  private val idleSyncRunnable = IdleSyncRunnable(listener, this)
+  private var idleSyncRunnable: IdleSyncRunnable? = null
 
   /**
    * Start a synchronization.
@@ -69,7 +69,7 @@ class EmailSyncManager(val listener: SyncListener) {
   fun stopSync() {
     connectionFuture?.cancel(true)
     idleFuture?.cancel(true)
-    idleSyncRunnable.interruptIdle()
+    idleSyncRunnable?.interruptIdle()
     connectionExecutorService.shutdown()
     idleExecutorService.shutdown()
   }
@@ -79,7 +79,10 @@ class EmailSyncManager(val listener: SyncListener) {
    */
   private fun runIdleInboxIfNeeded() {
     if (!isThreadAlreadyWorking(idleFuture)) {
-      idleFuture = idleExecutorService.submit(idleSyncRunnable)
+      idleSyncRunnable = IdleSyncRunnable(listener, this)
+      idleSyncRunnable?.let {
+        idleFuture = idleExecutorService.submit(it)
+      }
     }
   }
 

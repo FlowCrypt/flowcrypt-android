@@ -132,9 +132,7 @@ class ForwardedAttachmentsDownloaderJobService : JobService() {
               downloadForwardedAtts(context, account)
             }
 
-            if (store?.isConnected == true) {
-              store?.close()
-            }
+            store?.close()
           }
         }
 

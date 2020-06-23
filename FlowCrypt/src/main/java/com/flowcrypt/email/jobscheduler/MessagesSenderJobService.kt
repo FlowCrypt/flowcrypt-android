@@ -142,9 +142,7 @@ class MessagesSenderJobService : JobService() {
               saveCopyOfAlreadySentMsgs(context, account, attsCacheDir)
             }
 
-            if (store?.isConnected == true) {
-              store?.close()
-            }
+            store?.close()
           }
         }
 
