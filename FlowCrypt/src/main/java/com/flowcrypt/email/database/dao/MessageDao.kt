@@ -66,22 +66,14 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid IN (:msgsUID)")
   abstract fun delete(email: String?, label: String?, msgsUID: Collection<Long>): Int
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state NOT IN (:msgStates)")
-  abstract fun getOutboxMsgsExceptSent(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
-                                       msgStates: Collection<Int> = listOf(
-                                           MessageState.SENDING.value,
-                                           MessageState.SENT_WITHOUT_LOCAL_COPY.value,
-                                           MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER.value)):
-      List<MessageEntity>
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label")
+  abstract fun getOutboxMsgs(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX): List<MessageEntity>
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state NOT IN (:msgStates)")
-  abstract suspend fun getOutboxMsgsExceptSentSuspend(account: String?,
-                                                      label: String = JavaEmailConstants.FOLDER_OUTBOX,
-                                                      msgStates: Collection<Int> = listOf(
-                                                          MessageState.SENDING.value,
-                                                          MessageState.SENT_WITHOUT_LOCAL_COPY.value,
-                                                          MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER.value)):
-      List<MessageEntity>
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label")
+  abstract fun getOutboxMsgsLD(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX): LiveData<List<MessageEntity>>
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label")
+  abstract suspend fun getOutboxMsgsSuspend(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX): List<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state IN (:msgStates)")
   abstract fun getOutboxMsgsByStates(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
@@ -92,7 +84,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
                                          msgStates: Collection<Int> = listOf(
                                              MessageState.SENDING.value,
                                              MessageState.SENT_WITHOUT_LOCAL_COPY.value,
-                                             MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER.value)): Int
+                                             MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER.value)): Int
 
   @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :folder")
   abstract fun count(account: String?, folder: String?): Int

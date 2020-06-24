@@ -127,7 +127,7 @@ class MessagesSenderJobService : JobService() {
                 msgStates = listOf(MessageState.QUEUED.value))
 
             val sentButNotSavedMsgs = roomDatabase.msgDao().getOutboxMsgsByStates(account = account.email,
-                msgStates = listOf(MessageState.SENT_WITHOUT_LOCAL_COPY.value, MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER.value))
+                msgStates = listOf(MessageState.SENT_WITHOUT_LOCAL_COPY.value, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER.value))
 
             if (!CollectionUtils.isEmpty(queuedMsgs) || !CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
               sess = OpenStoreHelper.getAccountSess(context, account)
@@ -234,7 +234,7 @@ class MessagesSenderJobService : JobService() {
               deleteMsgAtts(roomDatabase, account, attsCacheDir, msgEntity)
             }
 
-            val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsExceptSent(email).size
+            val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgs(email).size
             val outboxLabel = roomDatabase.labelDao().getLabel(email, JavaEmailConstants.FOLDER_OUTBOX)
 
             outboxLabel?.let {
@@ -293,7 +293,7 @@ class MessagesSenderJobService : JobService() {
       while (true) {
         list = roomDatabase.msgDao().getOutboxMsgsByStates(
             account = account.email,
-            msgStates = listOf(MessageState.SENT_WITHOUT_LOCAL_COPY.value, MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER.value)
+            msgStates = listOf(MessageState.SENT_WITHOUT_LOCAL_COPY.value, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER.value)
         )
         if (CollectionUtils.isEmpty(list)) {
           break

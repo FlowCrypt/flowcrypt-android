@@ -348,7 +348,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
       when (messageEntity.msgState) {
         MessageState.NEW, MessageState.NEW_FORWARDED -> actionBarSubTitle = getString(R.string.preparing)
 
-        MessageState.QUEUED, MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER -> actionBarSubTitle = getString(R.string.queued)
+        MessageState.QUEUED, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER -> actionBarSubTitle = getString(R.string.queued)
 
         MessageState.SENDING -> actionBarSubTitle = getString(R.string.sending)
 

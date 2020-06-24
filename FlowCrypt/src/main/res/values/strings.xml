@@ -429,4 +429,5 @@
     <string name="show_more">Show more</string>
     <string name="delete_quoted_text">Delete quoted text</string>
     <string name="cannot_save_copy_in_sent_folder">Cannot save a copy in SENT folder</string>
+    <string name="outbox_msgs_count">%1$d unsent in Outbox</string>
 </resources>

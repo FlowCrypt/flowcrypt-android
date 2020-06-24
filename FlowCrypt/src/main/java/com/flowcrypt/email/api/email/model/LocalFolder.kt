@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.entity.LabelEntity
 
 /**
@@ -45,6 +46,10 @@ data class LocalFolder constructor(val account: String,
       source.msgsCount ?: 0,
       null
   )
+
+  fun isOutbox(): Boolean {
+    return JavaEmailConstants.FOLDER_OUTBOX.equals(fullName, ignoreCase = true)
+  }
 
   override fun describeContents(): Int {
     return 0

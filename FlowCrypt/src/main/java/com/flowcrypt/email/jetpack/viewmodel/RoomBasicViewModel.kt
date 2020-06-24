@@ -39,7 +39,7 @@ open class RoomBasicViewModel(application: Application) : BaseAndroidViewModel(a
 
   protected suspend fun updateOutboxMsgsCount(accountEntity: AccountEntity?) {
     val account = accountEntity ?: return
-    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsExceptSentSuspend(account.email).size
+    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(account.email).size
     val outboxLabel = roomDatabase.labelDao().getLabelSuspend(account.email, JavaEmailConstants.FOLDER_OUTBOX)
 
     outboxLabel?.let {

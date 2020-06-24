@@ -97,7 +97,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
   /**
    * Update the list of emails after changing the folder.
    */
-  protected fun onFolderChanged(forceClearCache: Boolean = false) {
+  protected open fun onFolderChanged(forceClearCache: Boolean = false) {
     toolbar?.title = currentFolder?.folderAlias
 
     val emailListFragment = supportFragmentManager

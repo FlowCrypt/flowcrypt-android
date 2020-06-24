@@ -166,7 +166,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
   }
 
   private fun updateOutgoingMsgCount(email: String, roomDatabase: FlowCryptRoomDatabase) {
-    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsExceptSent(email).size
+    val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgs(email).size
     val outboxLabel = roomDatabase.labelDao().getLabel(email, JavaEmailConstants.FOLDER_OUTBOX)
 
     outboxLabel?.let {

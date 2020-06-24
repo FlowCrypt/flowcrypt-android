@@ -302,7 +302,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         stateTextColor = ContextCompat.getColor(context, R.color.colorAccent)
       }
 
-      MessageState.QUEUED, MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER -> {
+      MessageState.QUEUED, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER -> {
         state = context.getString(R.string.queued)
         stateTextColor = ContextCompat.getColor(context, R.color.colorAccent)
       }

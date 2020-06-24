@@ -205,7 +205,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       REQUEST_CODE_RETRY_TO_SEND_MESSAGES -> when (resultCode) {
         TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
           val newMsgState = when (activeMsgEntity?.msgState) {
-            MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER
+            MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER
 
             else -> MessageState.QUEUED
           }

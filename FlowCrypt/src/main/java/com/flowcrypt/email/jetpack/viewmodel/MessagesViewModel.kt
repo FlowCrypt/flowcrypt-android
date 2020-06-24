@@ -39,6 +39,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
 
   val msgStatesLiveData = MutableLiveData<MessageState>()
   var msgsLiveData: LiveData<PagedList<MessageEntity>>? = null
+  var outboxMsgsLiveData: LiveData<List<MessageEntity>> = Transformations.switchMap(activeAccountLiveData) {
+    roomDatabase.msgDao().getOutboxMsgsLD(it?.email ?: "")
+  }
 
   fun loadMsgs(lifecycleOwner: LifecycleOwner, localFolder: LocalFolder?,
                observer: Observer<PagedList<MessageEntity>>,
@@ -147,7 +150,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     val candidates = mutableListOf<MessageEntity>()
 
     for (msgEntity in entities) {
-      if (msgEntity.msgState in listOf(MessageState.SENDING, MessageState.SENT_WITHOUT_LOCAL_COPY, MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER)) {
+      if (msgEntity.msgState in listOf(MessageState.SENDING, MessageState.SENT_WITHOUT_LOCAL_COPY, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER)) {
         continue
       }
 

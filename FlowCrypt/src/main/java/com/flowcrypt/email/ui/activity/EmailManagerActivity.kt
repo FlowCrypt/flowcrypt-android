@@ -43,6 +43,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
@@ -80,6 +81,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   private lateinit var client: GoogleSignInClient
   private val labelsViewModel: LabelsViewModel by viewModels()
   private val actionsViewModel: ActionsViewModel by viewModels()
+  private val msgsViewModel: MessagesViewModel by viewModels()
 
   private var foldersManager: FoldersManager? = null
   override var currentFolder: LocalFolder? = null
@@ -113,6 +115,12 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     accountViewModel.nonActiveAccountsLiveData.observe(this, Observer {
       genAccountsLayout(it)
+    })
+
+    msgsViewModel.outboxMsgsLiveData.observe(this, Observer {
+      toolbar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox() == false) {
+        getString(R.string.outbox_msgs_count, it.size)
+      } else null
     })
   }
 
@@ -361,6 +369,20 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onQueryTextChange(newText: String): Boolean {
     return false
+  }
+
+  override fun onFolderChanged(forceClearCache: Boolean) {
+    super.onFolderChanged(forceClearCache)
+    currentFolder?.let {
+      if (it.isOutbox()) {
+        toolbar?.subtitle = null
+      } else {
+        val msgCount = msgsViewModel.outboxMsgsLiveData.value?.size
+        toolbar?.subtitle = if (msgCount != null && msgCount > 0) {
+          getString(R.string.outbox_msgs_count, msgCount)
+        } else null
+      }
+    }
   }
 
   private fun showGmailSignIn() {
