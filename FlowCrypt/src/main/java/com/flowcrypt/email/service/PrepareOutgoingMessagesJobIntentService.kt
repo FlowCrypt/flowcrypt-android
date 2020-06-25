@@ -36,6 +36,7 @@ import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.flowcrypt.email.util.exception.ForceHandlingException
 import com.flowcrypt.email.util.exception.NoKeyAvailableException
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
@@ -56,8 +57,6 @@ import javax.mail.internet.MimeMessage
  * E-mail: DenBond7@gmail.com
  */
 class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
-  private var attsCacheDir: File? = null
-
   override fun onCreate() {
     super.onCreate()
     LogsUtil.d(TAG, "onCreate")
@@ -75,36 +74,40 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
 
   override fun onHandleWork(intent: Intent) {
     LogsUtil.d(TAG, "onHandleWork")
+
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-    val accountEntity = roomDatabase.accountDao().getActiveAccount() ?: return
+    val outgoingMsgInfo = intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO)
+        ?: return
+    val accountEntity = roomDatabase.accountDao().getAccount(outgoingMsgInfo.account.toLowerCase(Locale.US))
+        ?: return
     val sess = OpenStoreHelper.getAccountSess(applicationContext, accountEntity)
-    val outgoingMsgInfo =
-        intent.getParcelableExtra<OutgoingMessageInfo>(EXTRA_KEY_OUTGOING_MESSAGE_INFO) ?: return
+
     val uid = outgoingMsgInfo.uid
     val email = accountEntity.email
     val label = JavaEmailConstants.FOLDER_OUTBOX
 
     if (roomDatabase.msgDao().getMsg(email, label, uid) != null) {
+      ExceptionUtil.handleError(ForceHandlingException(
+          IllegalStateException("Message with the same uid is already exists")))
       return
     }
 
-    LogsUtil.d(TAG, "Received a new job: $outgoingMsgInfo")
+    LogsUtil.d(TAG, "Preparing a new message with subject: ${outgoingMsgInfo.subject}")
     var newMsgId: Long = -1
 
     try {
-      setupIfNeeded()
       updateContactsLastUseDateTime(outgoingMsgInfo)
 
-      var pubKeys: List<String>? = null
-      if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
+      val pubKeys: List<String>? = if (outgoingMsgInfo.encryptionType === MessageEncryptionType.ENCRYPTED) {
         val senderEmail = outgoingMsgInfo.from
-        pubKeys = SecurityUtils.getRecipientsPubKeys(this,
-            outgoingMsgInfo.getAllRecipients().toMutableList(), accountEntity, senderEmail)
-      }
+        val recipients = outgoingMsgInfo.getAllRecipients().toMutableList()
+        SecurityUtils.getRecipientsPubKeys(this, recipients, accountEntity, senderEmail)
+      } else emptyList()
 
       val rawMsg = EmailUtil.genRawMsgWithoutAtts(outgoingMsgInfo, pubKeys)
       val mimeMsg = MimeMessage(sess, IOUtils.toInputStream(rawMsg, StandardCharsets.UTF_8))
 
+      val attsCacheDir = getAttsCacheDir()
       val msgAttsCacheDir = File(attsCacheDir, UUID.randomUUID().toString())
 
       val msgEntity = prepareMessageEntity(accountEntity, outgoingMsgInfo, uid, mimeMsg, rawMsg, msgAttsCacheDir)
@@ -119,7 +122,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         if (hasAtts) {
           if (!msgAttsCacheDir.exists()) {
             if (!msgAttsCacheDir.mkdir()) {
-              Log.e(TAG, "Create cache directory " + attsCacheDir!!.name + " filed!")
+              Log.e(TAG, "Create cache directory " + attsCacheDir.name + " filed!")
               roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.ERROR_CACHE_PROBLEM.value))
               return
             }
@@ -141,7 +144,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       }
     } catch (e: Exception) {
       e.printStackTrace()
-      ExceptionUtil.handleError(e)
+      ExceptionUtil.handleError(ForceHandlingException(e))
 
       val msgEntity = MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
 
@@ -157,12 +160,24 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         } else {
           roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.ERROR_DURING_CREATION.value))
         }
+      } else {
+        ExceptionUtil.handleError(IllegalStateException("An error occurred during inserting a new message"))
       }
     }
 
     if (newMsgId > 0) {
       updateOutgoingMsgCount(email, roomDatabase)
     }
+  }
+
+  private fun getAttsCacheDir(): File {
+    val attsCacheDir = File(cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
+    if (!attsCacheDir.exists()) {
+      if (!attsCacheDir.mkdirs()) {
+        throw IllegalStateException("Create cache directory " + attsCacheDir.name + " filed!")
+      }
+    }
+    return attsCacheDir
   }
 
   private fun updateOutgoingMsgCount(email: String, roomDatabase: FlowCryptRoomDatabase) {
@@ -300,32 +315,26 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
     roomDatabase.attachmentDao().insert(cachedAtts.mapNotNull { AttachmentEntity.fromAttInfo(it) })
   }
 
-  private fun setupIfNeeded() {
-    if (attsCacheDir == null) {
-      attsCacheDir = File(cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
-      if (attsCacheDir?.exists() == false) {
-        if (attsCacheDir?.mkdirs() == false) {
-          throw IllegalStateException("Create cache directory " + attsCacheDir!!.name + " filed!")
-        }
-      }
-    }
-  }
-
   /**
    * Update 'last_use' field in "contacts" table.
    *
    * @param msgInfo - [OutgoingMessageInfo] which contains information about an outgoing message.
    */
   private fun updateContactsLastUseDateTime(msgInfo: OutgoingMessageInfo) {
-    val contactsDao = FlowCryptRoomDatabase.getDatabase(this).contactsDao()
+    try {
+      val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).contactsDao()
 
-    for (email in msgInfo.getAllRecipients()) {
-      val contactEntity = contactsDao.getContactByEmails(email)
-      if (contactEntity == null) {
-        contactsDao.insert(PgpContact(email, null).toContactEntity())
-      } else {
-        contactsDao.update(contactEntity.copy(lastUse = System.currentTimeMillis()))
+      for (email in msgInfo.getAllRecipients()) {
+        val contactEntity = contactsDao.getContactByEmails(email)
+        if (contactEntity == null) {
+          contactsDao.insert(PgpContact(email, null).toContactEntity())
+        } else {
+          contactsDao.update(contactEntity.copy(lastUse = System.currentTimeMillis()))
+        }
       }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
     }
   }
 
