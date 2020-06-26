@@ -227,6 +227,14 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         }
       }
 
+      REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
+            activeMsgEntity?.let { msgsViewModel.deleteOutgoingMsgs(listOf(it)) }
+          }
+        }
+      }
+
       else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
@@ -391,8 +399,8 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
 
     val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(listener?.currentFolder?.fullName, ignoreCase = true)
-    val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty()
-    if (isOutbox || isRawMsgAvailable == true || GeneralUtil.isConnected(context)) {
+    val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty() ?: false
+    if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
       when (msgEntity.msgState) {
         MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
         MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
@@ -402,8 +410,18 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
         MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> handleOutgoingMsgWhichHasSomeError(msgEntity)
         else -> {
-          startActivityForResult(MessageDetailsActivity.getIntent(context,
-              listener?.currentFolder, msgEntity), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
+          if (isOutbox && !isRawMsgAvailable) {
+            val twoWayDialogFragment = TwoWayDialogFragment.newInstance(dialogTitle = "",
+                dialogMsg = getString(R.string.message_failed_to_create),
+                positiveButtonTitle = getString(R.string.delete_message),
+                negativeButtonTitle = getString(R.string.cancel),
+                isCancelable = true)
+            twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE)
+            twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
+          } else {
+            startActivityForResult(MessageDetailsActivity.getIntent(context,
+                listener?.currentFolder, msgEntity), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
+          }
         }
       }
     } else {
@@ -896,6 +914,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     private const val REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10
     private const val REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 11
     private const val REQUEST_CODE_ERROR_DURING_CREATION = 12
+    private const val REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE = 13
 
     private const val DIALOG_MSG_MAX_LENGTH = 600
   }

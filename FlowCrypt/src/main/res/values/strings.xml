@@ -432,4 +432,6 @@
     <string name="outbox_msgs_count">%1$d unsent in Outbox</string>
     <string name="delete_message">Delete message</string>
     <string name="write_us">Write us</string>
+    <string name="message_details_unavailable">Message details unavailable</string>
+    <string name="message_failed_to_create">The message failed to create. Please create the message again</string>
 </resources>

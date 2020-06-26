@@ -217,6 +217,13 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
         if (it != null) {
           if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
             rawMimeBytesOfOutgoingMsg = it.rawMessageWithoutAttachments?.toByteArray()
+
+            if (rawMimeBytesOfOutgoingMsg == null) {
+              Toast.makeText(this@MessageDetailsActivity,
+                  R.string.message_failed_to_create, Toast.LENGTH_LONG).show()
+              finish()
+              return
+            }
           } else {
             msgSnapshot = MsgsCacheManager.getMsgSnapshot(it.id.toString())
           }

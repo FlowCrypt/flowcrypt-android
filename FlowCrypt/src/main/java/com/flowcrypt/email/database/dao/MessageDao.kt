@@ -79,7 +79,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   abstract fun getOutboxMsgsByStates(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
                                      msgStates: Collection<Int>): List<MessageEntity>
 
-  @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid = :uid AND state NOT IN (:msgStates)")
+  @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid = :uid AND (state NOT IN (:msgStates) OR state IS NULL)")
   abstract suspend fun deleteOutgoingMsg(email: String?, label: String?, uid: Long?,
                                          msgStates: Collection<Int> = listOf(
                                              MessageState.SENDING.value,
