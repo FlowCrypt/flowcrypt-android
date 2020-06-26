@@ -49,6 +49,7 @@ import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
@@ -211,6 +212,18 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
           }
           msgsViewModel.changeMsgsState(listOf(activeMsgEntity?.id ?: -1), it, newMsgState)
           MessagesSenderJobService.schedule(requireContext())
+        }
+      }
+
+      REQUEST_CODE_ERROR_DURING_CREATION -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
+            FeedbackActivity.show(requireActivity())
+          }
+
+          TwoWayDialogFragment.RESULT_CANCELED -> {
+            activeMsgEntity?.let { msgsViewModel.deleteOutgoingMsgs(listOf(it)) }
+          }
         }
       }
 
@@ -447,8 +460,19 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
       MessageState.ERROR_CACHE_PROBLEM -> message = getString(R.string.there_is_problem_with_cache)
 
-      MessageState.ERROR_DURING_CREATION ->
-        message = getString(R.string.error_happened_during_creation, getString(R.string.support_email))
+      MessageState.ERROR_DURING_CREATION -> {
+        message = getString(R.string.error_happened_during_creation, getString(R.string
+            .support_email), messageEntity.errorMsg ?: "none")
+
+        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(dialogTitle = "",
+            dialogMsg = message,
+            positiveButtonTitle = getString(R.string.write_us),
+            negativeButtonTitle = getString(R.string.delete_message),
+            isCancelable = true)
+        twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_ERROR_DURING_CREATION)
+        twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
+        return
+      }
 
       MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> {
         val errorMsg = messageEntity.errorMsg
@@ -871,6 +895,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   companion object {
     private const val REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10
     private const val REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 11
+    private const val REQUEST_CODE_ERROR_DURING_CREATION = 12
 
     private const val DIALOG_MSG_MAX_LENGTH = 600
   }
