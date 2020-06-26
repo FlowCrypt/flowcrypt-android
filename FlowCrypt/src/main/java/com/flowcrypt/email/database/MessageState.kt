@@ -16,6 +16,8 @@ import android.os.Parcelable
  * Time: 15:11
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 Modify [com.flowcrypt.email.database.dao.MessageDao.getFailedOutgoingMsgsCount]
+// if you add new states
 enum class MessageState constructor(val value: Int) : Parcelable {
   NONE(-1),
   NEW(1),

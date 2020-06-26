@@ -32,6 +32,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.bumptech.glide.request.RequestOptions
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
@@ -53,6 +54,7 @@ import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.GlideApp
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -134,6 +136,14 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   override fun onDestroy() {
     super.onDestroy()
     actionBarDrawerToggle?.let { drawerLayout?.removeDrawerListener(it) }
+  }
+
+  override fun onNewIntent(intent: Intent?) {
+    super.onNewIntent(intent)
+    if (ACTION_OPEN_OUTBOX_FOLDER.equals(intent?.action, true)) {
+      val newLocalFolder = foldersManager?.folderOutbox
+      changeFolder(newLocalFolder)
+    }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -317,13 +327,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
       Menu.NONE -> {
         val newLocalFolder = foldersManager?.getFolderByAlias(item.title.toString())
-        if (newLocalFolder != null) {
-          if (currentFolder == null || currentFolder?.fullName != newLocalFolder.fullName) {
-            this.currentFolder = newLocalFolder
-            onFolderChanged()
-            invalidateOptionsMenu()
-          }
-        }
+        changeFolder(newLocalFolder)
       }
     }
 
@@ -655,6 +659,20 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     }
   }
 
+  private fun changeFolder(newLocalFolder: LocalFolder?) {
+    if (newLocalFolder != null) {
+      if (currentFolder == null || currentFolder?.fullName != newLocalFolder.fullName) {
+        this.currentFolder = newLocalFolder
+        onFolderChanged()
+        invalidateOptionsMenu()
+
+        if (currentFolder?.isOutbox() == true) {
+          ErrorNotificationManager(this).cancel(ErrorNotificationManager.NOTIFICATION_ID_HAS_FAILED_OUTGOING_MSGS)
+        }
+      }
+    }
+  }
+
   /**
    * The custom realization of [ActionBarDrawerToggle]. Will be used to start a labels
    * update task when the drawer will be opened.
@@ -700,7 +718,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   companion object {
-
+    const val ACTION_OPEN_OUTBOX_FOLDER = BuildConfig.APPLICATION_ID + ".OPEN_OUTBOX_FOLDER"
     private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 100
     private const val REQUEST_CODE_SIGN_IN = 101
 

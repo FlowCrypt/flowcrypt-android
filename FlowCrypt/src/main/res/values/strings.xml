@@ -360,7 +360,9 @@
     <string name="opening_password_encrypted_msg_not_implemented_yet">Opening password encrypted messages not
         implemented yet</string>
     <string name="system">System</string>
+    <string name="errors_notifications">Errors notifications</string>
     <string name="system_notifications_notification_chanel">The system notifications channel</string>
+    <string name="errors_notifications_notification_chanel">The errors notifications channel with high priority</string>
     <string name="warning_passphrase_is_too_weak">Your private key pass phrase is too weak. Please change it in the
         settings.</string>
     <string name="please_type_key_id_or_email">Please type key id or email</string>
@@ -419,7 +421,7 @@
     <string name="source_is_empty_or_not_available">The source is empty or not available</string>
     <string name="parsing_keys_please_wait">Parsing keys, please wait</string>
     <string name="pass_phrase_too_weak">Pass phrase too weak</string>
-    <string name="missing_pass_phrase_strength_evalutaion">Unexpectedly missing pass phrase strength evaluation</string>
+    <string name="missing_pass_phrase_strength_evaluation">Unexpectedly missing pass phrase strength evaluation</string>
     <string name="empty_pass_phrase">Empty pass phrase</string>
     <string name="keys_have_different_pass_phrase">The keys have different pass phrase</string>
     <string name="contact_for_saving_not_found">Contact for saving is not found</string>
@@ -429,9 +431,13 @@
     <string name="show_more">Show more</string>
     <string name="delete_quoted_text">Delete quoted text</string>
     <string name="cannot_save_copy_in_sent_folder">Cannot save a copy in SENT folder</string>
-    <string name="outbox_msgs_count">%1$d unsent in Outbox</string>
+    <string name="outbox_msgs_count">Outbox: %1$d unsent</string>
     <string name="delete_message">Delete message</string>
     <string name="write_us">Write us</string>
     <string name="message_details_unavailable">Message details unavailable</string>
     <string name="message_failed_to_create">The message failed to create. Please create the message again</string>
+    <plurals name="has_failed_outgoing_msgs">
+        <item quantity="one">You have an outgoing message which can not be sent</item>
+        <item quantity="other">You have %1$d outgoing messages which can not be sent</item>
+    </plurals>
 </resources>

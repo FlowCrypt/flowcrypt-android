@@ -32,6 +32,7 @@ import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -146,22 +147,28 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       e.printStackTrace()
       ExceptionUtil.handleError(ForceHandlingException(e))
 
-      val msgEntity = MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
+      var msgEntity = MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
 
       if (newMsgId <= 0) {
         newMsgId = roomDatabase.msgDao().insert(msgEntity)
+        msgEntity = roomDatabase.msgDao().getMsg(email, label, uid) ?: msgEntity
       }
 
       if (newMsgId > 0) {
         if (e is NoKeyAvailableException) {
-          val errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
           roomDatabase.msgDao().update(msgEntity.copy(state = MessageState
-              .ERROR_PRIVATE_KEY_NOT_FOUND.value, errorMsg = errorMsg))
+              .ERROR_PRIVATE_KEY_NOT_FOUND.value, errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias))
         } else {
-          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.ERROR_DURING_CREATION.value))
+          roomDatabase.msgDao().update(msgEntity.copy(
+              state = MessageState.ERROR_DURING_CREATION.value, errorMsg = e.message))
         }
       } else {
         ExceptionUtil.handleError(IllegalStateException("An error occurred during inserting a new message"))
+      }
+
+      val failedOutgoingMsgsCount = roomDatabase.msgDao().getFailedOutgoingMsgsCount(accountEntity.email)
+      if (failedOutgoingMsgsCount > 0) {
+        ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMsg(accountEntity, failedOutgoingMsgsCount)
       }
     }
 
