@@ -8,7 +8,6 @@ package com.flowcrypt.email.service
 import android.content.Context
 import android.content.Intent
 import android.text.TextUtils
-import android.util.Log
 import androidx.core.app.JobIntentService
 import androidx.core.content.FileProvider
 import com.flowcrypt.email.Constants
@@ -44,6 +43,7 @@ import org.apache.commons.io.FilenameUtils
 import org.apache.commons.io.IOUtils
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.IOException
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -123,9 +123,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
         if (hasAtts) {
           if (!msgAttsCacheDir.exists()) {
             if (!msgAttsCacheDir.mkdir()) {
-              Log.e(TAG, "Create cache directory " + attsCacheDir.name + " filed!")
-              roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.ERROR_CACHE_PROBLEM.value))
-              return
+              throw IOException("Create cache directory for outgoing attachments filed!")
             }
           }
 
@@ -147,20 +145,29 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       e.printStackTrace()
       ExceptionUtil.handleError(ForceHandlingException(e))
 
-      var msgEntity = MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
+      var msgEntity = roomDatabase.msgDao().getMsg(email, label, uid)
+          ?: MessageEntity.genMsgEntity(email, label, uid, outgoingMsgInfo)
 
       if (newMsgId <= 0) {
         newMsgId = roomDatabase.msgDao().insert(msgEntity)
-        msgEntity = roomDatabase.msgDao().getMsg(email, label, uid) ?: msgEntity
+        msgEntity = msgEntity.copy(id = newMsgId)
       }
 
       if (newMsgId > 0) {
-        if (e is NoKeyAvailableException) {
-          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState
-              .ERROR_PRIVATE_KEY_NOT_FOUND.value, errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias))
-        } else {
-          roomDatabase.msgDao().update(msgEntity.copy(
-              state = MessageState.ERROR_DURING_CREATION.value, errorMsg = e.message))
+        when (e) {
+          is NoKeyAvailableException -> {
+            roomDatabase.msgDao().update(msgEntity.copy(
+                state = MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
+                errorMsg = if (TextUtils.isEmpty(e.alias)) e.email else e.alias
+            ))
+          }
+
+          else -> {
+            roomDatabase.msgDao().update(msgEntity.copy(
+                state = MessageState.ERROR_DURING_CREATION.value,
+                errorMsg = e.message
+            ))
+          }
         }
       } else {
         ExceptionUtil.handleError(IllegalStateException("An error occurred during inserting a new message"))

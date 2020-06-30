@@ -319,11 +319,11 @@
     <string name="there_are_no_private_keys">There are no imported private keys for %1$s</string>
     <string name="original_message_missing">Could not forward: original message missing</string>
     <string name="original_attachment_not_found">Could not forward: some attachments are not available</string>
-    <string name="could_not_create">Could not create: an unknown error</string>
+    <string name="could_not_create">Could not create: click to see details</string>
     <string name="could_not_create_no_key_available">Could not create: no key available</string>
     <string name="message_failed_to_forward">Message failed to send. Please forward the message again</string>
     <string name="there_is_problem_with_cache">There is a problem with a temp cache directory. Please create the message again</string>
-    <string name="error_happened_during_creation">Sorry, we could not create a message. Please write %1$s for help.\n\nDetails:%2$s</string>
+    <string name="error_happened_during_creation">Sorry, we could not create a message. Please write %1$s for help.\n\nDetails: %2$s</string>
     <string name="sent">Sent</string>
     <string name="an_error_has_occurred">An error has occurred</string>
     <string name="outgoing">Outgoing</string>
