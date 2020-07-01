@@ -29,7 +29,6 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
-import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
@@ -56,7 +55,7 @@ import javax.mail.Store
  * Time: 11:48
  * E-mail: DenBond7@gmail.com
  */
-class ForwardedAttachmentsDownloaderJobService(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
   override suspend fun doWork(): Result =
       withContext(Dispatchers.IO) {
         if (isStopped) {
@@ -260,7 +259,7 @@ class ForwardedAttachmentsDownloaderJobService(context: Context, params: WorkerP
   }
 
   companion object {
-    val NAME = ForwardedAttachmentsDownloaderJobService::class.java.simpleName
+    val NAME = ForwardedAttachmentsDownloaderWorker::class.java.simpleName
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
