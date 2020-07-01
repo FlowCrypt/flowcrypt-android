@@ -31,8 +31,10 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.security.SecurityUtils
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.common.util.CollectionUtils
 import com.sun.mail.imap.IMAPFolder
@@ -59,6 +61,7 @@ import javax.mail.Store
 class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
   override suspend fun doWork(): Result =
       withContext(Dispatchers.IO) {
+        LogsUtil.d(TAG, "doWork")
         if (isStopped) {
           return@withContext Result.success()
         }
@@ -145,6 +148,13 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
 
             val updateResult = roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = msgState.value))
             if (updateResult > 0) {
+              if (msgState != MessageState.QUEUED) {
+                val failedOutgoingMsgsCount = roomDatabase.msgDao().getFailedOutgoingMsgsCountSuspend(account.email)
+                if (failedOutgoingMsgsCount > 0) {
+                  ErrorNotificationManager(applicationContext).notifyUserAboutProblemWithOutgoingMsg(account, failedOutgoingMsgsCount)
+                }
+              }
+
               MessagesSenderJobService.schedule(applicationContext)
             }
           } catch (e: Exception) {
@@ -263,6 +273,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
       }
 
   companion object {
+    private val TAG = ForwardedAttachmentsDownloaderWorker::class.java.simpleName
     val NAME = ForwardedAttachmentsDownloaderWorker::class.java.simpleName
 
     fun enqueue(context: Context) {
