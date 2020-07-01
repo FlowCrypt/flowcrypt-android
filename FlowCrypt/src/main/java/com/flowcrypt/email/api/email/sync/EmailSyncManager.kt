@@ -59,7 +59,7 @@ class EmailSyncManager(val listener: SyncListener) {
     deleteMsgs()
     moveMsgsToINBOX()
 
-    ForwardedAttachmentsDownloaderJobService.schedule(listener.context)
+    ForwardedAttachmentsDownloaderJobService.enqueue(listener.context)
     MessagesSenderJobService.schedule(listener.context)
   }
 

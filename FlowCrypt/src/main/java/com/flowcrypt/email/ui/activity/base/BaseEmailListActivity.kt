@@ -109,7 +109,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
     if (currentFolder != null) {
       val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder!!.fullName, ignoreCase = true)
       if (currentFolder != null && isOutbox) {
-        ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
+        ForwardedAttachmentsDownloaderJobService.enqueue(applicationContext)
         MessagesSenderJobService.schedule(applicationContext)
       } else {
         //run the tasks which maybe not completed last time

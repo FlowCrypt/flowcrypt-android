@@ -52,7 +52,7 @@ class LauncherActivity : BaseActivity() {
     setupLauncherViewModel()
     super.onCreate(savedInstanceState)
     PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false)
-    ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
+    ForwardedAttachmentsDownloaderJobService.enqueue(applicationContext)
     MessagesSenderJobService.schedule(applicationContext)
     FeedbackJobIntentService.enqueueWork(this)
 

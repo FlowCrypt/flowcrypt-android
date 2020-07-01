@@ -10,8 +10,6 @@ import android.content.Intent
 import android.text.TextUtils
 import androidx.core.app.JobIntentService
 import androidx.core.content.FileProvider
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -27,7 +25,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
+import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
 import com.flowcrypt.email.jobscheduler.JobIdManager
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -140,7 +138,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
             MessagesSenderJobService.schedule(applicationContext)
           }
         } else {
-          ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
+          ForwardedAttachmentsDownloaderJobService.enqueue(applicationContext)
         }
       }
     } catch (e: Exception) {
