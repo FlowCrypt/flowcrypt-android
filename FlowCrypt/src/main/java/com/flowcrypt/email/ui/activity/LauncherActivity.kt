@@ -17,7 +17,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.CheckGmailTokenViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
-import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderWorker
+import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.security.KeysStorageImpl

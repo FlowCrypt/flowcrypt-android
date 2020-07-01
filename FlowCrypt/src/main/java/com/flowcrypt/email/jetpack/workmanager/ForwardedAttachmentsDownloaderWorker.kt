@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.jobscheduler
+package com.flowcrypt.email.jetpack.workmanager
 
 import android.content.Context
 import androidx.core.content.FileProvider
@@ -29,6 +29,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
+import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
