@@ -536,7 +536,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
           .getInstance(context.applicationContext)
           .enqueueUniqueWork(
               NAME,
-              ExistingWorkPolicy.REPLACE,
+              ExistingWorkPolicy.KEEP,
               OneTimeWorkRequestBuilder<MessagesSenderWorker>()
                   .setConstraints(constraints)
                   .build()

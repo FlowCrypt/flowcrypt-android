@@ -284,7 +284,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
           .getInstance(context.applicationContext)
           .enqueueUniqueWork(
               NAME,
-              ExistingWorkPolicy.REPLACE,
+              ExistingWorkPolicy.KEEP,
               OneTimeWorkRequestBuilder<ForwardedAttachmentsDownloaderWorker>()
                   .setConstraints(constraints)
                   .build()
