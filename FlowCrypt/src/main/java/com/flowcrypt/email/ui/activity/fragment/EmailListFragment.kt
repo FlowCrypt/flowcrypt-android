@@ -43,7 +43,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.jobscheduler.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
@@ -211,7 +211,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
             else -> MessageState.QUEUED
           }
           msgsViewModel.changeMsgsState(listOf(activeMsgEntity?.id ?: -1), it, newMsgState)
-          MessagesSenderJobService.enqueue(requireContext())
+          MessagesSenderWorker.enqueue(requireContext())
         }
       }
 
@@ -254,7 +254,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       swipeRefreshLayout?.isRefreshing = false
 
       if (isOutboxFolder) {
-        context?.let { MessagesSenderJobService.enqueue(it) }
+        context?.let { MessagesSenderWorker.enqueue(it) }
       }
     } else {
       emptyView?.visibility = View.GONE
@@ -837,7 +837,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
           MessageState.PENDING_DELETING -> deleteMsgs()
           MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
           MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> changeMsgsReadState()
-          MessageState.QUEUED -> context?.let { nonNullContext -> MessagesSenderJobService.enqueue(nonNullContext) }
+          MessageState.QUEUED -> context?.let { nonNullContext -> MessagesSenderWorker.enqueue(nonNullContext) }
           else -> {
           }
         }

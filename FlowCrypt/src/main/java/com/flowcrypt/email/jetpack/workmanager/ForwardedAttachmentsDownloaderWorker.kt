@@ -29,7 +29,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.jobscheduler.MessagesSenderWorker
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
@@ -155,7 +155,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
                 }
               }
 
-              MessagesSenderJobService.enqueue(applicationContext)
+              MessagesSenderWorker.enqueue(applicationContext)
             }
           } catch (e: Exception) {
             e.printStackTrace()

@@ -18,7 +18,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.CheckGmailTokenViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.jobscheduler.MessagesSenderWorker
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.EmailSyncService
@@ -53,7 +53,7 @@ class LauncherActivity : BaseActivity() {
     super.onCreate(savedInstanceState)
     PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false)
     ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)
-    MessagesSenderJobService.enqueue(applicationContext)
+    MessagesSenderWorker.enqueue(applicationContext)
     FeedbackJobIntentService.enqueueWork(this)
 
     setupCheckGmailTokenViewModel()

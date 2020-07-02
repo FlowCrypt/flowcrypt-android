@@ -9,7 +9,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.jobscheduler.MessagesSenderWorker
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
 
@@ -110,7 +110,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
       val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder!!.fullName, ignoreCase = true)
       if (currentFolder != null && isOutbox) {
         ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)
-        MessagesSenderJobService.enqueue(applicationContext)
+        MessagesSenderWorker.enqueue(applicationContext)
       } else {
         //run the tasks which maybe not completed last time
         archiveMsgs()

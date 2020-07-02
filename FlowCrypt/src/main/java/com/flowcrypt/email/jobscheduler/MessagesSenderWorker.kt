@@ -75,7 +75,7 @@ import javax.net.ssl.SSLException
  * Time: 18:43
  * E-mail: DenBond7@gmail.com
  */
-class MessagesSenderJobService(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+class MessagesSenderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
   override suspend fun doWork(): Result =
       withContext(Dispatchers.IO) {
         LogsUtil.d(TAG, "doWork")
@@ -516,8 +516,8 @@ class MessagesSenderJobService(context: Context, params: WorkerParameters) : Cor
   }
 
   companion object {
-    private val TAG = MessagesSenderJobService::class.java.simpleName
-    val NAME = MessagesSenderJobService::class.java.simpleName
+    private val TAG = MessagesSenderWorker::class.java.simpleName
+    val NAME = MessagesSenderWorker::class.java.simpleName
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
@@ -529,7 +529,7 @@ class MessagesSenderJobService(context: Context, params: WorkerParameters) : Cor
           .enqueueUniqueWork(
               NAME,
               ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<MessagesSenderJobService>()
+              OneTimeWorkRequestBuilder<MessagesSenderWorker>()
                   .setConstraints(constraints)
                   .build()
           )

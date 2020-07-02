@@ -27,7 +27,7 @@ import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.jobscheduler.MessagesSenderWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.SecurityUtils
@@ -135,7 +135,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
               msgEntity.email, msgEntity.folder, msgEntity.uid)
           insertedMsgEntity?.let {
             roomDatabase.msgDao().update(it.copy(state = MessageState.QUEUED.value))
-            MessagesSenderJobService.enqueue(applicationContext)
+            MessagesSenderWorker.enqueue(applicationContext)
           }
         } else {
           ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)
