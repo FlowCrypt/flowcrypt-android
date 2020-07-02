@@ -27,6 +27,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
+import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -68,6 +69,7 @@ class SyncJobService : JobService(), SyncListener {
 
   override fun onStartJob(jobParameters: JobParameters): Boolean {
     LogsUtil.d(TAG, "onStartJob")
+    MessagesSenderWorker.enqueue(applicationContext)
     CheckNewMessagesJobTask(this).execute(jobParameters)
     return true
   }
