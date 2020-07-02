@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.jobscheduler
+package com.flowcrypt.email.jetpack.workmanager
 
 import android.content.Context
 import android.net.Uri

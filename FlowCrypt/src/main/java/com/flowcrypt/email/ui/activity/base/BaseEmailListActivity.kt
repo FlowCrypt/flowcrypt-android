@@ -9,7 +9,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
-import com.flowcrypt.email.jobscheduler.MessagesSenderWorker
+import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
 

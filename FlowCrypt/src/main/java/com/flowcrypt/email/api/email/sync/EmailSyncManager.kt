@@ -13,7 +13,7 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
-import com.flowcrypt.email.jobscheduler.MessagesSenderWorker
+import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.util.LogsUtil
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ExecutorService

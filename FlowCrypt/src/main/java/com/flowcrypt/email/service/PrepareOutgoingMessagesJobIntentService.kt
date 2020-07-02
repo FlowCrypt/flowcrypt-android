@@ -26,8 +26,8 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
+import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
-import com.flowcrypt.email.jobscheduler.MessagesSenderWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.SecurityUtils
