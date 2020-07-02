@@ -44,6 +44,7 @@ import com.google.api.services.gmail.Gmail
 import com.sun.mail.imap.IMAPFolder
 import com.sun.mail.util.MailConnectException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.commons.io.IOUtils
 import java.io.BufferedInputStream
@@ -87,17 +88,18 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
 
         try {
           val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-          val account = AccountViewModel.getAccountEntityWithDecryptedInfo(
-              roomDatabase.accountDao().getActiveAccount()) ?: return@withContext Result.success()
+          val account = AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(
+              roomDatabase.accountDao().getActiveAccountSuspend())
+              ?: return@withContext Result.success()
 
           val attsCacheDir = File(applicationContext.cacheDir, Constants.ATTACHMENTS_CACHE_DIR)
 
-          roomDatabase.msgDao().resetMsgsWithSendingState(account.email)
+          roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email)
 
-          val queuedMsgs = roomDatabase.msgDao().getOutboxMsgsByStates(account = account.email,
+          val queuedMsgs = roomDatabase.msgDao().getOutboxMsgsByStatesSuspend(account = account.email,
               msgStates = listOf(MessageState.QUEUED.value))
 
-          val sentButNotSavedMsgs = roomDatabase.msgDao().getOutboxMsgsByStates(account = account.email,
+          val sentButNotSavedMsgs = roomDatabase.msgDao().getOutboxMsgsByStatesSuspend(account = account.email,
               msgStates = listOf(MessageState.SENT_WITHOUT_LOCAL_COPY.value, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER.value))
 
           if (!CollectionUtils.isEmpty(queuedMsgs) || !CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
@@ -135,251 +137,254 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
         }
       }
 
-  private fun sendQueuedMsgs(account: AccountEntity, sess: Session, store: Store, attsCacheDir: File) {
-    var list: List<MessageEntity>
-    var lastMsgUID = 0L
-    val email = account.email
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-    while (true) {
-      list = roomDatabase.msgDao().getOutboxMsgsByStates(
-          account = account.email,
-          msgStates = listOf(MessageState.QUEUED.value)
-      )
+  private suspend fun sendQueuedMsgs(account: AccountEntity, sess: Session, store: Store, attsCacheDir: File) =
+      withContext(Dispatchers.IO) {
+        var list: List<MessageEntity>
+        var lastMsgUID = 0L
+        val email = account.email
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+        while (true) {
+          list = roomDatabase.msgDao().getOutboxMsgsByStatesSuspend(
+              account = account.email,
+              msgStates = listOf(MessageState.QUEUED.value)
+          )
 
-      if (CollectionUtils.isEmpty(list)) {
-        break
-      }
-
-      val iterator = list.iterator()
-      var msgEntity: MessageEntity? = null
-
-      while (iterator.hasNext()) {
-        val tempMsgDetails = iterator.next()
-        if (tempMsgDetails.uid > lastMsgUID) {
-          msgEntity = tempMsgDetails
-          break
-        }
-      }
-
-      if (msgEntity == null) {
-        msgEntity = list[0]
-      }
-
-      lastMsgUID = msgEntity.uid
-
-      try {
-        roomDatabase.msgDao().resetMsgsWithSendingState(account.email)
-        roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENDING.value))
-        Thread.sleep(2000)
-
-        val attachments = roomDatabase.attachmentDao()
-            .getAttachments(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
-        val isMsgSent = sendMsg(account, msgEntity, attachments, sess, store)
-
-        if (!isMsgSent) {
-          continue
-        }
-
-        msgEntity = roomDatabase.msgDao().getMsg(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
-
-        if (msgEntity != null && msgEntity.msgState === MessageState.SENT) {
-          roomDatabase.msgDao().delete(msgEntity)
-
-          if (!CollectionUtils.isEmpty(attachments)) {
-            deleteMsgAtts(account, attsCacheDir, msgEntity)
+          if (CollectionUtils.isEmpty(list)) {
+            break
           }
 
-          val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgs(email).size
-          val outboxLabel = roomDatabase.labelDao().getLabel(email, JavaEmailConstants.FOLDER_OUTBOX)
+          val iterator = list.iterator()
+          var msgEntity: MessageEntity? = null
 
-          outboxLabel?.let {
-            roomDatabase.labelDao().update(it.copy(msgsCount = outgoingMsgCount))
-          }
-        }
-      } catch (e: Exception) {
-        e.printStackTrace()
-        ExceptionUtil.handleError(e)
-
-        if (!GeneralUtil.isConnected(applicationContext)) {
-          if (msgEntity.msgState !== MessageState.SENT) {
-            roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.QUEUED.value))
+          while (iterator.hasNext()) {
+            val tempMsgDetails = iterator.next()
+            if (tempMsgDetails.uid > lastMsgUID) {
+              msgEntity = tempMsgDetails
+              break
+            }
           }
 
-          throw e
-        } else {
-          val newMsgState = when (e) {
-            is MailConnectException -> {
-              MessageState.QUEUED
+          if (msgEntity == null) {
+            msgEntity = list[0]
+          }
+
+          lastMsgUID = msgEntity.uid
+
+          try {
+            roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email)
+            roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.SENDING.value))
+            delay(2000)
+
+            val attachments = roomDatabase.attachmentDao()
+                .getAttachmentsSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
+            val isMsgSent = sendMsg(account, msgEntity, attachments, sess, store)
+
+            if (!isMsgSent) {
+              continue
             }
 
-            is MessagingException -> {
-              if (e.cause is SSLException || e.cause is SocketException) {
-                MessageState.QUEUED
-              } else {
-                MessageState.ERROR_SENDING_FAILED
+            msgEntity = roomDatabase.msgDao().getMsgSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
+
+            if (msgEntity != null && msgEntity.msgState === MessageState.SENT) {
+              roomDatabase.msgDao().deleteSuspend(msgEntity)
+
+              if (!CollectionUtils.isEmpty(attachments)) {
+                deleteMsgAtts(account, attsCacheDir, msgEntity)
+              }
+
+              val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(email).size
+              val outboxLabel = roomDatabase.labelDao().getLabelSuspend(email, JavaEmailConstants.FOLDER_OUTBOX)
+
+              outboxLabel?.let {
+                roomDatabase.labelDao().updateSuspend(it.copy(msgsCount = outgoingMsgCount))
               }
             }
+          } catch (e: Exception) {
+            e.printStackTrace()
+            ExceptionUtil.handleError(e)
 
-            is CopyNotSavedInSentFolderException -> MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER
-
-            else -> {
-              when (e.cause) {
-                is FileNotFoundException -> MessageState.ERROR_CACHE_PROBLEM
-
-                else -> MessageState.ERROR_SENDING_FAILED
+            if (!GeneralUtil.isConnected(applicationContext)) {
+              if (msgEntity.msgState !== MessageState.SENT) {
+                roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.QUEUED.value))
               }
+
+              throw e
+            } else {
+              val newMsgState = when (e) {
+                is MailConnectException -> {
+                  MessageState.QUEUED
+                }
+
+                is MessagingException -> {
+                  if (e.cause is SSLException || e.cause is SocketException) {
+                    MessageState.QUEUED
+                  } else {
+                    MessageState.ERROR_SENDING_FAILED
+                  }
+                }
+
+                is CopyNotSavedInSentFolderException -> MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER
+
+                else -> {
+                  when (e.cause) {
+                    is FileNotFoundException -> MessageState.ERROR_CACHE_PROBLEM
+
+                    else -> MessageState.ERROR_SENDING_FAILED
+                  }
+                }
+              }
+
+              roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
             }
+
+            delay(5000)
           }
-
-          roomDatabase.msgDao().update(msgEntity.copy(state = newMsgState.value, errorMsg = e.message))
         }
-
-        Thread.sleep(5000)
       }
-    }
-  }
 
-  private fun saveCopyOfAlreadySentMsgs(account: AccountEntity, sess: Session, store: Store,
-                                        attsCacheDir: File) {
-    var list: List<MessageEntity>
-    val email = account.email
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-    while (true) {
-      list = roomDatabase.msgDao().getOutboxMsgsByStates(
-          account = account.email,
-          msgStates = listOf(MessageState.SENT_WITHOUT_LOCAL_COPY.value, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER.value)
-      )
-      if (CollectionUtils.isEmpty(list)) {
-        break
-      }
-      val msgEntity = list.first()
-      try {
-        val attachments = roomDatabase.attachmentDao()
-            .getAttachments(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
-
-        val mimeMsg = createMimeMsg(sess, msgEntity, attachments)
-
-        roomDatabase.msgDao().resetMsgsWithSendingState(account.email)
-        roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENDING.value))
-        Thread.sleep(2000)
-
-        val isMsgSaved = saveCopyOfSentMsg(account, store, mimeMsg)
-
-        if (!isMsgSaved) {
-          continue
-        }
-
-        roomDatabase.msgDao().delete(msgEntity)
-
-        if (attachments.isNotEmpty()) {
-          deleteMsgAtts(account, attsCacheDir, msgEntity)
-        }
-      } catch (e: Exception) {
-        e.printStackTrace()
-        ExceptionUtil.handleError(e)
-
-        if (!GeneralUtil.isConnected(applicationContext)) {
-          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT_WITHOUT_LOCAL_COPY.value))
-          throw e
-        }
-
-        when (e) {
-          is CopyNotSavedInSentFolderException -> {
-            roomDatabase.msgDao().update(msgEntity.copy(
-                state = MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value,
-                errorMsg = e.message))
+  private suspend fun saveCopyOfAlreadySentMsgs(account: AccountEntity, sess: Session, store: Store, attsCacheDir: File) =
+      withContext(Dispatchers.IO) {
+        var list: List<MessageEntity>
+        val email = account.email
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+        while (true) {
+          list = roomDatabase.msgDao().getOutboxMsgsByStatesSuspend(
+              account = account.email,
+              msgStates = listOf(MessageState.SENT_WITHOUT_LOCAL_COPY.value, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER.value)
+          )
+          if (CollectionUtils.isEmpty(list)) {
+            break
           }
+          val msgEntity = list.first()
+          try {
+            val attachments = roomDatabase.attachmentDao()
+                .getAttachmentsSuspend(email, JavaEmailConstants.FOLDER_OUTBOX, msgEntity.uid)
 
-          else -> {
-            when (e.cause) {
-              is FileNotFoundException -> {
-                roomDatabase.msgDao().delete(msgEntity)
+            val mimeMsg = createMimeMsg(sess, msgEntity, attachments)
+
+            roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email)
+            roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.SENDING.value))
+            delay(2000)
+
+            val isMsgSaved = saveCopyOfSentMsg(account, store, mimeMsg)
+
+            if (!isMsgSaved) {
+              continue
+            }
+
+            roomDatabase.msgDao().deleteSuspend(msgEntity)
+
+            if (attachments.isNotEmpty()) {
+              deleteMsgAtts(account, attsCacheDir, msgEntity)
+            }
+          } catch (e: Exception) {
+            e.printStackTrace()
+            ExceptionUtil.handleError(e)
+
+            if (!GeneralUtil.isConnected(applicationContext)) {
+              roomDatabase.msgDao().updateSuspend(msgEntity.copy(
+                  state = MessageState.SENT_WITHOUT_LOCAL_COPY.value))
+              throw e
+            }
+
+            when (e) {
+              is CopyNotSavedInSentFolderException -> {
+                roomDatabase.msgDao().updateSuspend(msgEntity.copy(
+                    state = MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value,
+                    errorMsg = e.message))
               }
 
               else -> {
-                roomDatabase.msgDao().update(msgEntity.copy(
-                    state = MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value,
-                    errorMsg = e.message
-                ))
+                when (e.cause) {
+                  is FileNotFoundException -> {
+                    roomDatabase.msgDao().deleteSuspend(msgEntity)
+                  }
+
+                  else -> {
+                    roomDatabase.msgDao().updateSuspend(msgEntity.copy(
+                        state = MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value,
+                        errorMsg = e.message
+                    ))
+                  }
+                }
               }
             }
           }
         }
       }
-    }
-  }
 
-  private fun deleteMsgAtts(account: AccountEntity, attsCacheDir: File, details: MessageEntity) {
-    FlowCryptRoomDatabase.getDatabase(applicationContext).attachmentDao().delete(
-        account = account.email,
-        label = JavaEmailConstants.FOLDER_OUTBOX,
-        uid = details.uid
-    )
-    details.attachmentsDirectory?.let { FileAndDirectoryUtils.deleteDir(File(attsCacheDir, it)) }
-  }
+  private suspend fun deleteMsgAtts(account: AccountEntity, attsCacheDir: File, details: MessageEntity) =
+      withContext(Dispatchers.IO) {
+        FlowCryptRoomDatabase.getDatabase(applicationContext).attachmentDao().deleteAttSuspend(
+            account = account.email,
+            label = JavaEmailConstants.FOLDER_OUTBOX,
+            uid = details.uid
+        )
+        details.attachmentsDirectory?.let { FileAndDirectoryUtils.deleteDir(File(attsCacheDir, it)) }
+      }
 
-  private fun sendMsg(account: AccountEntity, msgEntity: MessageEntity, atts:
-  List<AttachmentEntity>, sess: Session, store: Store): Boolean {
-    val mimeMsg = createMimeMsg(sess, msgEntity, atts)
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+  private suspend fun sendMsg(account: AccountEntity, msgEntity: MessageEntity, atts: List<AttachmentEntity>, sess: Session, store: Store): Boolean =
+      withContext(Dispatchers.IO) {
+        val mimeMsg = createMimeMsg(sess, msgEntity, atts)
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
-    when (account.accountType) {
-      AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-        if (account.email.equals(msgEntity.from.firstOrNull()?.address, ignoreCase = true)) {
-          val transport = SmtpProtocolUtil.prepareSmtpTransport(applicationContext, sess, account)
-          transport.sendMessage(mimeMsg, mimeMsg.allRecipients)
-        } else {
-          val gmail = GmailApiHelper.generateGmailApiService(applicationContext, account)
-          val outputStream = ByteArrayOutputStream()
-          mimeMsg.writeTo(outputStream)
+        when (account.accountType) {
+          AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+            if (account.email.equals(msgEntity.from.firstOrNull()?.address, ignoreCase = true)) {
+              val transport = SmtpProtocolUtil.prepareSmtpTransport(applicationContext, sess, account)
+              transport.sendMessage(mimeMsg, mimeMsg.allRecipients)
+            } else {
+              val gmail = GmailApiHelper.generateGmailApiService(applicationContext, account)
+              val outputStream = ByteArrayOutputStream()
+              mimeMsg.writeTo(outputStream)
 
-          var threadId: String? = null
-          val replyMsgId = mimeMsg.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, null)
+              var threadId: String? = null
+              val replyMsgId = mimeMsg.getHeader(JavaEmailConstants.HEADER_IN_REPLY_TO, null)
 
-          if (!TextUtils.isEmpty(replyMsgId)) {
-            threadId = getGmailMsgThreadID(gmail, replyMsgId)
+              if (!TextUtils.isEmpty(replyMsgId)) {
+                threadId = getGmailMsgThreadID(gmail, replyMsgId)
+              }
+
+              var sentMsg = com.google.api.services.gmail.model.Message()
+              sentMsg.raw = Base64.encodeToString(outputStream.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+              if (!TextUtils.isEmpty(threadId)) {
+                sentMsg.threadId = threadId
+              }
+
+              sentMsg = gmail
+                  .users()
+                  .messages()
+                  .send(GmailApiHelper.DEFAULT_USER_ID, sentMsg)
+                  .execute()
+
+              if (sentMsg.id == null) {
+                return@withContext false
+              }
+            }
+
+            roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.SENT.value))
+            //Gmail automatically save a copy of the sent message.
           }
 
-          var sentMsg = com.google.api.services.gmail.model.Message()
-          sentMsg.raw = Base64.encodeToString(outputStream.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
-          if (!TextUtils.isEmpty(threadId)) {
-            sentMsg.threadId = threadId
+          AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
+            val outlookTransport = SmtpProtocolUtil.prepareSmtpTransport(applicationContext, sess, account)
+            outlookTransport.sendMessage(mimeMsg, mimeMsg.allRecipients)
+            roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.SENT.value))
           }
 
-          sentMsg = gmail
-              .users()
-              .messages()
-              .send(GmailApiHelper.DEFAULT_USER_ID, sentMsg)
-              .execute()
+          else -> {
+            val defaultTransport = SmtpProtocolUtil.prepareSmtpTransport(applicationContext, sess, account)
+            defaultTransport.sendMessage(mimeMsg, mimeMsg.allRecipients)
+            roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.SENT_WITHOUT_LOCAL_COPY.value))
 
-          if (sentMsg.id == null) {
-            return false
+            if (saveCopyOfSentMsg(account, store, mimeMsg)) {
+              roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.SENT.value))
+            }
           }
         }
 
-        roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT.value))
-        //Gmail automatically save a copy of the sent message.
+        return@withContext true
       }
-
-      AccountEntity.ACCOUNT_TYPE_OUTLOOK -> {
-        val outlookTransport = SmtpProtocolUtil.prepareSmtpTransport(applicationContext, sess, account)
-        outlookTransport.sendMessage(mimeMsg, mimeMsg.allRecipients)
-        roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT.value))
-      }
-
-      else -> {
-        val defaultTransport = SmtpProtocolUtil.prepareSmtpTransport(applicationContext, sess, account)
-        defaultTransport.sendMessage(mimeMsg, mimeMsg.allRecipients)
-        roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT_WITHOUT_LOCAL_COPY.value))
-
-        if (saveCopyOfSentMsg(account, store, mimeMsg)) {
-          roomDatabase.msgDao().update(msgEntity.copy(state = MessageState.SENT.value))
-        }
-      }
-    }
-
-    return true
-  }
 
   /**
    * Create [MimeMessage] from the given [GeneralMessageDetails].
@@ -388,27 +393,28 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
    * @throws IOException
    * @throws MessagingException
    */
-  private fun createMimeMsg(sess: Session?, details: MessageEntity, atts: List<AttachmentEntity>): MimeMessage {
-    val stream = IOUtils.toInputStream(details.rawMessageWithoutAttachments, StandardCharsets.UTF_8)
-    val mimeMsg = MimeMessage(sess, stream)
+  private suspend fun createMimeMsg(sess: Session?, details: MessageEntity, atts: List<AttachmentEntity>): MimeMessage =
+      withContext(Dispatchers.IO) {
+        val stream = IOUtils.toInputStream(details.rawMessageWithoutAttachments, StandardCharsets.UTF_8)
+        val mimeMsg = MimeMessage(sess, stream)
 
-    //https://tools.ietf.org/html/draft-melnikov-email-user-agent-00#:~:text=User%2DAgent%20and%20X%2DMailer%20are%20common%20Email%20header%20fields,use%20of%20different%20email%20clients.
-    mimeMsg.addHeader("User-Agent", "FlowCrypt_Android_" + BuildConfig.VERSION_NAME)
+        //https://tools.ietf.org/html/draft-melnikov-email-user-agent-00#:~:text=User%2DAgent%20and%20X%2DMailer%20are%20common%20Email%20header%20fields,use%20of%20different%20email%20clients.
+        mimeMsg.addHeader("User-Agent", "FlowCrypt_Android_" + BuildConfig.VERSION_NAME)
 
-    if (mimeMsg.content is MimeMultipart && !CollectionUtils.isEmpty(atts)) {
-      val mimeMultipart = mimeMsg.content as MimeMultipart
+        if (mimeMsg.content is MimeMultipart && !CollectionUtils.isEmpty(atts)) {
+          val mimeMultipart = mimeMsg.content as MimeMultipart
 
-      for (att in atts) {
-        val attBodyPart = genBodyPartWithAtt(att)
-        mimeMultipart.addBodyPart(attBodyPart)
+          for (att in atts) {
+            val attBodyPart = genBodyPartWithAtt(att)
+            mimeMultipart.addBodyPart(attBodyPart)
+          }
+
+          mimeMsg.setContent(mimeMultipart)
+          mimeMsg.saveChanges()
+        }
+
+        return@withContext mimeMsg
       }
-
-      mimeMsg.setContent(mimeMultipart)
-      mimeMsg.saveChanges()
-    }
-
-    return mimeMsg
-  }
 
   /**
    * Generate a [BodyPart] with an attachment.
@@ -436,19 +442,20 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
    * @return The input message thread id.
    * @throws IOException
    */
-  private fun getGmailMsgThreadID(service: Gmail, rfc822msgidValue: String): String? {
-    val response = service
-        .users()
-        .messages()
-        .list(GmailApiHelper.DEFAULT_USER_ID)
-        .setQ("rfc822msgid:$rfc822msgidValue")
-        .execute()
+  private suspend fun getGmailMsgThreadID(service: Gmail, rfc822msgidValue: String): String? =
+      withContext(Dispatchers.IO) {
+        val response = service
+            .users()
+            .messages()
+            .list(GmailApiHelper.DEFAULT_USER_ID)
+            .setQ("rfc822msgid:$rfc822msgidValue")
+            .execute()
 
-    return if (response.messages != null && response.messages.size == 1) {
-      response.messages[0].threadId
-    } else null
+        return@withContext if (response.messages != null && response.messages.size == 1) {
+          response.messages[0].threadId
+        } else null
 
-  }
+      }
 
   /**
    * Save a copy of the sent message to the account SENT folder.
@@ -457,29 +464,30 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
    * @param store   The connected and opened [Store] object.
    * @param mimeMsg The original [MimeMessage] which will be saved to the SENT folder.
    */
-  private fun saveCopyOfSentMsg(account: AccountEntity, store: Store, mimeMsg: MimeMessage): Boolean {
-    val foldersManager = FoldersManager.fromDatabase(applicationContext, account.email)
-    val sentLocalFolder = foldersManager.findSentFolder()
+  private suspend fun saveCopyOfSentMsg(account: AccountEntity, store: Store, mimeMsg: MimeMessage): Boolean =
+      withContext(Dispatchers.IO) {
+        val foldersManager = FoldersManager.fromDatabase(applicationContext, account.email)
+        val sentLocalFolder = foldersManager.findSentFolder()
 
-    if (sentLocalFolder != null) {
-      val sentRemoteFolder = store.getFolder(sentLocalFolder.fullName) as IMAPFolder
+        if (sentLocalFolder != null) {
+          val sentRemoteFolder = store.getFolder(sentLocalFolder.fullName) as IMAPFolder
 
-      if (!sentRemoteFolder.exists()) {
-        throw IllegalArgumentException("The SENT folder doesn't exists. Can't create a copy of the sent message!")
+          if (!sentRemoteFolder.exists()) {
+            throw IllegalArgumentException("The SENT folder doesn't exists. Can't create a copy of the sent message!")
+          }
+
+          sentRemoteFolder.open(Folder.READ_WRITE)
+          mimeMsg.setFlag(Flags.Flag.SEEN, true)
+          sentRemoteFolder.appendMessages(arrayOf<Message>(mimeMsg))
+          sentRemoteFolder.close(false)
+          return@withContext true
+        } else {
+          throw CopyNotSavedInSentFolderException("An error occurred during saving a copy of the outgoing message. " +
+              "The SENT folder is not defined. Please contact the support: " +
+              applicationContext.getString(R.string.support_email) + "\n\nProvider: "
+              + account.email.substring(account.email.indexOf("@") + 1))
+        }
       }
-
-      sentRemoteFolder.open(Folder.READ_WRITE)
-      mimeMsg.setFlag(Flags.Flag.SEEN, true)
-      sentRemoteFolder.appendMessages(arrayOf<Message>(mimeMsg))
-      sentRemoteFolder.close(false)
-      return true
-    } else {
-      throw CopyNotSavedInSentFolderException("An error occurred during saving a copy of the outgoing message. " +
-          "The SENT folder is not defined. Please contact the support: " +
-          applicationContext.getString(R.string.support_email) + "\n\nProvider: "
-          + account.email.substring(account.email.indexOf("@") + 1))
-    }
-  }
 
   /**
    * The [DataSource] realization for a file which received from [Uri]

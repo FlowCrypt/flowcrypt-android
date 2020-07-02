@@ -33,6 +33,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid = :uid")
   abstract fun getMsg(account: String?, folder: String?, uid: Long): MessageEntity?
 
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid = :uid")
+  abstract suspend fun getMsgSuspend(account: String?, folder: String?, uid: Long): MessageEntity?
+
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getMsgs(account: String, folder: String): LiveData<MessageEntity>
 
@@ -169,6 +172,16 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   abstract fun resetMsgsWithSendingState(account: String?,
                                          label: String = JavaEmailConstants.FOLDER_OUTBOX,
                                          oldValue: Int = MessageState.SENDING.value): Int
+
+  /**
+   * Add the messages which have a current state equal [MessageState.SENDING] to the sending queue again.
+   *
+   * @param account   The email that the message linked
+   */
+  @Query("UPDATE messages SET state=2 WHERE email = :account AND folder = :label AND state =:oldValue")
+  abstract suspend fun resetMsgsWithSendingStateSuspend(account: String?,
+                                                        label: String = JavaEmailConstants.FOLDER_OUTBOX,
+                                                        oldValue: Int = MessageState.SENDING.value): Int
 
   @Query("SELECT uid, flags FROM messages WHERE email = :account AND folder = :label")
   abstract fun getUIDAndFlagsPairs(account: String?, label: String): List<UidFlagsPair>
