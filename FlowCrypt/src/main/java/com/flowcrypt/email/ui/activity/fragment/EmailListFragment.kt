@@ -211,7 +211,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
             else -> MessageState.QUEUED
           }
           msgsViewModel.changeMsgsState(listOf(activeMsgEntity?.id ?: -1), it, newMsgState)
-          MessagesSenderJobService.schedule(requireContext())
+          MessagesSenderJobService.enqueue(requireContext())
         }
       }
 
@@ -254,7 +254,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       swipeRefreshLayout?.isRefreshing = false
 
       if (isOutboxFolder) {
-        MessagesSenderJobService.schedule(context?.applicationContext)
+        context?.let { MessagesSenderJobService.enqueue(it) }
       }
     } else {
       emptyView?.visibility = View.GONE
@@ -837,7 +837,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
           MessageState.PENDING_DELETING -> deleteMsgs()
           MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
           MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> changeMsgsReadState()
-          MessageState.QUEUED -> MessagesSenderJobService.schedule(context)
+          MessageState.QUEUED -> context?.let { nonNullContext -> MessagesSenderJobService.enqueue(nonNullContext) }
           else -> {
           }
         }

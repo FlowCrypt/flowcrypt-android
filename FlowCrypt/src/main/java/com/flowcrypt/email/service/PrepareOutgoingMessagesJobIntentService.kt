@@ -135,7 +135,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
               msgEntity.email, msgEntity.folder, msgEntity.uid)
           insertedMsgEntity?.let {
             roomDatabase.msgDao().update(it.copy(state = MessageState.QUEUED.value))
-            MessagesSenderJobService.schedule(applicationContext)
+            MessagesSenderJobService.enqueue(applicationContext)
           }
         } else {
           ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)

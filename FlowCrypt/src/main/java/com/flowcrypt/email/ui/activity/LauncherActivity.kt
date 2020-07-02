@@ -53,7 +53,7 @@ class LauncherActivity : BaseActivity() {
     super.onCreate(savedInstanceState)
     PreferenceManager.setDefaultValues(this, R.xml.preferences_notifications_settings, false)
     ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)
-    MessagesSenderJobService.schedule(applicationContext)
+    MessagesSenderJobService.enqueue(applicationContext)
     FeedbackJobIntentService.enqueueWork(this)
 
     setupCheckGmailTokenViewModel()

@@ -155,7 +155,7 @@ class ForwardedAttachmentsDownloaderWorker(context: Context, params: WorkerParam
                 }
               }
 
-              MessagesSenderJobService.schedule(applicationContext)
+              MessagesSenderJobService.enqueue(applicationContext)
             }
           } catch (e: Exception) {
             e.printStackTrace()

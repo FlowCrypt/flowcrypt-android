@@ -75,7 +75,7 @@ class UserRecoverableAuthExceptionActivity : BaseActivity(), View.OnClickListene
               roomDatabase.msgDao().changeMsgsStateSuspend(
                   activeAccount?.email, JavaEmailConstants.FOLDER_OUTBOX, MessageState.AUTH_FAILURE.value,
                   MessageState.QUEUED.value)
-              MessagesSenderJobService.schedule(applicationContext)
+              MessagesSenderJobService.enqueue(applicationContext)
               EmailManagerActivity.runEmailManagerActivity(this@UserRecoverableAuthExceptionActivity)
               finish()
             }

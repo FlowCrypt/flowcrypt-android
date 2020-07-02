@@ -60,7 +60,7 @@ class EmailSyncManager(val listener: SyncListener) {
     moveMsgsToINBOX()
 
     ForwardedAttachmentsDownloaderWorker.enqueue(listener.context)
-    MessagesSenderJobService.schedule(listener.context)
+    MessagesSenderJobService.enqueue(listener.context)
   }
 
   /**
