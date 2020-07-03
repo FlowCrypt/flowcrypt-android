@@ -11,7 +11,7 @@
         android:menuCategory="system"
         android:orderInCategory="1000"
         android:title="@string/feedback"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/menuSearch"
@@ -25,8 +25,16 @@
     <item
         android:id="@+id/menuSwitch"
         android:menuCategory="system"
-        android:orderInCategory="1"
+        android:orderInCategory="2"
         android:title="@string/showing_only_encrypted_messages"
         app:actionLayout="@layout/action_item_switch"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menuForceSending"
+        android:icon="@drawable/selector_ic_force_sending"
+        android:menuCategory="system"
+        android:orderInCategory="1"
+        android:title="@string/reload_sending"
         app:showAsAction="always" />
 </menu>

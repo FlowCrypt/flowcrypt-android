@@ -439,6 +439,8 @@
     <string name="message_failed_to_create">The message failed to create. Please create the message again</string>
     <string name="sync">Sync</string>
     <string name="sending_email">Sending email&#8230;</string>
+    <string name="reload_sending">Reload sending</string>
+    <string name="reload_sending_process_warning">You are going to reload a sending process. Usually, you don\'t need to do it. It should be the last resort if you think that the app can\'t send a message normally. Would you like to continue?</string>
     <plurals name="has_failed_outgoing_msgs">
         <item quantity="one">You have an outgoing message which can not be sent</item>
         <item quantity="other">You have %1$d outgoing messages which can not be sent</item>

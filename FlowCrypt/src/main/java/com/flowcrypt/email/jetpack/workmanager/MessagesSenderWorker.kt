@@ -88,9 +88,9 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
         }
 
         var store: Store? = null
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
         try {
-          val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
           val account = AccountViewModel.getAccountEntityWithDecryptedInfoSuspend(
               roomDatabase.accountDao().getActiveAccountSuspend())
               ?: return@withContext Result.success()
@@ -123,7 +123,6 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
           return@withContext Result.success()
         } catch (e: UserRecoverableAuthException) {
           e.printStackTrace()
-          val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
           val account = roomDatabase.accountDao().getActiveAccountSuspend()
           roomDatabase.msgDao().changeMsgsStateSuspend(
               account = account?.email,
@@ -135,10 +134,18 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
           return@withContext Result.failure()
         } catch (e: Exception) {
           e.printStackTrace()
+
+          val account = roomDatabase.accountDao().getActiveAccountSuspend()
+          account?.email?.let { roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email) }
+
           ExceptionUtil.handleError(ForceHandlingException(e))
           return@withContext Result.failure()
         } finally {
+          val account = roomDatabase.accountDao().getActiveAccountSuspend()
+          account?.email?.let { roomDatabase.msgDao().resetMsgsWithSendingStateSuspend(account.email) }
+
           store?.close()
+          LogsUtil.d(TAG, "work was finished")
         }
       }
 
@@ -548,7 +555,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
     private const val NOTIFICATION_ID = -10000
     val NAME = MessagesSenderWorker::class.java.simpleName
 
-    fun enqueue(context: Context) {
+    fun enqueue(context: Context, forceSending: Boolean = false) {
       val constraints = Constraints.Builder()
           .setRequiredNetworkType(NetworkType.CONNECTED)
           .build()
@@ -557,7 +564,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
           .getInstance(context.applicationContext)
           .enqueueUniqueWork(
               NAME,
-              ExistingWorkPolicy.KEEP,
+              if (forceSending) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP,
               OneTimeWorkRequestBuilder<MessagesSenderWorker>()
                   .setConstraints(constraints)
                   .build()
