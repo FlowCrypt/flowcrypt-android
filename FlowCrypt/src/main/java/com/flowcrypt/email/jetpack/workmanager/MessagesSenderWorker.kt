@@ -9,9 +9,11 @@ import android.content.Context
 import android.net.Uri
 import android.text.TextUtils
 import android.util.Base64
+import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
+import androidx.work.ForegroundInfo
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -32,6 +34,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
+import com.flowcrypt.email.ui.notifications.NotificationChannelManager
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -103,6 +106,8 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
               msgStates = listOf(MessageState.SENT_WITHOUT_LOCAL_COPY.value, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER.value))
 
           if (!CollectionUtils.isEmpty(queuedMsgs) || !CollectionUtils.isEmpty(sentButNotSavedMsgs)) {
+            setForeground(genForegroundInfo(account))
+
             val session = OpenStoreHelper.getAccountSess(applicationContext, account)
             store = OpenStoreHelper.openStore(applicationContext, account, session)
 
@@ -136,6 +141,21 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
           store?.close()
         }
       }
+
+  private fun genForegroundInfo(account: AccountEntity): ForegroundInfo {
+    val title = applicationContext.getString(R.string.sending_email)
+    val notification = NotificationCompat.Builder(applicationContext,
+        NotificationChannelManager.CHANNEL_ID_SYNC)
+        .setContentTitle(title)
+        .setTicker(title)
+        .setSmallIcon(R.drawable.ic_sending_email_grey_24dp)
+        .setOngoing(true)
+        .setSubText(account.email)
+        .setProgress(0, 0, true)
+        .build()
+
+    return ForegroundInfo(NOTIFICATION_ID, notification)
+  }
 
   private suspend fun sendQueuedMsgs(account: AccountEntity, sess: Session, store: Store, attsCacheDir: File) =
       withContext(Dispatchers.IO) {
@@ -525,6 +545,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
 
   companion object {
     private val TAG = MessagesSenderWorker::class.java.simpleName
+    private const val NOTIFICATION_ID = -10000
     val NAME = MessagesSenderWorker::class.java.simpleName
 
     fun enqueue(context: Context) {
