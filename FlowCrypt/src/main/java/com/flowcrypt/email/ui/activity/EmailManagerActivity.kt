@@ -245,7 +245,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         showTwoWayDialogFragment(
             requestCode = REQUEST_CODE_DIALOG_FORCE_SENDING,
             dialogTitle = getString(R.string.restart_sending),
-            dialogMsg = getString(R.string.reload_sending_process_warning)
+            dialogMsg = getString(R.string.restart_sending_process_warning)
         )
         return true
       }
