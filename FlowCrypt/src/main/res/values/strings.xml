@@ -445,4 +445,8 @@
         <item quantity="one">You have an outgoing message which can not be sent</item>
         <item quantity="other">You have %1$d outgoing messages which can not be sent</item>
     </plurals>
+    <plurals name="delete_msg_question">
+        <item quantity="one">Delete this message permanently?</item>
+        <item quantity="other">Delete these %1$d messages permanently?</item>
+    </plurals>
 </resources>

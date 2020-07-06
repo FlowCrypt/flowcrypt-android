@@ -42,6 +42,7 @@ import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
@@ -231,6 +232,21 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         when (resultCode) {
           TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
             activeMsgEntity?.let { msgsViewModel.deleteOutgoingMsgs(listOf(it)) }
+          }
+        }
+      }
+
+      REQUEST_CODE_DELETE_MESSAGE_DIALOG -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            listener?.currentFolder?.let { localFolder ->
+              val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
+              if (ids.isNotEmpty()) {
+                msgsViewModel.changeMsgsState(ids, localFolder, MessageState.PENDING_DELETING_PERMANENTLY)
+              }
+            }
+
+            actionMode?.finish()
           }
         }
       }
@@ -764,9 +780,18 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
             }
 
             R.id.menuActionDeleteMessage -> {
-              msgsViewModel.changeMsgsState(ids, it,
-                  if (it.getFolderType() == FoldersManager.FolderType.TRASH) MessageState.PENDING_DELETING_PERMANENTLY else MessageState.PENDING_DELETING)
-              mode?.finish()
+              if (it.getFolderType() == FoldersManager.FolderType.TRASH) {
+                showTwoWayDialog(
+                    dialogMsg = requireContext().resources.getQuantityString(R.plurals.delete_msg_question, ids.size, ids.size),
+                    positiveButtonTitle = getString(android.R.string.ok),
+                    negativeButtonTitle = getString(android.R.string.cancel),
+                    requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
+                    isCancelable = false
+                )
+              } else {
+                msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_DELETING)
+                mode?.finish()
+              }
               true
             }
 
@@ -902,6 +927,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     private const val REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 11
     private const val REQUEST_CODE_ERROR_DURING_CREATION = 12
     private const val REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE = 13
+    private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 14
 
     private const val DIALOG_MSG_MAX_LENGTH = 600
   }
