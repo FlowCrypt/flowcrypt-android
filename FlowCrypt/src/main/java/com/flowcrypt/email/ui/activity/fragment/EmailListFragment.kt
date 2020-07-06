@@ -782,6 +782,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
             R.id.menuActionDeleteMessage -> {
               if (it.getFolderType() == FoldersManager.FolderType.TRASH) {
                 showTwoWayDialog(
+                    dialogTitle = "",
                     dialogMsg = requireContext().resources.getQuantityString(R.plurals.delete_msg_question, ids.size, ids.size),
                     positiveButtonTitle = getString(android.R.string.ok),
                     negativeButtonTitle = getString(android.R.string.cancel),
