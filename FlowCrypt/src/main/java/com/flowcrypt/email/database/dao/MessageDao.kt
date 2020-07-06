@@ -189,6 +189,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT * FROM messages WHERE email = :account AND state =:stateValue")
   abstract fun getMsgsWithState(account: String?, stateValue: Int): List<MessageEntity>
 
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state =:stateValue")
+  abstract fun getMsgsWithState(account: String?, label: String?, stateValue: Int): List<MessageEntity>
+
   @Query("UPDATE messages SET is_new = 0 WHERE email = :account AND folder = :label AND uid IN (:uidList)")
   abstract suspend fun markMsgsAsOld(account: String?, label: String?, uidList: Collection<Long>): Int
 

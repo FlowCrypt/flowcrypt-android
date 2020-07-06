@@ -235,7 +235,12 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
             }
           }
         } else {
-          msgDetailsViewModel?.changeMsgState(MessageState.PENDING_DELETING)
+          val newState = if (localFolder?.getFolderType() == FoldersManager.FolderType.TRASH) {
+            MessageState.PENDING_DELETING_PERMANENTLY
+          } else {
+            MessageState.PENDING_DELETING
+          }
+          msgDetailsViewModel?.changeMsgState(newState)
         }
         true
       }
@@ -472,7 +477,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
         FoldersManager.FolderType.TRASH -> {
           isMoveToInboxActionEnabled = true
-          isDeleteActionEnabled = false
+          isDeleteActionEnabled = true
         }
 
         FoldersManager.FolderType.DRAFTS, FoldersManager.FolderType.OUTBOX -> {

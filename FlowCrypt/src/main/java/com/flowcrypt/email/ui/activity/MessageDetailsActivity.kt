@@ -303,6 +303,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
       when (it) {
         MessageState.PENDING_ARCHIVING -> archiveMsgs()
         MessageState.PENDING_DELETING -> deleteMsgs()
+        MessageState.PENDING_DELETING_PERMANENTLY -> deleteMsgs(deletePermanently = true)
         MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
         MessageState.PENDING_MARK_UNREAD -> changeMsgsReadState()
         MessageState.PENDING_MARK_READ -> {

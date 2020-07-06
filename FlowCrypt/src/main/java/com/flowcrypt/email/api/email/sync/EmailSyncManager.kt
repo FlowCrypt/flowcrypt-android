@@ -57,6 +57,7 @@ class EmailSyncManager(val listener: SyncListener) {
     archiveMsgs()
     changeMsgsReadState()
     deleteMsgs()
+    deleteMsgs(deletePermanently = true)
     moveMsgsToINBOX()
 
     ForwardedAttachmentsDownloaderWorker.enqueue(listener.context)
@@ -100,9 +101,10 @@ class EmailSyncManager(val listener: SyncListener) {
    *
    * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for the reply to [android.os.Messenger].
+   * @param deletePermanently if true we will delete messages permanently
    */
-  fun deleteMsgs(ownerKey: String = "", requestCode: Int = -1) {
-    connectionRunnable.deleteMsgs(ownerKey, requestCode)
+  fun deleteMsgs(ownerKey: String = "", requestCode: Int = -1, deletePermanently: Boolean = false) {
+    connectionRunnable.deleteMsgs(ownerKey, requestCode, deletePermanently)
   }
 
   /**

@@ -764,7 +764,8 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
             }
 
             R.id.menuActionDeleteMessage -> {
-              msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_DELETING)
+              msgsViewModel.changeMsgsState(ids, it,
+                  if (it.getFolderType() == FoldersManager.FolderType.TRASH) MessageState.PENDING_DELETING_PERMANENTLY else MessageState.PENDING_DELETING)
               mode?.finish()
               true
             }
@@ -801,9 +802,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         val menuActionMarkUnread = menu?.findItem(R.id.menuActionMarkUnread)
         menuActionMarkUnread?.isVisible = isChangeSeenStateActionEnabled()
 
-        val menuActionDeleteMessage = menu?.findItem(R.id.menuActionDeleteMessage)
-        menuActionDeleteMessage?.isVisible = isDeleteActionEnabled()
-
         if (isChangeSeenStateActionEnabled()) {
           val id = tracker?.selection?.first() ?: return true
           val msgEntity = adapter.getMsgEntity(keyProvider?.getPosition(id))
@@ -835,6 +833,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         when (it) {
           MessageState.PENDING_ARCHIVING -> archiveMsgs()
           MessageState.PENDING_DELETING -> deleteMsgs()
+          MessageState.PENDING_DELETING_PERMANENTLY -> deleteMsgs(deletePermanently = true)
           MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
           MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> changeMsgsReadState()
           MessageState.QUEUED -> context?.let { nonNullContext -> MessagesSenderWorker.enqueue(nonNullContext) }
@@ -868,18 +867,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private fun isChangeSeenStateActionEnabled(): Boolean {
     return when (FoldersManager.getFolderType(listener?.currentFolder)) {
       FoldersManager.FolderType.OUTBOX -> {
-        false
-      }
-
-      else -> {
-        true
-      }
-    }
-  }
-
-  private fun isDeleteActionEnabled(): Boolean {
-    return when (FoldersManager.getFolderType(listener?.currentFolder)) {
-      FoldersManager.FolderType.TRASH, null -> {
         false
       }
 
