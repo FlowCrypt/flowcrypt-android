@@ -370,7 +370,14 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     if (drawerLayout?.isDrawerOpen(GravityCompat.START) == true) {
       drawerLayout?.closeDrawer(GravityCompat.START)
     } else {
-      super.onBackPressed()
+      val inbox = foldersManager?.findInboxFolder()
+      if (inbox != null) {
+        if (currentFolder == inbox) {
+          super.onBackPressed()
+        } else {
+          changeFolder(inbox)
+        }
+      } else super.onBackPressed()
     }
   }
 
