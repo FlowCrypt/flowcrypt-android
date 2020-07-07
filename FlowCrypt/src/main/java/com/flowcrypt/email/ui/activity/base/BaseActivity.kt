@@ -9,6 +9,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
@@ -24,7 +25,9 @@ import androidx.lifecycle.Observer
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.hasActiveConnection
 import com.flowcrypt.email.extensions.shutdown
+import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.node.Node
@@ -52,6 +55,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
   protected val tag: String = javaClass.simpleName
   protected var activeAccount: AccountEntity? = null
   protected var isAccountInfoReceived = false
+  protected lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
 
   val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
@@ -112,6 +116,9 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
 
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    connectionLifecycleObserver = ConnectionLifecycleObserver(this)
+    lifecycle.addObserver(connectionLifecycleObserver)
+
     registerNodeIdlingResources()
     LogsUtil.d(tag, "onCreate")
     if (contentViewResourceId != 0) {
@@ -139,6 +146,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
 
   public override fun onDestroy() {
     super.onDestroy()
+    lifecycle.removeObserver(connectionLifecycleObserver)
     LogsUtil.d(tag, "onDestroy")
     countingIdlingResource.shutdown()
   }
@@ -286,6 +294,14 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
 
   protected open fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
 
+  }
+
+  protected fun isConnected(): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      connectionLifecycleObserver.connectionLiveData.value ?: false
+    } else {
+      hasActiveConnection()
+    }
   }
 
   private fun initAccountViewModel() {

@@ -183,7 +183,9 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           }
         }
 
-        MessageState.PENDING_DELETING, MessageState.PENDING_DELETING_PERMANENTLY -> {
+        MessageState.PENDING_DELETING,
+        MessageState.PENDING_DELETING_PERMANENTLY,
+        MessageState.PENDING_EMPTY_TRASH -> {
           with(viewHolder.imageViewStatus) {
             this?.visibility = View.VISIBLE
             this?.setBackgroundResource(R.drawable.ic_delete_blue_16dp)

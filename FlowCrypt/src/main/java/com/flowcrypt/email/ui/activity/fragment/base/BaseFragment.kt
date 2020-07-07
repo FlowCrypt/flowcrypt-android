@@ -87,6 +87,11 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
     } else super.onCreateView(inflater, container, savedInstanceState)
   }
 
+  override fun onDetach() {
+    super.onDetach()
+    lifecycle.removeObserver(connectionLifecycleObserver)
+  }
+
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
     return Loader(baseActivity)
   }

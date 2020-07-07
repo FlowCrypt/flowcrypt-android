@@ -273,6 +273,27 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   }
 
   /**
+   * Empty trash
+   *
+   * @param requestCode    The unique request code for identify the current action.
+   */
+  fun emptyTrash(requestCode: Int = -1) {
+    if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
+
+    val action = BaseService.Action(replyMessengerName, requestCode, null)
+
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_EMPTY_TRASH, action)
+    msg.replyTo = syncReplyMessenger
+    try {
+      syncMessenger?.send(msg)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  /**
    * Archive marked messages
    *
    * @param requestCode    The unique request code for identify the current action.

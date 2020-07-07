@@ -441,6 +441,8 @@
     <string name="sending_email">Sending email&#8230;</string>
     <string name="restart_sending">Restart sending</string>
     <string name="restart_sending_process_warning">You are going to restart a sending process. Usually, you don\'t need to do it. It should be the last resort if you think that the app can\'t send a message normally. Would you like to continue?</string>
+    <string name="empty_trash">Empty trash</string>
+    <string name="empty_trash_warning">You are about to permanently delete all messages in this folder. Are you sure?</string>
     <plurals name="has_failed_outgoing_msgs">
         <item quantity="one">You have an outgoing message which can not be sent</item>
         <item quantity="other">You have %1$d outgoing messages which can not be sent</item>
@@ -449,4 +451,5 @@
         <item quantity="one">Delete this message permanently?</item>
         <item quantity="other">Delete these %1$d messages permanently?</item>
     </plurals>
+    <string name="emptying_trash_failed">Emptying trash failed!</string>
 </resources>

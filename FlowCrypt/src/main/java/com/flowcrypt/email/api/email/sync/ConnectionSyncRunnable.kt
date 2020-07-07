@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSy
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.DeleteMessagesPermanentlySyncTask
 import com.flowcrypt.email.api.email.sync.tasks.DeleteMessagesSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.EmptyTrashSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadAttsInfoSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask
@@ -253,6 +254,15 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
     val future = tasksMap[uniqueId]
     if (future?.isDone == false) {
       future.cancel(true)
+    }
+  }
+
+  fun emptyTrash(ownerKey: String, requestCode: Int) {
+    try {
+      removeOldTasks(EmptyTrashSyncTask::class.java, tasksQueue)
+      tasksQueue.put(EmptyTrashSyncTask(ownerKey, requestCode))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
     }
   }
 

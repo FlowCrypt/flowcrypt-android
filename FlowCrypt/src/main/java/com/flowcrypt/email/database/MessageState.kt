@@ -40,7 +40,8 @@ enum class MessageState constructor(val value: Int) : Parcelable {
   AUTH_FAILURE(18),
   ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER(19),
   QUEUED_MAKE_COPY_IN_SENT_FOLDER(20),
-  PENDING_DELETING_PERMANENTLY(21);
+  PENDING_DELETING_PERMANENTLY(21),
+  PENDING_EMPTY_TRASH(22);
 
   override fun describeContents(): Int {
     return 0

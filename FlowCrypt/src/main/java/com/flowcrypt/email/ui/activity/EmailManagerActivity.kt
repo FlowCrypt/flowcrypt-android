@@ -44,6 +44,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showTwoWayDialogFragment
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
@@ -219,6 +220,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     val itemSwitch = menu.findItem(R.id.menuSwitch)
     val itemSearch = menu.findItem(R.id.menuSearch)
     val itemForceSending = menu.findItem(R.id.menuForceSending)
+    val itemEmptyTrash = menu.findItem(R.id.menuEmptyTrash)
 
     when {
       JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true) -> {
@@ -229,6 +231,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       }
 
       else -> {
+        itemEmptyTrash.isVisible = currentFolder?.getFolderType() == FoldersManager.FolderType.TRASH
         itemSwitch.isVisible = true
         itemSearch.isVisible = true
         itemForceSending.isVisible = false
@@ -246,6 +249,18 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
             requestCode = REQUEST_CODE_DIALOG_FORCE_SENDING,
             dialogTitle = getString(R.string.restart_sending),
             dialogMsg = getString(R.string.restart_sending_process_warning)
+        )
+        return true
+      }
+
+      R.id.menuEmptyTrash -> {
+        showTwoWayDialogFragment(
+            requestCode = REQUEST_CODE_DIALOG_EMPTY_TRASH,
+            dialogTitle = getString(R.string.empty_trash),
+            dialogMsg = getString(R.string.empty_trash_warning),
+            positiveButtonTitle = getString(android.R.string.ok),
+            negativeButtonTitle = getString(android.R.string.cancel),
+            isCancelable = false
         )
         return true
       }
@@ -333,6 +348,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       R.id.syns_request_code_load_next_messages -> {
         switchView?.isEnabled = true
         onFetchMsgsCompleted()
+      }
+
+      R.id.syns_request_empty_trash -> {
+        toast(R.string.emptying_trash_failed)
       }
 
       else -> {
@@ -434,6 +453,18 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
           TwoWayDialogFragment.RESULT_OK -> {
             if (isForceSendingEnabled) {
               MessagesSenderWorker.enqueue(applicationContext, true)
+            }
+          }
+        }
+      }
+
+      REQUEST_CODE_DIALOG_EMPTY_TRASH -> {
+        when (result) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            if (GeneralUtil.isConnected(this)) {
+              emptyTrash(R.id.syns_request_empty_trash)
+            } else {
+              showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
             }
           }
         }
@@ -774,6 +805,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 100
     private const val REQUEST_CODE_SIGN_IN = 101
     private const val REQUEST_CODE_DIALOG_FORCE_SENDING = 103
+    private const val REQUEST_CODE_DIALOG_EMPTY_TRASH = 104
 
     /**
      * This method can bu used to start [EmailManagerActivity].

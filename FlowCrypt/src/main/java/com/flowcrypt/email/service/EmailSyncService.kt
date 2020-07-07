@@ -807,6 +807,8 @@ class EmailSyncService : BaseService(), SyncListener {
           MESSAGE_MOVE_MSGS_TO_INBOX -> emailSyncManager?.moveMsgsToINBOX(ownerKey
               ?: "", requestCode)
 
+          MESSAGE_EMPTY_TRASH -> emailSyncManager?.emptyTrash(ownerKey ?: "", requestCode)
+
           else -> super.handleMessage(msg)
         }
       }
@@ -839,6 +841,7 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_CHANGE_MSGS_READ_STATE = 17
     const val MESSAGE_MOVE_MSGS_TO_INBOX = 18
     const val MESSAGE_DELETE_MSGS_PERMANENTLY = 19
+    const val MESSAGE_EMPTY_TRASH = 20
 
     private val TAG = EmailSyncService::class.java.simpleName
 
