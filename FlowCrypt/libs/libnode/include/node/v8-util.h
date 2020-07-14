@@ -24,7 +24,7 @@ namespace v8 {
     enum PersistentContainerCallbackType {
         kNotWeak,
         // These correspond to v8::WeakCallbackType
-                kWeakWithParameter,
+        kWeakWithParameter,
         kWeakWithInternalFields,
         kWeak = kWeakWithParameter  // For backwards compatibility.  Deprecate.
     };
@@ -40,7 +40,7 @@ namespace v8 {
     class StdMapTraits {
     public:
         // STL map & related:
-        typedef std::map<K, PersistentContainerValue> Impl;
+        typedef std::map <K, PersistentContainerValue> Impl;
         typedef typename Impl::iterator Iterator;
 
         static bool Empty(Impl *impl) { return impl->empty(); }
@@ -559,7 +559,7 @@ namespace v8 {
 
     class DefaultPersistentValueVectorTraits {
     public:
-        typedef std::vector<PersistentContainerValue> Impl;
+        typedef std::vector <PersistentContainerValue> Impl;
 
         static void Append(Impl *impl, PersistentContainerValue value) {
             impl->push_back(value);

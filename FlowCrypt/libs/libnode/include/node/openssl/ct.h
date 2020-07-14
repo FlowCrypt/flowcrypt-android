@@ -13,11 +13,9 @@
 # include <openssl/opensslconf.h>
 
 # ifndef OPENSSL_NO_CT
-
 # include <openssl/ossl_typ.h>
 # include <openssl/safestack.h>
 # include <openssl/x509.h>
-
 # ifdef  __cplusplus
 extern "C" {
 # endif
@@ -417,8 +415,8 @@ CTLOG *CTLOG_new(EVP_PKEY *public_key, const char *name);
  * Returns 1 on success, 0 on failure.
  * Should be deleted by the caller using CTLOG_free when no longer needed.
  */
-int CTLOG_new_from_base64(CTLOG **ct_log,
-                          const char *pkey_base64, const char *name);
+int CTLOG_new_from_base64(CTLOG * *ct_log,
+const char *pkey_base64, const char *name);
 
 /*
  * Deletes a CT log instance and its fields.

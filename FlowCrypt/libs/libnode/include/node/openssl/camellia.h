@@ -14,7 +14,6 @@
 
 # ifndef OPENSSL_NO_CAMELLIA
 # include <stddef.h>
-
 #ifdef  __cplusplus
 extern "C" {
 #endif

@@ -30,7 +30,7 @@
 
 #ifdef V8_OS_WIN
 
-                                                                                                                        // Setup for Windows DLL export/import. When building the V8 DLL the
+// Setup for Windows DLL export/import. When building the V8 DLL the
 // BUILDING_V8_SHARED needs to be defined. When building a program which uses
 // the V8 DLL USING_V8_SHARED needs to be defined. When either building the V8
 // static library or building a program which uses the V8 static library neither
@@ -722,8 +722,7 @@ namespace v8 {
         V8_DEPRECATE_SOON(
                 "Objects are always considered independent. "
                 "Use MarkActive to avoid collecting otherwise dead weak handles.",
-                V8_INLINE
-                        void MarkIndependent());
+                V8_INLINE void MarkIndependent());
 
         /**
    * Marks the reference to this object as active. The scavenge garbage
@@ -735,8 +734,7 @@ namespace v8 {
         V8_INLINE void MarkActive();
 
         V8_DEPRECATE_SOON("See MarkIndependent.",
-                          V8_INLINE
-                                  bool IsIndependent() const);
+                          V8_INLINE bool IsIndependent() const);
 
         /** Checks if the handle holds the only reference to an object. */
         V8_INLINE bool IsNearDeath() const;
@@ -1485,10 +1483,8 @@ namespace v8 {
                 ScriptOrigin *origin = nullptr);
 
         static Local<Script> V8_DEPRECATED("Use maybe version",
-                                           Compile(Local<String>
-                                                   source,
-                                                           Local<String>
-                                                   file_name));
+                                           Compile(Local<String> source,
+                                                   Local<String> file_name));
 
         /**
    * Runs the script returning the resulting value. It will be run in the
@@ -2852,14 +2848,14 @@ namespace v8 {
         /**
    * Create a new string, always allocating new storage memory.
    */
-                kNormal,
+        kNormal,
 
         /**
    * Acts as a hint that the string should be created in the
    * old generation heap space and be deduplicated if an identical string
    * already exists.
    */
-                kInternalized
+        kInternalized
     };
 
 /**
@@ -2937,7 +2933,7 @@ namespace v8 {
             // Used by WriteUtf8 to replace orphan surrogate code units with the
             // unicode replacement character. Needs to be set to guarantee valid UTF-8
             // output.
-                    REPLACE_INVALID_UTF8 = 8
+            REPLACE_INVALID_UTF8 = 8
         };
 
         // 16-bit character codes.
@@ -2953,12 +2949,8 @@ namespace v8 {
                          int length = -1, int options = NO_OPTIONS) const;
 
         V8_DEPRECATED("Use Isolate* version",
-                      int
-                              WriteOneByte(uint8_t * buffer, int
-                              start = 0,
-                                      int
-                              length = -1, int
-                              options = NO_OPTIONS)
+                      int WriteOneByte(uint8_t * buffer, int start = 0,
+                              int length = -1, int options = NO_OPTIONS)
                               const);
 
         // UTF-8 encoded characters.
@@ -3206,8 +3198,7 @@ namespace v8 {
         class V8_EXPORT Utf8Value {
         public:
             V8_DEPRECATED("Use Isolate version",
-                          explicit Utf8Value(Local<v8::Value>
-                                  obj));
+                          explicit Utf8Value(Local<v8::Value> obj));
 
             Utf8Value(Isolate *isolate, Local<v8::Value> obj);
 
@@ -3237,8 +3228,7 @@ namespace v8 {
    */
         class V8_EXPORT Value {
         public:
-            V8_DEPRECATED("Use Isolate version", explicit Value(Local<v8::Value>
-                    obj));
+            V8_DEPRECATED("Use Isolate version", explicit Value(Local<v8::Value> obj));
 
             Value(Isolate *isolate, Local<v8::Value> obj);
 
@@ -3501,13 +3491,13 @@ namespace v8 {
  */
     enum PropertyAttribute {
         /** None. **/
-                None = 0,
+        None = 0,
         /** ReadOnly, i.e., not writable. **/
-                ReadOnly = 1 << 0,
+        ReadOnly = 1 << 0,
         /** DontEnum, i.e., not enumerable. **/
-                DontEnum = 1 << 1,
+        DontEnum = 1 << 1,
         /** DontDelete, i.e., not configurable. **/
-                DontDelete = 1 << 2
+        DontDelete = 1 << 2
     };
 
 /**
@@ -4426,8 +4416,7 @@ namespace v8 {
         static V8_DEPRECATE_SOON(
                 "Use maybe version",
                 Local<Function> New(Isolate *isolate, FunctionCallback callback,
-                        Local<Value> data = Local<Value>(),
-                        int length = 0));
+                        Local<Value> data = Local<Value>(), int length = 0));
 
         V8_WARN_UNUSED_RESULT MaybeLocal<Object> NewInstance(
                 Local<Context> context, int argc, Local<Value> argv[]) const;
@@ -6323,29 +6312,29 @@ namespace v8 {
         /**
    * None.
    */
-                kNone = 0,
+        kNone = 0,
 
         /**
    * See ALL_CAN_READ above.
    */
-                kAllCanRead = 1,
+        kAllCanRead = 1,
 
         /** Will not call into interceptor for properties on the receiver or prototype
    * chain, i.e., only call into interceptor for properties that do not exist.
    * Currently only valid for named interceptors.
    */
-                kNonMasking = 1 << 1,
+        kNonMasking = 1 << 1,
 
         /**
    * Will not call into interceptor for symbol lookup.  Only meaningful for
    * named interceptors.
    */
-                kOnlyInterceptStrings = 1 << 2,
+        kOnlyInterceptStrings = 1 << 2,
 
         /**
    * The getter, query, enumerator callbacks do not produce side effects.
    */
-                kHasNoSideEffect = 1 << 3,
+        kHasNoSideEffect = 1 << 3,
     };
 
     struct NamedPropertyHandlerConfiguration {
@@ -7418,17 +7407,17 @@ namespace v8 {
         // Response performance mode: In this mode very low virtual machine latency
         // is provided. V8 will try to avoid JavaScript execution interruptions.
         // Throughput may be throttled.
-                PERFORMANCE_RESPONSE,
+        PERFORMANCE_RESPONSE,
         // Animation performance mode: In this mode low virtual machine latency is
         // provided. V8 will try to avoid as many JavaScript execution interruptions
         // as possible. Throughput may be throttled. This is the default mode.
-                PERFORMANCE_ANIMATION,
+        PERFORMANCE_ANIMATION,
         // Idle performance mode: The embedder is idle. V8 can complete deferred work
         // in this mode.
-                PERFORMANCE_IDLE,
+        PERFORMANCE_IDLE,
         // Load performance mode: In this mode high throughput is provided. V8 may
         // turn off latency optimizations.
-                PERFORMANCE_LOAD
+        PERFORMANCE_LOAD
     };
 
 /**
@@ -7437,7 +7426,7 @@ namespace v8 {
     enum JitCodeEventOptions {
         kJitCodeEventDefault = 0,
         // Generate callbacks for already existent code.
-                kJitCodeEventEnumExisting = 1
+        kJitCodeEventEnumExisting = 1
     };
 
 
@@ -7579,6 +7568,7 @@ namespace v8 {
         CallbackFunction callback;
         void *data;
     };
+
 // Note that these fields are called "internal fields" in the API and called
 // "embedder fields" within V8.
     typedef SerializeInternalFieldsCallback SerializeEmbedderFieldsCallback;
@@ -7870,7 +7860,7 @@ namespace v8 {
             // If you add new values here, you'll also need to update Chromium's:
             // web_feature.mojom, UseCounterCallback.cpp, and enums.xml. V8 changes to
             // this list need to be landed first, then changes on the Chromium side.
-                    kUseCounterFeatureCount  // This enum value must be last.
+            kUseCounterFeatureCount  // This enum value must be last.
         };
 
         enum MessageErrorLevel {
@@ -8341,8 +8331,8 @@ namespace v8 {
         void RemoveCallCompletedCallback(CallCompletedCallback callback);
 
         V8_DEPRECATED("Use callback with parameter",
-                void RemoveCallCompletedCallback(
-                        DeprecatedCallCompletedCallback callback));
+                      void RemoveCallCompletedCallback(
+                              DeprecatedCallCompletedCallback callback));
 
         /**
    * Set the PromiseHook callback for various promise lifecycle
@@ -8917,7 +8907,7 @@ namespace v8 {
    * \param context The third argument passed to the Linux signal handler, which
    * points to a ucontext_t structure.
    */
-  static bool TryHandleSignal(int signal_number, void* info, void* context);
+        static bool TryHandleSignal(int signal_number, void *info, void *context);
 
 #endif  // V8_OS_POSIX
 
@@ -10071,7 +10061,8 @@ namespace v8 {
                 typedef internal::Internals I;
                 O *ctx = *reinterpret_cast<O *const *>(context);
                 int embedder_data_offset = I::kContextHeaderSize +
-                                           (internal::kApiPointerSize * I::kContextEmbedderDataIndex);
+                                           (internal::kApiPointerSize *
+                                            I::kContextEmbedderDataIndex);
                 O *embedder_data = I::ReadField<O *>(ctx, embedder_data_offset);
                 int value_offset =
                         I::kFixedArrayHeaderSize + (internal::kApiPointerSize * index);

@@ -104,7 +104,7 @@ struct uv_loop_s;
 
 // Forward-declare TracingController, used by CreatePlatform.
 namespace v8 {
-    class TracingController;
+class TracingController;
 }
 
 // Forward-declare these functions now to stop MSVS from becoming
@@ -163,30 +163,27 @@ namespace node {
  */
 
     NODE_DEPRECATED("Use MakeCallback(..., async_context)",
-                    NODE_EXTERN
-                            v8::Local<v8::Value> MakeCallback(
-                                    v8::Isolate *isolate,
-                                    v8::Local<v8::Object> recv,
-                                    const char *method,
-                                    int argc,
+                    NODE_EXTERN v8::Local<v8::Value> MakeCallback(
+                            v8::Isolate *isolate,
+                            v8::Local<v8::Object> recv,
+                            const char *method,
+                            int argc,
                             v8::Local<v8::Value> *argv));
 
     NODE_DEPRECATED("Use MakeCallback(..., async_context)",
-                    NODE_EXTERN
-                            v8::Local<v8::Value> MakeCallback(
-                                    v8::Isolate *isolate,
-                                    v8::Local<v8::Object> recv,
-                                    v8::Local<v8::String> symbol,
-                                    int argc,
+                    NODE_EXTERN v8::Local<v8::Value> MakeCallback(
+                            v8::Isolate *isolate,
+                            v8::Local<v8::Object> recv,
+                            v8::Local<v8::String> symbol,
+                            int argc,
                             v8::Local<v8::Value> *argv));
 
     NODE_DEPRECATED("Use MakeCallback(..., async_context)",
-                    NODE_EXTERN
-                            v8::Local<v8::Value> MakeCallback(
-                                    v8::Isolate *isolate,
-                                    v8::Local<v8::Object> recv,
-                                    v8::Local<v8::Function> callback,
-                                    int argc,
+                    NODE_EXTERN v8::Local<v8::Value> MakeCallback(
+                            v8::Isolate *isolate,
+                            v8::Local<v8::Object> recv,
+                            v8::Local<v8::Function> callback,
+                            int argc,
                             v8::Local<v8::Value> *argv));
 
 }  // namespace node
@@ -214,8 +211,7 @@ namespace node {
 
 // TODO(addaleax): Remove all of these.
     NODE_DEPRECATED("use command-line flags",
-                    NODE_EXTERN
-                            extern bool no_deprecation);
+                    NODE_EXTERN extern bool no_deprecation);
 #if HAVE_OPENSSL
     NODE_DEPRECATED("use command-line flags",
                     NODE_EXTERN extern bool ssl_openssl_cert_store);
@@ -347,7 +343,6 @@ namespace node {
                     inline double NODE_V8_UNIXTIME(v8::Local<v8::Date> date) {
                         return date->ValueOf() / 1000;
                     })
-
 #define NODE_V8_UNIXTIME node::NODE_V8_UNIXTIME
 
 #define NODE_DEFINE_CONSTANT(target, constant)                                \
@@ -435,6 +430,7 @@ namespace node {
         t->SetClassName(fn_name);
         recv->PrototypeTemplate()->Set(fn_name, t);
     }
+
 #define NODE_SET_PROTOTYPE_METHOD node::NODE_SET_PROTOTYPE_METHOD
 
 // BINARY is a deprecated alias of LATIN1.
@@ -451,7 +447,8 @@ namespace node {
                     inline enum encoding ParseEncoding(
                             v8::Local<v8::Value> encoding_v,
                             enum encoding default_encoding = LATIN1) {
-                        return ParseEncoding(v8::Isolate::GetCurrent(), encoding_v, default_encoding);
+                        return ParseEncoding(v8::Isolate::GetCurrent(), encoding_v,
+                                             default_encoding);
                     })
 
     NODE_EXTERN void FatalException(v8::Isolate *isolate,

@@ -11,11 +11,8 @@
 # define HEADER_BUFFER_H
 
 # include <openssl/ossl_typ.h>
-
 # ifndef HEADER_CRYPTO_H
-
 #  include <openssl/crypto.h>
-
 # endif
 
 

@@ -25,12 +25,9 @@
 # define HEADER_BN_H
 
 # include <openssl/e_os2.h>
-
 # ifndef OPENSSL_NO_STDIO
-
 #  include <stdio.h>
 # endif
-
 # include <openssl/opensslconf.h>
 # include <openssl/ossl_typ.h>
 # include <openssl/crypto.h>
@@ -257,6 +254,7 @@ int BN_is_negative(const BIGNUM *b);
 
 int BN_div(BIGNUM *dv, BIGNUM *rem, const BIGNUM *m, const BIGNUM *d,
            BN_CTX *ctx);
+
 # define BN_mod(rem, m, d, ctx) BN_div(NULL,(rem),(m),(d),(ctx))
 int BN_nnmod(BIGNUM *r, const BIGNUM *m, const BIGNUM *d, BN_CTX *ctx);
 int BN_mod_add(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const BIGNUM *m,
@@ -330,37 +328,60 @@ int BN_kronecker(const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx); /* returns
                                                                   * error */
 BIGNUM *BN_mod_inverse(BIGNUM *ret,
                        const BIGNUM *a, const BIGNUM *n, BN_CTX *ctx);
+
 BIGNUM *BN_mod_sqrt(BIGNUM *ret,
                     const BIGNUM *a, const BIGNUM *n, BN_CTX *ctx);
 
 void BN_consttime_swap(BN_ULONG swap, BIGNUM *a, BIGNUM *b, int nwords);
 
 /* Deprecated versions */
-DEPRECATEDIN_0_9_8(BIGNUM *BN_generate_prime(BIGNUM *ret, int bits, int safe,
-                                             const BIGNUM *add,
-                                             const BIGNUM *rem,
-                                             void (*callback)(int, int,
-                                                              void *),
-                           void *cb_arg))
+DEPRECATEDIN_0_9_8(BIGNUM
+*
+BN_generate_prime(BIGNUM
+*ret,
+int bits,
+int safe,
+const BIGNUM *add,
+const BIGNUM *rem,
+
+void (*callback)(int, int,
+                 void *),
+
+void *cb_arg
+))
+
 DEPRECATEDIN_0_9_8(int
                    BN_is_prime(const BIGNUM *p, int nchecks,
-                               void (*callback)(int, int, void *),
-                           BN_CTX *ctx,
-                           void *cb_arg))
+                   void (*callback)(int, int, void *),
+                   BN_CTX *ctx, void *cb_arg)
+
+)
+
 DEPRECATEDIN_0_9_8(int
                    BN_is_prime_fasttest(const BIGNUM *p, int nchecks,
-                                        void (*callback)(int, int, void *),
-                                        BN_CTX *ctx, void *cb_arg,
-                           int do_trial_division))
+                   void (*callback)(int, int, void *),
+                   BN_CTX *ctx, void *cb_arg,
+                   int do_trial_division)
+
+)
 
 /* Newer versions */
-int BN_generate_prime_ex(BIGNUM *ret, int bits, int safe, const BIGNUM *add,
-                         const BIGNUM *rem, BN_GENCB *cb);
+int BN_generate_prime_ex(BIGNUM * ret, int
+bits,
+int safe,
+const BIGNUM *add,
+const BIGNUM *rem, BN_GENCB
+*cb);
+
 int BN_is_prime_ex(const BIGNUM *p, int nchecks, BN_CTX *ctx, BN_GENCB *cb);
+
 int BN_is_prime_fasttest_ex(const BIGNUM *p, int nchecks, BN_CTX *ctx,
                             int do_trial_division, BN_GENCB *cb);
 
-int BN_X931_generate_Xpq(BIGNUM *Xp, BIGNUM *Xq, int nbits, BN_CTX *ctx);
+int BN_X931_generate_Xpq(BIGNUM * Xp, BIGNUM * Xq, int
+nbits,
+BN_CTX *ctx
+);
 
 int BN_X931_derive_prime_ex(BIGNUM *p, BIGNUM *p1, BIGNUM *p2,
                             const BIGNUM *Xp, const BIGNUM *Xp1,
@@ -396,31 +417,43 @@ int BN_BLINDING_convert_ex(BIGNUM *n, BIGNUM *r, BN_BLINDING *b, BN_CTX *);
 int BN_BLINDING_invert_ex(BIGNUM *n, const BIGNUM *r, BN_BLINDING *b,
                           BN_CTX *);
 
-int BN_BLINDING_is_current_thread(BN_BLINDING *b);
-void BN_BLINDING_set_current_thread(BN_BLINDING *b);
-int BN_BLINDING_lock(BN_BLINDING *b);
-int BN_BLINDING_unlock(BN_BLINDING *b);
+int BN_BLINDING_is_current_thread(BN_BLINDING * b);
+void BN_BLINDING_set_current_thread(BN_BLINDING * b);
+int BN_BLINDING_lock(BN_BLINDING * b);
+int BN_BLINDING_unlock(BN_BLINDING * b);
 
 unsigned long BN_BLINDING_get_flags(const BN_BLINDING *);
-void BN_BLINDING_set_flags(BN_BLINDING *, unsigned long);
-BN_BLINDING *BN_BLINDING_create_param(BN_BLINDING *b,
-                                      const BIGNUM *e, BIGNUM *m, BN_CTX *ctx,
-                                      int (*bn_mod_exp)(BIGNUM *r,
-                                                        const BIGNUM *a,
-                                                        const BIGNUM *p,
-                                                        const BIGNUM *m,
-                                                        BN_CTX *ctx,
-                                                        BN_MONT_CTX *m_ctx),
-                                      BN_MONT_CTX *m_ctx);
+
+void BN_BLINDING_set_flags(BN_BLINDING * , unsigned long);
+BN_BLINDING *BN_BLINDING_create_param(BN_BLINDING * b,
+const BIGNUM *e, BIGNUM
+*m,
+BN_CTX *ctx,
+int (*bn_mod_exp)(BIGNUM * r,
+const BIGNUM *a,
+const BIGNUM *p,
+const BIGNUM *m,
+        BN_CTX
+*ctx,
+BN_MONT_CTX *m_ctx
+),
+BN_MONT_CTX *m_ctx
+);
 
 DEPRECATEDIN_0_9_8(void BN_set_params(int mul, int high, int low, int mont))
+
 DEPRECATEDIN_0_9_8(int BN_get_params(int which)) /* 0, mul, 1 high, 2 low, 3
                                                   * mont */
 
 BN_RECP_CTX *BN_RECP_CTX_new(void);
+
 void BN_RECP_CTX_free(BN_RECP_CTX *recp);
+
 int BN_RECP_CTX_set(BN_RECP_CTX *recp, const BIGNUM *rdiv, BN_CTX *ctx);
-int BN_mod_mul_reciprocal(BIGNUM *r, const BIGNUM *x, const BIGNUM *y,
+
+int BN_mod_mul_reciprocal(BIGNUM * r,
+const BIGNUM *x,
+const BIGNUM *y,
                           BN_RECP_CTX *recp, BN_CTX *ctx);
 int BN_mod_exp_recp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
                     const BIGNUM *m, BN_CTX *ctx);
@@ -504,26 +537,49 @@ int BN_GF2m_arr2poly(const int p[], BIGNUM *a);
  */
 int BN_nist_mod_192(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx);
 int BN_nist_mod_224(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx);
-int BN_nist_mod_256(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx);
-int BN_nist_mod_384(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx);
-int BN_nist_mod_521(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx);
+int BN_nist_mod_256(BIGNUM * r,
+const BIGNUM *a,
+const BIGNUM *p, BN_CTX
+*ctx);
+int BN_nist_mod_384(BIGNUM * r,
+const BIGNUM *a,
+const BIGNUM *p, BN_CTX
+*ctx);
+int BN_nist_mod_521(BIGNUM * r,
+const BIGNUM *a,
+const BIGNUM *p, BN_CTX
+*ctx);
 
 const BIGNUM *BN_get0_nist_prime_192(void);
+
 const BIGNUM *BN_get0_nist_prime_224(void);
+
 const BIGNUM *BN_get0_nist_prime_256(void);
+
 const BIGNUM *BN_get0_nist_prime_384(void);
+
 const BIGNUM *BN_get0_nist_prime_521(void);
 
-int (*BN_nist_mod_func(const BIGNUM *p))(BIGNUM *r, const BIGNUM *a,
-                                         const BIGNUM *field, BN_CTX *ctx);
+int (*BN_nist_mod_func(const BIGNUM *p))
 
-int BN_generate_dsa_nonce(BIGNUM *out, const BIGNUM *range,
-                          const BIGNUM *priv, const unsigned char *message,
-                          size_t message_len, BN_CTX *ctx);
+(
+BIGNUM *r,
+const BIGNUM *a,
+const BIGNUM *field, BN_CTX
+*ctx);
+
+int BN_generate_dsa_nonce(BIGNUM * out,
+const BIGNUM *range,
+const BIGNUM *priv,
+const unsigned char *message,
+        size_t
+message_len,
+BN_CTX *ctx
+);
 
 /* Primes from RFC 2409 */
-BIGNUM *BN_get_rfc2409_prime_768(BIGNUM *bn);
-BIGNUM *BN_get_rfc2409_prime_1024(BIGNUM *bn);
+BIGNUM *BN_get_rfc2409_prime_768(BIGNUM * bn);
+BIGNUM *BN_get_rfc2409_prime_1024(BIGNUM * bn);
 
 /* Primes from RFC 3526 */
 BIGNUM *BN_get_rfc3526_prime_1536(BIGNUM *bn);

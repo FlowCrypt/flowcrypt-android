@@ -23,7 +23,6 @@
 # include <openssl/rsa.h>
 # include <openssl/dsa.h>
 # include <openssl/dh.h>
-
 # ifdef  __cplusplus
 extern "C" {
 # endif
@@ -513,11 +512,14 @@ int TS_CONF_set_signer_cert(CONF *conf, const char *section,
                             const char *cert, TS_RESP_CTX *ctx);
 int TS_CONF_set_certs(CONF *conf, const char *section, const char *certs,
                       TS_RESP_CTX *ctx);
+
 int TS_CONF_set_signer_key(CONF *conf, const char *section,
                            const char *key, const char *pass,
                            TS_RESP_CTX *ctx);
+
 int TS_CONF_set_signer_digest(CONF *conf, const char *section,
                               const char *md, TS_RESP_CTX *ctx);
+
 int TS_CONF_set_def_policy(CONF *conf, const char *section,
                            const char *policy, TS_RESP_CTX *ctx);
 int TS_CONF_set_policies(CONF *conf, const char *section, TS_RESP_CTX *ctx);
