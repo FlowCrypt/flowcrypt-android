@@ -5,12 +5,9 @@
 
 package com.flowcrypt.email.service
 
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.OperationApplicationException
-import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -19,6 +16,7 @@ import android.os.Messenger
 import android.os.RemoteException
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
@@ -34,6 +32,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -42,7 +41,6 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import java.io.IOException
 import java.lang.ref.WeakReference
-import java.util.*
 import javax.mail.Flags
 import javax.mail.Folder
 import javax.mail.FolderClosedException
@@ -70,8 +68,8 @@ class EmailSyncService : BaseService(), SyncListener {
   private val replyToMessengers: MutableMap<String, Messenger> = HashMap()
 
   private lateinit var emailSyncManager: EmailSyncManager
-  private lateinit var connectionBroadcastReceiver: BroadcastReceiver
   private lateinit var notificationManager: MessagesNotificationManager
+  private lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
 
   private var isServiceStarted: Boolean = false
 
@@ -81,16 +79,9 @@ class EmailSyncService : BaseService(), SyncListener {
   override fun onCreate() {
     super.onCreate()
     LogsUtil.d(TAG, "onCreate")
+    setupConnectionObserver()
 
     notificationManager = MessagesNotificationManager(this)
-    connectionBroadcastReceiver = object : BroadcastReceiver() {
-      override fun onReceive(context: Context, intent: Intent) {
-        handleConnectivityAction(context, intent)
-      }
-    }
-    //todo-denbond7 need to fix this deprecation
-    registerReceiver(connectionBroadcastReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
-
     emailSyncManager = EmailSyncManager(this)
     messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
   }
@@ -120,7 +111,7 @@ class EmailSyncService : BaseService(), SyncListener {
       emailSyncManager.stopSync()
     }
 
-    unregisterReceiver(connectionBroadcastReceiver)
+    lifecycle.removeObserver(connectionLifecycleObserver)
   }
 
   override fun onUnbind(intent: Intent): Boolean {
@@ -617,20 +608,16 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  fun handleConnectivityAction(context: Context, intent: Intent) {
-    //todo-denbond7 need to fix deprecation
-    if (ConnectivityManager.CONNECTIVITY_ACTION.equals(intent.action!!, ignoreCase = true)) {
-      val connectivityManager = context.getSystemService(Context
-          .CONNECTIVITY_SERVICE) as ConnectivityManager
-
-      val networkInfo = connectivityManager.activeNetworkInfo
-      if (GeneralUtil.isConnected(this)) {
-        LogsUtil.d(TAG, "networkInfo = $networkInfo")
+  private fun setupConnectionObserver() {
+    connectionLifecycleObserver = ConnectionLifecycleObserver(this)
+    lifecycle.addObserver(connectionLifecycleObserver)
+    connectionLifecycleObserver.connectionLiveData.observe(this, Observer {
+      if (it == true) {
         if (::emailSyncManager.isInitialized) {
           emailSyncManager.beginSync()
         }
       }
-    }
+    })
   }
 
   /**
@@ -807,6 +794,9 @@ class EmailSyncService : BaseService(), SyncListener {
 
           MESSAGE_DELETE_MSGS -> emailSyncManager?.deleteMsgs(ownerKey ?: "", requestCode)
 
+          MESSAGE_DELETE_MSGS_PERMANENTLY -> emailSyncManager?.deleteMsgs(ownerKey ?: "",
+              requestCode, true)
+
           MESSAGE_ARCHIVE_MSGS -> {
             emailSyncManager?.archiveMsgs(ownerKey ?: "", requestCode)
           }
@@ -816,6 +806,8 @@ class EmailSyncService : BaseService(), SyncListener {
 
           MESSAGE_MOVE_MSGS_TO_INBOX -> emailSyncManager?.moveMsgsToINBOX(ownerKey
               ?: "", requestCode)
+
+          MESSAGE_EMPTY_TRASH -> emailSyncManager?.emptyTrash(ownerKey ?: "", requestCode)
 
           else -> super.handleMessage(msg)
         }
@@ -848,6 +840,8 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_ARCHIVE_MSGS = 16
     const val MESSAGE_CHANGE_MSGS_READ_STATE = 17
     const val MESSAGE_MOVE_MSGS_TO_INBOX = 18
+    const val MESSAGE_DELETE_MSGS_PERMANENTLY = 19
+    const val MESSAGE_EMPTY_TRASH = 20
 
     private val TAG = EmailSyncService::class.java.simpleName
 

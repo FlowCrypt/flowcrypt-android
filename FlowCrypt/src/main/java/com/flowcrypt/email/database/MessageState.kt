@@ -16,6 +16,8 @@ import android.os.Parcelable
  * Time: 15:11
  * E-mail: DenBond7@gmail.com
  */
+//todo-denbond7 Modify [com.flowcrypt.email.database.dao.MessageDao.getFailedOutgoingMsgsCount]
+// if you add new states
 enum class MessageState constructor(val value: Int) : Parcelable {
   NONE(-1),
   NEW(1),
@@ -37,7 +39,9 @@ enum class MessageState constructor(val value: Int) : Parcelable {
   PENDING_MOVE_TO_INBOX(17),
   AUTH_FAILURE(18),
   ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER(19),
-  QUEUED_MADE_COPY_IN_SENT_FOLDER(20);
+  QUEUED_MAKE_COPY_IN_SENT_FOLDER(20),
+  PENDING_DELETING_PERMANENTLY(21),
+  PENDING_EMPTY_TRASH(22);
 
   override fun describeContents(): Int {
     return 0

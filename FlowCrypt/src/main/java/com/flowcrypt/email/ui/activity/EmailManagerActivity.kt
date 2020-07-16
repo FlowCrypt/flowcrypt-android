@@ -32,26 +32,34 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.bumptech.glide.request.RequestOptions
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
+import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.showTwoWayDialogFragment
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ActionsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
+import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
+import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivity
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.preferences.NotificationsSettingsFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.GlideApp
 import com.flowcrypt.email.util.SharedPreferencesHelper
@@ -75,11 +83,12 @@ import kotlinx.coroutines.launch
  * E-mail: DenBond7@gmail.com
  */
 class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigationItemSelectedListener,
-    View.OnClickListener, SearchView.OnQueryTextListener {
+    View.OnClickListener, SearchView.OnQueryTextListener, TwoWayDialogFragment.OnTwoWayDialogListener {
 
   private lateinit var client: GoogleSignInClient
   private val labelsViewModel: LabelsViewModel by viewModels()
   private val actionsViewModel: ActionsViewModel by viewModels()
+  private val msgsViewModel: MessagesViewModel by viewModels()
 
   private var foldersManager: FoldersManager? = null
   override var currentFolder: LocalFolder? = null
@@ -92,6 +101,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   private var navigationView: NavigationView? = null
   private var currentAccountDetailsItem: View? = null
   private var switchView: Switch? = null
+  private var isForceSendingEnabled: Boolean = true
 
   override val isSyncEnabled: Boolean
     get() = true
@@ -114,6 +124,26 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     accountViewModel.nonActiveAccountsLiveData.observe(this, Observer {
       genAccountsLayout(it)
     })
+
+    msgsViewModel.outboxMsgsLiveData.observe(this, Observer {
+      val msgsCount = it.size
+      toolbar?.subtitle = if (it.isNotEmpty() && currentFolder?.isOutbox() == false) {
+        getString(R.string.outbox_msgs_count, msgsCount)
+      } else null
+
+      isForceSendingEnabled = msgsCount > 0
+
+      for (messageEntity in it) {
+        if (messageEntity.msgState == MessageState.SENDING) {
+          isForceSendingEnabled = false
+          break
+        }
+      }
+
+      if (currentFolder?.isOutbox() == true) {
+        invalidateOptionsMenu()
+      }
+    })
   }
 
   override fun onResume() {
@@ -126,6 +156,14 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   override fun onDestroy() {
     super.onDestroy()
     actionBarDrawerToggle?.let { drawerLayout?.removeDrawerListener(it) }
+  }
+
+  override fun onNewIntent(intent: Intent?) {
+    super.onNewIntent(intent)
+    if (ACTION_OPEN_OUTBOX_FOLDER.equals(intent?.action, true)) {
+      val newLocalFolder = foldersManager?.folderOutbox
+      changeFolder(newLocalFolder)
+    }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -181,21 +219,54 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
     val itemSwitch = menu.findItem(R.id.menuSwitch)
     val itemSearch = menu.findItem(R.id.menuSearch)
+    val itemForceSending = menu.findItem(R.id.menuForceSending)
+    val itemEmptyTrash = menu.findItem(R.id.menuEmptyTrash)
 
-    if (currentFolder != null) {
-      if (JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true)) {
+    when {
+      JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder?.fullName, ignoreCase = true) -> {
         itemSwitch.isVisible = false
         itemSearch.isVisible = AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(activeAccount?.accountType, ignoreCase = true)
-      } else {
+        itemForceSending.isVisible = true
+        itemForceSending.isEnabled = isForceSendingEnabled
+      }
+
+      else -> {
+        itemEmptyTrash.isVisible = currentFolder?.getFolderType() == FoldersManager.FolderType.TRASH
         itemSwitch.isVisible = true
         itemSearch.isVisible = true
+        itemForceSending.isVisible = false
+        itemForceSending.isEnabled = isForceSendingEnabled
       }
-    } else {
-      itemSwitch.isVisible = true
-      itemSearch.isVisible = true
     }
 
     return super.onPrepareOptionsMenu(menu)
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
+      R.id.menuForceSending -> {
+        showTwoWayDialogFragment(
+            requestCode = REQUEST_CODE_DIALOG_FORCE_SENDING,
+            dialogTitle = getString(R.string.restart_sending),
+            dialogMsg = getString(R.string.restart_sending_process_warning)
+        )
+        return true
+      }
+
+      R.id.menuEmptyTrash -> {
+        showTwoWayDialogFragment(
+            requestCode = REQUEST_CODE_DIALOG_EMPTY_TRASH,
+            dialogTitle = getString(R.string.empty_trash),
+            dialogMsg = getString(R.string.empty_trash_warning),
+            positiveButtonTitle = getString(android.R.string.ok),
+            negativeButtonTitle = getString(android.R.string.cancel),
+            isCancelable = false
+        )
+        return true
+      }
+
+      else -> super.onOptionsItemSelected(item)
+    }
   }
 
   public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -279,6 +350,10 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         onFetchMsgsCompleted()
       }
 
+      R.id.syns_request_empty_trash -> {
+        toast(R.string.emptying_trash_failed)
+      }
+
       else -> {
       }
     }
@@ -295,7 +370,14 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     if (drawerLayout?.isDrawerOpen(GravityCompat.START) == true) {
       drawerLayout?.closeDrawer(GravityCompat.START)
     } else {
-      super.onBackPressed()
+      val inbox = foldersManager?.findInboxFolder()
+      if (inbox != null) {
+        if (currentFolder == inbox) {
+          super.onBackPressed()
+        } else {
+          changeFolder(inbox)
+        }
+      } else super.onBackPressed()
     }
   }
 
@@ -309,13 +391,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
       Menu.NONE -> {
         val newLocalFolder = foldersManager?.getFolderByAlias(item.title.toString())
-        if (newLocalFolder != null) {
-          if (currentFolder == null || currentFolder?.fullName != newLocalFolder.fullName) {
-            this.currentFolder = newLocalFolder
-            onFolderChanged()
-            invalidateOptionsMenu()
-          }
-        }
+        changeFolder(newLocalFolder)
       }
     }
 
@@ -361,6 +437,46 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onQueryTextChange(newText: String): Boolean {
     return false
+  }
+
+  override fun onFolderChanged(forceClearCache: Boolean) {
+    super.onFolderChanged(forceClearCache)
+    currentFolder?.let {
+      if (it.isOutbox()) {
+        toolbar?.subtitle = null
+      } else {
+        val msgCount = msgsViewModel.outboxMsgsLiveData.value?.size
+        toolbar?.subtitle = if (msgCount != null && msgCount > 0) {
+          getString(R.string.outbox_msgs_count, msgCount)
+        } else null
+      }
+    }
+  }
+
+  override fun onDialogButtonClick(requestCode: Int, result: Int) {
+    when (requestCode) {
+      REQUEST_CODE_DIALOG_FORCE_SENDING -> {
+        when (result) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            if (isForceSendingEnabled) {
+              MessagesSenderWorker.enqueue(applicationContext, true)
+            }
+          }
+        }
+      }
+
+      REQUEST_CODE_DIALOG_EMPTY_TRASH -> {
+        when (result) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            if (GeneralUtil.isConnected(this)) {
+              emptyTrash(R.id.syns_request_empty_trash)
+            } else {
+              showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
+            }
+          }
+        }
+      }
+    }
   }
 
   private fun showGmailSignIn() {
@@ -633,6 +749,20 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     }
   }
 
+  private fun changeFolder(newLocalFolder: LocalFolder?) {
+    if (newLocalFolder != null) {
+      if (currentFolder == null || currentFolder?.fullName != newLocalFolder.fullName) {
+        this.currentFolder = newLocalFolder
+        onFolderChanged()
+        invalidateOptionsMenu()
+
+        if (currentFolder?.isOutbox() == true) {
+          ErrorNotificationManager(this).cancel(ErrorNotificationManager.NOTIFICATION_ID_HAS_FAILED_OUTGOING_MSGS)
+        }
+      }
+    }
+  }
+
   /**
    * The custom realization of [ActionBarDrawerToggle]. Will be used to start a labels
    * update task when the drawer will be opened.
@@ -678,9 +808,11 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   companion object {
-
+    const val ACTION_OPEN_OUTBOX_FOLDER = BuildConfig.APPLICATION_ID + ".OPEN_OUTBOX_FOLDER"
     private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 100
     private const val REQUEST_CODE_SIGN_IN = 101
+    private const val REQUEST_CODE_DIALOG_FORCE_SENDING = 103
+    private const val REQUEST_CODE_DIALOG_EMPTY_TRASH = 104
 
     /**
      * This method can bu used to start [EmailManagerActivity].

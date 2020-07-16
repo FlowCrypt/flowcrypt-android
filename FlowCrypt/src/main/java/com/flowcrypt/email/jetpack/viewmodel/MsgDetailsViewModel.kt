@@ -91,7 +91,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
         roomDatabase.msgDao().deleteSuspend(msgEntity)
 
         if (JavaEmailConstants.FOLDER_OUTBOX.equals(localFolder.fullName, ignoreCase = true)) {
-          val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsExceptSentSuspend(msgEntity.email).size
+          val outgoingMsgCount = roomDatabase.msgDao().getOutboxMsgsSuspend(msgEntity.email).size
           val outboxLabel = roomDatabase.labelDao().getLabelSuspend(msgEntity.email,
               JavaEmailConstants.FOLDER_OUTBOX)
 

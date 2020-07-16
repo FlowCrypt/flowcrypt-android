@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -19,6 +20,7 @@ import androidx.loader.app.LoaderManager
 import androidx.loader.content.Loader
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.hasActiveConnection
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.model.results.LoaderResult
@@ -68,9 +70,6 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
   val baseActivity: BaseActivity
     get() = activity as BaseActivity
 
-  val isConnected: Boolean
-    get() = connectionLifecycleObserver.connectionLiveData.value ?: false
-
   override fun onAttach(context: Context) {
     super.onAttach(context)
     connectionLifecycleObserver = ConnectionLifecycleObserver(context)
@@ -86,6 +85,11 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
     return if (contentResourceId > 0) {
       inflater.inflate(contentResourceId, container, false)
     } else super.onCreateView(inflater, container, savedInstanceState)
+  }
+
+  override fun onDetach() {
+    super.onDetach()
+    lifecycle.removeObserver(connectionLifecycleObserver)
   }
 
   override fun onCreateLoader(id: Int, args: Bundle?): Loader<LoaderResult> {
@@ -191,6 +195,14 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
 
   fun dismissCurrentSnackBar() {
     snackBar?.dismiss()
+  }
+
+  fun isConnected(): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      connectionLifecycleObserver.connectionLiveData.value ?: false
+    } else {
+      context.hasActiveConnection()
+    }
   }
 
   protected fun handleLoaderResult(loaderId: Int, loaderResult: LoaderResult?) {

@@ -183,6 +183,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     attachments?.forEachIndexed { index, attachmentInfo -> attachmentInfo.path = index.toString() }
 
     return OutgoingMessageInfo(
+        accountViewModel.activeAccountLiveData.value?.email ?: "",
         editTextEmailSubject?.text.toString(),
         msg,
         recipientsTo?.chipValues,

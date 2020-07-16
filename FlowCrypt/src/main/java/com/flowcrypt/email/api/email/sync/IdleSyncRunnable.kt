@@ -122,7 +122,7 @@ class IdleSyncRunnable constructor(syncListener: SyncListener,
         }
       }
 
-      if (!isConnected) {
+      if (sess == null || store == null) {
         LogsUtil.d(tag, "Not connected. Start a reconnection ...")
         openConnToStore(accountEntity)
         LogsUtil.d(tag, "Reconnection done")

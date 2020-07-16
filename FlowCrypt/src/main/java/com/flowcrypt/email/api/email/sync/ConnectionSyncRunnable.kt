@@ -11,7 +11,9 @@ import com.flowcrypt.email.api.email.sync.tasks.ArchiveMsgsSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.ChangeMsgsReadStateSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.DeleteMessagesPermanentlySyncTask
 import com.flowcrypt.email.api.email.sync.tasks.DeleteMessagesSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.EmptyTrashSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadAttsInfoSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask
@@ -106,10 +108,15 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
     }
   }
 
-  fun deleteMsgs(ownerKey: String, requestCode: Int) {
+  fun deleteMsgs(ownerKey: String, requestCode: Int, deletePermanently: Boolean = false) {
     try {
-      removeOldTasks(DeleteMessagesSyncTask::class.java, tasksQueue)
-      tasksQueue.put(DeleteMessagesSyncTask(ownerKey, requestCode))
+      if (deletePermanently) {
+        removeOldTasks(DeleteMessagesPermanentlySyncTask::class.java, tasksQueue)
+        tasksQueue.put(DeleteMessagesPermanentlySyncTask(ownerKey, requestCode))
+      } else {
+        removeOldTasks(DeleteMessagesSyncTask::class.java, tasksQueue)
+        tasksQueue.put(DeleteMessagesSyncTask(ownerKey, requestCode))
+      }
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }
@@ -250,6 +257,15 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
     }
   }
 
+  fun emptyTrash(ownerKey: String, requestCode: Int) {
+    try {
+      removeOldTasks(EmptyTrashSyncTask::class.java, tasksQueue)
+      tasksQueue.put(EmptyTrashSyncTask(ownerKey, requestCode))
+    } catch (e: InterruptedException) {
+      e.printStackTrace()
+    }
+  }
+
   private fun loadContactsInfoIfNeeded() {
     try {
       tasksQueue.put(LoadContactsSyncTask())
@@ -265,11 +281,10 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
 
         resetConnIfNeeded(accountEntity, isResetConnectionNeeded, task)
 
-        if (!isConnected) {
-          LogsUtil.d(tag, "Not connected. Start a reconnection ...")
+        if (sess == null || store == null) {
           syncListener.onActionProgress(accountEntity, task.ownerKey, task.requestCode, R.id.progress_id_connecting_to_email_server)
           openConnToStore(accountEntity)
-          LogsUtil.d(tag, "Reconnection done")
+          LogsUtil.d(tag, "Connected!")
         }
 
         val activeStore = store ?: return
@@ -284,8 +299,8 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
         }
 
         if (!tasksExecutorService.isShutdown) {
-          tasksMap[task.uniqueId] = tasksExecutorService.submit(SyncTaskRunnable(accountEntity, syncListener,
-              task, activeStore, activeSess))
+          tasksMap[task.uniqueId] = tasksExecutorService.submit(
+              SyncTaskRunnable(accountEntity, syncListener, task, activeStore, activeSess))
         }
 
       } catch (e: Exception) {

@@ -93,7 +93,7 @@ class SecurityUtils {
             //everything looks good
           }
 
-          else -> throw IllegalArgumentException(context.getString(R.string.missing_pass_phrase_strength_evalutaion))
+          else -> throw IllegalArgumentException(context.getString(R.string.missing_pass_phrase_strength_evaluation))
         }
 
         val nodeKeyDetailsList = NodeCallsExecutor.parseKeys(private)

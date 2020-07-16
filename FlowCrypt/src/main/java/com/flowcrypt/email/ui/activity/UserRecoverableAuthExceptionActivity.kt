@@ -18,7 +18,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
@@ -75,7 +75,7 @@ class UserRecoverableAuthExceptionActivity : BaseActivity(), View.OnClickListene
               roomDatabase.msgDao().changeMsgsStateSuspend(
                   activeAccount?.email, JavaEmailConstants.FOLDER_OUTBOX, MessageState.AUTH_FAILURE.value,
                   MessageState.QUEUED.value)
-              MessagesSenderJobService.schedule(applicationContext)
+              MessagesSenderWorker.enqueue(applicationContext)
               EmailManagerActivity.runEmailManagerActivity(this@UserRecoverableAuthExceptionActivity)
               finish()
             }

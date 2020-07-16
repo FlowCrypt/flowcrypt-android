@@ -8,8 +8,8 @@ package com.flowcrypt.email.ui.activity.base
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
-import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
+import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
 
@@ -97,7 +97,7 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
   /**
    * Update the list of emails after changing the folder.
    */
-  protected fun onFolderChanged(forceClearCache: Boolean = false) {
+  protected open fun onFolderChanged(forceClearCache: Boolean = false) {
     toolbar?.title = currentFolder?.folderAlias
 
     val emailListFragment = supportFragmentManager
@@ -109,8 +109,8 @@ abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnM
     if (currentFolder != null) {
       val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(currentFolder!!.fullName, ignoreCase = true)
       if (currentFolder != null && isOutbox) {
-        ForwardedAttachmentsDownloaderJobService.schedule(applicationContext)
-        MessagesSenderJobService.schedule(applicationContext)
+        ForwardedAttachmentsDownloaderWorker.enqueue(applicationContext)
+        MessagesSenderWorker.enqueue(applicationContext)
       } else {
         //run the tasks which maybe not completed last time
         archiveMsgs()

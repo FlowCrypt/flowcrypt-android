@@ -4,14 +4,15 @@
   -->
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
     <item
         android:id="@+id/menuActionHelp"
         android:icon="@drawable/ic_help_white_24dp"
         android:menuCategory="system"
         android:orderInCategory="1000"
         android:title="@string/feedback"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/menuSearch"
@@ -23,10 +24,28 @@
         app:showAsAction="ifRoom|collapseActionView" />
 
     <item
+        android:id="@+id/menuEmptyTrash"
+        android:icon="@drawable/ic_delete_forever_white_24dp"
+        android:menuCategory="system"
+        android:orderInCategory="3"
+        android:title="@string/empty_trash"
+        android:visible="false"
+        app:showAsAction="ifRoom"
+        tools:visible="true" />
+
+    <item
         android:id="@+id/menuSwitch"
         android:menuCategory="system"
-        android:orderInCategory="1"
+        android:orderInCategory="2"
         android:title="@string/showing_only_encrypted_messages"
         app:actionLayout="@layout/action_item_switch"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menuForceSending"
+        android:icon="@drawable/selector_ic_force_sending"
+        android:menuCategory="system"
+        android:orderInCategory="1"
+        android:title="@string/restart_sending"
         app:showAsAction="always" />
 </menu>

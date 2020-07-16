@@ -17,18 +17,20 @@ import com.flowcrypt.email.model.MessageEncryptionType
  * Time: 11:20
  * E-mail: DenBond7@gmail.com
  */
-data class OutgoingMessageInfo constructor(val subject: String,
-                                           val msg: String? = null,
-                                           val toRecipients: List<String>? = null,
-                                           val ccRecipients: List<String>? = null,
-                                           val bccRecipients: List<String>? = null,
-                                           val from: String,
-                                           val origMsgHeaders: String? = null,
-                                           val atts: List<AttachmentInfo>? = null,
-                                           val forwardedAtts: List<AttachmentInfo>? = null,
-                                           val encryptionType: MessageEncryptionType,
-                                           val isForwarded: Boolean = false,
-                                           val uid: Long = 0) : Parcelable {
+data class OutgoingMessageInfo constructor(
+    val account: String,
+    val subject: String,
+    val msg: String? = null,
+    val toRecipients: List<String>? = null,
+    val ccRecipients: List<String>? = null,
+    val bccRecipients: List<String>? = null,
+    val from: String,
+    val origMsgHeaders: String? = null,
+    val atts: List<AttachmentInfo>? = null,
+    val forwardedAtts: List<AttachmentInfo>? = null,
+    val encryptionType: MessageEncryptionType,
+    val isForwarded: Boolean = false,
+    val uid: Long = 0) : Parcelable {
 
   /**
    * Generate a list of the all recipients.
@@ -44,6 +46,7 @@ data class OutgoingMessageInfo constructor(val subject: String,
   }
 
   constructor(parcel: Parcel) : this(
+      parcel.readString()!!,
       parcel.readString()!!,
       parcel.readString(),
       parcel.createStringArrayList(),
@@ -63,6 +66,7 @@ data class OutgoingMessageInfo constructor(val subject: String,
 
   override fun writeToParcel(dest: Parcel, flags: Int) {
     with(dest) {
+      writeString(account)
       writeString(subject)
       writeString(msg)
       writeStringList(toRecipients)

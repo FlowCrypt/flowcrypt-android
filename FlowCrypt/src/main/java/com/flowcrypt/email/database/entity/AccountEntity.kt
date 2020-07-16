@@ -63,8 +63,10 @@ data class AccountEntity constructor(
     @ColumnInfo(defaultValue = "NULL") val uuid: String? = null,
     @ColumnInfo(name = "domain_rules", defaultValue = "NULL") val domainRules: String? = null,
     @ColumnInfo(name = "is_restore_access_required", defaultValue = "0") val isRestoreAccessRequired: Boolean? = false) : Parcelable {
+
   @Ignore
-  val account: Account? = Account(this.email, accountType)
+  val account: Account? = Account(this.email, accountType
+      ?: this.email.substring(this.email.indexOf('@') + 1).toLowerCase(Locale.US))
 
   constructor(googleSignInAccount: GoogleSignInAccount, uuid: String? = null,
               domainRules: List<String>? = null) :
@@ -99,33 +101,6 @@ data class AccountEntity constructor(
           isRestoreAccessRequired = false
       )
 
-
-  /*val contentValues = ContentValues()
-    val email = authCreds.email
-    if (!TextUtils.isEmpty(email)) {
-      contentValues.put(COL_EMAIL, email.toLowerCase(Locale.getDefault()))
-    } else
-      return null
-
-    contentValues.put(COL_ACCOUNT_TYPE, email.substring(email.indexOf('@') + 1))
-    contentValues.put(COL_USERNAME, authCreds.username)
-    contentValues.put(COL_PASSWORD, KeyStoreCryptoManager.encrypt(authCreds.password))
-    contentValues.put(COL_IMAP_SERVER, authCreds.imapServer)
-    contentValues.put(COL_IMAP_PORT, authCreds.imapPort)
-    contentValues.put(COL_IMAP_IS_USE_SSL_TLS, authCreds.imapOpt === SecurityType.Option.SSL_TLS)
-    contentValues.put(COL_IMAP_IS_USE_STARTTLS, authCreds.imapOpt === SecurityType.Option.STARTLS)
-    contentValues.put(COL_SMTP_SERVER, authCreds.smtpServer)
-    contentValues.put(COL_SMTP_PORT, authCreds.smtpPort)
-    contentValues.put(COL_SMTP_IS_USE_SSL_TLS, authCreds.smtpOpt === SecurityType.Option.SSL_TLS)
-    contentValues.put(COL_SMTP_IS_USE_STARTTLS, authCreds.smtpOpt === SecurityType.Option.STARTLS)
-    contentValues.put(COL_SMTP_IS_USE_CUSTOM_SIGN, authCreds.hasCustomSignInForSmtp)
-    contentValues.put(COL_SMTP_USERNAME, authCreds.smtpSigInUsername)
-    contentValues.put(COL_SMTP_PASSWORD,
-        authCreds.smtpSignInPassword?.let { KeyStoreCryptoManager.encrypt(it) })
-
-    contentValues.put(COL_IS_ACTIVE, true)
-
-    return contentValues*/
   constructor(authCredentials: AuthCredentials, uuid: String? = null, domainRules: List<String>? = null) :
       this(
           email = authCredentials.email,

@@ -12,8 +12,8 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
-import com.flowcrypt.email.jobscheduler.ForwardedAttachmentsDownloaderJobService
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
+import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.util.LogsUtil
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ExecutorService
@@ -39,7 +39,7 @@ class EmailSyncManager(val listener: SyncListener) {
   private var connectionFuture: Future<*>? = null
   private var idleFuture: Future<*>? = null
   private val connectionRunnable = ConnectionSyncRunnable(listener)
-  private val idleSyncRunnable = IdleSyncRunnable(listener, this)
+  private var idleSyncRunnable: IdleSyncRunnable? = null
 
   /**
    * Start a synchronization.
@@ -57,10 +57,11 @@ class EmailSyncManager(val listener: SyncListener) {
     archiveMsgs()
     changeMsgsReadState()
     deleteMsgs()
+    deleteMsgs(deletePermanently = true)
     moveMsgsToINBOX()
 
-    ForwardedAttachmentsDownloaderJobService.schedule(listener.context)
-    MessagesSenderJobService.schedule(listener.context)
+    ForwardedAttachmentsDownloaderWorker.enqueue(listener.context)
+    MessagesSenderWorker.enqueue(listener.context)
   }
 
   /**
@@ -69,7 +70,7 @@ class EmailSyncManager(val listener: SyncListener) {
   fun stopSync() {
     connectionFuture?.cancel(true)
     idleFuture?.cancel(true)
-    idleSyncRunnable.interruptIdle()
+    idleSyncRunnable?.interruptIdle()
     connectionExecutorService.shutdown()
     idleExecutorService.shutdown()
   }
@@ -79,7 +80,10 @@ class EmailSyncManager(val listener: SyncListener) {
    */
   private fun runIdleInboxIfNeeded() {
     if (!isThreadAlreadyWorking(idleFuture)) {
-      idleFuture = idleExecutorService.submit(idleSyncRunnable)
+      idleSyncRunnable = IdleSyncRunnable(listener, this)
+      idleSyncRunnable?.let {
+        idleFuture = idleExecutorService.submit(it)
+      }
     }
   }
 
@@ -97,9 +101,10 @@ class EmailSyncManager(val listener: SyncListener) {
    *
    * @param ownerKey    The name of the reply to [android.os.Messenger].
    * @param requestCode The unique request code for the reply to [android.os.Messenger].
+   * @param deletePermanently if true we will delete messages permanently
    */
-  fun deleteMsgs(ownerKey: String = "", requestCode: Int = -1) {
-    connectionRunnable.deleteMsgs(ownerKey, requestCode)
+  fun deleteMsgs(ownerKey: String = "", requestCode: Int = -1, deletePermanently: Boolean = false) {
+    connectionRunnable.deleteMsgs(ownerKey, requestCode, deletePermanently)
   }
 
   /**
@@ -292,6 +297,16 @@ class EmailSyncManager(val listener: SyncListener) {
    */
   fun searchMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
     connectionRunnable.searchMsgs(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount)
+  }
+
+  /**
+   * Empty trash
+   *
+   * @param ownerKey    The name of the reply to [android.os.Messenger].
+   * @param requestCode The unique request code for the reply to [android.os.Messenger].
+   */
+  fun emptyTrash(ownerKey: String = "", requestCode: Int = -1) {
+    connectionRunnable.emptyTrash(ownerKey, requestCode)
   }
 
   companion object {

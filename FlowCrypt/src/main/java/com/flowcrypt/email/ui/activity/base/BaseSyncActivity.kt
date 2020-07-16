@@ -255,13 +255,35 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    *
    * @param requestCode    The unique request code for identify the current action.
    */
-  fun deleteMsgs(requestCode: Int = -1) {
+  fun deleteMsgs(requestCode: Int = -1, deletePermanently: Boolean = false) {
     if (checkServiceBound(isSyncServiceBound)) return
     syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
 
     val action = BaseService.Action(replyMessengerName, requestCode, null)
 
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_DELETE_MSGS, action)
+    val msg = Message.obtain(null,
+        if (deletePermanently) EmailSyncService.MESSAGE_DELETE_MSGS_PERMANENTLY else EmailSyncService.MESSAGE_DELETE_MSGS, action)
+    msg.replyTo = syncReplyMessenger
+    try {
+      syncMessenger?.send(msg)
+    } catch (e: RemoteException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  /**
+   * Empty trash
+   *
+   * @param requestCode    The unique request code for identify the current action.
+   */
+  fun emptyTrash(requestCode: Int = -1) {
+    if (checkServiceBound(isSyncServiceBound)) return
+    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
+
+    val action = BaseService.Action(replyMessengerName, requestCode, null)
+
+    val msg = Message.obtain(null, EmailSyncService.MESSAGE_EMPTY_TRASH, action)
     msg.replyTo = syncReplyMessenger
     try {
       syncMessenger?.send(msg)

@@ -33,8 +33,14 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid = :uid")
   abstract fun getMsg(account: String?, folder: String?, uid: Long): MessageEntity?
 
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid = :uid")
+  abstract suspend fun getMsgSuspend(account: String?, folder: String?, uid: Long): MessageEntity?
+
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
   abstract fun getMsgs(account: String, folder: String): LiveData<MessageEntity>
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
+  abstract fun getMsgsAsList(account: String, folder: String): List<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND _id IN (:msgsID)")
   abstract suspend fun getMsgsByIDSuspend(account: String, folder: String, msgsID: Collection<Long>?):
@@ -66,33 +72,54 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid IN (:msgsUID)")
   abstract fun delete(email: String?, label: String?, msgsUID: Collection<Long>): Int
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state NOT IN (:msgStates)")
-  abstract fun getOutboxMsgsExceptSent(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
-                                       msgStates: Collection<Int> = listOf(
-                                           MessageState.SENDING.value,
-                                           MessageState.SENT_WITHOUT_LOCAL_COPY.value,
-                                           MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER.value)):
-      List<MessageEntity>
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label")
+  abstract fun getOutboxMsgs(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX): List<MessageEntity>
 
-  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state NOT IN (:msgStates)")
-  abstract suspend fun getOutboxMsgsExceptSentSuspend(account: String?,
-                                                      label: String = JavaEmailConstants.FOLDER_OUTBOX,
-                                                      msgStates: Collection<Int> = listOf(
-                                                          MessageState.SENDING.value,
-                                                          MessageState.SENT_WITHOUT_LOCAL_COPY.value,
-                                                          MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER.value)):
-      List<MessageEntity>
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label")
+  abstract fun getOutboxMsgsLD(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX): LiveData<List<MessageEntity>>
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label")
+  abstract suspend fun getOutboxMsgsSuspend(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX): List<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state IN (:msgStates)")
   abstract fun getOutboxMsgsByStates(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX,
                                      msgStates: Collection<Int>): List<MessageEntity>
 
-  @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid = :uid AND state NOT IN (:msgStates)")
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state IN (:msgStates)")
+  abstract suspend fun getOutboxMsgsByStatesSuspend(account: String?,
+                                                    label: String = JavaEmailConstants.FOLDER_OUTBOX,
+                                                    msgStates: Collection<Int>): List<MessageEntity>
+
+  @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid = :uid AND (state NOT IN (:msgStates) OR state IS NULL)")
   abstract suspend fun deleteOutgoingMsg(email: String?, label: String?, uid: Long?,
                                          msgStates: Collection<Int> = listOf(
                                              MessageState.SENDING.value,
                                              MessageState.SENT_WITHOUT_LOCAL_COPY.value,
-                                             MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER.value)): Int
+                                             MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER.value)): Int
+
+  @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :label AND (state IN (:msgStates) OR state IS NULL)")
+  abstract fun getFailedOutgoingMsgsCount(account: String?,
+                                          label: String = JavaEmailConstants.FOLDER_OUTBOX,
+                                          msgStates: Collection<Int> = listOf(
+                                              MessageState.ERROR_CACHE_PROBLEM.value,
+                                              MessageState.ERROR_DURING_CREATION.value,
+                                              MessageState.ERROR_ORIGINAL_MESSAGE_MISSING.value,
+                                              MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND.value,
+                                              MessageState.ERROR_SENDING_FAILED.value,
+                                              MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
+                                              MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value)): Int
+
+  @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :label AND (state IN (:msgStates) OR state IS NULL)")
+  abstract suspend fun getFailedOutgoingMsgsCountSuspend(account: String?,
+                                                         label: String = JavaEmailConstants.FOLDER_OUTBOX,
+                                                         msgStates: Collection<Int> = listOf(
+                                                             MessageState.ERROR_CACHE_PROBLEM.value,
+                                                             MessageState.ERROR_DURING_CREATION.value,
+                                                             MessageState.ERROR_ORIGINAL_MESSAGE_MISSING.value,
+                                                             MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND.value,
+                                                             MessageState.ERROR_SENDING_FAILED.value,
+                                                             MessageState.ERROR_PRIVATE_KEY_NOT_FOUND.value,
+                                                             MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER.value)): Int
 
   @Query("SELECT COUNT(*) FROM messages WHERE email = :account AND folder = :folder")
   abstract fun count(account: String?, folder: String?): Int
@@ -135,6 +162,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("UPDATE messages SET state=:newValues WHERE email = :account AND folder = :label AND state = :oldValue")
   abstract fun changeMsgsState(account: String?, label: String?, oldValue: Int, newValues: Int): Int
 
+  @Query("UPDATE messages SET state=:newValue WHERE email = :account AND folder = :label")
+  abstract fun changeMsgsState(account: String?, label: String?, newValue: Int? = null): Int
+
   @Query("UPDATE messages SET state=:newValues WHERE email = :account AND folder = :label AND state = :oldValue")
   abstract suspend fun changeMsgsStateSuspend(account: String?, label: String?, oldValue: Int,
                                               newValues: Int): Int
@@ -149,11 +179,24 @@ abstract class MessageDao : BaseDao<MessageEntity> {
                                          label: String = JavaEmailConstants.FOLDER_OUTBOX,
                                          oldValue: Int = MessageState.SENDING.value): Int
 
+  /**
+   * Add the messages which have a current state equal [MessageState.SENDING] to the sending queue again.
+   *
+   * @param account   The email that the message linked
+   */
+  @Query("UPDATE messages SET state=2 WHERE email = :account AND folder = :label AND state =:oldValue")
+  abstract suspend fun resetMsgsWithSendingStateSuspend(account: String?,
+                                                        label: String = JavaEmailConstants.FOLDER_OUTBOX,
+                                                        oldValue: Int = MessageState.SENDING.value): Int
+
   @Query("SELECT uid, flags FROM messages WHERE email = :account AND folder = :label")
   abstract fun getUIDAndFlagsPairs(account: String?, label: String): List<UidFlagsPair>
 
   @Query("SELECT * FROM messages WHERE email = :account AND state =:stateValue")
   abstract fun getMsgsWithState(account: String?, stateValue: Int): List<MessageEntity>
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state =:stateValue")
+  abstract fun getMsgsWithState(account: String?, label: String?, stateValue: Int): List<MessageEntity>
 
   @Query("UPDATE messages SET is_new = 0 WHERE email = :account AND folder = :label AND uid IN (:uidList)")
   abstract suspend fun markMsgsAsOld(account: String?, label: String?, uidList: Collection<Long>): Int

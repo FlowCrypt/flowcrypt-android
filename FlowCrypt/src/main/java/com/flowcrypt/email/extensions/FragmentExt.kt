@@ -1,0 +1,67 @@
+/*
+ * © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+ * Contributors: DenBond7
+ */
+
+package com.flowcrypt.email.extensions
+
+import android.widget.Toast
+import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+
+/**
+ * @author Denis Bondarenko
+ *         Date: 7/6/20
+ *         Time: 4:16 PM
+ *         E-mail: DenBond7@gmail.com
+ */
+
+fun androidx.fragment.app.Fragment.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {
+  text?.let { activity?.toast(text, duration) }
+}
+
+fun androidx.fragment.app.Fragment.toast(resId: Int, duration: Int = Toast.LENGTH_SHORT) {
+  if (resId != -1) {
+    activity?.toast(resId, duration)
+  }
+}
+
+fun androidx.fragment.app.Fragment.showInfoDialog(
+    dialogTitle: String? = null,
+    dialogMsg: String? = null,
+    buttonTitle: String? = null,
+    isPopBackStack: Boolean = false,
+    isCancelable: Boolean = false,
+    hasHtml: Boolean = false,
+    requestCode: Int = 10000
+) {
+  val fragment = InfoDialogFragment.newInstance(
+      dialogTitle = dialogTitle,
+      dialogMsg = dialogMsg,
+      buttonTitle = buttonTitle,
+      isPopBackStack = isPopBackStack,
+      isCancelable = isCancelable,
+      hasHtml = hasHtml
+  )
+  fragment.setTargetFragment(this, requestCode)
+  fragment.show(parentFragmentManager, fragment.javaClass::class.java.simpleName)
+}
+
+fun androidx.fragment.app.Fragment.showTwoWayDialog(
+    dialogTitle: String? = null,
+    dialogMsg: String? = null,
+    positiveButtonTitle: String? = null,
+    negativeButtonTitle: String? = null,
+    isCancelable: Boolean = false,
+    requestCode: Int = 10000
+) {
+  val fragment = TwoWayDialogFragment.newInstance(
+      dialogTitle = dialogTitle,
+      dialogMsg = dialogMsg,
+      positiveButtonTitle = positiveButtonTitle,
+      negativeButtonTitle = negativeButtonTitle,
+      isCancelable = isCancelable
+  )
+  fragment.setTargetFragment(this, requestCode)
+  fragment.show(parentFragmentManager, fragment.javaClass::class.java.simpleName)
+}

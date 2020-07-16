@@ -53,6 +53,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
@@ -65,6 +66,7 @@ import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.widget.EmailWebView
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
@@ -179,6 +181,14 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         }
       }
 
+      REQUEST_CODE_DELETE_MESSAGE_DIALOG -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            msgDetailsViewModel?.changeMsgState(MessageState.PENDING_DELETING_PERMANENTLY)
+          }
+        }
+      }
+
       else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
@@ -235,7 +245,17 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
             }
           }
         } else {
-          msgDetailsViewModel?.changeMsgState(MessageState.PENDING_DELETING)
+          if (localFolder?.getFolderType() == FoldersManager.FolderType.TRASH) {
+            showTwoWayDialog(
+                dialogTitle = "",
+                dialogMsg = requireContext().resources.getQuantityString(R.plurals.delete_msg_question, 1, 1),
+                positiveButtonTitle = getString(android.R.string.ok),
+                negativeButtonTitle = getString(android.R.string.cancel),
+                requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG
+            )
+          } else {
+            msgDetailsViewModel?.changeMsgState(MessageState.PENDING_DELETING)
+          }
         }
         true
       }
@@ -472,7 +492,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
         FoldersManager.FolderType.TRASH -> {
           isMoveToInboxActionEnabled = true
-          isDeleteActionEnabled = false
+          isDeleteActionEnabled = true
         }
 
         FoldersManager.FolderType.DRAFTS, FoldersManager.FolderType.OUTBOX -> {
@@ -995,6 +1015,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     private const val REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE = 100
     private const val REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 101
     private const val REQUEST_CODE_SHOW_DIALOG_WITH_SEND_KEY_OPTION = 102
+    private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 103
     private const val CONTENT_MAX_ALLOWED_LENGTH = 50000
   }
 }

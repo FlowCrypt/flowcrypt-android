@@ -42,13 +42,15 @@ import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
-import com.flowcrypt.email.jobscheduler.MessagesSenderJobService
+import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.adapter.MsgsPagedListAdapter
 import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
@@ -205,12 +207,47 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       REQUEST_CODE_RETRY_TO_SEND_MESSAGES -> when (resultCode) {
         TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
           val newMsgState = when (activeMsgEntity?.msgState) {
-            MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER
+            MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER
 
             else -> MessageState.QUEUED
           }
           msgsViewModel.changeMsgsState(listOf(activeMsgEntity?.id ?: -1), it, newMsgState)
-          MessagesSenderJobService.schedule(requireContext())
+          MessagesSenderWorker.enqueue(requireContext())
+        }
+      }
+
+      REQUEST_CODE_ERROR_DURING_CREATION -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
+            FeedbackActivity.show(requireActivity())
+          }
+
+          TwoWayDialogFragment.RESULT_CANCELED -> {
+            activeMsgEntity?.let { msgsViewModel.deleteOutgoingMsgs(listOf(it)) }
+          }
+        }
+      }
+
+      REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> listener?.currentFolder?.let {
+            activeMsgEntity?.let { msgsViewModel.deleteOutgoingMsgs(listOf(it)) }
+          }
+        }
+      }
+
+      REQUEST_CODE_DELETE_MESSAGE_DIALOG -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            listener?.currentFolder?.let { localFolder ->
+              val ids = tracker?.selection?.map { it } ?: emptyList<Long>()
+              if (ids.isNotEmpty()) {
+                msgsViewModel.changeMsgsState(ids, localFolder, MessageState.PENDING_DELETING_PERMANENTLY)
+              }
+            }
+
+            actionMode?.finish()
+          }
         }
       }
 
@@ -233,7 +270,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       swipeRefreshLayout?.isRefreshing = false
 
       if (isOutboxFolder) {
-        MessagesSenderJobService.schedule(context?.applicationContext)
+        context?.let { MessagesSenderWorker.enqueue(it) }
       }
     } else {
       emptyView?.visibility = View.GONE
@@ -378,8 +415,8 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
 
     val isOutbox = JavaEmailConstants.FOLDER_OUTBOX.equals(listener?.currentFolder?.fullName, ignoreCase = true)
-    val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty()
-    if (isOutbox || isRawMsgAvailable == true || GeneralUtil.isConnected(context)) {
+    val isRawMsgAvailable = msgEntity.rawMessageWithoutAttachments?.isNotEmpty() ?: false
+    if (isOutbox || isRawMsgAvailable || GeneralUtil.isConnected(context)) {
       when (msgEntity.msgState) {
         MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
         MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
@@ -389,8 +426,18 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
         MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> handleOutgoingMsgWhichHasSomeError(msgEntity)
         else -> {
-          startActivityForResult(MessageDetailsActivity.getIntent(context,
-              listener?.currentFolder, msgEntity), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
+          if (isOutbox && !isRawMsgAvailable) {
+            val twoWayDialogFragment = TwoWayDialogFragment.newInstance(dialogTitle = "",
+                dialogMsg = getString(R.string.message_failed_to_create),
+                positiveButtonTitle = getString(R.string.delete_message),
+                negativeButtonTitle = getString(R.string.cancel),
+                isCancelable = true)
+            twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE)
+            twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
+          } else {
+            startActivityForResult(MessageDetailsActivity.getIntent(context,
+                listener?.currentFolder, msgEntity), REQUEST_CODE_SHOW_MESSAGE_DETAILS)
+          }
         }
       }
     } else {
@@ -447,8 +494,19 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
       MessageState.ERROR_CACHE_PROBLEM -> message = getString(R.string.there_is_problem_with_cache)
 
-      MessageState.ERROR_DURING_CREATION ->
-        message = getString(R.string.error_happened_during_creation, getString(R.string.support_email))
+      MessageState.ERROR_DURING_CREATION -> {
+        message = getString(R.string.error_happened_during_creation, getString(R.string
+            .support_email), messageEntity.errorMsg ?: "none")
+
+        val twoWayDialogFragment = TwoWayDialogFragment.newInstance(dialogTitle = "",
+            dialogMsg = message,
+            positiveButtonTitle = getString(R.string.write_us),
+            negativeButtonTitle = getString(R.string.delete_message),
+            isCancelable = true)
+        twoWayDialogFragment.setTargetFragment(this, REQUEST_CODE_ERROR_DURING_CREATION)
+        twoWayDialogFragment.show(parentFragmentManager, TwoWayDialogFragment::class.java.simpleName)
+        return
+      }
 
       MessageState.ERROR_PRIVATE_KEY_NOT_FOUND -> {
         val errorMsg = messageEntity.errorMsg
@@ -722,8 +780,19 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
             }
 
             R.id.menuActionDeleteMessage -> {
-              msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_DELETING)
-              mode?.finish()
+              if (it.getFolderType() == FoldersManager.FolderType.TRASH) {
+                showTwoWayDialog(
+                    dialogTitle = "",
+                    dialogMsg = requireContext().resources.getQuantityString(R.plurals.delete_msg_question, ids.size, ids.size),
+                    positiveButtonTitle = getString(android.R.string.ok),
+                    negativeButtonTitle = getString(android.R.string.cancel),
+                    requestCode = REQUEST_CODE_DELETE_MESSAGE_DIALOG,
+                    isCancelable = false
+                )
+              } else {
+                msgsViewModel.changeMsgsState(ids, it, MessageState.PENDING_DELETING)
+                mode?.finish()
+              }
               true
             }
 
@@ -759,9 +828,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         val menuActionMarkUnread = menu?.findItem(R.id.menuActionMarkUnread)
         menuActionMarkUnread?.isVisible = isChangeSeenStateActionEnabled()
 
-        val menuActionDeleteMessage = menu?.findItem(R.id.menuActionDeleteMessage)
-        menuActionDeleteMessage?.isVisible = isDeleteActionEnabled()
-
         if (isChangeSeenStateActionEnabled()) {
           val id = tracker?.selection?.first() ?: return true
           val msgEntity = adapter.getMsgEntity(keyProvider?.getPosition(id))
@@ -793,9 +859,10 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         when (it) {
           MessageState.PENDING_ARCHIVING -> archiveMsgs()
           MessageState.PENDING_DELETING -> deleteMsgs()
+          MessageState.PENDING_DELETING_PERMANENTLY -> deleteMsgs(deletePermanently = true)
           MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
           MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> changeMsgsReadState()
-          MessageState.QUEUED -> MessagesSenderJobService.schedule(context)
+          MessageState.QUEUED -> context?.let { nonNullContext -> MessagesSenderWorker.enqueue(nonNullContext) }
           else -> {
           }
         }
@@ -835,18 +902,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
     }
   }
 
-  private fun isDeleteActionEnabled(): Boolean {
-    return when (FoldersManager.getFolderType(listener?.currentFolder)) {
-      FoldersManager.FolderType.TRASH, null -> {
-        false
-      }
-
-      else -> {
-        true
-      }
-    }
-  }
-
   private fun setupConnectionNotifier() {
     connectionLifecycleObserver.connectionLiveData.observe(this, Observer {
       if (isForceLoadNextMsgsNeeded && it) {
@@ -871,6 +926,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   companion object {
     private const val REQUEST_CODE_SHOW_MESSAGE_DETAILS = 10
     private const val REQUEST_CODE_RETRY_TO_SEND_MESSAGES = 11
+    private const val REQUEST_CODE_ERROR_DURING_CREATION = 12
+    private const val REQUEST_CODE_MESSAGE_DETAILS_UNAVAILABLE = 13
+    private const val REQUEST_CODE_DELETE_MESSAGE_DIALOG = 14
 
     private const val DIALOG_MSG_MAX_LENGTH = 600
   }

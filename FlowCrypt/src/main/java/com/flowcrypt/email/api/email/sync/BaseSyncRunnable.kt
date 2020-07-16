@@ -32,15 +32,6 @@ abstract class BaseSyncRunnable constructor(val syncListener: SyncListener) : Ru
   protected var sess: Session? = null
   protected var store: Store? = null
 
-  /**
-   * Check available connection to the store.
-   * Must be called from non-main thread.
-   *
-   * @return trus if connected, false otherwise.
-   */
-  internal val isConnected: Boolean
-    get() = store?.isConnected == true
-
   internal fun resetConnIfNeeded(accountEntity: AccountEntity, isResetConnectionNeeded: Boolean, task: SyncTask?) {
     val activeStore = store ?: return
 
@@ -75,8 +66,13 @@ abstract class BaseSyncRunnable constructor(val syncListener: SyncListener) : Ru
 
   internal fun openConnToStore(accountEntity: AccountEntity) {
     patchingSecurityProvider(syncListener.context)
-    sess = OpenStoreHelper.getAccountSess(syncListener.context, accountEntity)
-    store = OpenStoreHelper.openStore(syncListener.context, accountEntity, sess!!)
+    if (sess == null) {
+      sess = OpenStoreHelper.getAccountSess(syncListener.context, accountEntity)
+    }
+
+    if (store == null) {
+      store = OpenStoreHelper.openStore(syncListener.context, accountEntity, sess!!)
+    }
   }
 
   /**

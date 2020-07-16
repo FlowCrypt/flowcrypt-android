@@ -25,6 +25,8 @@ object NotificationChannelManager {
   const val CHANNEL_ID_ATTACHMENTS = "Attachments"
   const val CHANNEL_ID_MESSAGES = "Messages"
   const val CHANNEL_ID_SYSTEM = "System"
+  const val CHANNEL_ID_ERRORS = "Errors"
+  const val CHANNEL_ID_SYNC = "Sync"
 
   /**
    * Register [NotificationChannel](s) of the app in the system.
@@ -38,6 +40,8 @@ object NotificationChannelManager {
       notificationManager.createNotificationChannel(genGeneralNotificationChannel(context))
       notificationManager.createNotificationChannel(genAttsNotificationChannel(context))
       notificationManager.createNotificationChannel(genMsgsNotificationChannel(context))
+      notificationManager.createNotificationChannel(genErrorNotificationChannel(context))
+      notificationManager.createNotificationChannel(genSyncNotificationChannel(context))
     }
   }
 
@@ -97,6 +101,46 @@ object NotificationChannelManager {
     notificationChannel.description = description
     notificationChannel.enableLights(true)
     notificationChannel.enableVibration(true)
+
+    return notificationChannel
+  }
+
+  /**
+   * Generate errors notification channel.
+   *
+   * @param context Interface to global information about an application environment.
+   * @return Generated [NotificationChannel]
+   */
+  @RequiresApi(api = Build.VERSION_CODES.O)
+  private fun genErrorNotificationChannel(context: Context): NotificationChannel {
+    val name = context.getString(R.string.errors_notifications)
+    val description = context.getString(R.string.errors_notifications_notification_chanel)
+    val importance = NotificationManager.IMPORTANCE_HIGH
+
+    val notificationChannel = NotificationChannel(CHANNEL_ID_ERRORS, name, importance)
+    notificationChannel.description = description
+    notificationChannel.enableLights(true)
+    notificationChannel.enableVibration(true)
+
+    return notificationChannel
+  }
+
+  /**
+   * Generate sync notification channel.
+   *
+   * @param context Interface to global information about an application environment.
+   * @return Generated [NotificationChannel]
+   */
+  @RequiresApi(api = Build.VERSION_CODES.O)
+  private fun genSyncNotificationChannel(context: Context): NotificationChannel {
+    val name = context.getString(R.string.sync)
+    val description = context.getString(R.string.sync_notifications_notification_chanel)
+    val importance = NotificationManager.IMPORTANCE_LOW
+
+    val notificationChannel = NotificationChannel(CHANNEL_ID_SYNC, name, importance)
+    notificationChannel.description = description
+    notificationChannel.enableLights(false)
+    notificationChannel.enableVibration(false)
 
     return notificationChannel
   }

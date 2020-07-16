@@ -183,7 +183,9 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
           }
         }
 
-        MessageState.PENDING_DELETING -> {
+        MessageState.PENDING_DELETING,
+        MessageState.PENDING_DELETING_PERMANENTLY,
+        MessageState.PENDING_EMPTY_TRASH -> {
           with(viewHolder.imageViewStatus) {
             this?.visibility = View.VISIBLE
             this?.setBackgroundResource(R.drawable.ic_delete_blue_16dp)
@@ -302,7 +304,7 @@ class MsgsPagedListAdapter(private val onMessageClickListener: OnMessageClickLis
         stateTextColor = ContextCompat.getColor(context, R.color.colorAccent)
       }
 
-      MessageState.QUEUED, MessageState.QUEUED_MADE_COPY_IN_SENT_FOLDER -> {
+      MessageState.QUEUED, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER -> {
         state = context.getString(R.string.queued)
         stateTextColor = ContextCompat.getColor(context, R.color.colorAccent)
       }
