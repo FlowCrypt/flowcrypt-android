@@ -20,6 +20,8 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
@@ -298,12 +300,14 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
+            countingIdlingResource.incrementSafely()
             textViewProgressText.setText(R.string.submitting_pub_key)
             UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
           }
 
           Result.Status.SUCCESS -> {
             handleSuccessSubmit()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -327,6 +331,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
                 positiveButtonTitle = getString(R.string.retry),
                 negativeButtonTitle = getString(R.string.cancel),
                 isCancelable = false))
+            countingIdlingResource.decrementSafely()
           }
         }
       }
@@ -338,11 +343,13 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
+            countingIdlingResource.incrementSafely()
             UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
           }
 
           Result.Status.SUCCESS -> {
             setResult(Activity.RESULT_OK)
+            countingIdlingResource.decrementSafely()
             finish()
           }
 
@@ -358,6 +365,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
               showInfoSnackbar(rootView, e?.message ?: e?.javaClass?.simpleName
               ?: getString(R.string.unknown_error))
             }
+            countingIdlingResource.decrementSafely()
           }
         }
       }
