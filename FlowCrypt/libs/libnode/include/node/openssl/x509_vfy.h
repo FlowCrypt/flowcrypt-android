@@ -14,9 +14,7 @@
  * Protect against recursion, x509.h and x509_vfy.h each include the other.
  */
 # ifndef HEADER_X509_H
-
 #  include <openssl/x509.h>
-
 # endif
 
 # include <openssl/opensslconf.h>
@@ -328,27 +326,31 @@ void *X509_STORE_get_ex_data(X509_STORE *ctx, int idx);
 
 X509_STORE_CTX *X509_STORE_CTX_new(void);
 
-int X509_STORE_CTX_get1_issuer(X509 **issuer, X509_STORE_CTX *ctx, X509 *x);
+int X509_STORE_CTX_get1_issuer(X509 * *issuer, X509_STORE_CTX * ctx, X509 * x);
 
-void X509_STORE_CTX_free(X509_STORE_CTX *ctx);
-int X509_STORE_CTX_init(X509_STORE_CTX *ctx, X509_STORE *store,
-                        X509 *x509, STACK_OF(X509) *chain);
-void X509_STORE_CTX_set0_trusted_stack(X509_STORE_CTX *ctx, STACK_OF(X509) *sk);
-void X509_STORE_CTX_cleanup(X509_STORE_CTX *ctx);
+void X509_STORE_CTX_free(X509_STORE_CTX * ctx);
+int X509_STORE_CTX_init(X509_STORE_CTX * ctx, X509_STORE * store,
+                        X509 * x509, STACK_OF(X509) * chain);
+void X509_STORE_CTX_set0_trusted_stack(X509_STORE_CTX * ctx, STACK_OF(X509) * sk);
+void X509_STORE_CTX_cleanup(X509_STORE_CTX * ctx);
 
-X509_STORE *X509_STORE_CTX_get0_store(X509_STORE_CTX *ctx);
-X509 *X509_STORE_CTX_get0_cert(X509_STORE_CTX *ctx);
-STACK_OF(X509) *X509_STORE_CTX_get0_untrusted(X509_STORE_CTX *ctx);
-void X509_STORE_CTX_set0_untrusted(X509_STORE_CTX *ctx, STACK_OF(X509) *sk);
-void X509_STORE_CTX_set_verify_cb(X509_STORE_CTX *ctx,
-                                  X509_STORE_CTX_verify_cb verify);
-X509_STORE_CTX_verify_cb X509_STORE_CTX_get_verify_cb(X509_STORE_CTX *ctx);
-X509_STORE_CTX_verify_fn X509_STORE_CTX_get_verify(X509_STORE_CTX *ctx);
-X509_STORE_CTX_get_issuer_fn X509_STORE_CTX_get_get_issuer(X509_STORE_CTX *ctx);
-X509_STORE_CTX_check_issued_fn X509_STORE_CTX_get_check_issued(X509_STORE_CTX *ctx);
-X509_STORE_CTX_check_revocation_fn X509_STORE_CTX_get_check_revocation(X509_STORE_CTX *ctx);
-X509_STORE_CTX_get_crl_fn X509_STORE_CTX_get_get_crl(X509_STORE_CTX *ctx);
-X509_STORE_CTX_check_crl_fn X509_STORE_CTX_get_check_crl(X509_STORE_CTX *ctx);
+X509_STORE *X509_STORE_CTX_get0_store(X509_STORE_CTX * ctx);
+X509 *X509_STORE_CTX_get0_cert(X509_STORE_CTX * ctx);
+STACK_OF(X509)
+*
+X509_STORE_CTX_get0_untrusted(X509_STORE_CTX
+*ctx);
+void X509_STORE_CTX_set0_untrusted(X509_STORE_CTX * ctx, STACK_OF(X509) * sk);
+void X509_STORE_CTX_set_verify_cb(X509_STORE_CTX * ctx,
+                                  X509_STORE_CTX_verify_cb
+verify);
+X509_STORE_CTX_verify_cb X509_STORE_CTX_get_verify_cb(X509_STORE_CTX * ctx);
+X509_STORE_CTX_verify_fn X509_STORE_CTX_get_verify(X509_STORE_CTX * ctx);
+X509_STORE_CTX_get_issuer_fn X509_STORE_CTX_get_get_issuer(X509_STORE_CTX * ctx);
+X509_STORE_CTX_check_issued_fn X509_STORE_CTX_get_check_issued(X509_STORE_CTX * ctx);
+X509_STORE_CTX_check_revocation_fn X509_STORE_CTX_get_check_revocation(X509_STORE_CTX * ctx);
+X509_STORE_CTX_get_crl_fn X509_STORE_CTX_get_get_crl(X509_STORE_CTX * ctx);
+X509_STORE_CTX_check_crl_fn X509_STORE_CTX_get_check_crl(X509_STORE_CTX * ctx);
 X509_STORE_CTX_cert_crl_fn X509_STORE_CTX_get_cert_crl(X509_STORE_CTX *ctx);
 X509_STORE_CTX_check_policy_fn X509_STORE_CTX_get_check_policy(X509_STORE_CTX *ctx);
 X509_STORE_CTX_lookup_certs_fn X509_STORE_CTX_get_lookup_certs(X509_STORE_CTX *ctx);
@@ -381,59 +383,91 @@ typedef int (*X509_LOOKUP_get_by_issuer_serial_fn)(X509_LOOKUP *ctx,
                                                    X509_OBJECT *ret);
 typedef int (*X509_LOOKUP_get_by_fingerprint_fn)(X509_LOOKUP *ctx,
                                                  X509_LOOKUP_TYPE type,
-                                                 const unsigned char *bytes,
-                                                 int len,
-                                                 X509_OBJECT *ret);
-typedef int (*X509_LOOKUP_get_by_alias_fn)(X509_LOOKUP *ctx,
-                                           X509_LOOKUP_TYPE type,
-                                           const char *str,
-                                           int len,
-                                           X509_OBJECT *ret);
+const unsigned char *bytes,
+int len,
+        X509_OBJECT *ret);
+typedef int (*X509_LOOKUP_get_by_alias_fn)(X509_LOOKUP * ctx,
+                                           X509_LOOKUP_TYPE
+type,
+const char *str,
+int len,
+        X509_OBJECT
+*ret);
 
 X509_LOOKUP_METHOD *X509_LOOKUP_meth_new(const char *name);
+
 void X509_LOOKUP_meth_free(X509_LOOKUP_METHOD *method);
 
 int X509_LOOKUP_meth_set_new_item(X509_LOOKUP_METHOD *method,
-                                  int (*new_item)(X509_LOOKUP *ctx));
+                                  int (*new_item)(X509_LOOKUP *ctx)
+
+);
+
 int (*X509_LOOKUP_meth_get_new_item(const X509_LOOKUP_METHOD *method))
-        (X509_LOOKUP *ctx);
+
+(
+X509_LOOKUP *ctx
+);
 
 int X509_LOOKUP_meth_set_free(X509_LOOKUP_METHOD *method,
-                              void (*free)(X509_LOOKUP *ctx));
+                              void (*free)(X509_LOOKUP *ctx)
+
+);
+
 void (*X509_LOOKUP_meth_get_free(const X509_LOOKUP_METHOD *method))
-        (X509_LOOKUP *ctx);
+
+(
+X509_LOOKUP *ctx
+);
 
 int X509_LOOKUP_meth_set_init(X509_LOOKUP_METHOD *method,
-                              int (*init)(X509_LOOKUP *ctx));
+                              int (*init)(X509_LOOKUP *ctx)
+
+);
+
 int (*X509_LOOKUP_meth_get_init(const X509_LOOKUP_METHOD *method))
-        (X509_LOOKUP *ctx);
+
+(
+X509_LOOKUP *ctx
+);
 
 int X509_LOOKUP_meth_set_shutdown(X509_LOOKUP_METHOD *method,
-                                  int (*shutdown)(X509_LOOKUP *ctx));
+                                  int (*shutdown)(X509_LOOKUP *ctx)
+
+);
+
 int (*X509_LOOKUP_meth_get_shutdown(const X509_LOOKUP_METHOD *method))
-        (X509_LOOKUP *ctx);
+
+(
+X509_LOOKUP *ctx
+);
 
 int X509_LOOKUP_meth_set_ctrl(X509_LOOKUP_METHOD *method,
                               X509_LOOKUP_ctrl_fn ctrl_fn);
+
 X509_LOOKUP_ctrl_fn X509_LOOKUP_meth_get_ctrl(const X509_LOOKUP_METHOD *method);
 
 int X509_LOOKUP_meth_set_get_by_subject(X509_LOOKUP_METHOD *method,
                                         X509_LOOKUP_get_by_subject_fn fn);
+
 X509_LOOKUP_get_by_subject_fn X509_LOOKUP_meth_get_get_by_subject(
         const X509_LOOKUP_METHOD *method);
 
 int X509_LOOKUP_meth_set_get_by_issuer_serial(X509_LOOKUP_METHOD *method,
                                               X509_LOOKUP_get_by_issuer_serial_fn fn);
+
 X509_LOOKUP_get_by_issuer_serial_fn X509_LOOKUP_meth_get_get_by_issuer_serial(
         const X509_LOOKUP_METHOD *method);
 
 int X509_LOOKUP_meth_set_get_by_fingerprint(X509_LOOKUP_METHOD *method,
                                             X509_LOOKUP_get_by_fingerprint_fn fn);
+
 X509_LOOKUP_get_by_fingerprint_fn X509_LOOKUP_meth_get_get_by_fingerprint(
         const X509_LOOKUP_METHOD *method);
 
 int X509_LOOKUP_meth_set_get_by_alias(X509_LOOKUP_METHOD *method,
                                       X509_LOOKUP_get_by_alias_fn fn);
+
 X509_LOOKUP_get_by_alias_fn X509_LOOKUP_meth_get_get_by_alias(
         const X509_LOOKUP_METHOD *method);
 

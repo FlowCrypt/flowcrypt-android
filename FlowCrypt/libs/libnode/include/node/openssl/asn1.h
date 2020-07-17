@@ -20,7 +20,6 @@
 # include <openssl/symhacks.h>
 
 # include <openssl/ossl_typ.h>
-
 # if OPENSSL_API_COMPAT < 0x10100000L
 #  include <openssl/bn.h>
 # endif
@@ -117,7 +116,7 @@ extern "C" {
 # define SMIME_OLDMIME           0x400
 # define SMIME_CRLFEOL           0x800
 # define SMIME_STREAM            0x1000
-struct X509_algor_st;
+    struct X509_algor_st;
 DEFINE_STACK_OF(X509_ALGOR)
 
 # define ASN1_STRING_FLAG_BITS_LEFT 0x08/* Set if 0x07 has bits left value */
@@ -536,25 +535,40 @@ DECLARE_ASN1_ITEM(ASN1_OBJECT)
 DEFINE_STACK_OF(ASN1_OBJECT)
 
 ASN1_STRING *ASN1_STRING_new(void);
+
 void ASN1_STRING_free(ASN1_STRING *a);
+
 void ASN1_STRING_clear_free(ASN1_STRING *a);
+
 int ASN1_STRING_copy(ASN1_STRING *dst, const ASN1_STRING *str);
+
 ASN1_STRING *ASN1_STRING_dup(const ASN1_STRING *a);
+
 ASN1_STRING *ASN1_STRING_type_new(int type);
+
 int ASN1_STRING_cmp(const ASN1_STRING *a, const ASN1_STRING *b);
+
 /*
  * Since this is used to store all sorts of things, via macros, for now,
  * make its data void *
  */
 int ASN1_STRING_set(ASN1_STRING *str, const void *data, int len);
+
 void ASN1_STRING_set0(ASN1_STRING *str, void *data, int len);
+
 int ASN1_STRING_length(const ASN1_STRING *x);
+
 void ASN1_STRING_length_set(ASN1_STRING *x, int n);
+
 int ASN1_STRING_type(const ASN1_STRING *x);
+
 DEPRECATEDIN_1_1_0(unsigned char *ASN1_STRING_data(ASN1_STRING *x))
-const unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *x);
+const
+
+unsigned char *ASN1_STRING_get0_data(const ASN1_STRING *x);
 
 DECLARE_ASN1_FUNCTIONS(ASN1_BIT_STRING)
+
 int ASN1_BIT_STRING_set(ASN1_BIT_STRING *a, unsigned char *d, int length);
 int ASN1_BIT_STRING_set_bit(ASN1_BIT_STRING *a, int n, int value);
 int ASN1_BIT_STRING_get_bit(const ASN1_BIT_STRING *a, int n);
@@ -700,6 +714,7 @@ void *ASN1_item_dup(const ASN1_ITEM *it, void *x);
                 ASN1_item_free(CHECKED_PTR_OF(type, x), ASN1_ITEM_rptr(type))
 
 # ifndef OPENSSL_NO_STDIO
+
 void *ASN1_d2i_fp(void *(*xnew)(void), d2i_of_void *d2i, FILE *in, void **x);
 
 #  define ASN1_d2i_fp_of(type, xnew, d2i, in, x) \
@@ -849,6 +864,7 @@ unsigned long ASN1_PCTX_get_str_flags(const ASN1_PCTX *p);
 void ASN1_PCTX_set_str_flags(ASN1_PCTX *p, unsigned long flags);
 
 ASN1_SCTX *ASN1_SCTX_new(int (*scan_cb)(ASN1_SCTX *ctx));
+
 void ASN1_SCTX_free(ASN1_SCTX *p);
 const ASN1_ITEM *ASN1_SCTX_get_item(ASN1_SCTX *p);
 const ASN1_TEMPLATE *ASN1_SCTX_get_template(ASN1_SCTX *p);

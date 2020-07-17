@@ -42,9 +42,7 @@
 # include <openssl/symhacks.h>
 
 # if OPENSSL_API_COMPAT < 0x10100000L
-
 #  include <openssl/opensslv.h>
-
 # endif
 
 #ifdef  __cplusplus
@@ -175,13 +173,17 @@ int OPENSSL_issetugid(void);
 
 typedef void CRYPTO_EX_new(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
                            int idx, long argl, void *argp);
+
 typedef void CRYPTO_EX_free(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
                             int idx, long argl, void *argp);
+
 typedef int CRYPTO_EX_dup(CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
                           void *from_d, int idx, long argl, void *argp);
+
 __owur int CRYPTO_get_ex_new_index(int class_index, long argl, void *argp,
-                            CRYPTO_EX_new *new_func, CRYPTO_EX_dup *dup_func,
-                            CRYPTO_EX_free *free_func);
+                                   CRYPTO_EX_new *new_func, CRYPTO_EX_dup *dup_func,
+                                   CRYPTO_EX_free *free_func);
+
 /* No longer use an index. */
 int CRYPTO_free_ex_index(int class_index, int idx);
 
@@ -267,7 +269,9 @@ int CRYPTO_set_mem_functions(
         void *(*m)(size_t, const char *, int),
         void *(*r)(void *, size_t, const char *, int),
         void (*f)(void *, const char *, int));
+
 int CRYPTO_set_mem_debug(int flag);
+
 void CRYPTO_get_mem_functions(
         void *(**m)(size_t, const char *, int),
         void *(**r)(void *, size_t, const char *, int),

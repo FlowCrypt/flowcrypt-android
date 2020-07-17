@@ -34,7 +34,6 @@ typedef struct txt_db_st {
     int num_fields;
     STACK_OF(OPENSSL_PSTRING) *data;
     LHASH_OF(OPENSSL_STRING) **index;
-
     int (**qual)(OPENSSL_STRING *);
     long error;
     long arg1;
@@ -44,8 +43,11 @@ typedef struct txt_db_st {
 
 TXT_DB *TXT_DB_read(BIO *in, int num);
 long TXT_DB_write(BIO *out, TXT_DB *db);
+
 int TXT_DB_create_index(TXT_DB *db, int field, int (*qual)(OPENSSL_STRING *),
-                        OPENSSL_LH_HASHFUNC hash, OPENSSL_LH_COMPFUNC cmp);
+        OPENSSL_LH_HASHFUNC
+
+hash, OPENSSL_LH_COMPFUNC cmp);
 void TXT_DB_free(TXT_DB *db);
 OPENSSL_STRING *TXT_DB_get_by_index(TXT_DB *db, int idx,
                                     OPENSSL_STRING *value);

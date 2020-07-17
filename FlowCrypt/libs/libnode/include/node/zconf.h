@@ -238,14 +238,13 @@
 #endif
 
 #ifdef Z_SOLO
-typedef unsigned long z_size_t;
+   typedef unsigned long z_size_t;
 #else
 #  define z_longlong long long
 #  if defined(NO_SIZE_T)
 typedef unsigned NO_SIZE_T z_size_t;
 #  elif defined(STDC)
 #    include <stddef.h>
-
 typedef size_t z_size_t;
 #  else
 typedef unsigned long z_size_t;
@@ -407,12 +406,12 @@ typedef uLong FAR uLongf;
 
 #ifdef STDC
 typedef void const *voidpc;
-typedef void FAR *voidpf;
-typedef void *voidp;
+typedef void FAR   *voidpf;
+typedef void       *voidp;
 #else
 typedef Byte const *voidpc;
-typedef Byte FAR   *voidpf;
-typedef Byte       *voidp;
+typedef Byte FAR *voidpf;
+typedef Byte *voidp;
 #endif
 
 #if !defined(Z_U4) && !defined(Z_SOLO) && defined(STDC)

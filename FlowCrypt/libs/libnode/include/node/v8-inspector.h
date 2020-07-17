@@ -70,7 +70,7 @@ namespace v8_inspector {
         virtual const StringView &string() = 0;
 
         // This method copies contents.
-        static std::unique_ptr<StringBuffer> create(const StringView &);
+        static std::unique_ptr <StringBuffer> create(const StringView &);
     };
 
     class V8_EXPORT V8ContextInfo {
@@ -125,13 +125,13 @@ namespace v8_inspector {
 
         virtual ~V8StackTrace() {}
 
-        virtual std::unique_ptr<protocol::Runtime::API::StackTrace>
+        virtual std::unique_ptr <protocol::Runtime::API::StackTrace>
         buildInspectorObject() const = 0;
 
-        virtual std::unique_ptr<StringBuffer> toString() const = 0;
+        virtual std::unique_ptr <StringBuffer> toString() const = 0;
 
         // Safe to pass between threads, drops async chain.
-        virtual std::unique_ptr<V8StackTrace> clone() = 0;
+        virtual std::unique_ptr <V8StackTrace> clone() = 0;
     };
 
     class V8_EXPORT V8InspectorSession {
@@ -146,16 +146,16 @@ namespace v8_inspector {
             virtual ~Inspectable() {}
         };
 
-        virtual void addInspectedObject(std::unique_ptr<Inspectable>) = 0;
+        virtual void addInspectedObject(std::unique_ptr <Inspectable>) = 0;
 
         // Dispatching protocol messages.
         static bool canDispatchMethod(const StringView &method);
 
         virtual void dispatchProtocolMessage(const StringView &message) = 0;
 
-        virtual std::unique_ptr<StringBuffer> stateJSON() = 0;
+        virtual std::unique_ptr <StringBuffer> stateJSON() = 0;
 
-        virtual std::vector<std::unique_ptr<protocol::Schema::API::Domain>>
+        virtual std::vector <std::unique_ptr<protocol::Schema::API::Domain>>
         supportedDomains() = 0;
 
         // Debugger actions.
@@ -173,19 +173,19 @@ namespace v8_inspector {
 
         virtual void stepOver() = 0;
 
-        virtual std::vector<std::unique_ptr<protocol::Debugger::API::SearchMatch>>
+        virtual std::vector <std::unique_ptr<protocol::Debugger::API::SearchMatch>>
         searchInTextByLines(const StringView &text, const StringView &query,
                             bool caseSensitive, bool isRegex) = 0;
 
         // Remote objects.
-        virtual std::unique_ptr<protocol::Runtime::API::RemoteObject> wrapObject(
+        virtual std::unique_ptr <protocol::Runtime::API::RemoteObject> wrapObject(
                 v8::Local<v8::Context>, v8::Local<v8::Value>, const StringView &groupName,
                 bool generatePreview) = 0;
 
-        virtual bool unwrapObject(std::unique_ptr<StringBuffer> *error,
+        virtual bool unwrapObject(std::unique_ptr <StringBuffer> *error,
                                   const StringView &objectId, v8::Local<v8::Value> *,
                                   v8::Local<v8::Context> *,
-                                  std::unique_ptr<StringBuffer> *objectGroup) = 0;
+                                  std::unique_ptr <StringBuffer> *objectGroup) = 0;
 
         virtual void releaseObjectGroup(const StringView &) = 0;
     };
@@ -208,7 +208,7 @@ namespace v8_inspector {
 
         virtual void endUserGesture() {}
 
-        virtual std::unique_ptr<StringBuffer> valueSubtype(v8::Local<v8::Value>) {
+        virtual std::unique_ptr <StringBuffer> valueSubtype(v8::Local<v8::Value>) {
             return nullptr;
         }
 
@@ -263,7 +263,7 @@ namespace v8_inspector {
 
         virtual void maxAsyncCallStackDepthChanged(int depth) {}
 
-        virtual std::unique_ptr<StringBuffer> resourceNameToUrl(
+        virtual std::unique_ptr <StringBuffer> resourceNameToUrl(
                 const StringView &resourceName) {
             return nullptr;
         }
@@ -274,11 +274,11 @@ namespace v8_inspector {
 // them if a single client connects to multiple debuggers.
     struct V8_EXPORT V8StackTraceId {
         uintptr_t id;
-        std::pair<int64_t, int64_t> debugger_id;
+        std::pair <int64_t, int64_t> debugger_id;
 
         V8StackTraceId();
 
-        V8StackTraceId(uintptr_t id, const std::pair<int64_t, int64_t> debugger_id);
+        V8StackTraceId(uintptr_t id, const std::pair <int64_t, int64_t> debugger_id);
 
         ~V8StackTraceId() = default;
 
@@ -287,7 +287,7 @@ namespace v8_inspector {
 
     class V8_EXPORT V8Inspector {
     public:
-        static std::unique_ptr<V8Inspector> create(v8::Isolate *, V8InspectorClient *);
+        static std::unique_ptr <V8Inspector> create(v8::Isolate *, V8InspectorClient *);
 
         virtual ~V8Inspector() {}
 
@@ -327,7 +327,7 @@ namespace v8_inspector {
                 v8::Local<v8::Context>, const StringView &message,
                 v8::Local<v8::Value> exception, const StringView &detailedMessage,
                 const StringView &url, unsigned lineNumber, unsigned columnNumber,
-                std::unique_ptr<V8StackTrace>, int scriptId) = 0;
+                std::unique_ptr <V8StackTrace>, int scriptId) = 0;
 
         virtual void exceptionRevoked(v8::Local<v8::Context>, unsigned exceptionId,
                                       const StringView &message) = 0;
@@ -338,21 +338,21 @@ namespace v8_inspector {
             virtual ~Channel() {}
 
             virtual void sendResponse(int callId,
-                                      std::unique_ptr<StringBuffer> message) = 0;
+                                      std::unique_ptr <StringBuffer> message) = 0;
 
-            virtual void sendNotification(std::unique_ptr<StringBuffer> message) = 0;
+            virtual void sendNotification(std::unique_ptr <StringBuffer> message) = 0;
 
             virtual void flushProtocolNotifications() = 0;
         };
 
-        virtual std::unique_ptr<V8InspectorSession> connect(
+        virtual std::unique_ptr <V8InspectorSession> connect(
                 int contextGroupId, Channel *, const StringView &state) = 0;
 
         // API methods.
-        virtual std::unique_ptr<V8StackTrace> createStackTrace(
+        virtual std::unique_ptr <V8StackTrace> createStackTrace(
                 v8::Local<v8::StackTrace>) = 0;
 
-        virtual std::unique_ptr<V8StackTrace> captureStackTrace(bool fullStack) = 0;
+        virtual std::unique_ptr <V8StackTrace> captureStackTrace(bool fullStack) = 0;
     };
 
 }  // namespace v8_inspector

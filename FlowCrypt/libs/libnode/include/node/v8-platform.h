@@ -15,7 +15,7 @@
 
 namespace v8 {
 
-    class Isolate;
+class Isolate;
 
 /**
  * A Task represents a unit of work.
@@ -216,7 +216,7 @@ namespace v8 {
             kRead,
             kReadWrite,
             // TODO(hpayer): Remove this flag. Memory should never be rwx.
-                    kReadWriteExecute,
+            kReadWriteExecute,
             kReadExecute
         };
 

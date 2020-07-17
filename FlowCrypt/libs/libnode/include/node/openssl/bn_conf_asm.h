@@ -44,9 +44,7 @@
 #elif defined(OPENSSL_LINUX) && defined(__s390__)
 # include "./archs/linux32-s390x/asm/crypto/include/internal/bn_conf.h"
 #else
-
 # include "./archs/linux-elf/asm/crypto/include/internal/bn_conf.h"
-
 #endif
 
 /* GOST is not included in all platform */

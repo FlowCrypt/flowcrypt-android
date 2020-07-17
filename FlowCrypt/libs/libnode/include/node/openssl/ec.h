@@ -29,7 +29,6 @@
 # ifndef OPENSSL_NO_EC
 # include <openssl/asn1.h>
 # include <openssl/symhacks.h>
-
 # if OPENSSL_API_COMPAT < 0x10100000L
 #  include <openssl/bn.h>
 # endif
@@ -46,12 +45,12 @@ extern "C" {
 typedef enum {
     /** the point is encoded as z||x, where the octet z specifies
      *  which solution of the quadratic equation y is  */
-            POINT_CONVERSION_COMPRESSED = 2,
+    POINT_CONVERSION_COMPRESSED = 2,
     /** the point is encoded as z||x||y, where z is the octet 0x04  */
-            POINT_CONVERSION_UNCOMPRESSED = 4,
+    POINT_CONVERSION_UNCOMPRESSED = 4,
     /** the point is encoded as z||x||y, where the octet z specifies
      *  which solution of the quadratic equation y is  */
-            POINT_CONVERSION_HYBRID = 6
+    POINT_CONVERSION_HYBRID = 6
 } point_conversion_form_t;
 
 typedef struct ec_method_st EC_METHOD;
@@ -709,14 +708,17 @@ DECLARE_ASN1_ALLOC_FUNCTIONS(ECPARAMETERS)
 int EC_GROUP_get_basis_type(const EC_GROUP *);
 # ifndef OPENSSL_NO_EC2M
 int EC_GROUP_get_trinomial_basis(const EC_GROUP *, unsigned int *k);
+
 int EC_GROUP_get_pentanomial_basis(const EC_GROUP *, unsigned int *k1,
                                    unsigned int *k2, unsigned int *k3);
+
 # endif
 
 # define OPENSSL_EC_EXPLICIT_CURVE  0x000
 # define OPENSSL_EC_NAMED_CURVE     0x001
 
 EC_GROUP *d2i_ECPKParameters(EC_GROUP **, const unsigned char **in, long len);
+
 int i2d_ECPKParameters(const EC_GROUP *, unsigned char **out);
 
 # define d2i_ECPKParameters_bio(bp, x) ASN1_d2i_bio_of(EC_GROUP,NULL,d2i_ECPKParameters,bp,x)
@@ -727,8 +729,11 @@ int i2d_ECPKParameters(const EC_GROUP *, unsigned char **out);
                 (unsigned char *)(x))
 
 int ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off);
+
 # ifndef OPENSSL_NO_STDIO
+
 int ECPKParameters_print_fp(FILE *fp, const EC_GROUP *x, int off);
+
 # endif
 
 /********************************************************************/

@@ -17,10 +17,8 @@
 # include <openssl/bio.h>
 # include <openssl/asn1.h>
 # include <openssl/ossl_typ.h>
-
 # if OPENSSL_API_COMPAT < 0x10100000L
 #  include <openssl/bn.h>
-
 # endif
 
 # ifdef  __cplusplus
@@ -125,28 +123,46 @@ DH *DH_new_method(ENGINE *engine);
 DH *DH_new(void);
 void DH_free(DH *dh);
 int DH_up_ref(DH *dh);
+
 int DH_bits(const DH *dh);
+
 int DH_size(const DH *dh);
+
 int DH_security_bits(const DH *dh);
+
 #define DH_get_ex_new_index(l, p, newf, dupf, freef) \
     CRYPTO_get_ex_new_index(CRYPTO_EX_INDEX_DH, l, p, newf, dupf, freef)
+
 int DH_set_ex_data(DH *d, int idx, void *arg);
+
 void *DH_get_ex_data(DH *d, int idx);
 
 /* Deprecated version */
-DEPRECATEDIN_0_9_8(DH *DH_generate_parameters(int prime_len, int generator,
-                                              void (*callback)(int, int,
-                                                               void *),
-                           void *cb_arg))
+DEPRECATEDIN_0_9_8(DH
+*
+
+DH_generate_parameters(int prime_len, int generator,
+                       void (*callback)(int, int,
+                                        void *),
+                       void *cb_arg)
+
+)
 
 /* New version */
-int DH_generate_parameters_ex(DH *dh, int prime_len, int generator,
-                              BN_GENCB *cb);
+int DH_generate_parameters_ex(DH * dh, int
+prime_len,
+int generator,
+        BN_GENCB
+*cb);
 
 int DH_check_params(const DH *dh, int *ret);
+
 int DH_check(const DH *dh, int *codes);
+
 int DH_check_pub_key(const DH *dh, const BIGNUM *pub_key, int *codes);
-int DH_generate_key(DH *dh);
+
+int DH_generate_key(DH * dh);
+
 int DH_compute_key(unsigned char *key, const BIGNUM *pub_key, DH *dh);
 int DH_compute_key_padded(unsigned char *key, const BIGNUM *pub_key, DH *dh);
 DH *d2i_DHparams(DH **a, const unsigned char **pp, long length);
@@ -185,34 +201,73 @@ long DH_get_length(const DH *dh);
 int DH_set_length(DH *dh, long length);
 
 DH_METHOD *DH_meth_new(const char *name, int flags);
+
 void DH_meth_free(DH_METHOD *dhm);
+
 DH_METHOD *DH_meth_dup(const DH_METHOD *dhm);
+
 const char *DH_meth_get0_name(const DH_METHOD *dhm);
+
 int DH_meth_set1_name(DH_METHOD *dhm, const char *name);
+
 int DH_meth_get_flags(const DH_METHOD *dhm);
+
 int DH_meth_set_flags(DH_METHOD *dhm, int flags);
+
 void *DH_meth_get0_app_data(const DH_METHOD *dhm);
+
 int DH_meth_set0_app_data(DH_METHOD *dhm, void *app_data);
-int (*DH_meth_get_generate_key(const DH_METHOD *dhm))(DH *);
-int DH_meth_set_generate_key(DH_METHOD *dhm, int (*generate_key)(DH *));
+
+int (*DH_meth_get_generate_key(const DH_METHOD *dhm))
+
+(DH *);
+
+int DH_meth_set_generate_key(DH_METHOD *dhm, int (*generate_key)(DH *)
+
+);
+
 int (*DH_meth_get_compute_key(const DH_METHOD *dhm))
         (unsigned char *key, const BIGNUM *pub_key, DH *dh);
+
 int DH_meth_set_compute_key(DH_METHOD *dhm,
-                            int (*compute_key)(unsigned char *key, const BIGNUM *pub_key, DH *dh));
+                            int (*compute_key)(unsigned char *key, const BIGNUM *pub_key, DH *dh)
+
+);
+
 int (*DH_meth_get_bn_mod_exp(const DH_METHOD *dhm))
         (const DH *, BIGNUM *, const BIGNUM *, const BIGNUM *, const BIGNUM *,
          BN_CTX *, BN_MONT_CTX *);
+
 int DH_meth_set_bn_mod_exp(DH_METHOD *dhm,
                            int (*bn_mod_exp)(const DH *, BIGNUM *, const BIGNUM *, const BIGNUM *,
-                                             const BIGNUM *, BN_CTX *, BN_MONT_CTX *));
-int (*DH_meth_get_init(const DH_METHOD *dhm))(DH *);
-int DH_meth_set_init(DH_METHOD *dhm, int (*init)(DH *));
-int (*DH_meth_get_finish(const DH_METHOD *dhm))(DH *);
-int DH_meth_set_finish(DH_METHOD *dhm, int (*finish)(DH *));
+                           const BIGNUM *, BN_CTX *, BN_MONT_CTX *)
+
+);
+
+int (*DH_meth_get_init(const DH_METHOD *dhm))
+
+(DH *);
+
+int DH_meth_set_init(DH_METHOD *dhm, int (*init)(DH *)
+
+);
+
+int (*DH_meth_get_finish(const DH_METHOD *dhm))
+
+(DH *);
+
+int DH_meth_set_finish(DH_METHOD *dhm, int (*finish)(DH *)
+
+);
+
 int (*DH_meth_get_generate_params(const DH_METHOD *dhm))
-        (DH *, int, int, BN_GENCB *);
+
+(DH *, int, int, BN_GENCB *);
+
 int DH_meth_set_generate_params(DH_METHOD *dhm,
-                                int (*generate_params)(DH *, int, int, BN_GENCB *));
+                                int (*generate_params)(DH *, int, int, BN_GENCB *)
+
+);
 
 
 # define EVP_PKEY_CTX_set_dh_paramgen_prime_len(ctx, len) \

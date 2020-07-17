@@ -25,21 +25,36 @@ struct v3_ext_ctx;
 /* Useful typedefs */
 
 typedef void *(*X509V3_EXT_NEW)(void);
+
 typedef void (*X509V3_EXT_FREE)(void *);
+
 typedef void *(*X509V3_EXT_D2I)(void *, const unsigned char **, long);
+
 typedef int (*X509V3_EXT_I2D)(void *, unsigned char **);
-typedef STACK_OF(CONF_VALUE) *
-(*X509V3_EXT_I2V)(const struct v3_ext_method *method, void *ext,
-                  STACK_OF(CONF_VALUE) *extlist);
+
+typedef STACK_OF(CONF_VALUE)
+*
+(*X509V3_EXT_I2V) (
+const struct v3_ext_method *method,
+void *ext,
+        STACK_OF(CONF_VALUE)
+*extlist);
+
 typedef void *(*X509V3_EXT_V2I)(const struct v3_ext_method *method,
                                 struct v3_ext_ctx *ctx,
-                                STACK_OF(CONF_VALUE) *values);
+                                STACK_OF(CONF_VALUE)
+
+*values);
+
 typedef char *(*X509V3_EXT_I2S)(const struct v3_ext_method *method,
                                 void *ext);
+
 typedef void *(*X509V3_EXT_S2I)(const struct v3_ext_method *method,
                                 struct v3_ext_ctx *ctx, const char *str);
+
 typedef int (*X509V3_EXT_I2R)(const struct v3_ext_method *method, void *ext,
                               BIO *out, int indent);
+
 typedef void *(*X509V3_EXT_R2I)(const struct v3_ext_method *method,
                                 struct v3_ext_ctx *ctx, const char *str);
 
@@ -70,11 +85,17 @@ struct v3_ext_method {
 typedef struct X509V3_CONF_METHOD_st {
     char *(*get_string)(void *db, const char *section, const char *value);
 
-    STACK_OF(CONF_VALUE) *(*get_section)(void *db, const char *section);
+    STACK_OF(CONF_VALUE)
+    *(*get_section) (
+    void *db,
+    const char *section
+    );
 
     void (*free_string)(void *db, char *string);
 
-    void (*free_section)(void *db, STACK_OF(CONF_VALUE) *section);
+    void (*free_section)(void *db, STACK_OF(CONF_VALUE)
+
+    *section);
 } X509V3_CONF_METHOD;
 
 /* Context specific info */

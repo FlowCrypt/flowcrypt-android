@@ -15,7 +15,6 @@
 # ifndef OPENSSL_NO_MD5
 # include <openssl/e_os2.h>
 # include <stddef.h>
-
 # ifdef  __cplusplus
 extern "C" {
 # endif
