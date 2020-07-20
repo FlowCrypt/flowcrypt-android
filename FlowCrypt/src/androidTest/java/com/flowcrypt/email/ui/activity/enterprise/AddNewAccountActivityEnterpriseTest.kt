@@ -27,7 +27,6 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.StubAllExternalIntentsRule
-import com.flowcrypt.email.ui.activity.AddNewAccountActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.base.BaseSignActivityTest
 import okhttp3.mockwebserver.Dispatcher

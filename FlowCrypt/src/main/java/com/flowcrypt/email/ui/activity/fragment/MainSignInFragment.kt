@@ -34,6 +34,7 @@ import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity
+import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
@@ -66,6 +67,8 @@ class MainSignInFragment : BaseFragment(), ProgressBehaviour {
   private val enterpriseDomainRulesViewModel: EnterpriseDomainRulesViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
+  private val existedAccounts = mutableListOf<AccountEntity>()
+
   override val progressView: View?
     get() = view?.findViewById(R.id.progress)
   override val contentView: View?
@@ -83,6 +86,7 @@ class MainSignInFragment : BaseFragment(), ProgressBehaviour {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     subscribeToAuthorizeAndSearchBackups()
+    setupAllAccountsLiveData()
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -104,7 +108,7 @@ class MainSignInFragment : BaseFragment(), ProgressBehaviour {
       }
 
       REQUEST_CODE_CREATE_OR_IMPORT_KEY -> when (resultCode) {
-        Activity.RESULT_OK -> runEmailManagerActivity()
+        Activity.RESULT_OK -> if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
 
         Activity.RESULT_CANCELED, CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
           this.googleSignInAccount = null
@@ -126,12 +130,12 @@ class MainSignInFragment : BaseFragment(), ProgressBehaviour {
           }
 
           CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
-            runEmailManagerActivity()
+            if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
           }
 
           CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
             Toast.makeText(requireContext(), getString(R.string.key_already_imported_finishing_setup), Toast.LENGTH_SHORT).show()
-            runEmailManagerActivity()
+            if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
           }
 
           Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
@@ -211,22 +215,30 @@ class MainSignInFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun onSignSuccess(googleSignInAccount: GoogleSignInAccount?) {
-    if (domainRules?.contains(AccountEntity.DomainRule.NO_PRV_BACKUP.name) == true) {
-      if (googleSignInAccount != null) {
-        requireContext().startService(Intent(requireContext(), CheckClipboardToFindKeyService::class.java))
-        val intent = CreateOrImportKeyActivity.newIntent(requireContext(),
-            AccountEntity(googleSignInAccount, uuid, domainRules), true)
-        startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
+    val existedAccount = existedAccounts.firstOrNull {
+      it.email.equals(googleSignInAccount?.email, ignoreCase = true)
+    }
+
+    if (existedAccount == null) {
+      if (domainRules?.contains(AccountEntity.DomainRule.NO_PRV_BACKUP.name) == true) {
+        if (googleSignInAccount != null) {
+          requireContext().startService(Intent(requireContext(), CheckClipboardToFindKeyService::class.java))
+          val intent = CreateOrImportKeyActivity.newIntent(requireContext(),
+              AccountEntity(googleSignInAccount, uuid, domainRules), true)
+          startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
+        }
+      } else {
+        googleSignInAccount?.let {
+          val account = AccountEntity(it, uuid, domainRules)
+          val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
+          activity?.supportFragmentManager?.beginTransaction()
+              ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
+              ?.addToBackStack(null)
+              ?.commit()
+        }
       }
     } else {
-      googleSignInAccount?.let {
-        val account = AccountEntity(it, uuid, domainRules)
-        val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
-        activity?.supportFragmentManager?.beginTransaction()
-            ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
-            ?.addToBackStack(null)
-            ?.commit()
-      }
+      showInfoSnackbar(msgText = getString(R.string.template_email_alredy_added, existedAccount.email), duration = Snackbar.LENGTH_LONG)
     }
   }
 
@@ -291,7 +303,7 @@ class MainSignInFragment : BaseFragment(), ProgressBehaviour {
           }
 
           Result.Status.SUCCESS -> {
-            runEmailManagerActivity()
+            if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -344,6 +356,30 @@ class MainSignInFragment : BaseFragment(), ProgressBehaviour {
         EmailSyncService.startEmailSyncService(requireContext())
         roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = googleSignInAccount?.email))
         EmailManagerActivity.runEmailManagerActivity(requireContext())
+        activity?.finish()
+      }
+    }
+  }
+
+  private fun setupAllAccountsLiveData() {
+    accountViewModel.pureAccountsLiveData.observe(this, Observer {
+      existedAccounts.clear()
+      existedAccounts.addAll(it)
+    })
+  }
+
+  private fun returnResultOk() {
+    googleSignInAccount?.let {
+      lifecycleScope.launch {
+        val accountEntity = AccountEntity(it, uuid, domainRules)
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
+        roomDatabase.accountDao().addAccountSuspend(accountEntity)
+        roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = accountEntity.email))
+
+        val intent = Intent()
+        intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, accountEntity)
+
+        activity?.setResult(Activity.RESULT_OK, intent)
         activity?.finish()
       }
     }

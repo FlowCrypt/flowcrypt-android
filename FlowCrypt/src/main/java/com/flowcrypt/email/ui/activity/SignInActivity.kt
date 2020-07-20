@@ -10,9 +10,10 @@ import android.os.Bundle
 import android.view.View
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.fragment.MainSignInFragment
+import com.flowcrypt.email.util.GeneralUtil
 
 /**
- * This [Activity] shows a screen where a user can to sign in to his account.
+ * This [Activity] shows a screen where a user can sign in to his account.
  *
  * @author DenBond7
  * Date: 26.14.2017
@@ -27,7 +28,7 @@ class SignInActivity : BaseNodeActivity() {
     get() = false
 
   override val contentViewResourceId: Int
-    get() = R.layout.activity_splash
+    get() = R.layout.activity_sign_in
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -36,5 +37,10 @@ class SignInActivity : BaseNodeActivity() {
       supportFragmentManager.beginTransaction().add(
           R.id.fragmentContainerView, MainSignInFragment()).commitNow()
     }
+  }
+
+  companion object {
+    val KEY_EXTRA_NEW_ACCOUNT =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEW_ACCOUNT", SignInActivity::class.java)
   }
 }

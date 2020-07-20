@@ -53,6 +53,9 @@ abstract class AccountDao : BaseDao<AccountEntity> {
   @Query("SELECT * FROM accounts")
   abstract fun getAccounts(): List<AccountEntity>
 
+  @Query("SELECT * FROM accounts")
+  abstract fun getAccountsLD(): LiveData<List<AccountEntity>>
+
   @Transaction
   open suspend fun addAccountSuspend(accountEntity: AccountEntity) {
     val availableAccounts = getAccountsSuspend()

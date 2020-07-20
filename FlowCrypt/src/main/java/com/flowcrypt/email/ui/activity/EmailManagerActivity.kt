@@ -404,7 +404,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       R.id.floatActionButtonCompose -> startActivity(CreateMessageActivity.generateIntent(this, null,
           MessageEncryptionType.ENCRYPTED))
 
-      R.id.viewIdAddNewAccount -> startActivityForResult(Intent(this, AddNewAccountActivity::class.java),
+      R.id.viewIdAddNewAccount -> startActivityForResult(Intent(this, SignInActivity::class.java),
           REQUEST_CODE_ADD_NEW_ACCOUNT)
     }
   }
