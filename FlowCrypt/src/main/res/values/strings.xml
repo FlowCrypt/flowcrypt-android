@@ -451,4 +451,5 @@
         <item quantity="other">Delete these %1$d messages permanently?</item>
     </plurals>
     <string name="emptying_trash_failed">Emptying trash failed!</string>
+    <string name="processing">Processing&#8230;</string>
 </resources>

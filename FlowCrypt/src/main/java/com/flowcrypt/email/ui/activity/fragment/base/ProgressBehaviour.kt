@@ -29,7 +29,7 @@ interface ProgressBehaviour {
     contentView?.visibility = View.GONE
     statusView?.visibility = View.GONE
 
-    val tVProgressMsg = statusView?.findViewById<TextView>(R.id.tVProgressMsg)
+    val tVProgressMsg = progressView?.findViewById<TextView>(R.id.tVProgressMsg)
     tVProgressMsg?.text = progressMsg
 
     progressView?.visibility = View.VISIBLE

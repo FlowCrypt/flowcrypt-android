@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.api.retrofit.response.base
 
+import java.io.Serializable
+
 /**
  * It's a wrapper for coroutines calls
  *
@@ -13,7 +15,11 @@ package com.flowcrypt.email.api.retrofit.response.base
  *         Time: 3:42 PM
  *         E-mail: DenBond7@gmail.com
  */
-class Result<out T>(val status: Status, val data: T?, val exception: Throwable?, val requestCode: Long = 0) {
+data class Result<out T>(val status: Status,
+                         val data: T?,
+                         val exception: Throwable?,
+                         val requestCode: Long = 0,
+                         val progressMsg: String? = null) : Serializable {
 
   enum class Status {
     SUCCESS,
@@ -35,8 +41,9 @@ class Result<out T>(val status: Status, val data: T?, val exception: Throwable?,
       return Result(status = Status.ERROR, data = data, exception = null, requestCode = requestCode)
     }
 
-    fun <T> loading(data: T? = null, requestCode: Long = 0): Result<T> {
-      return Result(status = Status.LOADING, data = data, exception = null, requestCode = requestCode)
+    fun <T> loading(data: T? = null, requestCode: Long = 0, progressMsg: String? = null): Result<T> {
+      return Result(status = Status.LOADING, data = data, exception = null, requestCode =
+      requestCode, progressMsg = progressMsg)
     }
   }
 }

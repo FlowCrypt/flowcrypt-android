@@ -23,6 +23,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.hasActiveConnection
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
+import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.model.results.LoaderResult
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.UIUtil
@@ -38,6 +39,8 @@ import com.google.android.material.snackbar.Snackbar
  */
 abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderResult> {
   protected val accountViewModel: AccountViewModel by viewModels()
+  protected val roomBasicViewModel: RoomBasicViewModel by viewModels()
+
   protected var account: AccountEntity? = null
   protected var isAccountInfoReceived = false
 
@@ -145,10 +148,12 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
    * @param duration How long to display the message.
    */
   @JvmOverloads
-  fun showInfoSnackbar(view: View?, msgText: String, duration: Int = Snackbar.LENGTH_INDEFINITE)
+  fun showInfoSnackbar(view: View? = getView(), msgText: String?, duration: Int = Snackbar
+      .LENGTH_INDEFINITE)
       : Snackbar? {
     view?.let {
-      snackBar = Snackbar.make(it, msgText, duration).setAction(android.R.string.ok) {}.apply {
+      snackBar = Snackbar.make(it, msgText
+          ?: "", duration).setAction(android.R.string.ok) {}.apply {
         show()
       }
       return snackBar
@@ -179,7 +184,7 @@ abstract class BaseFragment : Fragment(), LoaderManager.LoaderCallbacks<LoaderRe
    * @param duration        How long to display the message.
    * @param onClickListener The Snackbar button click listener.
    */
-  fun showSnackbar(view: View?, msgText: String, btnName: String, duration: Int,
+  fun showSnackbar(view: View? = getView(), msgText: String, btnName: String, duration: Int,
                    onClickListener: View.OnClickListener): Snackbar? {
     view?.let {
       snackBar = Snackbar.make(it, msgText, duration).setAction(btnName, onClickListener).apply {

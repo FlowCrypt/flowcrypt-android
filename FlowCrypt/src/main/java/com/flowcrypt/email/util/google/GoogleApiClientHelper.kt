@@ -47,7 +47,7 @@ class GoogleApiClientHelper {
      * @param requestCode     A request code for handling the result.
      */
     fun signInWithGmailUsingOAuth2(activity: BaseActivity, client: GoogleSignInClient,
-                                   rootView: View, requestCode: Int) {
+                                   rootView: View?, requestCode: Int) {
       if (GeneralUtil.isConnected(activity)) {
         client.signOut()
         activity.startActivityForResult(client.signInIntent, requestCode)

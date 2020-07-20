@@ -41,11 +41,15 @@ import javax.mail.Store
 class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
   val privateKeysLiveData = MutableLiveData<Result<ArrayList<NodeKeyDetails>?>>()
 
-  fun fetchAvailableKeys(accountEntity: AccountEntity) {
+  fun fetchAvailableKeys(accountEntity: AccountEntity?) {
     viewModelScope.launch {
-      privateKeysLiveData.postValue(Result.loading())
-      val result = fetchKeys(accountEntity)
-      privateKeysLiveData.postValue(result)
+      privateKeysLiveData.postValue(Result.loading(progressMsg = "Searching backups..."))
+      if (accountEntity != null) {
+        val result = fetchKeys(accountEntity)
+        privateKeysLiveData.postValue(result)
+      } else {
+        privateKeysLiveData.postValue(Result.exception(NullPointerException("AccountEntity is null!")))
+      }
     }
   }
 
