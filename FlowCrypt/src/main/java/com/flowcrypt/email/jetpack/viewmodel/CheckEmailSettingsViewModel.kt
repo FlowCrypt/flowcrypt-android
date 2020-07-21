@@ -43,7 +43,7 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
       val existedAccount = FlowCryptRoomDatabase.getDatabase(context).accountDao().getAccountSuspend(authCreds.email)
 
       if (existedAccount == null) {
-        checkEmailSettingsLiveData.postValue(Result.loading())
+        checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.connection)))
         val result = checkAuthCreds(authCreds)
         checkEmailSettingsLiveData.postValue(result)
       } else {
@@ -55,6 +55,7 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
 
   private suspend fun checkAuthCreds(authCreds: AuthCredentials): Result<Boolean?> =
       withContext(Dispatchers.IO) {
+        val context: Context = getApplication()
         val props = PropertiesHelper.genProps(authCreds)
         props[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_CONNECTIONTIMEOUT] = 1000 * 10
         props[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_CONNECTIONTIMEOUT] = 1000 * 10
@@ -63,6 +64,7 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
         session.debug = EmailUtil.hasEnabledDebug(getApplication())
 
         try {
+          checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.checking_imap_settings)))
           testImapConn(authCreds, session)
         } catch (e: Exception) {
           e.printStackTrace()
@@ -70,6 +72,7 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
         }
 
         try {
+          checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.checking_smtp_settings)))
           testSmtpConn(authCreds, session)
         } catch (e: Exception) {
           e.printStackTrace()

@@ -154,7 +154,11 @@ class MainSignInFragment : BaseFragment(), ProgressBehaviour {
       signInWithGmail()
     }
     view.findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener {
-      //in progress
+      val addOtherAccountFragment = AddOtherAccountFragment.newInstance()
+      activity?.supportFragmentManager?.beginTransaction()
+          ?.replace(R.id.fragmentContainerView, addOtherAccountFragment, AddOtherAccountFragment::class.java.simpleName)
+          ?.addToBackStack(null)
+          ?.commit()
     }
     view.findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_PRIVACY_URL)

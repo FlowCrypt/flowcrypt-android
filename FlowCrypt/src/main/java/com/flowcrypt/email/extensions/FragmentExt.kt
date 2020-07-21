@@ -6,6 +6,7 @@
 package com.flowcrypt.email.extensions
 
 import android.widget.Toast
+import androidx.fragment.app.DialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 
@@ -26,6 +27,10 @@ fun androidx.fragment.app.Fragment.toast(resId: Int, duration: Int = Toast.LENGT
   }
 }
 
+fun androidx.fragment.app.Fragment.showDialogFragment(dialog: DialogFragment) {
+  dialog.show(parentFragmentManager, dialog.javaClass::class.java.simpleName)
+}
+
 fun androidx.fragment.app.Fragment.showInfoDialog(
     dialogTitle: String? = null,
     dialogMsg: String? = null,
@@ -44,7 +49,7 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
       hasHtml = hasHtml
   )
   fragment.setTargetFragment(this, requestCode)
-  fragment.show(parentFragmentManager, fragment.javaClass::class.java.simpleName)
+  showDialogFragment(fragment)
 }
 
 fun androidx.fragment.app.Fragment.showTwoWayDialog(
@@ -63,5 +68,5 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
       isCancelable = isCancelable
   )
   fragment.setTargetFragment(this, requestCode)
-  fragment.show(parentFragmentManager, fragment.javaClass::class.java.simpleName)
+  showDialogFragment(fragment)
 }
