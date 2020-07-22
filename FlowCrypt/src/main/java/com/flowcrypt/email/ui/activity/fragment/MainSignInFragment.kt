@@ -35,7 +35,7 @@ import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
-import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -58,7 +58,7 @@ import kotlinx.coroutines.launch
  *         Time: 12:06 PM
  *         E-mail: DenBond7@gmail.com
  */
-class MainSignInFragment : BaseFragment(), ProgressBehaviour {
+class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
   private lateinit var client: GoogleSignInClient
   private var googleSignInAccount: GoogleSignInAccount? = null
   private var uuid: String? = null
@@ -66,8 +66,6 @@ class MainSignInFragment : BaseFragment(), ProgressBehaviour {
 
   private val enterpriseDomainRulesViewModel: EnterpriseDomainRulesViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
-
-  private val existedAccounts = mutableListOf<AccountEntity>()
 
   override val progressView: View?
     get() = view?.findViewById(R.id.progress)
@@ -86,7 +84,6 @@ class MainSignInFragment : BaseFragment(), ProgressBehaviour {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     subscribeToAuthorizeAndSearchBackups()
-    setupAllAccountsLiveData()
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -146,6 +143,56 @@ class MainSignInFragment : BaseFragment(), ProgressBehaviour {
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
+    }
+  }
+
+  override fun runEmailManagerActivity() {
+    if (googleSignInAccount == null) {
+      ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
+      Toast.makeText(requireContext(), R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
+      return
+    }
+
+    googleSignInAccount?.email?.let { email ->
+      lifecycleScope.launch {
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
+        val existedAccount = roomDatabase.accountDao().getAccountSuspend(email)
+
+        val insertOrUpdateCandidate = googleSignInAccount?.let {
+          AccountEntity(it, uuid, domainRules)
+        }
+
+        insertOrUpdateCandidate?.let {
+          if (existedAccount == null) {
+            roomDatabase.accountDao().addAccountSuspend(insertOrUpdateCandidate)
+          } else {
+            roomDatabase.accountDao().updateAccountSuspend(insertOrUpdateCandidate.copy(
+                id = existedAccount.id, uuid = existedAccount.uuid, domainRules = existedAccount.domainRules))
+          }
+        }
+
+        EmailSyncService.startEmailSyncService(requireContext())
+        roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = googleSignInAccount?.email))
+        EmailManagerActivity.runEmailManagerActivity(requireContext())
+        activity?.finish()
+      }
+    }
+  }
+
+  override fun returnResultOk() {
+    googleSignInAccount?.let {
+      lifecycleScope.launch {
+        val accountEntity = AccountEntity(it, uuid, domainRules)
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
+        roomDatabase.accountDao().addAccountSuspend(accountEntity)
+        roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = accountEntity.email))
+
+        val intent = Intent()
+        intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, accountEntity)
+
+        activity?.setResult(Activity.RESULT_OK, intent)
+        activity?.finish()
+      }
     }
   }
 
@@ -330,63 +377,6 @@ class MainSignInFragment : BaseFragment(), ProgressBehaviour {
         }
       }
     })
-  }
-
-  private fun runEmailManagerActivity() {
-    if (googleSignInAccount == null) {
-      ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
-      Toast.makeText(requireContext(), R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
-      return
-    }
-
-    googleSignInAccount?.email?.let { email ->
-      lifecycleScope.launch {
-        val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-        val existedAccount = roomDatabase.accountDao().getAccountSuspend(email)
-
-        val insertOrUpdateCandidate = googleSignInAccount?.let {
-          AccountEntity(it, uuid, domainRules)
-        }
-
-        insertOrUpdateCandidate?.let {
-          if (existedAccount == null) {
-            roomDatabase.accountDao().addAccountSuspend(insertOrUpdateCandidate)
-          } else {
-            roomDatabase.accountDao().updateAccountSuspend(insertOrUpdateCandidate.copy(
-                id = existedAccount.id, uuid = existedAccount.uuid, domainRules = existedAccount.domainRules))
-          }
-        }
-
-        EmailSyncService.startEmailSyncService(requireContext())
-        roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = googleSignInAccount?.email))
-        EmailManagerActivity.runEmailManagerActivity(requireContext())
-        activity?.finish()
-      }
-    }
-  }
-
-  private fun setupAllAccountsLiveData() {
-    accountViewModel.pureAccountsLiveData.observe(this, Observer {
-      existedAccounts.clear()
-      existedAccounts.addAll(it)
-    })
-  }
-
-  private fun returnResultOk() {
-    googleSignInAccount?.let {
-      lifecycleScope.launch {
-        val accountEntity = AccountEntity(it, uuid, domainRules)
-        val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-        roomDatabase.accountDao().addAccountSuspend(accountEntity)
-        roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = accountEntity.email))
-
-        val intent = Intent()
-        intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, accountEntity)
-
-        activity?.setResult(Activity.RESULT_OK, intent)
-        activity?.finish()
-      }
-    }
   }
 
   companion object {

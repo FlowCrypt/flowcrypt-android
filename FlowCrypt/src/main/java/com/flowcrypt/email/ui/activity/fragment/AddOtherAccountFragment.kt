@@ -38,10 +38,12 @@ import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
+import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
-import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -65,7 +67,7 @@ import javax.mail.AuthenticationFailedException
  *         Time: 3:39 PM
  *         E-mail: DenBond7@gmail.com
  */
-class AddOtherAccountFragment : BaseFragment(), ProgressBehaviour,
+class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     AdapterView.OnItemSelectedListener {
 
   private var editTextEmail: EditText? = null
@@ -142,7 +144,7 @@ class AddOtherAccountFragment : BaseFragment(), ProgressBehaviour,
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
       REQUEST_CODE_ADD_NEW_ACCOUNT -> when (resultCode) {
-        Activity.RESULT_OK -> returnOkResult()
+        Activity.RESULT_OK -> if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
 
         CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT -> {
           //return result --> need to use another account
@@ -164,13 +166,13 @@ class AddOtherAccountFragment : BaseFragment(), ProgressBehaviour,
         }
 
         CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
-          returnOkResult()
+          if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
         }
 
         CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
           Toast.makeText(requireContext(), getString(R.string.key_already_imported_finishing_setup), Toast
               .LENGTH_SHORT).show()
-          returnOkResult()
+          if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
         }
 
         Activity.RESULT_CANCELED -> showContent()
@@ -217,6 +219,44 @@ class AddOtherAccountFragment : BaseFragment(), ProgressBehaviour,
 
   override fun onNothingSelected(parent: AdapterView<*>) {
 
+  }
+
+  override fun runEmailManagerActivity() {
+    lifecycleScope.launch {
+      val accountEntity = AccountEntity(generateAuthCreds())
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
+      roomDatabase.accountDao().addAccountSuspend(accountEntity)
+      EmailSyncService.startEmailSyncService(requireContext())
+
+      val addedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email)
+      if (addedAccount != null) {
+        EmailManagerActivity.runEmailManagerActivity(requireContext())
+        activity?.finish()
+      } else {
+        Toast.makeText(requireContext(), R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
+      }
+    }
+  }
+
+  override fun returnResultOk() {
+    lifecycleScope.launch {
+      try {
+        val newAccount = AccountEntity(generateAuthCreds())
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
+        roomDatabase.accountDao().addAccountSuspend(newAccount)
+        val addedAccount = roomDatabase.accountDao().getAccountSuspend(newAccount.email)
+
+        val intent = Intent()
+        intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, addedAccount)
+        activity?.setResult(Activity.RESULT_OK, intent)
+        activity?.finish()
+      } catch (e: Exception) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
+        Toast.makeText(requireContext(), e.message
+            ?: getString(R.string.error_occurred_during_adding_new_account), Toast.LENGTH_SHORT).show()
+      }
+    }
   }
 
   private fun initViews(view: View) {
@@ -435,7 +475,7 @@ class AddOtherAccountFragment : BaseFragment(), ProgressBehaviour,
           }
 
           Result.Status.SUCCESS -> {
-            returnOkResult()
+            if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -526,30 +566,6 @@ class AddOtherAccountFragment : BaseFragment(), ProgressBehaviour,
       //setResult(RESULT_CODE_CONTINUE_WITH_GMAIL)
       //finish()
     })
-  }
-
-  /**
-   * Return the [Activity.RESULT_OK] to the initiator-activity.
-   */
-  private fun returnOkResult() {
-    lifecycleScope.launch {
-      try {
-        val newAccount = AccountEntity(generateAuthCreds())
-        val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-        roomDatabase.accountDao().addAccountSuspend(newAccount)
-        val addedAccount = roomDatabase.accountDao().getAccountSuspend(newAccount.email)
-
-        val intent = Intent()
-        intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, addedAccount)
-        activity?.setResult(Activity.RESULT_OK, intent)
-        activity?.finish()
-      } catch (e: Exception) {
-        e.printStackTrace()
-        ExceptionUtil.handleError(e)
-        Toast.makeText(requireContext(), e.message
-            ?: getString(R.string.error_occurred_during_adding_new_account), Toast.LENGTH_SHORT).show()
-      }
-    }
   }
 
   /**

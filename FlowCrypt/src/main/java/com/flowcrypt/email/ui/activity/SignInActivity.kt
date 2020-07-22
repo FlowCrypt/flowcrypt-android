@@ -8,6 +8,7 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.os.Bundle
 import android.view.View
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.fragment.MainSignInFragment
 import com.flowcrypt.email.util.GeneralUtil
@@ -40,6 +41,8 @@ class SignInActivity : BaseNodeActivity() {
   }
 
   companion object {
+    const val ACTION_ADD_ONE_MORE_ACCOUNT = BuildConfig.APPLICATION_ID + ".ACTION_ADD_ONE_MORE_ACCOUNT"
+
     val KEY_EXTRA_NEW_ACCOUNT =
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEW_ACCOUNT", SignInActivity::class.java)
   }
