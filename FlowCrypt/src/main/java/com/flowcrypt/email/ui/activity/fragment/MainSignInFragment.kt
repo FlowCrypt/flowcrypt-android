@@ -111,35 +111,14 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
           this.googleSignInAccount = null
           showContent()
         }
+
+        CreateOrImportKeyActivity.RESULT_CODE_HANDLE_RESOLVED_KEYS -> {
+          handleResultFromCheckKeysActivity(resultCode, data)
+        }
       }
 
       REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL -> {
-        when (resultCode) {
-          Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
-            val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
-                CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
-
-            if (keys.isNullOrEmpty()) {
-              showInfoSnackbar(msgText = getString(R.string.error_no_keys))
-            } else {
-              privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
-            }
-          }
-
-          CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
-            if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
-          }
-
-          CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
-            Toast.makeText(requireContext(), getString(R.string.key_already_imported_finishing_setup), Toast.LENGTH_SHORT).show()
-            if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
-          }
-
-          Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
-            this.googleSignInAccount = null
-            showContent()
-          }
-        }
+        handleResultFromCheckKeysActivity(resultCode, data)
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
@@ -377,6 +356,35 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
         }
       }
     })
+  }
+
+  private fun handleResultFromCheckKeysActivity(resultCode: Int, data: Intent?) {
+    when (resultCode) {
+      Activity.RESULT_OK, CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
+        val keys: List<NodeKeyDetails>? = data?.getParcelableArrayListExtra(
+            CheckKeysActivity.KEY_EXTRA_UNLOCKED_PRIVATE_KEYS)
+
+        if (keys.isNullOrEmpty()) {
+          showInfoSnackbar(msgText = getString(R.string.error_no_keys))
+        } else {
+          privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
+        }
+      }
+
+      CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
+        if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+      }
+
+      CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
+        Toast.makeText(requireContext(), getString(R.string.key_already_imported_finishing_setup), Toast.LENGTH_SHORT).show()
+        if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+      }
+
+      Activity.RESULT_CANCELED, CheckKeysActivity.RESULT_NEGATIVE -> {
+        this.googleSignInAccount = null
+        showContent()
+      }
+    }
   }
 
   companion object {

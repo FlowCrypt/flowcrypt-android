@@ -183,6 +183,11 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
               }
             }
           }
+
+          CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
+            setResult(CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS, data)
+            finish()
+          }
         }
       }
       else -> super.onActivityResult(requestCode, resultCode, data)
