@@ -366,7 +366,7 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            showProgress(progressMsg = "Loading domain rules...")
+            showProgress(progressMsg = getString(R.string.loading_domain_rules))
           }
 
           Result.Status.SUCCESS -> {

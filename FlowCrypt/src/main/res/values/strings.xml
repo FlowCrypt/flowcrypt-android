@@ -456,6 +456,14 @@
     <string name="or_use_your_credentials_to_connect">or use your credentials to connect</string>
     <string name="advanced_settings">Advanced settings</string>
     <string name="connection">Connecting&#8230;</string>
-    <string name="checking_imap_settings">Checking IMAP setting&#8230;</string>
-    <string name="checking_smtp_settings">Checking SMTP setting&#8230;</string>
+    <string name="checking_imap_settings">Checking IMAP settings&#8230;</string>
+    <string name="checking_smtp_settings">Checking SMTP settings&#8230;</string>
+    <string name="searching_backups">Searching backups&#8230;</string>
+    <string name="loading_domain_rules">Loading domain rules&#8230;</string>
+    <plurals name="found_folder">
+        <item quantity="zero">No folders found</item>
+        <item quantity="one">Found 1 folder</item>
+        <item quantity="other">Found %1$d folders</item>
+    </plurals>
+    <string name="searching_in_folders" tools:ignore="PluralsCandidate">Searching in folder %1$d of %2$d</string>
 </resources>
