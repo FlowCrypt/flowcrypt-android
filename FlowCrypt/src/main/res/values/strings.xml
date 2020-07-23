@@ -465,5 +465,5 @@
         <item quantity="one">Found 1 folder</item>
         <item quantity="other">Found %1$d folders</item>
     </plurals>
-    <string name="searching_in_folders" tools:ignore="PluralsCandidate">Searching in folder %1$d of %2$d</string>
+    <string name="searching_in_folders" tools:ignore="PluralsCandidate">Searching for backups in folder %1$d/%2$d</string>
 </resources>
