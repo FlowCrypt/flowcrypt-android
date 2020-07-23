@@ -19,6 +19,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -89,6 +90,7 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
+    setupEnterpriseViewModel()
     setupPrivateKeysViewModel()
   }
 
@@ -268,6 +270,7 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
         }
       }
     } else {
+      showContent()
       showInfoSnackbar(msgText = getString(R.string.template_email_alredy_added, existedAccount.email), duration = Snackbar.LENGTH_LONG)
     }
   }
@@ -352,6 +355,37 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
               showInfoSnackbar(msgText = e?.message ?: e?.javaClass?.simpleName
               ?: getString(R.string.unknown_error))
             }
+          }
+        }
+      }
+    })
+  }
+
+  private fun setupEnterpriseViewModel() {
+    enterpriseDomainRulesViewModel.domainRulesLiveData.observe(viewLifecycleOwner, Observer {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            showProgress(progressMsg = "Loading domain rules...")
+          }
+
+          Result.Status.SUCCESS -> {
+            val result = it.data as? DomainRulesResponse
+            domainRules = result?.domainRules?.flags ?: emptyList()
+            onSignSuccess(googleSignInAccount)
+            enterpriseDomainRulesViewModel.domainRulesLiveData.value = null
+          }
+
+          Result.Status.ERROR -> {
+            showContent()
+            Toast.makeText(requireContext(), it.data?.apiError?.msg
+                ?: getString(R.string.could_not_load_domain_rules), Toast.LENGTH_SHORT).show()
+          }
+
+          Result.Status.EXCEPTION -> {
+            showContent()
+            Toast.makeText(requireContext(), it.exception?.message
+                ?: getString(R.string.could_not_load_domain_rules), Toast.LENGTH_SHORT).show()
           }
         }
       }

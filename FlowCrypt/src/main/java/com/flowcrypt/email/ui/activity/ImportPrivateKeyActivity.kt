@@ -188,6 +188,11 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             setResult(CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS, data)
             finish()
           }
+
+          CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
+            setResult(CheckKeysActivity.RESULT_USE_EXISTING_KEYS, data)
+            finish()
+          }
         }
       }
       else -> super.onActivityResult(requestCode, resultCode, data)
