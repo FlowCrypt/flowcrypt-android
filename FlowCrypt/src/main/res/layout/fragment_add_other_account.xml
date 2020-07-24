@@ -29,41 +29,29 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/textViewConnectYourEmail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_big"
+            <ImageView
+                android:id="@+id/imageViewLogo"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/default_margin_content_large"
+                android:contentDescription="@string/app_name"
+                android:drawablePadding="@dimen/default_margin_medium"
+                android:fontFamily="sans-serif-medium"
                 android:gravity="center"
-                android:lineSpacingExtra="@dimen/default_margin_small"
-                android:text="@string/connect_your_email_account_using_oauth_2_0"
-                android:textColor="@android:color/black"
-                android:textSize="@dimen/default_text_size_big"
+                android:scaleType="center"
+                android:textAlignment="center"
+                android:textAllCaps="false"
+                android:textSize="@dimen/text_size_logo_crypt"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/guidelineTop" />
-
-            <Button
-                android:id="@+id/buttonSignInWithGmail"
-                style="@style/AppWidget.Button.White.ConnectAccount"
-                android:layout_marginTop="@dimen/default_margin_content"
-                android:drawableStart="@mipmap/ic_gmail"
-                android:text="@string/continue_with_gmail"
-                android:theme="@style/AppWidget.Button.White.ConnectAccount"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textViewConnectYourEmail"
-                app:layout_constraintVertical_chainStyle="packed"
-                tools:layout_constraintLeft_creator="1"
-                tools:layout_constraintRight_creator="1"
-                tools:layout_constraintTop_creator="1" />
+                app:layout_constraintTop_toTopOf="@+id/guidelineTop"
+                app:srcCompat="@mipmap/logo_flowcrypt" />
 
             <TextView
                 android:id="@+id/textViewConnect"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/default_margin_content_big"
                 android:gravity="center"
                 android:lineSpacingExtra="@dimen/default_margin_small"
                 android:text="@string/or_use_your_credentials_to_connect"
@@ -71,7 +59,7 @@
                 android:textSize="@dimen/default_text_size_big"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/buttonSignInWithGmail" />
+                app:layout_constraintTop_toBottomOf="@+id/imageViewLogo" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/constraintLayoutCredentials"

@@ -181,6 +181,7 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
     view.findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener {
       signInWithGmail()
     }
+
     view.findViewById<View>(R.id.buttonOtherEmailProvider)?.setOnClickListener {
       val addOtherAccountFragment = AddOtherAccountFragment.newInstance()
       activity?.supportFragmentManager?.beginTransaction()
@@ -188,16 +189,20 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
           ?.addToBackStack(null)
           ?.commit()
     }
+
     view.findViewById<View>(R.id.buttonPrivacy)?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_PRIVACY_URL)
     }
+
     view.findViewById<View>(R.id.buttonTerms)?.setOnClickListener {
       GeneralUtil.openCustomTab(requireContext(), Constants.FLOWCRYPT_TERMS_URL)
     }
+
     view.findViewById<View>(R.id.buttonSecurity)?.setOnClickListener {
       startActivity(HtmlViewFromAssetsRawActivity.newIntent(requireContext(), getString(R.string.security),
           "html/security.htm"))
     }
+
     view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
       FeedbackActivity.show(requireActivity())
     }
@@ -302,8 +307,6 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
 
           }
         }
-      } else {
-        //show error
       }
     }
   }

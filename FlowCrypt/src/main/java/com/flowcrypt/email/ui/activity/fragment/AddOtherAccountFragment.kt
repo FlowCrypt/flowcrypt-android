@@ -12,6 +12,7 @@ import android.text.Editable
 import android.text.TextUtils
 import android.text.TextWatcher
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.CheckBox
@@ -81,6 +82,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   private var editTextSmtpPassword: EditText? = null
   private var spinnerImapSecurityType: Spinner? = null
   private var spinnerSmtpSecurityType: Spinner? = null
+  private var checkBoxAdvancedMode: CheckBox? = null
   private var checkBoxRequireSignInForSmtp: CheckBox? = null
   private var authCreds: AuthCredentials? = null
 
@@ -244,6 +246,20 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     editTextSmtpUsername = view.findViewById(R.id.editTextSmtpUsername)
     editTextSmtpPassword = view.findViewById(R.id.editTextSmtpPassword)
 
+    editTextPassword?.setOnEditorActionListener { v, actionId, event ->
+      return@setOnEditorActionListener when (actionId) {
+        EditorInfo.IME_ACTION_DONE -> {
+          if (isDataCorrect()) {
+            v.hideKeyboard()
+            authCreds = generateAuthCreds()
+            tryToConnect()
+          }
+          true
+        }
+        else -> false
+      }
+    }
+
     editTextEmail?.addTextChangedListener(object : TextWatcher {
       override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
 
@@ -261,7 +277,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       }
     })
 
-    val checkBoxAdvancedMode = view.findViewById<CheckBox>(R.id.checkBoxAdvancedMode)
+    checkBoxAdvancedMode = view.findViewById(R.id.checkBoxAdvancedMode)
     checkBoxRequireSignInForSmtp = view.findViewById(R.id.checkBoxRequireSignInForSmtp)
     checkBoxRequireSignInForSmtp?.setOnCheckedChangeListener { _, isChecked ->
       if (checkBoxAdvancedMode?.isChecked == true) {
@@ -269,7 +285,8 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       }
     }
 
-    checkBoxAdvancedMode.setOnCheckedChangeListener { _, isChecked ->
+    checkBoxAdvancedMode?.setOnCheckedChangeListener { buttonView, isChecked ->
+      buttonView.hideKeyboard()
       view.findViewById<View>(R.id.groupAdvancedSettings)?.visibility = if (isChecked) View.VISIBLE else View.GONE
       if ((checkBoxRequireSignInForSmtp?.isChecked == true) && isChecked) {
         view.findViewById<View>(R.id.groupRequireSignInForSmtp)?.visibility = View.VISIBLE
@@ -377,8 +394,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
           }
         }
-      } else {
-        //show error
       }
     }
   }
@@ -432,8 +447,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
           }
         }
-      } else {
-        //show error
       }
     }
   }
@@ -507,12 +520,12 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
    */
   private fun generateAuthCreds(): AuthCredentials {
     val imapPort = if (TextUtils.isEmpty(editTextImapPort?.text))
-      JavaEmailConstants.DEFAULT_IMAP_PORT
+      JavaEmailConstants.SSL_IMAP_PORT
     else
       Integer.parseInt(editTextImapPort?.text.toString())
 
     val smtpPort = if (TextUtils.isEmpty(editTextSmtpPort?.text))
-      JavaEmailConstants.DEFAULT_SMTP_PORT
+      JavaEmailConstants.SSL_SMTP_PORT
     else
       Integer.parseInt(editTextSmtpPort?.text.toString())
 
@@ -535,8 +548,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   private fun showLessSecurityWarning() {
     showSnackbar(rootView, getString(R.string.less_secure_login_is_not_allowed),
         getString(android.R.string.ok), Snackbar.LENGTH_LONG, View.OnClickListener {
-      //setResult(RESULT_CODE_CONTINUE_WITH_GMAIL)
-      //finish()
+      parentFragmentManager.popBackStack()
     })
   }
 
@@ -553,6 +565,18 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       }
 
       GeneralUtil.isEmailValid(editTextEmail?.text) -> {
+        if (checkBoxAdvancedMode?.isChecked == false) {
+          when {
+            editTextPassword?.text.isNullOrEmpty() -> {
+              showInfoSnackbar(editTextPassword, getString(R.string.text_must_not_be_empty,
+                  getString(R.string.password)))
+              editTextPassword?.requestFocus()
+            }
+
+            else -> return true
+          }
+        }
+
         when {
           editTextUserName?.text.isNullOrEmpty() -> {
             showInfoSnackbar(editTextUserName, getString(R.string.text_must_not_be_empty,
@@ -656,8 +680,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       Activity.RESULT_CANCELED -> showContent()
 
       CheckKeysActivity.RESULT_NEGATIVE -> {
-        //setResult(CreateOrImportKeyActivity.RESULT_CODE_USE_ANOTHER_ACCOUNT, data)
-        //activity?.finish()
+        parentFragmentManager.popBackStack()
       }
     }
   }

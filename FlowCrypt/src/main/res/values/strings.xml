@@ -453,7 +453,7 @@
     <string name="emptying_trash_failed">Emptying trash failed!</string>
     <string name="processing">Processing&#8230;</string>
     <string name="connect_your_email_account_using_oauth_2_0">Connect your email account\n using OAuth 2.0</string>
-    <string name="or_use_your_credentials_to_connect">or use your credentials to connect</string>
+    <string name="or_use_your_credentials_to_connect">Use your credentials to connect</string>
     <string name="advanced_settings">Advanced settings</string>
     <string name="connection">Connecting&#8230;</string>
     <string name="checking_imap_settings">Checking IMAP settings&#8230;</string>
