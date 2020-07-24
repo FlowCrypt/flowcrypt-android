@@ -49,6 +49,7 @@ import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
@@ -298,6 +299,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       } else {
         view.findViewById<View>(R.id.groupRequireSignInForSmtp)?.visibility = View.GONE
       }
+
+      if (!isChecked) {
+        applyRecommendSettings()
+      }
     }
 
     spinnerImapSecurityType = view.findViewById(R.id.spinnerImapSecurityType)
@@ -314,6 +319,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
     view.findViewById<View>(R.id.buttonTryToConnect)?.setOnClickListener {
       tryToConnect()
+    }
+
+    view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
+      FeedbackActivity.show(requireActivity())
     }
   }
 
