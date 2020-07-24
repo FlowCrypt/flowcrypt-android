@@ -18,9 +18,15 @@ import com.flowcrypt.email.util.GeneralUtil
  *         E-mail: DenBond7@gmail.com
  */
 object ProvideEmailSettingsHelper {
+  /*********************** Microsoft **********************/
+  private const val PROVIDER_OUTLOOK = "outlook.com"
   private const val IMAP_SERVER_OUTLOOK = "outlook.office365.com"
   private const val SMTP_SERVER_OUTLOOK = "smtp.office365.com"
-  private const val PROVIDER_OUTLOOK = "outlook.com"
+
+  /*********************** Account for internal testing **********************/
+  private const val PROVIDER_TESTS = "denbond7.com"
+  private const val IMAP_SERVER_TESTS = "imap.denbond7.com"
+  private const val SMTP_SERVER_TESTS = "smtp.denbond7.com"
 
   /**
    * Get the base settings for the given account.
@@ -32,6 +38,7 @@ object ProvideEmailSettingsHelper {
 
     return when {
       PROVIDER_OUTLOOK.equals(EmailUtil.getDomain(email), true) -> getOutlookSettings(email, password)
+      PROVIDER_TESTS.equals(EmailUtil.getDomain(email), true) -> getTestProviderSettings(email, password)
 
       else -> {
         null
@@ -53,6 +60,21 @@ object ProvideEmailSettingsHelper {
         hasCustomSignInForSmtp = true,
         smtpSigInUsername = email,
         smtpSignInPassword = password
+    )
+  }
+
+  private fun getTestProviderSettings(email: String, password: String): AuthCredentials {
+    return AuthCredentials(
+        email = email,
+        username = email,
+        password = password,
+        imapServer = IMAP_SERVER_TESTS,
+        imapPort = JavaEmailConstants.DEFAULT_IMAP_PORT,
+        imapOpt = SecurityType.Option.NONE,
+        smtpServer = SMTP_SERVER_TESTS,
+        smtpPort = JavaEmailConstants.DEFAULT_SMTP_PORT,
+        smtpOpt = SecurityType.Option.NONE,
+        hasCustomSignInForSmtp = false
     )
   }
 }
