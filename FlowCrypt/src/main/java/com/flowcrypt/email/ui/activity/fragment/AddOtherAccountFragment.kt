@@ -19,6 +19,7 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
@@ -27,6 +28,7 @@ import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.ProvideEmailSettingsHelper
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
@@ -138,7 +140,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
-    updateView()
+    updateView(authCreds)
 
     setupPrivateKeysViewModel()
   }
@@ -249,33 +251,36 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     editTextPassword?.setOnEditorActionListener { v, actionId, event ->
       return@setOnEditorActionListener when (actionId) {
         EditorInfo.IME_ACTION_DONE -> {
-          if (isDataCorrect()) {
-            v.hideKeyboard()
-            authCreds = generateAuthCreds()
-            tryToConnect()
-          }
+          tryToConnect()
           true
         }
         else -> false
       }
     }
 
-    editTextEmail?.addTextChangedListener(object : TextWatcher {
-      override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
-
-      override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
-
-      override fun afterTextChanged(editable: Editable) {
-        if (GeneralUtil.isEmailValid(editable)) {
-          val email = editable.toString()
-          val mainDomain = email.substring(email.indexOf('@') + 1)
-          editTextImapServer?.setText(getString(R.string.template_imap_server, mainDomain))
-          editTextSmtpServer?.setText(getString(R.string.template_smtp_server, mainDomain))
-          editTextUserName?.setText(email)
-          editTextSmtpUsername?.setText(email)
+    editTextEmail?.addTextChangedListener {
+      if (GeneralUtil.isEmailValid(it)) {
+        if (checkBoxAdvancedMode?.isChecked == false) {
+          if (applyRecommendSettings()) return@addTextChangedListener
         }
+
+        val email = it.toString()
+        val mainDomain = email.substring(email.indexOf('@') + 1)
+        editTextImapServer?.setText(getString(R.string.template_imap_server, mainDomain))
+        editTextSmtpServer?.setText(getString(R.string.template_smtp_server, mainDomain))
+        editTextUserName?.setText(email)
+        editTextSmtpUsername?.setText(email)
       }
-    })
+    }
+
+    editTextPassword?.addTextChangedListener {
+      if (checkBoxAdvancedMode?.isChecked == false) {
+        val recommendAuthCredentials = ProvideEmailSettingsHelper.getBaseSettings(
+            editTextEmail?.text.toString(), editTextPassword?.text.toString())
+
+        editTextSmtpPassword?.setText(recommendAuthCredentials?.smtpSignInPassword)
+      }
+    }
 
     checkBoxAdvancedMode = view.findViewById(R.id.checkBoxAdvancedMode)
     checkBoxRequireSignInForSmtp = view.findViewById(R.id.checkBoxRequireSignInForSmtp)
@@ -308,20 +313,18 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     spinnerSmtpSecurityType?.onItemSelectedListener = this
 
     view.findViewById<View>(R.id.buttonTryToConnect)?.setOnClickListener {
-      if (isDataCorrect()) {
-        it.hideKeyboard()
-        authCreds = generateAuthCreds()
-        tryToConnect()
-      }
+      tryToConnect()
     }
   }
 
   /**
    * Update the current views if [AuthCredentials] not null.l
    */
-  private fun updateView() {
+  private fun updateView(authCreds: AuthCredentials?, updateEmail: Boolean = true) {
     authCreds?.let { nonNullAuthCreds ->
-      editTextEmail?.setText(nonNullAuthCreds.email)
+      if (updateEmail) {
+        editTextEmail?.setText(nonNullAuthCreds.email)
+      }
       editTextUserName?.setText(nonNullAuthCreds.username)
       editTextImapServer?.setText(nonNullAuthCreds.imapServer)
       editTextImapPort?.setText(nonNullAuthCreds.imapPort.toString())
@@ -329,6 +332,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       editTextSmtpPort?.setText(nonNullAuthCreds.smtpPort.toString())
       checkBoxRequireSignInForSmtp?.isChecked = nonNullAuthCreds.hasCustomSignInForSmtp
       editTextSmtpUsername?.setText(nonNullAuthCreds.smtpSigInUsername)
+      editTextSmtpPassword?.setText(nonNullAuthCreds.smtpSignInPassword)
 
       val imapOptionsCount = spinnerImapSecurityType?.adapter?.count ?: 0
       for (i in 0 until imapOptionsCount) {
@@ -643,13 +647,17 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   }
 
   private fun tryToConnect() {
-    authCreds?.let { authCredentials ->
-      val account = AccountEntity(authCredentials)
-      val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
-      activity?.supportFragmentManager?.beginTransaction()
-          ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
-          ?.addToBackStack(null)
-          ?.commit()
+    if (isDataCorrect()) {
+      view?.hideKeyboard()
+      authCreds = generateAuthCreds()
+      authCreds?.let { authCredentials ->
+        val account = AccountEntity(authCredentials)
+        val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
+        activity?.supportFragmentManager?.beginTransaction()
+            ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
+            ?.addToBackStack(null)
+            ?.commit()
+      }
     }
   }
 
@@ -683,6 +691,17 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
         parentFragmentManager.popBackStack()
       }
     }
+  }
+
+  private fun applyRecommendSettings(): Boolean {
+    val recommendAuthCredentials = ProvideEmailSettingsHelper.getBaseSettings(
+        editTextEmail?.text.toString(), editTextPassword?.text.toString())
+
+    if (recommendAuthCredentials != null) {
+      updateView(recommendAuthCredentials, false)
+      return true
+    }
+    return false
   }
 
   companion object {
