@@ -394,10 +394,16 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
               return@setFragmentResultListener
             }
 
+            val dialogMsg = if (checkBoxAdvancedMode?.isChecked == false) {
+              getString(R.string.show_error_msg_with_recommendations, msg)
+            } else {
+              msg
+            }
+
             showTwoWayDialog(
                 requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
                 dialogTitle = title,
-                dialogMsg = msg,
+                dialogMsg = dialogMsg,
                 positiveButtonTitle = getString(R.string.retry),
                 negativeButtonTitle = getString(R.string.cancel),
                 isCancelable = true)
