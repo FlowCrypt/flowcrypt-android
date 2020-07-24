@@ -17,7 +17,7 @@ import com.flowcrypt.email.util.GeneralUtil
  *         Time: 9:09 AM
  *         E-mail: DenBond7@gmail.com
  */
-object ProvideEmailSettingsHelper {
+object EmailProviderSettingsHelper {
   /*********************** Microsoft **********************/
   private const val PROVIDER_OUTLOOK = "outlook.com"
   private const val IMAP_SERVER_OUTLOOK = "outlook.office365.com"

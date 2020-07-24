@@ -27,8 +27,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.ProvideEmailSettingsHelper
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
@@ -276,7 +276,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
     editTextPassword?.addTextChangedListener {
       if (checkBoxAdvancedMode?.isChecked == false) {
-        val recommendAuthCredentials = ProvideEmailSettingsHelper.getBaseSettings(
+        val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(
             editTextEmail?.text.toString(), editTextPassword?.text.toString())
 
         editTextSmtpPassword?.setText(recommendAuthCredentials?.smtpSignInPassword)
@@ -703,7 +703,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   }
 
   private fun applyRecommendSettings(): Boolean {
-    val recommendAuthCredentials = ProvideEmailSettingsHelper.getBaseSettings(
+    val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(
         editTextEmail?.text.toString(), editTextPassword?.text.toString())
 
     if (recommendAuthCredentials != null) {
