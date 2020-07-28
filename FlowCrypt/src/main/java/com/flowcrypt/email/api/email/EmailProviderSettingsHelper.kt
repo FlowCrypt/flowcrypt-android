@@ -36,6 +36,12 @@ object EmailProviderSettingsHelper {
   private const val SMTP_SERVER_ICLOUD = "smtp.mail.me.com"
   private const val FAQ_URL_ICLOUD = "https://support.apple.com/en-us/HT202304"
 
+  /*********************** AOL **********************/
+  private const val PROVIDER_AOL = "aol.com"
+  private const val IMAP_SERVER_AOL = "imap.aol.com"
+  private const val SMTP_SERVER_AOL = "smtp.aol.com"
+  private const val FAQ_URL_AOL = "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail"
+
   /*********************** Account for internal testing **********************/
   private const val PROVIDER_TESTS = "denbond7.com"
   private const val IMAP_SERVER_TESTS = "imap.denbond7.com"
@@ -55,6 +61,7 @@ object EmailProviderSettingsHelper {
       PROVIDER_LIVE.equals(EmailUtil.getDomain(email), true) -> getOutlookSettings(email, password)
       PROVIDER_YAHOO.equals(EmailUtil.getDomain(email), true) -> getYahooSettings(email, password)
       PROVIDER_ICLOUD.equals(EmailUtil.getDomain(email), true) -> getICloudSettings(email, password)
+      PROVIDER_AOL.equals(EmailUtil.getDomain(email), true) -> getAolSettings(email, password)
       PROVIDER_TESTS.equals(EmailUtil.getDomain(email), true) -> getTestProviderSettings(email, password)
 
       else -> {
@@ -112,6 +119,24 @@ object EmailProviderSettingsHelper {
         smtpSigInUsername = email,
         smtpSignInPassword = password,
         faqUrl = FAQ_URL_ICLOUD
+    )
+  }
+
+  private fun getAolSettings(email: String, password: String): AuthCredentials {
+    return AuthCredentials(
+        email = email,
+        username = email,
+        password = password,
+        imapServer = IMAP_SERVER_AOL,
+        imapPort = JavaEmailConstants.SSL_IMAP_PORT,
+        imapOpt = SecurityType.Option.SSL_TLS,
+        smtpServer = SMTP_SERVER_AOL,
+        smtpPort = JavaEmailConstants.SSL_SMTP_PORT,
+        smtpOpt = SecurityType.Option.SSL_TLS,
+        hasCustomSignInForSmtp = true,
+        smtpSigInUsername = email,
+        smtpSignInPassword = password,
+        faqUrl = FAQ_URL_AOL
     )
   }
 
