@@ -20,6 +20,7 @@ import com.flowcrypt.email.util.GeneralUtil
 object EmailProviderSettingsHelper {
   /*********************** Microsoft **********************/
   private const val PROVIDER_OUTLOOK = "outlook.com"
+  private const val PROVIDER_HOTMAIL = "hotmail.com"
   private const val IMAP_SERVER_OUTLOOK = "outlook.office365.com"
   private const val SMTP_SERVER_OUTLOOK = "smtp.office365.com"
 
@@ -43,6 +44,7 @@ object EmailProviderSettingsHelper {
 
     return when {
       PROVIDER_OUTLOOK.equals(EmailUtil.getDomain(email), true) -> getOutlookSettings(email, password)
+      PROVIDER_HOTMAIL.equals(EmailUtil.getDomain(email), true) -> getOutlookSettings(email, password)
       PROVIDER_YAHOO.equals(EmailUtil.getDomain(email), true) -> getYahooSettings(email, password)
       PROVIDER_TESTS.equals(EmailUtil.getDomain(email), true) -> getTestProviderSettings(email, password)
 
