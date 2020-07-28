@@ -30,6 +30,12 @@ object EmailProviderSettingsHelper {
   private const val IMAP_SERVER_YAHOO = "imap.mail.yahoo.com"
   private const val SMTP_SERVER_YAHOO = "smtp.mail.yahoo.com"
 
+  /*********************** iCloud **********************/
+  private const val PROVIDER_ICLOUD = "icloud.com"
+  private const val IMAP_SERVER_ICLOUD = "imap.mail.me.com"
+  private const val SMTP_SERVER_ICLOUD = "smtp.mail.me.com"
+  private const val FAQ_URL_ICLOUD = "https://support.apple.com/en-us/HT202304"
+
   /*********************** Account for internal testing **********************/
   private const val PROVIDER_TESTS = "denbond7.com"
   private const val IMAP_SERVER_TESTS = "imap.denbond7.com"
@@ -48,6 +54,7 @@ object EmailProviderSettingsHelper {
       PROVIDER_HOTMAIL.equals(EmailUtil.getDomain(email), true) -> getOutlookSettings(email, password)
       PROVIDER_LIVE.equals(EmailUtil.getDomain(email), true) -> getOutlookSettings(email, password)
       PROVIDER_YAHOO.equals(EmailUtil.getDomain(email), true) -> getYahooSettings(email, password)
+      PROVIDER_ICLOUD.equals(EmailUtil.getDomain(email), true) -> getICloudSettings(email, password)
       PROVIDER_TESTS.equals(EmailUtil.getDomain(email), true) -> getTestProviderSettings(email, password)
 
       else -> {
@@ -87,6 +94,24 @@ object EmailProviderSettingsHelper {
         hasCustomSignInForSmtp = true,
         smtpSigInUsername = email,
         smtpSignInPassword = password
+    )
+  }
+
+  private fun getICloudSettings(email: String, password: String): AuthCredentials {
+    return AuthCredentials(
+        email = email,
+        username = email,
+        password = password,
+        imapServer = IMAP_SERVER_ICLOUD,
+        imapPort = JavaEmailConstants.SSL_IMAP_PORT,
+        imapOpt = SecurityType.Option.SSL_TLS,
+        smtpServer = SMTP_SERVER_ICLOUD,
+        smtpPort = JavaEmailConstants.STARTTLS_SMTP_PORT,
+        smtpOpt = SecurityType.Option.STARTLS,
+        hasCustomSignInForSmtp = true,
+        smtpSigInUsername = email,
+        smtpSignInPassword = password,
+        faqUrl = FAQ_URL_ICLOUD
     )
   }
 

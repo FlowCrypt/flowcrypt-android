@@ -29,7 +29,8 @@ data class AuthCredentials constructor(val email: String,
                                        val smtpOpt: SecurityType.Option = SecurityType.Option.NONE,
                                        val hasCustomSignInForSmtp: Boolean = false,
                                        val smtpSigInUsername: String? = null,
-                                       var smtpSignInPassword: String? = null) : Parcelable {
+                                       var smtpSignInPassword: String? = null,
+                                       val faqUrl: String? = null) : Parcelable {
   constructor(source: Parcel) : this(
       source.readString()!!,
       source.readString()!!,
@@ -41,6 +42,7 @@ data class AuthCredentials constructor(val email: String,
       source.readInt(),
       source.readParcelable(SecurityType.Option::class.java.classLoader)!!,
       source.readByte() != 0.toByte(),
+      source.readString(),
       source.readString(),
       source.readString()
   )
@@ -61,6 +63,7 @@ data class AuthCredentials constructor(val email: String,
       writeInt((if (hasCustomSignInForSmtp) 1 else 0))
       writeString(smtpSigInUsername)
       writeString(smtpSignInPassword)
+      writeString(faqUrl)
     }
   }
 
