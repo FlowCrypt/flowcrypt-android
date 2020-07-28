@@ -9,11 +9,7 @@ import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
-import android.text.method.LinkMovementMethod
-import android.view.View
-import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.fragment.app.DialogFragment
 import com.flowcrypt.email.R
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -26,13 +22,12 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 17:34
  * E-mail: DenBond7@gmail.com
  */
-class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
+class InfoDialogFragment : BaseDialogFragment(), DialogInterface.OnClickListener {
 
   private var dialogTitle: String? = null
   private var dialogMsg: String? = null
   private var buttonTitle: String? = null
   private var isPopBackStack: Boolean = false
-  private var hasHtml: Boolean = false
   var onInfoDialogButtonClickListener: OnInfoDialogButtonClickListener? = null
 
   override fun onAttach(context: Context) {
@@ -49,15 +44,7 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
     dialogMsg = arguments?.getString(KEY_INFO_DIALOG_MESSAGE)
     buttonTitle = arguments?.getString(KEY_INFO_BUTTON_TITLE, getString(android.R.string.ok))
     isPopBackStack = arguments?.getBoolean(KEY_INFO_IS_POP_BACK_STACK, false) ?: false
-    hasHtml = arguments?.getBoolean(KEY_INFO_HAS_HTML, false) ?: false
     isCancelable = arguments?.getBoolean(KEY_INFO_IS_CANCELABLE, false) ?: false
-  }
-
-  override fun onStart() {
-    super.onStart()
-    if (hasHtml) {
-      (dialog?.findViewById<View>(android.R.id.message) as? TextView)?.movementMethod = LinkMovementMethod.getInstance()
-    }
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -99,22 +86,13 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
         GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_POP_BACK_STACK", InfoDialogFragment::class.java)
     private val KEY_INFO_IS_CANCELABLE =
         GeneralUtil.generateUniqueExtraKey("KEY_INFO_IS_CANCELABLE", InfoDialogFragment::class.java)
-    private val KEY_INFO_HAS_HTML =
-        GeneralUtil.generateUniqueExtraKey("KEY_INFO_HAS_HTML", InfoDialogFragment::class.java)
 
     fun newInstance(dialogTitle: String? = null, dialogMsg: String? = null,
                     buttonTitle: String? = null, isPopBackStack: Boolean = false,
-                    isCancelable: Boolean = false, hasHtml: Boolean = false): InfoDialogFragment {
-      val infoDialogFragment = InfoDialogFragment()
+                    isCancelable: Boolean = false, hasHtml: Boolean = false,
+                    useLinkify: Boolean = false): InfoDialogFragment {
+      val dialogFragment = InfoDialogFragment()
 
-      val args = prepareArgs(dialogTitle, dialogMsg, buttonTitle, isPopBackStack, isCancelable, hasHtml)
-      infoDialogFragment.arguments = args
-
-      return infoDialogFragment
-    }
-
-    private fun prepareArgs(dialogTitle: String?, dialogMsg: String?, buttonTitle: String?,
-                            isPopBackStack: Boolean, isCancelable: Boolean, hasHtml: Boolean): Bundle {
       val args = Bundle()
       args.putString(KEY_INFO_DIALOG_TITLE, dialogTitle)
       args.putString(KEY_INFO_DIALOG_MESSAGE, dialogMsg)
@@ -122,7 +100,10 @@ class InfoDialogFragment : DialogFragment(), DialogInterface.OnClickListener {
       args.putBoolean(KEY_INFO_IS_POP_BACK_STACK, isPopBackStack)
       args.putBoolean(KEY_INFO_IS_CANCELABLE, isCancelable)
       args.putBoolean(KEY_INFO_HAS_HTML, hasHtml)
-      return args
+      args.putBoolean(KEY_INFO_USE_LINKIFY, useLinkify)
+      dialogFragment.arguments = args
+
+      return dialogFragment
     }
   }
 }

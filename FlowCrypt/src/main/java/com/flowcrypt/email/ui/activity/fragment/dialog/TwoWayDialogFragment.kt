@@ -9,9 +9,9 @@ import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
-import androidx.fragment.app.DialogFragment
 import com.flowcrypt.email.R
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.UIUtil
 
 /**
  * This dialog can be used if we need to show a simple info dialog which has two buttons (negative and positive).
@@ -21,7 +21,7 @@ import com.flowcrypt.email.util.GeneralUtil
  * Time: 15:28
  * E-mail: DenBond7@gmail.com
  */
-class TwoWayDialogFragment : DialogFragment() {
+class TwoWayDialogFragment : BaseDialogFragment() {
 
   private var dialogTitle: String? = null
   private var dialogMsg: String? = null
@@ -52,7 +52,11 @@ class TwoWayDialogFragment : DialogFragment() {
     val dialogBuilder = AlertDialog.Builder(requireContext())
 
     dialogBuilder.setTitle(dialogTitle)
-    dialogBuilder.setMessage(dialogMsg)
+    val msg = when {
+      hasHtml -> UIUtil.getHtmlSpannedFromText(dialogMsg)
+      else -> dialogMsg
+    }
+    dialogBuilder.setMessage(msg)
 
     dialogBuilder.setPositiveButton(positiveBtnTitle
     ) { _, _ ->
@@ -111,7 +115,9 @@ class TwoWayDialogFragment : DialogFragment() {
                     dialogMsg: String? = null,
                     positiveButtonTitle: String? = null,
                     negativeButtonTitle: String? = null,
-                    isCancelable: Boolean = true): TwoWayDialogFragment {
+                    isCancelable: Boolean = true,
+                    hasHtml: Boolean = false,
+                    useLinkify: Boolean = false): TwoWayDialogFragment {
       val args = Bundle()
       args.putInt(KEY_REQUEST_CODE, requestCode)
       args.putString(KEY_DIALOG_TITLE, dialogTitle)
@@ -120,10 +126,12 @@ class TwoWayDialogFragment : DialogFragment() {
       args.putString(KEY_POSITIVE_BUTTON_TITLE, positiveButtonTitle)
       args.putString(KEY_NEGATIVE_BUTTON_TITLE, negativeButtonTitle)
       args.putBoolean(KEY_IS_CANCELABLE, isCancelable)
-      val infoDialogFragment = TwoWayDialogFragment()
-      infoDialogFragment.arguments = args
+      args.putBoolean(KEY_INFO_HAS_HTML, hasHtml)
+      args.putBoolean(KEY_INFO_USE_LINKIFY, useLinkify)
+      val dialogFragment = TwoWayDialogFragment()
+      dialogFragment.arguments = args
 
-      return infoDialogFragment
+      return dialogFragment
     }
   }
 }

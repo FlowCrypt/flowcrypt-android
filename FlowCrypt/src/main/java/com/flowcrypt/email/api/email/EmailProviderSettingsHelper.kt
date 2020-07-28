@@ -22,13 +22,15 @@ object EmailProviderSettingsHelper {
   private const val PROVIDER_OUTLOOK = "outlook.com"
   private const val PROVIDER_HOTMAIL = "hotmail.com"
   private const val PROVIDER_LIVE = "Live.com"
-  private const val IMAP_SERVER_OUTLOOK = "outlook.office365.com"
-  private const val SMTP_SERVER_OUTLOOK = "smtp.office365.com"
+  private const val IMAP_SERVER_MICROSOFT = "outlook.office365.com"
+  private const val SMTP_SERVER_MICROSOFT = "smtp.office365.com"
+  private const val FAQ_URL_MICROSOFT = "https://support.microsoft.com/en-us/office/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040"
 
   /*********************** Yahoo **********************/
   private const val PROVIDER_YAHOO = "yahoo.com"
   private const val IMAP_SERVER_YAHOO = "imap.mail.yahoo.com"
   private const val SMTP_SERVER_YAHOO = "smtp.mail.yahoo.com"
+  private const val FAQ_URL_YAHOO = "https://help.yahoo.com/kb/sln4075.html"
 
   /*********************** iCloud **********************/
   private const val PROVIDER_ICLOUD = "icloud.com"
@@ -82,15 +84,16 @@ object EmailProviderSettingsHelper {
         email = email,
         username = email,
         password = password,
-        imapServer = IMAP_SERVER_OUTLOOK,
+        imapServer = IMAP_SERVER_MICROSOFT,
         imapPort = JavaEmailConstants.SSL_IMAP_PORT,
         imapOpt = SecurityType.Option.SSL_TLS,
-        smtpServer = SMTP_SERVER_OUTLOOK,
+        smtpServer = SMTP_SERVER_MICROSOFT,
         smtpPort = JavaEmailConstants.STARTTLS_SMTP_PORT,
         smtpOpt = SecurityType.Option.STARTLS,
         hasCustomSignInForSmtp = true,
         smtpSigInUsername = email,
-        smtpSignInPassword = password
+        smtpSignInPassword = password,
+        faqUrl = FAQ_URL_MICROSOFT
     )
   }
 
@@ -107,7 +110,8 @@ object EmailProviderSettingsHelper {
         smtpOpt = SecurityType.Option.SSL_TLS,
         hasCustomSignInForSmtp = true,
         smtpSigInUsername = email,
-        smtpSignInPassword = password
+        smtpSignInPassword = password,
+        faqUrl = FAQ_URL_YAHOO
     )
   }
 

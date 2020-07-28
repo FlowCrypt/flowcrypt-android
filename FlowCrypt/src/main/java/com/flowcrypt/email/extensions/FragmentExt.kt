@@ -38,6 +38,7 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
     isPopBackStack: Boolean = false,
     isCancelable: Boolean = false,
     hasHtml: Boolean = false,
+    useLinkify: Boolean = false,
     requestCode: Int = 10000
 ) {
   val fragment = InfoDialogFragment.newInstance(
@@ -46,7 +47,8 @@ fun androidx.fragment.app.Fragment.showInfoDialog(
       buttonTitle = buttonTitle,
       isPopBackStack = isPopBackStack,
       isCancelable = isCancelable,
-      hasHtml = hasHtml
+      hasHtml = hasHtml,
+      useLinkify = useLinkify
   )
   fragment.setTargetFragment(this, requestCode)
   showDialogFragment(fragment)
@@ -58,14 +60,18 @@ fun androidx.fragment.app.Fragment.showTwoWayDialog(
     positiveButtonTitle: String? = null,
     negativeButtonTitle: String? = null,
     isCancelable: Boolean = false,
-    requestCode: Int = 10000
+    requestCode: Int = 10000,
+    hasHtml: Boolean = false,
+    useLinkify: Boolean = false
 ) {
   val fragment = TwoWayDialogFragment.newInstance(
       dialogTitle = dialogTitle,
       dialogMsg = dialogMsg,
       positiveButtonTitle = positiveButtonTitle,
       negativeButtonTitle = negativeButtonTitle,
-      isCancelable = isCancelable
+      isCancelable = isCancelable,
+      hasHtml = hasHtml,
+      useLinkify = useLinkify
   )
   fragment.setTargetFragment(this, requestCode)
   showDialogFragment(fragment)

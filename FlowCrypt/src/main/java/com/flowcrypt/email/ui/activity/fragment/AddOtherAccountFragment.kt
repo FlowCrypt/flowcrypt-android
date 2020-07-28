@@ -394,11 +394,14 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
               return@setFragmentResultListener
             }
 
+            val faqUrl = EmailProviderSettingsHelper.getBaseSettings(
+                editTextEmail?.text.toString(), editTextPassword?.text.toString())?.faqUrl
+
             val dialogMsg = if (checkBoxAdvancedMode?.isChecked == false) {
               getString(R.string.show_error_msg_with_recommendations, msg)
             } else {
               msg
-            }
+            } + if (faqUrl.isNullOrEmpty()) "" else getString(R.string.provider_faq, faqUrl)
 
             showTwoWayDialog(
                 requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
@@ -406,7 +409,8 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
                 dialogMsg = dialogMsg,
                 positiveButtonTitle = getString(R.string.retry),
                 negativeButtonTitle = getString(R.string.cancel),
-                isCancelable = true)
+                isCancelable = true,
+                useLinkify = true)
           }
 
           else -> {

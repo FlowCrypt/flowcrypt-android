@@ -467,4 +467,5 @@
     </plurals>
     <string name="searching_in_folders" tools:ignore="PluralsCandidate">Searching for backups in folder %1$d/%2$d</string>
     <string name="show_error_msg_with_recommendations">%1$s\n\nPlease check your credentials or use advanced settings to connect</string>
+    <string name="provider_faq">\n\nThe provider FAQ: %1$s</string>
 </resources>
