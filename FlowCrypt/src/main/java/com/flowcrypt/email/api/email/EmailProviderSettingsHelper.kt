@@ -42,6 +42,12 @@ object EmailProviderSettingsHelper {
   private const val SMTP_SERVER_AOL = "smtp.aol.com"
   private const val FAQ_URL_AOL = "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail"
 
+  /*********************** UKR-NET **********************/
+  private const val PROVIDER_UKR_NET = "ukr.net"
+  private const val IMAP_SERVER_UKR_NET = "imap.ukr.net"
+  private const val SMTP_SERVER_UKR_NET = "smtp.ukr.net"
+  private const val FAQ_URL_UKR_NET = "https://wiki.ukr.net/IMAP_enable_ua"
+
   /*********************** Account for internal testing **********************/
   private const val PROVIDER_TESTS = "denbond7.com"
   private const val IMAP_SERVER_TESTS = "imap.denbond7.com"
@@ -62,6 +68,7 @@ object EmailProviderSettingsHelper {
       PROVIDER_YAHOO.equals(EmailUtil.getDomain(email), true) -> getYahooSettings(email, password)
       PROVIDER_ICLOUD.equals(EmailUtil.getDomain(email), true) -> getICloudSettings(email, password)
       PROVIDER_AOL.equals(EmailUtil.getDomain(email), true) -> getAolSettings(email, password)
+      PROVIDER_UKR_NET.equals(EmailUtil.getDomain(email), true) -> getUkrNetSettings(email, password)
       PROVIDER_TESTS.equals(EmailUtil.getDomain(email), true) -> getTestProviderSettings(email, password)
 
       else -> {
@@ -137,6 +144,24 @@ object EmailProviderSettingsHelper {
         smtpSigInUsername = email,
         smtpSignInPassword = password,
         faqUrl = FAQ_URL_AOL
+    )
+  }
+
+  private fun getUkrNetSettings(email: String, password: String): AuthCredentials {
+    return AuthCredentials(
+        email = email,
+        username = email,
+        password = password,
+        imapServer = IMAP_SERVER_UKR_NET,
+        imapPort = JavaEmailConstants.SSL_IMAP_PORT,
+        imapOpt = SecurityType.Option.SSL_TLS,
+        smtpServer = SMTP_SERVER_UKR_NET,
+        smtpPort = JavaEmailConstants.SSL_SMTP_PORT,
+        smtpOpt = SecurityType.Option.SSL_TLS,
+        hasCustomSignInForSmtp = true,
+        smtpSigInUsername = email,
+        smtpSignInPassword = password,
+        faqUrl = FAQ_URL_UKR_NET
     )
   }
 
