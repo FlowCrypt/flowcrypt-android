@@ -52,6 +52,7 @@ import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import kotlinx.coroutines.launch
+import java.util.*
 
 /**
  * @author Denis Bondarenko
@@ -137,7 +138,7 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
     googleSignInAccount?.email?.let { email ->
       lifecycleScope.launch {
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-        val existedAccount = roomDatabase.accountDao().getAccountSuspend(email)
+        val existedAccount = roomDatabase.accountDao().getAccountSuspend(email.toLowerCase(Locale.US))
 
         val insertOrUpdateCandidate = googleSignInAccount?.let {
           AccountEntity(it, uuid, domainRules)

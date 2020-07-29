@@ -11,6 +11,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import java.util.*
 
 /**
  * This class describe creating of table which has name
@@ -69,6 +70,7 @@ abstract class AccountDao : BaseDao<AccountEntity> {
 
     insertSuspend(
         accountEntity.copy(
+            email = accountEntity.email.toLowerCase(Locale.US),
             password = encryptedPassword,
             smtpPassword = encryptedSmtpPassword,
             uuid = encryptedUuid,
@@ -88,6 +90,7 @@ abstract class AccountDao : BaseDao<AccountEntity> {
 
     insert(
         accountEntity.copy(
+            email = accountEntity.email.toLowerCase(Locale.US),
             password = encryptedPassword,
             smtpPassword = encryptedSmtpPassword,
             uuid = encryptedUuid,

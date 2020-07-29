@@ -9,6 +9,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
+import android.text.InputFilter
 import android.text.TextUtils
 import android.text.TextWatcher
 import android.view.View
@@ -19,7 +20,7 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
-import androidx.core.widget.addTextChangedListener
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
@@ -50,6 +51,7 @@ import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
+import com.flowcrypt.email.ui.widget.inputfilters.InputFilters
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
@@ -249,7 +251,11 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     editTextSmtpUsername = view.findViewById(R.id.editTextSmtpUsername)
     editTextSmtpPassword = view.findViewById(R.id.editTextSmtpPassword)
 
-    editTextPassword?.setOnEditorActionListener { v, actionId, event ->
+    editTextEmail?.filters = arrayOf<InputFilter>(InputFilters.NoCaps())
+    editTextImapServer?.filters = arrayOf<InputFilter>(InputFilters.NoCaps())
+    editTextSmtpServer?.filters = arrayOf<InputFilter>(InputFilters.NoCaps())
+
+    editTextPassword?.setOnEditorActionListener { _, actionId, _ ->
       return@setOnEditorActionListener when (actionId) {
         EditorInfo.IME_ACTION_DONE -> {
           tryToConnect()
@@ -259,10 +265,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       }
     }
 
-    editTextEmail?.addTextChangedListener {
+    editTextEmail?.doAfterTextChanged {
       if (GeneralUtil.isEmailValid(it)) {
         if (checkBoxAdvancedMode?.isChecked == false) {
-          if (applyRecommendSettings()) return@addTextChangedListener
+          if (applyRecommendSettings()) return@doAfterTextChanged
         }
 
         val email = it.toString()
@@ -274,7 +280,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       }
     }
 
-    editTextPassword?.addTextChangedListener {
+    editTextPassword?.doAfterTextChanged {
       if (checkBoxAdvancedMode?.isChecked == false) {
         val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(
             editTextEmail?.text.toString(), editTextPassword?.text.toString())
