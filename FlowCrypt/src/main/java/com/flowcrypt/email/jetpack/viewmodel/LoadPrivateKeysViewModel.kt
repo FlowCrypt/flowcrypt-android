@@ -56,7 +56,7 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
     }
   }
 
-  private suspend fun fetchKeys(accountEntity: AccountEntity): Result<ArrayList<NodeKeyDetails>>? =
+  private suspend fun fetchKeys(accountEntity: AccountEntity): Result<ArrayList<NodeKeyDetails>> =
       withContext(Dispatchers.IO) {
         val privateKeyDetailsList = ArrayList<NodeKeyDetails>()
 

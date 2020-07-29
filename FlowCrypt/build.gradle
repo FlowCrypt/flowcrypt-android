@@ -257,6 +257,7 @@ android {
 
     lintOptions {
         warningsAsErrors true
+        disable "NullSafeMutableLiveData"
     }
 
     packagingOptions {
