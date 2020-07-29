@@ -131,14 +131,6 @@ android {
     }
 
     sourceSets {
-        // If you want Gradle to package prebuilt native libraries
-        // with your APK, modify the default source set configuration
-        // to include the directory of your prebuilt .so files as follows.
-        main {
-            jniLibs.srcDirs 'libs/libnode/bin/'
-        }
-
-        // used by Room, to test migrations
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
 

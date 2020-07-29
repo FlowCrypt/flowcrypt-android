@@ -142,16 +142,8 @@ class SyncJobService : JobService(), SyncListener {
 
       val isInbox = FoldersManager.getFolderType(localFolder) === FoldersManager.FolderType.INBOX
       if (!GeneralUtil.isAppForegrounded() && isInbox) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-          for (msgEntity in msgsDeleteCandidates) {
-            messagesNotificationManager?.cancel(msgEntity.uid.toInt())
-          }
-        } else {
-          if (!msgsDeleteCandidates.isEmpty()) {
-            val unseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(account.email, folderName)
-            messagesNotificationManager?.notify(this, account, localFolder, detailsAfterUpdate,
-                unseenMsgs, true)
-          }
+        for (msgEntity in msgsDeleteCandidates) {
+          messagesNotificationManager?.cancel(msgEntity.uid.toInt())
         }
       }
     } catch (e: RemoteException) {
@@ -229,15 +221,12 @@ class SyncJobService : JobService(), SyncListener {
       roomDatabase.msgDao().insertWithReplace(msgEntities)
 
       if (!GeneralUtil.isAppForegrounded()) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && newCandidates.isEmpty()) {
+        if (newCandidates.isEmpty()) {
           return
         }
 
         val newMsgsList = roomDatabase.msgDao().getNewMsgs(account.email, folderName)
-        val unseenUIDs = roomDatabase.msgDao().getUIDOfUnseenMsgs(account.email, folderName)
-
-        messagesNotificationManager?.notify(this, account, localFolder, newMsgsList, unseenUIDs,
-            false)
+        messagesNotificationManager?.notify(this, account, localFolder, newMsgsList)
       }
     } catch (e: MessagingException) {
       e.printStackTrace()

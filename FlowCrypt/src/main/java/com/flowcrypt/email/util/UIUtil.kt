@@ -9,7 +9,6 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.os.Build
 import android.text.Html
 import android.text.Spanned
 import android.text.TextUtils
@@ -94,14 +93,9 @@ class UIUtil {
      * @param text     The text which will be set to the current textView.
      * @param textView The textView where we will set the HTML text.
      */
-    @Suppress("DEPRECATION")
     fun setHtmlTextToTextView(text: String, textView: TextView?) {
       if (textView != null && !TextUtils.isEmpty(text)) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-          textView.text = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY)
-        } else {
-          textView.text = Html.fromHtml(text)
-        }
+        textView.text = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY)
       }
     }
 
@@ -110,14 +104,9 @@ class UIUtil {
      *
      * @param text The text which contains HTML.
      */
-    @Suppress("DEPRECATION")
     fun getHtmlSpannedFromText(text: String?): CharSequence? {
       return if (text?.isNotEmpty() == true) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-          Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY)
-        } else {
-          Html.fromHtml(text)
-        }
+        Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY)
       } else
         text
     }

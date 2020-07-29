@@ -10,7 +10,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
@@ -51,13 +50,10 @@ class ErrorNotificationManager(context: Context) : CustomNotificationManager(con
         .setSubText(account.email)
         .setOngoing(true)
         .setDefaults(Notification.DEFAULT_ALL)
+        .setGroup(GROUP_NAME_ERRORS)
+        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      prepareAndShowNotificationsGroup(context)
-      builder.setGroup(GROUP_NAME_ERRORS).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
-    } else {
-      builder.setShowWhen(false)
-    }
+    prepareAndShowNotificationsGroup(context)
 
     notificationManagerCompat.notify(groupName, NOTIFICATION_ID_HAS_FAILED_OUTGOING_MSGS, builder.build())
   }
