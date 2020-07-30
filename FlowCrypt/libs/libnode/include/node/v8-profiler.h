@@ -37,7 +37,7 @@ namespace v8 {
     struct V8_EXPORT CpuProfileDeoptInfo {
         /** A pointer to a static string owned by v8. */
         const char *deopt_reason;
-        std::vector<CpuProfileDeoptFrame> stack;
+        std::vector <CpuProfileDeoptFrame> stack;
     };
 
 }  // namespace v8
@@ -55,7 +55,7 @@ namespace v8 {
  */
     class V8_EXPORT TracingCpuProfiler {
     public:
-        static std::unique_ptr<TracingCpuProfiler> Create(Isolate *);
+        static std::unique_ptr <TracingCpuProfiler> Create(Isolate *);
 
         virtual ~TracingCpuProfiler() = default;
 
@@ -221,7 +221,7 @@ namespace v8 {
         const CpuProfileNode *GetChild(int index) const;
 
         /** Retrieves deopt infos for the node. */
-        const std::vector<CpuProfileDeoptInfo> &GetDeoptInfos() const;
+        const std::vector <CpuProfileDeoptInfo> &GetDeoptInfos() const;
 
         static const int kNoLineNumberInfo = Message::kNoLineNumberInfo;
         static const int kNoColumnNumberInfo = Message::kNoColumnInfo;
@@ -283,10 +283,10 @@ namespace v8 {
         // In the resulting CpuProfile tree, intermediate nodes in a stack trace
         // (from the root to a leaf) will have line numbers that point to the start
         // line of the function, rather than the line of the callsite of the child.
-                kLeafNodeLineNumbers,
+        kLeafNodeLineNumbers,
         // In the resulting CpuProfile tree, nodes are separated based on the line
         // number of their callsite in their parent.
-                kCallerLineNumbers,
+        kCallerLineNumbers,
     };
 
 /**
@@ -386,11 +386,11 @@ namespace v8 {
             kInternal = 3,         // A link that can't be accessed from JS,
             // thus, its name isn't a real property name
             // (e.g. parts of a ConsString).
-                    kHidden = 4,           // A link that is needed for proper sizes
+            kHidden = 4,           // A link that is needed for proper sizes
             // calculation, but may be hidden from user.
-                    kShortcut = 5,         // A link that must not be followed during
+            kShortcut = 5,         // A link that must not be followed during
             // sizes calculation.
-                    kWeak = 6              // A weak reference (ignored by the GC).
+            kWeak = 6              // A weak reference (ignored by the GC).
         };
 
         /** Returns edge type (see HeapGraphEdge::Type). */
@@ -427,7 +427,7 @@ namespace v8 {
             kNative = 8,         // Native object (not from V8 heap).
             kSynthetic = 9,      // Synthetic object, usually used for grouping
             // snapshot items together.
-                    kConsString = 10,    // Concatenated string. A pair of pointers to strings.
+            kConsString = 10,    // Concatenated string. A pair of pointers to strings.
             kSlicedString = 11,  // Sliced string. A fragment of another string.
             kSymbol = 12,        // A Symbol (ES6).
             kBigInt = 13         // BigInt.
@@ -646,7 +646,7 @@ namespace v8 {
             /**
              * List of self allocations done by this node in the call-graph.
              */
-            std::vector<Allocation> allocations;
+            std::vector <Allocation> allocations;
         };
 
         /**
@@ -721,7 +721,7 @@ namespace v8 {
          * Adds the given node to the graph and takes ownership of the node.
          * Returns a raw pointer to the node that is valid while the graph is alive.
          */
-        virtual Node *AddNode(std::unique_ptr<Node> node) = 0;
+        virtual Node *AddNode(std::unique_ptr <Node> node) = 0;
 
         /**
          * Adds an edge that represents a strong reference from the given node
@@ -746,9 +746,9 @@ namespace v8 {
 
         typedef std::unordered_set<const v8::PersistentBase<v8::Value> *>
                 RetainerChildren;
-        typedef std::vector<std::pair<v8::RetainedObjectInfo *, RetainerChildren>>
+        typedef std::vector <std::pair<v8::RetainedObjectInfo *, RetainerChildren>>
                 RetainerGroups;
-        typedef std::vector<std::pair<const v8::PersistentBase<v8::Value> *,
+        typedef std::vector <std::pair<const v8::PersistentBase<v8::Value> *,
                 const v8::PersistentBase<v8::Value> *>>
                 RetainerEdges;
 

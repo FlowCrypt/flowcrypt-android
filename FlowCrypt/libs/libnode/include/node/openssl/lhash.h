@@ -22,10 +22,15 @@ extern "C" {
 #endif
 
 typedef struct lhash_node_st OPENSSL_LH_NODE;
+
 typedef int (*OPENSSL_LH_COMPFUNC)(const void *, const void *);
+
 typedef unsigned long (*OPENSSL_LH_HASHFUNC)(const void *);
+
 typedef void (*OPENSSL_LH_DOALL_FUNC)(void *);
+
 typedef void (*OPENSSL_LH_DOALL_FUNCARG)(void *, void *);
+
 typedef struct lhash_st OPENSSL_LHASH;
 
 /*

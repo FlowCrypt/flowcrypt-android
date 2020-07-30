@@ -32,7 +32,6 @@
 # include <openssl/ossl_typ.h>
 # include <openssl/symhacks.h>
 # include <openssl/x509.h>
-
 # ifdef  __cplusplus
 extern "C" {
 # endif
@@ -262,21 +261,30 @@ typedef struct ENGINE_CMD_DEFN_st {
 
 /* Generic function pointer */
 typedef int (*ENGINE_GEN_FUNC_PTR)(void);
+
 /* Generic function pointer taking no arguments */
 typedef int (*ENGINE_GEN_INT_FUNC_PTR)(ENGINE *);
+
 /* Specific control function pointer */
 typedef int (*ENGINE_CTRL_FUNC_PTR)(ENGINE *, int, long, void *,
                                     void (*f)(void));
+
 /* Generic load_key function pointer */
 typedef EVP_PKEY *(*ENGINE_LOAD_KEY_PTR)(ENGINE *, const char *,
                                          UI_METHOD *ui_method,
                                          void *callback_data);
+
 typedef int (*ENGINE_SSL_CLIENT_CERT_PTR)(ENGINE *, SSL *ssl,
-                                          STACK_OF(X509_NAME) *ca_dn,
-                                          X509 **pcert, EVP_PKEY **pkey,
-                                          STACK_OF(X509) **pother,
-                                          UI_METHOD *ui_method,
-                                          void *callback_data);
+                                          STACK_OF(X509_NAME)
+
+*ca_dn,
+X509 **pcert, EVP_PKEY
+**pkey,
+STACK_OF(X509)
+**pother,
+UI_METHOD *ui_method,
+void *callback_data
+);
 /*-
  * These callback types are for an ENGINE's handler for cipher and digest logic.
  * These handlers have these prototypes;
@@ -294,10 +302,13 @@ typedef int (*ENGINE_SSL_CLIENT_CERT_PTR)(ENGINE *, SSL *ssl,
  */
 typedef int (*ENGINE_CIPHERS_PTR)(ENGINE *, const EVP_CIPHER **,
                                   const int **, int);
+
 typedef int (*ENGINE_DIGESTS_PTR)(ENGINE *, const EVP_MD **, const int **,
                                   int);
+
 typedef int (*ENGINE_PKEY_METHS_PTR)(ENGINE *, EVP_PKEY_METHOD **,
                                      const int **, int);
+
 typedef int (*ENGINE_PKEY_ASN1_METHS_PTR)(ENGINE *, EVP_PKEY_ASN1_METHOD **,
                                           const int **, int);
 /*
@@ -662,8 +673,11 @@ void ENGINE_add_conf_module(void);
  * these callbacks need to be set or not.
  */
 typedef void *(*dyn_MEM_malloc_fn)(size_t, const char *, int);
+
 typedef void *(*dyn_MEM_realloc_fn)(void *, size_t, const char *, int);
+
 typedef void (*dyn_MEM_free_fn)(void *, const char *, int);
+
 typedef struct st_dynamic_MEM_fns {
     dyn_MEM_malloc_fn malloc_fn;
     dyn_MEM_realloc_fn realloc_fn;

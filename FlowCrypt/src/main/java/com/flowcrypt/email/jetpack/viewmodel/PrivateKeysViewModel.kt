@@ -511,6 +511,6 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     /**
      * Max size of a key is 256k.
      */
-    private const val MAX_SIZE_IN_BYTES = 256 * 1024
+    const val MAX_SIZE_IN_BYTES = 256 * 1024
   }
 }

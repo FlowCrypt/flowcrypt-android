@@ -56,3 +56,4 @@ fun FragmentActivity.showTwoWayDialogFragment(requestCode: Int = 0, dialogTitle:
 
   showDialogFragment(infoDialogFragment)
 }
+

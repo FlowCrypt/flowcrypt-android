@@ -9,7 +9,6 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.os.Build
 import android.text.Html
 import android.widget.Toast
 import androidx.test.espresso.Espresso.onView
@@ -109,7 +108,7 @@ abstract class BaseTest {
   }
 
   /**
-   * Check is [Dialog] displayed. This method can be used only with activity. It doesn't work if a
+   * Check is [android.app.Dialog] displayed. This method can be used only with activity. It doesn't work if a
    * dialog is displayed
    * when some toast is displayed.
    *
@@ -201,13 +200,8 @@ abstract class BaseTest {
     return getTargetContext().getString(resId, *formatArgs)
   }
 
-  @Suppress("DEPRECATION")
   protected fun getHtmlString(html: String): String {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString()
-    } else {
-      Html.fromHtml(html).toString()
-    }
+    return Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString()
   }
 
   protected fun assertResultAfterFinish(resultCode: Int) {

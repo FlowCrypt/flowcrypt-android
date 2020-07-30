@@ -15,7 +15,6 @@
 # ifndef OPENSSL_NO_CMS
 # include <openssl/x509.h>
 # include <openssl/x509v3.h>
-
 # ifdef __cplusplus
 extern "C" {
 # endif

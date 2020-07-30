@@ -8,7 +8,6 @@ package com.flowcrypt.email.ui.notifications
 import android.app.Notification.InboxStyle
 import android.app.NotificationManager
 import android.content.Context
-import android.os.Build
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextUtils
@@ -47,19 +46,17 @@ abstract class CustomNotificationManager(protected var context: Context) {
    */
   fun cancel(tag: String?, notificationId: Int) {
     notificationManagerCompat.cancel(tag, notificationId)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-      var messageCount = 0
-      for (statusBarNotification in notificationManager.activeNotifications) {
-        if (groupName == statusBarNotification.notification.group) {
-          messageCount++
-        }
+    var messageCount = 0
+    for (statusBarNotification in notificationManager.activeNotifications) {
+      if (groupName == statusBarNotification.notification.group) {
+        messageCount++
       }
+    }
 
-      if (messageCount == 1) {
-        notificationManager.cancel(groupName, groupId)
-      }
+    if (messageCount == 1) {
+      notificationManager.cancel(groupName, groupId)
     }
   }
 

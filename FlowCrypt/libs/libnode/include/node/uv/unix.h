@@ -37,20 +37,15 @@
 #include <pwd.h>
 
 #if !defined(__MVS__)
-
 #include <semaphore.h>
-
 #endif
-
 #include <pthread.h>
 #include <signal.h>
 
 #include "uv/threadpool.h"
 
 #if defined(__linux__)
-
 # include "uv/linux.h"
-
 #elif defined (__MVS__)
 # include "uv/os390.h"
 #elif defined(__PASE__)

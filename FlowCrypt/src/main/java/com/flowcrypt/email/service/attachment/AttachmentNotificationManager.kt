@@ -11,7 +11,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.text.TextUtils
 import android.text.format.DateUtils
 import androidx.core.app.NotificationCompat
@@ -46,13 +45,11 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
     builder.setProgress(0, 0, true)
         .addAction(genCancelDownloadAction(context, attInfo))
         .setOnlyAlertOnce(true)
+        .setGroup(GROUP_NAME_ATTACHMENTS)
+        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      prepareAndShowNotificationsGroup(context, attInfo, true)
-      builder.setGroup(GROUP_NAME_ATTACHMENTS).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
-    } else {
-      builder.setWhen(attInfo.orderNumber.toLong()).setShowWhen(false)
-    }
+    prepareAndShowNotificationsGroup(context, attInfo, true)
+
 
     notificationManagerCompat.notify(attInfo.id, attInfo.uid, builder.build())
   }
@@ -75,18 +72,11 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
         .setSmallIcon(android.R.drawable.stat_sys_download)
         .setContentText(DateUtils.formatElapsedTime(timeLeftInMillisecond / DateUtils.SECOND_IN_MILLIS))
         .setOnlyAlertOnce(true)
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      builder.setGroup(GROUP_NAME_ATTACHMENTS).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
-    } else {
-      builder.setWhen(attInfo.orderNumber.toLong()).setShowWhen(false)
-    }
+        .setGroup(GROUP_NAME_ATTACHMENTS)
+        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
 
     notificationManagerCompat.notify(attInfo.id, attInfo.uid, builder.build())
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      prepareAndShowNotificationsGroup(context, attInfo, true)
-    }
+    prepareAndShowNotificationsGroup(context, attInfo, true)
   }
 
   /**
@@ -113,18 +103,12 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
         .setSmallIcon(android.R.drawable.stat_sys_download_done)
         .setContentText(context.getString(R.string.download_complete))
         .setContentIntent(pendingIntent)
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      builder.setGroup(GROUP_NAME_ATTACHMENTS).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
-    } else {
-      builder.setWhen(attInfo.orderNumber.toLong()).setShowWhen(false)
-    }
+        .setGroup(GROUP_NAME_ATTACHMENTS)
+        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
 
     notificationManagerCompat.notify(attInfo.id, attInfo.uid, builder.build())
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      prepareAndShowNotificationsGroup(context, attInfo, false)
-    }
+    prepareAndShowNotificationsGroup(context, attInfo, false)
   }
 
   /**
@@ -152,18 +136,11 @@ class AttachmentNotificationManager(context: Context) : CustomNotificationManage
         .setCategory(NotificationCompat.CATEGORY_SERVICE)
         .setSmallIcon(android.R.drawable.stat_sys_download_done)
         .setContentText(contentText)
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      builder.setGroup(GROUP_NAME_ATTACHMENTS).setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
-    } else {
-      builder.setWhen(attInfo.orderNumber.toLong()).setShowWhen(false)
-    }
+        .setGroup(GROUP_NAME_ATTACHMENTS)
+        .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
 
     notificationManagerCompat.notify(attInfo.id, attInfo.uid, builder.build())
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      prepareAndShowNotificationsGroup(context, attInfo, false)
-    }
+    prepareAndShowNotificationsGroup(context, attInfo, false)
   }
 
   /**

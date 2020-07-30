@@ -8,7 +8,6 @@ package com.flowcrypt.email.service
 import android.content.Context
 import android.content.Intent
 import android.content.OperationApplicationException
-import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Message
@@ -317,8 +316,7 @@ class EmailSyncService : BaseService(), SyncListener {
 
       if (!GeneralUtil.isAppForegrounded()) {
         val detailsList = roomDatabase.msgDao().getNewMsgs(email, folderName)
-        val uidListOfUnseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(email, folderName)
-        notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, false)
+        notificationManager.notify(this, account, localFolder, detailsList)
       }
     } catch (e: MessagingException) {
       e.printStackTrace()
@@ -392,14 +390,8 @@ class EmailSyncService : BaseService(), SyncListener {
 
       val folderType = FoldersManager.getFolderType(localFolder)
       if (!GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-          for (uid in deleteCandidatesUIDs) {
-            notificationManager.cancel(uid.toInt())
-          }
-        } else {
-          val detailsList = roomDatabase.msgDao().getNewMsgs(email, folderName)
-          val uidListOfUnseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(email, folderName)
-          notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, false)
+        for (uid in deleteCandidatesUIDs) {
+          notificationManager.cancel(uid.toInt())
         }
       }
 
@@ -558,25 +550,15 @@ class EmailSyncService : BaseService(), SyncListener {
 
   override fun onMsgChanged(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                             msg: javax.mail.Message, ownerKey: String, requestCode: Int) {
-    val email = account.email
-    val folderName = localFolder.fullName
     val folderType = FoldersManager.getFolderType(localFolder)
 
     if (!GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX) {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        try {
-          if (msg.flags.contains(Flags.Flag.SEEN)) {
-            notificationManager.cancel(remoteFolder.getUID(msg).toInt())
-          }
-        } catch (e: MessagingException) {
-          e.printStackTrace()
+      try {
+        if (msg.flags.contains(Flags.Flag.SEEN)) {
+          notificationManager.cancel(remoteFolder.getUID(msg).toInt())
         }
-
-      } else {
-        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-        val newMsgs = roomDatabase.msgDao().getNewMsgs(email, folderName)
-        val uidListOfUnseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(email, folderName)
-        notificationManager.notify(this, account, localFolder, newMsgs, uidListOfUnseenMsgs, true)
+      } catch (e: MessagingException) {
+        e.printStackTrace()
       }
     }
   }
@@ -591,9 +573,7 @@ class EmailSyncService : BaseService(), SyncListener {
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
       val detailsList = roomDatabase.msgDao().getNewMsgs(email, folderName)
-      val uidListOfUnseenMsgs = roomDatabase.msgDao().getUIDOfUnseenMsgs(email, folderName)
-
-      notificationManager.notify(this, account, localFolder, detailsList, uidListOfUnseenMsgs, false)
+      notificationManager.notify(this, account, localFolder, detailsList)
     }
   }
 

@@ -88,8 +88,25 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     when (requestCode) {
-      REQUEST_CODE_IMPORT_ACTIVITY, REQUEST_CODE_CREATE_KEY_ACTIVITY -> when (resultCode) {
+      REQUEST_CODE_CREATE_KEY_ACTIVITY -> when (resultCode) {
         Activity.RESULT_OK -> {
+          setResult(Activity.RESULT_OK)
+          finish()
+        }
+      }
+
+      REQUEST_CODE_IMPORT_ACTIVITY -> when (resultCode) {
+        Activity.RESULT_OK -> {
+          setResult(Activity.RESULT_OK)
+          finish()
+        }
+
+        CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
+          setResult(RESULT_CODE_HANDLE_RESOLVED_KEYS, data)
+          finish()
+        }
+
+        CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
           setResult(Activity.RESULT_OK)
           finish()
         }
@@ -131,6 +148,8 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
 
   companion object {
     const val RESULT_CODE_USE_ANOTHER_ACCOUNT = 10
+    const val RESULT_CODE_HANDLE_RESOLVED_KEYS = 11
+
     val EXTRA_KEY_ACCOUNT =
         GeneralUtil.generateUniqueExtraKey("EXTRA_KEY_ACCOUNT", CreateOrImportKeyActivity::class.java)
 

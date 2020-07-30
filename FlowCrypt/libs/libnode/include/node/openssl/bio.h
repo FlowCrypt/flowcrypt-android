@@ -252,8 +252,8 @@ typedef BIO_info_cb bio_info_cb;  /* backward compatibility */
 DEFINE_STACK_OF(BIO)
 
 /* Prefix and suffix callback in ASN1 BIO */
-typedef int asn1_ps_func(BIO *b, unsigned char **pbuf, int *plen,
-                         void *parg);
+typedef int asn1_ps_func(BIO * b, unsigned char * *pbuf, int * plen,
+                         void * parg);
 
 # ifndef OPENSSL_NO_SCTP
 /* SCTP parameter structs */
@@ -472,7 +472,7 @@ int BIO_read_filename(BIO *b, const char *name);
 # define BIO_wpending(b)         (int)BIO_ctrl(b,BIO_CTRL_WPENDING,0,NULL)
 /* ...pending macros have inappropriate return type */
 size_t BIO_ctrl_pending(BIO *b);
-size_t BIO_ctrl_wpending(BIO *b);
+size_t BIO_ctrl_wpending(BIO * b);
 # define BIO_flush(b)            (int)BIO_ctrl(b,BIO_CTRL_FLUSH,0,NULL)
 # define BIO_get_info_callback(b, cbp) (int)BIO_ctrl(b,BIO_CTRL_GET_CALLBACK,0, \
                                                    cbp)
@@ -490,9 +490,9 @@ size_t BIO_ctrl_wpending(BIO *b);
 /* macros with inappropriate type -- but ...pending macros use int too: */
 # define BIO_get_write_guarantee(b) (int)BIO_ctrl(b,BIO_C_GET_WRITE_GUARANTEE,0,NULL)
 # define BIO_get_read_request(b)    (int)BIO_ctrl(b,BIO_C_GET_READ_REQUEST,0,NULL)
-size_t BIO_ctrl_get_write_guarantee(BIO *b);
-size_t BIO_ctrl_get_read_request(BIO *b);
-int BIO_ctrl_reset_read_request(BIO *b);
+size_t BIO_ctrl_get_write_guarantee(BIO * b);
+size_t BIO_ctrl_get_read_request(BIO * b);
+int BIO_ctrl_reset_read_request(BIO * b);
 
 /* ctrl macros for dgram */
 # define BIO_ctrl_dgram_connect(b, peer)  \
@@ -610,9 +610,12 @@ int BIO_sock_non_fatal_error(int error);
 # endif
 
 int BIO_fd_should_retry(int i);
+
 int BIO_fd_non_fatal_error(int error);
+
 int BIO_dump_cb(int (*cb)(const void *data, size_t len, void *u),
                 void *u, const char *s, int len);
+
 int BIO_dump_indent_cb(int (*cb)(const void *data, size_t len, void *u),
                        void *u, const char *s, int len, int indent);
 int BIO_dump(BIO *b, const char *bytes, int len);
@@ -721,39 +724,90 @@ int BIO_printf(BIO *bio, const char *format, ...)
 __bio_h__attr__((__format__(__printf__, 2, 3)));
 int BIO_vprintf(BIO *bio, const char *format, va_list args)
 __bio_h__attr__((__format__(__printf__, 2, 0)));
+
 int BIO_snprintf(char *buf, size_t n, const char *format, ...)
 __bio_h__attr__((__format__(__printf__, 3, 4)));
+
 int BIO_vsnprintf(char *buf, size_t n, const char *format, va_list args)
 __bio_h__attr__((__format__(__printf__, 3, 0)));
+
 # undef __bio_h__attr__
 
 
 BIO_METHOD *BIO_meth_new(int type, const char *name);
+
 void BIO_meth_free(BIO_METHOD *biom);
-int (*BIO_meth_get_write(const BIO_METHOD *biom))(BIO *, const char *, int);
+
+int (*BIO_meth_get_write(const BIO_METHOD *biom))
+
+(BIO *, const char *, int);
+
 int BIO_meth_set_write(BIO_METHOD *biom,
-                       int (*write)(BIO *, const char *, int));
-int (*BIO_meth_get_read(const BIO_METHOD *biom))(BIO *, char *, int);
+                       int (*write)(BIO *, const char *, int)
+
+);
+
+int (*BIO_meth_get_read(const BIO_METHOD *biom))
+
+(BIO *, char *, int);
+
 int BIO_meth_set_read(BIO_METHOD *biom,
-                      int (*read)(BIO *, char *, int));
-int (*BIO_meth_get_puts(const BIO_METHOD *biom))(BIO *, const char *);
+                      int (*read)(BIO *, char *, int)
+
+);
+
+int (*BIO_meth_get_puts(const BIO_METHOD *biom))
+
+(BIO *, const char *);
+
 int BIO_meth_set_puts(BIO_METHOD *biom,
-                      int (*puts)(BIO *, const char *));
-int (*BIO_meth_get_gets(const BIO_METHOD *biom))(BIO *, char *, int);
+                      int (*puts)(BIO *, const char *)
+
+);
+
+int (*BIO_meth_get_gets(const BIO_METHOD *biom))
+
+(BIO *, char *, int);
+
 int BIO_meth_set_gets(BIO_METHOD *biom,
-                      int (*gets)(BIO *, char *, int));
-long (*BIO_meth_get_ctrl(const BIO_METHOD *biom))(BIO *, int, long, void *);
+                      int (*gets)(BIO *, char *, int)
+
+);
+
+long (*BIO_meth_get_ctrl(const BIO_METHOD *biom))
+
+(BIO *, int, long, void *);
+
 int BIO_meth_set_ctrl(BIO_METHOD *biom,
-                      long (*ctrl)(BIO *, int, long, void *));
-int (*BIO_meth_get_create(const BIO_METHOD *bion))(BIO *);
-int BIO_meth_set_create(BIO_METHOD *biom, int (*create)(BIO *));
-int (*BIO_meth_get_destroy(const BIO_METHOD *biom))(BIO *);
-int BIO_meth_set_destroy(BIO_METHOD *biom, int (*destroy)(BIO *));
+                      long (*ctrl)(BIO *, int, long, void *)
+
+);
+
+int (*BIO_meth_get_create(const BIO_METHOD *bion))
+
+(BIO *);
+
+int BIO_meth_set_create(BIO_METHOD *biom, int (*create)(BIO *)
+
+);
+
+int (*BIO_meth_get_destroy(const BIO_METHOD *biom))
+
+(BIO *);
+
+int BIO_meth_set_destroy(BIO_METHOD *biom, int (*destroy)(BIO *)
+
+);
+
 long (*BIO_meth_get_callback_ctrl(const BIO_METHOD *biom))
-        (BIO *, int, BIO_info_cb *);
+
+(BIO *, int, BIO_info_cb *);
+
 int BIO_meth_set_callback_ctrl(BIO_METHOD *biom,
                                long (*callback_ctrl)(BIO *, int,
-                                                     BIO_info_cb *));
+                               BIO_info_cb *)
+
+);
 
 /* BEGIN ERROR CODES */
 /*

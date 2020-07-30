@@ -66,8 +66,10 @@ DEFINE_STACK_OF(CONF_MODULE)
 DEFINE_STACK_OF(CONF_IMODULE)
 
 /* DSO module function typedefs */
-typedef int conf_init_func(CONF_IMODULE *md, const CONF *cnf);
-typedef void conf_finish_func(CONF_IMODULE *md);
+typedef int conf_init_func(CONF_IMODULE * md,
+const CONF *cnf
+);
+typedef void conf_finish_func(CONF_IMODULE * md);
 
 # define CONF_MFLAGS_IGNORE_ERRORS       0x1
 # define CONF_MFLAGS_IGNORE_RETURN_CODES 0x2
@@ -77,7 +79,10 @@ typedef void conf_finish_func(CONF_IMODULE *md);
 # define CONF_MFLAGS_DEFAULT_SECTION     0x20
 
 int CONF_set_default_method(CONF_METHOD *meth);
-void CONF_set_nconf(CONF *conf, LHASH_OF(CONF_VALUE) *hash);
+
+void CONF_set_nconf(CONF *conf, LHASH_OF(CONF_VALUE)
+
+*hash);
 LHASH_OF(CONF_VALUE) *CONF_load(LHASH_OF(CONF_VALUE) *conf, const char *file,
                                 long *eline);
 # ifndef OPENSSL_NO_STDIO

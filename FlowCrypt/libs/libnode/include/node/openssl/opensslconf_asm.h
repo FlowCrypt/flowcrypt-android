@@ -131,7 +131,5 @@
 #elif defined(OPENSSL_LINUX) && defined(__s390__)
 # include "./archs/linux32-s390x/asm/include/openssl/opensslconf.h"
 #else
-
 # include "./archs/linux-elf/asm/include/openssl/opensslconf.h"
-
 #endif

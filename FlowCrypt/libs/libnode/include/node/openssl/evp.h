@@ -174,24 +174,30 @@ void EVP_CIPHER_meth_free(EVP_CIPHER *cipher);
 int EVP_CIPHER_meth_set_iv_length(EVP_CIPHER *cipher, int iv_len);
 int EVP_CIPHER_meth_set_flags(EVP_CIPHER *cipher, unsigned long flags);
 int EVP_CIPHER_meth_set_impl_ctx_size(EVP_CIPHER *cipher, int ctx_size);
+
 int EVP_CIPHER_meth_set_init(EVP_CIPHER *cipher,
                              int (*init)(EVP_CIPHER_CTX *ctx,
                                          const unsigned char *key,
                                          const unsigned char *iv,
                                          int enc));
+
 int EVP_CIPHER_meth_set_do_cipher(EVP_CIPHER *cipher,
                                   int (*do_cipher)(EVP_CIPHER_CTX *ctx,
                                                    unsigned char *out,
                                                    const unsigned char *in,
                                                    size_t inl));
+
 int EVP_CIPHER_meth_set_cleanup(EVP_CIPHER *cipher,
                                 int (*cleanup)(EVP_CIPHER_CTX *));
+
 int EVP_CIPHER_meth_set_set_asn1_params(EVP_CIPHER *cipher,
                                         int (*set_asn1_parameters)(EVP_CIPHER_CTX *,
                                                                    ASN1_TYPE *));
+
 int EVP_CIPHER_meth_set_get_asn1_params(EVP_CIPHER *cipher,
                                         int (*get_asn1_parameters)(EVP_CIPHER_CTX *,
                                                                    ASN1_TYPE *));
+
 int EVP_CIPHER_meth_set_ctrl(EVP_CIPHER *cipher,
                              int (*ctrl)(EVP_CIPHER_CTX *, int type,
                                          int arg, void *ptr));
@@ -205,10 +211,13 @@ int (*EVP_CIPHER_meth_get_do_cipher(const EVP_CIPHER *cipher))(EVP_CIPHER_CTX *c
                                                                const unsigned char *in,
                                                                size_t inl);
 int (*EVP_CIPHER_meth_get_cleanup(const EVP_CIPHER *cipher))(EVP_CIPHER_CTX *);
+
 int (*EVP_CIPHER_meth_get_set_asn1_params(const EVP_CIPHER *cipher))(EVP_CIPHER_CTX *,
                                                                      ASN1_TYPE *);
+
 int (*EVP_CIPHER_meth_get_get_asn1_params(const EVP_CIPHER *cipher))(EVP_CIPHER_CTX *,
                                                                      ASN1_TYPE *);
+
 int (*EVP_CIPHER_meth_get_ctrl(const EVP_CIPHER *cipher))(EVP_CIPHER_CTX *,
                                                           int type, int arg,
                                                           void *ptr);
@@ -412,8 +421,10 @@ int EVP_MD_block_size(const EVP_MD *md);
 unsigned long EVP_MD_flags(const EVP_MD *md);
 
 const EVP_MD *EVP_MD_CTX_md(const EVP_MD_CTX *ctx);
+
 int (*EVP_MD_CTX_update_fn(EVP_MD_CTX *ctx))(EVP_MD_CTX *ctx,
                                              const void *data, size_t count);
+
 void EVP_MD_CTX_set_update_fn(EVP_MD_CTX *ctx,
                               int (*update)(EVP_MD_CTX *ctx,
                                             const void *data, size_t count));
@@ -448,7 +459,9 @@ int EVP_CIPHER_CTX_copy(EVP_CIPHER_CTX *out, const EVP_CIPHER_CTX *in);
 void *EVP_CIPHER_CTX_get_app_data(const EVP_CIPHER_CTX *ctx);
 void EVP_CIPHER_CTX_set_app_data(EVP_CIPHER_CTX *ctx, void *data);
 void *EVP_CIPHER_CTX_get_cipher_data(const EVP_CIPHER_CTX *ctx);
+
 void *EVP_CIPHER_CTX_set_cipher_data(EVP_CIPHER_CTX *ctx, void *cipher_data);
+
 # define EVP_CIPHER_CTX_type(c)         EVP_CIPHER_type(EVP_CIPHER_CTX_cipher(c))
 # if OPENSSL_API_COMPAT < 0x10100000L
 #  define EVP_CIPHER_CTX_flags(c)       EVP_CIPHER_flags(EVP_CIPHER_CTX_cipher(c))
@@ -503,13 +516,18 @@ void EVP_MD_CTX_free(EVP_MD_CTX *ctx);
 __owur int EVP_MD_CTX_copy_ex(EVP_MD_CTX *out, const EVP_MD_CTX *in);
 void EVP_MD_CTX_set_flags(EVP_MD_CTX *ctx, int flags);
 void EVP_MD_CTX_clear_flags(EVP_MD_CTX *ctx, int flags);
+
 int EVP_MD_CTX_test_flags(const EVP_MD_CTX *ctx, int flags);
+
 __owur int EVP_DigestInit_ex(EVP_MD_CTX *ctx, const EVP_MD *type,
                              ENGINE *impl);
+
 __owur int EVP_DigestUpdate(EVP_MD_CTX *ctx, const void *d,
                             size_t cnt);
+
 __owur int EVP_DigestFinal_ex(EVP_MD_CTX *ctx, unsigned char *md,
                               unsigned int *s);
+
 __owur int EVP_Digest(const void *data, size_t count,
                       unsigned char *md, unsigned int *size,
                       const EVP_MD *type, ENGINE *impl);
@@ -617,10 +635,13 @@ void EVP_EncodeFinal(EVP_ENCODE_CTX *ctx, unsigned char *out, int *outl);
 int EVP_EncodeBlock(unsigned char *t, const unsigned char *f, int n);
 
 void EVP_DecodeInit(EVP_ENCODE_CTX *ctx);
+
 int EVP_DecodeUpdate(EVP_ENCODE_CTX *ctx, unsigned char *out, int *outl,
                      const unsigned char *in, int inl);
+
 int EVP_DecodeFinal(EVP_ENCODE_CTX *ctx, unsigned
 char *out, int *outl);
+
 int EVP_DecodeBlock(unsigned char *t, const unsigned char *f, int n);
 
 # if OPENSSL_API_COMPAT < 0x10100000L
@@ -875,6 +896,7 @@ const EVP_MD *EVP_get_digestbyname(const char *name);
 void EVP_CIPHER_do_all(void (*fn)(const EVP_CIPHER *ciph,
                                   const char *from, const char *to, void *x),
                        void *arg);
+
 void EVP_CIPHER_do_all_sorted(void (*fn)
         (const EVP_CIPHER *ciph, const char *from,
          const char *to, void *x), void *arg);
@@ -882,6 +904,7 @@ void EVP_CIPHER_do_all_sorted(void (*fn)
 void EVP_MD_do_all(void (*fn)(const EVP_MD *ciph,
                               const char *from, const char *to, void *x),
                    void *arg);
+
 void EVP_MD_do_all_sorted(void (*fn)
         (const EVP_MD *ciph, const char *from,
          const char *to, void *x), void *arg);
@@ -1056,7 +1079,9 @@ EVP_PKEY_ASN1_METHOD *EVP_PKEY_asn1_new(int id, int flags,
                                         const char *info);
 void EVP_PKEY_asn1_copy(EVP_PKEY_ASN1_METHOD *dst,
                         const EVP_PKEY_ASN1_METHOD *src);
+
 void EVP_PKEY_asn1_free(EVP_PKEY_ASN1_METHOD *ameth);
+
 void EVP_PKEY_asn1_set_public(EVP_PKEY_ASN1_METHOD *ameth,
                               int (*pub_decode)(EVP_PKEY *pk,
                                                 X509_PUBKEY *pub),
@@ -1069,6 +1094,7 @@ void EVP_PKEY_asn1_set_public(EVP_PKEY_ASN1_METHOD *ameth,
                                                int indent, ASN1_PCTX *pctx),
                               int (*pkey_size)(const EVP_PKEY *pk),
                               int (*pkey_bits)(const EVP_PKEY *pk));
+
 void EVP_PKEY_asn1_set_private(EVP_PKEY_ASN1_METHOD *ameth,
                                int (*priv_decode)(EVP_PKEY *pk,
                                                   const PKCS8_PRIV_KEY_INFO
@@ -1079,6 +1105,7 @@ void EVP_PKEY_asn1_set_private(EVP_PKEY_ASN1_METHOD *ameth,
                                                  const EVP_PKEY *pkey,
                                                  int indent,
                                                  ASN1_PCTX *pctx));
+
 void EVP_PKEY_asn1_set_param(EVP_PKEY_ASN1_METHOD *ameth,
                              int (*param_decode)(EVP_PKEY *pkey,
                                                  const unsigned char **pder,
@@ -1097,9 +1124,11 @@ void EVP_PKEY_asn1_set_param(EVP_PKEY_ASN1_METHOD *ameth,
 
 void EVP_PKEY_asn1_set_free(EVP_PKEY_ASN1_METHOD *ameth,
                             void (*pkey_free)(EVP_PKEY *pkey));
+
 void EVP_PKEY_asn1_set_ctrl(EVP_PKEY_ASN1_METHOD *ameth,
                             int (*pkey_ctrl)(EVP_PKEY *pkey, int op,
                                              long arg1, void *arg2));
+
 void EVP_PKEY_asn1_set_item(EVP_PKEY_ASN1_METHOD *ameth,
                             int (*item_verify)(EVP_MD_CTX *ctx,
                                                const ASN1_ITEM *it,

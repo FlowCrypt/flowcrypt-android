@@ -28,15 +28,15 @@ extern "C" {
 #endif
 
 #ifdef _WIN32
-/* Windows - set up dll import/export decorators. */
+  /* Windows - set up dll import/export decorators. */
 # if defined(BUILDING_UV_SHARED)
-  /* Building shared library. */
+    /* Building shared library. */
 #   define UV_EXTERN __declspec(dllexport)
 # elif defined(USING_UV_SHARED)
-  /* Using shared library. */
+    /* Using shared library. */
 #   define UV_EXTERN __declspec(dllimport)
 # else
-  /* Building static library. */
+    /* Building static library. */
 #   define UV_EXTERN /* nothing */
 # endif
 #elif __GNUC__ >= 4
@@ -543,7 +543,7 @@ UV_EXTERN int uv_tcp_simultaneous_accepts(uv_tcp_t *handle, int enable);
 
 enum uv_tcp_flags {
     /* Used with uv_tcp_bind, when an IPv6 address is used. */
-            UV_TCP_IPV6ONLY = 1
+    UV_TCP_IPV6ONLY = 1
 };
 
 UV_EXTERN int uv_tcp_bind(uv_tcp_t *handle,
@@ -575,12 +575,12 @@ struct uv_connect_s {
 
 enum uv_udp_flags {
     /* Disables dual stack mode. */
-            UV_UDP_IPV6ONLY = 1,
+    UV_UDP_IPV6ONLY = 1,
     /*
      * Indicates message was truncated because read buffer was too small. The
      * remainder was discarded by the OS. Used in uv_udp_recv_cb.
      */
-            UV_UDP_PARTIAL = 2,
+    UV_UDP_PARTIAL = 2,
     /*
      * Indicates if SO_REUSEADDR will be set when binding the handle.
      * This sets the SO_REUSEPORT socket flag on the BSDs and OS X. On other
@@ -589,7 +589,7 @@ enum uv_udp_flags {
      * (provided they all set the flag) but only the last one to bind will receive
      * any traffic, in effect "stealing" the port from the previous listener.
      */
-            UV_UDP_REUSEADDR = 4
+    UV_UDP_REUSEADDR = 4
 };
 
 typedef void (*uv_udp_send_cb)(uv_udp_send_t *req, int status);
@@ -674,11 +674,11 @@ struct uv_tty_s {
 
 typedef enum {
     /* Initial/normal terminal mode */
-            UV_TTY_MODE_NORMAL,
+    UV_TTY_MODE_NORMAL,
     /* Raw input mode (On Windows, ENABLE_WINDOW_INPUT is also enabled) */
-            UV_TTY_MODE_RAW,
+    UV_TTY_MODE_RAW,
     /* Binary-safe I/O mode for IPC (Unix-only) */
-            UV_TTY_MODE_IO
+    UV_TTY_MODE_IO
 } uv_tty_mode_t;
 
 UV_EXTERN int uv_tty_init(uv_loop_t *, uv_tty_t *, uv_file fd, int readable);
@@ -868,14 +868,14 @@ typedef enum {
      * determine the direction of flow, from the child process' perspective. Both
      * flags may be specified to create a duplex data stream.
      */
-            UV_READABLE_PIPE = 0x10,
+    UV_READABLE_PIPE = 0x10,
     UV_WRITABLE_PIPE = 0x20,
 
     /*
      * Open the child pipe handle in overlapped mode on Windows.
      * On Unix it is silently ignored.
      */
-            UV_OVERLAPPED_PIPE = 0x40
+    UV_OVERLAPPED_PIPE = 0x40
 } uv_stdio_flags;
 
 typedef struct uv_stdio_container_s {
@@ -941,19 +941,19 @@ enum uv_process_flags {
      * of the options struct. This does not work on windows; setting this flag
      * will cause uv_spawn() to fail.
      */
-            UV_PROCESS_SETUID = (1 << 0),
+    UV_PROCESS_SETUID = (1 << 0),
     /*
      * Set the child process' group id. The user id is supplied in the `gid`
      * field of the options struct. This does not work on windows; setting this
      * flag will cause uv_spawn() to fail.
      */
-            UV_PROCESS_SETGID = (1 << 1),
+    UV_PROCESS_SETGID = (1 << 1),
     /*
      * Do not wrap any arguments in quotes, or perform any other escaping, when
      * converting the argument list into a command line string. This option is
      * only meaningful on Windows systems. On Unix it is silently ignored.
      */
-            UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS = (1 << 2),
+    UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS = (1 << 2),
     /*
      * Spawn the child process in a detached state - this will make it a process
      * group leader, and will effectively enable the child to keep running after
@@ -961,13 +961,13 @@ enum uv_process_flags {
      * parent's event loop alive unless the parent process calls uv_unref() on
      * the child's process handle.
      */
-            UV_PROCESS_DETACHED = (1 << 3),
+    UV_PROCESS_DETACHED = (1 << 3),
     /*
      * Hide the subprocess console window that would normally be created. This
      * option is only meaningful on Windows systems. On Unix it is silently
      * ignored.
      */
-            UV_PROCESS_WINDOWS_HIDE = (1 << 4)
+    UV_PROCESS_WINDOWS_HIDE = (1 << 4)
 };
 
 /*
@@ -1432,7 +1432,7 @@ enum uv_fs_event_flags {
      * flag does not affect individual files watched.
      * This flag is currently not implemented yet on any backend.
      */
-            UV_FS_EVENT_WATCH_ENTRY = 1,
+    UV_FS_EVENT_WATCH_ENTRY = 1,
 
     /*
      * By default uv_fs_event will try to use a kernel interface such as inotify
@@ -1441,14 +1441,14 @@ enum uv_fs_event_flags {
      * regular interval.
      * This flag is currently not implemented yet on any backend.
      */
-            UV_FS_EVENT_STAT = 2,
+    UV_FS_EVENT_STAT = 2,
 
     /*
      * By default, event watcher, when watching directory, is not registering
      * (is ignoring) changes in it's subdirectories.
      * This flag will override this behaviour on platforms that support it.
      */
-            UV_FS_EVENT_RECURSIVE = 4
+    UV_FS_EVENT_RECURSIVE = 4
 };
 
 

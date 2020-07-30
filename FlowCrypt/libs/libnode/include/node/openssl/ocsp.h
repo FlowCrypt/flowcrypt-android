@@ -198,7 +198,9 @@ int OCSP_resp_get0_signer(OCSP_BASICRESP *bs, X509 **signer,
                           STACK_OF(X509) *extra_certs);
 
 int OCSP_resp_count(OCSP_BASICRESP *bs);
+
 OCSP_SINGLERESP *OCSP_resp_get0(OCSP_BASICRESP *bs, int idx);
+
 const ASN1_GENERALIZEDTIME *OCSP_resp_get0_produced_at(const OCSP_BASICRESP *bs);
 const STACK_OF(X509) *OCSP_resp_get0_certs(const OCSP_BASICRESP *bs);
 int OCSP_resp_get0_id(const OCSP_BASICRESP *bs,

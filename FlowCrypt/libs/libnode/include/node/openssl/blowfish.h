@@ -14,7 +14,6 @@
 
 # ifndef OPENSSL_NO_BF
 # include <openssl/e_os2.h>
-
 # ifdef  __cplusplus
 extern "C" {
 # endif

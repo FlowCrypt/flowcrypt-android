@@ -18,108 +18,59 @@ typedef enum FUNC_TYPE {
 typedef struct function_st {
     FUNC_TYPE type;
     const char *name;
-
     int (*func)(int argc, char *argv[]);
-
     const OPTIONS *help;
 } FUNCTION;
 
 DEFINE_LHASH_OF(FUNCTION);
 
 extern int asn1parse_main(int argc, char *argv[]);
-
 extern int ca_main(int argc, char *argv[]);
-
 extern int ciphers_main(int argc, char *argv[]);
-
 extern int cms_main(int argc, char *argv[]);
-
 extern int crl_main(int argc, char *argv[]);
-
 extern int crl2pkcs7_main(int argc, char *argv[]);
-
 extern int dgst_main(int argc, char *argv[]);
-
 extern int dhparam_main(int argc, char *argv[]);
-
 extern int dsa_main(int argc, char *argv[]);
-
 extern int dsaparam_main(int argc, char *argv[]);
-
 extern int ec_main(int argc, char *argv[]);
-
 extern int ecparam_main(int argc, char *argv[]);
-
 extern int enc_main(int argc, char *argv[]);
-
 extern int engine_main(int argc, char *argv[]);
-
 extern int errstr_main(int argc, char *argv[]);
-
 extern int exit_main(int argc, char *argv[]);
-
 extern int gendsa_main(int argc, char *argv[]);
-
 extern int genpkey_main(int argc, char *argv[]);
-
 extern int genrsa_main(int argc, char *argv[]);
-
 extern int help_main(int argc, char *argv[]);
-
 extern int list_main(int argc, char *argv[]);
-
 extern int nseq_main(int argc, char *argv[]);
-
 extern int ocsp_main(int argc, char *argv[]);
-
 extern int passwd_main(int argc, char *argv[]);
-
 extern int pkcs12_main(int argc, char *argv[]);
-
 extern int pkcs7_main(int argc, char *argv[]);
-
 extern int pkcs8_main(int argc, char *argv[]);
-
 extern int pkey_main(int argc, char *argv[]);
-
 extern int pkeyparam_main(int argc, char *argv[]);
-
 extern int pkeyutl_main(int argc, char *argv[]);
-
 extern int prime_main(int argc, char *argv[]);
-
 extern int rand_main(int argc, char *argv[]);
-
 extern int rehash_main(int argc, char *argv[]);
-
 extern int req_main(int argc, char *argv[]);
-
 extern int rsa_main(int argc, char *argv[]);
-
 extern int rsautl_main(int argc, char *argv[]);
-
 extern int s_client_main(int argc, char *argv[]);
-
 extern int s_server_main(int argc, char *argv[]);
-
 extern int s_time_main(int argc, char *argv[]);
-
 extern int sess_id_main(int argc, char *argv[]);
-
 extern int smime_main(int argc, char *argv[]);
-
 extern int speed_main(int argc, char *argv[]);
-
 extern int spkac_main(int argc, char *argv[]);
-
 extern int srp_main(int argc, char *argv[]);
-
 extern int ts_main(int argc, char *argv[]);
-
 extern int verify_main(int argc, char *argv[]);
-
 extern int version_main(int argc, char *argv[]);
-
 extern int x509_main(int argc, char *argv[]);
 
 extern OPTIONS asn1parse_options[];

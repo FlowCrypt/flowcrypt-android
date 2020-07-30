@@ -942,15 +942,18 @@ typedef struct obj_name_st {
 # define         OBJ_create_and_add_object(a, b, c) OBJ_create(a,b,c)
 
 int OBJ_NAME_init(void);
+
 int OBJ_NAME_new_index(unsigned long (*hash_func)(const char *),
                        int (*cmp_func)(const char *, const char *),
                        void (*free_func)(const char *, int, const char *));
+
 const char *OBJ_NAME_get(const char *name, int type);
 int OBJ_NAME_add(const char *name, int type, const char *data);
 int OBJ_NAME_remove(const char *name, int type);
 void OBJ_NAME_cleanup(int type); /* -1 for everything */
 void OBJ_NAME_do_all(int type, void (*fn)(const OBJ_NAME *, void *arg),
                      void *arg);
+
 void OBJ_NAME_do_all_sorted(int type,
                             void (*fn)(const OBJ_NAME *, void *arg),
                             void *arg);
@@ -965,9 +968,12 @@ int OBJ_obj2txt(char *buf, int buf_len, const ASN1_OBJECT *a, int no_name);
 int OBJ_txt2nid(const char *s);
 int OBJ_ln2nid(const char *s);
 int OBJ_sn2nid(const char *s);
+
 int OBJ_cmp(const ASN1_OBJECT *a, const ASN1_OBJECT *b);
+
 const void *OBJ_bsearch_(const void *key, const void *base, int num, int size,
                          int (*cmp)(const void *, const void *));
+
 const void *OBJ_bsearch_ex_(const void *key, const void *base, int num,
                             int size,
                             int (*cmp)(const void *, const void *),

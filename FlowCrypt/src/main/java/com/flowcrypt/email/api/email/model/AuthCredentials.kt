@@ -7,6 +7,8 @@ package com.flowcrypt.email.api.email.model
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.database.entity.AccountEntity
 
 /**
  * This class describes a details information about auth settings for some IMAP and SMTP servers.
@@ -27,7 +29,8 @@ data class AuthCredentials constructor(val email: String,
                                        val smtpOpt: SecurityType.Option = SecurityType.Option.NONE,
                                        val hasCustomSignInForSmtp: Boolean = false,
                                        val smtpSigInUsername: String? = null,
-                                       var smtpSignInPassword: String? = null) : Parcelable {
+                                       var smtpSignInPassword: String? = null,
+                                       val faqUrl: String? = null) : Parcelable {
   constructor(source: Parcel) : this(
       source.readString()!!,
       source.readString()!!,
@@ -39,6 +42,7 @@ data class AuthCredentials constructor(val email: String,
       source.readInt(),
       source.readParcelable(SecurityType.Option::class.java.classLoader)!!,
       source.readByte() != 0.toByte(),
+      source.readString(),
       source.readString(),
       source.readString()
   )
@@ -59,6 +63,7 @@ data class AuthCredentials constructor(val email: String,
       writeInt((if (hasCustomSignInForSmtp) 1 else 0))
       writeString(smtpSigInUsername)
       writeString(smtpSignInPassword)
+      writeString(faqUrl)
     }
   }
 
@@ -68,6 +73,40 @@ data class AuthCredentials constructor(val email: String,
     val CREATOR: Parcelable.Creator<AuthCredentials> = object : Parcelable.Creator<AuthCredentials> {
       override fun createFromParcel(source: Parcel): AuthCredentials = AuthCredentials(source)
       override fun newArray(size: Int): Array<AuthCredentials?> = arrayOfNulls(size)
+    }
+
+    fun from(accountEntity: AccountEntity): AuthCredentials {
+      with(accountEntity) {
+        var imapOpt: SecurityType.Option = SecurityType.Option.NONE
+
+        if (imapIsUseSslTls == true) {
+          imapOpt = SecurityType.Option.SSL_TLS
+        } else if (imapIsUseStarttls == true) {
+          imapOpt = SecurityType.Option.STARTLS
+        }
+
+        var smtpOpt: SecurityType.Option = SecurityType.Option.NONE
+
+        if (smtpIsUseSslTls == true) {
+          smtpOpt = SecurityType.Option.SSL_TLS
+        } else if (smtpIsUseStarttls == true) {
+          smtpOpt = SecurityType.Option.STARTLS
+        }
+
+        return AuthCredentials(
+            email = email,
+            username = username,
+            password = password,
+            imapServer = imapServer,
+            imapPort = imapPort ?: JavaEmailConstants.DEFAULT_IMAP_PORT,
+            imapOpt = imapOpt,
+            smtpServer = smtpServer,
+            smtpPort = smtpPort ?: JavaEmailConstants.DEFAULT_SMTP_PORT,
+            smtpOpt = smtpOpt,
+            hasCustomSignInForSmtp = true,
+            smtpSigInUsername = smtpUsername,
+            smtpSignInPassword = smtpPassword)
+      }
     }
   }
 }

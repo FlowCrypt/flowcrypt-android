@@ -114,6 +114,7 @@ PKCS8_PRIV_KEY_INFO *PKCS12_decrypt_skey(const PKCS12_SAFEBAG *bag,
 X509_SIG *PKCS8_encrypt(int pbe_nid, const EVP_CIPHER *cipher,
                         const char *pass, int passlen, unsigned char *salt,
                         int saltlen, int iter, PKCS8_PRIV_KEY_INFO *p8);
+
 X509_SIG *PKCS8_set0_pbe(const char *pass, int passlen,
                          PKCS8_PRIV_KEY_INFO *p8inf, X509_ALGOR *pbe);
 PKCS7 *PKCS12_pack_p7data(STACK_OF(PKCS12_SAFEBAG) *sk);

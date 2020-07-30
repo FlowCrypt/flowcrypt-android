@@ -131,14 +131,6 @@ android {
     }
 
     sourceSets {
-        // If you want Gradle to package prebuilt native libraries
-        // with your APK, modify the default source set configuration
-        // to include the directory of your prebuilt .so files as follows.
-        main {
-            jniLibs.srcDirs 'libs/libnode/bin/'
-        }
-
-        // used by Room, to test migrations
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
 
@@ -265,6 +257,7 @@ android {
 
     lintOptions {
         warningsAsErrors true
+        disable "NullSafeMutableLiveData"
     }
 
     packagingOptions {
@@ -389,14 +382,14 @@ dependencies {
     implementation "androidx.room:room-ktx:$roomVersion"
     implementation "androidx.paging:paging-runtime-ktx:$pagingVersion"
     implementation 'androidx.preference:preference:1.1.1'
-    implementation 'androidx.core:core-ktx:1.3.0'
+    implementation 'androidx.core:core-ktx:1.3.1'
     implementation 'androidx.activity:activity-ktx:1.1.0'
-    implementation 'androidx.fragment:fragment-ktx:1.2.5'
-    implementation 'androidx.work:work-runtime-ktx:2.3.4'
+    implementation 'androidx.fragment:fragment-ktx:1.3.0-alpha07'
+    implementation 'androidx.work:work-runtime-ktx:2.4.0'
 
     //https://developers.google.com/android/guides/setup
     implementation 'com.google.android.gms:play-services-base:17.3.0'
-    implementation 'com.google.android.gms:play-services-auth:18.0.0'
+    implementation 'com.google.android.gms:play-services-auth:18.1.0'
 
     //https://mvnrepository.com/artifact/com.google.android.material/material
     implementation 'com.google.android.material:material:1.1.0'

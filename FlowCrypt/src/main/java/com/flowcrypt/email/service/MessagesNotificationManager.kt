@@ -12,8 +12,6 @@ import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
@@ -59,12 +57,8 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
    * @param account               An [AccountEntity] object which contains information about an email account.
    * @param localFolder           A local implementation of a remote folder.
    * @param msgs                  A list of models which consists information about some messages.
-   * @param uidListOfUnseenMsgs   A list of UID of unseen messages.
-   * @param isSilent              true if we don't need sound and vibration for Android 7.0 and below.
    */
-  fun notify(context: Context, account: AccountEntity?, localFolder: LocalFolder,
-             msgs: List<MessageEntity>?, uidListOfUnseenMsgs: List<Long>,
-             isSilent: Boolean) {
+  fun notify(context: Context, account: AccountEntity?, localFolder: LocalFolder, msgs: List<MessageEntity>?) {
 
     if (account == null || msgs == null || msgs.isEmpty()) {
       notificationManagerCompat.cancel(NOTIFICATIONS_GROUP_MESSAGES)
@@ -79,11 +73,7 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
       return
     }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-      notifyWithGroupSupport(context, account, localFolder, msgs)
-    } else {
-      notifyWithSingleNotification(context, account, localFolder, msgs, uidListOfUnseenMsgs, isSilent)
-    }
+    notifyWithGroupSupport(context, account, localFolder, msgs)
   }
 
   fun cancelAll(context: Context, account: AccountEntity, foldersManager: FoldersManager) {
@@ -96,80 +86,6 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
         roomDatabase.msgDao().markMsgsAsOld(account.email, localFolder.fullName)
       }
     }
-  }
-
-  private fun notifyWithSingleNotification(context: Context, account: AccountEntity,
-                                           folder: LocalFolder, msgs: List<MessageEntity>,
-                                           uidOfUnseenMsgs: List<Long>, isSilent: Boolean) {
-    val onlyEncrypted = NotificationsSettingsFragment.NOTIFICATION_LEVEL_ENCRYPTED_MESSAGES_ONLY ==
-        SharedPreferencesHelper.getString(PreferenceManager.getDefaultSharedPreferences(context),
-            Constants.PREF_KEY_MESSAGES_NOTIFICATION_FILTER, "")
-
-    val builder = NotificationCompat.Builder(context, NotificationChannelManager.CHANNEL_ID_MESSAGES)
-        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-        .setCategory(NotificationCompat.CATEGORY_EMAIL)
-        .setSmallIcon(R.drawable.ic_email_encrypted)
-        .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.mipmap.ic_launcher))
-        .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
-        .setAutoCancel(true)
-        .setGroup(GROUP_NAME_FLOWCRYPT_MESSAGES)
-        .setSubText(account.email)
-
-    if (!isSilent) {
-      builder.setDefaults(Notification.DEFAULT_ALL)
-    }
-
-    if (uidOfUnseenMsgs.size > 1) {
-      builder.setNumber(uidOfUnseenMsgs.size)
-    }
-
-    if (msgs.size > 1) {
-      var hasAllowedNotifications = false
-
-      val inboxStyle = NotificationCompat.InboxStyle()
-      for (msgEntity in msgs) {
-        if (onlyEncrypted && msgEntity.isEncrypted == false) {
-          continue
-        }
-
-        hasAllowedNotifications = true
-        inboxStyle.addLine(formatInboxStyleLine(context, EmailUtil.getFirstAddressString
-        (msgEntity.from), msgEntity.subject))
-      }
-
-      if (!hasAllowedNotifications) {
-        return
-      }
-
-      builder.setStyle(inboxStyle)
-          .setSmallIcon(R.drawable.ic_email_multiply_encrypted)
-          .setContentIntent(getInboxPendingIntent(context))
-          .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, account, folder, msgs))
-          .setContentTitle(context.getString(R.string.incoming_message, msgs.size))
-    } else {
-      val msgDetails = msgs[0]
-
-      if (onlyEncrypted && msgDetails.isEncrypted == false) {
-        return
-      }
-
-      val style = NotificationCompat.BigTextStyle().bigText(formatText(msgDetails.subject,
-          ContextCompat.getColor(context, android.R.color.black)))
-
-      val contentText = formatText(msgDetails.subject,
-          ContextCompat.getColor(context, android.R.color.black))
-
-      builder.setContentText(contentText)
-          .setContentIntent(getMsgDetailsPendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, folder, msgDetails))
-          .setContentTitle(EmailUtil.getFirstAddressString(msgDetails.from))
-          .setStyle(style)
-          .setDeleteIntent(genDeletePendingIntent(context, NOTIFICATIONS_GROUP_MESSAGES, account, folder, msgs))
-          .setColor(ContextCompat.getColor(context, if (msgDetails.isEncrypted == true)
-            R.color.colorPrimary else R.color.red))
-          .setSmallIcon(R.drawable.ic_email_encrypted)
-    }
-
-    notificationManagerCompat.notify(groupName, NOTIFICATIONS_GROUP_MESSAGES, builder.build())
   }
 
   private fun notifyWithGroupSupport(context: Context, account: AccountEntity,

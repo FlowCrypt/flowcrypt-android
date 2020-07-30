@@ -6,9 +6,11 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.text.TextUtils
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.SearchBackupsUtil
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
@@ -41,15 +43,20 @@ import javax.mail.Store
 class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(application) {
   val privateKeysLiveData = MutableLiveData<Result<ArrayList<NodeKeyDetails>?>>()
 
-  fun fetchAvailableKeys(accountEntity: AccountEntity) {
+  fun fetchAvailableKeys(accountEntity: AccountEntity?) {
     viewModelScope.launch {
-      privateKeysLiveData.postValue(Result.loading())
-      val result = fetchKeys(accountEntity)
-      privateKeysLiveData.postValue(result)
+      val context: Context = getApplication()
+      privateKeysLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.searching_backups)))
+      if (accountEntity != null) {
+        val result = fetchKeys(accountEntity)
+        privateKeysLiveData.postValue(result)
+      } else {
+        privateKeysLiveData.postValue(Result.exception(NullPointerException("AccountEntity is null!")))
+      }
     }
   }
 
-  private suspend fun fetchKeys(accountEntity: AccountEntity): Result<ArrayList<NodeKeyDetails>>? =
+  private suspend fun fetchKeys(accountEntity: AccountEntity): Result<ArrayList<NodeKeyDetails>> =
       withContext(Dispatchers.IO) {
         val privateKeyDetailsList = ArrayList<NodeKeyDetails>()
 
@@ -86,10 +93,14 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
         val details = ArrayList<NodeKeyDetails>()
         var store: Store? = null
         try {
-          store = OpenStoreHelper.openStore(getApplication(), accountEntity, session)
+          val context: Context = getApplication()
+          store = OpenStoreHelper.openStore(context, accountEntity, session)
           val folders = store.defaultFolder.list("*")
 
-          for (folder in folders) {
+          privateKeysLiveData.postValue(Result.loading(progressMsg = context.resources
+              .getQuantityString(R.plurals.found_folder, folders.size, folders.size)))
+
+          for ((index, folder) in folders.withIndex()) {
             val containsNoSelectAttr = EmailUtil.containsNoSelectAttr(folder as IMAPFolder)
             if (!containsNoSelectAttr) {
               folder.open(Folder.READ_ONLY)
@@ -113,6 +124,8 @@ class LoadPrivateKeysViewModel(application: Application) : BaseAndroidViewModel(
 
               folder.close(false)
             }
+
+            privateKeysLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.searching_in_folders, index, folders.size)))
           }
 
           store.close()

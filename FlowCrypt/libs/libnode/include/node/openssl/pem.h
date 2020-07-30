@@ -278,6 +278,7 @@ int PEM_write_bio_##name(BIO *bp, type *x, const EVP_CIPHER *enc, \
 # define DECLARE_PEM_rw_cb(name, type) \
         DECLARE_PEM_read(name, type) \
         DECLARE_PEM_write_cb(name, type)
+
 typedef int pem_password_cb(char *buf, int size, int rwflag, void *userdata);
 
 int PEM_get_EVP_CIPHER_INFO(char *header, EVP_CIPHER_INFO *cipher);

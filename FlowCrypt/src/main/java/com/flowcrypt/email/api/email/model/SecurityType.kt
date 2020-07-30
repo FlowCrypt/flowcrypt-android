@@ -20,9 +20,9 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
  * E-mail: DenBond7@gmail.com
  */
 data class SecurityType constructor(val name: String = "",
-                                    val opt: Option = Option.NONE,
-                                    val defImapPort: Int = 0,
-                                    val defSmtpPort: Int = 0) : Parcelable {
+                                    val opt: Option = Option.SSL_TLS,
+                                    val defImapPort: Int = 993,
+                                    val defSmtpPort: Int = 465) : Parcelable {
 
   constructor(parcel: Parcel) : this(
       parcel.readString()!!,
@@ -81,12 +81,12 @@ data class SecurityType constructor(val name: String = "",
      */
     fun generateSecurityTypes(context: Context): MutableList<SecurityType> {
       val securityTypes = mutableListOf<SecurityType>()
-      securityTypes.add(SecurityType(context.getString(R.string.none), Option.NONE,
-          JavaEmailConstants.DEFAULT_IMAP_PORT, JavaEmailConstants.DEFAULT_SMTP_PORT))
       securityTypes.add(SecurityType(context.getString(R.string.ssl_tls), Option.SSL_TLS,
           JavaEmailConstants.SSL_IMAP_PORT, JavaEmailConstants.SSL_SMTP_PORT))
       securityTypes.add(SecurityType(context.getString(R.string.startls), Option.STARTLS,
           JavaEmailConstants.DEFAULT_IMAP_PORT, JavaEmailConstants.STARTTLS_SMTP_PORT))
+      securityTypes.add(SecurityType(context.getString(R.string.none), Option.NONE,
+          JavaEmailConstants.DEFAULT_IMAP_PORT, JavaEmailConstants.DEFAULT_SMTP_PORT))
       return securityTypes
     }
   }

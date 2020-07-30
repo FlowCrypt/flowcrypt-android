@@ -44,9 +44,7 @@
 #elif defined(OPENSSL_LINUX) && defined(__s390__)
 # include "./archs/linux32-s390x/no-asm/crypto/include/internal/dso_conf.h"
 #else
-
 # include "./archs/linux-elf/no-asm/crypto/include/internal/dso_conf.h"
-
 #endif
 
 /* GOST is not included in all platform */
