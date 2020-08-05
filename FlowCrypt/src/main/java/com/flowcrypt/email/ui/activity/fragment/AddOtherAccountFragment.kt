@@ -20,6 +20,7 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
@@ -30,6 +31,7 @@ import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.OAuth2Helper
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
@@ -40,6 +42,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.jetpack.viewmodel.OAuth2AuthCredentialsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.service.EmailSyncService
@@ -95,6 +98,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   private var isSmtpSpinnerRestored: Boolean = false
 
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
+  private val oAuth2AuthCredentialsViewModel: OAuth2AuthCredentialsViewModel by viewModels()
 
   private val digitsTextWatcher: TextWatcher = object : TextWatcher {
     override fun afterTextChanged(s: Editable?) {
@@ -146,6 +150,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     updateView(authCreds)
 
     setupPrivateKeysViewModel()
+    setupOAuth2AuthCredentialsViewModel()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -236,6 +241,11 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
             ?: getString(R.string.error_occurred_during_adding_new_account), Toast.LENGTH_SHORT).show()
       }
     }
+  }
+
+  fun handleOAuth2Intent(intent: Intent?) {
+    oAuth2AuthCredentialsViewModel.getMicrosoftOAuth2Token(authorizeCode = intent?.data?.getQueryParameter("code")
+        ?: "")
   }
 
   private fun initViews(view: View) {
@@ -329,6 +339,15 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
     view.findViewById<View>(R.id.buttonHelp)?.setOnClickListener {
       FeedbackActivity.show(requireActivity())
+    }
+
+    view.findViewById<View>(R.id.buttonSignInWithOutlook)?.setOnClickListener {
+      val intent = OAuth2Helper.getMicrosoftOAuth2Intent("")
+      if (intent.resolveActivity(requireContext().packageManager) != null) {
+        intent.data?.let {
+          CustomTabsIntent.Builder().build().launchUrl(requireContext(), it)
+        }
+      }
     }
   }
 
@@ -440,7 +459,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
             val keyDetailsList = result.data as ArrayList<NodeKeyDetails>?
             if (keyDetailsList?.isEmpty() == true) {
               authCreds?.let { authCredentials ->
-                val account = AccountEntity(authCredentials, null, null)
+                val account = AccountEntity(authCredentials)
                 startActivityForResult(CreateOrImportKeyActivity.newIntent(requireContext(), account, true),
                     REQUEST_CODE_ADD_NEW_ACCOUNT)
                 showContent()
@@ -510,6 +529,35 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     })
   }
 
+  private fun setupOAuth2AuthCredentialsViewModel() {
+    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          showProgress(progressMsg = getString(R.string.loading_account_details))
+        }
+
+        Result.Status.SUCCESS -> {
+          it.data?.let { authCredentials ->
+            authCreds = authCredentials
+            val account = AccountEntity(authCredentials)
+            val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
+            activity?.supportFragmentManager?.beginTransaction()
+                ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
+                ?.addToBackStack(null)
+                ?.commit()
+          }
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          showContent()
+          showInfoDialog(
+              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: "Couldn't fetch token")
+        }
+      }
+    })
+  }
+
   /**
    * Retrieve a temp [AuthCredentials] from the shared preferences.
    */
@@ -534,12 +582,11 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
    * Save the current [AuthCredentials] to the shared preferences.
    */
   private fun saveTempCreds() {
-    authCreds = generateAuthCreds()
-    val gson = Gson()
-    authCreds?.password = ""
-    authCreds?.smtpSignInPassword = null
+    authCreds?.let { if (it.useOAuth2) return }
+
+    val authCreds = generateAuthCreds().copy(password = "", smtpSignInPassword = "")
     SharedPreferencesHelper.setString(PreferenceManager.getDefaultSharedPreferences(requireContext()),
-        Constants.PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS, gson.toJson(authCreds))
+        Constants.PREF_KEY_TEMP_LAST_AUTH_CREDENTIALS, Gson().toJson(authCreds))
   }
 
   /**
@@ -548,6 +595,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
    * @return [AuthCredentials].
    */
   private fun generateAuthCreds(): AuthCredentials {
+    authCreds?.let {
+      if (it.useOAuth2) return it
+    }
+
     val imapPort = if (TextUtils.isEmpty(editTextImapPort?.text))
       JavaEmailConstants.SSL_IMAP_PORT
     else

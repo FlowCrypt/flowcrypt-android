@@ -75,7 +75,6 @@ class PropertiesHelper {
      * @param authCreds The object which contains information about settings for a connection.
      * @return <tt>Properties</tt> New properties.
      */
-    @JvmStatic
     fun genProps(authCreds: AuthCredentials?): Properties {
       val prop = Properties()
       authCreds?.let {
@@ -88,6 +87,17 @@ class PropertiesHelper {
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = it.smtpOpt === SecurityType.Option.SSL_TLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] = it.smtpOpt === SecurityType.Option.STARTLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] = it.smtpOpt === SecurityType.Option.SSL_TLS
+
+        if (authCreds.useOAuth2) {
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_LOGIN_DISABLE] = "true"
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_PLAIN_DISABLE] = "true"
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_XOAUTH2_DISABLE] = "false"
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_LOGIN_DISABLE] = "true"
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_PLAIN_DISABLE] = "true"
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_XOAUTH2_DISABLE] = "false"
+        }
       }
 
       return prop
@@ -111,6 +121,20 @@ class PropertiesHelper {
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = it.smtpOpt() === SecurityType.Option.SSL_TLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] = it.smtpOpt() === SecurityType.Option.STARTLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] = it.smtpOpt() === SecurityType.Option.SSL_TLS
+
+        if (accountEntity.imapAuthMechanisms == JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2) {
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_LOGIN_DISABLE] = "true"
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_PLAIN_DISABLE] = "true"
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_XOAUTH2_DISABLE] = "false"
+        }
+
+        if (accountEntity.smtpAuthMechanisms == JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2) {
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_LOGIN_DISABLE] = "true"
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_PLAIN_DISABLE] = "true"
+          prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_XOAUTH2_DISABLE] = "false"
+        }
       }
 
       return prop

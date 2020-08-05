@@ -20,6 +20,8 @@ import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftAccountResponse
+import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -90,5 +92,18 @@ class FlowcryptApiRepository : ApiRepository {
 
           Result.Status.LOADING -> Result.loading(requestCode = requestCode)
         }
+      }
+
+  override suspend fun getMicrosoftOAuth2Token(requestCode: Long, context: Context,
+                                               authorizeCode: String): Result<MicrosoftOAuth2TokenResponse> =
+      withContext(Dispatchers.IO) {
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        getResult { apiService.getMicrosoftOAuth2Token(authorizeCode) }
+      }
+
+  override suspend fun getMicrosoftAccountInfo(requestCode: Long, context: Context, bearerToken: String): Result<MicrosoftAccountResponse> =
+      withContext(Dispatchers.IO) {
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        getResult { apiService.getMicrosoftAccountInfo("Bearer $bearerToken") }
       }
 }

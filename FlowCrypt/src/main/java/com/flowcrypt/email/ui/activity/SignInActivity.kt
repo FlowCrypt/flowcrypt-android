@@ -6,10 +6,12 @@
 package com.flowcrypt.email.ui.activity
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ui.activity.fragment.AddOtherAccountFragment
 import com.flowcrypt.email.ui.activity.fragment.MainSignInFragment
 import com.flowcrypt.email.util.GeneralUtil
 
@@ -38,6 +40,13 @@ class SignInActivity : BaseNodeActivity() {
       supportFragmentManager.beginTransaction().add(
           R.id.fragmentContainerView, MainSignInFragment()).commitNow()
     }
+  }
+
+  override fun onNewIntent(intent: Intent?) {
+    super.onNewIntent(intent)
+    val fragment = supportFragmentManager
+        .findFragmentByTag(AddOtherAccountFragment::class.java.simpleName) as AddOtherAccountFragment?
+    fragment?.handleOAuth2Intent(intent)
   }
 
   companion object {

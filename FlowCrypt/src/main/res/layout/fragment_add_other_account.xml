@@ -44,7 +44,7 @@
                 app:layout_constraintTop_toTopOf="@+id/guidelineTop" />
 
             <Button
-                android:id="@+id/buttonSignInWithGmail"
+                android:id="@+id/buttonSignInWithOutlook"
                 style="@style/AppWidget.Button.White.ConnectAccount"
                 android:layout_marginTop="@dimen/default_margin_content"
                 android:drawableStart="@drawable/ic_outlook_24dp"
@@ -71,7 +71,7 @@
                 android:textSize="@dimen/default_text_size_big"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/buttonSignInWithGmail" />
+                app:layout_constraintTop_toBottomOf="@+id/buttonSignInWithOutlook" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/constraintLayoutCredentials"

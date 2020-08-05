@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.retrofit
 
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.api.email.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
@@ -19,9 +20,13 @@ import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitRes
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
+import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftAccountResponse
+import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
@@ -133,4 +138,17 @@ interface ApiService {
    */
   @POST("initial/legacy_submit")
   suspend fun submitPubKey(@Body body: InitialLegacySubmitModel): Response<InitialLegacySubmitResponse>
+
+  @FormUrlEncoded
+  @POST(OAuth2Helper.MICROSOFT_OAUTH2_TOKEN_URL)
+  suspend fun getMicrosoftOAuth2Token(
+      @Field("code") code: String,
+      @Field("client_id") clientId: String = OAuth2Helper.MICROSOFT_AZURE_APP_ID,
+      @Field("scope") scope: String = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2,
+      @Field("redirect_uri") redirect_uri: String = OAuth2Helper.MICROSOFT_REDIRECT_URI,
+      @Field("grant_type") grant_type: String = OAuth2Helper.OAUTH2_GRANT_TYPE): Response<MicrosoftOAuth2TokenResponse>
+
+
+  @GET("https://graph.microsoft.com/v1.0/me/")
+  suspend fun getMicrosoftAccountInfo(@Header("Authorization") bearerToken: String): Response<MicrosoftAccountResponse>
 }
