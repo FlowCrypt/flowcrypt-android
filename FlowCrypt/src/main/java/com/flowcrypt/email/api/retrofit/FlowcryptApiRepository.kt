@@ -95,10 +95,11 @@ class FlowcryptApiRepository : ApiRepository {
       }
 
   override suspend fun getMicrosoftOAuth2Token(requestCode: Long, context: Context,
-                                               authorizeCode: String): Result<MicrosoftOAuth2TokenResponse> =
+                                               authorizeCode: String, scopes: String):
+      Result<MicrosoftOAuth2TokenResponse> =
       withContext(Dispatchers.IO) {
         val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-        getResult { apiService.getMicrosoftOAuth2Token(authorizeCode) }
+        getResult { apiService.getMicrosoftOAuth2Token(authorizeCode, scopes) }
       }
 
   override suspend fun getMicrosoftAccountInfo(requestCode: Long, context: Context, bearerToken: String): Result<MicrosoftAccountResponse> =

@@ -466,4 +466,6 @@
     <string name="connect_your_email_account_using_oauth_2_0">Connect your email account\n using OAuth 2.0</string>
     <string name="continue_with_outlook_hotmail">Continue with Outlook, Hotmail</string>
     <string name="loading_account_details">Loading the account details &#8230;</string>
+    <string name="could_not_varify_response">Sorry, we couldn\'t verify the response. Please try again or write to us at %1$s</string>
+    <string name="error_with_value">Error: %1$s</string>
 </resources>

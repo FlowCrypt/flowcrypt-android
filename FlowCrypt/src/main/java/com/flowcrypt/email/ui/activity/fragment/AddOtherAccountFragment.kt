@@ -67,8 +67,10 @@ import com.sun.mail.util.MailConnectException
 import kotlinx.android.synthetic.main.fragment_screenshot_editor.*
 import kotlinx.coroutines.launch
 import java.net.SocketTimeoutException
+import java.util.*
 import java.util.regex.Pattern
 import javax.mail.AuthenticationFailedException
+import kotlin.collections.ArrayList
 
 /**
  * @author Denis Bondarenko
@@ -96,6 +98,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
   private var isImapSpinnerRestored: Boolean = false
   private var isSmtpSpinnerRestored: Boolean = false
+  private var uuidForOAuth: String? = null
 
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private val oAuth2AuthCredentialsViewModel: OAuth2AuthCredentialsViewModel by viewModels()
@@ -128,6 +131,11 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+
+    savedInstanceState?.let {
+      uuidForOAuth = it.getString(KEY_UUID_FOR_OAUTH)
+    }
+
     subscribeToCheckAccountSettings()
     subscribeToAuthorizeAndSearchBackups()
 
@@ -139,11 +147,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     }
   }
 
-  override fun onPause() {
-    super.onPause()
-    saveTempCreds()
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
@@ -151,6 +154,16 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
     setupPrivateKeysViewModel()
     setupOAuth2AuthCredentialsViewModel()
+  }
+
+  override fun onPause() {
+    super.onPause()
+    saveTempCreds()
+  }
+
+  override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    outState.putString(KEY_UUID_FOR_OAUTH, uuidForOAuth)
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -244,8 +257,26 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   }
 
   fun handleOAuth2Intent(intent: Intent?) {
-    oAuth2AuthCredentialsViewModel.getMicrosoftOAuth2Token(authorizeCode = intent?.data?.getQueryParameter("code")
-        ?: "")
+    val state = intent?.data?.getQueryParameter(OAuth2Helper.QUERY_PARAMETER_STATE)
+    val code = intent?.data?.getQueryParameter(OAuth2Helper.QUERY_PARAMETER_CODE)
+    if (uuidForOAuth.equals(state)) {
+      if (code != null) {
+        oAuth2AuthCredentialsViewModel.getMicrosoftOAuth2Token(authorizeCode = code)
+      } else {
+        val error = intent?.data?.getQueryParameter(OAuth2Helper.QUERY_PARAMETER_ERROR)
+        val errorDescription = intent?.data?.getQueryParameter(OAuth2Helper
+            .QUERY_PARAMETER_ERROR_DESCRIPTION)
+
+        showInfoDialog(
+            dialogTitle = getString(R.string.error_with_value, error),
+            dialogMsg = errorDescription,
+            useLinkify = true
+        )
+      }
+    } else {
+      showInfoDialog(dialogTitle = "", dialogMsg = getString(R.string.could_not_varify_response,
+          getString(R.string.support_email)), useLinkify = true)
+    }
   }
 
   private fun initViews(view: View) {
@@ -342,10 +373,13 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     }
 
     view.findViewById<View>(R.id.buttonSignInWithOutlook)?.setOnClickListener {
-      val intent = OAuth2Helper.getMicrosoftOAuth2Intent("")
-      if (intent.resolveActivity(requireContext().packageManager) != null) {
-        intent.data?.let {
-          CustomTabsIntent.Builder().build().launchUrl(requireContext(), it)
+      uuidForOAuth = UUID.randomUUID().toString()
+      uuidForOAuth?.let { state ->
+        val intent = OAuth2Helper.getMicrosoftOAuth2Intent(state)
+        if (intent.resolveActivity(requireContext().packageManager) != null) {
+          intent.data?.let {
+            CustomTabsIntent.Builder().build().launchUrl(requireContext(), it)
+          }
         }
       }
     }
@@ -781,6 +815,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   }
 
   companion object {
+    private val KEY_UUID_FOR_OAUTH =
+        GeneralUtil.generateUniqueExtraKey("KEY_UUID_FOR_OAUTH", AddOtherAccountFragment::class.java)
+
     private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 10
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL = 11
     private const val REQUEST_CODE_RETRY_SETTINGS_CHECKING = 12

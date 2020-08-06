@@ -86,7 +86,7 @@ interface ApiRepository : BaseApiRepository {
    * @param context Interface to global information about an application environment.
    * @param authorizeCode A code which will be used to retrieve an access token.
    */
-  suspend fun getMicrosoftOAuth2Token(requestCode: Long = 0L, context: Context, authorizeCode: String): Result<MicrosoftOAuth2TokenResponse>
+  suspend fun getMicrosoftOAuth2Token(requestCode: Long = 0L, context: Context, authorizeCode: String, scopes: String): Result<MicrosoftOAuth2TokenResponse>
 
   suspend fun getMicrosoftAccountInfo(requestCode: Long = 0L, context: Context, bearerToken: String): Result<MicrosoftAccountResponse>
 }
