@@ -20,7 +20,6 @@ import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitRes
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
-import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftAccountResponse
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import retrofit2.Call
 import retrofit2.Response
@@ -144,6 +143,7 @@ interface ApiService {
   suspend fun getMicrosoftOAuth2Token(
       @Field("code") code: String,
       @Field("scope") scope: String,
+      @Field("code_verifier") codeVerifier: String,
       @Field("client_id") clientId: String = OAuth2Helper.MICROSOFT_AZURE_APP_ID,
       @Field("redirect_uri") redirect_uri: String = OAuth2Helper.MICROSOFT_REDIRECT_URI,
       @Field("grant_type") grant_type: String = OAuth2Helper.OAUTH2_GRANT_TYPE): Response<MicrosoftOAuth2TokenResponse>
@@ -155,8 +155,4 @@ interface ApiService {
       @Field("scope") scope: String,
       @Field("client_id") clientId: String = OAuth2Helper.MICROSOFT_AZURE_APP_ID,
       @Field("grant_type") grant_type: String = OAuth2Helper.OAUTH2_GRANT_TYPE_REFRESH_TOKEN): Response<MicrosoftOAuth2TokenResponse>
-
-
-  @GET("https://graph.microsoft.com/v1.0/me/")
-  suspend fun getMicrosoftAccountInfo(@Header("Authorization") bearerToken: String): Response<MicrosoftAccountResponse>
 }

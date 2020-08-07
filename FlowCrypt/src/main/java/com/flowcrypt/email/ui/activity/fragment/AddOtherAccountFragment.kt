@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity.fragment
 
 import android.app.Activity
+import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -20,7 +21,6 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
@@ -66,11 +66,13 @@ import com.google.gson.JsonSyntaxException
 import com.sun.mail.util.MailConnectException
 import kotlinx.android.synthetic.main.fragment_screenshot_editor.*
 import kotlinx.coroutines.launch
+import net.openid.appauth.AuthorizationException
+import net.openid.appauth.AuthorizationRequest
+import net.openid.appauth.AuthorizationResponse
+import net.openid.appauth.AuthorizationService
 import java.net.SocketTimeoutException
-import java.util.*
 import java.util.regex.Pattern
 import javax.mail.AuthenticationFailedException
-import kotlin.collections.ArrayList
 
 /**
  * @author Denis Bondarenko
@@ -98,7 +100,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
   private var isImapSpinnerRestored: Boolean = false
   private var isSmtpSpinnerRestored: Boolean = false
-  private var uuidForOAuth: String? = null
+  private var authRequest: AuthorizationRequest? = null
 
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private val oAuth2AuthCredentialsViewModel: OAuth2AuthCredentialsViewModel by viewModels()
@@ -131,10 +133,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-
-    savedInstanceState?.let {
-      uuidForOAuth = it.getString(KEY_UUID_FOR_OAUTH)
-    }
+    savedInstanceState?.let { restoreAuthRequest(it) }
 
     subscribeToCheckAccountSettings()
     subscribeToAuthorizeAndSearchBackups()
@@ -163,7 +162,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
   override fun onSaveInstanceState(outState: Bundle) {
     super.onSaveInstanceState(outState)
-    outState.putString(KEY_UUID_FOR_OAUTH, uuidForOAuth)
+    outState.putString(KEY_AUTH_REQUEST, authRequest?.jsonSerializeString())
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -257,25 +256,40 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   }
 
   fun handleOAuth2Intent(intent: Intent?) {
-    val state = intent?.data?.getQueryParameter(OAuth2Helper.QUERY_PARAMETER_STATE)
-    val code = intent?.data?.getQueryParameter(OAuth2Helper.QUERY_PARAMETER_CODE)
-    if (uuidForOAuth.equals(state)) {
-      if (code != null) {
-        oAuth2AuthCredentialsViewModel.getMicrosoftOAuth2Token(authorizeCode = code)
-      } else {
-        val error = intent?.data?.getQueryParameter(OAuth2Helper.QUERY_PARAMETER_ERROR)
-        val errorDescription = intent?.data?.getQueryParameter(OAuth2Helper
-            .QUERY_PARAMETER_ERROR_DESCRIPTION)
+    intent?.let {
+      val schema = intent.data?.scheme
+      if (schema !in OAuth2Helper.SUPPORTED_SCHEMAS) {
+        return
+      }
 
+      val authResponse = AuthorizationResponse.fromIntent(intent)
+      val authException = AuthorizationException.fromIntent(intent)
+      if (authResponse != null) {
+        val code = authResponse.authorizationCode
+        if (code != null) {
+          authRequest?.let { request ->
+            when (schema) {
+              OAuth2Helper.MICROSOFT_OAUTH2_SCHEMA -> {
+                oAuth2AuthCredentialsViewModel.getMicrosoftOAuth2Token(authorizeCode = code, authRequest = request)
+              }
+            }
+          }
+        } else {
+          showInfoDialog(
+              dialogTitle = "",
+              dialogMsg = getString(R.string.could_not_verify_response),
+              useLinkify = true
+          )
+        }
+      } else if (authException != null) {
         showInfoDialog(
-            dialogTitle = getString(R.string.error_with_value, error),
-            dialogMsg = errorDescription,
+            dialogTitle = getString(R.string.error_with_value, authException.error),
+            dialogMsg = authException.errorDescription,
             useLinkify = true
         )
+      } else {
+        return@let
       }
-    } else {
-      showInfoDialog(dialogTitle = "", dialogMsg = getString(R.string.could_not_varify_response,
-          getString(R.string.support_email)), useLinkify = true)
     }
   }
 
@@ -373,14 +387,12 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     }
 
     view.findViewById<View>(R.id.buttonSignInWithOutlook)?.setOnClickListener {
-      uuidForOAuth = UUID.randomUUID().toString()
-      uuidForOAuth?.let { state ->
-        val intent = OAuth2Helper.getMicrosoftOAuth2Intent(state)
-        if (intent.resolveActivity(requireContext().packageManager) != null) {
-          intent.data?.let {
-            CustomTabsIntent.Builder().build().launchUrl(requireContext(), it)
-          }
-        }
+      authRequest = OAuth2Helper.getMicrosoftAuthorizationRequest()
+      authRequest?.let { request ->
+        AuthorizationService(requireContext())
+            .performAuthorizationRequest(
+                request,
+                PendingIntent.getActivity(requireContext(), 0, Intent(requireContext(), SignInActivity::class.java), 0))
       }
     }
   }
@@ -814,8 +826,19 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     return false
   }
 
+  private fun restoreAuthRequest(state: Bundle) {
+    val serializedAuthorizationRequest = state.getString(KEY_AUTH_REQUEST)
+    serializedAuthorizationRequest?.let { jsonString ->
+      try {
+        authRequest = AuthorizationRequest.jsonDeserialize(jsonString)
+      } catch (e: Exception) {
+        e.printStackTrace()
+      }
+    }
+  }
+
   companion object {
-    private val KEY_UUID_FOR_OAUTH =
+    private val KEY_AUTH_REQUEST =
         GeneralUtil.generateUniqueExtraKey("KEY_UUID_FOR_OAUTH", AddOtherAccountFragment::class.java)
 
     private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 10

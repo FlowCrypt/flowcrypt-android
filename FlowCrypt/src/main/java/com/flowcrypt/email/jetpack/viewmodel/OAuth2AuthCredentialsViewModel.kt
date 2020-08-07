@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import kotlinx.coroutines.launch
+import net.openid.appauth.AuthorizationRequest
 
 
 /**
@@ -27,14 +28,15 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
   val microsoftOAuth2TokenLiveData = MutableLiveData<Result<AuthCredentials>>()
 
-  fun getMicrosoftOAuth2Token(requestCode: Long = 0L, authorizeCode: String) {
+  fun getMicrosoftOAuth2Token(requestCode: Long = 0L, authorizeCode: String, authRequest: AuthorizationRequest) {
     viewModelScope.launch {
       microsoftOAuth2TokenLiveData.postValue(Result.loading())
       val microsoftOAuth2TokenResponseResultForProfile = apiRepository.getMicrosoftOAuth2Token(
           requestCode = requestCode,
           context = getApplication(),
           authorizeCode = authorizeCode,
-          scopes = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_PROFILE
+          scopes = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_PROFILE,
+          codeVerifier = authRequest.codeVerifier ?: ""
       )
 
       if (microsoftOAuth2TokenResponseResultForProfile.status != Result.Status.SUCCESS) {
@@ -54,19 +56,17 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
         return@launch
       }
 
+      //validate id_token
+
+
       val tokenForProfile = microsoftOAuth2TokenResponseResultForProfile.data?.accessToken
       if (tokenForProfile == null) {
         microsoftOAuth2TokenLiveData.postValue(Result.exception(NullPointerException("token is null")))
         return@launch
       }
 
-      val microsoftAccount = apiRepository.getMicrosoftAccountInfo(
-          requestCode = requestCode,
-          context = getApplication(),
-          bearerToken = tokenForProfile
-      )
 
-      val userEmailAddress = microsoftAccount.data?.userPrincipalName
+      val userEmailAddress = "user@outlook.com"//microsoftAccount.data?.userPrincipalName
       if (userEmailAddress == null) {
         microsoftOAuth2TokenLiveData.postValue(Result.exception(NullPointerException("User email is null")))
         return@launch
@@ -76,7 +76,8 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
           requestCode = requestCode,
           context = getApplication(),
           authorizeCode = authorizeCode,
-          scopes = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_MAIL
+          scopes = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_MAIL,
+          codeVerifier = authRequest.codeVerifier ?: ""
       )
 
       if (microsoftOAuth2TokenResponseResultForEmail.status != Result.Status.SUCCESS) {
@@ -104,7 +105,7 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
       }
 
       val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(
-          microsoftAccount.data.userPrincipalName, tokenForEmail)?.copy(useOAuth2 = true)
+          "microsoftAccount.data.userPrincipalName", tokenForEmail)?.copy(useOAuth2 = true)
 
       microsoftOAuth2TokenLiveData.postValue(Result.success(recommendAuthCredentials!!))
     }

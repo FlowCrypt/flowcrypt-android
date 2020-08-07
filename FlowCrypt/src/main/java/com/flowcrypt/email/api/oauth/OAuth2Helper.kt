@@ -5,9 +5,10 @@
 
 package com.flowcrypt.email.api.oauth
 
-import android.content.Intent
 import android.net.Uri
-import okhttp3.HttpUrl.Companion.toHttpUrl
+import net.openid.appauth.AuthorizationRequest
+import net.openid.appauth.AuthorizationServiceConfiguration
+import net.openid.appauth.ResponseTypeValues
 
 /**
  * @author Denis Bondarenko
@@ -17,10 +18,6 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
  */
 class OAuth2Helper {
   companion object {
-    const val QUERY_PARAMETER_STATE = "state"
-    const val QUERY_PARAMETER_CODE = "code"
-    const val QUERY_PARAMETER_ERROR = "error"
-    const val QUERY_PARAMETER_ERROR_DESCRIPTION = "error_description"
     const val OAUTH2_GRANT_TYPE = "authorization_code"
     const val OAUTH2_GRANT_TYPE_REFRESH_TOKEN = "refresh_token"
 
@@ -41,19 +38,20 @@ class OAuth2Helper {
     const val MICROSOFT_OAUTH2_TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
     const val MICROSOFT_REDIRECT_URI = "msauth://com.flowcrypt.email.denys/04gM%2BEAfhnq4ALbhOX8jG5oRuow%3D"
     const val MICROSOFT_AZURE_APP_ID = "3be51534-5f76-4970-9a34-40ef197aa018"
+    const val MICROSOFT_OAUTH2_SCHEMA = "msauth"
 
-    fun getMicrosoftOAuth2Intent(state: String): Intent {
-      val authorizeUrl = MICROSOFT_OAUTH2_AUTHORIZE_URL.toHttpUrl()
-          .newBuilder()
-          .addQueryParameter("client_id", MICROSOFT_AZURE_APP_ID)
-          .addQueryParameter("response_type", "code")
-          .addQueryParameter("redirect_uri", MICROSOFT_REDIRECT_URI)
-          .addQueryParameter("response_mode", "query")
-          .addQueryParameter("scope", "$SCOPE_MICROSOFT_OAUTH2_FOR_PROFILE $SCOPE_MICROSOFT_OAUTH2_FOR_MAIL")
-          .addQueryParameter(QUERY_PARAMETER_STATE, state)
+    fun getMicrosoftAuthorizationRequest(): AuthorizationRequest {
+      val configuration = AuthorizationServiceConfiguration(Uri.parse(MICROSOFT_OAUTH2_AUTHORIZE_URL), Uri.parse(MICROSOFT_OAUTH2_TOKEN_URL))
+
+      return AuthorizationRequest.Builder(
+          configuration,
+          MICROSOFT_AZURE_APP_ID,
+          ResponseTypeValues.CODE,
+          Uri.parse(MICROSOFT_REDIRECT_URI))
+          .setScope("$SCOPE_MICROSOFT_OAUTH2_FOR_PROFILE $SCOPE_MICROSOFT_OAUTH2_FOR_MAIL")
           .build()
-
-      return Intent(Intent.ACTION_VIEW).apply { data = Uri.parse(authorizeUrl.toUrl().toString()) }
     }
+
+    val SUPPORTED_SCHEMAS = listOf(MICROSOFT_OAUTH2_SCHEMA)
   }
 }

@@ -21,7 +21,6 @@ import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftAccountResponse
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 
 /**
@@ -86,7 +85,5 @@ interface ApiRepository : BaseApiRepository {
    * @param context Interface to global information about an application environment.
    * @param authorizeCode A code which will be used to retrieve an access token.
    */
-  suspend fun getMicrosoftOAuth2Token(requestCode: Long = 0L, context: Context, authorizeCode: String, scopes: String): Result<MicrosoftOAuth2TokenResponse>
-
-  suspend fun getMicrosoftAccountInfo(requestCode: Long = 0L, context: Context, bearerToken: String): Result<MicrosoftAccountResponse>
+  suspend fun getMicrosoftOAuth2Token(requestCode: Long = 0L, context: Context, authorizeCode: String, scopes: String, codeVerifier: String): Result<MicrosoftOAuth2TokenResponse>
 }

@@ -47,16 +47,21 @@
         <activity
             android:name=".ui.activity.SignInActivity"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait">
-            <intent-filter android:autoVerify="true">
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="net.openid.appauth.RedirectUriReceiverActivity"
+            tools:node="replace">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <!-- support Microsoft OAuth2.0 -->
-                <data android:scheme="msauth" />
-                <data android:host="${applicationId}" />
+                <data
+                    android:host="${applicationId}"
+                    android:scheme="msauth" />
             </intent-filter>
         </activity>
 
