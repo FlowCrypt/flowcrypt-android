@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email
+package com.flowcrypt.email.api.oauth
 
 import android.content.Intent
 import android.net.Uri

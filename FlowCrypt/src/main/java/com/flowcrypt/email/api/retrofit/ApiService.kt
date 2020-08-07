@@ -6,7 +6,7 @@
 package com.flowcrypt.email.api.retrofit
 
 import com.flowcrypt.email.BuildConfig
-import com.flowcrypt.email.api.email.OAuth2Helper
+import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel

@@ -9,8 +9,8 @@ import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
-import com.flowcrypt.email.api.email.OAuth2Helper
 import com.flowcrypt.email.api.email.model.AuthCredentials
+import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
