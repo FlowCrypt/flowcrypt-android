@@ -64,7 +64,8 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
           return@launch
         }
 
-        val claims = validateTokenAndGetClaims(response.data?.idToken ?: "")
+        val claims = validateTokenAndGetClaims(response.data?.idToken ?: "", authRequest
+            .clientId, jwks = JWKS_MICROSOFT)
         val email: String? = claims.getClaimValueAsString(CLAIM_EMAIL)?.toLowerCase(Locale.US)
         val displayName: String? = claims.getClaimValueAsString(CLAIM_NAME)
 
@@ -85,14 +86,14 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
     }
   }
 
-  private suspend fun validateTokenAndGetClaims(idToken: String): JwtClaims =
+  private suspend fun validateTokenAndGetClaims(idToken: String, clientId: String, jwks: String):
+      JwtClaims =
       withContext(Dispatchers.IO) {
-        //https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration
-        val httpsJkws = HttpsJwks("https://login.microsoftonline.com/common/discovery/v2.0/keys")
+        val httpsJkws = HttpsJwks(jwks)
         val httpsJwksKeyResolver = HttpsJwksVerificationKeyResolver(httpsJkws)
         val jwtConsumer = JwtConsumerBuilder()
             .setVerificationKeyResolver(httpsJwksKeyResolver)
-            .setExpectedAudience("3be51534-5f76-4970-9a34-40ef197aa018")
+            .setExpectedAudience(clientId)
             .build()
         return@withContext jwtConsumer.processToClaims(idToken)
       }
@@ -100,5 +101,8 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
   companion object {
     private const val CLAIM_EMAIL = "email"
     private const val CLAIM_NAME = "name"
+
+    //https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration
+    private const val JWKS_MICROSOFT = "https://login.microsoftonline.com/common/discovery/v2.0/keys"
   }
 }
