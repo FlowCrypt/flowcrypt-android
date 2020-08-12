@@ -104,7 +104,7 @@ data class AccountEntity constructor(
       this(
           email = authCredentials.email,
           accountType = authCredentials.email.substring(authCredentials.email.indexOf('@') + 1).toLowerCase(Locale.getDefault()),
-          displayName = null,
+          displayName = authCredentials.displayName,
           givenName = null,
           familyName = null,
           photoUrl = null,

@@ -14,8 +14,15 @@ import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.openid.appauth.AuthorizationRequest
+import org.jose4j.jwk.HttpsJwks
+import org.jose4j.jwt.JwtClaims
+import org.jose4j.jwt.consumer.JwtConsumerBuilder
+import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver
+import java.util.*
 
 
 /**
@@ -31,83 +38,67 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
   fun getMicrosoftOAuth2Token(requestCode: Long = 0L, authorizeCode: String, authRequest: AuthorizationRequest) {
     viewModelScope.launch {
       microsoftOAuth2TokenLiveData.postValue(Result.loading())
-      val microsoftOAuth2TokenResponseResultForProfile = apiRepository.getMicrosoftOAuth2Token(
-          requestCode = requestCode,
-          context = getApplication(),
-          authorizeCode = authorizeCode,
-          scopes = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_PROFILE,
-          codeVerifier = authRequest.codeVerifier ?: ""
-      )
+      try {
+        val response = apiRepository.getMicrosoftOAuth2Token(
+            requestCode = requestCode,
+            context = getApplication(),
+            authorizeCode = authorizeCode,
+            scopes = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_MAIL,
+            codeVerifier = authRequest.codeVerifier ?: ""
+        )
 
-      if (microsoftOAuth2TokenResponseResultForProfile.status != Result.Status.SUCCESS) {
-        when (microsoftOAuth2TokenResponseResultForProfile.status) {
-          Result.Status.ERROR -> {
-            microsoftOAuth2TokenLiveData.postValue(Result.exception(IllegalStateException()))
-          }
+        if (response.status != Result.Status.SUCCESS) {
+          when (response.status) {
+            Result.Status.ERROR -> {
+              microsoftOAuth2TokenLiveData.postValue(Result.exception(IllegalStateException()))
+            }
 
-          Result.Status.EXCEPTION -> {
-            microsoftOAuth2TokenLiveData.postValue(Result.exception(microsoftOAuth2TokenResponseResultForProfile.exception
-                ?: RuntimeException()))
-          }
+            Result.Status.EXCEPTION -> {
+              microsoftOAuth2TokenLiveData.postValue(Result.exception(response.exception
+                  ?: RuntimeException()))
+            }
 
-          else -> {
+            else -> {
+            }
           }
+          return@launch
         }
-        return@launch
-      }
 
-      //validate id_token
+        val claims = validateTokenAndGetClaims(response.data?.idToken ?: "")
+        val email: String? = claims.getClaimValueAsString(CLAIM_EMAIL)?.toLowerCase(Locale.US)
+        val displayName: String? = claims.getClaimValueAsString(CLAIM_NAME)
 
-
-      val tokenForProfile = microsoftOAuth2TokenResponseResultForProfile.data?.accessToken
-      if (tokenForProfile == null) {
-        microsoftOAuth2TokenLiveData.postValue(Result.exception(NullPointerException("token is null")))
-        return@launch
-      }
-
-
-      val userEmailAddress = "user@outlook.com"//microsoftAccount.data?.userPrincipalName
-      if (userEmailAddress == null) {
-        microsoftOAuth2TokenLiveData.postValue(Result.exception(NullPointerException("User email is null")))
-        return@launch
-      }
-
-      val microsoftOAuth2TokenResponseResultForEmail = apiRepository.getMicrosoftOAuth2Token(
-          requestCode = requestCode,
-          context = getApplication(),
-          authorizeCode = authorizeCode,
-          scopes = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_MAIL,
-          codeVerifier = authRequest.codeVerifier ?: ""
-      )
-
-      if (microsoftOAuth2TokenResponseResultForEmail.status != Result.Status.SUCCESS) {
-        when (microsoftOAuth2TokenResponseResultForEmail.status) {
-          Result.Status.ERROR -> {
-            microsoftOAuth2TokenLiveData.postValue(Result.exception(IllegalStateException()))
-          }
-
-          Result.Status.EXCEPTION -> {
-            microsoftOAuth2TokenLiveData.postValue(Result.exception(microsoftOAuth2TokenResponseResultForEmail.exception
-                ?: RuntimeException()))
-          }
-
-          else -> {
-          }
+        if (email == null) {
+          microsoftOAuth2TokenLiveData.postValue(Result.exception(NullPointerException("User email is null!")))
+          return@launch
         }
-        return@launch
+
+        val token = response.data?.accessToken ?: throw NullPointerException("token is null")
+        val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(
+            email, token)?.copy(useOAuth2 = true, displayName = displayName)
+            ?: throw NullPointerException("Couldn't find default settings!")
+
+        microsoftOAuth2TokenLiveData.postValue(Result.success(recommendAuthCredentials))
+      } catch (e: Exception) {
+        microsoftOAuth2TokenLiveData.postValue(Result.exception(e))
       }
-
-      val tokenForEmail = microsoftOAuth2TokenResponseResultForEmail.data?.accessToken
-
-      if (tokenForEmail == null) {
-        microsoftOAuth2TokenLiveData.postValue(Result.exception(NullPointerException("token is null")))
-        return@launch
-      }
-
-      val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(
-          "microsoftAccount.data.userPrincipalName", tokenForEmail)?.copy(useOAuth2 = true)
-
-      microsoftOAuth2TokenLiveData.postValue(Result.success(recommendAuthCredentials!!))
     }
+  }
+
+  private suspend fun validateTokenAndGetClaims(idToken: String): JwtClaims =
+      withContext(Dispatchers.IO) {
+        //https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration
+        val httpsJkws = HttpsJwks("https://login.microsoftonline.com/common/discovery/v2.0/keys")
+        val httpsJwksKeyResolver = HttpsJwksVerificationKeyResolver(httpsJkws)
+        val jwtConsumer = JwtConsumerBuilder()
+            .setVerificationKeyResolver(httpsJwksKeyResolver)
+            .setExpectedAudience("3be51534-5f76-4970-9a34-40ef197aa018")
+            .build()
+        return@withContext jwtConsumer.processToClaims(idToken)
+      }
+
+  companion object {
+    private const val CLAIM_EMAIL = "email"
+    private const val CLAIM_NAME = "name"
   }
 }

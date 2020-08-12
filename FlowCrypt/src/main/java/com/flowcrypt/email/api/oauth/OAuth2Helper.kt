@@ -31,8 +31,7 @@ class OAuth2Helper {
      *
      * https://outlook.office.com/SMTP.Send - Allows the app to be able to send emails from the user’s mailbox using the SMTP AUTH client submission protocol.
      */
-    const val SCOPE_MICROSOFT_OAUTH2_FOR_MAIL = "offline_access https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send"
-    const val SCOPE_MICROSOFT_OAUTH2_FOR_PROFILE = "openid profile email"
+    const val SCOPE_MICROSOFT_OAUTH2_FOR_MAIL = "openid offline_access https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send"
 
     const val MICROSOFT_OAUTH2_AUTHORIZE_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
     const val MICROSOFT_OAUTH2_TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
@@ -48,7 +47,7 @@ class OAuth2Helper {
           MICROSOFT_AZURE_APP_ID,
           ResponseTypeValues.CODE,
           Uri.parse(MICROSOFT_REDIRECT_URI))
-          .setScope("$SCOPE_MICROSOFT_OAUTH2_FOR_PROFILE $SCOPE_MICROSOFT_OAUTH2_FOR_MAIL")
+          .setScope("profile email $SCOPE_MICROSOFT_OAUTH2_FOR_MAIL")
           .build()
     }
 

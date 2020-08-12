@@ -31,7 +31,8 @@ data class AuthCredentials constructor(val email: String,
                                        val smtpSigInUsername: String? = null,
                                        var smtpSignInPassword: String? = null,
                                        val faqUrl: String? = null,
-                                       val useOAuth2: Boolean = false) : Parcelable {
+                                       val useOAuth2: Boolean = false,
+                                       val displayName: String? = null) : Parcelable {
   constructor(source: Parcel) : this(
       source.readString()!!,
       source.readString()!!,
@@ -46,7 +47,8 @@ data class AuthCredentials constructor(val email: String,
       source.readString(),
       source.readString(),
       source.readString(),
-      source.readByte() != 0.toByte()
+      source.readByte() != 0.toByte(),
+      source.readString()
   )
 
   override fun describeContents() = 0
@@ -67,6 +69,7 @@ data class AuthCredentials constructor(val email: String,
       writeString(smtpSignInPassword)
       writeString(faqUrl)
       writeInt((if (useOAuth2) 1 else 0))
+      writeString(displayName)
     }
   }
 
