@@ -67,6 +67,9 @@ data class AccountEntity constructor(
   val account: Account? = Account(this.email, accountType
       ?: this.email.substring(this.email.indexOf('@') + 1).toLowerCase(Locale.US))
 
+  val useOAuth2: Boolean
+    get() = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 == imapAuthMechanisms
+
   constructor(googleSignInAccount: GoogleSignInAccount, uuid: String? = null,
               domainRules: List<String>? = null) :
       this(

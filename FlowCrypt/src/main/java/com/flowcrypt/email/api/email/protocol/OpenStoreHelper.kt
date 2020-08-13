@@ -5,7 +5,9 @@
 
 package com.flowcrypt.email.api.email.protocol
 
+import android.accounts.AccountManager
 import android.content.Context
+import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
@@ -145,7 +147,20 @@ class OpenStoreHelper {
               else -> session.getStore(JavaEmailConstants.PROTOCOL_IMAPS)
             }
 
-            store.connect(account.imapServer, account.username, account.password)
+            val password = if (account.useOAuth2) {
+              val accountManager = AccountManager.get(context)
+              val oauthAccount = accountManager.accounts.firstOrNull { it.name == account.email }
+              if (oauthAccount != null) {
+                accountManager.blockingGetAuthToken(oauthAccount,
+                    FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true)
+              } else {
+                account.password
+              }
+            } else {
+              account.password
+            }
+
+            store.connect(account.imapServer, account.username, password)
             store
           }
         }

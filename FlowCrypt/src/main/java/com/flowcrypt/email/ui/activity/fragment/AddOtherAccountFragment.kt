@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.accounts.Account
+import android.accounts.AccountManager
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
@@ -29,6 +31,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
@@ -71,8 +74,10 @@ import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 import java.net.SocketTimeoutException
+import java.util.*
 import java.util.regex.Pattern
 import javax.mail.AuthenticationFailedException
+import kotlin.collections.ArrayList
 
 /**
  * @author Denis Bondarenko
@@ -219,9 +224,23 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
   override fun runEmailManagerActivity() {
     lifecycleScope.launch {
-      val accountEntity = AccountEntity(generateAuthCreds())
+      val authCreds = generateAuthCreds()
+      val accountEntity = AccountEntity(
+          if (authCreds.useOAuth2) {
+            authCreds.copy(password = "", smtpSignInPassword = null)
+          } else {
+            authCreds
+          })
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
       roomDatabase.accountDao().addAccountSuspend(accountEntity)
+
+      if (authCreds.useOAuth2) {
+        val accountManager = AccountManager.get(requireContext())
+        val account = Account(accountEntity.email.toLowerCase(Locale.US), FlowcryptAccountAuthenticator.ACCOUNT_TYPE)
+        accountManager.addAccountExplicitly(account, null, null)
+        accountManager.setAuthToken(account, FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, authCreds.password)
+      }
+
       EmailSyncService.startEmailSyncService(requireContext())
 
       val addedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email)
