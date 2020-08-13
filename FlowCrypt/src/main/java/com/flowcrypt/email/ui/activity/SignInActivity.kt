@@ -5,6 +5,8 @@
 
 package com.flowcrypt.email.ui.activity
 
+import android.accounts.AccountAuthenticatorResponse
+import android.accounts.AccountManager
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -24,6 +26,9 @@ import com.flowcrypt.email.util.GeneralUtil
  * E-mail: DenBond7@gmail.com
  */
 class SignInActivity : BaseNodeActivity() {
+  private var accountAuthenticatorResponse: AccountAuthenticatorResponse? = null
+  private val resultBundle: Bundle? = null
+
   override val rootView: View
     get() = findViewById(R.id.fragmentContainerView)
 
@@ -36,10 +41,26 @@ class SignInActivity : BaseNodeActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
+    accountAuthenticatorResponse = intent.getParcelableExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE)
+    accountAuthenticatorResponse?.onRequestContinued()
+
     if (savedInstanceState == null) {
       supportFragmentManager.beginTransaction().add(
           R.id.fragmentContainerView, MainSignInFragment()).commitNow()
     }
+  }
+
+  override fun finish() {
+    accountAuthenticatorResponse?.let {
+      if (resultBundle != null) {
+        it.onResult(resultBundle)
+      } else {
+        it.onError(AccountManager.ERROR_CODE_CANCELED, "canceled")
+      }
+    }
+    accountAuthenticatorResponse = null
+
+    super.finish()
   }
 
   override fun onNewIntent(intent: Intent?) {
@@ -51,6 +72,7 @@ class SignInActivity : BaseNodeActivity() {
 
   companion object {
     const val ACTION_ADD_ONE_MORE_ACCOUNT = BuildConfig.APPLICATION_ID + ".ACTION_ADD_ONE_MORE_ACCOUNT"
+    const val ACTION_ADD_ACCOUNT_FROM_SETTINGS = BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_FROM_SETTINGS"
 
     val KEY_EXTRA_NEW_ACCOUNT =
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEW_ACCOUNT", SignInActivity::class.java)

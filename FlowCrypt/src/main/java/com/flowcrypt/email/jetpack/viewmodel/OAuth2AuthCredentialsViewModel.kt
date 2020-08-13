@@ -10,6 +10,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
 import com.flowcrypt.email.api.email.model.AuthCredentials
+import com.flowcrypt.email.api.email.model.AuthTokenInfo
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
@@ -23,6 +24,7 @@ import org.jose4j.jwt.JwtClaims
 import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 /**
@@ -75,9 +77,17 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
         }
 
         val token = response.data?.accessToken ?: throw NullPointerException("token is null")
-        val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(
-            email, token)?.copy(useOAuth2 = true, displayName = displayName)
-            ?: throw NullPointerException("Couldn't find default settings!")
+        val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(email, token)?.copy(
+            useOAuth2 = true,
+            displayName = displayName,
+            authTokenInfo = AuthTokenInfo(
+                email = email,
+                accessToken = response.data.accessToken,
+                expiresAt = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis((response.data.expiresIn
+                    ?: 0L)) - TimeUnit.MINUTES.toMillis(5),
+                refreshToken = response.data.refreshToken
+            )
+        ) ?: throw NullPointerException("Couldn't find default settings!")
 
         microsoftOAuth2TokenLiveData.postValue(Result.success(recommendAuthCredentials))
       } catch (e: Exception) {

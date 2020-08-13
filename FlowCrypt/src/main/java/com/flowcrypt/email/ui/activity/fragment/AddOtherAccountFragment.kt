@@ -237,8 +237,13 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       if (authCreds.useOAuth2) {
         val accountManager = AccountManager.get(requireContext())
         val account = Account(accountEntity.email.toLowerCase(Locale.US), FlowcryptAccountAuthenticator.ACCOUNT_TYPE)
-        accountManager.addAccountExplicitly(account, null, null)
-        accountManager.setAuthToken(account, FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, authCreds.password)
+        accountManager.addAccountExplicitly(account, null, Bundle().apply {
+          with(authCreds.authTokenInfo) {
+            putString(FlowcryptAccountAuthenticator.KEY_ACCOUNT_EMAIL, this?.email)
+            putString(FlowcryptAccountAuthenticator.KEY_REFRESH_TOKEN, this?.refreshToken)
+            putString(FlowcryptAccountAuthenticator.KEY_EXPIRES_AT, this?.expiresAt?.toString())
+          }
+        })
       }
 
       EmailSyncService.startEmailSyncService(requireContext())

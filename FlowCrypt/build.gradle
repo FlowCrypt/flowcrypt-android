@@ -119,7 +119,7 @@ android {
 
         debug {
             versionNameSuffix '_' + defaultConfig.versionCode + '__' + new SimpleDateFormat('yyyy_MM_dd').format(new Date())
-            applicationIdSuffix '.debug'
+            applicationIdSuffix '.denys'
             signingConfig signingConfigs.debug
         }
     }

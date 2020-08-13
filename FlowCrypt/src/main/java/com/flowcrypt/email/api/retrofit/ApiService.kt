@@ -150,9 +150,9 @@ interface ApiService {
 
   @FormUrlEncoded
   @POST(OAuth2Helper.MICROSOFT_OAUTH2_TOKEN_URL)
-  suspend fun refreshMicrosoftOAuth2Token(
+  fun refreshMicrosoftOAuth2Token(
       @Field("refresh_token") code: String,
-      @Field("scope") scope: String,
+      @Field("scope") scope: String = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_MAIL,
       @Field("client_id") clientId: String = OAuth2Helper.MICROSOFT_AZURE_APP_ID,
-      @Field("grant_type") grant_type: String = OAuth2Helper.OAUTH2_GRANT_TYPE_REFRESH_TOKEN): Response<MicrosoftOAuth2TokenResponse>
+      @Field("grant_type") grant_type: String = OAuth2Helper.OAUTH2_GRANT_TYPE_REFRESH_TOKEN): Call<MicrosoftOAuth2TokenResponse>
 }

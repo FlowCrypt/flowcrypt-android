@@ -12,9 +12,11 @@ import android.accounts.AccountManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.text.TextUtils
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.api.retrofit.ApiHelper
+import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.ui.activity.SignInActivity
+import java.util.concurrent.TimeUnit
 
 
 /**
@@ -25,7 +27,7 @@ import com.flowcrypt.email.ui.activity.SignInActivity
  */
 class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthenticator(context) {
   override fun getAuthTokenLabel(authTokenType: String?): String {
-    return ""
+    return BuildConfig.APPLICATION_ID + ".auth" + if (authTokenType.isNullOrEmpty()) "" else ".$authTokenType"
   }
 
   override fun confirmCredentials(response: AccountAuthenticatorResponse?, account: Account?, options: Bundle?): Bundle {
@@ -37,49 +39,50 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
   }
 
   override fun getAuthToken(response: AccountAuthenticatorResponse?, account: Account?, authTokenType: String?, options: Bundle?): Bundle {
-    // Extract the username and password from the Account Manager, and ask
-    // the server for an appropriate AuthToken.
-    // Extract the username and password from the Account Manager, and ask
-    // the server for an appropriate AuthToken.
+    account ?: return Bundle().apply {
+      putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_ARGUMENTS)
+      putString(AccountManager.KEY_ERROR_MESSAGE, "Should provided non-null account")
+    }
+
     val accountManager = AccountManager.get(context)
+    val email = accountManager.getUserData(account, KEY_ACCOUNT_EMAIL)
 
-    var authToken = accountManager.peekAuthToken(account, authTokenType)
-
-    // Lets give another try to authenticate the user
-
-    // Lets give another try to authenticate the user
-    if (TextUtils.isEmpty(authToken)) {
-      val password = accountManager.getPassword(account)
-      if (password != null) {
-        authToken = "some token"//AuthTokenLoader.signIn(mContext, account.name, password);
+    if (email != account.name) {
+      return Bundle().apply {
+        putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_ARGUMENTS)
+        putString(AccountManager.KEY_ERROR_MESSAGE, "Account email mismatch!")
       }
     }
 
-    // If we get an authToken - we return it
+    val expireAtInMillis = accountManager.getUserData(account, KEY_EXPIRES_AT)?.toLongOrNull() ?: 0
+    var authToken = accountManager.peekAuthToken(account, authTokenType)
 
-    // If we get an authToken - we return it
-    if (!TextUtils.isEmpty(authToken)) {
-      val result = Bundle()
-      result.putString(AccountManager.KEY_ACCOUNT_NAME, account!!.name)
-      result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type)
-      result.putString(AccountManager.KEY_AUTHTOKEN, authToken)
-      return result
+    if (authToken.isNullOrEmpty()) {
+      val refreshToken = accountManager.getUserData(account, KEY_REFRESH_TOKEN)
+      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+      val apiResponse = apiService.refreshMicrosoftOAuth2Token(refreshToken).execute()
+      if (apiResponse.isSuccessful) {
+        val tokenResponse = apiResponse.body()
+        authToken = tokenResponse?.accessToken
+        accountManager.setUserData(account, KEY_REFRESH_TOKEN, tokenResponse?.refreshToken)
+        accountManager.setUserData(account, KEY_EXPIRES_AT, (System.currentTimeMillis() + (tokenResponse?.expiresIn
+            ?: 0L) - TimeUnit.MINUTES.toMillis(5)).toString())
+      } else return Bundle().apply {
+        putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_AUTHENTICATION)
+        putString(AccountManager.KEY_ERROR_MESSAGE, "Couldn't fetch an access token")
+      }
     }
 
-    // If we get here, then we couldn't access the user's password - so we
-    // need to re-prompt them for their credentials. We do that by creating
-    // an intent to display our AuthenticatorActivity.
+    if (!authToken.isNullOrEmpty()) {
+      return Bundle().apply {
+        putString(AccountManager.KEY_ACCOUNT_NAME, account.name)
+        putString(AccountManager.KEY_ACCOUNT_TYPE, account.type)
+        putLong(KEY_CUSTOM_TOKEN_EXPIRY, expireAtInMillis)
+        putString(AccountManager.KEY_AUTHTOKEN, authToken)
+      }
+    }
 
-    // If we get here, then we couldn't access the user's password - so we
-    // need to re-prompt them for their credentials. We do that by creating
-    // an intent to display our AuthenticatorActivity.
-    val intent = Intent(context, SignInActivity::class.java)
-    //intent.putExtra(FlowcryptAuthenticatorActivity.ARG_ACCOUNT_TYPE, attr.accountType)
-    //intent.putExtra(FlowcryptAuthenticatorActivity.ARG_AUTH_TYPE, authTokenType)
-    intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
-    val bundle = Bundle()
-    bundle.putParcelable(AccountManager.KEY_INTENT, intent)
-    return bundle
+    return genBundleToAddNewAccount(response).apply { options?.let { putAll(options) } }
   }
 
   override fun hasFeatures(response: AccountAuthenticatorResponse?, account: Account?, features: Array<out String>?): Bundle {
@@ -91,17 +94,29 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
   }
 
   override fun addAccount(response: AccountAuthenticatorResponse?, accountType: String?, authTokenType: String?, requiredFeatures: Array<out String>?, options: Bundle?): Bundle {
-    val intent = Intent(context, SignInActivity::class.java)
-    //intent.putExtra(FlowcryptAuthenticatorActivity.ARG_ACCOUNT_TYPE, attr.accountType)
-    //intent.putExtra(FlowcryptAuthenticatorActivity.ARG_AUTH_TYPE, authTokenType)
-    intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
-    val bundle = Bundle()
-    bundle.putParcelable(AccountManager.KEY_INTENT, intent)
-    return bundle
+    if (ACCOUNT_TYPE != accountType) {
+      throw IllegalArgumentException("Request to the wrong authenticator!")
+    }
+
+    return genBundleToAddNewAccount(response).apply { options?.let { putAll(options) } }
+  }
+
+  private fun genBundleToAddNewAccount(response: AccountAuthenticatorResponse?): Bundle {
+    val intent = Intent(context, SignInActivity::class.java).apply {
+      action = SignInActivity.ACTION_ADD_ACCOUNT_FROM_SETTINGS
+      putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
+    }
+
+    return Bundle().apply {
+      putParcelable(AccountManager.KEY_INTENT, intent)
+    }
   }
 
   companion object {
-    val ACCOUNT_TYPE = BuildConfig.APPLICATION_ID
-    val AUTH_TOKEN_TYPE_EMAIL = "email"
+    const val KEY_ACCOUNT_EMAIL = BuildConfig.APPLICATION_ID + ".KEY_ACCOUNT_EMAIL"
+    const val KEY_REFRESH_TOKEN = BuildConfig.APPLICATION_ID + ".KEY_REFRESH_TOKEN"
+    const val KEY_EXPIRES_AT = BuildConfig.APPLICATION_ID + ".KEY_EXPIRES_AT"
+    const val ACCOUNT_TYPE = BuildConfig.APPLICATION_ID
+    const val AUTH_TOKEN_TYPE_EMAIL = "email"
   }
 }
