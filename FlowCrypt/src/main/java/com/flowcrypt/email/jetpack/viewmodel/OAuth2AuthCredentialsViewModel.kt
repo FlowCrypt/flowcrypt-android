@@ -31,7 +31,6 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 /**
@@ -111,22 +110,23 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
         val displayName: String? = claims.getClaimValueAsString(CLAIM_NAME)
 
         if (email == null) {
-          microsoftOAuth2TokenLiveData.postValue(Result.exception(NullPointerException("User email is null!")))
+          microsoftOAuth2TokenLiveData.postValue(Result.exception(NullPointerException("IdToken:User email is null!")))
           return@launch
         }
 
-        val token = response.data?.accessToken ?: throw NullPointerException("token is null")
-        val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(email, token)?.copy(
+        val accessToken = response.data?.accessToken
+            ?: throw NullPointerException("API error: accessToken is null!")
+        val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(email, "")?.copy(
             useOAuth2 = true,
             displayName = displayName,
             authTokenInfo = AuthTokenInfo(
                 email = email,
-                accessToken = response.data.accessToken,
-                expiresAt = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis((response.data.expiresIn
-                    ?: 0L)) - TimeUnit.MINUTES.toMillis(5),
+                accessToken = accessToken,
+                expiresAt = OAuth2Helper.getExpiresAtTime(response.data.expiresIn),
                 refreshToken = response.data.refreshToken
             )
-        ) ?: throw NullPointerException("Couldn't find default settings!")
+        )?.copy(password = "", smtpSignInPassword = null)
+            ?: throw NullPointerException("Couldn't find default settings for $email!")
 
         microsoftOAuth2TokenLiveData.postValue(Result.success(recommendAuthCredentials))
       } catch (e: Exception) {

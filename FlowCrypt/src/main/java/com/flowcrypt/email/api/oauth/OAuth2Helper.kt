@@ -9,6 +9,7 @@ import android.net.Uri
 import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationServiceConfiguration
 import net.openid.appauth.ResponseTypeValues
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Denis Bondarenko
@@ -59,6 +60,11 @@ class OAuth2Helper {
       }
 
       return request.build()
+    }
+
+    fun getExpiresAtTime(expiresIn: Long?): Long {
+      return System.currentTimeMillis() +
+          TimeUnit.SECONDS.toMillis((expiresIn ?: 0L)) - TimeUnit.MINUTES.toMillis(5)
     }
 
     val SUPPORTED_SCHEMAS = listOf(MICROSOFT_OAUTH2_SCHEMA)

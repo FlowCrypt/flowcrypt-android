@@ -91,7 +91,7 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
    */
   private fun testImapConn(authCreds: AuthCredentials, session: Session) {
     val store = session.getStore(JavaEmailConstants.PROTOCOL_IMAP)
-    store.connect(authCreds.imapServer, authCreds.imapPort, authCreds.username, authCreds.password)
+    store.connect(authCreds.imapServer, authCreds.imapPort, authCreds.username, authCreds.peekPassword())
     val folder = store.getFolder(JavaEmailConstants.FOLDER_INBOX)
     folder.open(Folder.READ_ONLY)
     folder.close(false)
@@ -112,10 +112,10 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
 
     if (authCreds.hasCustomSignInForSmtp) {
       username = authCreds.smtpSigInUsername
-      password = authCreds.smtpSignInPassword
+      password = authCreds.peekSmtpPassword()
     } else {
       username = authCreds.username
-      password = authCreds.password
+      password = authCreds.peekPassword()
     }
 
     transport.connect(authCreds.smtpServer, authCreds.smtpPort, username, password)

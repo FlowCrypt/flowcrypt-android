@@ -13,10 +13,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.ui.activity.SignInActivity
-import java.util.concurrent.TimeUnit
 
 
 /**
@@ -65,8 +65,7 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
         val tokenResponse = apiResponse.body()
         authToken = tokenResponse?.accessToken
         accountManager.setUserData(account, KEY_REFRESH_TOKEN, tokenResponse?.refreshToken)
-        accountManager.setUserData(account, KEY_EXPIRES_AT, (System.currentTimeMillis() + (tokenResponse?.expiresIn
-            ?: 0L) - TimeUnit.MINUTES.toMillis(5)).toString())
+        accountManager.setUserData(account, KEY_EXPIRES_AT, OAuth2Helper.getExpiresAtTime(tokenResponse?.expiresIn).toString())
       } else return Bundle().apply {
         putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_AUTHENTICATION)
         putString(AccountManager.KEY_ERROR_MESSAGE, "Couldn't fetch an access token")

@@ -236,15 +236,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       roomDatabase.accountDao().addAccountSuspend(accountEntity)
 
       if (authCreds.useOAuth2) {
-        val accountManager = AccountManager.get(requireContext())
-        val account = Account(accountEntity.email.toLowerCase(Locale.US), FlowcryptAccountAuthenticator.ACCOUNT_TYPE)
-        accountManager.addAccountExplicitly(account, null, Bundle().apply {
-          with(authCreds.authTokenInfo) {
-            putString(FlowcryptAccountAuthenticator.KEY_ACCOUNT_EMAIL, this?.email)
-            putString(FlowcryptAccountAuthenticator.KEY_REFRESH_TOKEN, this?.refreshToken)
-            putString(FlowcryptAccountAuthenticator.KEY_EXPIRES_AT, this?.expiresAt?.toString())
-          }
-        })
+        storeAccountInfoToAccountManager(accountEntity, authCreds)
       }
 
       EmailSyncService.startEmailSyncService(requireContext())
@@ -262,10 +254,20 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   override fun returnResultOk() {
     lifecycleScope.launch {
       try {
-        val newAccount = AccountEntity(generateAuthCreds())
+        val authCreds = generateAuthCreds()
+        val accountEntity = AccountEntity(
+            if (authCreds.useOAuth2) {
+              authCreds.copy(password = "", smtpSignInPassword = null)
+            } else {
+              authCreds
+            })
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-        roomDatabase.accountDao().addAccountSuspend(newAccount)
-        val addedAccount = roomDatabase.accountDao().getAccountSuspend(newAccount.email)
+        roomDatabase.accountDao().addAccountSuspend(accountEntity)
+        val addedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email)
+
+        if (authCreds.useOAuth2) {
+          storeAccountInfoToAccountManager(accountEntity, authCreds)
+        }
 
         val intent = Intent()
         intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, addedAccount)
@@ -278,6 +280,18 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
             ?: getString(R.string.error_occurred_during_adding_new_account), Toast.LENGTH_SHORT).show()
       }
     }
+  }
+
+  private fun storeAccountInfoToAccountManager(accountEntity: AccountEntity, authCreds: AuthCredentials) {
+    val accountManager = AccountManager.get(requireContext())
+    val account = Account(accountEntity.email.toLowerCase(Locale.US), FlowcryptAccountAuthenticator.ACCOUNT_TYPE)
+    accountManager.addAccountExplicitly(account, null, Bundle().apply {
+      with(authCreds.authTokenInfo) {
+        putString(FlowcryptAccountAuthenticator.KEY_ACCOUNT_EMAIL, this?.email)
+        putString(FlowcryptAccountAuthenticator.KEY_REFRESH_TOKEN, this?.refreshToken)
+        putString(FlowcryptAccountAuthenticator.KEY_EXPIRES_AT, this?.expiresAt?.toString())
+      }
+    })
   }
 
   fun handleOAuth2Intent(intent: Intent?) {
@@ -618,7 +632,8 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
           oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.removeObservers(viewLifecycleOwner)
           it.data?.let { authCredentials ->
             authCreds = authCredentials
-            val account = AccountEntity(authCredentials)
+            val account = AccountEntity(authCredentials).copy(password = authCredentials
+                .peekPassword(), smtpPassword = authCredentials.peekSmtpPassword())
             val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
             activity?.supportFragmentManager?.beginTransaction()
                 ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
@@ -648,6 +663,8 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
         Result.Status.SUCCESS -> {
           oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.removeObservers(viewLifecycleOwner)
           buttonSignInWithOutlook?.isEnabled = true
+          showContent()
+
           it.data?.let { authorizationRequest ->
             authRequest = authorizationRequest
             authRequest?.let { request ->
@@ -656,7 +673,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
                       request,
                       PendingIntent.getActivity(requireContext(), 0, Intent(requireContext(), SignInActivity::class.java), 0))
             }
-            showContent()
           }
         }
 

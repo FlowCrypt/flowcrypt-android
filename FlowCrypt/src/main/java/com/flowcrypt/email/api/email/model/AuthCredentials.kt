@@ -76,6 +76,14 @@ data class AuthCredentials constructor(val email: String,
     }
   }
 
+  fun peekPassword(): String {
+    return if (useOAuth2) authTokenInfo?.accessToken ?: password else password
+  }
+
+  fun peekSmtpPassword(): String? {
+    return if (useOAuth2) authTokenInfo?.accessToken ?: password else smtpSignInPassword
+  }
+
   companion object {
     @JvmField
     @Suppress("unused")
