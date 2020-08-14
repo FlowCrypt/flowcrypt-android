@@ -39,16 +39,23 @@ class OAuth2Helper {
     const val MICROSOFT_AZURE_APP_ID = "3be51534-5f76-4970-9a34-40ef197aa018"
     const val MICROSOFT_OAUTH2_SCHEMA = "msauth"
 
-    fun getMicrosoftAuthorizationRequest(): AuthorizationRequest {
+    fun getMicrosoftAuthorizationRequest(loginHint: String? = null): AuthorizationRequest {
       val configuration = AuthorizationServiceConfiguration(Uri.parse(MICROSOFT_OAUTH2_AUTHORIZE_URL), Uri.parse(MICROSOFT_OAUTH2_TOKEN_URL))
 
-      return AuthorizationRequest.Builder(
+      val request = AuthorizationRequest.Builder(
           configuration,
           MICROSOFT_AZURE_APP_ID,
           ResponseTypeValues.CODE,
           Uri.parse(MICROSOFT_REDIRECT_URI))
+          .setResponseMode(AuthorizationRequest.ResponseMode.QUERY)
+          .setPrompt(AuthorizationRequest.Prompt.SELECT_ACCOUNT)
           .setScope("profile email $SCOPE_MICROSOFT_OAUTH2_FOR_MAIL")
-          .build()
+
+      if (loginHint?.isNotEmpty() == true) {
+        request.setLoginHint(loginHint)
+      }
+
+      return request.build()
     }
 
     val SUPPORTED_SCHEMAS = listOf(MICROSOFT_OAUTH2_SCHEMA)

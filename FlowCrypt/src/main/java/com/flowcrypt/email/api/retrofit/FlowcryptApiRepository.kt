@@ -98,6 +98,11 @@ class FlowcryptApiRepository : ApiRepository {
       Result<MicrosoftOAuth2TokenResponse> =
       withContext(Dispatchers.IO) {
         val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-        getResult { apiService.getMicrosoftOAuth2Token(authorizeCode, scopes, codeVerifier) }
+        getResult(
+            context = context,
+            expectedResultClass = MicrosoftOAuth2TokenResponse::class.java
+        ) {
+          apiService.getMicrosoftOAuth2Token(authorizeCode, scopes, codeVerifier)
+        }
       }
 }

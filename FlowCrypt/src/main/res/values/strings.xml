@@ -468,4 +468,5 @@
     <string name="loading_account_details">Loading the account details &#8230;</string>
     <string name="could_not_verify_response">Sorry, we couldn\'t verify the response. Please try again or write to us at %1$s</string>
     <string name="error_with_value">Error: %1$s</string>
+    <string name="oauth_error">OAuth error</string>
 </resources>

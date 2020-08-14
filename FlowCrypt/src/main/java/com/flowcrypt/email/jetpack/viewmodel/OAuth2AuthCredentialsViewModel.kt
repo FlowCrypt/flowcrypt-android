@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.util.exception.ApiException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -52,7 +53,7 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
         if (response.status != Result.Status.SUCCESS) {
           when (response.status) {
             Result.Status.ERROR -> {
-              microsoftOAuth2TokenLiveData.postValue(Result.exception(IllegalStateException()))
+              microsoftOAuth2TokenLiveData.postValue(Result.exception(ApiException(response.data?.apiError)))
             }
 
             Result.Status.EXCEPTION -> {
