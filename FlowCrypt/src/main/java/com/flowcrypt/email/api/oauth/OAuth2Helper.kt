@@ -17,7 +17,13 @@ import net.openid.appauth.ResponseTypeValues
  *         E-mail: DenBond7@gmail.com
  */
 class OAuth2Helper {
+  enum class Provider constructor(val openidConfigurationUrl: String) {
+    MICROSOFT(OPENID_CONFIGURATION_URL_MICROSOFT)
+  }
+
   companion object {
+    const val OPENID_CONFIGURATION_URL_MICROSOFT = "https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration"
+
     const val OAUTH2_GRANT_TYPE = "authorization_code"
     const val OAUTH2_GRANT_TYPE_REFRESH_TOKEN = "refresh_token"
 
@@ -33,15 +39,12 @@ class OAuth2Helper {
      */
     const val SCOPE_MICROSOFT_OAUTH2_FOR_MAIL = "openid offline_access https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send"
 
-    const val MICROSOFT_OAUTH2_AUTHORIZE_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
     const val MICROSOFT_OAUTH2_TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
     const val MICROSOFT_REDIRECT_URI = "msauth://com.flowcrypt.email.denys/04gM%2BEAfhnq4ALbhOX8jG5oRuow%3D"
     const val MICROSOFT_AZURE_APP_ID = "3be51534-5f76-4970-9a34-40ef197aa018"
     const val MICROSOFT_OAUTH2_SCHEMA = "msauth"
 
-    fun getMicrosoftAuthorizationRequest(loginHint: String? = null): AuthorizationRequest {
-      val configuration = AuthorizationServiceConfiguration(Uri.parse(MICROSOFT_OAUTH2_AUTHORIZE_URL), Uri.parse(MICROSOFT_OAUTH2_TOKEN_URL))
-
+    fun getMicrosoftAuthorizationRequest(loginHint: String? = null, configuration: AuthorizationServiceConfiguration): AuthorizationRequest {
       val request = AuthorizationRequest.Builder(
           configuration,
           MICROSOFT_AZURE_APP_ID,

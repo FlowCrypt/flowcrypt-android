@@ -19,6 +19,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.Spinner
@@ -88,6 +89,7 @@ import kotlin.collections.ArrayList
 class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     AdapterView.OnItemSelectedListener {
 
+  private var buttonSignInWithOutlook: Button? = null
   private var editTextEmail: EditText? = null
   private var editTextUserName: EditText? = null
   private var editTextPassword: EditText? = null
@@ -414,14 +416,12 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       FeedbackActivity.show(requireActivity())
     }
 
-    view.findViewById<View>(R.id.buttonSignInWithOutlook)?.setOnClickListener {
-      authRequest = OAuth2Helper.getMicrosoftAuthorizationRequest()
-      authRequest?.let { request ->
-        AuthorizationService(requireContext())
-            .performAuthorizationRequest(
-                request,
-                PendingIntent.getActivity(requireContext(), 0, Intent(requireContext(), SignInActivity::class.java), 0))
-      }
+    buttonSignInWithOutlook = view.findViewById(R.id.buttonSignInWithOutlook)
+    buttonSignInWithOutlook?.setOnClickListener {
+      it.isEnabled = false
+      oAuth2AuthCredentialsViewModel.getAuthorizationRequestForProvider(
+          requestCode = REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION,
+          provider = OAuth2Helper.Provider.MICROSOFT)
     }
   }
 
@@ -604,6 +604,36 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   }
 
   private fun setupOAuth2AuthCredentialsViewModel() {
+    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          showProgress(progressMsg = getString(R.string.loading_oauth_server_configuration))
+        }
+
+        Result.Status.SUCCESS -> {
+          buttonSignInWithOutlook?.isEnabled = true
+          it.data?.let { authorizationRequest ->
+            authRequest = authorizationRequest
+            authRequest?.let { request ->
+              AuthorizationService(requireContext())
+                  .performAuthorizationRequest(
+                      request,
+                      PendingIntent.getActivity(requireContext(), 0, Intent(requireContext(), SignInActivity::class.java), 0))
+            }
+            showContent()
+          }
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          buttonSignInWithOutlook?.isEnabled = true
+          showContent()
+          showInfoDialog(
+              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: "Couldn't load the server configuration")
+        }
+      }
+    })
+
     oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, Observer {
       when (it.status) {
         Result.Status.LOADING -> {
@@ -872,6 +902,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 10
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_EMAIL = 11
     private const val REQUEST_CODE_RETRY_SETTINGS_CHECKING = 12
+    private const val REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION = 13L
 
     fun newInstance(): AddOtherAccountFragment {
       return AddOtherAccountFragment()

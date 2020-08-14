@@ -469,4 +469,5 @@
     <string name="could_not_verify_response">Sorry, we couldn\'t verify the response. Please try again or write to us at %1$s</string>
     <string name="error_with_value">Error: %1$s</string>
     <string name="oauth_error">OAuth error</string>
+    <string name="loading_oauth_server_configuration">Loading OAuth server configuration&#8230;</string>
 </resources>

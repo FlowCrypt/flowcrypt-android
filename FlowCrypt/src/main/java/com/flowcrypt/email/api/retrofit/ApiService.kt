@@ -21,6 +21,7 @@ import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
+import com.google.gson.JsonObject
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -30,6 +31,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Url
 
 /**
  * A base API interface for RETROFIT.
@@ -155,4 +157,7 @@ interface ApiService {
       @Field("scope") scope: String = OAuth2Helper.SCOPE_MICROSOFT_OAUTH2_FOR_MAIL,
       @Field("client_id") clientId: String = OAuth2Helper.MICROSOFT_AZURE_APP_ID,
       @Field("grant_type") grant_type: String = OAuth2Helper.OAUTH2_GRANT_TYPE_REFRESH_TOKEN): Call<MicrosoftOAuth2TokenResponse>
+
+  @GET
+  suspend fun getOpenIdConfiguration(@Url url: String): Response<JsonObject>
 }

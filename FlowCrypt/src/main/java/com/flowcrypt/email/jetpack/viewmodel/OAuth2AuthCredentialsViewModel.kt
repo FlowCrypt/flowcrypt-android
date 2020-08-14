@@ -19,11 +19,17 @@ import com.flowcrypt.email.util.exception.ApiException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
+import net.openid.appauth.AuthorizationServiceConfiguration
+import net.openid.appauth.AuthorizationServiceDiscovery
 import org.jose4j.jwk.HttpsJwks
 import org.jose4j.jwt.JwtClaims
 import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.IOException
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -37,6 +43,34 @@ import java.util.concurrent.TimeUnit
 class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
   val microsoftOAuth2TokenLiveData = MutableLiveData<Result<AuthCredentials>>()
+  val authorizationRequestLiveData = MutableLiveData<Result<AuthorizationRequest>>()
+
+  fun getAuthorizationRequestForProvider(requestCode: Long = 0L, provider: OAuth2Helper.Provider) {
+    viewModelScope.launch {
+      authorizationRequestLiveData.postValue(Result.loading())
+
+      try {
+        val authRequest = when (provider) {
+          OAuth2Helper.Provider.MICROSOFT -> {
+            val jsonObject = getJsonObjectForOpenidConfiguration(requestCode, provider)
+            val authorizationServiceDiscovery = AuthorizationServiceDiscovery(jsonObject)
+            OAuth2Helper.getMicrosoftAuthorizationRequest(configuration = AuthorizationServiceConfiguration(authorizationServiceDiscovery))
+          }
+        }
+        authorizationRequestLiveData.postValue(Result.success(authRequest))
+      } catch (e: IOException) {
+        authorizationRequestLiveData.postValue(Result.exception(AuthorizationException.fromTemplate(AuthorizationException.GeneralErrors.NETWORK_ERROR, e)))
+      } catch (e: JSONException) {
+        authorizationRequestLiveData.postValue(Result.exception(AuthorizationException.fromTemplate(
+            AuthorizationException.GeneralErrors.JSON_DESERIALIZATION_ERROR, e)))
+      } catch (e: AuthorizationServiceDiscovery.MissingArgumentException) {
+        authorizationRequestLiveData.postValue(Result.exception(AuthorizationException.fromTemplate(
+            AuthorizationException.GeneralErrors.INVALID_DISCOVERY_DOCUMENT, e)))
+      } catch (e: Exception) {
+        authorizationRequestLiveData.postValue(Result.exception(e))
+      }
+    }
+  }
 
   fun getMicrosoftOAuth2Token(requestCode: Long = 0L, authorizeCode: String, authRequest: AuthorizationRequest) {
     viewModelScope.launch {
@@ -67,8 +101,12 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
           return@launch
         }
 
-        val claims = validateTokenAndGetClaims(response.data?.idToken ?: "", authRequest
-            .clientId, jwks = JWKS_MICROSOFT)
+        val claims = validateTokenAndGetClaims(
+            idToken = response.data?.idToken ?: "",
+            clientId = authRequest.clientId,
+            jwks = authRequest.configuration.discoveryDoc?.jwksUri.toString()
+        )
+
         val email: String? = claims.getClaimValueAsString(CLAIM_EMAIL)?.toLowerCase(Locale.US)
         val displayName: String? = claims.getClaimValueAsString(CLAIM_NAME)
 
@@ -101,19 +139,38 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
       JwtClaims =
       withContext(Dispatchers.IO) {
         val httpsJkws = HttpsJwks(jwks)
-        val httpsJwksKeyResolver = HttpsJwksVerificationKeyResolver(httpsJkws)
+        val verificationKeyResolver = HttpsJwksVerificationKeyResolver(httpsJkws)
         val jwtConsumer = JwtConsumerBuilder()
-            .setVerificationKeyResolver(httpsJwksKeyResolver)
+            .setVerificationKeyResolver(verificationKeyResolver)
             .setExpectedAudience(clientId)
             .build()
         return@withContext jwtConsumer.processToClaims(idToken)
       }
 
+  private suspend fun getJsonObjectForOpenidConfiguration(requestCode: Long, provider: OAuth2Helper.Provider): JSONObject =
+      withContext(Dispatchers.IO) {
+        val jsonObjectResult = apiRepository.getOpenIdConfiguration(
+            requestCode = requestCode,
+            context = getApplication(),
+            url = provider.openidConfigurationUrl
+        )
+
+        when (jsonObjectResult.status) {
+          Result.Status.SUCCESS -> {
+            return@withContext JSONObject(jsonObjectResult.data.toString())
+          }
+
+          Result.Status.EXCEPTION -> {
+            throw jsonObjectResult.exception ?: IOException("Couldn't fetch configurations")
+          }
+
+          else -> throw IOException("Couldn't fetch configurations")
+        }
+      }
+
+
   companion object {
     private const val CLAIM_EMAIL = "email"
     private const val CLAIM_NAME = "name"
-
-    //https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration
-    private const val JWKS_MICROSOFT = "https://login.microsoftonline.com/common/discovery/v2.0/keys"
   }
 }
