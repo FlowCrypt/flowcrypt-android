@@ -159,7 +159,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     updateView(authCreds)
 
     setupPrivateKeysViewModel()
-    setupOAuth2AuthCredentialsViewModel()
   }
 
   override fun onPause() {
@@ -293,13 +292,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       if (authResponse != null) {
         val code = authResponse.authorizationCode
         if (code != null) {
-          authRequest?.let { request ->
-            when (schema) {
-              OAuth2Helper.MICROSOFT_OAUTH2_SCHEMA -> {
-                oAuth2AuthCredentialsViewModel.getMicrosoftOAuth2Token(authorizeCode = code, authRequest = request)
-              }
-            }
-          }
+          getOAuthToken(schema, code)
         } else {
           showInfoDialog(
               dialogTitle = "",
@@ -419,7 +412,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     buttonSignInWithOutlook = view.findViewById(R.id.buttonSignInWithOutlook)
     buttonSignInWithOutlook?.setOnClickListener {
       it.isEnabled = false
-      oAuth2AuthCredentialsViewModel.getAuthorizationRequestForProvider(
+      getAuthorizationRequestForProvider(
           requestCode = REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION,
           provider = OAuth2Helper.Provider.MICROSOFT)
     }
@@ -578,7 +571,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            showProgress()
+            showProgress(progressMsg = getString(R.string.saving_prv_keys))
           }
 
           Result.Status.SUCCESS -> {
@@ -603,7 +596,49 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     })
   }
 
-  private fun setupOAuth2AuthCredentialsViewModel() {
+  private fun getOAuthToken(schema: String?, code: String) {
+    authRequest?.let { request ->
+      when (schema) {
+        OAuth2Helper.MICROSOFT_OAUTH2_SCHEMA -> {
+          observeMicrosoftOAuth2TokenLiveData()
+          oAuth2AuthCredentialsViewModel.getMicrosoftOAuth2Token(authorizeCode = code, authRequest = request)
+        }
+      }
+    }
+  }
+
+  private fun observeMicrosoftOAuth2TokenLiveData() {
+    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          showProgress(progressMsg = getString(R.string.loading_account_details))
+        }
+
+        Result.Status.SUCCESS -> {
+          oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.removeObservers(viewLifecycleOwner)
+          it.data?.let { authCredentials ->
+            authCreds = authCredentials
+            val account = AccountEntity(authCredentials)
+            val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
+            activity?.supportFragmentManager?.beginTransaction()
+                ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
+                ?.addToBackStack(null)
+                ?.commit()
+          }
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.removeObservers(viewLifecycleOwner)
+          showContent()
+          showInfoDialog(
+              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: "Couldn't fetch token")
+        }
+      }
+    })
+  }
+
+  private fun getAuthorizationRequestForProvider(requestCode: Long, provider: OAuth2Helper.Provider) {
     oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, Observer {
       when (it.status) {
         Result.Status.LOADING -> {
@@ -611,6 +646,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
         }
 
         Result.Status.SUCCESS -> {
+          oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.removeObservers(viewLifecycleOwner)
           buttonSignInWithOutlook?.isEnabled = true
           it.data?.let { authorizationRequest ->
             authRequest = authorizationRequest
@@ -625,6 +661,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.removeObservers(viewLifecycleOwner)
           buttonSignInWithOutlook?.isEnabled = true
           showContent()
           showInfoDialog(
@@ -634,32 +671,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
       }
     })
 
-    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, Observer {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          showProgress(progressMsg = getString(R.string.loading_account_details))
-        }
-
-        Result.Status.SUCCESS -> {
-          it.data?.let { authCredentials ->
-            authCreds = authCredentials
-            val account = AccountEntity(authCredentials)
-            val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
-            activity?.supportFragmentManager?.beginTransaction()
-                ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
-                ?.addToBackStack(null)
-                ?.commit()
-          }
-        }
-
-        Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          showContent()
-          showInfoDialog(
-              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: "Couldn't fetch token")
-        }
-      }
-    })
+    oAuth2AuthCredentialsViewModel.getAuthorizationRequestForProvider(requestCode, provider)
   }
 
   /**
