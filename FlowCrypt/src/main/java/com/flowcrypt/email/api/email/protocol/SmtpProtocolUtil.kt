@@ -5,11 +5,14 @@
 
 package com.flowcrypt.email.api.email.protocol
 
+import android.accounts.AccountManager
 import android.content.Context
+import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.google.android.gms.auth.GoogleAuthException
 import java.io.IOException
 import javax.mail.MessagingException
@@ -50,7 +53,7 @@ class SmtpProtocolUtil {
 
         else -> {
           val userName: String?
-          val password: String?
+          var password: String?
 
           if (accountEntity.useCustomSignForSmtp == true) {
             userName = accountEntity.smtpUsername
@@ -58,6 +61,20 @@ class SmtpProtocolUtil {
           } else {
             userName = accountEntity.username
             password = accountEntity.password
+          }
+
+          if (accountEntity.useOAuth2) {
+            val accountManager = AccountManager.get(context)
+            val oAuthAccount = accountManager.accounts.firstOrNull { it.name == accountEntity.email }
+            if (oAuthAccount != null) {
+              val encryptedToken = accountManager.blockingGetAuthToken(oAuthAccount,
+                  FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true)
+              password = if (encryptedToken.isNullOrEmpty()) {
+                ""//need to think about
+              } else {
+                KeyStoreCryptoManager.decrypt(encryptedToken)
+              }
+            }
           }
 
           transport.connect(accountEntity.smtpServer, accountEntity.smtpPort

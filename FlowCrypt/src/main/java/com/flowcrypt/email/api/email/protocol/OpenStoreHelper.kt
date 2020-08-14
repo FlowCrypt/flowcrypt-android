@@ -13,6 +13,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.LogsUtil
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.sun.mail.gimap.GmailSSLStore
@@ -151,8 +152,13 @@ class OpenStoreHelper {
               val accountManager = AccountManager.get(context)
               val oauthAccount = accountManager.accounts.firstOrNull { it.name == account.email }
               if (oauthAccount != null) {
-                accountManager.blockingGetAuthToken(oauthAccount,
+                val encryptedToken = accountManager.blockingGetAuthToken(oauthAccount,
                     FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true)
+                if (encryptedToken.isNullOrEmpty()) {
+                  ""//need to think about
+                } else {
+                  KeyStoreCryptoManager.decrypt(encryptedToken)
+                }
               } else {
                 account.password
               }

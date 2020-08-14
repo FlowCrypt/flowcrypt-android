@@ -16,6 +16,7 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.ApiService
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.ui.activity.SignInActivity
 
 
@@ -58,13 +59,21 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
     var authToken = accountManager.peekAuthToken(account, authTokenType)
 
     if (authToken.isNullOrEmpty()) {
-      val refreshToken = accountManager.getUserData(account, KEY_REFRESH_TOKEN)
+      val encryptedRefreshToken = accountManager.getUserData(account, KEY_REFRESH_TOKEN)
+      if (encryptedRefreshToken.isNullOrEmpty()) {
+        return Bundle().apply {
+          putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_ARGUMENTS)
+          putString(AccountManager.KEY_ERROR_MESSAGE, "Refresh token is wrong or was corrupted!")
+        }
+      }
+      val refreshToken = KeyStoreCryptoManager.decrypt(encryptedRefreshToken)
       val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
       val apiResponse = apiService.refreshMicrosoftOAuth2Token(refreshToken).execute()
       if (apiResponse.isSuccessful) {
         val tokenResponse = apiResponse.body()
-        authToken = tokenResponse?.accessToken
-        accountManager.setUserData(account, KEY_REFRESH_TOKEN, tokenResponse?.refreshToken)
+        authToken = KeyStoreCryptoManager.encrypt(tokenResponse?.accessToken)
+        accountManager.setAuthToken(account, authTokenType, authToken)
+        accountManager.setUserData(account, KEY_REFRESH_TOKEN, KeyStoreCryptoManager.encrypt(tokenResponse?.refreshToken))
         accountManager.setUserData(account, KEY_EXPIRES_AT, OAuth2Helper.getExpiresAtTime(tokenResponse?.expiresIn).toString())
       } else return Bundle().apply {
         putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_AUTHENTICATION)

@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.exception.ApiException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -123,7 +124,7 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
                 email = email,
                 accessToken = accessToken,
                 expiresAt = OAuth2Helper.getExpiresAtTime(response.data.expiresIn),
-                refreshToken = response.data.refreshToken
+                refreshToken = KeyStoreCryptoManager.encryptSuspend(response.data.refreshToken)
             )
         )?.copy(password = "", smtpSignInPassword = null)
             ?: throw NullPointerException("Couldn't find default settings for $email!")
