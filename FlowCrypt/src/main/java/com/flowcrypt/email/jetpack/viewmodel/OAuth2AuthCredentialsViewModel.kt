@@ -26,6 +26,7 @@ import net.openid.appauth.AuthorizationServiceConfiguration
 import net.openid.appauth.AuthorizationServiceDiscovery
 import org.jose4j.jwk.HttpsJwks
 import org.jose4j.jwt.JwtClaims
+import org.jose4j.jwt.consumer.InvalidJwtException
 import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver
 import org.json.JSONException
@@ -131,7 +132,11 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
 
         microsoftOAuth2TokenLiveData.postValue(Result.success(recommendAuthCredentials))
       } catch (e: Exception) {
-        microsoftOAuth2TokenLiveData.postValue(Result.exception(e))
+        if (e is InvalidJwtException) {
+          microsoftOAuth2TokenLiveData.postValue(Result.exception(InvalidJwtException("JWT validation was failed!\n\n", e.errorDetails, e.jwtContext)))
+        } else {
+          microsoftOAuth2TokenLiveData.postValue(Result.exception(e))
+        }
       }
     }
   }
@@ -144,6 +149,9 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
         val jwtConsumer = JwtConsumerBuilder()
             .setVerificationKeyResolver(verificationKeyResolver)
             .setExpectedAudience(clientId)
+            .setRequireIssuedAt()
+            .setRequireNotBefore()
+            .setRequireExpirationTime()
             .build()
         return@withContext jwtConsumer.processToClaims(idToken)
       }
