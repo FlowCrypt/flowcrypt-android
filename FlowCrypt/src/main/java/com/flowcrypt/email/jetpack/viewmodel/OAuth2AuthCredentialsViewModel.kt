@@ -60,14 +60,18 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
         }
         authorizationRequestLiveData.postValue(Result.success(authRequest))
       } catch (e: IOException) {
+        e.printStackTrace()
         authorizationRequestLiveData.postValue(Result.exception(AuthorizationException.fromTemplate(AuthorizationException.GeneralErrors.NETWORK_ERROR, e)))
       } catch (e: JSONException) {
+        e.printStackTrace()
         authorizationRequestLiveData.postValue(Result.exception(AuthorizationException.fromTemplate(
             AuthorizationException.GeneralErrors.JSON_DESERIALIZATION_ERROR, e)))
       } catch (e: AuthorizationServiceDiscovery.MissingArgumentException) {
+        e.printStackTrace()
         authorizationRequestLiveData.postValue(Result.exception(AuthorizationException.fromTemplate(
             AuthorizationException.GeneralErrors.INVALID_DISCOVERY_DOCUMENT, e)))
       } catch (e: Exception) {
+        e.printStackTrace()
         authorizationRequestLiveData.postValue(Result.exception(e))
       }
     }
@@ -132,6 +136,7 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
 
         microsoftOAuth2TokenLiveData.postValue(Result.success(recommendAuthCredentials))
       } catch (e: Exception) {
+        //we don't store stacktrace to prevent tokens leaks
         if (e is InvalidJwtException) {
           microsoftOAuth2TokenLiveData.postValue(Result.exception(InvalidJwtException("JWT validation was failed!\n\n", e.errorDetails, e.jwtContext)))
         } else {
