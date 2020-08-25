@@ -57,8 +57,9 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
 
     val expireAtInMillis = accountManager.getUserData(account, KEY_EXPIRES_AT)?.toLongOrNull() ?: 0
     var authToken = accountManager.peekAuthToken(account, authTokenType)
+    val isTokenExpired = System.currentTimeMillis() - expireAtInMillis > 0
 
-    if (authToken.isNullOrEmpty()) {
+    if (authToken.isNullOrEmpty() || isTokenExpired) {
       val encryptedRefreshToken = accountManager.getUserData(account, KEY_REFRESH_TOKEN)
       if (encryptedRefreshToken.isNullOrEmpty()) {
         return Bundle().apply {
