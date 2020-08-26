@@ -17,6 +17,7 @@ import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.ApiService
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
 
 
@@ -112,12 +113,33 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
 
   private fun genBundleToAddNewAccount(response: AccountAuthenticatorResponse?): Bundle {
     val intent = Intent(context, SignInActivity::class.java).apply {
-      action = SignInActivity.ACTION_ADD_ACCOUNT_FROM_SETTINGS
+      action = SignInActivity.ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS
       putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
     }
 
     return Bundle().apply {
       putParcelable(AccountManager.KEY_INTENT, intent)
+    }
+  }
+
+  override fun getAccountRemovalAllowed(response: AccountAuthenticatorResponse?, account: Account?): Bundle {
+    val bundle = super.getAccountRemovalAllowed(response, account)
+
+    if (bundle?.containsKey(AccountManager.KEY_BOOLEAN_RESULT) == true) {
+      val isRemovalAllowed = bundle.getBoolean(AccountManager.KEY_BOOLEAN_RESULT, false)
+      if (isRemovalAllowed) {
+        return Bundle().apply {
+          putParcelable(AccountManager.KEY_INTENT, Intent(context, EmailManagerActivity::class.java).apply {
+            action = EmailManagerActivity.ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS
+            putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
+            putExtra(EmailManagerActivity.KEY_ACCOUNT, account)
+          })
+        }
+      }
+    }
+
+    return Bundle().apply {
+      putBoolean(AccountManager.KEY_BOOLEAN_RESULT, false)
     }
   }
 

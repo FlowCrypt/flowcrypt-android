@@ -19,7 +19,6 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
-import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -122,37 +121,6 @@ class UserRecoverableAuthExceptionActivity : BaseActivity(), View.OnClickListene
     findViewById<View>(R.id.buttonTerms)?.setOnClickListener(this)
     findViewById<View>(R.id.buttonSecurity)?.setOnClickListener(this)
     findViewById<View>(R.id.buttonHelp)?.setOnClickListener(this)
-  }
-
-  private fun logout() {
-    val activeAccount = activeAccount ?: return
-    lifecycleScope.launch {
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-
-      //remove all info about the given account from the local db
-      roomDatabase.accountDao().deleteSuspend(activeAccount)
-      //todo-denbond7 Improve this via onDelete = ForeignKey.CASCADE
-      roomDatabase.labelDao().deleteByEmailSuspend(activeAccount.email)
-      roomDatabase.msgDao().deleteByEmailSuspend(activeAccount.email)
-      roomDatabase.attachmentDao().deleteByEmailSuspend(activeAccount.email)
-      roomDatabase.accountAliasesDao().deleteByEmailSuspend(activeAccount.email)
-
-      val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccountsSuspend()
-      if (nonactiveAccounts.isNotEmpty()) {
-        val firstNonactiveAccount = nonactiveAccounts.first()
-        roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
-        roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
-        EmailSyncService.switchAccount(applicationContext)
-        EmailManagerActivity.runEmailManagerActivity(this@UserRecoverableAuthExceptionActivity)
-        finish()
-      } else {
-        stopService(Intent(applicationContext, EmailSyncService::class.java))
-        val intent = Intent(applicationContext, SignInActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        startActivity(intent)
-        finish()
-      }
-    }
   }
 
   companion object {

@@ -72,7 +72,7 @@ class SignInActivity : BaseNodeActivity() {
 
   companion object {
     const val ACTION_ADD_ONE_MORE_ACCOUNT = BuildConfig.APPLICATION_ID + ".ACTION_ADD_ONE_MORE_ACCOUNT"
-    const val ACTION_ADD_ACCOUNT_FROM_SETTINGS = BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_FROM_SETTINGS"
+    const val ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS = BuildConfig.APPLICATION_ID + ".ACTION_ADD_ACCOUNT_VIA_SYSTEM_SETTINGS"
 
     val KEY_EXTRA_NEW_ACCOUNT =
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_NEW_ACCOUNT", SignInActivity::class.java)

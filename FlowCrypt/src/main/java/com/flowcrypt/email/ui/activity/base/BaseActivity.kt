@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.base
 
+import android.accounts.AccountManager
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -22,16 +23,23 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.hasActiveConnection
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
 import com.flowcrypt.email.jetpack.viewmodel.RoomBasicViewModel
 import com.flowcrypt.email.node.Node
 import com.flowcrypt.email.service.BaseService
+import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.ui.activity.EmailManagerActivity
+import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -39,6 +47,7 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.idling.NodeIdlingResource
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 
 /**
@@ -301,6 +310,50 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
       connectionLifecycleObserver.connectionLiveData.value ?: false
     } else {
       hasActiveConnection()
+    }
+  }
+
+  protected fun removeAccountFromAccountManager(accountEntity: AccountEntity?) {
+    val accountManager = AccountManager.get(this)
+    accountManager.accounts.firstOrNull { it.name == accountEntity?.email }?.let { account ->
+      accountManager.removeAccountExplicitly(account)
+    }
+  }
+
+  protected fun logout() {
+    lifecycleScope.launch {
+      activeAccount?.let { accountEntity ->
+        countingIdlingResource.incrementSafely()
+
+        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+        //remove all info about the given account from the local db
+        roomDatabase.accountDao().deleteSuspend(accountEntity)
+        removeAccountFromAccountManager(accountEntity)
+
+        //todo-denbond7 Improve this via onDelete = ForeignKey.CASCADE
+        roomDatabase.labelDao().deleteByEmailSuspend(accountEntity.email)
+        roomDatabase.msgDao().deleteByEmailSuspend(accountEntity.email)
+        roomDatabase.attachmentDao().deleteByEmailSuspend(accountEntity.email)
+        roomDatabase.accountAliasesDao().deleteByEmailSuspend(accountEntity.email)
+
+        val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccountsSuspend()
+        if (nonactiveAccounts.isNotEmpty()) {
+          val firstNonactiveAccount = nonactiveAccounts.first()
+          roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
+          roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
+          EmailSyncService.switchAccount(applicationContext)
+          EmailManagerActivity.runEmailManagerActivity(this@BaseActivity)
+          finish()
+        } else {
+          stopService(Intent(applicationContext, EmailSyncService::class.java))
+          val intent = Intent(applicationContext, SignInActivity::class.java)
+          intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+          startActivity(intent)
+          finish()
+        }
+
+        countingIdlingResource.decrementSafely()
+      }
     }
   }
 
