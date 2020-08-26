@@ -344,7 +344,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         onRefreshMsgsCompleted()
       }
 
-      R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> {
+      R.id.syns_request_code_update_labels -> {
         onErrorOccurred(requestCode, errorType, e)
       }
 
@@ -366,7 +366,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onSyncServiceConnected() {
     super.onSyncServiceConnected()
-    updateLabels(R.id.syns_request_code_update_label_passive)
+    updateLabels(R.id.syns_request_code_update_labels)
   }
 
   override fun onBackPressed() {
@@ -768,7 +768,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       super.onDrawerOpened(drawerView)
 
       if (GeneralUtil.isConnected(this@EmailManagerActivity)) {
-        updateLabels(R.id.syns_request_code_update_label_passive)
+        updateLabels(R.id.syns_request_code_update_labels)
       }
 
       labelsViewModel.updateOutboxMsgsCount()

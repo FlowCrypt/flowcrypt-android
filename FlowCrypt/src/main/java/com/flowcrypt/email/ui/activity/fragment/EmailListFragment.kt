@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.accounts.AuthenticatorException
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
@@ -262,6 +263,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
     if (localFolder == null) {
       swipeRefreshLayout?.isRefreshing = false
+      baseSyncActivity.updateLabels(R.id.syns_request_code_update_labels)
       return
     }
 
@@ -334,17 +336,26 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         }
       }
 
-      R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active ->
+      R.id.syns_request_code_update_labels ->
         if (listener?.currentFolder == null) {
           var errorMsg = getString(R.string.failed_load_labels_from_email_server)
 
-          if (e is AuthenticationFailedException) {
-            if (getString(R.string.gmail_imap_disabled_error).equals(e.message, ignoreCase = true)) {
-              errorMsg = getString(R.string.it_seems_imap_access_is_disabled)
+          when (e) {
+            is AuthenticationFailedException -> {
+              if (getString(R.string.gmail_imap_disabled_error).equals(e.message, ignoreCase = true)) {
+                errorMsg = getString(R.string.it_seems_imap_access_is_disabled)
+                super.onErrorOccurred(requestCode, errorType, Exception(errorMsg))
+              }
+            }
+
+            is AuthenticatorException -> {
+              super.onErrorOccurred(requestCode, errorType, e)
+            }
+
+            else -> {
+              super.onErrorOccurred(requestCode, errorType, Exception(errorMsg))
             }
           }
-
-          super.onErrorOccurred(requestCode, errorType, Exception(errorMsg))
           setSupportActionBarTitle("")
         }
 
