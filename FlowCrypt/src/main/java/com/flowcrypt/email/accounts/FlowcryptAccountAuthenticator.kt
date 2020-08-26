@@ -68,18 +68,25 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
           putString(AccountManager.KEY_ERROR_MESSAGE, "Refresh token is wrong or was corrupted!")
         }
       }
-      val refreshToken = KeyStoreCryptoManager.decrypt(encryptedRefreshToken)
-      val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-      val apiResponse = apiService.refreshMicrosoftOAuth2Token(refreshToken).execute()
-      if (apiResponse.isSuccessful) {
-        val tokenResponse = apiResponse.body()
-        authToken = KeyStoreCryptoManager.encrypt(tokenResponse?.accessToken)
-        accountManager.setAuthToken(account, authTokenType, authToken)
-        accountManager.setUserData(account, KEY_REFRESH_TOKEN, KeyStoreCryptoManager.encrypt(tokenResponse?.refreshToken))
-        accountManager.setUserData(account, KEY_EXPIRES_AT, OAuth2Helper.getExpiresAtTime(tokenResponse?.expiresIn).toString())
-      } else return Bundle().apply {
-        putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_AUTHENTICATION)
-        putString(AccountManager.KEY_ERROR_MESSAGE, "Couldn't fetch an access token")
+      try {
+        val refreshToken = KeyStoreCryptoManager.decrypt(encryptedRefreshToken)
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        val apiResponse = apiService.refreshMicrosoftOAuth2Token(refreshToken + " 12").execute()
+        if (apiResponse.isSuccessful) {
+          val tokenResponse = apiResponse.body()
+          authToken = KeyStoreCryptoManager.encrypt(tokenResponse?.accessToken)
+          accountManager.setAuthToken(account, authTokenType, authToken)
+          accountManager.setUserData(account, KEY_REFRESH_TOKEN, KeyStoreCryptoManager.encrypt(tokenResponse?.refreshToken))
+          accountManager.setUserData(account, KEY_EXPIRES_AT, OAuth2Helper.getExpiresAtTime(tokenResponse?.expiresIn).toString())
+        } else return Bundle().apply {
+          putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_AUTHENTICATION)
+          putString(AccountManager.KEY_ERROR_MESSAGE, "Couldn't fetch an access token")
+        }
+      } catch (e: Exception) {
+        return Bundle().apply {
+          putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_AUTHENTICATION)
+          putString(AccountManager.KEY_ERROR_MESSAGE, e.message)
+        }
       }
     }
 
