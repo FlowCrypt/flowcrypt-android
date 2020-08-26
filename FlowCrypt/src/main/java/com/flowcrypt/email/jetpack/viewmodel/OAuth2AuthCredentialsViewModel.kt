@@ -43,7 +43,7 @@ import java.util.*
  */
 class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
-  val microsoftOAuth2TokenLiveData = MutableLiveData<Result<AuthCredentials>>()
+  val microsoftOAuth2TokenLiveData = MutableLiveData<Result<AuthCredentials?>>()
   val authorizationRequestLiveData = MutableLiveData<Result<AuthorizationRequest>>()
 
   fun getAuthorizationRequestForProvider(requestCode: Long = 0L, provider: OAuth2Helper.Provider) {

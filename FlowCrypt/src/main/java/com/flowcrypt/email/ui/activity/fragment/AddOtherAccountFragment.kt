@@ -282,18 +282,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     }
   }
 
-  private fun storeAccountInfoToAccountManager(accountEntity: AccountEntity, authCreds: AuthCredentials) {
-    val accountManager = AccountManager.get(requireContext())
-    val account = Account(accountEntity.email.toLowerCase(Locale.US), FlowcryptAccountAuthenticator.ACCOUNT_TYPE)
-    accountManager.addAccountExplicitly(account, null, Bundle().apply {
-      with(authCreds.authTokenInfo) {
-        putString(FlowcryptAccountAuthenticator.KEY_ACCOUNT_EMAIL, this?.email)
-        putString(FlowcryptAccountAuthenticator.KEY_REFRESH_TOKEN, this?.refreshToken)
-        putString(FlowcryptAccountAuthenticator.KEY_EXPIRES_AT, this?.expiresAt?.toString())
-      }
-    })
-  }
-
   fun handleOAuth2Intent(intent: Intent?) {
     intent?.let {
       val schema = intent.data?.scheme
@@ -629,16 +617,32 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
         }
 
         Result.Status.SUCCESS -> {
-          oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.removeObservers(viewLifecycleOwner)
           it.data?.let { authCredentials ->
             authCreds = authCredentials
-            val account = AccountEntity(authCredentials).copy(password = authCredentials
-                .peekPassword(), smtpPassword = authCredentials.peekSmtpPassword())
-            val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
-            activity?.supportFragmentManager?.beginTransaction()
-                ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
-                ?.addToBackStack(null)
-                ?.commit()
+
+            val existedAccount = existedAccounts.firstOrNull { account ->
+              account.email.equals(authCredentials.email, ignoreCase = true)
+            }
+
+            if (existedAccount == null) {
+              oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.removeObservers(viewLifecycleOwner)
+              val account = AccountEntity(authCredentials).copy(
+                  password = authCredentials.peekPassword(),
+                  smtpPassword = authCredentials.peekSmtpPassword()
+              )
+
+              val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
+              activity?.supportFragmentManager?.beginTransaction()
+                  ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
+                  ?.addToBackStack(null)
+                  ?.commit()
+
+              return@let
+            } else {
+              oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.success(null)
+              showContent()
+              showInfoSnackbar(msgText = getString(R.string.template_email_alredy_added, existedAccount.email), duration = Snackbar.LENGTH_LONG)
+            }
           }
         }
 
@@ -921,6 +925,18 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
         e.printStackTrace()
       }
     }
+  }
+
+  private fun storeAccountInfoToAccountManager(accountEntity: AccountEntity, authCreds: AuthCredentials) {
+    val accountManager = AccountManager.get(requireContext())
+    val account = Account(accountEntity.email.toLowerCase(Locale.US), FlowcryptAccountAuthenticator.ACCOUNT_TYPE)
+    accountManager.addAccountExplicitly(account, null, Bundle().apply {
+      with(authCreds.authTokenInfo) {
+        putString(FlowcryptAccountAuthenticator.KEY_ACCOUNT_EMAIL, this?.email)
+        putString(FlowcryptAccountAuthenticator.KEY_REFRESH_TOKEN, this?.refreshToken)
+        putString(FlowcryptAccountAuthenticator.KEY_EXPIRES_AT, this?.expiresAt?.toString())
+      }
+    })
   }
 
   companion object {
