@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.jetpack.workmanager
 
+import android.accounts.AuthenticatorException
 import android.content.Context
 import android.net.Uri
 import android.text.TextUtils
@@ -123,13 +124,12 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
           return@withContext Result.success()
         } catch (e: UserRecoverableAuthException) {
           e.printStackTrace()
-          val account = roomDatabase.accountDao().getActiveAccountSuspend()
-          roomDatabase.msgDao().changeMsgsStateSuspend(
-              account = account?.email,
-              label = JavaEmailConstants.FOLDER_OUTBOX,
-              oldValue = MessageState.QUEUED.value,
-              newValues = MessageState.AUTH_FAILURE.value
-          )
+          markMsgsWithAuthFailureState(roomDatabase)
+
+          return@withContext Result.failure()
+        } catch (e: AuthenticatorException) {
+          e.printStackTrace()
+          markMsgsWithAuthFailureState(roomDatabase)
 
           return@withContext Result.failure()
         } catch (e: Exception) {
@@ -148,6 +148,16 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
           LogsUtil.d(TAG, "work was finished")
         }
       }
+
+  private suspend fun markMsgsWithAuthFailureState(roomDatabase: FlowCryptRoomDatabase) {
+    val account = roomDatabase.accountDao().getActiveAccountSuspend()
+    roomDatabase.msgDao().changeMsgsStateSuspend(
+        account = account?.email,
+        label = JavaEmailConstants.FOLDER_OUTBOX,
+        oldValue = MessageState.QUEUED.value,
+        newValues = MessageState.AUTH_FAILURE.value
+    )
+  }
 
   private fun genForegroundInfo(account: AccountEntity): ForegroundInfo {
     val title = applicationContext.getString(R.string.sending_email)
@@ -519,8 +529,8 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
   /**
    * The [DataSource] realization for a file which received from [Uri]
    */
-  private class AttachmentInfoDataSource internal constructor(private val context: Context,
-                                                              private val att: AttachmentInfo) : DataSource {
+  private class AttachmentInfoDataSource(private val context: Context,
+                                         private val att: AttachmentInfo) : DataSource {
 
     override fun getInputStream(): InputStream? {
       val inputStream: InputStream? = if (att.uri == null) {

@@ -13,6 +13,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.ApiService
@@ -65,7 +66,7 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
       if (encryptedRefreshToken.isNullOrEmpty()) {
         return Bundle().apply {
           putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_ARGUMENTS)
-          putString(AccountManager.KEY_ERROR_MESSAGE, "Refresh token is wrong or was corrupted!")
+          putString(AccountManager.KEY_ERROR_MESSAGE, context.getString(R.string.refrech_token_was_corrupted))
         }
       }
       try {
@@ -80,7 +81,7 @@ class FlowcryptAccountAuthenticator(val context: Context) : AbstractAccountAuthe
           accountManager.setUserData(account, KEY_EXPIRES_AT, OAuth2Helper.getExpiresAtTime(tokenResponse?.expiresIn).toString())
         } else return Bundle().apply {
           putInt(AccountManager.KEY_ERROR_CODE, AccountManager.ERROR_CODE_BAD_AUTHENTICATION)
-          putString(AccountManager.KEY_ERROR_MESSAGE, "Couldn't fetch an access token")
+          putString(AccountManager.KEY_ERROR_MESSAGE, context.getString(R.string.could_not_fetch_access_token))
         }
       } catch (e: Exception) {
         return Bundle().apply {

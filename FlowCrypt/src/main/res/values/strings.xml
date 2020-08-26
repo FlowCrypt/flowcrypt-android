@@ -471,4 +471,6 @@
     <string name="oauth_error">OAuth error</string>
     <string name="loading_oauth_server_configuration">Loading OAuth server configuration&#8230;</string>
     <string name="open_side_menu_and_do_logout">Please open the side menu and do logout to remove %1$s</string>
+    <string name="refrech_token_was_corrupted">The refresh token is wrong or was corrupted!</string>
+    <string name="could_not_fetch_access_token">Couldn\'t fetch an access token. Correct credentials needed. Please logout and login again.</string>
 </resources>
