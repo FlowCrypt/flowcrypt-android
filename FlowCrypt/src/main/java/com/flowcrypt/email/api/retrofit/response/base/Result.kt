@@ -29,6 +29,10 @@ data class Result<out T>(val status: Status,
   }
 
   companion object {
+    fun <T> clearResult(): Result<T> {
+      return Result(status = Status.SUCCESS, data = null, exception = null, requestCode = 0)
+    }
+
     fun <T> success(data: T, requestCode: Long = 0): Result<T> {
       return Result(status = Status.SUCCESS, data = data, exception = null, requestCode = requestCode)
     }

@@ -158,6 +158,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     initViews(view)
     updateView(authCreds)
 
+    setupOAuth2AuthCredentialsViewModel()
     setupPrivateKeysViewModel()
   }
 
@@ -414,7 +415,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     buttonSignInWithOutlook = view.findViewById(R.id.buttonSignInWithOutlook)
     buttonSignInWithOutlook?.setOnClickListener {
       it.isEnabled = false
-      getAuthorizationRequestForProvider(
+      oAuth2AuthCredentialsViewModel.getAuthorizationRequestForProvider(
           requestCode = REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION,
           provider = OAuth2Helper.Provider.MICROSOFT)
     }
@@ -568,6 +569,86 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     }
   }
 
+  private fun setupOAuth2AuthCredentialsViewModel() {
+    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          showProgress(progressMsg = getString(R.string.loading_account_details))
+        }
+
+        Result.Status.SUCCESS -> {
+          it.data?.let { authCredentials ->
+            authCreds = authCredentials
+            oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.clearResult()
+
+            val existedAccount = existedAccounts.firstOrNull { account ->
+              account.email.equals(authCredentials.email, ignoreCase = true)
+            }
+
+            if (existedAccount == null) {
+              val account = AccountEntity(authCredentials).copy(
+                  password = authCredentials.peekPassword(),
+                  smtpPassword = authCredentials.peekSmtpPassword()
+              )
+
+              val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
+              activity?.supportFragmentManager?.beginTransaction()
+                  ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
+                  ?.addToBackStack(null)
+                  ?.commit()
+
+              return@let
+            } else {
+              showContent()
+              showInfoSnackbar(msgText = getString(R.string.template_email_alredy_added, existedAccount.email), duration = Snackbar.LENGTH_LONG)
+            }
+          }
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.clearResult()
+          showContent()
+          showInfoDialog(
+              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: "Couldn't fetch token")
+        }
+      }
+    })
+
+    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, Observer {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          showProgress(progressMsg = getString(R.string.loading_oauth_server_configuration))
+        }
+
+        Result.Status.SUCCESS -> {
+          it.data?.let { authorizationRequest ->
+            oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.value = Result.clearResult()
+            buttonSignInWithOutlook?.isEnabled = true
+            showContent()
+
+            authRequest = authorizationRequest
+            authRequest?.let { request ->
+              AuthorizationService(requireContext())
+                  .performAuthorizationRequest(
+                      request,
+                      PendingIntent.getActivity(requireContext(), 0, Intent(requireContext(), SignInActivity::class.java), 0))
+            }
+          }
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.value = Result.clearResult()
+          buttonSignInWithOutlook?.isEnabled = true
+          showContent()
+          showInfoDialog(
+              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: "Couldn't load the server configuration")
+        }
+      }
+    })
+  }
+
   private fun setupPrivateKeysViewModel() {
     privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner, Observer {
       it?.let {
@@ -602,96 +683,13 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     authRequest?.let { request ->
       when (schema) {
         OAuth2Helper.MICROSOFT_OAUTH2_SCHEMA -> {
-          observeMicrosoftOAuth2TokenLiveData()
-          oAuth2AuthCredentialsViewModel.getMicrosoftOAuth2Token(authorizeCode = code, authRequest = request)
+          oAuth2AuthCredentialsViewModel.getMicrosoftOAuth2Token(
+              authorizeCode = code,
+              authRequest = request
+          )
         }
       }
     }
-  }
-
-  private fun observeMicrosoftOAuth2TokenLiveData() {
-    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, Observer {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          showProgress(progressMsg = getString(R.string.loading_account_details))
-        }
-
-        Result.Status.SUCCESS -> {
-          it.data?.let { authCredentials ->
-            authCreds = authCredentials
-
-            val existedAccount = existedAccounts.firstOrNull { account ->
-              account.email.equals(authCredentials.email, ignoreCase = true)
-            }
-
-            if (existedAccount == null) {
-              oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.removeObservers(viewLifecycleOwner)
-              val account = AccountEntity(authCredentials).copy(
-                  password = authCredentials.peekPassword(),
-                  smtpPassword = authCredentials.peekSmtpPassword()
-              )
-
-              val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
-              activity?.supportFragmentManager?.beginTransaction()
-                  ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
-                  ?.addToBackStack(null)
-                  ?.commit()
-
-              return@let
-            } else {
-              oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.success(null)
-              showContent()
-              showInfoSnackbar(msgText = getString(R.string.template_email_alredy_added, existedAccount.email), duration = Snackbar.LENGTH_LONG)
-            }
-          }
-        }
-
-        Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.removeObservers(viewLifecycleOwner)
-          showContent()
-          showInfoDialog(
-              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: "Couldn't fetch token")
-        }
-      }
-    })
-  }
-
-  private fun getAuthorizationRequestForProvider(requestCode: Long, provider: OAuth2Helper.Provider) {
-    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, Observer {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          showProgress(progressMsg = getString(R.string.loading_oauth_server_configuration))
-        }
-
-        Result.Status.SUCCESS -> {
-          oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.removeObservers(viewLifecycleOwner)
-          buttonSignInWithOutlook?.isEnabled = true
-          showContent()
-
-          it.data?.let { authorizationRequest ->
-            authRequest = authorizationRequest
-            authRequest?.let { request ->
-              AuthorizationService(requireContext())
-                  .performAuthorizationRequest(
-                      request,
-                      PendingIntent.getActivity(requireContext(), 0, Intent(requireContext(), SignInActivity::class.java), 0))
-            }
-          }
-        }
-
-        Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.removeObservers(viewLifecycleOwner)
-          buttonSignInWithOutlook?.isEnabled = true
-          showContent()
-          showInfoDialog(
-              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: "Couldn't load the server configuration")
-        }
-      }
-    })
-
-    oAuth2AuthCredentialsViewModel.getAuthorizationRequestForProvider(requestCode, provider)
   }
 
   /**

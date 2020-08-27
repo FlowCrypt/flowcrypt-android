@@ -122,7 +122,9 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
 
         val accessToken = response.data?.accessToken
             ?: throw NullPointerException("API error: accessToken is null!")
-        val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettings(email, "")?.copy(
+        val recommendAuthCredentials = EmailProviderSettingsHelper.getBaseSettingsForProvider(email, OAuth2Helper.Provider.MICROSOFT)?.copy(
+            password = "",
+            smtpSignInPassword = null,
             useOAuth2 = true,
             displayName = displayName,
             authTokenInfo = AuthTokenInfo(
@@ -130,9 +132,7 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
                 accessToken = accessToken,
                 expiresAt = OAuth2Helper.getExpiresAtTime(response.data.expiresIn),
                 refreshToken = KeyStoreCryptoManager.encryptSuspend(response.data.refreshToken)
-            )
-        )?.copy(password = "", smtpSignInPassword = null)
-            ?: throw NullPointerException("Couldn't find default settings for $email!")
+            )) ?: throw NullPointerException("Couldn't find default settings for $email!")
 
         microsoftOAuth2TokenLiveData.postValue(Result.success(recommendAuthCredentials))
       } catch (e: Exception) {

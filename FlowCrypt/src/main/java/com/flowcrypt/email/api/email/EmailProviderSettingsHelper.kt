@@ -7,6 +7,7 @@ package com.flowcrypt.email.api.email
 
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
+import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
@@ -21,7 +22,7 @@ object EmailProviderSettingsHelper {
   /*********************** Microsoft **********************/
   private const val PROVIDER_OUTLOOK = "outlook.com"
   private const val PROVIDER_HOTMAIL = "hotmail.com"
-  private const val PROVIDER_LIVE = "Live.com"
+  private const val PROVIDER_LIVE = "live.com"
   private const val IMAP_SERVER_MICROSOFT = "outlook.office365.com"
   private const val SMTP_SERVER_MICROSOFT = "smtp.office365.com"
   private const val FAQ_URL_MICROSOFT = "https://support.microsoft.com/en-us/office/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040"
@@ -76,6 +77,12 @@ object EmailProviderSettingsHelper {
       else -> {
         null
       }
+    }
+  }
+
+  fun getBaseSettingsForProvider(email: String, provider: OAuth2Helper.Provider): AuthCredentials? {
+    return when (provider) {
+      OAuth2Helper.Provider.MICROSOFT -> getOutlookSettings(email, "")
     }
   }
 
