@@ -41,16 +41,15 @@ class OAuth2Helper {
     const val SCOPE_MICROSOFT_OAUTH2_FOR_MAIL = "openid offline_access https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send"
 
     const val MICROSOFT_OAUTH2_TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
-    const val MICROSOFT_REDIRECT_URI = "msauth://com.flowcrypt.email.denys/04gM%2BEAfhnq4ALbhOX8jG5oRuow%3D"
-    const val MICROSOFT_AZURE_APP_ID = "3be51534-5f76-4970-9a34-40ef197aa018"
+    const val MICROSOFT_AZURE_APP_ID = "7c5d8772-773f-4bef-bbc7-892e4de91f7f"
     const val MICROSOFT_OAUTH2_SCHEMA = "msauth"
 
-    fun getMicrosoftAuthorizationRequest(loginHint: String? = null, configuration: AuthorizationServiceConfiguration): AuthorizationRequest {
+    fun getMicrosoftAuthorizationRequest(loginHint: String? = null, redirectUri: String, configuration: AuthorizationServiceConfiguration): AuthorizationRequest {
       val request = AuthorizationRequest.Builder(
           configuration,
           MICROSOFT_AZURE_APP_ID,
           ResponseTypeValues.CODE,
-          Uri.parse(MICROSOFT_REDIRECT_URI))
+          Uri.parse(redirectUri))
           .setResponseMode(AuthorizationRequest.ResponseMode.QUERY)
           .setPrompt(AuthorizationRequest.Prompt.SELECT_ACCOUNT)
           .setScope("profile email $SCOPE_MICROSOFT_OAUTH2_FOR_MAIL")

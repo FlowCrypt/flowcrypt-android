@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.request.api.DomainRulesRequest
 import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
@@ -103,7 +104,12 @@ class FlowcryptApiRepository : ApiRepository {
             context = context,
             expectedResultClass = MicrosoftOAuth2TokenResponse::class.java
         ) {
-          apiService.getMicrosoftOAuth2Token(authorizeCode, scopes, codeVerifier)
+          apiService.getMicrosoftOAuth2Token(
+              code = authorizeCode,
+              scope = scopes,
+              codeVerifier = codeVerifier,
+              redirect_uri = context.getString(R.string.microsoft_redirect_uri)
+          )
         }
       }
 

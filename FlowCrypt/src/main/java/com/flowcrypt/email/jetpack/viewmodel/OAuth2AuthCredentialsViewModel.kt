@@ -6,8 +6,10 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.AuthTokenInfo
@@ -49,13 +51,16 @@ class OAuth2AuthCredentialsViewModel(application: Application) : BaseAndroidView
   fun getAuthorizationRequestForProvider(requestCode: Long = 0L, provider: OAuth2Helper.Provider) {
     viewModelScope.launch {
       authorizationRequestLiveData.postValue(Result.loading())
+      val context: Context = getApplication()
 
       try {
         val authRequest = when (provider) {
           OAuth2Helper.Provider.MICROSOFT -> {
             val jsonObject = getJsonObjectForOpenidConfiguration(requestCode, provider)
             val authorizationServiceDiscovery = AuthorizationServiceDiscovery(jsonObject)
-            OAuth2Helper.getMicrosoftAuthorizationRequest(configuration = AuthorizationServiceConfiguration(authorizationServiceDiscovery))
+            OAuth2Helper.getMicrosoftAuthorizationRequest(
+                configuration = AuthorizationServiceConfiguration(authorizationServiceDiscovery),
+                redirectUri = context.getString(R.string.microsoft_redirect_uri))
           }
         }
         authorizationRequestLiveData.postValue(Result.success(authRequest))

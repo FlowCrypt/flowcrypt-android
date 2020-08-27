@@ -146,7 +146,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       }
     })
 
-    handleLogoutFromSystemSettings()
+    handleLogoutFromSystemSettings(intent)
   }
 
   override fun onResume() {
@@ -166,7 +166,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     if (ACTION_OPEN_OUTBOX_FOLDER.equals(intent?.action, true)) {
       val newLocalFolder = foldersManager?.folderOutbox
       changeFolder(newLocalFolder)
-    } else handleLogoutFromSystemSettings()
+    } else handleLogoutFromSystemSettings(intent)
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -736,9 +736,9 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     }
   }
 
-  private fun handleLogoutFromSystemSettings() {
+  private fun handleLogoutFromSystemSettings(intent: Intent?) {
     if (ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS.equals(intent?.action, true)) {
-      val account = intent.getParcelableExtra<Account>(KEY_ACCOUNT)
+      val account = intent?.getParcelableExtra<Account>(KEY_ACCOUNT)
       account?.let {
         toast(getString(R.string.open_side_menu_and_do_logout, it.name), Toast.LENGTH_LONG)
       }

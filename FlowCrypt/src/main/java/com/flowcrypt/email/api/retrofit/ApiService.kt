@@ -146,8 +146,8 @@ interface ApiService {
       @Field("code") code: String,
       @Field("scope") scope: String,
       @Field("code_verifier") codeVerifier: String,
+      @Field("redirect_uri") redirect_uri: String,
       @Field("client_id") clientId: String = OAuth2Helper.MICROSOFT_AZURE_APP_ID,
-      @Field("redirect_uri") redirect_uri: String = OAuth2Helper.MICROSOFT_REDIRECT_URI,
       @Field("grant_type") grant_type: String = OAuth2Helper.OAUTH2_GRANT_TYPE): Response<MicrosoftOAuth2TokenResponse>
 
   @FormUrlEncoded
