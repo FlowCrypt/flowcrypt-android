@@ -15,6 +15,7 @@ import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.sun.mail.gimap.GmailSSLStore
 import javax.mail.AuthenticationFailedException
@@ -155,7 +156,8 @@ class OpenStoreHelper {
                 val encryptedToken = accountManager.blockingGetAuthToken(oauthAccount,
                     FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true)
                 if (encryptedToken.isNullOrEmpty()) {
-                  ""//need to think about
+                  ExceptionUtil.handleError(NullPointerException("Warning. Encrypted token is null!"))
+                  ""
                 } else {
                   KeyStoreCryptoManager.decrypt(encryptedToken)
                 }
