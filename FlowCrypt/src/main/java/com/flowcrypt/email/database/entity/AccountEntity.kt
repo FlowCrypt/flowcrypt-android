@@ -18,7 +18,6 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import java.util.*
 
@@ -68,6 +67,9 @@ data class AccountEntity constructor(
   val account: Account? = Account(this.email, accountType
       ?: this.email.substring(this.email.indexOf('@') + 1).toLowerCase(Locale.US))
 
+  val useOAuth2: Boolean
+    get() = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 == imapAuthMechanisms
+
   constructor(googleSignInAccount: GoogleSignInAccount, uuid: String? = null,
               domainRules: List<String>? = null) :
       this(
@@ -105,7 +107,7 @@ data class AccountEntity constructor(
       this(
           email = authCredentials.email,
           accountType = authCredentials.email.substring(authCredentials.email.indexOf('@') + 1).toLowerCase(Locale.getDefault()),
-          displayName = null,
+          displayName = authCredentials.displayName,
           givenName = null,
           familyName = null,
           photoUrl = null,
@@ -117,12 +119,12 @@ data class AccountEntity constructor(
           imapPort = authCredentials.imapPort,
           imapIsUseSslTls = authCredentials.imapOpt === SecurityType.Option.SSL_TLS,
           imapIsUseStarttls = authCredentials.imapOpt === SecurityType.Option.STARTLS,
-          imapAuthMechanisms = null,
+          imapAuthMechanisms = if (authCredentials.useOAuth2) JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 else null,
           smtpServer = authCredentials.smtpServer,
           smtpPort = authCredentials.smtpPort,
           smtpIsUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
           smtpIsUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,
-          smtpAuthMechanisms = null,
+          smtpAuthMechanisms = if (authCredentials.useOAuth2) JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 else null,
           useCustomSignForSmtp = authCredentials.hasCustomSignInForSmtp,
           smtpUsername = authCredentials.smtpSigInUsername,
           smtpPassword = authCredentials.smtpSignInPassword,
@@ -231,46 +233,6 @@ data class AccountEntity constructor(
 
       else -> SecurityType.Option.NONE
     }
-  }
-
-  fun getAuthCredentials(): AuthCredentials {
-    var imapOpt: SecurityType.Option = SecurityType.Option.NONE
-
-    if (imapIsUseSslTls == true) {
-      imapOpt = SecurityType.Option.SSL_TLS
-    } else if (imapIsUseStarttls == true) {
-      imapOpt = SecurityType.Option.STARTLS
-    }
-
-    var smtpOpt: SecurityType.Option = SecurityType.Option.NONE
-
-    if (smtpIsUseSslTls == true) {
-      smtpOpt = SecurityType.Option.SSL_TLS
-    } else if (smtpIsUseStarttls == true) {
-      smtpOpt = SecurityType.Option.STARTLS
-    }
-
-    var originalPassword = this.password
-
-    //fixed a bug when try to decrypting the template password.
-    // See https://github.com/FlowCrypt/flowcrypt-android/issues/168
-    if ("password".equals(originalPassword, ignoreCase = true)) {
-      originalPassword = ""
-    }
-
-    return AuthCredentials(
-        email = email,
-        username = username,
-        password = KeyStoreCryptoManager.decrypt(originalPassword),
-        imapServer = imapServer,
-        imapPort = imapPort ?: JavaEmailConstants.DEFAULT_IMAP_PORT,
-        imapOpt = imapOpt,
-        smtpServer = smtpServer,
-        smtpPort = smtpPort ?: JavaEmailConstants.DEFAULT_SMTP_PORT,
-        smtpOpt = smtpOpt,
-        hasCustomSignInForSmtp = true,
-        smtpSigInUsername = smtpUsername,
-        smtpSignInPassword = KeyStoreCryptoManager.decrypt(smtpPassword))
   }
 
   fun isRuleExist(domainRule: DomainRule): Boolean {

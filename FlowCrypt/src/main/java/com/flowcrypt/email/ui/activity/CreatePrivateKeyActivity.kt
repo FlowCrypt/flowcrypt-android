@@ -141,7 +141,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
 
             it.exception?.let { exception ->
               if (exception is ApiException) {
-                showSnackbar(rootView, exception.apiError.msg ?: it.javaClass.simpleName,
+                showSnackbar(rootView, exception.apiError?.msg ?: it.javaClass.simpleName,
                     getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener {
                   onConfirmPassPhraseSuccess()
                 })

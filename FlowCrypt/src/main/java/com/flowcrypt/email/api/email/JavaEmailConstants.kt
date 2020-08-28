@@ -27,6 +27,9 @@ class JavaEmailConstants {
     const val PROPERTY_NAME_MAIL_IMAP_CONNECTIONTIMEOUT = "mail.imap.connectiontimeout"
     const val DEFAULT_IMAP_PORT = 143
     const val SSL_IMAP_PORT = 993
+    const val PROPERTY_NAME_MAIL_IMAPS_AUTH_LOGIN_DISABLE = "mail.imaps.auth.login.disable"
+    const val PROPERTY_NAME_MAIL_IMAPS_AUTH_PLAIN_DISABLE = "mail.imaps.auth.plain.disable"
+    const val PROPERTY_NAME_MAIL_IMAPS_AUTH_XOAUTH2_DISABLE = "mail.imaps.auth.xoauth2.disable"
 
     /*SMTP*/
     const val PROPERTY_NAME_MAIL_SMTP_AUTH = "mail.smtp.auth"
@@ -38,6 +41,9 @@ class JavaEmailConstants {
     const val DEFAULT_SMTP_PORT = 25
     const val SSL_SMTP_PORT = 465
     const val STARTTLS_SMTP_PORT = 587
+    const val PROPERTY_NAME_MAIL_SMTP_AUTH_LOGIN_DISABLE = "mail.smtp.auth.login.disable"
+    const val PROPERTY_NAME_MAIL_SMTP_AUTH_PLAIN_DISABLE = "mail.smtp.auth.plain.disable"
+    const val PROPERTY_NAME_MAIL_SMTP_AUTH_XOAUTH2_DISABLE = "mail.smtp.auth.xoauth2.disable"
 
     /*AUTH MECHANISMS*/
     const val AUTH_MECHANISMS_XOAUTH2 = "XOAUTH2"

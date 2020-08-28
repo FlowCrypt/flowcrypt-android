@@ -21,6 +21,8 @@ import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
+import com.google.gson.JsonObject
 
 /**
  * It's a repository interface for the whole API calls over the app
@@ -78,4 +80,17 @@ interface ApiRepository : BaseApiRepository {
    * @param keyIdOrEmail A key id or the user email.
    */
   suspend fun getPub(requestCode: Long = 0L, context: Context, keyIdOrEmail: String): Result<PubResponse>
+
+  /**
+   * @param requestCode A unique request code for this call
+   * @param context Interface to global information about an application environment.
+   * @param authorizeCode A code which will be used to retrieve an access token.
+   */
+  suspend fun getMicrosoftOAuth2Token(requestCode: Long = 0L, context: Context, authorizeCode: String, scopes: String, codeVerifier: String): Result<MicrosoftOAuth2TokenResponse>
+
+  /**
+   * @param context Interface to global information about an application environment.
+   * @param url The configuration url.
+   */
+  suspend fun getOpenIdConfiguration(requestCode: Long = 0L, context: Context, url: String): Result<JsonObject>
 }

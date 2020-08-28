@@ -46,7 +46,25 @@
 
         <activity
             android:name=".ui.activity.SignInActivity"
+            android:launchMode="singleTask"
             android:screenOrientation="portrait" />
+
+        <activity
+            android:name="net.openid.appauth.RedirectUriReceiverActivity"
+            tools:node="replace">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- support Microsoft OAuth2.0 -->
+                <data
+                    android:host="${applicationId}"
+                    android:path="@string/microsoft_redirect_path"
+                    android:scheme="msauth" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".ui.activity.EmailManagerActivity"
@@ -277,6 +295,17 @@
             android:name=".service.FeedbackJobIntentService"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
+            android:name=".accounts.FlowcryptAuthenticatorService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service>
 
         <receiver android:name=".broadcastreceivers.MarkMessagesAsOldBroadcastReceiver" />
 

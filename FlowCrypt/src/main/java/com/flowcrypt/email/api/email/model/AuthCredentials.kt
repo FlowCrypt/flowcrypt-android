@@ -30,7 +30,10 @@ data class AuthCredentials constructor(val email: String,
                                        val hasCustomSignInForSmtp: Boolean = false,
                                        val smtpSigInUsername: String? = null,
                                        var smtpSignInPassword: String? = null,
-                                       val faqUrl: String? = null) : Parcelable {
+                                       val faqUrl: String? = null,
+                                       val useOAuth2: Boolean = false,
+                                       val displayName: String? = null,
+                                       val authTokenInfo: AuthTokenInfo? = null) : Parcelable {
   constructor(source: Parcel) : this(
       source.readString()!!,
       source.readString()!!,
@@ -44,7 +47,10 @@ data class AuthCredentials constructor(val email: String,
       source.readByte() != 0.toByte(),
       source.readString(),
       source.readString(),
-      source.readString()
+      source.readString(),
+      source.readByte() != 0.toByte(),
+      source.readString(),
+      source.readParcelable(AuthTokenInfo::class.java.classLoader)
   )
 
   override fun describeContents() = 0
@@ -64,7 +70,18 @@ data class AuthCredentials constructor(val email: String,
       writeString(smtpSigInUsername)
       writeString(smtpSignInPassword)
       writeString(faqUrl)
+      writeInt((if (useOAuth2) 1 else 0))
+      writeString(displayName)
+      writeParcelable(authTokenInfo, flags)
     }
+  }
+
+  fun peekPassword(): String {
+    return if (useOAuth2) authTokenInfo?.accessToken ?: password else password
+  }
+
+  fun peekSmtpPassword(): String? {
+    return if (useOAuth2) authTokenInfo?.accessToken ?: password else smtpSignInPassword
   }
 
   companion object {
@@ -105,7 +122,8 @@ data class AuthCredentials constructor(val email: String,
             smtpOpt = smtpOpt,
             hasCustomSignInForSmtp = true,
             smtpSigInUsername = smtpUsername,
-            smtpSignInPassword = smtpPassword)
+            smtpSignInPassword = smtpPassword,
+            useOAuth2 = accountEntity.imapAuthMechanisms == JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2)
       }
     }
   }

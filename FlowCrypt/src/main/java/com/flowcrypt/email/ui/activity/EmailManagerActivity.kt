@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.ui.activity
 
+import android.accounts.Account
 import android.app.Activity
 import android.app.SearchManager
 import android.content.Context
@@ -144,6 +145,8 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         invalidateOptionsMenu()
       }
     })
+
+    handleLogoutFromSystemSettings(intent)
   }
 
   override fun onResume() {
@@ -163,7 +166,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     if (ACTION_OPEN_OUTBOX_FOLDER.equals(intent?.action, true)) {
       val newLocalFolder = foldersManager?.folderOutbox
       changeFolder(newLocalFolder)
-    }
+    } else handleLogoutFromSystemSettings(intent)
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -341,7 +344,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         onRefreshMsgsCompleted()
       }
 
-      R.id.syns_request_code_update_label_passive, R.id.syns_request_code_update_label_active -> {
+      R.id.syns_request_code_update_labels -> {
         onErrorOccurred(requestCode, errorType, e)
       }
 
@@ -363,7 +366,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onSyncServiceConnected() {
     super.onSyncServiceConnected()
-    updateLabels(R.id.syns_request_code_update_label_passive)
+    updateLabels(R.id.syns_request_code_update_labels)
   }
 
   override fun onBackPressed() {
@@ -383,7 +386,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   override fun onNavigationItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
-      R.id.navMenuLogOut -> logout()
+      R.id.navMenuLogOut -> doLogout()
 
       R.id.navMenuActionSettings -> startActivity(Intent(this, SettingsActivity::class.java))
 
@@ -484,44 +487,14 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         Snackbar.LENGTH_INDEFINITE, View.OnClickListener { onRetryGoogleAuth() })
   }
 
-  private fun logout() {
-    lifecycleScope.launch {
-      activeAccount?.let { accountEntity ->
-        countingIdlingResource.incrementSafely()
+  private fun doLogout() {
+    disconnectFromSyncService()
 
-        when (accountEntity.accountType) {
-          AccountEntity.ACCOUNT_TYPE_GOOGLE -> client.signOut()
-        }
-
-        val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-        //remove all info about the given account from the local db
-        roomDatabase.accountDao().deleteSuspend(accountEntity)
-        //todo-denbond7 Improve this via onDelete = ForeignKey.CASCADE
-        roomDatabase.labelDao().deleteByEmailSuspend(accountEntity.email)
-        roomDatabase.msgDao().deleteByEmailSuspend(accountEntity.email)
-        roomDatabase.attachmentDao().deleteByEmailSuspend(accountEntity.email)
-        roomDatabase.accountAliasesDao().deleteByEmailSuspend(accountEntity.email)
-
-        val nonactiveAccounts = roomDatabase.accountDao().getAllNonactiveAccountsSuspend()
-        if (nonactiveAccounts.isNotEmpty()) {
-          disconnectFromSyncService()
-          val firstNonactiveAccount = nonactiveAccounts.first()
-          roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
-          roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
-          EmailSyncService.switchAccount(applicationContext)
-          runEmailManagerActivity(this@EmailManagerActivity)
-          finish()
-        } else {
-          stopService(Intent(applicationContext, EmailSyncService::class.java))
-          val intent = Intent(applicationContext, SignInActivity::class.java)
-          intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-          startActivity(intent)
-          finish()
-        }
-
-        countingIdlingResource.decrementSafely()
-      }
+    activeAccount?.let {
+      if (it.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) client.signOut()
     }
+
+    logout()
   }
 
   /**
@@ -763,15 +736,24 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     }
   }
 
+  private fun handleLogoutFromSystemSettings(intent: Intent?) {
+    if (ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS.equals(intent?.action, true)) {
+      val account = intent?.getParcelableExtra<Account>(KEY_ACCOUNT)
+      account?.let {
+        toast(getString(R.string.open_side_menu_and_do_logout, it.name), Toast.LENGTH_LONG)
+      }
+    }
+  }
+
   /**
    * The custom realization of [ActionBarDrawerToggle]. Will be used to start a labels
    * update task when the drawer will be opened.
    */
-  private inner class CustomDrawerToggle internal constructor(activity: Activity,
-                                                              drawerLayout: DrawerLayout?,
-                                                              toolbar: Toolbar?,
-                                                              @StringRes openDrawerContentDescRes: Int,
-                                                              @StringRes closeDrawerContentDescRes: Int)
+  private inner class CustomDrawerToggle(activity: Activity,
+                                         drawerLayout: DrawerLayout?,
+                                         toolbar: Toolbar?,
+                                         @StringRes openDrawerContentDescRes: Int,
+                                         @StringRes closeDrawerContentDescRes: Int)
     : ActionBarDrawerToggle(activity, drawerLayout, toolbar, openDrawerContentDescRes, closeDrawerContentDescRes) {
 
     var slideOffset = 0f
@@ -786,7 +768,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       super.onDrawerOpened(drawerView)
 
       if (GeneralUtil.isConnected(this@EmailManagerActivity)) {
-        updateLabels(R.id.syns_request_code_update_label_passive)
+        updateLabels(R.id.syns_request_code_update_labels)
       }
 
       labelsViewModel.updateOutboxMsgsCount()
@@ -809,6 +791,9 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
   companion object {
     const val ACTION_OPEN_OUTBOX_FOLDER = BuildConfig.APPLICATION_ID + ".OPEN_OUTBOX_FOLDER"
+    const val ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS = BuildConfig.APPLICATION_ID + ".ACTION_REMOVE_ACCOUNT_VIA_SYSTEM_SETTINGS"
+    const val KEY_ACCOUNT = BuildConfig.APPLICATION_ID + ".KEY_ACCOUNT"
+
     private const val REQUEST_CODE_ADD_NEW_ACCOUNT = 100
     private const val REQUEST_CODE_SIGN_IN = 101
     private const val REQUEST_CODE_DIALOG_FORCE_SENDING = 103

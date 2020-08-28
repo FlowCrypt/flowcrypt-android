@@ -5,13 +5,17 @@
 
 package com.flowcrypt.email.api.email.protocol
 
+import android.accounts.AccountManager
 import android.content.Context
+import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.GoogleAuthUtil
 import com.sun.mail.gimap.GmailSSLStore
 import javax.mail.AuthenticationFailedException
@@ -145,7 +149,26 @@ class OpenStoreHelper {
               else -> session.getStore(JavaEmailConstants.PROTOCOL_IMAPS)
             }
 
-            store.connect(account.imapServer, account.username, account.password)
+            val password = if (account.useOAuth2) {
+              val accountManager = AccountManager.get(context)
+              val oauthAccount = accountManager.accounts.firstOrNull { it.name == account.email }
+              if (oauthAccount != null) {
+                val encryptedToken = accountManager.blockingGetAuthToken(oauthAccount,
+                    FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true)
+                if (encryptedToken.isNullOrEmpty()) {
+                  ExceptionUtil.handleError(NullPointerException("Warning. Encrypted token is null!"))
+                  ""
+                } else {
+                  KeyStoreCryptoManager.decrypt(encryptedToken)
+                }
+              } else {
+                account.password
+              }
+            } else {
+              account.password
+            }
+
+            store.connect(account.imapServer, account.username, password)
             store
           }
         }

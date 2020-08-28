@@ -6,6 +6,7 @@
 package com.flowcrypt.email.api.retrofit
 
 import android.content.Context
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.request.api.DomainRulesRequest
 import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
@@ -20,6 +21,8 @@ import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
+import com.google.gson.JsonObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -89,6 +92,32 @@ class FlowcryptApiRepository : ApiRepository {
               ?: Exception())
 
           Result.Status.LOADING -> Result.loading(requestCode = requestCode)
+        }
+      }
+
+  override suspend fun getMicrosoftOAuth2Token(requestCode: Long, context: Context,
+                                               authorizeCode: String, scopes: String, codeVerifier: String):
+      Result<MicrosoftOAuth2TokenResponse> =
+      withContext(Dispatchers.IO) {
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        getResult(
+            context = context,
+            expectedResultClass = MicrosoftOAuth2TokenResponse::class.java
+        ) {
+          apiService.getMicrosoftOAuth2Token(
+              code = authorizeCode,
+              scope = scopes,
+              codeVerifier = codeVerifier,
+              redirect_uri = context.getString(R.string.microsoft_redirect_uri)
+          )
+        }
+      }
+
+  override suspend fun getOpenIdConfiguration(requestCode: Long, context: Context, url: String): Result<JsonObject> =
+      withContext(Dispatchers.IO) {
+        val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
+        getResult {
+          apiService.getOpenIdConfiguration(url)
         }
       }
 }
