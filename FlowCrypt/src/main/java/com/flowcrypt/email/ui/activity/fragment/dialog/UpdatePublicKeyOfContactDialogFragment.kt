@@ -115,7 +115,7 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
         .format(Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.lastModified
             ?: 0, TimeUnit.SECONDS))))
 
-    if (nodeKeyDetails?.expiration ?: 0 > 0) {
+    if (nodeKeyDetails?.isExpired == true) {
       tVWarning.visibility = View.VISIBLE
       tVWarning?.text = getString(R.string.warning_key_expired, DateFormat.getMediumDateFormat(context)
           .format(Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.expiration
@@ -126,7 +126,7 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
     builder.setTitle(getString(R.string.public_key_details))
     builder.setView(view)
 
-    if (nodeKeyDetails?.expiration ?: 0 == 0L) {
+    if (nodeKeyDetails?.isExpired == false) {
       builder.setPositiveButton(getString(R.string.use_this_key)) { _, _ ->
         nodeKeyDetails?.let { keyDetails -> onKeySelectedListener?.onKeySelected(keyDetails) }
       }

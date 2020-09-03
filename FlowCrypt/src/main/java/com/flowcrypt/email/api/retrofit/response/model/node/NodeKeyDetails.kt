@@ -51,6 +51,9 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
   val isPrivate: Boolean
     get() = !TextUtils.isEmpty(privateKey)
 
+  val isExpired: Boolean
+    get() = expiration > 0 && (System.currentTimeMillis() / 1000 > expiration)
+
   val mimeAddresses: List<InternetAddress>
     get() = parseMimeAddresses()
 
