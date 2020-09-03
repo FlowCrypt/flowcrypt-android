@@ -488,4 +488,5 @@
     <string name="public_key_details">Public Key Details</string>
     <string name="users_">Users:</string>
     <string name="fingerprints_">Fingerprints:</string>
+    <string name="warning_key_expired">Warning: this key was expired on %1$s</string>
 </resources>

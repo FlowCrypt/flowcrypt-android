@@ -33,6 +33,7 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
                                       @Expose val ids: List<KeyId>?,
                                       @Expose val created: Long,
                                       @Expose val lastModified: Long,
+                                      @Expose val expiration: Long,
                                       @Expose val algo: Algo?,
                                       var passphrase: String?,
                                       var errorMsg: String?) : Parcelable {
@@ -67,6 +68,7 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
       source.createTypedArrayList(KeyId.CREATOR),
       source.readLong(),
       source.readLong(),
+      source.readLong(),
       source.readParcelable<Algo>(Algo::class.java.classLoader),
       source.readString(),
       source.readString()
@@ -83,6 +85,7 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
     writeTypedList(ids)
     writeLong(created)
     writeLong(lastModified)
+    writeLong(expiration)
     writeParcelable(algo, 0)
     writeString(passphrase)
     writeString(errorMsg)

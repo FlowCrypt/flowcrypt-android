@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.text.format.DateFormat
 import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -60,6 +61,7 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
     val tVAlgorithmBitsOrCurve = view.findViewById<TextView>(R.id.tVAlgorithmBitsOrCurve)
     val tVCreated = view.findViewById<TextView>(R.id.tVCreated)
     val tVModified = view.findViewById<TextView>(R.id.tVModified)
+    val tVWarning = view.findViewById<TextView>(R.id.tVWarning)
 
     if (nodeKeyDetails?.mimeAddresses.isNullOrEmpty()) {
       nodeKeyDetails?.users?.forEach { user ->
@@ -102,12 +104,23 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
         .format(Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.lastModified
             ?: 0, TimeUnit.SECONDS))))
 
+    if (nodeKeyDetails?.expiration ?: 0 > 0) {
+      tVWarning.visibility = View.VISIBLE
+      tVWarning?.text = getString(R.string.warning_key_expired, DateFormat.getMediumDateFormat(context)
+          .format(Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.expiration
+              ?: 0, TimeUnit.SECONDS))))
+    }
+
     val builder = AlertDialog.Builder(requireContext())
     builder.setTitle(getString(R.string.public_key_details))
     builder.setView(view)
-    builder.setPositiveButton(getString(R.string.use_this_key)) { _, _ ->
-      nodeKeyDetails?.let { keyDetails -> onKeySelectedListener?.onKeySelected(keyDetails) }
+
+    if (nodeKeyDetails?.expiration ?: 0 == 0L) {
+      builder.setPositiveButton(getString(R.string.use_this_key)) { _, _ ->
+        nodeKeyDetails?.let { keyDetails -> onKeySelectedListener?.onKeySelected(keyDetails) }
+      }
     }
+
     builder.setNegativeButton(R.string.cancel) { _, _ -> }//do nothing
 
     return builder.create()
