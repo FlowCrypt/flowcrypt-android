@@ -489,4 +489,5 @@
     <string name="users_">Users:</string>
     <string name="fingerprints_">Fingerprints:</string>
     <string name="warning_key_expired">Warning: this key was expired on %1$s</string>
+    <string name="warning_no_expected_email">Warning: it seems this key doesn\'t relates to expected email address %1$s</string>
 </resources>

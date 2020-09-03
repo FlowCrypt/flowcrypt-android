@@ -63,7 +63,7 @@ class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDia
       return
     }
 
-    showDialogFragment(UpdatePublicKeyOfContactDialogFragment.newInstance(keyDetailsList.first()))
+    showDialogFragment(UpdatePublicKeyOfContactDialogFragment.newInstance(contactEntity?.email, keyDetailsList.first()))
   }
 
   override fun initViews() {

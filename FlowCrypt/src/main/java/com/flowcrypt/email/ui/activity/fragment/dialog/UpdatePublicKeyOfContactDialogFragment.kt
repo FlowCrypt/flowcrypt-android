@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit
  */
 class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
   private var nodeKeyDetails: NodeKeyDetails? = null
+  private var expectedEmail: String? = null
   private var onKeySelectedListener: OnKeySelectedListener? = null
 
   override fun onAttach(context: Context) {
@@ -47,6 +48,7 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     nodeKeyDetails = arguments?.getParcelable(KEY_NODE_KEY_DETAILS)
+    expectedEmail = arguments?.getString(KEY_EXPECTED_EMAIL)
   }
 
   @SuppressLint("SetTextI18n")
@@ -63,12 +65,15 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
     val tVModified = view.findViewById<TextView>(R.id.tVModified)
     val tVWarning = view.findViewById<TextView>(R.id.tVWarning)
 
+    var isExpectedEmailFound = false
+
     if (nodeKeyDetails?.mimeAddresses.isNullOrEmpty()) {
       nodeKeyDetails?.users?.forEach { user ->
         val userLayout = layoutInflater.inflate(R.layout.item_user_with_email, lUsers, false)
         val tVUserName = userLayout.findViewById<TextView>(R.id.tVUserName)
         tVUserName.text = user
         lUsers?.addView(userLayout)
+        expectedEmail?.let { email -> isExpectedEmailFound = user.contains(email, ignoreCase = true) }
       }
     } else {
       nodeKeyDetails?.mimeAddresses?.forEach { address ->
@@ -78,7 +83,13 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
         val tVEmail = userLayout.findViewById<TextView>(R.id.tVEmail)
         tVEmail.text = address.address
         lUsers?.addView(userLayout)
+        isExpectedEmailFound = address.address.equals(expectedEmail, true)
       }
+    }
+
+    if (!isExpectedEmailFound) {
+      tVWarning.visibility = View.VISIBLE
+      tVWarning?.text = getString(R.string.warning_no_expected_email, expectedEmail ?: "")
     }
 
     nodeKeyDetails?.ids?.forEach { uid ->
@@ -133,10 +144,13 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
   companion object {
     private val KEY_NODE_KEY_DETAILS =
         GeneralUtil.generateUniqueExtraKey("KEY_NODE_KEY_DETAILS", UpdatePublicKeyOfContactDialogFragment::class.java)
+    private val KEY_EXPECTED_EMAIL =
+        GeneralUtil.generateUniqueExtraKey("KEY_EXPECTED_EMAIL", UpdatePublicKeyOfContactDialogFragment::class.java)
 
-    fun newInstance(nodeKeyDetails: NodeKeyDetails): DialogFragment {
+    fun newInstance(expectedEmail: String?, nodeKeyDetails: NodeKeyDetails): DialogFragment {
       return UpdatePublicKeyOfContactDialogFragment().apply {
         arguments = Bundle().apply {
+          putString(KEY_EXPECTED_EMAIL, expectedEmail)
           putParcelable(KEY_NODE_KEY_DETAILS, nodeKeyDetails)
         }
       }
