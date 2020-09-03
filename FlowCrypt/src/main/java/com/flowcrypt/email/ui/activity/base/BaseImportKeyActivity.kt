@@ -265,8 +265,12 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
                   getString(R.string.file_has_wrong_pgp_structure,
                       if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_))
 
-                else ->
+                KeyDetails.Type.CLIPBOARD ->
                   getString(R.string.clipboard_has_wrong_structure,
+                      if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_))
+
+                else ->
+                  getString(R.string.source_has_wrong_pgp_structure,
                       if (isPrivateKeyMode) getString(R.string.private_) else getString(R.string.public_))
               }
               showInfoDialogFragment(dialogMsg = msg)

@@ -241,6 +241,10 @@
             android:name=".ui.activity.UserRecoverableAuthExceptionActivity"
             android:launchMode="singleTask" />
 
+        <activity
+            android:name=".ui.activity.EditContactActivity"
+            android:screenOrientation="portrait" />
+
         <!-- Providers -->
         <provider
             android:name="androidx.core.content.FileProvider"

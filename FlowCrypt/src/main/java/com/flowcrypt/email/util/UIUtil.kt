@@ -93,7 +93,7 @@ class UIUtil {
      * @param text     The text which will be set to the current textView.
      * @param textView The textView where we will set the HTML text.
      */
-    fun setHtmlTextToTextView(text: String, textView: TextView?) {
+    fun setHtmlTextToTextView(text: String?, textView: TextView?) {
       if (textView != null && !TextUtils.isEmpty(text)) {
         textView.text = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY)
       }

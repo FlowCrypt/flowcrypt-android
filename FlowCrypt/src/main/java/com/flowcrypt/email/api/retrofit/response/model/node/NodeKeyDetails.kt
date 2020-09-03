@@ -49,6 +49,9 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
   val isPrivate: Boolean
     get() = !TextUtils.isEmpty(privateKey)
 
+  val mimeAddresses: List<InternetAddress>
+    get() = parseMimeAddresses()
+
   val isPartiallyEncrypted: Boolean
     get() {
       return isFullyDecrypted == false && isFullyEncrypted == false
@@ -135,6 +138,20 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
     }
 
     return pgpContacts
+  }
+
+  private fun parseMimeAddresses(): List<InternetAddress> {
+    val results = mutableListOf<InternetAddress>()
+
+    for (user in users ?: emptyList()) {
+      try {
+        results.addAll(listOf(*InternetAddress.parse(user)))
+      } catch (e: AddressException) {
+        //do nothing
+      }
+    }
+
+    return results
   }
 
   fun toKeyEntity(): KeyEntity {

@@ -36,7 +36,7 @@ data class KeyDetails constructor(val keyName: String? = null,
    * The key available types.
    */
   enum class Type : Parcelable {
-    EMAIL, FILE, CLIPBOARD, NEW;
+    EMAIL, FILE, CLIPBOARD, NEW, MANUAL_ENTERING;
 
     companion object {
       @JvmField
@@ -57,7 +57,7 @@ data class KeyDetails constructor(val keyName: String? = null,
     fun toPrivateKeySourceTypeString(): String {
       return when (this) {
         EMAIL -> PrivateKeySourceType.BACKUP
-        FILE, CLIPBOARD -> PrivateKeySourceType.IMPORT
+        FILE, CLIPBOARD, MANUAL_ENTERING -> PrivateKeySourceType.IMPORT
         NEW -> PrivateKeySourceType.NEW
       }.toString()
     }

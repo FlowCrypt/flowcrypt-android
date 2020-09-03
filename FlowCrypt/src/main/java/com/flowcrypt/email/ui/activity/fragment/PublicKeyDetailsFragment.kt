@@ -35,6 +35,7 @@ import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
+import com.flowcrypt.email.ui.activity.EditContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -115,6 +116,11 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
           contactEntity?.let { roomDatabase.contactsDao().deleteSuspend(it) }
           parentFragmentManager.popBackStack()
         }
+        return true
+      }
+
+      R.id.menuActionEdit -> {
+        startActivityForResult(EditContactActivity.newIntent(requireContext(), account, contactEntity), 0)
         return true
       }
 
