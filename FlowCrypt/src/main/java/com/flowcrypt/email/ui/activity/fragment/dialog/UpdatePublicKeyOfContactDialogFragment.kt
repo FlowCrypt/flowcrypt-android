@@ -7,6 +7,7 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.Context
 import android.graphics.Typeface
 import android.os.Bundle
 import android.text.format.DateFormat
@@ -32,6 +33,15 @@ import java.util.concurrent.TimeUnit
  */
 class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
   private var nodeKeyDetails: NodeKeyDetails? = null
+  private var onKeySelectedListener: OnKeySelectedListener? = null
+
+  override fun onAttach(context: Context) {
+    super.onAttach(context)
+
+    if (context is OnKeySelectedListener) {
+      onKeySelectedListener = context
+    }
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -86,12 +96,15 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
     builder.setTitle(getString(R.string.public_key_details))
     builder.setView(view)
     builder.setPositiveButton(getString(R.string.use_this_key)) { _, _ ->
-
+      nodeKeyDetails?.let { keyDetails -> onKeySelectedListener?.onKeySelected(keyDetails) }
     }
-
     builder.setNegativeButton(R.string.cancel) { _, _ -> }//do nothing
 
     return builder.create()
+  }
+
+  interface OnKeySelectedListener {
+    fun onKeySelected(nodeKeyDetails: NodeKeyDetails)
   }
 
   companion object {

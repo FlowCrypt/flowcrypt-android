@@ -110,8 +110,7 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
         throw object : FlowCryptException("No user ids with mail address") {}
       }
 
-      return PgpContact(email, name, publicKey, !TextUtils.isEmpty(publicKey), null,
-          fingerprint1, longId1, keywords1, 0)
+      return PgpContact(email.toLowerCase(Locale.US), name, publicKey, !TextUtils.isEmpty(publicKey), null, fingerprint1, longId1, keywords1, 0)
     }
 
     return PgpContact("", "")

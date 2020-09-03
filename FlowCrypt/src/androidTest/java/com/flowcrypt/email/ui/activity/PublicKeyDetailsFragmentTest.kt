@@ -202,7 +202,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     @AfterClass
     fun removeContactFromDatabase() {
       val dao = FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext()).contactsDao()
-      dao.getContactByEmails(EMAIL_DENBOND7)?.let { dao.delete(it) }
+      dao.getContactByEmail(EMAIL_DENBOND7)?.let { dao.delete(it) }
     }
   }
 }

@@ -11,12 +11,14 @@ import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.viewModels
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.extensions.showDialogFragment
 import com.flowcrypt.email.extensions.showInfoDialogFragment
+import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
@@ -30,7 +32,8 @@ import java.util.*
  *         Time: 6:44 PM
  *         E-mail: DenBond7@gmail.com
  */
-class EditContactActivity : BaseImportKeyActivity() {
+class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDialogFragment.OnKeySelectedListener {
+  private val contactsViewModel: ContactsViewModel by viewModels()
   private var contactEntity: ContactEntity? = null
   private var editTextNewPubKey: EditText? = null
 
@@ -51,12 +54,6 @@ class EditContactActivity : BaseImportKeyActivity() {
   override fun onPause() {
     super.onPause()
     isCheckingClipboardEnabled = false
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
   }
 
   override fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>) {
@@ -82,6 +79,11 @@ class EditContactActivity : BaseImportKeyActivity() {
 
       }
     }
+  }
+
+  override fun onKeySelected(nodeKeyDetails: NodeKeyDetails) {
+    contactsViewModel.updateContactPgpInfo(contactEntity, nodeKeyDetails)
+    finish()
   }
 
   companion object {

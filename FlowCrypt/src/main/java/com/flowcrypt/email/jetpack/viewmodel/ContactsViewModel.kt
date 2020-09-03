@@ -18,6 +18,7 @@ import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.util.GeneralUtil
@@ -93,6 +94,10 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
               keywords = contactEntity.keywords,
               hasPgp = true))
     }
+  }
+
+  fun contactChangesLiveData(contactEntity: ContactEntity): LiveData<ContactEntity?> {
+    return roomDatabase.contactsDao().getContactByEmailLD(contactEntity.email)
   }
 
   /**
@@ -187,6 +192,19 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
       if (contact != null) {
         val updateCandidate = pgpContact.toContactEntity().copy(id = contact.id)
         roomDatabase.contactsDao().updateSuspend(updateCandidate)
+      }
+    }
+  }
+
+  fun updateContactPgpInfo(contactEntity: ContactEntity?, nodeKeyDetails: NodeKeyDetails) {
+    viewModelScope.launch {
+      contactEntity?.let {
+        val contactEntityFromPrimaryPgpContact = nodeKeyDetails.primaryPgpContact.toContactEntity()
+        roomDatabase.contactsDao().updateSuspend(contactEntityFromPrimaryPgpContact.copy(
+            id = contactEntity.id,
+            email = contactEntity.email.toLowerCase(Locale.US),
+            client = ContactEntity.CLIENT_PGP,
+        ))
       }
     }
   }

@@ -339,7 +339,7 @@ class PrepareOutgoingMessagesJobIntentService : JobIntentService() {
       val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).contactsDao()
 
       for (email in msgInfo.getAllRecipients()) {
-        val contactEntity = contactsDao.getContactByEmails(email)
+        val contactEntity = contactsDao.getContactByEmail(email)
         if (contactEntity == null) {
           contactsDao.insert(PgpContact(email, null).toContactEntity())
         } else {

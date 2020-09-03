@@ -40,7 +40,10 @@ interface ContactsDao : BaseDao<ContactEntity> {
   suspend fun getContactByEmailSuspend(email: String): ContactEntity?
 
   @Query("SELECT * FROM contacts WHERE email = :email")
-  fun getContactByEmails(email: String): ContactEntity?
+  fun getContactByEmail(email: String): ContactEntity?
+
+  @Query("SELECT * FROM contacts WHERE email = :email")
+  fun getContactByEmailLD(email: String): LiveData<ContactEntity?>
 
   @Query("SELECT * FROM contacts WHERE email IN (:emails)")
   fun getContactsByEmails(emails: Collection<String>): List<ContactEntity>
