@@ -12,6 +12,7 @@ import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.core.widget.addTextChangedListener
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -67,17 +68,17 @@ class EditContactActivity : BaseImportKeyActivity(), UpdatePublicKeyOfContactDia
 
   override fun initViews() {
     super.initViews()
-    this.editTextNewPubKey = findViewById(R.id.editTextNewPubKey)
+    editTextNewPubKey = findViewById(R.id.editTextNewPubKey)
 
-    findViewById<View>(R.id.buttonCheck)?.setOnClickListener {
+    val buttonCheck = findViewById<View>(R.id.buttonCheck)
+    editTextNewPubKey?.addTextChangedListener {
+      buttonCheck?.isEnabled = !it.isNullOrEmpty()
+    }
+
+    buttonCheck?.setOnClickListener {
       dismissSnackBar()
-
-      if (true) {//check empty string
-        keyImportModel = KeyImportModel(null, editTextNewPubKey?.text.toString(), isPrivateKeyMode, KeyDetails.Type.CLIPBOARD)
-        keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
-      } else {
-
-      }
+      keyImportModel = KeyImportModel(null, editTextNewPubKey?.text.toString(), isPrivateKeyMode, KeyDetails.Type.MANUAL_ENTERING)
+      keyImportModel?.let { privateKeysViewModel.parseKeys(it, false) }
     }
   }
 

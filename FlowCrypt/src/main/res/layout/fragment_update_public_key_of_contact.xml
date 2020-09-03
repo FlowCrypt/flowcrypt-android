@@ -71,14 +71,34 @@
             tools:text="Algorithm: RSA 4096 bit" />
 
         <TextView
-            android:id="@+id/tVCreated"
+            android:id="@+id/tVAlgorithmBitsOrCurve"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textIsSelectable="true"
             app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
             app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
             app:layout_constraintTop_toBottomOf="@+id/tVAlgorithm"
+            tools:text="Bits: 1024" />
+
+        <TextView
+            android:id="@+id/tVCreated"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textIsSelectable="true"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/tVAlgorithmBitsOrCurve"
             tools:text="Created: Nov 3, 2017" />
+
+        <TextView
+            android:id="@+id/tVModified"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textIsSelectable="true"
+            app:layout_constraintEnd_toStartOf="@+id/guidelineRight"
+            app:layout_constraintStart_toStartOf="@+id/guidelineLeft"
+            app:layout_constraintTop_toBottomOf="@+id/tVCreated"
+            tools:text="Modified: Nov 3, 2017" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guidelineLeft"

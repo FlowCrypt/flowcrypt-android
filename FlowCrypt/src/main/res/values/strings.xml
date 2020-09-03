@@ -384,7 +384,10 @@
     </plurals>
     <string name="pub_key">Public Key</string>
     <string name="template_created">Created: %1$s</string>
+    <string name="template_modified">Modified: %1$s</string>
     <string name="template_algorithm">Algorithm: %1$s</string>
+    <string name="template_algorithm_bits">Bits: %1$s</string>
+    <string name="template_curve">Curve: %1$s</string>
     <string name="template_user">User %1$d: %2$s</string>
     <string name="template_long_id">LongID %1$d: %2$s</string>
     <string name="public_key_copied_to_clipboard">Public Key copied to clipboard</string>

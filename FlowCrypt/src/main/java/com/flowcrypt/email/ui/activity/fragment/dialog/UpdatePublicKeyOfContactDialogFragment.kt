@@ -57,7 +57,9 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
     val lUsers = view.findViewById<LinearLayout>(R.id.lUsers)
     val lFingerprints = view.findViewById<LinearLayout>(R.id.lFingerprints)
     val tVAlgorithm = view.findViewById<TextView>(R.id.tVAlgorithm)
+    val tVAlgorithmBitsOrCurve = view.findViewById<TextView>(R.id.tVAlgorithmBitsOrCurve)
     val tVCreated = view.findViewById<TextView>(R.id.tVCreated)
+    val tVModified = view.findViewById<TextView>(R.id.tVModified)
 
     if (nodeKeyDetails?.mimeAddresses.isNullOrEmpty()) {
       nodeKeyDetails?.users?.forEach { user ->
@@ -88,9 +90,17 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
     }
 
     tVAlgorithm?.text = getString(R.string.template_algorithm, nodeKeyDetails?.algo?.algorithm)
-    tVCreated?.text = getString(R.string.template_created,
-        DateFormat.getMediumDateFormat(context).format(
-            Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.created ?: 0, TimeUnit.SECONDS))))
+    tVAlgorithmBitsOrCurve?.text = if (nodeKeyDetails?.algo?.bits == 0) {
+      getString(R.string.template_curve, nodeKeyDetails?.algo?.curve)
+    } else {
+      getString(R.string.template_algorithm_bits, nodeKeyDetails?.algo?.bits.toString())
+    }
+
+    tVCreated?.text = getString(R.string.template_created, DateFormat.getMediumDateFormat(context).format(
+        Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.created ?: 0, TimeUnit.SECONDS))))
+    tVModified?.text = getString(R.string.template_modified, DateFormat.getMediumDateFormat(context)
+        .format(Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.lastModified
+            ?: 0, TimeUnit.SECONDS))))
 
     val builder = AlertDialog.Builder(requireContext())
     builder.setTitle(getString(R.string.public_key_details))
