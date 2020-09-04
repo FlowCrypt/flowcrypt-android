@@ -42,7 +42,6 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -59,6 +58,7 @@ import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showKeyboard
 import com.flowcrypt.email.jetpack.viewmodel.AccountAliasesViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
@@ -237,6 +237,9 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           return false
         }
         if (hasRecipientWithoutPgp(true, pgpContactsTo, pgpContactsCc, pgpContactsBcc)) {
+          return false
+        }
+        if (hasRecipientWithExpiredPubKey(pgpContactsTo, pgpContactsCc, pgpContactsBcc)) {
           return false
         }
       }
@@ -933,6 +936,26 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   /**
+   * Check that all recipients have not-expired pub keys.
+   *
+   * @return true if all recipients have not-expired pub keys, other wise false.
+   */
+  private fun hasRecipientWithExpiredPubKey(vararg pgpContactsList: List<PgpContact>?): Boolean {
+    for (sublist in pgpContactsList) {
+      sublist?.let {
+        for (pgpContact in it) {
+          if (pgpContact.nodeKeyDetails?.isExpired == true) {
+            showInfoDialog(dialogMsg = getString(R.string.warning_one_of_pub_keys_is_expired))
+            return true
+          }
+        }
+      }
+    }
+
+    return false
+  }
+
+  /**
    * This method does update chips in the recipients field.
    *
    * @param view        A view which contains input [PgpContact](s).
@@ -948,7 +971,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       for (pgpContact in pgpContacts ?: emptyList()) {
         for (pgpContactChipSpan in pgpContactChipSpans) {
           if (pgpContact.email.equals(pgpContactChipSpan.text.toString(), ignoreCase = true)) {
-            pgpContactChipSpan.setHasPgp(pgpContact.hasPgp)
+            pgpContactChipSpan.hasPgp = pgpContact.hasPgp
+            pgpContactChipSpan.isExpired = pgpContact.nodeKeyDetails?.isExpired
             break
           }
         }
@@ -1453,7 +1477,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   private fun setupAccountAliasesViewModel() {
     accountAliasesViewModel.fetchUpdates(viewLifecycleOwner)
     baseActivity.countingIdlingResource.incrementSafely()
-    accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner, Observer {
+    accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner, {
       val aliases = ArrayList<String>()
       accountAliasesViewModel.activeAccountLiveData.value?.let { accountEntity ->
         aliases.add(accountEntity.email)
@@ -1501,7 +1525,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.userIdEmailsKeysLiveData.observe(viewLifecycleOwner, Observer {
+    privateKeysViewModel.userIdEmailsKeysLiveData.observe(viewLifecycleOwner, {
       updateFromAddressAdapter(it)
     })
   }
@@ -1523,7 +1547,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   private fun handleUpdatingToContacts() {
-    contactsViewModel.contactsToLiveData.observe(viewLifecycleOwner, Observer {
+    contactsViewModel.contactsToLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           hostActivity?.fetchInfoAboutContactsIdlingResource?.incrementSafely()
@@ -1554,7 +1578,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   private fun handleUpdatingCcContacts() {
-    contactsViewModel.contactsCcLiveData.observe(viewLifecycleOwner, Observer {
+    contactsViewModel.contactsCcLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           hostActivity?.fetchInfoAboutContactsIdlingResource?.incrementSafely()
@@ -1585,7 +1609,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   private fun handleUpdatingBccContacts() {
-    contactsViewModel.contactsBccLiveData.observe(viewLifecycleOwner, Observer {
+    contactsViewModel.contactsBccLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           hostActivity?.fetchInfoAboutContactsIdlingResource?.incrementSafely()

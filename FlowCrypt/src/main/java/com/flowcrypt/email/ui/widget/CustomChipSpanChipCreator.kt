@@ -27,6 +27,7 @@ import java.util.*
  */
 class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSpan> {
   private val backgroundColorPgpExists: Int = UIUtil.getColor(context, R.color.colorPrimary)
+  private val backgroundColorPgpExistsButKeyExpired: Int = UIUtil.getColor(context, R.color.orange)
   private val backgroundColorPgpNotExists: Int = UIUtil.getColor(context, R.color.aluminum)
   private val textColorPgpExists: Int = UIUtil.getColor(context, android.R.color.white)
   private val textColorNoPgpNoExists: Int = UIUtil.getColor(context, R.color.dark)
@@ -71,16 +72,16 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
       span.setMaxAvailableWidth(maxAvailableWidth)
     }
 
-    if (span.hasPgp() != null) {
-      updateChipSpanBackground(span, span.hasPgp()!!)
+    if (span.hasPgp != null) {
+      span.hasPgp?.let { updateChipSpanBackground(span) }
     } else if (span.data != null && span.data is Cursor) {
       val cursor = span.data as? Cursor ?: return
       if (!cursor.isClosed) {
         val columnIndex = cursor.getColumnIndex("has_pgp")
         if (columnIndex != -1) {
           val hasPgp = cursor.getInt(columnIndex) == 1
-          span.setHasPgp(hasPgp)
-          updateChipSpanBackground(span, hasPgp)
+          span.hasPgp = hasPgp
+          updateChipSpanBackground(span)
         }
       }
     } else {
@@ -95,11 +96,14 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
    * Update the [ChipSpan] background.
    *
    * @param span   The [ChipSpan] object.
-   * @param hasPgp true if the contact has pgp key, otherwise false.
    */
-  private fun updateChipSpanBackground(span: PGPContactChipSpan, hasPgp: Boolean) {
-    if (hasPgp) {
-      span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExists))
+  private fun updateChipSpanBackground(span: PGPContactChipSpan) {
+    if (span.hasPgp == true) {
+      if (span.isExpired == true) {
+        span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExistsButKeyExpired))
+      } else {
+        span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpExists))
+      }
       span.setTextColor(textColorPgpExists)
     } else {
       span.setBackgroundColor(ColorStateList.valueOf(backgroundColorPgpNotExists))

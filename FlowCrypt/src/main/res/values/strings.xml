@@ -490,4 +490,5 @@
     <string name="fingerprints_">Fingerprints:</string>
     <string name="warning_key_expired">Warning: this key was expired on %1$s</string>
     <string name="warning_no_expected_email">Warning: it seems this key doesn\'t relates to expected email address %1$s</string>
+    <string name="warning_one_of_pub_keys_is_expired">The public key of one of your recipients is expired. Sending encrypted emails to expired public keys is not possible.\n\nPlease ask the recipient(s) to send you an updated Public Key.</string>
 </resources>
