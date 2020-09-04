@@ -117,19 +117,20 @@ class UpdatePublicKeyOfContactDialogFragment : BaseDialogFragment() {
 
     if (nodeKeyDetails?.isExpired == true) {
       tVWarning.visibility = View.VISIBLE
-      tVWarning?.text = getString(R.string.warning_key_expired, DateFormat.getMediumDateFormat(context)
+      val warningText = getString(R.string.warning_key_expired, DateFormat.getMediumDateFormat(context)
           .format(Date(TimeUnit.MILLISECONDS.convert(nodeKeyDetails?.expiration
               ?: 0, TimeUnit.SECONDS))))
+      if (tVWarning.text.isNullOrEmpty()) {
+        tVWarning?.text = warningText
+      } else tVWarning.append("\n\n" + warningText)
     }
 
     val builder = AlertDialog.Builder(requireContext())
     builder.setTitle(getString(R.string.public_key_details))
     builder.setView(view)
 
-    if (nodeKeyDetails?.isExpired == false) {
-      builder.setPositiveButton(getString(R.string.use_this_key)) { _, _ ->
-        nodeKeyDetails?.let { keyDetails -> onKeySelectedListener?.onKeySelected(keyDetails) }
-      }
+    builder.setPositiveButton(getString(R.string.use_this_key)) { _, _ ->
+      nodeKeyDetails?.let { keyDetails -> onKeySelectedListener?.onKeySelected(keyDetails) }
     }
 
     builder.setNegativeButton(R.string.cancel) { _, _ -> }//do nothing
