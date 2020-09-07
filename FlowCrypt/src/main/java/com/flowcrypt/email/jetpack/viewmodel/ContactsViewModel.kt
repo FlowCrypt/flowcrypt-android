@@ -16,6 +16,7 @@ import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -143,16 +144,20 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
             }
 
             try {
-              val attesterPgpContact = getPgpContactInfoFromServer(emailLowerCase)
-              attesterPgpContact?.let {
-                if (cachedContactEntity?.hasPgp == false) {
-                  cachedContactEntity = updateCachedInfoWithAttesterInfo(cachedContactEntity, attesterPgpContact, emailLowerCase)
-                } else if (cachedContactEntity?.nodeKeyDetails != null && attesterPgpContact.nodeKeyDetails != null) {
-                  val cacheLastModified = cachedContactEntity?.nodeKeyDetails?.lastModified ?: 0
-                  val attesterLastModified = attesterPgpContact.nodeKeyDetails?.lastModified ?: 0
+              if (cachedContactEntity?.hasPgp == false) {
+                getPgpContactInfoFromServer(email = emailLowerCase)?.let {
+                  cachedContactEntity = updateCachedInfoWithAttesterInfo(cachedContactEntity, it, emailLowerCase)
+                }
+              } else {
+                cachedContactEntity?.nodeKeyDetails?.fingerprint?.let { fingerprint ->
+                  getPgpContactInfoFromServer(fingerprint = fingerprint)?.let {
+                    val cacheLastModified = cachedContactEntity?.nodeKeyDetails?.lastModified ?: 0
+                    val attesterLastModified = it.nodeKeyDetails?.lastModified ?: 0
+                    val attesterFingerprint = it.nodeKeyDetails?.fingerprint
 
-                  if (attesterLastModified > cacheLastModified) {
-                    cachedContactEntity = updateCachedInfoWithAttesterInfo(cachedContactEntity, attesterPgpContact, emailLowerCase)
+                    if (attesterLastModified > cacheLastModified && fingerprint.equals(attesterFingerprint, true)) {
+                      cachedContactEntity = updateCachedInfoWithAttesterInfo(cachedContactEntity, it, emailLowerCase)
+                    }
                   }
                 }
               }
@@ -253,7 +258,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   fun fetchPubKeys(keyIdOrEmail: String, requestCode: Long) {
     viewModelScope.launch {
       pubKeysFromAttesterLiveData.value = Result.loading(requestCode = requestCode)
-      pubKeysFromAttesterLiveData.value = apiRepository.getPub(requestCode = requestCode, context = getApplication(), keyIdOrEmail = keyIdOrEmail)
+      pubKeysFromAttesterLiveData.value = apiRepository.getPub(requestCode = requestCode, context = getApplication(), identData = keyIdOrEmail)
     }
   }
 
@@ -280,19 +285,43 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
    * @return [PgpContact]
    * @throws IOException
    */
-  private suspend fun getPgpContactInfoFromServer(email: String): PgpContact? =
+  private suspend fun getPgpContactInfoFromServer(email: String? = null, fingerprint: String? = null):
+      PgpContact? =
       withContext(Dispatchers.IO) {
         try {
-          val response = apiRepository.postLookUpEmail(getApplication(), PostLookUpEmailModel(email))
+          val response = if (email != null) {
+            apiRepository.postLookUpEmail(context = getApplication(), model = PostLookUpEmailModel(email))
+          } else {
+            apiRepository.getPub(context = getApplication(), identData = fingerprint ?: "")
+          }
+
           when (response.status) {
             Result.Status.SUCCESS -> {
-              if (response.data?.pubKey?.isNotEmpty() == true) {
-                val client = if (response.data.hasCryptup()) {
-                  ContactEntity.CLIENT_FLOWCRYPT
-                } else {
-                  ContactEntity.CLIENT_PGP
+              val pubKeyString = when (response.data) {
+                is LookUpEmailResponse -> {
+                  response.data.pubKey
                 }
-                pgpApiRepository.fetchKeyDetails(ParseKeysRequest(response.data.pubKey)).data?.nodeKeyDetails?.firstOrNull()?.let {
+
+                is PubResponse -> {
+                  response.data.pubkey
+                }
+                else -> ""
+              }
+
+              val client = when (response.data) {
+                is LookUpEmailResponse -> {
+                  if (response.data.hasCryptup()) {
+                    ContactEntity.CLIENT_FLOWCRYPT
+                  } else {
+                    ContactEntity.CLIENT_PGP
+                  }
+                }
+
+                else -> ContactEntity.CLIENT_PGP
+              }
+
+              if (pubKeyString?.isNotEmpty() == true) {
+                pgpApiRepository.fetchKeyDetails(ParseKeysRequest(pubKeyString)).data?.nodeKeyDetails?.firstOrNull()?.let {
                   val pgpContact = it.primaryPgpContact
                   pgpContact.client = client
                   pgpContact.nodeKeyDetails = it
