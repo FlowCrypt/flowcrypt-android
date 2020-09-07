@@ -26,6 +26,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
+import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
@@ -316,7 +317,9 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
   protected fun removeAccountFromAccountManager(accountEntity: AccountEntity?) {
     val accountManager = AccountManager.get(this)
     accountManager.accounts.firstOrNull { it.name == accountEntity?.email }?.let { account ->
-      accountManager.removeAccountExplicitly(account)
+      if (account.type.equals(FlowcryptAccountAuthenticator.ACCOUNT_TYPE, ignoreCase = true)) {
+        accountManager.removeAccountExplicitly(account)
+      }
     }
   }
 
