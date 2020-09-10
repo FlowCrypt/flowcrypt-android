@@ -14,6 +14,7 @@ import android.view.Menu
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -67,7 +68,8 @@ class SelectContactsActivity : BaseBackStackActivity(),
     recyclerViewContacts = findViewById(R.id.recyclerViewContacts)
     val manager = LinearLayoutManager(this)
     val decoration = DividerItemDecoration(this, manager.orientation)
-    decoration.setDrawable(resources.getDrawable(R.drawable.divider_1dp_grey, theme))
+    val drawable = ResourcesCompat.getDrawable(resources, R.drawable.divider_1dp_grey, theme)
+    drawable?.let { decoration.setDrawable(drawable) }
     recyclerViewContacts?.addItemDecoration(decoration)
     recyclerViewContacts?.layoutManager = manager
     recyclerViewContacts?.adapter = contactsRecyclerViewAdapter
