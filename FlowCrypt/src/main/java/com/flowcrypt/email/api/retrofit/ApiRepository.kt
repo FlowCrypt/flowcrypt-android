@@ -77,9 +77,9 @@ interface ApiRepository : BaseApiRepository {
 
   /**
    * @param context Interface to global information about an application environment.
-   * @param keyIdOrEmail A key id or the user email.
+   * @param identData A key id or the user email or a fingerprint.
    */
-  suspend fun getPub(requestCode: Long = 0L, context: Context, keyIdOrEmail: String): Result<PubResponse>
+  suspend fun getPub(requestCode: Long = 0L, context: Context, identData: String): Result<PubResponse>
 
   /**
    * @param requestCode A unique request code for this call

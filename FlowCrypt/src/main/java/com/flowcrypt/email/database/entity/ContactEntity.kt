@@ -10,8 +10,10 @@ import android.os.Parcelable
 import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.model.PgpContact
 
 /**
@@ -42,6 +44,9 @@ data class ContactEntity(
     @ColumnInfo(defaultValue = "NULL") val keywords: String? = null,
     @ColumnInfo(name = "last_use", defaultValue = "0") val lastUse: Long = 0
 ) : Parcelable {
+
+  @Ignore
+  var nodeKeyDetails: NodeKeyDetails? = null
 
   constructor(parcel: Parcel) : this(
       parcel.readValue(Long::class.java.classLoader) as? Long,
@@ -123,7 +128,8 @@ data class ContactEntity(
         fingerprint = fingerprint,
         longid = longId,
         keywords = keywords,
-        lastUse = lastUse)
+        lastUse = lastUse,
+        nodeKeyDetails = nodeKeyDetails)
   }
 
   companion object CREATOR : Parcelable.Creator<ContactEntity> {

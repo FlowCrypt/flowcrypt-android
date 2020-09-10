@@ -176,9 +176,9 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
     }
   }
 
-  private class PublicKeysParserAsyncTask internal constructor(fragment: PreviewImportPgpContactFragment,
-                                                               private val publicKeysString: String,
-                                                               private val publicKeysFileUri: Uri?)
+  private class PublicKeysParserAsyncTask(fragment: PreviewImportPgpContactFragment,
+                                          private val publicKeysString: String,
+                                          private val publicKeysFileUri: Uri?)
     : BaseAsyncTask<Void, Int, LoaderResult>(fragment) {
     override val progressTitleResourcesId: Int
       get() = R.string.parsing_public_keys
@@ -287,7 +287,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
         if (weakRef.get() != null) {
           val contact = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
-              .contactsDao().getContactByEmails(keyOwner)?.toPgpContact()
+              .contactsDao().getContactByEmail(keyOwner)?.toPgpContact()
           return PublicKeyInfo(keyWords!!, fingerprint!!, keyOwner, longId!!, contact, nodeKeyDetails.publicKey!!)
         }
       }
@@ -295,7 +295,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
     }
   }
 
-  private class SaveAllContactsAsyncTask internal constructor(
+  private class SaveAllContactsAsyncTask(
       fragment: PreviewImportPgpContactFragment,
       private val publicKeyInfoList: List<PublicKeyInfo>) : BaseAsyncTask<Void, Int, Boolean>(fragment) {
 
@@ -358,7 +358,7 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
 
             list.forEach { pgpContact ->
               val foundContactEntity = FlowCryptRoomDatabase.getDatabase(weakRef.get()?.requireContext()!!)
-                  .contactsDao().getContactByEmails(pgpContact.email)
+                  .contactsDao().getContactByEmail(pgpContact.email)
               foundContactEntity?.let { entity -> contacts.add(pgpContact.toContactEntity().copy(id = entity.id)) }
             }
 
@@ -405,10 +405,9 @@ class PreviewImportPgpContactFragment : BaseFragment(), View.OnClickListener,
     }
   }
 
-  private abstract class BaseAsyncTask<Params, Progress, Result>
-  internal constructor(previewImportPgpContactFragment: PreviewImportPgpContactFragment)
+  private abstract class BaseAsyncTask<Params, Progress, Result>(previewImportPgpContactFragment: PreviewImportPgpContactFragment)
     : AsyncTask<Params, Progress, Result>() {
-    internal val weakRef: WeakReference<PreviewImportPgpContactFragment> =
+    val weakRef: WeakReference<PreviewImportPgpContactFragment> =
         WeakReference(previewImportPgpContactFragment)
 
     abstract val progressTitleResourcesId: Int

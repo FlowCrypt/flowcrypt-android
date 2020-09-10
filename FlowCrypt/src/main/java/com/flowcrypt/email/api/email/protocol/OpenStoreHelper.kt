@@ -152,7 +152,7 @@ class OpenStoreHelper {
             val password = if (account.useOAuth2) {
               val accountManager = AccountManager.get(context)
               val oauthAccount = accountManager.accounts.firstOrNull { it.name == account.email }
-              if (oauthAccount != null) {
+              if (oauthAccount != null && oauthAccount.type.equals(FlowcryptAccountAuthenticator.ACCOUNT_TYPE, ignoreCase = true)) {
                 val encryptedToken = accountManager.blockingGetAuthToken(oauthAccount,
                     FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true)
                 if (encryptedToken.isNullOrEmpty()) {

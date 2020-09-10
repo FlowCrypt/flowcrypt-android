@@ -46,7 +46,7 @@ class EmailAndNameUpdaterService : JobIntentService() {
 
     for (pair in pairs) {
       val email = pair.email?.toLowerCase(Locale.getDefault()) ?: continue
-      val contactEntity = contactsDao.getContactByEmails(email)
+      val contactEntity = contactsDao.getContactByEmail(email)
       if (contactEntity != null) {
         if (contactEntity.name.isNullOrEmpty()) {
           contactsDao.update(contactEntity.copy(name = pair.name))

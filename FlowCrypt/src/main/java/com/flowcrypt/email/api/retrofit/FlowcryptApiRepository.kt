@@ -79,10 +79,10 @@ class FlowcryptApiRepository : ApiRepository {
 
   //todo-denbond7 need to ask Tom to improve https://flowcrypt.com/attester/pub to use the common
   // API  response ([ApiResponse])
-  override suspend fun getPub(requestCode: Long, context: Context, keyIdOrEmail: String): Result<PubResponse> =
+  override suspend fun getPub(requestCode: Long, context: Context, identData: String): Result<PubResponse> =
       withContext(Dispatchers.IO) {
         val apiService = ApiHelper.getInstance(context).retrofit.create(ApiService::class.java)
-        val result = getResult(requestCode = requestCode) { apiService.getPub(keyIdOrEmail) }
+        val result = getResult(requestCode = requestCode) { apiService.getPub(identData) }
         when (result.status) {
           Result.Status.SUCCESS -> Result.success(requestCode = requestCode, data = PubResponse(null, result.data))
 

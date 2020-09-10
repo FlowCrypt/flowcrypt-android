@@ -32,6 +32,8 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
                                       @Expose val users: List<String>?,
                                       @Expose val ids: List<KeyId>?,
                                       @Expose val created: Long,
+                                      @Expose val lastModified: Long,
+                                      @Expose val expiration: Long,
                                       @Expose val algo: Algo?,
                                       var passphrase: String?,
                                       var errorMsg: String?) : Parcelable {
@@ -49,6 +51,12 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
   val isPrivate: Boolean
     get() = !TextUtils.isEmpty(privateKey)
 
+  val isExpired: Boolean
+    get() = expiration > 0 && (System.currentTimeMillis() / 1000 > expiration)
+
+  val mimeAddresses: List<InternetAddress>
+    get() = parseMimeAddresses()
+
   val isPartiallyEncrypted: Boolean
     get() {
       return isFullyDecrypted == false && isFullyEncrypted == false
@@ -61,6 +69,8 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
       source.readString(),
       source.createStringArrayList(),
       source.createTypedArrayList(KeyId.CREATOR),
+      source.readLong(),
+      source.readLong(),
       source.readLong(),
       source.readParcelable<Algo>(Algo::class.java.classLoader),
       source.readString(),
@@ -77,6 +87,8 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
     writeStringList(users)
     writeTypedList(ids)
     writeLong(created)
+    writeLong(lastModified)
+    writeLong(expiration)
     writeParcelable(algo, 0)
     writeString(passphrase)
     writeString(errorMsg)
@@ -107,8 +119,7 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
         throw object : FlowCryptException("No user ids with mail address") {}
       }
 
-      return PgpContact(email, name, publicKey, !TextUtils.isEmpty(publicKey), null,
-          fingerprint1, longId1, keywords1, 0)
+      return PgpContact(email.toLowerCase(Locale.US), name, publicKey, !TextUtils.isEmpty(publicKey), null, fingerprint1, longId1, keywords1, 0)
     }
 
     return PgpContact("", "")
@@ -135,6 +146,20 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
     }
 
     return pgpContacts
+  }
+
+  private fun parseMimeAddresses(): List<InternetAddress> {
+    val results = mutableListOf<InternetAddress>()
+
+    for (user in users ?: emptyList()) {
+      try {
+        results.addAll(listOf(*InternetAddress.parse(user)))
+      } catch (e: AddressException) {
+        //do nothing
+      }
+    }
+
+    return results
   }
 
   fun toKeyEntity(): KeyEntity {

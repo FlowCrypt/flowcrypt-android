@@ -111,8 +111,8 @@ interface ApiService {
    *
    * @return [<]
    */
-  @GET("pub/{keyIdOrEmail}")
-  suspend fun getPub(@Path("keyIdOrEmail") keyIdOrEmail: String): Response<String>
+  @GET("pub/{keyIdOrEmailOrFingerprint}")
+  suspend fun getPub(@Path("keyIdOrEmailOrFingerprint") keyIdOrEmailOrFingerprint: String): Response<String>
 
   /**
    * This method calls the API "https://flowcrypt.com/api/account/login"

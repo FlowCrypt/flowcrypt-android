@@ -233,7 +233,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
                 ?: throw NullPointerException(context.getString(R.string.source_is_empty_or_not_available))
           }
 
-          KeyDetails.Type.CLIPBOARD, KeyDetails.Type.EMAIL -> {
+          KeyDetails.Type.CLIPBOARD, KeyDetails.Type.EMAIL, KeyDetails.Type.MANUAL_ENTERING -> {
             armoredSource = keyImportModel.keyString
                 ?: throw NullPointerException(context.getString(R.string.source_is_empty_or_not_available))
           }

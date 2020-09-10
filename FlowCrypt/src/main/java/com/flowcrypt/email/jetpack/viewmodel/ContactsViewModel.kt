@@ -13,17 +13,19 @@ import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.node.NodeCallsExecutor
+import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
+import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ApiException
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.google.android.gms.common.util.CollectionUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -38,6 +40,7 @@ import java.util.*
  */
 class ContactsViewModel(application: Application) : AccountViewModel(application) {
   private val apiRepository: ApiRepository = FlowcryptApiRepository()
+  private val pgpApiRepository = NodeRepository()
   private val searchPatternLiveData: MutableLiveData<String> = MutableLiveData()
 
   val allContactsLiveData: LiveData<List<ContactEntity>> = roomDatabase.contactsDao().getAllContactsLD()
@@ -95,17 +98,23 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
+  fun contactChangesLiveData(contactEntity: ContactEntity): LiveData<ContactEntity?> {
+    return roomDatabase.contactsDao().getContactByEmailLD(contactEntity.email)
+  }
+
   /**
    * Here we do the following things:
    *
-   *  a) look up the email in the database;
-   *  b) if there is a record for that email and has_pgp==true, we can use the `pubkey` instead of
-   * querying Attester;
-   *  c) if there is a record but `has_pgp==false`, do `flowcrypt.com/attester/lookup/email` API call
+   *  a) if there is a record for that email and has_pgp==true, do `flowcrypt.com/attester/pub/<FINGERPRINT>` API
+   *  call to see if you can now get the fresher pubkey. If we successfully load a key, we
+   *  compare date of last signature on the key we have and on the key we received.
+   *  If the key from attester has a newer signature on it, then it's more recent, and we will automatically replace the local version
+   *  b) if there is a record but `has_pgp==false`, do `flowcrypt.com/attester/pub/<EMAIL>` API
+   *  call
    * to see if you can now get the pubkey. If a pubkey is available, save it back to the database.
-   *  e) no record in the db found:
+   *  c) no record in the db found:
    *  1. save an empty record eg `new PgpContact(email, null);` - this means we don't know if they have PGP yet
-   *  1. look up the email on `flowcrypt.com/attester/lookup/email`
+   *  1. look up the email on `flowcrypt.com/attester/pub/EMAIL>`
    *  1. if pubkey comes back, create something like `new PgpContact(js, email, null, pubkey,
    * client);`. The PgpContact constructor will define has_pgp, longid, fingerprint, etc
    * for you. Then save that object into database.
@@ -121,36 +130,39 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
         for (email in emails) {
           if (GeneralUtil.isEmailValid(email)) {
             val emailLowerCase = email.toLowerCase(Locale.getDefault())
-            var localPgpContact = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
+            var cachedContactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
 
-            if (localPgpContact == null) {
-              localPgpContact = PgpContact(emailLowerCase, null).toContactEntity()
-              roomDatabase.contactsDao().insertSuspend(localPgpContact)
-              localPgpContact = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
+            if (cachedContactEntity == null) {
+              cachedContactEntity = PgpContact(emailLowerCase, null).toContactEntity()
+              roomDatabase.contactsDao().insertSuspend(cachedContactEntity)
+              cachedContactEntity = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
+            } else {
+              cachedContactEntity.publicKey?.let {
+                val result = pgpApiRepository.fetchKeyDetails(ParseKeysRequest(String(it)))
+                cachedContactEntity?.nodeKeyDetails = result.data?.nodeKeyDetails?.firstOrNull()
+              }
             }
 
             try {
-              if (localPgpContact?.hasPgp == false) {
-                val remotePgpContact = getPgpContactInfoFromServer(emailLowerCase)
-                if (remotePgpContact != null) {
-                  val updateCandidate = if (localPgpContact.name.isNullOrEmpty()
-                      && localPgpContact.email.equals(remotePgpContact.email, ignoreCase = true)) {
-                    remotePgpContact.toContactEntity().copy(
-                        id = localPgpContact.id,
-                        email = localPgpContact.email)
-                  } else {
-                    remotePgpContact.toContactEntity().copy(
-                        id = localPgpContact.id,
-                        name = localPgpContact.name,
-                        email = localPgpContact.email)
-                  }
+              if (cachedContactEntity?.hasPgp == false) {
+                getPgpContactInfoFromServer(email = emailLowerCase)?.let {
+                  cachedContactEntity = updateCachedInfoWithAttesterInfo(cachedContactEntity, it, emailLowerCase)
+                }
+              } else {
+                cachedContactEntity?.nodeKeyDetails?.fingerprint?.let { fingerprint ->
+                  getPgpContactInfoFromServer(fingerprint = fingerprint)?.let {
+                    val cacheLastModified = cachedContactEntity?.nodeKeyDetails?.lastModified ?: 0
+                    val attesterLastModified = it.nodeKeyDetails?.lastModified ?: 0
+                    val attesterFingerprint = it.nodeKeyDetails?.fingerprint
 
-                  roomDatabase.contactsDao().updateSuspend(updateCandidate)
-                  localPgpContact = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
+                    if (attesterLastModified > cacheLastModified && fingerprint.equals(attesterFingerprint, true)) {
+                      cachedContactEntity = updateCachedInfoWithAttesterInfo(cachedContactEntity, it, emailLowerCase)
+                    }
+                  }
                 }
               }
 
-              localPgpContact?.let { pgpContacts.add(it) }
+              cachedContactEntity?.let { pgpContacts.add(it) }
             } catch (e: Exception) {
               e.printStackTrace()
               ExceptionUtil.handleError(e)
@@ -164,6 +176,33 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
         setResultForRemoteContactsLiveData(type, Result.exception(e))
       }
     }
+  }
+
+  private suspend fun updateCachedInfoWithAttesterInfo(cachedContactEntity: ContactEntity?,
+                                                       attesterPgpContact: PgpContact, emailLowerCase: String): ContactEntity? {
+    cachedContactEntity ?: return null
+    val updateCandidate = if (
+        cachedContactEntity.name.isNullOrEmpty()
+        && cachedContactEntity.email.equals(attesterPgpContact.email, ignoreCase = true)) {
+      attesterPgpContact.toContactEntity().copy(
+          id = cachedContactEntity.id,
+          email = cachedContactEntity.email)
+    } else {
+      attesterPgpContact.toContactEntity().copy(
+          id = cachedContactEntity.id,
+          name = cachedContactEntity.name,
+          email = cachedContactEntity.email)
+    }
+
+    roomDatabase.contactsDao().updateSuspend(updateCandidate)
+    val lastVersion = roomDatabase.contactsDao().getContactByEmailSuspend(emailLowerCase)
+
+    lastVersion?.publicKey?.let {
+      val result = pgpApiRepository.fetchKeyDetails(ParseKeysRequest(String(it)))
+      lastVersion.nodeKeyDetails = result.data?.nodeKeyDetails?.firstOrNull()
+    }
+
+    return lastVersion
   }
 
   fun deleteContact(contactEntity: ContactEntity) {
@@ -191,6 +230,19 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
     }
   }
 
+  fun updateContactPgpInfo(contactEntity: ContactEntity?, nodeKeyDetails: NodeKeyDetails) {
+    viewModelScope.launch {
+      contactEntity?.let {
+        val contactEntityFromPrimaryPgpContact = nodeKeyDetails.primaryPgpContact.toContactEntity()
+        roomDatabase.contactsDao().updateSuspend(contactEntityFromPrimaryPgpContact.copy(
+            id = contactEntity.id,
+            email = contactEntity.email.toLowerCase(Locale.US),
+            client = ContactEntity.CLIENT_PGP,
+        ))
+      }
+    }
+  }
+
   fun filterContacts(searchPattern: String?) {
     searchPatternLiveData.value = searchPattern
   }
@@ -206,7 +258,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   fun fetchPubKeys(keyIdOrEmail: String, requestCode: Long) {
     viewModelScope.launch {
       pubKeysFromAttesterLiveData.value = Result.loading(requestCode = requestCode)
-      pubKeysFromAttesterLiveData.value = apiRepository.getPub(requestCode = requestCode, context = getApplication(), keyIdOrEmail = keyIdOrEmail)
+      pubKeysFromAttesterLiveData.value = apiRepository.getPub(requestCode = requestCode, context = getApplication(), identData = keyIdOrEmail)
     }
   }
 
@@ -233,34 +285,62 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
    * @return [PgpContact]
    * @throws IOException
    */
-  private suspend fun getPgpContactInfoFromServer(email: String): PgpContact? =
+  private suspend fun getPgpContactInfoFromServer(email: String? = null, fingerprint: String? = null):
+      PgpContact? =
       withContext(Dispatchers.IO) {
-        val response = apiRepository.postLookUpEmail(getApplication(), PostLookUpEmailModel(email))
-        when (response.status) {
-          Result.Status.SUCCESS -> {
-            if (response.data?.pubKey?.isNotEmpty() == true) {
-              val client = if (response.data.hasCryptup()) {
-                ContactEntity.CLIENT_FLOWCRYPT
-              } else {
-                ContactEntity.CLIENT_PGP
+        try {
+          val response = if (email != null) {
+            apiRepository.postLookUpEmail(context = getApplication(), model = PostLookUpEmailModel(email))
+          } else {
+            apiRepository.getPub(context = getApplication(), identData = fingerprint ?: "")
+          }
+
+          when (response.status) {
+            Result.Status.SUCCESS -> {
+              val pubKeyString = when (response.data) {
+                is LookUpEmailResponse -> {
+                  response.data.pubKey
+                }
+
+                is PubResponse -> {
+                  response.data.pubkey
+                }
+                else -> ""
               }
-              val details = NodeCallsExecutor.parseKeys(response.data.pubKey)
-              if (!CollectionUtils.isEmpty(details)) {
-                val pgpContact = details[0].primaryPgpContact
-                pgpContact.client = client
-                return@withContext pgpContact
+
+              val client = when (response.data) {
+                is LookUpEmailResponse -> {
+                  if (response.data.hasCryptup()) {
+                    ContactEntity.CLIENT_FLOWCRYPT
+                  } else {
+                    ContactEntity.CLIENT_PGP
+                  }
+                }
+
+                else -> ContactEntity.CLIENT_PGP
+              }
+
+              if (pubKeyString?.isNotEmpty() == true) {
+                pgpApiRepository.fetchKeyDetails(ParseKeysRequest(pubKeyString)).data?.nodeKeyDetails?.firstOrNull()?.let {
+                  val pgpContact = it.primaryPgpContact
+                  pgpContact.client = client
+                  pgpContact.nodeKeyDetails = it
+                  return@withContext pgpContact
+                }
               }
             }
-          }
 
-          Result.Status.ERROR -> {
-            throw ApiException(response.data?.apiError
-                ?: ApiError(code = -1, msg = "Unknown API error"))
-          }
+            Result.Status.ERROR -> {
+              throw ApiException(response.data?.apiError
+                  ?: ApiError(code = -1, msg = "Unknown API error"))
+            }
 
-          else -> {
-            throw response.exception ?: java.lang.Exception()
+            else -> {
+              throw response.exception ?: java.lang.Exception()
+            }
           }
+        } catch (e: IOException) {
+          e.printStackTrace()
         }
 
         null

@@ -91,6 +91,7 @@
     <string name="no_connection">No connection</string>
     <string name="archive">Archive</string>
     <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
     <string name="move_to_inbox">Move to Inbox</string>
     <string name="sending_message_must_not_be_empty">Message should not be empty</string>
     <string name="there_was_syncing_problem">There was a syncing problem</string>
@@ -119,6 +120,7 @@
     <string name="hint_clipboard_is_empty">Your clipboard is empty. Please find your %1$s Key where you are storing it, select the text and copy it. After that, return back to %2$s.</string>
     <string name="clipboard_has_wrong_structure">The content of your clipboard does not look like a valid PGP %1$s Key.</string>
     <string name="file_has_wrong_pgp_structure">The content of your file does not look like a valid PGP %1$s Key.</string>
+    <string name="source_has_wrong_pgp_structure">The content which you provided does not look like a valid PGP %1$s Key.</string>
     <string name="evaluating">Evaluating…</string>
     <string name="key_successfully_imported">Key(s) successfully imported</string>
     <string name="the_key_successfully_imported">Key successfully imported</string>
@@ -382,7 +384,10 @@
     </plurals>
     <string name="pub_key">Public Key</string>
     <string name="template_created">Created: %1$s</string>
+    <string name="template_modified">Modified: %1$s</string>
     <string name="template_algorithm">Algorithm: %1$s</string>
+    <string name="template_algorithm_bits">Bits: %1$s</string>
+    <string name="template_curve">Curve: %1$s</string>
     <string name="template_user">User %1$d: %2$s</string>
     <string name="template_long_id">LongID %1$d: %2$s</string>
     <string name="public_key_copied_to_clipboard">Public Key copied to clipboard</string>
@@ -473,4 +478,17 @@
     <string name="open_side_menu_and_do_logout">Please open the side menu and do logout to remove %1$s</string>
     <string name="refrech_token_was_corrupted">The refresh token is wrong or was corrupted!</string>
     <string name="could_not_fetch_access_token">Couldn\'t fetch an access token. Correct credentials needed. Please logout and login again.</string>
+    <string name="contact_can_not_be_null">Contact can not be null</string>
+    <string name="enter_a_new_public_key_for_this_contact">Enter a new Public Key for this contact</string>
+    <string name="new_pub_key">New Public Key</string>
+    <string name="or">or</string>
+    <string name="check">Check</string>
+    <string name="more_than_one_public_key_found">We\'ve found more than one public key in the provided source. Please choose a source with a single public key.</string>
+    <string name="use_this_key">Use this key</string>
+    <string name="public_key_details">Public Key Details</string>
+    <string name="users_">Users:</string>
+    <string name="fingerprints_">Fingerprints:</string>
+    <string name="warning_key_expired">Warning: this key was expired on %1$s</string>
+    <string name="warning_no_expected_email">Warning: it seems this key doesn\'t relates to expected email address %1$s</string>
+    <string name="warning_one_of_pub_keys_is_expired">The public key of one of your recipients is expired. Sending encrypted emails to expired public keys is not possible.\n\nPlease ask the recipient(s) to send you an updated Public Key.</string>
 </resources>

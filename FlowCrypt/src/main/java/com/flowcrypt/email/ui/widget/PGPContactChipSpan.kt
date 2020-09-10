@@ -19,19 +19,13 @@ import com.hootsuite.nachos.chip.ChipSpan
  * E-mail: DenBond7@gmail.com
  */
 class PGPContactChipSpan : ChipSpan {
-  private var hasPgp: Boolean? = null
+  var hasPgp: Boolean? = false
+  var isExpired: Boolean? = false
 
   constructor(context: Context, text: CharSequence, icon: Drawable?, data: Any?) : super(context, text, icon, data)
 
   constructor(context: Context, pgpContactChipSpan: PGPContactChipSpan) : super(context, pgpContactChipSpan) {
-    this.hasPgp = pgpContactChipSpan.hasPgp()
-  }
-
-  fun hasPgp(): Boolean? {
-    return hasPgp
-  }
-
-  fun setHasPgp(hasPgp: Boolean?) {
-    this.hasPgp = hasPgp
+    this.hasPgp = pgpContactChipSpan.hasPgp
+    this.isExpired = pgpContactChipSpan.isExpired
   }
 }

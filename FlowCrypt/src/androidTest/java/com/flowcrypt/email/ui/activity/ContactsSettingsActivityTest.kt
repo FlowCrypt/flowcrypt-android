@@ -95,7 +95,7 @@ class ContactsSettingsActivityTest : BaseTest() {
       for (email in EMAILS) {
         val dao = FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext()).contactsDao()
 
-        val contact = dao.getContactByEmails(email) ?: continue
+        val contact = dao.getContactByEmail(email) ?: continue
         dao.delete(contact)
       }
     }

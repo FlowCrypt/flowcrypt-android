@@ -21,20 +21,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.LoadingState
 import com.flowcrypt.email.api.retrofit.Status
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.ParseKeysViewModel
+import com.flowcrypt.email.ui.activity.EditContactActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
@@ -54,6 +55,8 @@ import java.util.concurrent.TimeUnit
  *         E-mail: DenBond7@gmail.com
  */
 class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>> {
+  private val contactsViewModel: ContactsViewModel by viewModels()
+  private val parseKeysViewModel: ParseKeysViewModel by viewModels()
 
   private var contactEntity: ContactEntity? = null
   private var details: NodeKeyDetails? = null
@@ -66,6 +69,13 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
 
   override val contentResourceId: Int = R.layout.fragment_public_key_details
 
+  private val contactEntityObserver = Observer<ContactEntity?> {
+    contactEntity = it
+    if (baseActivity.isNodeReady) {
+      fetchKeyDetails(contactEntity)
+    }
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setHasOptionsMenu(true)
@@ -77,15 +87,11 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    initViews(view)
-  }
-
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
     supportActionBar?.setTitle(R.string.pub_key)
+    initViews(view)
 
-    if (baseActivity.isNodeReady) {
-      fetchKeyDetails()
+    contactEntity?.let {
+      contactsViewModel.contactChangesLiveData(it).observe(viewLifecycleOwner, contactEntityObserver)
     }
   }
 
@@ -118,6 +124,14 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
         return true
       }
 
+      R.id.menuActionEdit -> {
+        contactEntity?.let {
+          startActivity(EditContactActivity.newIntent(requireContext(), account, it))
+        }
+
+        return true
+      }
+
       else -> return super.onOptionsItemSelected(item)
     }
   }
@@ -136,7 +150,7 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
       R.id.live_data_id_fetch_keys -> when (nodeResponseWrapper.status) {
         Status.LOADING -> {
           nodeResponseWrapper.loadingState?.let {
-            if (LoadingState.PREPARE_REQUEST == it) {
+            if (LoadingState.PREPARE_REQUEST == it && layoutUsers?.childCount == 0) {
               UIUtil.exchangeViewVisibility(true, progressBar, content)
             }
           }
@@ -209,12 +223,14 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
   }
 
   private fun updateViews() {
+    layoutUsers?.removeAllViews()
     details?.users?.forEachIndexed { index, s ->
       val textView = TextView(context)
       textView.text = getString(R.string.template_user, index + 1, s)
       layoutUsers?.addView(textView)
     }
 
+    layoutLongIdsAndKeyWords?.removeAllViews()
     details?.ids?.forEachIndexed { index, s ->
       val textViewLongId = TextView(context)
       textViewLongId.text = getString(R.string.template_long_id, index + 1, s.longId)
@@ -233,11 +249,11 @@ class PublicKeyDetailsFragment : BaseFragment(), Observer<NodeResponseWrapper<*>
             Date(TimeUnit.MILLISECONDS.convert(details?.created ?: 0, TimeUnit.SECONDS))))
   }
 
-  private fun fetchKeyDetails() {
-    val viewModel = ViewModelProvider(this).get(ParseKeysViewModel::class.java)
-    viewModel.init(NodeRepository())
-    viewModel.responsesLiveData.observe(viewLifecycleOwner, this)
-    viewModel.fetchKeys(String(contactEntity?.publicKey ?: byteArrayOf()))
+  private fun fetchKeyDetails(contactEntity: ContactEntity?) {
+    contactEntity?.let {
+      parseKeysViewModel.responsesLiveData.observe(viewLifecycleOwner, this)
+      parseKeysViewModel.fetchKeys(String(it.publicKey ?: byteArrayOf()))
+    }
   }
 
   private fun chooseDest() {
