@@ -105,16 +105,16 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   /**
    * Here we do the following things:
    *
-   *  a) if there is a record for that email and has_pgp==true, do `flowcrypt.com/attester/lookup/email` API
+   *  a) if there is a record for that email and has_pgp==true, do `flowcrypt.com/attester/pub/<FINGERPRINT>` API
    *  call to see if you can now get the fresher pubkey. If we successfully load a key, we
    *  compare date of last signature on the key we have and on the key we received.
    *  If the key from attester has a newer signature on it, then it's more recent, and we will automatically replace the local version
-   *  b) if there is a record but `has_pgp==false`, do `flowcrypt.com/attester/lookup/email` API
+   *  b) if there is a record but `has_pgp==false`, do `flowcrypt.com/attester/pub/<EMAIL>` API
    *  call
    * to see if you can now get the pubkey. If a pubkey is available, save it back to the database.
    *  c) no record in the db found:
    *  1. save an empty record eg `new PgpContact(email, null);` - this means we don't know if they have PGP yet
-   *  1. look up the email on `flowcrypt.com/attester/lookup/email`
+   *  1. look up the email on `flowcrypt.com/attester/pub/EMAIL>`
    *  1. if pubkey comes back, create something like `new PgpContact(js, email, null, pubkey,
    * client);`. The PgpContact constructor will define has_pgp, longid, fingerprint, etc
    * for you. Then save that object into database.
