@@ -1,7 +1,7 @@
 version: '2'
 services:
   mail:
-    image: tvial/docker-mailserver:latest
+    image: flowcrypt-test-mailboxes:latest
     hostname: ${HOSTNAME}
     domainname: ${DOMAINNAME}
     container_name: ${CONTAINER_NAME}
@@ -11,6 +11,8 @@ services:
       - "587:587"
       - "993:993"
     volumes:
+      #uncomment this only to make a backup of mailboxes
+      #- ./maildata_volume:/var/mail
       - ./config/:/tmp/docker-mailserver/
     env_file:
       - .env
