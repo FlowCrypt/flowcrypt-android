@@ -44,3 +44,4 @@ FlowCrypt/src/main/assets/.idea/vcs.xml
 FlowCrypt/src/main/assets/.idea/workspace.xml
 
 release/*.apk
+docker-mailserver /maildata_volume/
