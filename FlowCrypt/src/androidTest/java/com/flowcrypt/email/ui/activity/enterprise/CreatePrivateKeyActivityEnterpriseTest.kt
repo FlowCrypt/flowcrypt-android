@@ -33,6 +33,7 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -49,6 +50,7 @@ import java.io.InputStreamReader
 @LargeTest
 @DoesNotNeedMailserverEnterprise
 @RunWith(AndroidJUnit4::class)
+@Ignore("Need to think how to run")
 class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
   override val activityTestRule: ActivityTestRule<*>? =
       object : ActivityTestRule<CreatePrivateKeyActivity>(CreatePrivateKeyActivity::class.java) {
