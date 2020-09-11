@@ -40,6 +40,7 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -55,6 +56,7 @@ import java.io.File
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("fix me")
 class BackupKeysActivityTest : BaseTest() {
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(BackupKeysActivity::class.java)
 

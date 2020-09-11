@@ -42,6 +42,7 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -57,6 +58,7 @@ import java.io.File
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("fix me")
 class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
   val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
