@@ -11,9 +11,6 @@ services:
       - "587:587"
       - "993:993"
     volumes:
-      - ./maildata_volume:/var/mail
-      - mailstate:/var/mail-state
-      - maillogs:/var/log/mail
       - ./config/:/tmp/docker-mailserver/
     env_file:
       - .env
