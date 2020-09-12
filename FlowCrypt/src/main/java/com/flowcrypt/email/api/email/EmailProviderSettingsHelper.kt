@@ -183,11 +183,13 @@ object EmailProviderSettingsHelper {
         password = password,
         imapServer = IMAP_SERVER_TESTS,
         imapPort = JavaEmailConstants.DEFAULT_IMAP_PORT,
-        imapOpt = SecurityType.Option.NONE,
+        imapOpt = SecurityType.Option.STARTLS,
         smtpServer = SMTP_SERVER_TESTS,
         smtpPort = JavaEmailConstants.STARTTLS_SMTP_PORT,
-        smtpOpt = SecurityType.Option.NONE,
-        hasCustomSignInForSmtp = false
+        smtpOpt = SecurityType.Option.STARTLS,
+        hasCustomSignInForSmtp = true,
+        smtpSigInUsername = email,
+        smtpSignInPassword = password,
     )
   }
 }
