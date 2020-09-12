@@ -53,8 +53,8 @@ object EmailProviderSettingsHelper {
 
   /*********************** Account for internal testing **********************/
   private const val PROVIDER_TESTS = "denbond7.com"
-  private const val IMAP_SERVER_TESTS = "imap.denbond7.com"
-  private const val SMTP_SERVER_TESTS = "smtp.denbond7.com"
+  private const val IMAP_SERVER_TESTS = "10.0.2.2"//local machine where an emulator works
+  private const val SMTP_SERVER_TESTS = "10.0.2.2"//local machine where an emulator works
 
   /**
    * Get the base settings for the given account.
@@ -185,7 +185,7 @@ object EmailProviderSettingsHelper {
         imapPort = JavaEmailConstants.DEFAULT_IMAP_PORT,
         imapOpt = SecurityType.Option.NONE,
         smtpServer = SMTP_SERVER_TESTS,
-        smtpPort = JavaEmailConstants.DEFAULT_SMTP_PORT,
+        smtpPort = JavaEmailConstants.STARTTLS_SMTP_PORT,
         smtpOpt = SecurityType.Option.NONE,
         hasCustomSignInForSmtp = false
     )
