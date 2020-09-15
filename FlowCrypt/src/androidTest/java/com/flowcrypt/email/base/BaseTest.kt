@@ -13,10 +13,12 @@ import android.text.Html
 import android.widget.Toast
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
+import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode
+import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -25,7 +27,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
@@ -52,10 +53,10 @@ import org.junit.runner.RunWith
  * E-mail: DenBond7@gmail.com
  */
 @RunWith(AndroidJUnit4::class)
-abstract class BaseTest {
-
-  abstract val activityTestRule: ActivityTestRule<*>?
+abstract class BaseTest : BaseActivityTestImplementation {
   val roomDatabase: FlowCryptRoomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
+  var countingIdlingResource: IdlingResource? = null
+  private var isIntentsInitialized = false
 
   @Before
   open fun registerNodeIdling() {
@@ -86,11 +87,34 @@ abstract class BaseTest {
   @Before
   fun registerCountingIdlingResource() {
     (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+
+    activityScenarioRule?.scenario?.onActivity { activity ->
+      val baseActivity = (activity as? BaseActivity) ?: return@onActivity
+      countingIdlingResource = baseActivity.countingIdlingResource
+      countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+    }
   }
 
   @After
   fun unregisterCountingIdlingResource() {
     (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+    countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+  }
+
+  @Before
+  fun intentsInit() {
+    if (useIntents) {
+      Intents.init()
+      isIntentsInitialized = true
+    }
+  }
+
+  @After
+  fun intentsRelease() {
+    if (useIntents && isIntentsInitialized) {
+      Intents.release()
+      isIntentsInitialized = false
+    }
   }
 
   /**
