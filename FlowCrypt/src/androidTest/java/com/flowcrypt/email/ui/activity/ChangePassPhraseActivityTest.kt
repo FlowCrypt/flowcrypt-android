@@ -6,26 +6,21 @@
 package com.flowcrypt.email.ui.activity
 
 import android.app.Activity
-import android.content.Intent
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
-import org.junit.After
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -44,35 +39,15 @@ import org.junit.runner.RunWith
 class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
-  override val activityTestRule: ActivityTestRule<*>? =
-      object : IntentsTestRule<ChangePassPhraseActivity>(ChangePassPhraseActivity::class.java) {
-        override fun getActivityIntent(): Intent {
-          return ChangePassPhraseActivity.newIntent(getTargetContext())
-        }
-      }
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<ChangePassPhraseActivity>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(addAccountToDatabaseRule)
       .around(AddPrivateKeyToDatabaseRule())
-      .around(activityTestRule)
-
-  @Before
-  fun registerChangePassphraseIdlingResource() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is ChangePassPhraseActivity) {
-      IdlingRegistry.getInstance().register(activity.changePassphraseIdlingResource)
-    }
-  }
-
-  @After
-  fun unregisterChangePassphraseIdlingResource() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is ChangePassPhraseActivity) {
-      IdlingRegistry.getInstance().unregister(activity.changePassphraseIdlingResource)
-    }
-  }
+      .around(activityScenarioRule)
 
   @Test
   @Ignore("fix me")

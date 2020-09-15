@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity.base
 
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -21,8 +20,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.startsWith
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import java.util.*
 
@@ -33,23 +30,6 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 abstract class BasePassphraseActivityTest : BaseTest() {
-
-  @Before
-  fun registerIdlingForPassphraseChecking() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is BasePassPhraseManagerActivity) {
-      IdlingRegistry.getInstance().register(activity.idlingForPassphraseChecking)
-    }
-  }
-
-  @After
-  fun unregisterIdlingForPassphraseChecking() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is BasePassPhraseManagerActivity) {
-      IdlingRegistry.getInstance().unregister(activity.idlingForPassphraseChecking)
-    }
-  }
-
   @Test
   @DoesNotNeedMailserver
   fun testShowDialogWithPasswordRecommendation() {

@@ -55,39 +55,41 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 abstract class BaseTest : BaseActivityTestImplementation {
   val roomDatabase: FlowCryptRoomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
-  var countingIdlingResource: IdlingResource? = null
+  private var countingIdlingResource: IdlingResource? = null
+  private var nodeIdlingResource: IdlingResource? = null
+  var syncServiceCountingIdlingResource: IdlingResource? = null
   private var isIntentsInitialized = false
 
   @Before
   open fun registerNodeIdling() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is BaseActivity) {
-      IdlingRegistry.getInstance().register(activity.nodeIdlingResource)
+    activityScenarioRule?.scenario?.onActivity { activity ->
+      val baseActivity = (activity as? BaseActivity) ?: return@onActivity
+      nodeIdlingResource = baseActivity.nodeIdlingResource
+      nodeIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
     }
   }
 
   @After
   open fun unregisterNodeIdling() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is BaseActivity) {
-      IdlingRegistry.getInstance().unregister(activity.nodeIdlingResource)
-    }
+    nodeIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
   @Before
   fun registerSyncServiceCountingIdlingResource() {
-    (activityTestRule?.activity as? BaseSyncActivity)?.syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+    activityScenarioRule?.scenario?.onActivity { activity ->
+      val baseSyncActivity = (activity as? BaseSyncActivity) ?: return@onActivity
+      syncServiceCountingIdlingResource = baseSyncActivity.syncServiceCountingIdlingResource
+      syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+    }
   }
 
   @After
   fun unregisterSyncServiceCountingIdlingResource() {
-    (activityTestRule?.activity as? BaseSyncActivity)?.syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+    syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
   @Before
   fun registerCountingIdlingResource() {
-    (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
-
     activityScenarioRule?.scenario?.onActivity { activity ->
       val baseActivity = (activity as? BaseActivity) ?: return@onActivity
       countingIdlingResource = baseActivity.countingIdlingResource
@@ -97,7 +99,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
   @After
   fun unregisterCountingIdlingResource() {
-    (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
     countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
