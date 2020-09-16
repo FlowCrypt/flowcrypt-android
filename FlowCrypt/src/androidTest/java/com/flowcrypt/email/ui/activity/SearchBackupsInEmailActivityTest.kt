@@ -23,6 +23,7 @@ import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.settings.SearchBackupsInEmailActivity
 import org.hamcrest.Matchers.not
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -37,6 +38,7 @@ import org.junit.runner.RunWith
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("fix me")
 class SearchBackupsInEmailActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(SearchBackupsInEmailActivity::class.java)
