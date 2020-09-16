@@ -7,10 +7,49 @@ agent:
     os_image: ubuntu1804
 
 blocks:
+  - name: "Init"
+      execution_time_limit:
+        minutes: 1
+      task:
+        env_vars:
+          - name: SEMAPHORE_GIT_DIR
+            value: /home/semaphore/git/flowcrypt-android
+          - name: ANDROID_SDK_ROOT
+            value: /home/semaphore/Android/Sdk
+        jobs:
+          - name: Initialization job
+            commands:
+              - sudo rm -rf ~/.rbenv ~/.phpbrew
+              - checkout && cd ~
+              - cat /proc/cpuinfo
 
-  - name: Test without mailserver
+  - name: "Restore cache"
+      execution_time_limit:
+        minutes: 10
+      task:
+        env_vars:
+          - name: SEMAPHORE_GIT_DIR
+            value: /home/semaphore/git/flowcrypt-android
+          - name: ANDROID_SDK_ROOT
+            value: /home/semaphore/Android/Sdk
+        jobs:
+          - name: Restore cache job
+            commands:
+              # restore caches
+              - export SUM=$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
+              - export GRADLE_CACHE=gradle-cache-$SUM # per conf files hash
+              - export ANDROID_SDK_CACHE=android-sdk-$SUM  # per conf files hash
+              - export BUILD_NATIVE_CACHE=build-native-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
+              - export BUILD_CACHE=build-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
+              - cache restore $ANDROID_SDK_CACHE
+              - cache restore $GRADLE_CACHE
+              - cache restore $BUILD_NATIVE_CACHE
+              - cache restore $BUILD_CACHE
+      dependencies: ["Init"]
+
+  - name: "Prepare environment"
     execution_time_limit:
-      minutes: 30
+      minutes: 15
     task:
       env_vars:
         - name: SEMAPHORE_GIT_DIR
@@ -18,59 +57,86 @@ blocks:
         - name: ANDROID_SDK_ROOT
           value: /home/semaphore/Android/Sdk
       jobs:
-        - name: Test without mailserver
+        - name: Prepare environment job
           commands:
-            - sudo rm -rf ~/.rbenv ~/.phpbrew
-            - checkout && cd ~
-            - cat /proc/cpuinfo
-
-            # restore caches
-            - export SUM=$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
-            - export GRADLE_CACHE=gradle-cache-$SUM # per conf files hash
-            - export ANDROID_SDK_CACHE=android-sdk-$SUM  # per conf files hash
-            - export BUILD_NATIVE_CACHE=build-native-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
-            - export BUILD_CACHE=build-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
-            - cache restore $ANDROID_SDK_CACHE
-            - cache restore $GRADLE_CACHE
-            - cache restore $BUILD_NATIVE_CACHE
-            - cache restore $BUILD_CACHE
-
-            # build + test
+            # install android sdk
             - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
-            # run JUnit tests first
-            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-junit-tests.sh )
-            # run Lint checks
-            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-lint-checks.sh )
-            # Run an emulator and instrumentation tests
+            # Install an emulator
             - ~/Android/Sdk/emulator/emulator -accel-check # debug
             - echo -ne '\n' | ~/Android/Sdk/tools/bin/avdmanager -v create avd --name ci-test-pixel-x86-64-api29 --package "system-images;android-29;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
             - ~/Android/Sdk/emulator/emulator -list-avds # debug
+      dependencies: ["Restore cache"]
+
+  - name: "Lint checks"
+    execution_time_limit:
+      minutes: 15
+    task:
+      env_vars:
+        - name: SEMAPHORE_GIT_DIR
+          value: /home/semaphore/git/flowcrypt-android
+        - name: ANDROID_SDK_ROOT
+          value: /home/semaphore/Android/Sdk
+      jobs:
+        - name: Lint checks job
+          commands:
+            # run Lint checks
+            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-lint-checks.sh )
+      dependencies: ["Prepare environment"]
+
+  - name: "JUnit tests"
+    execution_time_limit:
+      minutes: 15
+    task:
+      env_vars:
+        - name: SEMAPHORE_GIT_DIR
+          value: /home/semaphore/git/flowcrypt-android
+        - name: ANDROID_SDK_ROOT
+          value: /home/semaphore/Android/Sdk
+      jobs:
+        - name: JUnit tests job
+          commands:
+            # run JUnit tests
+            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-junit-tests.sh )
+      dependencies: ["Lint checks"]
+
+  - name: "Instrumentation tests"
+    execution_time_limit:
+      minutes: 15
+    task:
+      env_vars:
+        - name: SEMAPHORE_GIT_DIR
+          value: /home/semaphore/git/flowcrypt-android
+        - name: ANDROID_SDK_ROOT
+          value: /home/semaphore/Android/Sdk
+      jobs:
+        - name: Run instrumentation tests job
+          commands:
+            # Run instrumentation tests
             - ~/Android/Sdk/emulator/emulator -no-window -avd ci-test-pixel-x86-64-api29 -no-boot-anim -no-audio & # start emulator in the background
             - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
             - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
+      epilogue:
+        on_fail:
+          commands:
+            - artifact push job --expire-in 1w $SEMAPHORE_GIT_DIR/FlowCrypt/build/reports/androidTests/connected/flavors/DEVTEST/
+      dependencies: ["JUnit tests"]
 
+  - name: "Store cache"
+    execution_time_limit:
+      minutes: 15
+    task:
+      env_vars:
+        - name: SEMAPHORE_GIT_DIR
+          value: /home/semaphore/git/flowcrypt-android
+        - name: ANDROID_SDK_ROOT
+          value: /home/semaphore/Android/Sdk
+      jobs:
+        - name: Store cache job
+          commands:
             # store caches
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
             - cache has_key $GRADLE_CACHE || cache store $GRADLE_CACHE .gradle
             - cache has_key $ANDROID_SDK_CACHE || cache store $ANDROID_SDK_CACHE Android
             - cache has_key $BUILD_NATIVE_CACHE || cache store $BUILD_NATIVE_CACHE git/flowcrypt-android/FlowCrypt/.externalNativeBuild
             - cache has_key $BUILD_CACHE || cache store $BUILD_CACHE git/flowcrypt-android/FlowCrypt/build
-
-      epilogue:
-        on_fail:
-          commands:
-            - artifact push job --expire-in 1w $SEMAPHORE_GIT_DIR/FlowCrypt/build/reports/androidTests/connected/flavors/DEVTEST/
-
-#            # transfer testable result to next block
-#            - mkdir ~/testable && mv $SEMAPHORE_GIT_DIR/FlowCrypt/build/outputs/apk/prod/debug/FlowCrypt-prod-debug.apk ~/testable/FlowCrypt-prod-debug.apk
-#            - cache store android-testable-$SEMAPHORE_PIPELINE_ID testable
-
-#  - name: Test
-#    task:
-#      jobs:
-#        - name: Find testable folder
-#          commands:
-#            - cache has_key android-testable-$SEMAPHORE_PIPELINE_ID
-#            - cache restore android-testable-$SEMAPHORE_PIPELINE_ID
-#            - ls ~/testable/
-#            - du -sh ~/testable/*
+      dependencies: ["Instrumentation tests"]
