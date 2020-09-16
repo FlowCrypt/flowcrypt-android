@@ -20,7 +20,7 @@ services:
     cap_add:
       - NET_ADMIN
       - SYS_PTRACE
-    restart: always
+    restart: no
 volumes:
   mailstate:
     driver: local
