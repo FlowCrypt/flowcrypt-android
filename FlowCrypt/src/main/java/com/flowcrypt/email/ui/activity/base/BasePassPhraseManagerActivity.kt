@@ -8,11 +8,9 @@ package com.flowcrypt.email.ui.activity.base
 import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
-import android.text.Editable
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextUtils
-import android.text.TextWatcher
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.view.View
@@ -25,6 +23,7 @@ import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
+import androidx.core.widget.addTextChangedListener
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -48,7 +47,7 @@ import java.util.*
  * Time: 14:53
  * E-mail: DenBond7@gmail.com
  */
-abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnClickListener, TextWatcher {
+abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnClickListener {
 
   protected lateinit var layoutProgress: View
   protected lateinit var layoutContentView: View
@@ -156,22 +155,6 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     }
   }
 
-  override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
-
-  }
-
-  override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-
-  }
-
-  override fun afterTextChanged(editable: Editable) {
-    val passphrase = editable.toString()
-    passwordStrengthViewModel.check(passphrase)
-    if (TextUtils.isEmpty(editable)) {
-      textViewPasswordQualityInfo.setText(R.string.passphrase_must_be_non_empty)
-    }
-  }
-
   protected open fun initViews() {
     layoutProgress = findViewById(R.id.layoutProgress)
     layoutContentView = findViewById(R.id.layoutContentView)
@@ -185,7 +168,13 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     btnSuccess = findViewById(R.id.buttonSuccess)
 
     editTextKeyPassword = findViewById(R.id.editTextKeyPassword)
-    editTextKeyPassword.addTextChangedListener(this)
+    editTextKeyPassword.addTextChangedListener { editable ->
+      val passphrase = editable.toString()
+      passwordStrengthViewModel.check(passphrase)
+      if (TextUtils.isEmpty(editable)) {
+        textViewPasswordQualityInfo.setText(R.string.passphrase_must_be_non_empty)
+      }
+    }
     editTextKeyPasswordSecond = findViewById(R.id.editTextKeyPasswordSecond)
     progressBarPasswordQuality = findViewById(R.id.progressBarPasswordQuality)
     textViewPasswordQualityInfo = findViewById(R.id.textViewPasswordQualityInfo)
@@ -319,9 +308,5 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
         }
       }
     }
-  }
-
-  companion object {
-    private const val DELAY: Long = 350
   }
 }
