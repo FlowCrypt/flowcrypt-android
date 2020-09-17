@@ -47,6 +47,11 @@ blocks:
             - emulator -list-avds # debug
             - emulator -no-window -avd ci-test-pixel-x86-64-api29 -no-boot-anim -no-audio -gpu off& # start emulator in the background
             - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
+            - adb shell wm dismiss-keyguard
+            - sleep 1
+            - adb shell settings put global window_animation_scale 0
+            - adb shell settings put global transition_animation_scale 0
+            - adb shell settings put global animator_duration_scale 0
             # Run instrumentation tests
             - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
 
