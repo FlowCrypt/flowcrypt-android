@@ -8,15 +8,14 @@ agent:
     - name: main
       image: semaphoreci/android:29
 global_job_config:
-  env_vars:
-    - name: SEMAPHORE_GIT_DIR
-      value: ~/git/flowcrypt-android
   prologue:
     commands:
       - export PATH=${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools:${PATH}
-      - checkout && cd ~
+      - sudo rm -rf ~/.rbenv ~/.phpbrew
+      - checkout
+      - ls -a
       # restore caches
-      - export SUM=$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
+      - export SUM=$(checksum build.gradle)-$(checksum FlowCrypt/build.gradle)-$(checksum ./script/ci-install-android-sdk.sh)
       - export GRADLE_CACHE=gradle-cache-$SUM # per conf files hash
       - export BUILD_NATIVE_CACHE=build-native-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
       - export BUILD_CACHE=build-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
@@ -31,28 +30,29 @@ blocks:
       jobs:
         - name: Test without mailserver
           commands:
-            - sudo rm -rf ~/.rbenv ~/.phpbrew
             - cat /proc/cpuinfo
             # Install Android dependencies
-            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-install-android-sdk.sh )
+            - ./script/ci-install-android-sdk.sh
             # Enable gradle daemon. https://docs.gradle.org/current/userguide/gradle_daemon.html#sec:disabling_the_daemon
             - sudo mkdir -p ~/.gradle && echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
-            - ( cd $SEMAPHORE_GIT_DIR && ./gradlew :FlowCrypt:assembleConsumerDebug )
-            - ( cd $SEMAPHORE_GIT_DIR && ls -a )
-            - ( cd $SEMAPHORE_GIT_DIR && ls -a FlowCrypt )
-            - ( cd $SEMAPHORE_GIT_DIR && ls -a FlowCrypt/build )
+            - ./gradlew :FlowCrypt:assembleConsumerDebug
+            - ls -a
+            - ls -a FlowCrypt
+            - ls -a FlowCrypt/build
 
       epilogue:
         on_fail:
           commands:
+            - echo "epilogue"
+            - ls -a
             - artifact push job --expire-in 1w $SEMAPHORE_GIT_DIR/FlowCrypt/build/reports/androidTests/connected/flavors/DEVTEST/
         on_pass:
           commands:
             # store caches
             - echo "store caches"
-            - ( cd $SEMAPHORE_GIT_DIR && ls -a )
-            - ( cd $SEMAPHORE_GIT_DIR && ls -a FlowCrypt )
-            - ( cd $SEMAPHORE_GIT_DIR && ls -a FlowCrypt/build )
+            - ls -a
+            - ls -a FlowCrypt
+            - ls -a FlowCrypt/build
             - cache clear
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
             - cache store $GRADLE_CACHE .gradle
