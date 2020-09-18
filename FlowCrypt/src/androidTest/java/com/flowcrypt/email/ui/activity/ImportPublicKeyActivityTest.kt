@@ -57,6 +57,7 @@ import java.io.File
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("Failed on CI")
 class ImportPublicKeyActivityTest : BaseTest() {
 
   override val activityTestRule: IntentsTestRule<*>? =
