@@ -35,10 +35,17 @@ blocks:
             - ./script/ci-install-android-sdk.sh
             # Enable gradle daemon. https://docs.gradle.org/current/userguide/gradle_daemon.html#sec:disabling_the_daemon
             - sudo mkdir -p ~/.gradle && echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
-            - ./gradlew :FlowCrypt:assembleConsumerDebug
-            - ls -a
-            - ls -a FlowCrypt
-            - ls -a FlowCrypt/build
+            # run Lint checks
+            - ./script/ci-lint-checks.sh
+            # run JUnit tests
+            - ./script/ci-junit-tests.sh
+            # Setup and run an emulator
+            - echo no | avdmanager -v create avd -n ci-test-pixel-x86-64-api29 -k "system-images;android-29;google_apis;x86_64"
+            - emulator -list-avds # debug
+            - emulator -avd ci-test-pixel-x86-64-api29 -no-window -no-boot-anim -no-audio -gpu auto& # start emulator in the background
+            - ./script/ci-wait-for-emulator.sh # wait till ready
+            # Run instrumentation tests
+            - ./script/ci-tests-without-mailserver.sh
       epilogue:
         on_fail:
           commands:
