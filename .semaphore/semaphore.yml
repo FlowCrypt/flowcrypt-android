@@ -37,17 +37,9 @@ blocks:
             - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-install-android-sdk.sh )
             # Enable gradle daemon. https://docs.gradle.org/current/userguide/gradle_daemon.html#sec:disabling_the_daemon
             - sudo mkdir -p ~/.gradle && echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
-            # run Lint checks
-            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-lint-checks.sh )
-            # run JUnit tests
-            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-junit-tests.sh )
-            # Setup and run an emulator
-            - echo no | avdmanager -v create avd -n ci-test-pixel-x86-64-api29 -k "system-images;android-29;google_apis;x86_64"
-            - emulator -list-avds # debug
-            - emulator -avd ci-test-pixel-x86-64-api29 -no-window -no-boot-anim -no-audio -gpu auto& # start emulator in the background
-            - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
-            # Run instrumentation tests
-            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
+            - ( cd $SEMAPHORE_GIT_DIR && ./gradlew :FlowCrypt:assembleConsumerDebug )
+            - ls FlowCrypt
+            - ls FlowCrypt/build
 
       epilogue:
         on_fail:
@@ -57,6 +49,8 @@ blocks:
           commands:
             # store caches
             - ( cd $SEMAPHORE_GIT_DIR && ls )
+            - ls FlowCrypt
+            - ls FlowCrypt/build
             - cache clear
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
             - cache store $GRADLE_CACHE .gradle
