@@ -56,9 +56,9 @@ blocks:
         on_pass:
           commands:
             # store caches
-            - cd $SEMAPHORE_GIT_DIR
+            - ( cd $SEMAPHORE_GIT_DIR && ls )
             - cache clear
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
-            - cache store $GRADLE_CACHE $SEMAPHORE_GIT_DIR/.gradle
-            - cache store $BUILD_NATIVE_CACHE $SEMAPHORE_GIT_DIR/FlowCrypt/.externalNativeBuild
-            - cache store $BUILD_CACHE $SEMAPHORE_GIT_DIR/FlowCrypt/build
+            - cache store $GRADLE_CACHE .gradle
+            - cache store $BUILD_NATIVE_CACHE FlowCrypt/.externalNativeBuild
+            - cache store $BUILD_CACHE FlowCrypt/build
