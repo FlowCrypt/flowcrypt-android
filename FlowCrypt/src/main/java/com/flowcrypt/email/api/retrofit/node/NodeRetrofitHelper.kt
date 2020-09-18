@@ -101,7 +101,7 @@ object NodeRetrofitHelper {
         attemptCount--
         try {
           LogsUtil.d(NodeRetrofitHelper::class.java.simpleName, "Node.js server is not run yet. Trying to wait...")
-          Thread.sleep(1000)
+          Thread.sleep(5000)
         } catch (e: InterruptedException) {
           e.printStackTrace()
         }
