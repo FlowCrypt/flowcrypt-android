@@ -10,7 +10,7 @@ agent:
 global_job_config:
   env_vars:
     - name: SEMAPHORE_GIT_DIR
-      value: /home/semaphore/git/flowcrypt-android
+      value: ~/git/flowcrypt-android
   prologue:
     commands:
       - export PATH=${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools:${PATH}
@@ -54,8 +54,9 @@ blocks:
         on_pass:
           commands:
             # store caches
+            - cd $SEMAPHORE_GIT_DIR
             - cache clear
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
-            - cache store $GRADLE_CACHE .gradle
-            - cache store $BUILD_NATIVE_CACHE git/flowcrypt-android/FlowCrypt/.externalNativeBuild
-            - cache store $BUILD_CACHE git/flowcrypt-android/FlowCrypt/build
+            - cache store $GRADLE_CACHE $SEMAPHORE_GIT_DIR/.gradle
+            - cache store $BUILD_NATIVE_CACHE $SEMAPHORE_GIT_DIR/FlowCrypt/.externalNativeBuild
+            - cache store $BUILD_CACHE $SEMAPHORE_GIT_DIR/flowcrypt-android/FlowCrypt/build
