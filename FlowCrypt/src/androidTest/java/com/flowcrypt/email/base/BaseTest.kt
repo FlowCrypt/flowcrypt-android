@@ -67,11 +67,23 @@ abstract class BaseTest : BaseActivityTestImplementation {
       nodeIdlingResource = baseActivity.nodeIdlingResource
       nodeIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
     }
+
+    //remove that after migration to a new approach
+    val activity = activityTestRule?.activity ?: return
+    if (activity is BaseActivity) {
+      IdlingRegistry.getInstance().register(activity.nodeIdlingResource)
+    }
   }
 
   @After
   open fun unregisterNodeIdling() {
     nodeIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+
+    //remove that after migration to a new approach
+    val activity = activityTestRule?.activity ?: return
+    if (activity is BaseActivity) {
+      IdlingRegistry.getInstance().unregister(activity.nodeIdlingResource)
+    }
   }
 
   @Before
@@ -81,11 +93,14 @@ abstract class BaseTest : BaseActivityTestImplementation {
       syncServiceCountingIdlingResource = baseSyncActivity.syncServiceCountingIdlingResource
       syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
     }
+
+    (activityTestRule?.activity as? BaseSyncActivity)?.syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
   }
 
   @After
   fun unregisterSyncServiceCountingIdlingResource() {
     syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+    (activityTestRule?.activity as? BaseSyncActivity)?.syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
   @Before
@@ -95,11 +110,14 @@ abstract class BaseTest : BaseActivityTestImplementation {
       countingIdlingResource = baseActivity.countingIdlingResource
       countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
     }
+
+    (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
   }
 
   @After
   fun unregisterCountingIdlingResource() {
     countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+    (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
   @Before
