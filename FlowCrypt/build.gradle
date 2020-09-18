@@ -257,7 +257,8 @@ android {
 
     lintOptions {
         warningsAsErrors true
-        disable "NullSafeMutableLiveData"
+        //we disable 'IconLauncherShape' to prevent fails because of use easylauncher
+        disable 'NullSafeMutableLiveData', 'IconLauncherShape'
     }
 
     packagingOptions {
