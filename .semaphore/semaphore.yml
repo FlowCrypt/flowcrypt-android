@@ -36,8 +36,8 @@ blocks:
             # Install Android dependencies
             - sudo apt-get update
             - sudo apt-get -yq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
-            - sdkmanager "platform-tools" "platforms;android-29" "emulator" "extras;google;m2repository" "build-tools;29.0.2" "ndk;21.2.6472646" "cmake;3.10.2.4988404"
-            - sdkmanager "system-images;android-29;google_apis;x86_64"
+            - sdkmanager "platform-tools" "platforms;android-29" "emulator" "extras;google;m2repository" "build-tools;29.0.2" "ndk;21.2.6472646" "cmake;3.10.2.4988404" | grep -v = || true
+            - sdkmanager "system-images;android-29;google_apis;x86_64" | grep -v = || true
             # run Lint checks
             - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-lint-checks.sh )
             # run JUnit tests
