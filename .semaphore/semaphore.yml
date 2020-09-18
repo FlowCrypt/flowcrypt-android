@@ -45,7 +45,7 @@ blocks:
             # Setup and run an emulator
             - echo no | avdmanager -v create avd -n ci-test-pixel-x86-64-api29 -k "system-images;android-29;google_apis;x86_64"
             - emulator -list-avds # debug
-            - emulator -no-window -avd ci-test-pixel-x86-64-api29 -no-boot-anim -no-audio -gpu off& # start emulator in the background
+            - emulator -avd ci-test-pixel-x86-64-api29 -no-window -no-boot-anim -no-audio -gpu auto& # start emulator in the background
             - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
             - adb shell wm dismiss-keyguard
             - sleep 1
