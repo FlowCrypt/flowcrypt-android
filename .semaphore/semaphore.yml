@@ -33,9 +33,9 @@ blocks:
           commands:
             - sudo rm -rf ~/.rbenv ~/.phpbrew
             - cat /proc/cpuinfo
-            # Install Android dependencies
-            - sudo apt-get update
-            - sudo apt-get -yq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
+            # Install Android dependencies. We use grep -v = || true to disable printing logs
+            - sudo apt-get update | grep -v = || true
+            - sudo apt-get -yq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils | grep -v = || true
             - sdkmanager "platform-tools" "platforms;android-29" "emulator" "extras;google;m2repository" "build-tools;29.0.2" "ndk;21.2.6472646" "cmake;3.10.2.4988404" | grep -v = || true
             - sdkmanager "system-images;android-29;google_apis;x86_64" | grep -v = || true
             # run Lint checks
@@ -47,11 +47,6 @@ blocks:
             - emulator -list-avds # debug
             - emulator -avd ci-test-pixel-x86-64-api29 -no-window -no-boot-anim -no-audio -gpu auto& # start emulator in the background
             - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh # wait till ready
-            - adb shell wm dismiss-keyguard
-            - sleep 1
-            - adb shell settings put global window_animation_scale 0
-            - adb shell settings put global transition_animation_scale 0
-            - adb shell settings put global animator_duration_scale 0
             # Run instrumentation tests
             - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
 
