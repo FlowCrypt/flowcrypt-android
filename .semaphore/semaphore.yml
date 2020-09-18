@@ -15,6 +15,7 @@ global_job_config:
       - checkout
       - ls -a
       # restore caches
+      - cache clear
       - export SUM=$(checksum build.gradle)-$(checksum FlowCrypt/build.gradle)-$(checksum ./script/ci-install-android-sdk.sh)
       - export GRADLE_CACHE=gradle-cache-$SUM # per conf files hash
       - export BUILD_NATIVE_CACHE=build-native-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
