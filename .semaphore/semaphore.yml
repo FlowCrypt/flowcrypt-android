@@ -33,13 +33,8 @@ blocks:
           commands:
             - sudo rm -rf ~/.rbenv ~/.phpbrew
             - cat /proc/cpuinfo
-            # Install Android dependencies. We use grep -v = || true to disable printing logs
-            - sudo apt-get update -qq
-            # We use "sudo apt-get -qq install" to disable printing logs. To see them again use "-yq install"
-            - sudo apt-get -qq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
-            # We use "| grep -v = || true" to disable printing logs
-            - sdkmanager "platform-tools" "platforms;android-29" "emulator" "extras;google;m2repository" "build-tools;29.0.2" "ndk;21.2.6472646" "cmake;3.10.2.4988404" | grep -v = || true
-            - sdkmanager "system-images;android-29;google_apis;x86_64" | grep -v = || true
+            # Install Android dependencies
+            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-install-android-sdk.sh )
             # run Lint checks
             - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-lint-checks.sh )
             # run JUnit tests
@@ -59,7 +54,8 @@ blocks:
         on_pass:
           commands:
             # store caches
+            - cache clear
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
-            - cache has_key $GRADLE_CACHE || cache store $GRADLE_CACHE .gradle
-            - cache has_key $BUILD_NATIVE_CACHE || cache store $BUILD_NATIVE_CACHE git/flowcrypt-android/FlowCrypt/.externalNativeBuild
-            - cache has_key $BUILD_CACHE || cache store $BUILD_CACHE git/flowcrypt-android/FlowCrypt/build
+            - cache store $GRADLE_CACHE .gradle
+            - cache store $BUILD_NATIVE_CACHE git/flowcrypt-android/FlowCrypt/.externalNativeBuild
+            - cache store $BUILD_CACHE git/flowcrypt-android/FlowCrypt/build
