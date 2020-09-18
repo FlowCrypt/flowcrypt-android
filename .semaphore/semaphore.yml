@@ -38,7 +38,9 @@ blocks:
             # Enable gradle daemon. https://docs.gradle.org/current/userguide/gradle_daemon.html#sec:disabling_the_daemon
             - sudo mkdir -p ~/.gradle && echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
             - ( cd $SEMAPHORE_GIT_DIR && ./gradlew :FlowCrypt:assembleConsumerDebug )
-            - ls
+            - ( cd $SEMAPHORE_GIT_DIR && ls -a )
+            - ( cd $SEMAPHORE_GIT_DIR && ls -a FlowCrypt )
+            - ( cd $SEMAPHORE_GIT_DIR && ls -a FlowCrypt/build )
 
       epilogue:
         on_fail:
@@ -47,9 +49,10 @@ blocks:
         on_pass:
           commands:
             # store caches
-            - ( cd $SEMAPHORE_GIT_DIR && ls )
-            - ls FlowCrypt
-            - ls FlowCrypt/build
+            - echo "store caches"
+            - ( cd $SEMAPHORE_GIT_DIR && ls -a )
+            - ( cd $SEMAPHORE_GIT_DIR && ls -a FlowCrypt )
+            - ( cd $SEMAPHORE_GIT_DIR && ls -a FlowCrypt/build )
             - cache clear
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
             - cache store $GRADLE_CACHE .gradle
