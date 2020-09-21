@@ -43,8 +43,9 @@ blocks:
             - $ANDROID_SDK_ROOT/emulator/emulator -accel-check
             - echo -ne '\n' | avdmanager -v create avd --name ci-test-pixel-x86-64-api29 --package "system-images;android-29;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
             - $ANDROID_SDK_ROOT/emulator/emulator -list-avds #debug
-            - $ANDROID_SDK_ROOT/emulator/emulator -no-window -avd ci-test-pixel-x86-64-api29 -no-boot-anim -no-audio &
-            - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh #wait until ready
+            - $ANDROID_SDK_ROOT/emulator/emulator -avd ci-test-pixel-x86-64-api29 -no-window -no-boot-anim -no-audio &
+            - ./script/ci-wait-for-emulator.sh #wait until ready
+            # Run instrumentation tests
             - ./script/ci-tests-without-mailserver.sh
       epilogue:
         on_fail:
