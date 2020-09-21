@@ -40,7 +40,7 @@ blocks:
             #- ./script/ci-junit-tests.sh
             # Setup and run an emulator
             - echo no | avdmanager -v create avd -n ci-test-pixel-x86-api29 -d 19 -k "system-images;android-29;google_apis;x86"
-            - echo "vm.heapSize=256"  >> ~/.android/avd/ci-test-pixel-x86-64-api29.avd/config.ini
+            - echo "vm.heapSize=256"  >> ~/.android/avd/ci-test-pixel-x86-api29.avd/config.ini
             - emulator -list-avds # debug
             - emulator -avd ci-test-pixel-x86-api29 -no-window -no-boot-anim -no-audio -gpu auto& # start emulator in the background
             - ./script/ci-wait-for-emulator.sh # wait till ready
