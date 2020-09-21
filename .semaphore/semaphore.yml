@@ -26,7 +26,7 @@ global_job_config:
       - cache restore $BUILD_NATIVE_CACHE
       - cache restore $BUILD_CACHE
 blocks:
-  - name: Test without mailserver
+  - name: Testing
     execution_time_limit:
       minutes: 30
     task:
