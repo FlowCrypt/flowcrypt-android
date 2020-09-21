@@ -4,60 +4,46 @@ agent:
   machine:
     type: e1-standard-4
     os_image: ubuntu1804
-  containers:
-    - name: main
-      image: semaphoreci/android:29
-global_job_config:
-  prologue:
-    commands:
-      - export PATH=${ANDROID_HOME}/emulator:${ANDROID_HOME}/tools:${ANDROID_HOME}/tools/bin:${ANDROID_HOME}/platform-tools:${PATH}
-      - sudo rm -rf ~/.rbenv ~/.phpbrew
-      - checkout
-      # restore caches
-      - export SUM=$(checksum build.gradle)-$(checksum FlowCrypt/build.gradle)-$(checksum ./script/ci-install-android-sdk.sh)
-      - export GRADLE_CACHE=gradle-cache-$SUM # per conf files hash
-      - export BUILD_NATIVE_CACHE=build-native-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
-      - export BUILD_CACHE=build-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
-      - cache restore $GRADLE_CACHE
-      - cache restore $BUILD_NATIVE_CACHE
-      - cache restore $BUILD_CACHE
 blocks:
   - name: Test without mailserver
     execution_time_limit:
       minutes: 30
     task:
+      env_vars:
+        - name: SEMAPHORE_GIT_DIR
+          value: /home/semaphore/git/flowcrypt-android
+        - name: ANDROID_SDK_ROOT
+          value: /home/semaphore/Android/Sdk
       jobs:
         - name: Test without mailserver
           commands:
+            - sudo rm -rf ~/.rbenv ~/.phpbrew
+            - checkout && cd ~
             - cat /proc/cpuinfo
-            # Install Android dependencies
-            - ./script/ci-install-android-sdk.sh
-            # Enable gradle daemon. https://docs.gradle.org/current/userguide/gradle_daemon.html#sec:disabling_the_daemon
-            - sudo mkdir -p ~/.gradle && echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
-            # run Lint checks
-            #- ./script/ci-lint-checks.sh
-            # run JUnit tests
-            #- ./script/ci-junit-tests.sh
-            # Setup and run an emulator
-            - echo no | avdmanager -v create avd -n ci-test-pixel-x86-api29 -d 19 -k "system-images;android-29;google_apis;x86"
-            - echo "vm.heapSize=256"  >> ~/.android/avd/ci-test-pixel-x86-api29.avd/config.ini
-            - emulator -list-avds # debug
-            - emulator -avd ci-test-pixel-x86-api29 -no-window -no-boot-anim -no-audio -gpu auto& # start emulator in the background
-            - ./script/ci-wait-for-emulator.sh # wait till ready
-            # Run instrumentation tests
-            - ./script/ci-tests-without-mailserver.sh
+            - export SUM=$(checksum $SEMAPHORE_GIT_DIR/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/FlowCrypt/build.gradle)-$(checksum $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh)
+            - export GRADLE_CACHE=gradle-cache-$SUM
+            - export ANDROID_SDK_CACHE=android-sdk-$SUM
+            - export BUILD_NATIVE_CACHE=build-native-cache-$SEMAPHORE_GIT_BRANCH-$SUM
+            - export BUILD_CACHE=build-cache-$SEMAPHORE_GIT_BRANCH-$SUM
+            - cache restore $ANDROID_SDK_CACHE
+            - cache restore $GRADLE_CACHE
+            - cache restore $BUILD_NATIVE_CACHE
+            - cache restore $BUILD_CACHE
+            - $SEMAPHORE_GIT_DIR/script/ci-install-android-sdk.sh
+            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-junit-tests.sh )
+            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-lint-checks.sh )
+            - ~/Android/Sdk/emulator/emulator -accel-check
+            - echo -ne '\n' | ~/Android/Sdk/tools/bin/avdmanager -v create avd --name ci-test-pixel-x86-64-api29 --package "system-images;android-29;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
+            - ~/Android/Sdk/emulator/emulator -list-avds
+            - ~/Android/Sdk/emulator/emulator -no-window -avd ci-test-pixel-x86-64-api29 -no-boot-anim -no-audio &
+            - $SEMAPHORE_GIT_DIR/script/ci-wait-for-emulator.sh
+            - ( cd $SEMAPHORE_GIT_DIR && ./script/ci-tests-without-mailserver.sh )
+            - find ~/.gradle/caches/ -name "*.lock" -type f -delete
+            - cache has_key $GRADLE_CACHE || cache store $GRADLE_CACHE .gradle
+            - cache has_key $ANDROID_SDK_CACHE || cache store $ANDROID_SDK_CACHE Android
+            - cache has_key $BUILD_NATIVE_CACHE || cache store $BUILD_NATIVE_CACHE git/flowcrypt-android/FlowCrypt/.externalNativeBuild
+            - cache has_key $BUILD_CACHE || cache store $BUILD_CACHE git/flowcrypt-android/FlowCrypt/build
       epilogue:
         on_fail:
           commands:
-            # store errors log
-            - echo "Store errors log"
-            - ls -a
-            - artifact push job --expire-in 1w FlowCrypt/build/reports/androidTests/connected/flavors/DEVTEST/
-        on_pass:
-          commands:
-            # store cache
-            - echo "Store cache"
-            - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
-            - cache has_key $GRADLE_CACHE || cache store $GRADLE_CACHE .gradle
-            - cache has_key $BUILD_NATIVE_CACHE || cache store $BUILD_NATIVE_CACHE FlowCrypt/.externalNativeBuild
-            - cache has_key $BUILD_CACHE || cache store $BUILD_CACHE FlowCrypt/build
+            - artifact push job --expire-in 1w $SEMAPHORE_GIT_DIR/FlowCrypt/build/reports/androidTests/connected/flavors/DEVTEST/

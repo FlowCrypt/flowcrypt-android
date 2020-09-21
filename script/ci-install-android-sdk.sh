@@ -1,9 +1,30 @@
 #!/bin/bash
 
-sudo apt-get update -qq
-# We use "sudo apt-get -qq install app > /dev/null" to disable printing logs. To see them again use "-yq install"
-sudo apt-get -qq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
+set -euxo pipefail
+
+mkdir ~/.android
+touch ~/.android/repositories.cfg
+
+SDK_ARCHIVE=sdk-tools-linux-4333796.zip
+
+sudo apt-get -qq install adb qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils > /dev/null
 sudo kvm-ok
-# We use "| grep -v = || true" to disable printing logs
-sdkmanager "platform-tools" "platforms;android-29" "emulator" "extras;google;m2repository" "build-tools;29.0.2" "ndk;21.2.6472646" "cmake;3.10.2.4988404" | grep -v = || true
-sdkmanager "system-images;android-29;google_apis;x86" | grep -v = || true
+
+if [ -d ~/Android ]; then
+    echo "~/Android already exists, skipping installation"
+else
+    echo "~/Android does not exist, installing"
+    mkdir -p $ANDROID_SDK_ROOT
+
+    # download, unpack and remove sdk archive
+    wget https://dl.google.com/android/repository/$SDK_ARCHIVE
+    unzip -qq $SDK_ARCHIVE -d $ANDROID_SDK_ROOT
+    rm $SDK_ARCHIVE
+
+    echo "yes" | ~/Android/Sdk/tools/bin/sdkmanager --licenses > /dev/null
+    ( sleep 5; echo "y" ) | ~/Android/Sdk/tools/bin/sdkmanager "build-tools;29.0.2" "platforms;
+    android-29" "extras;google;m2repository" "platform-tools" "emulator" "ndk;21.2.6472646" "cmake;3.10.2.4988404" "system-images;android-29;google_apis;x86_64" | grep -v = || true
+fi
+
+~/Android/Sdk/tools/bin/sdkmanager --list
+
