@@ -14,12 +14,12 @@ We have two types of tests which can be run:
 
 For now, independent tests run on [Semaphore CI](https://semaphoreci.com/) for every commit. Please follow this steps to run such tests locally:
 
-- Setup your device (virtual or physical) via [insctruction](https://developer.android.com/training/testing/espresso/setup#set-up-environment)
+- Setup your device (virtual or physical) via [instruction](https://developer.android.com/training/testing/espresso/setup#set-up-environment)
 - Run ```./script/ci-tests-without-mailserver.sh```
 
 To run all tests we use a custom [Docker image](https://hub.docker.com/r/flowcrypt/flowcrypt-email-server) which extends [docker-mailserver](https://github.com/tomav/docker-mailserver). This image has predefined settings for local testing. It has accounts and messages which we need for testing. You can investigate [`docker-mailserver`](https://github.com/FlowCrypt/flowcrypt-android/tree/master/docker-mailserver) folder to see more details. Please follow these steps to run all tests locally:
 
-- Setup your device (virtual or physical) via [insctruction](https://developer.android.com/training/testing/espresso/setup#set-up-environment)
+- Setup your device (virtual or physical) via [instruction](https://developer.android.com/training/testing/espresso/setup#set-up-environment)
 - We use `docker-compose` to run the email server. You have to install [docker-compose](https://docs.docker.com/compose/install/)
 - Run ```./docker-mailserver/run_email_server.sh``` and wait while the email server will be started
 - Run ```./script/run-all-tests.sh```
