@@ -22,13 +22,13 @@ else
     rm $SDK_ARCHIVE
 
     echo "yes" | ~/Android/Sdk/tools/bin/sdkmanager --licenses > /dev/null
-    ( sleep 5; echo "y" ) | ~/Android/Sdk/tools/bin/sdkmanager "build-tools;29.0.2" "platforms;android-29"
-    ~/Android/Sdk/tools/bin/sdkmanager "extras;google;m2repository"
-    ~/Android/Sdk/tools/bin/sdkmanager "platform-tools"
-    ~/Android/Sdk/tools/bin/sdkmanager "emulator"
+    ( sleep 5; echo "y" ) | ~/Android/Sdk/tools/bin/sdkmanager "build-tools;29.0.2" "platforms;android-29" | grep -v = || true
+    ~/Android/Sdk/tools/bin/sdkmanager "extras;google;m2repository" | grep -v = || true
+    ~/Android/Sdk/tools/bin/sdkmanager "platform-tools" | grep -v = || true
+    ~/Android/Sdk/tools/bin/sdkmanager "emulator" | grep -v = || true
     ~/Android/Sdk/tools/bin/sdkmanager "ndk;21.2.6472646"
     ~/Android/Sdk/tools/bin/sdkmanager "cmake;3.10.2.4988404"
-    ~/Android/Sdk/tools/bin/sdkmanager "system-images;android-29;google_apis;x86_64"
+    ~/Android/Sdk/tools/bin/sdkmanager "system-images;android-29;google_apis;x86_64" | grep -v = || true
 fi
 
 ~/Android/Sdk/tools/bin/sdkmanager --list
