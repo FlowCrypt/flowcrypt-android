@@ -26,8 +26,8 @@ else
     ~/Android/Sdk/tools/bin/sdkmanager "extras;google;m2repository" | grep -v = || true
     ~/Android/Sdk/tools/bin/sdkmanager "platform-tools" | grep -v = || true
     ~/Android/Sdk/tools/bin/sdkmanager "emulator" | grep -v = || true
-    ~/Android/Sdk/tools/bin/sdkmanager "ndk;21.2.6472646"
-    ~/Android/Sdk/tools/bin/sdkmanager "cmake;3.10.2.4988404"
+    ~/Android/Sdk/tools/bin/sdkmanager "ndk;21.2.6472646" | grep -v = || true
+    ~/Android/Sdk/tools/bin/sdkmanager "cmake;3.10.2.4988404" | grep -v = || true
     ~/Android/Sdk/tools/bin/sdkmanager "system-images;android-29;google_apis;x86_64" | grep -v = || true
 fi
 
