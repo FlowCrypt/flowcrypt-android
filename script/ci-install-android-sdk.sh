@@ -21,7 +21,7 @@ else
     unzip -qq $SDK_ARCHIVE -d $ANDROID_SDK_ROOT
     rm $SDK_ARCHIVE
 
-    echo "yes" | ~/Android/Sdk/tools/bin/sdkmanager --licenses | grep -v = || true
+    (echo "yes" | ~/Android/Sdk/tools/bin/sdkmanager --licenses > /dev/null | grep -v = || true)
     ( sleep 5; echo "y" ) | ~/Android/Sdk/tools/bin/sdkmanager "build-tools;29.0.2" "platforms;android-29" | grep -v = || true
     ~/Android/Sdk/tools/bin/sdkmanager "extras;google;m2repository" | grep -v = || true
     ~/Android/Sdk/tools/bin/sdkmanager "platform-tools" | grep -v = || true
