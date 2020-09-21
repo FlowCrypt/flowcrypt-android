@@ -6,4 +6,4 @@ sudo apt-get -qq install qemu-kvm libvirt-daemon-system libvirt-clients bridge-u
 sudo kvm-ok
 # We use "| grep -v = || true" to disable printing logs
 sdkmanager "platform-tools" "platforms;android-29" "emulator" "extras;google;m2repository" "build-tools;29.0.2" "ndk;21.2.6472646" "cmake;3.10.2.4988404" | grep -v = || true
-sdkmanager "system-images;android-29;google_apis;x86_64" | grep -v = || true
+sdkmanager "system-images;android-29;google_apis;x86" | grep -v = || true

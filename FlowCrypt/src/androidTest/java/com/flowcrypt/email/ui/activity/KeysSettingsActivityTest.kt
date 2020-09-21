@@ -69,6 +69,7 @@ import java.util.concurrent.TimeUnit
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("fix me")
 class KeysSettingsActivityTest : BaseTest() {
 
   override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(KeysSettingsActivity::class.java)
@@ -192,7 +193,6 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
-  @Ignore("fix me")
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
     //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
     Thread.sleep(1000)
