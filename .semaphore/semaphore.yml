@@ -35,8 +35,6 @@ blocks:
             - cat /proc/cpuinfo
             # Install Android dependencies
             - ./script/ci-install-android-sdk.sh
-            # Enable gradle daemon. https://docs.gradle.org/current/userguide/gradle_daemon.html#sec:disabling_the_daemon
-            - sudo mkdir -p ~/.gradle && sudo echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
             # run Lint checks
             - ./script/ci-lint-checks.sh
             # run JUnit tests
