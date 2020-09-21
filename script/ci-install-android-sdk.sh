@@ -22,7 +22,7 @@ else
     rm $SDK_ARCHIVE
 
     (echo "yes" | ~/Android/Sdk/tools/bin/sdkmanager --licenses > /dev/null | grep -v = || true)
-    ( sleep 5; echo "y" ) | (~/Android/Sdk/tools/bin/sdkmanager "build-tools;29.0.2" "platforms;android-29" | grep -v = || true)
+    ( sleep 5; echo "y" ) | (~/Android/Sdk/tools/bin/sdkmanager "build-tools;29.0.2" "platforms;android-29" > /dev/null | grep -v = || true)
     (~/Android/Sdk/tools/bin/sdkmanager "extras;google;m2repository" | grep -v = || true)
     (~/Android/Sdk/tools/bin/sdkmanager "platform-tools" | grep -v = || true)
     (~/Android/Sdk/tools/bin/sdkmanager "emulator" | grep -v = || true)
