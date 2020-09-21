@@ -22,6 +22,7 @@ global_job_config:
       - export BUILD_NATIVE_CACHE=build-native-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
       - export BUILD_CACHE=build-cache-$SEMAPHORE_GIT_BRANCH-$SUM  # per branch and conf files hash
       - cache restore $GRADLE_CACHE
+      - cache restore $ANDROID_SDK_CACHE
       - cache restore $BUILD_NATIVE_CACHE
       - cache restore $BUILD_CACHE
 blocks:
