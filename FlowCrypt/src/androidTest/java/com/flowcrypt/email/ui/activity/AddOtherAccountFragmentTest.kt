@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity
 
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.IdlingPolicies
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -16,11 +15,12 @@ import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -39,52 +39,49 @@ import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.startsWith
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.util.concurrent.TimeUnit
 
 /**
- * A test for [AddNewAccountManuallyActivity]
+ * Note: This test works well on com.google.android.material:material:1.1.0-rc02 and lower.
+ * it seems there is a bug on releases higher than 1.1.0-rc02. If we will upgrade
+ * com.google.android.material:material to a newer version we will have to remove
+ * app:passwordToggleEnabled="true" for layoutPassword to be able to run this test.
  *
  * @author Denis Bondarenko
  * Date: 01.02.2018
  * Time: 13:28
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
-@Ignore("Fix me after 1.0.9")
+@MediumTest
 @RunWith(AndroidJUnit4::class)
-class AddNewAccountManuallyActivityTest : BaseTest() {
-
-  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(SignInActivity::class.java)
+class AddOtherAccountFragmentTest : BaseTest() {
+  override val activityScenarioRule = activityScenarioRule<SignInActivity>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(activityTestRule)
+      .around(activityScenarioRule)
 
   private val authCreds: AuthCredentials = AuthCredentialsManager.getLocalWithOneBackupAuthCreds()
 
   @Before
-  fun setUp() {
-    IdlingPolicies.setMasterPolicyTimeout(60, TimeUnit.SECONDS)
+  fun openAddOtherAccountFragment() {
+    onView(withId(R.id.buttonOtherEmailProvider))
+        .perform(click())
   }
 
   @Test
-  fun testAllCredsCorrect() {
-    fillAllFields()
-    onView(withId(R.id.buttonTryToConnect))
-        .perform(scrollTo(), click())
-    onView(withId(R.id.textViewTitle))
-        .check(matches(isDisplayed()))
-  }
-
   @DoesNotNeedMailserver
   fun testShowSnackBarIfFieldEmpty() {
+    onView(withId(R.id.checkBoxAdvancedMode))
+        .perform(scrollTo(), click())
+
+    clearAllFields()
+
     checkIsFieldEmptyWork(R.id.editTextEmail, R.string.e_mail)
     checkIsFieldEmptyWork(R.id.editTextUserName, R.string.username)
     checkIsFieldEmptyWork(R.id.editTextPassword, R.string.password)
@@ -99,16 +96,16 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
     onView(withId(R.id.editTextSmtpPort))
         .perform(scrollTo(), typeText(authCreds.smtpPort.toString()))
 
-    onView(withId(R.id.checkBoxRequireSignInForSmtp))
-        .perform(scrollTo(), click())
     checkIsFieldEmptyWork(R.id.editTextSmtpUsername, R.string.smtp_username)
     checkIsFieldEmptyWork(R.id.editTextSmtpPassword, R.string.smtp_password)
   }
 
+  @Test
   @DoesNotNeedMailserver
   fun testIsPasswordFieldsAlwaysEmptyAtStart() {
     onView(withId(R.id.editTextPassword))
         .check(matches(withText(isEmptyString())))
+    enableAdvancedMode()
     onView(withId(R.id.checkBoxRequireSignInForSmtp))
         .perform(scrollTo(), click())
     onView(withId(R.id.editTextSmtpPassword))
@@ -118,6 +115,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   fun testChangingImapPortWhenSelectSpinnerItem() {
+    enableAdvancedMode()
     checkSecurityTypeOpt(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
         SecurityType.Option.STARTLS, JavaEmailConstants.DEFAULT_IMAP_PORT.toString())
     checkSecurityTypeOpt(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
@@ -129,6 +127,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   fun testChangingSmtpPortWhenSelectSpinnerItem() {
+    enableAdvancedMode()
     checkSecurityTypeOpt(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
         SecurityType.Option.STARTLS, JavaEmailConstants.STARTTLS_SMTP_PORT.toString())
     checkSecurityTypeOpt(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
@@ -138,7 +137,10 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testChangeFieldValuesWhenEmailChanged() {
+    enableAdvancedMode()
+
     onView(withId(R.id.editTextEmail))
         .perform(clearText(), typeText(authCreds.email), closeSoftKeyboard())
     onView(withId(R.id.editTextUserName))
@@ -150,15 +152,15 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
 
     val newUserName = "test"
     val newHost = "test.com"
-    val text = newUserName + TestConstants.COMMERCIAL_AT_SYMBOL + newHost
+    val fullUserName = newUserName + TestConstants.COMMERCIAL_AT_SYMBOL + newHost
 
     onView(withId(R.id.editTextEmail))
-        .perform(scrollTo(), clearText(), typeText(text), closeSoftKeyboard())
+        .perform(scrollTo(), clearText(), typeText(fullUserName), closeSoftKeyboard())
     onView(withId(R.id.editTextUserName))
         .perform(scrollTo())
         .check(matches(not(withText(authCreds.username))))
     onView(withId(R.id.editTextUserName))
-        .check(matches(withText(newUserName)))
+        .check(matches(withText(fullUserName)))
     onView(withId(R.id.editTextImapServer))
         .perform(scrollTo())
         .check(matches(not(withText(authCreds.imapServer))))
@@ -173,12 +175,14 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
         .perform(scrollTo(), click())
     onView(withId(R.id.editTextSmtpUsername))
         .perform(scrollTo())
-        .check(matches(withText(newUserName)))
+        .check(matches(withText(fullUserName)))
   }
 
   @Test
   @DoesNotNeedMailserver
   fun testVisibilityOfSmtpAuthField() {
+    enableAdvancedMode()
+
     onView(withId(R.id.checkBoxRequireSignInForSmtp))
         .perform(scrollTo(), click())
     onView(withId(R.id.editTextSmtpUsername))
@@ -199,6 +203,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   fun testFieldsAutoFilling() {
+    enableAdvancedMode()
 
     val userName = authCreds.email.substring(0, authCreds.email.indexOf(TestConstants.COMMERCIAL_AT_SYMBOL))
     val host = authCreds.email.substring(authCreds.email.indexOf(TestConstants.COMMERCIAL_AT_SYMBOL) + 1)
@@ -225,7 +230,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
         .perform(scrollTo(), clearText(), typeText(text), closeSoftKeyboard())
     onView(withId(R.id.editTextUserName))
         .perform(scrollTo())
-        .check(matches(withText(userName)))
+        .check(matches(withText(text)))
     onView(withId(R.id.editTextImapServer))
         .perform(scrollTo())
         .check(matches(withText(IMAP_SERVER_PREFIX + host)))
@@ -237,7 +242,8 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   @Test
   @DoesNotNeedMailserver
   fun testWrongFormatOfEmailAddress() {
-    fillAllFields()
+    enableAdvancedMode()
+    fillAllFields(authCreds)
 
     val invalidEmailAddresses = arrayOf("default", "default@", "default@@denbond7.com", "@denbond7.com", "    ")
 
@@ -255,19 +261,37 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowWarningIfAuthFail() {
-    fillAllFields()
+    enableAdvancedMode()
+    val creds = AuthCredentialsManager.getAuthCredentials("user_with_not_existed_server.json")
+    fillAllFields(creds)
     val someFailTextToChangeRightValue = "123"
 
-    val fieldIdentifiersWithIncorrectData = intArrayOf(R.id.editTextEmail, R.id.editTextUserName,
-        R.id.editTextPassword, R.id.editTextImapServer, R.id.editTextImapPort, R.id.editTextSmtpServer,
-        R.id.editTextSmtpPort, R.id.editTextSmtpUsername, R.id.editTextSmtpPassword)
+    val fieldIdentifiersWithIncorrectData = intArrayOf(
+        R.id.editTextEmail,
+        R.id.editTextUserName,
+        R.id.editTextImapServer,
+        R.id.editTextImapPort,
+        R.id.editTextSmtpServer,
+        R.id.editTextSmtpPort,
+        R.id.editTextSmtpUsername,
+        R.id.editTextSmtpPassword
+    )
 
-    val correctData = arrayOf(authCreds.email, authCreds.username, authCreds.password, authCreds.imapServer,
-        authCreds.imapPort.toString(), authCreds.smtpServer, authCreds.smtpPort.toString(),
-        authCreds.smtpSigInUsername, authCreds.smtpSignInPassword)
+    val correctData = arrayOf(
+        creds.email,
+        creds.username,
+        creds.password,
+        creds.imapServer,
+        creds.imapPort.toString(),
+        creds.smtpServer,
+        creds.smtpPort.toString(),
+        creds.smtpSigInUsername,
+        creds.smtpSignInPassword
+    )
 
-    val numberOfChecks = if (authCreds.hasCustomSignInForSmtp) {
+    val numberOfChecks = if (creds.hasCustomSignInForSmtp) {
       fieldIdentifiersWithIncorrectData.size
     } else {
       fieldIdentifiersWithIncorrectData.size - 2
@@ -329,7 +353,7 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
         .check(matches(isDisplayed())).perform(click())
   }
 
-  private fun fillAllFields() {
+  private fun fillAllFields(authCreds: AuthCredentials) {
     onView(withId(R.id.editTextEmail))
         .perform(clearText(), typeText(authCreds.email), closeSoftKeyboard())
     onView(withId(R.id.editTextUserName))
@@ -363,6 +387,47 @@ class AddNewAccountManuallyActivityTest : BaseTest() {
       onView(withId(R.id.editTextSmtpPassword))
           .perform(clearText(), typeText(authCreds.smtpSignInPassword), closeSoftKeyboard())
     }
+  }
+
+  private fun clearAllFields() {
+    onView(withId(R.id.editTextEmail))
+        .perform(scrollTo(), clearText(), closeSoftKeyboard())
+    onView(withId(R.id.editTextUserName))
+        .perform(scrollTo(), clearText(), closeSoftKeyboard())
+    onView(withId(R.id.editTextPassword))
+        .perform(scrollTo(), clearText(), closeSoftKeyboard())
+
+    onView(withId(R.id.editTextImapServer))
+        .perform(scrollTo(), clearText(), closeSoftKeyboard())
+    onView(withId(R.id.spinnerImapSecurityType))
+        .perform(scrollTo(), click())
+    onData(allOf(`is`(instanceOf<Any>(SecurityType::class.java)), withSecurityTypeOption(SecurityType.Option.NONE)))
+        .perform(scrollTo(), click())
+    onView(withId(R.id.editTextImapPort))
+        .perform(scrollTo(), clearText(), closeSoftKeyboard())
+
+    onView(withId(R.id.editTextSmtpServer))
+        .perform(scrollTo(), clearText(), closeSoftKeyboard())
+    onView(withId(R.id.spinnerSmtpSecyrityType))
+        .perform(scrollTo(), click())
+    onData(allOf(`is`(instanceOf<Any>(SecurityType::class.java)), withSecurityTypeOption(SecurityType.Option.NONE)))
+        .perform(click())
+    onView(withId(R.id.editTextSmtpPort))
+        .perform(clearText(), closeSoftKeyboard())
+
+    onView(withId(R.id.checkBoxRequireSignInForSmtp))
+        .check(matches(isNotChecked()))
+        .perform(scrollTo(), click())
+    onView(withId(R.id.editTextSmtpUsername))
+        .perform(scrollTo(), clearText(), closeSoftKeyboard())
+    onView(withId(R.id.editTextSmtpPassword))
+        .perform(scrollTo(), clearText(), closeSoftKeyboard())
+  }
+
+  private fun enableAdvancedMode() {
+    onView(withId(R.id.checkBoxAdvancedMode))
+        .check(matches(isNotChecked()))
+        .perform(scrollTo(), click())
   }
 
   companion object {

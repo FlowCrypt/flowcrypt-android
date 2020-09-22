@@ -1,0 +1,12 @@
+{
+  "email": "user_with_not_existed_server@denbond7.com",
+  "imapPort": 143,
+  "imapOpt": "NONE",
+  "imapServer": "10.0.2.3",
+  "hasCustomSignInForSmtp": false,
+  "password": "qwerty1234",
+  "smtpPort": 587,
+  "smtpOpt": "NONE",
+  "smtpServer": "10.0.2.3",
+  "username": "user_with_not_existed_server@denbond7.com"
+}

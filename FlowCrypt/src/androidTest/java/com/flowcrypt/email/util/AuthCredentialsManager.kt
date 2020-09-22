@@ -17,7 +17,10 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
  */
 class AuthCredentialsManager {
   companion object {
-    @JvmStatic
+    fun getAuthCredentials(resName: String): AuthCredentials {
+      return TestGeneralUtil.readObjectFromResources(resName, AuthCredentials::class.java)
+    }
+
     fun getLocalWithOneBackupAuthCreds(): AuthCredentials {
       return TestGeneralUtil.readObjectFromResources("user_with_one_backup.json", AuthCredentials::class.java)
     }
