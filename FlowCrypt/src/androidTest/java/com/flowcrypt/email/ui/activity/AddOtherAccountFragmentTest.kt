@@ -261,7 +261,6 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
   fun testShowWarningIfAuthFail() {
     enableAdvancedMode()
     val creds = AuthCredentialsManager.getAuthCredentials("user_with_not_existed_server.json")
