@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity
 
 import android.app.Activity
+import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -15,13 +16,13 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
-import org.junit.Ignore
+import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -34,9 +35,8 @@ import org.junit.runner.RunWith
  * Time: 12:15 PM
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("Failed on CI")
 class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
   private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
@@ -51,7 +51,6 @@ class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
       .around(activityScenarioRule)
 
   @Test
-  @Ignore("fix me")
   fun testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
         .check(matches(isDisplayed()))
@@ -66,6 +65,7 @@ class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-    assertResultAfterFinish(Activity.RESULT_OK)
+    Assert.assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.DESTROYED)
+    Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 }

@@ -20,7 +20,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.startsWith
-import org.junit.Ignore
 import org.junit.Test
 import java.util.*
 
@@ -153,7 +152,6 @@ abstract class BasePassphraseActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
-  @Ignore("Failed on CI")
   fun testShowDialogAboutBadPassPhrase() {
     val badPassPhrases = arrayOf(WEAK_PASSWORD, POOR_PASSWORD)
 
