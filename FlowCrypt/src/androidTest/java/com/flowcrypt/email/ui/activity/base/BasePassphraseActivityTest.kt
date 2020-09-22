@@ -31,7 +31,7 @@ import java.util.*
  */
 abstract class BasePassphraseActivityTest : BaseTest() {
   @Test
-  @DoesNotNeedMailserver
+  //@DoesNotNeedMailserver doesn't work on CI
   fun testShowDialogWithPasswordRecommendation() {
     onView(withId(R.id.imageButtonShowPasswordHint))
         .check(matches(isDisplayed()))
@@ -39,8 +39,7 @@ abstract class BasePassphraseActivityTest : BaseTest() {
     onView(withId(R.id.webView))
         .check(matches(isDisplayed()))
     onView(withId(R.id.buttonOk))
-        .check(matches(isDisplayed()))
-        .perform(click())
+        .perform(scrollTo(), click())
     onView(withId(R.id.textViewFirstPasswordCheckTitle))
         .check(matches(isDisplayed()))
   }
@@ -95,7 +94,7 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
+  //@DoesNotNeedMailserver doesn't work on CI
   fun testGoToUseAnotherPassPhrase() {
     testShowRepeatingPassPhraseScreen()
 
@@ -107,7 +106,7 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
+  //@DoesNotNeedMailserver doesn't work on CI
   fun testCheckEraseOfRepeatingPassPhrase() {
     testShowRepeatingPassPhraseScreen()
 
