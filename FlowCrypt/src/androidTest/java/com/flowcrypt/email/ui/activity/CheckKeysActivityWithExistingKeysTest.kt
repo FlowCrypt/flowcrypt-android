@@ -93,7 +93,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
+  @CICandidateAnnotation
   fun testCheckClickButtonNeutral() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonUseExistingKeys))
