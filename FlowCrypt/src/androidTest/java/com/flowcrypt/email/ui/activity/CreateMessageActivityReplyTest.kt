@@ -59,7 +59,10 @@ class CreateMessageActivityReplyTest : BaseTest() {
         msgInfo,
         MessageType.REPLY,
         MessageEncryptionType.STANDARD))
+
+    registerCountingIdlingResource()
     registerNodeIdling()
+    registerSyncServiceCountingIdlingResource()
 
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed()))

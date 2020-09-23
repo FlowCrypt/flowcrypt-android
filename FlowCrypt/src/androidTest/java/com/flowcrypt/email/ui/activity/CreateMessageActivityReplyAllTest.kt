@@ -69,7 +69,10 @@ class CreateMessageActivityReplyAllTest : BaseTest() {
         msgInfo,
         MessageType.REPLY_ALL,
         MessageEncryptionType.STANDARD))
+
+    registerCountingIdlingResource()
     registerNodeIdling()
+    registerSyncServiceCountingIdlingResource()
 
     Espresso.onView(ViewMatchers.withId(R.id.editTextRecipientCc))
         .check(ViewAssertions.matches(Matchers.not(ViewMatchers.isDisplayed())))

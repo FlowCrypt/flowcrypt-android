@@ -278,4 +278,10 @@ abstract class BaseTest : BaseActivityTestImplementation {
     }
     return incomingMsgInfo
   }
+
+  fun registerAllIdlingResources() {
+    registerCountingIdlingResource()
+    registerNodeIdling()
+    registerSyncServiceCountingIdlingResource()
+  }
 }
