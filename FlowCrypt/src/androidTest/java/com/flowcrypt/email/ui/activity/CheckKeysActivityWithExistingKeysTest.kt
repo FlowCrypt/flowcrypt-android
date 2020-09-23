@@ -24,10 +24,10 @@ import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
+import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.ui.activity.base.BaseCheckKeysActivityTest
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Ignore
@@ -47,7 +47,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @DoesNotNeedMailserver
 @Ignore("Failed on CI")
-class CheckKeysActivityWithExistingKeysTest : BaseCheckKeysActivityTest() {
+class CheckKeysActivityWithExistingKeysTest : BaseTest() {
   override val activityTestRule: ActivityTestRule<*>? =
       object : ActivityTestRule<CheckKeysActivity>(CheckKeysActivity::class.java) {
         override fun getActivityIntent(): Intent {

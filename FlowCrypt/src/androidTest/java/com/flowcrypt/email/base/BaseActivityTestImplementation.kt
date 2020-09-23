@@ -7,6 +7,7 @@ package com.flowcrypt.email.base
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.rule.ActivityTestRule
+import org.junit.rules.TestRule
 
 /**
  * @author Denis Bondarenko
@@ -20,6 +21,9 @@ interface BaseActivityTestImplementation {
     get() = null
 
   val activityScenarioRule: ActivityScenarioRule<*>?
+    get() = null
+
+  val activeActivityRule: TestRule?
     get() = null
 
   val useIntents: Boolean
