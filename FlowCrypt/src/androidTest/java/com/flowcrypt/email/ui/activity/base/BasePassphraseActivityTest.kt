@@ -15,6 +15,7 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
@@ -31,7 +32,7 @@ import java.util.*
  */
 abstract class BasePassphraseActivityTest : BaseTest() {
   @Test
-  //@DoesNotNeedMailserver doesn't work on CI
+  @CICandidateAnnotation
   fun testShowDialogWithPasswordRecommendation() {
     onView(withId(R.id.imageButtonShowPasswordHint))
         .check(matches(isDisplayed()))
@@ -94,7 +95,7 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   }
 
   @Test
-  //@DoesNotNeedMailserver doesn't work on CI
+  @CICandidateAnnotation
   fun testGoToUseAnotherPassPhrase() {
     testShowRepeatingPassPhraseScreen()
 
@@ -106,7 +107,7 @@ abstract class BasePassphraseActivityTest : BaseTest() {
   }
 
   @Test
-  //@DoesNotNeedMailserver doesn't work on CI
+  @CICandidateAnnotation
   fun testCheckEraseOfRepeatingPassPhrase() {
     testShowRepeatingPassPhraseScreen()
 
