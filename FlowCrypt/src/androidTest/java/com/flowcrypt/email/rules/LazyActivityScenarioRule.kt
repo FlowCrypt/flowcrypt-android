@@ -39,7 +39,7 @@ class LazyActivityScenarioRule<A : Activity> : ExternalResource {
 
   private var scenarioSupplier: () -> ActivityScenario<A>
 
-  private var scenario: ActivityScenario<A>? = null
+  var scenario: ActivityScenario<A>? = null
 
   private var scenarioLaunched: Boolean = false
 
@@ -62,7 +62,7 @@ class LazyActivityScenarioRule<A : Activity> : ExternalResource {
     scenarioLaunched = true
   }
 
-  fun getScenario(): ActivityScenario<A> = checkNotNull(scenario)
+  fun getNonNullScenario(): ActivityScenario<A> = checkNotNull(scenario)
 }
 
 inline fun <reified A : Activity> lazyActivityScenarioRule(launchActivity: Boolean = true, noinline intentSupplier: () -> Intent): LazyActivityScenarioRule<A> =

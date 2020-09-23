@@ -62,7 +62,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
   @Before
   open fun registerNodeIdling() {
-    activityScenarioRule?.scenario?.onActivity { activity ->
+    activityScenario?.onActivity { activity ->
       val baseActivity = (activity as? BaseActivity) ?: return@onActivity
       nodeIdlingResource = baseActivity.nodeIdlingResource
       nodeIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
@@ -88,7 +88,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
   @Before
   fun registerSyncServiceCountingIdlingResource() {
-    activityScenarioRule?.scenario?.onActivity { activity ->
+    activityScenario?.onActivity { activity ->
       val baseSyncActivity = (activity as? BaseSyncActivity) ?: return@onActivity
       syncServiceCountingIdlingResource = baseSyncActivity.syncServiceCountingIdlingResource
       syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
@@ -105,7 +105,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
   @Before
   fun registerCountingIdlingResource() {
-    activityScenarioRule?.scenario?.onActivity { activity ->
+    activityScenario?.onActivity { activity ->
       val baseActivity = (activity as? BaseActivity) ?: return@onActivity
       countingIdlingResource = baseActivity.countingIdlingResource
       countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
