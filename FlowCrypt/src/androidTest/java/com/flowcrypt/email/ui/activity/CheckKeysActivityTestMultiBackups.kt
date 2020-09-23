@@ -20,7 +20,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.DoesNotNeedMailserver
+import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
@@ -43,7 +43,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
+@CICandidateAnnotation
 class CheckKeysActivityTestMultiBackups : BaseTest() {
   override val activeActivityRule = lazyActivityScenarioRule<CheckKeysActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
@@ -58,8 +58,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * There are two keys (all keys are different and have different pass phrases). Only one key from two keys is using.
    */
   @Test
-
-
   fun testUseTwoKeysFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -113,7 +111,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * [TestConstants.DEFAULT_PASSWORD].
    */
   @Test
-
   fun testUseTwoKeysFourthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyC_default.json",
@@ -132,7 +129,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * [TestConstants.DEFAULT_STRONG_PASSWORD]
    */
   @Test
-
   fun testUseTwoKeysFifthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyC_default.json",
@@ -151,7 +147,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * key with a unique pass phrase.
    */
   @Test
-
   fun testUseThreeFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -170,7 +165,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * with the same pass phrase.
    */
   @Test
-
   fun testUseThreeKeysSecondCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -231,7 +225,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * pass phrase). Will be used one of the identical keys with a unique pass phrase.
    */
   @Test
-
   fun testUseThreeKeysFifthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyB_default.json",
@@ -250,7 +243,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * pass phrase). All keys will be imported per one transaction using [TestConstants.DEFAULT_STRONG_PASSWORD].
    */
   @Test
-
   fun testUseThreeKeysSixthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -270,7 +262,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * pass phrase). First will be used one key of the identical keys with a unique passphrase, and then the other keys.
    */
   @Test
-
   fun testUseThreeKeysSeventhCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyB_default.json",
@@ -293,7 +284,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * two keys with the same pass phrase.
    */
   @Test
-
   fun testUseFourKeysFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -314,7 +304,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * keys per one pass phrase typing).
    */
   @Test
-
   fun testUseFourKeysSecondCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
