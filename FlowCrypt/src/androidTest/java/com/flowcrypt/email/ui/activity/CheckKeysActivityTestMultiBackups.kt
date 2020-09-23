@@ -20,7 +20,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.CICandidateAnnotation
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
@@ -43,7 +43,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@CICandidateAnnotation
+@DoesNotNeedMailserver
 class CheckKeysActivityTestMultiBackups : BaseTest() {
   override val activeActivityRule = lazyActivityScenarioRule<CheckKeysActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
