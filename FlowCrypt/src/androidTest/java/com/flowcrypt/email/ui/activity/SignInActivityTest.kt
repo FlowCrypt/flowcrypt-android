@@ -5,25 +5,22 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.view.View
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.StubAllExternalIntentsRule
 import org.hamcrest.Matchers.allOf
 import org.junit.Ignore
 import org.junit.Rule
@@ -40,17 +37,17 @@ import org.junit.runner.RunWith
  * Time: 11:12
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 @DoesNotNeedMailserver
 class SignInActivityTest : BaseTest() {
-  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(SignInActivity::class.java)
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<SignInActivity>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(activityTestRule)
-      .around(StubAllExternalIntentsRule())
+      .around(activityScenarioRule)
 
   @Test
   @Ignore("Fix me after 1.0.9")
@@ -58,7 +55,7 @@ class SignInActivityTest : BaseTest() {
     onView(withId(R.id.buttonOtherEmailProvider))
         .check(matches(isDisplayed()))
         .perform(click())
-    onView(allOf<View>(withText(R.string.adding_new_account), withParent(withId(R.id.toolbar))))
+    onView(allOf(withText(R.string.adding_new_account), withParent(withId(R.id.toolbar))))
         .check(matches(isDisplayed()))
   }
 
@@ -76,7 +73,7 @@ class SignInActivityTest : BaseTest() {
     onView(withId(R.id.buttonSecurity))
         .check(matches(isDisplayed()))
         .perform(click())
-    onView(allOf<View>(withText(R.string.security), withParent(withId(R.id.toolbar))))
+    onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar))))
         .check(matches(isDisplayed()))
   }
 }

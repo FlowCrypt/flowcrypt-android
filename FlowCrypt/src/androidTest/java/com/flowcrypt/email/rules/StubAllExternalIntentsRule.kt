@@ -7,7 +7,6 @@ package com.flowcrypt.email.rules
 
 import android.app.Activity
 import android.app.Instrumentation
-import android.content.Intent
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.intent.rule.IntentsTestRule
@@ -27,7 +26,7 @@ class StubAllExternalIntentsRule : BaseRule() {
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        Intents.intending(Matchers.not<Intent>(IntentMatchers.isInternal())).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
+        Intents.intending(Matchers.not(IntentMatchers.isInternal())).respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
         base.evaluate()
       }
     }

@@ -6,20 +6,20 @@
 package com.flowcrypt.email.ui.activity
 
 import android.content.Intent
+import android.os.Parcelable
 import android.text.TextUtils
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isFocusable
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -43,7 +43,6 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.util.*
 
 /**
  * This class tests a case when we want to send a reply with [ServiceInfo]
@@ -53,51 +52,43 @@ import java.util.*
  * Time: 16:34
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
-  private lateinit var serviceInfo: ServiceInfo
-  private lateinit var incomingMsgInfo: IncomingMessageInfo
+  private val addAccountToDatabaseRule: AddAccountToDatabaseRule = AddAccountToDatabaseRule(AccountDaoManager.getDefaultAccountDao().copy(areContactsLoaded = true))
+  private val attachmentInfo = AttachmentInfo(name = "test.txt",
+      email = addAccountToDatabaseRule.account.email,
+      encodedSize = STRING.length.toLong(),
+      rawData = STRING,
+      type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN,
+      folder = "SENT",
+      id = EmailUtil.generateContentId(),
+      isProtected = true)
 
-  val addAccountToDatabaseRule: AddAccountToDatabaseRule = AddAccountToDatabaseRule(AccountDaoManager.getDefaultAccountDao().copy(areContactsLoaded = true))
+  private val incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plain_text.json", IncomingMessageInfo::class.java)!!
+  private val serviceInfo = ServiceInfo(isToFieldEditable = false,
+      isFromFieldEditable = false,
+      isMsgEditable = false,
+      isSubjectEditable = false,
+      isMsgTypeSwitchable = false,
+      hasAbilityToAddNewAtt = false,
+      systemMsg = getResString(R.string.message_was_encrypted_for_wrong_key),
+      atts = listOf(attachmentInfo))
 
-  override val activityTestRule: ActivityTestRule<*>? =
-      object : IntentsTestRule<CreateMessageActivity>(CreateMessageActivity::class.java) {
-        override fun getActivityIntent(): Intent {
-          incomingMsgInfo = TestGeneralUtil.getObjectFromJson("messages/info/encrypted_msg_info_plain_text.json",
-              IncomingMessageInfo::class.java)!!
-
-          val attachmentInfo = AttachmentInfo(name = "test.txt",
-              email = addAccountToDatabaseRule.account.email,
-              encodedSize = STRING.length.toLong(),
-              rawData = STRING,
-              type = JavaEmailConstants.MIME_TYPE_TEXT_PLAIN,
-              folder = "SENT",
-              id = EmailUtil.generateContentId(),
-              isProtected = true)
-
-          val attachmentInfoList = ArrayList<AttachmentInfo>()
-          attachmentInfoList.add(attachmentInfo)
-
-          serviceInfo = ServiceInfo(isToFieldEditable = false,
-              isFromFieldEditable = false,
-              isMsgEditable = false,
-              isSubjectEditable = false,
-              isMsgTypeSwitchable = false,
-              hasAbilityToAddNewAtt = false,
-              systemMsg = getResString(R.string.message_was_encrypted_for_wrong_key),
-              atts = attachmentInfoList)
-
-          return CreateMessageActivity.generateIntent(getTargetContext(), incomingMsgInfo, MessageType.REPLY,
-              MessageEncryptionType.STANDARD, serviceInfo)
-        }
-      }
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<SignInActivity>(
+      intent = Intent(getTargetContext(), CreateMessageActivity::class.java).apply {
+        putExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO, incomingMsgInfo)
+        putExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_TYPE, MessageType.REPLY as Parcelable)
+        putExtra(CreateMessageActivity.EXTRA_KEY_MESSAGE_ENCRYPTION_TYPE, MessageEncryptionType.STANDARD as Parcelable)
+        putExtra(CreateMessageActivity.EXTRA_KEY_SERVICE_INFO, serviceInfo)
+      })
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(addAccountToDatabaseRule)
-      .around(activityTestRule)
+      .around(activityScenarioRule)
 
   @Test
   fun testFrom() {

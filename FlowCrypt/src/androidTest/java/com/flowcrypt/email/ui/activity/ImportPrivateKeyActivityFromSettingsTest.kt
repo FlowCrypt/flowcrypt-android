@@ -20,12 +20,11 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
@@ -56,31 +55,29 @@ import java.io.File
  * Time: 13:33
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 @Ignore("fix me")
 class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
-  val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
-  override val activityTestRule: ActivityTestRule<*>? =
-      object : IntentsTestRule<ImportPrivateKeyActivity>(ImportPrivateKeyActivity::class.java) {
-        override fun getActivityIntent(): Intent {
-          return ImportPrivateKeyActivity.getIntent(context = getTargetContext(),
-              accountEntity = addAccountToDatabaseRule.account,
-              isSyncEnabled = true,
-              title = getTargetContext().getString(R.string.import_private_key),
-              throwErrorIfDuplicateFoundEnabled = true,
-              isSubmittingPubKeysEnabled = false,
-              cls = ImportPrivateKeyActivity::class.java)
-        }
-      }
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<ImportPrivateKeyActivity>(
+      intent = ImportPrivateKeyActivity.getIntent(
+          context = getTargetContext(),
+          accountEntity = addAccountToDatabaseRule.account,
+          isSyncEnabled = true,
+          title = getTargetContext().getString(R.string.import_private_key),
+          throwErrorIfDuplicateFoundEnabled = true,
+          isSubmittingPubKeysEnabled = false,
+          cls = ImportPrivateKeyActivity::class.java))
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(addAccountToDatabaseRule)
       .around(GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE))
-      .around(activityTestRule)
+      .around(activityScenarioRule)
 
   @Test
   fun testImportKeyFromBackup() {
@@ -156,14 +153,12 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
   }
 
   companion object {
-
     private const val SOME_TEXT = "Some text"
     private lateinit var fileWithPrivateKey: File
     private lateinit var fileWithoutPrivateKey: File
     private lateinit var privateKey: String
     private var keyDetails =
         PrivateKeysManager.getNodeKeyDetailsFromAssets("node/attested_user@denbond7.com_prv_default_strong.json")
-
 
     @BeforeClass
     @JvmStatic

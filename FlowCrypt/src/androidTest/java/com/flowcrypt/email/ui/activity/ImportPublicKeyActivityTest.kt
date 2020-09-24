@@ -18,11 +18,11 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
+import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.DoesNotNeedMailserver
@@ -55,31 +55,25 @@ import java.io.File
  * Time: 16:53
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 @Ignore("Failed on CI")
 class ImportPublicKeyActivityTest : BaseTest() {
-
-  override val activityTestRule: IntentsTestRule<*>? =
-      object : IntentsTestRule<ImportPublicKeyActivity>(ImportPublicKeyActivity::class.java) {
-        override fun getActivityIntent(): Intent {
-          val pgpContact = PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER, null, null,
-              false, null, null, null, null, 0)
-          val result = Intent(getTargetContext(), ImportPublicKeyActivity::class.java)
-          result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE, true)
-          result.putExtra(BaseImportKeyActivity.KEY_EXTRA_TITLE, getResString(R.string.import_public_key))
-          result.putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false)
-          result.putExtra(ImportPublicKeyActivity.KEY_EXTRA_PGP_CONTACT, pgpContact)
-          return result
-        }
-      }
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<ImportPublicKeyActivity>(
+      intent = Intent(getTargetContext(), ImportPublicKeyActivity::class.java).apply {
+        putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_SYNC_ENABLE, true)
+        putExtra(BaseImportKeyActivity.KEY_EXTRA_TITLE, getResString(R.string.import_public_key))
+        putExtra(BaseImportKeyActivity.KEY_EXTRA_IS_THROW_ERROR_IF_DUPLICATE_FOUND, false)
+        putExtra(ImportPublicKeyActivity.KEY_EXTRA_PGP_CONTACT, PgpContact(TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER))
+      })
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
       .around(GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE))
-      .around(activityTestRule)
+      .around(activityScenarioRule)
 
   @Test
   @DoesNotNeedMailserver

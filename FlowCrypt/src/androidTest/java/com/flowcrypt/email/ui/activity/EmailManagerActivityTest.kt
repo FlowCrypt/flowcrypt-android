@@ -16,15 +16,14 @@ import androidx.test.espresso.contrib.DrawerActions.open
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
+import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -55,11 +54,11 @@ import java.util.*
  * Time: 16:16
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 class EmailManagerActivityTest : BaseEmailListActivityTest() {
-
-  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(EmailManagerActivity::class.java)
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<EmailManagerActivity>()
 
   private val userWithoutLetters = AccountDaoManager.getAccountDao("user_without_letters.json")
   private val userWithMoreThan21LettersAccount = AccountDaoManager.getUserWitMoreThan21Letters()
@@ -71,7 +70,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
       .around(AddAccountToDatabaseRule(userWithMoreThan21LettersAccount))
       .around(AddLabelsToDatabaseRule(userWithMoreThan21LettersAccount, LOCAL_FOLDERS))
       .around(AddMessageToDatabaseRule(userWithMoreThan21LettersAccount, INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT))
-      .around(activityTestRule)
+      .around(activityScenarioRule)
 
   @Test
   fun testComposeFloatButton() {

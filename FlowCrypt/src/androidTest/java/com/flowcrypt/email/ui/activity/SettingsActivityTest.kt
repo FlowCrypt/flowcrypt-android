@@ -13,9 +13,9 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
@@ -36,18 +36,17 @@ import org.junit.runner.RunWith
  * Time: 15:42
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 @DoesNotNeedMailserver
 class SettingsActivityTest : BaseTest() {
-
-  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(SettingsActivity::class.java)
+  override val activityScenarioRule = activityScenarioRule<SettingsActivity>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
-      .around(activityTestRule)
+      .around(activityScenarioRule)
 
   @Test
   fun testShowHelpScreen() {
