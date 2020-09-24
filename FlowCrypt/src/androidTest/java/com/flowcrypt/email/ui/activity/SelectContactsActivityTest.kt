@@ -32,6 +32,7 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.viewaction.CustomActions.Companion.doNothing
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -87,6 +88,7 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
+  @Ignore("fix me")
   fun testCheckSearchExistingContact() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))
