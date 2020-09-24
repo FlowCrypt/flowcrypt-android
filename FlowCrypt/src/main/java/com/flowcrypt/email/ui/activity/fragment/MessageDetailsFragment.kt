@@ -22,11 +22,11 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.CompoundButton
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ListView
 import android.widget.ProgressBar
-import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
@@ -782,7 +782,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
 
     val pubKeyView = inflater.inflate(R.layout.message_part_public_key, layoutMsgParts, false) as ViewGroup
     val textViewPgpPublicKey = pubKeyView.findViewById<TextView>(R.id.textViewPgpPublicKey)
-    val switchShowPublicKey = pubKeyView.findViewById<Switch>(R.id.switchShowPublicKey)
+    val switchShowPublicKey = pubKeyView.findViewById<CompoundButton>(R.id.switchShowPublicKey)
 
     switchShowPublicKey.setOnCheckedChangeListener { buttonView, isChecked ->
       TransitionManager.beginDelayedTransition(pubKeyView)
@@ -984,7 +984,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     val textViewOrigPgpMsg = viewGroup.findViewById<TextView>(R.id.textViewOrigPgpMsg)
     textViewOrigPgpMsg.text = msg
 
-    val switchShowOrigMsg = viewGroup.findViewById<Switch>(R.id.switchShowOrigMsg)
+    val switchShowOrigMsg = viewGroup.findViewById<CompoundButton>(R.id.switchShowOrigMsg)
 
     switchShowOrigMsg.setOnCheckedChangeListener { buttonView, isChecked ->
       TransitionManager.beginDelayedTransition(rootView)

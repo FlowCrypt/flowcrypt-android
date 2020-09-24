@@ -18,6 +18,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.AccountDaoManager
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -34,6 +35,7 @@ import org.junit.runner.RunWith
 @DoesNotNeedMailserverEnterprise
 @LargeTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("Need to think how to run")
 class SettingsActivityEnterpriseTest : BaseTest() {
   override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(SettingsActivity::class.java)
 
