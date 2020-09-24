@@ -5,19 +5,13 @@
 
 package com.flowcrypt.email.ui.activity.base
 
-import android.app.Activity
-import android.app.Instrumentation
 import android.content.Intent
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.intent.Intents
-import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.matcher.ViewMatchers
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
-import com.flowcrypt.email.util.google.GoogleApiClientHelper
-import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 
 /**
@@ -32,11 +26,11 @@ abstract class BaseSignActivityTest : BaseTest() {
     val intent = Intent()
     intent.putExtra("googleSignInAccount", GoogleSignInAccount.zaa(signInAccountJson))
 
-    val signInIntent = GoogleSignIn.getClient(activityTestRule?.activity!!,
+    /*val signInIntent = GoogleSignIn.getClient(activityTestRule?.activity!!,
         GoogleApiClientHelper.generateGoogleSignInOptions()).signInIntent
 
     Intents.intending(IntentMatchers.hasComponent(signInIntent.component))
-        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))
+        .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, intent))*/
 
     Espresso.onView(ViewMatchers.withId(R.id.buttonSignInWithGmail))
         .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))

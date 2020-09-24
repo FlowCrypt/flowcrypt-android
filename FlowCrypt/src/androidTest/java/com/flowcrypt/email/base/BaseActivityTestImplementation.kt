@@ -7,7 +7,6 @@ package com.flowcrypt.email.base
 
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.rules.ActivityScenarioRule
-import androidx.test.rule.ActivityTestRule
 import org.junit.rules.TestRule
 
 /**
@@ -17,10 +16,6 @@ import org.junit.rules.TestRule
  *         E-mail: DenBond7@gmail.com
  */
 interface BaseActivityTestImplementation {
-  //todo-denbond7 remove this after refactoring
-  val activityTestRule: ActivityTestRule<*>?
-    get() = null
-
   val activityScenarioRule: ActivityScenarioRule<*>?
     get() = null
 

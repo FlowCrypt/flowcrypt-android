@@ -17,10 +17,8 @@ import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
-import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -67,23 +65,11 @@ abstract class BaseTest : BaseActivityTestImplementation {
       nodeIdlingResource = baseActivity.nodeIdlingResource
       nodeIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
     }
-
-    //remove that after migration to a new approach
-    val activity = activityTestRule?.activity ?: return
-    if (activity is BaseActivity) {
-      IdlingRegistry.getInstance().register(activity.nodeIdlingResource)
-    }
   }
 
   @After
   open fun unregisterNodeIdling() {
     nodeIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
-
-    //remove that after migration to a new approach
-    val activity = activityTestRule?.activity ?: return
-    if (activity is BaseActivity) {
-      IdlingRegistry.getInstance().unregister(activity.nodeIdlingResource)
-    }
   }
 
   @Before
@@ -93,14 +79,11 @@ abstract class BaseTest : BaseActivityTestImplementation {
       syncServiceCountingIdlingResource = baseSyncActivity.syncServiceCountingIdlingResource
       syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
     }
-
-    (activityTestRule?.activity as? BaseSyncActivity)?.syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
   }
 
   @After
   fun unregisterSyncServiceCountingIdlingResource() {
     syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
-    (activityTestRule?.activity as? BaseSyncActivity)?.syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
   @Before
@@ -110,14 +93,11 @@ abstract class BaseTest : BaseActivityTestImplementation {
       countingIdlingResource = baseActivity.countingIdlingResource
       countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
     }
-
-    (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
   }
 
   @After
   fun unregisterCountingIdlingResource() {
     countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
-    (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
   @Before
@@ -245,13 +225,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
   protected fun getHtmlString(html: String): String {
     return Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString()
-  }
-
-  protected fun assertResultAfterFinish(resultCode: Int) {
-    //todo-denbond7 need to improve this one in the future when we have a better approach. Maybe
-    // https://github.com/Kotlin/kotlinx.coroutines/issues/242 will resolve this
-    Thread.sleep(2000)
-    ViewMatchers.assertThat(activityTestRule?.activityResult, hasResultCode(resultCode))
   }
 
   fun getTargetContext(): Context {

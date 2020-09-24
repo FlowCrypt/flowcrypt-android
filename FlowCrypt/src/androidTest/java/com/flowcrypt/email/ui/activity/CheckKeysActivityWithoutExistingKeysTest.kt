@@ -19,6 +19,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
@@ -41,7 +42,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
 
   private val privateKeys = PrivateKeysManager.getKeysFromAssets(arrayOf("node/default@denbond7.com_fisrtKey_prv_default.json"))
@@ -62,6 +62,7 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
       .around(activityScenarioRule)
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowMsgEmptyWarning() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonPositiveAction))
@@ -70,6 +71,7 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testUseIncorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
         .perform(scrollTo(), typeText("some pass phrase"), closeSoftKeyboard())
@@ -79,6 +81,7 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   }
 
   @Test
+  @CICandidateAnnotation
   fun testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
         .perform(scrollTo(), typeText("android"), closeSoftKeyboard())
@@ -90,6 +93,7 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testCheckClickButtonNeutral() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonUseExistingKeys))
@@ -97,6 +101,7 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testCheckClickButtonNegative() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonNegativeAction))

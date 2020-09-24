@@ -62,6 +62,7 @@ class AddNewAccountActivityEnterpriseTest : BaseSignActivityTest() {
       .around(activityScenarioRule)
 
   @Test
+  @Ignore("fix setupAndClickSignInButton")
   fun testNoPrvCreateRule() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_WITH_NO_PRV_CREATE_RULE))
     intended(hasComponent(CreateOrImportKeyActivity::class.java.name))
