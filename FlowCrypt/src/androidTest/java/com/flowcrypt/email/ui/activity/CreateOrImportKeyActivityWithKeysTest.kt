@@ -8,25 +8,25 @@ package com.flowcrypt.email.ui.activity
 import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
-import android.content.Intent
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.ActivityResultMatchers
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
+import androidx.test.filters.MediumTest
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.ui.activity.base.BaseCreateOrImportKeyActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
-import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.allOf
+import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -39,22 +39,18 @@ import org.junit.runner.RunWith
  * Time: 16:51
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
+@DoesNotNeedMailserver
 class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest() {
-
-  override val activityTestRule =
-      object : IntentsTestRule<CreateOrImportKeyActivity>(CreateOrImportKeyActivity::class.java) {
-        override fun getActivityIntent(): Intent {
-          return CreateOrImportKeyActivity.newIntent(getTargetContext(), AccountDaoManager.getDefaultAccountDao(), true)
-        }
-      }
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<CreateOrImportKeyActivity>(CreateOrImportKeyActivity.newIntent(getTargetContext(), AccountDaoManager.getDefaultAccountDao(), true))
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddPrivateKeyToDatabaseRule())
-      .around(activityTestRule)
+      .around(activityScenarioRule)
 
   @Test
   fun testClickOnButtonCreateNewKey() {
@@ -63,16 +59,15 @@ class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest(
     onView(withId(R.id.buttonCreateNewKey))
         .check(matches(ViewMatchers.isDisplayed()))
         .perform(click())
-    assertThat(activityTestRule.activityResult, ActivityResultMatchers
-        .hasResultCode(Activity.RESULT_OK))
+
+    Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 
   @Test
   fun testClickOnButtonSkipSetup() {
     onView(withId(R.id.buttonSkipSetup))
-        .check(matches(ViewMatchers.isDisplayed()))
-        .perform(click())
-    assertThat(activityTestRule.activityResult, ActivityResultMatchers
-        .hasResultCode(Activity.RESULT_OK))
+        .perform(scrollTo(), click())
+
+    Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 }

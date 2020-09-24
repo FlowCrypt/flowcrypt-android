@@ -9,17 +9,18 @@ import android.app.Activity
 import android.app.Instrumentation
 import android.content.ComponentName
 import android.text.format.Formatter
+import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingPolicies
 import androidx.test.espresso.IdlingRegistry
+import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.assertThat
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
@@ -32,8 +33,7 @@ import androidx.test.espresso.web.webdriver.DriverAtoms.findElement
 import androidx.test.espresso.web.webdriver.DriverAtoms.getText
 import androidx.test.espresso.web.webdriver.Locator
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
@@ -50,7 +50,7 @@ import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.ui.activity.base.BaseActivity
+import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
@@ -74,13 +74,17 @@ import java.util.concurrent.TimeUnit
  * Time: 4:32 PM
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 @Ignore("fix me")
 class MessageDetailsActivityTest : BaseTest() {
-  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(MessageDetailsActivity::class.java,
-      false, false)
+  override val useIntents: Boolean = true
+  override val activeActivityRule = lazyActivityScenarioRule<MessageDetailsActivity>(launchActivity = false)
+  override val activityScenario: ActivityScenario<*>?
+    get() = activeActivityRule.scenario
+
   private val accountRule = AddAccountToDatabaseRule()
+  private var idlingForWebView: IdlingResource? = null
 
   private val simpleAttInfo = TestGeneralUtil.getObjectFromJson("messages/attachments/simple_att.json", AttachmentInfo::class.java)
   private val encryptedAttInfo = TestGeneralUtil.getObjectFromJson("messages/attachments/encrypted_att.json", AttachmentInfo::class.java)
@@ -91,7 +95,7 @@ class MessageDetailsActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(accountRule)
       .around(AddPrivateKeyToDatabaseRule())
-      .around(activityTestRule)
+      .around(activeActivityRule)
 
   private val localFolder: LocalFolder = LocalFolder(
       accountRule.account.email,
@@ -102,11 +106,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
   @After
   fun unregisterDecryptionIdling() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is MessageDetailsActivity) {
-      IdlingRegistry.getInstance().unregister(activity.idlingForDecryption)
-      IdlingRegistry.getInstance().unregister(activity.idlingForWebView)
-    }
+    idlingForWebView?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
   @Test
@@ -459,10 +459,14 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   private fun launchActivity(msgEntity: MessageEntity) {
-    activityTestRule?.launchActivity(MessageDetailsActivity.getIntent(getTargetContext(), localFolder, msgEntity))
-    IdlingRegistry.getInstance().register((activityTestRule?.activity as BaseActivity).nodeIdlingResource)
-    IdlingRegistry.getInstance().register((activityTestRule.activity as MessageDetailsActivity).idlingForDecryption)
-    IdlingRegistry.getInstance().register((activityTestRule.activity as MessageDetailsActivity).idlingForWebView)
+    activeActivityRule.launch(MessageDetailsActivity.getIntent(getTargetContext(), localFolder, msgEntity))
+    registerAllIdlingResources()
+
+    activityScenario?.onActivity { activity ->
+      val messageDetailsActivity = (activity as? MessageDetailsActivity) ?: return@onActivity
+      idlingForWebView = messageDetailsActivity.idlingForWebView
+      idlingForWebView?.let { IdlingRegistry.getInstance().register(it) }
+    }
   }
 
   private fun testTopReplyAction(title: String) {

@@ -134,7 +134,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       saveBackupToInboxLiveData.value = Result.loading()
       withContext(Dispatchers.IO) {
         try {
-          val account = roomDatabase.accountDao().getActiveAccountSuspend()
+          val account = getAccountEntityWithDecryptedInfo(roomDatabase.accountDao().getActiveAccountSuspend())
           requireNotNull(account)
 
           val sess = OpenStoreHelper.getAccountSess(getApplication(), account)

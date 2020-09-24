@@ -18,6 +18,7 @@ import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
+import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
 import com.flowcrypt.email.model.PgpContact
 
 /**
@@ -75,4 +76,14 @@ interface PgpApiRepository : BaseApiRepository {
    * @return A result with an instance of [GenerateKeyResult]
    */
   suspend fun createPrivateKey(context: Context, passphrase: String, pgpContacts: List<PgpContact>): Result<GenerateKeyResult?>
+
+
+  /**
+   * Check the passphrase strong value.
+   *
+   * @param context Interface to global information about an application environment;
+   * @param guesses  A value which was received via [Zxcvbn].
+   * @return A result with an instance of [ZxcvbnStrengthBarResult]
+   */
+  suspend fun zxcvbnStrengthBar(context: Context, guesses: Double): Result<ZxcvbnStrengthBarResult?>
 }

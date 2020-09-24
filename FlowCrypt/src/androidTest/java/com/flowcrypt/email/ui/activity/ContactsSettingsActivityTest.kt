@@ -13,9 +13,9 @@ import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -27,7 +27,6 @@ import com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
 import org.hamcrest.Matchers.not
 import org.junit.AfterClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -40,17 +39,17 @@ import org.junit.runner.RunWith
  * Time: 15:43
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 class ContactsSettingsActivityTest : BaseTest() {
 
-  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(ContactsSettingsActivity::class.java)
+  override val activityScenarioRule = activityScenarioRule<ContactsSettingsActivity>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
-      .around(activityTestRule)
+      .around(activityScenarioRule)
 
   @Test
   fun testShowHelpScreen() {
@@ -66,13 +65,15 @@ class ContactsSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testDeleteContacts() {
     addContactsToDatabase()
+    //todo-denbond7 improve this in the future. When we have a good solution for ROOM, coroutines and Espresso
+    Thread.sleep(2000)
     for (ignored in EMAILS) {
       onView(withId(R.id.recyclerViewContacts))
           .perform(actionOnItemAtPosition<RecyclerView.ViewHolder>(0, ClickOnViewInRecyclerViewItem(R.id.imageButtonDeleteContact)))
     }
+    Thread.sleep(2000)
     onView(withId(R.id.emptyView))
         .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
     clearContactsFromDatabase()

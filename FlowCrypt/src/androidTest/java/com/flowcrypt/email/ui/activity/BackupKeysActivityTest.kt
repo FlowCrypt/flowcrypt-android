@@ -10,6 +10,7 @@ import android.app.Instrumentation
 import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
+import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -18,14 +19,15 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
+import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
@@ -38,9 +40,7 @@ import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -54,19 +54,20 @@ import java.io.File
  * Time: 16:28
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
 class BackupKeysActivityTest : BaseTest() {
-  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(BackupKeysActivity::class.java)
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<BackupKeysActivity>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
-      .around(activityTestRule)
+      .around(activityScenarioRule)
 
   @Test
+  @DoesNotNeedMailserver
   fun testEmailOptionHint() {
     onView(withId(R.id.radioButtonEmail))
         .check(matches(isDisplayed()))
@@ -76,6 +77,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testDownloadOptionHint() {
     onView(withId(R.id.radioButtonDownload))
         .check(matches(isDisplayed()))
@@ -85,6 +87,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testNoKeysEmailOption() {
     onView(withId(R.id.radioButtonEmail))
         .check(matches(isDisplayed()))
@@ -97,6 +100,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testNoKeysDownloadOption() {
     onView(withId(R.id.radioButtonDownload))
         .check(matches(isDisplayed()))
@@ -114,7 +118,8 @@ class BackupKeysActivityTest : BaseTest() {
     onView(withId(R.id.buttonBackupAction))
         .check(matches(isDisplayed()))
         .perform(click())
-    assertTrue(activityTestRule?.activity!!.isFinishing)
+    assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.DESTROYED)
+    assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 
   @Test
@@ -124,6 +129,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
+  @CICandidateAnnotation
   fun testSuccessDownloadOption() {
     addFirstKeyWithStrongPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -137,10 +143,9 @@ class BackupKeysActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-    //need some time to finish an activity
-    Thread.sleep(1000)
+    assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.DESTROYED)
+    assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
 
-    assertTrue(activityTestRule?.activity?.isDestroyed == true)
     TestGeneralUtil.deleteFiles(listOf(file))
   }
 
@@ -151,6 +156,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowWeakPasswordHintForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -175,6 +181,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testFixWeakPasswordForDownloadOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -187,7 +194,8 @@ class BackupKeysActivityTest : BaseTest() {
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak))
-    assertFalse(activityTestRule?.activity!!.isFinishing)
+
+    assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
   }
 
   @Test
@@ -199,7 +207,7 @@ class BackupKeysActivityTest : BaseTest() {
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     checkIsSnackbarDisplayedAndClick(getResString(R.string.pass_phrase_is_too_weak))
-    assertFalse(activityTestRule?.activity!!.isFinishing)
+    assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
   }
 
   @Test
@@ -212,10 +220,11 @@ class BackupKeysActivityTest : BaseTest() {
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
-    assertTrue(activityTestRule?.activity?.isFinishing == false)
+    assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testDiffPassphrasesForDownloadOption() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()
@@ -229,7 +238,7 @@ class BackupKeysActivityTest : BaseTest() {
     intending(hasComponent(ComponentName(getTargetContext(), ChangePassPhraseActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
     checkIsSnackbarDisplayedAndClick(getResString(R.string.different_pass_phrases))
-    assertFalse(activityTestRule?.activity!!.isFinishing)
+    assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.RESUMED)
   }
 
   private fun intendingFileChoose(file: File) {

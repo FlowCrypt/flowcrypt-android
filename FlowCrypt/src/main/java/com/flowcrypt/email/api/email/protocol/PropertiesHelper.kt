@@ -5,6 +5,7 @@
 
 package com.flowcrypt.email.api.email.protocol
 
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
@@ -88,6 +89,10 @@ class PropertiesHelper {
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] = it.smtpOpt === SecurityType.Option.STARTLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] = it.smtpOpt === SecurityType.Option.SSL_TLS
 
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_SSL_TRUST] = Constants.HOST_MACHINE_IP
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_TRUST] = Constants.HOST_MACHINE_IP
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_TRUST] = Constants.HOST_MACHINE_IP
+
         if (authCreds.useOAuth2) {
           prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
           prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_AUTH_LOGIN_DISABLE] = "true"
@@ -121,6 +126,10 @@ class PropertiesHelper {
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = it.smtpOpt() === SecurityType.Option.SSL_TLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] = it.smtpOpt() === SecurityType.Option.STARTLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] = it.smtpOpt() === SecurityType.Option.SSL_TLS
+
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_SSL_TRUST] = Constants.HOST_MACHINE_IP
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_TRUST] = Constants.HOST_MACHINE_IP
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_TRUST] = Constants.HOST_MACHINE_IP
 
         if (accountEntity.imapAuthMechanisms == JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2) {
           prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2

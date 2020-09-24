@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./gradlew lintConsumerRelease
+./gradlew lintConsumerDebug -q

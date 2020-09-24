@@ -5,15 +5,15 @@
 
 package com.flowcrypt.email.ui.activity
 
+import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
+import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -21,6 +21,7 @@ import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
 import org.junit.Rule
 import org.junit.Test
@@ -34,29 +35,34 @@ import org.junit.runner.RunWith
  *         Time: 2:29 PM
  *         E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
+@CICandidateAnnotation
 class CreateMessageActivityReplyTest : BaseTest() {
-  override val activityTestRule: ActivityTestRule<*>? =
-      IntentsTestRule(CreateMessageActivity::class.java, false, false)
+  override val activeActivityRule = lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
+  override val activityScenario: ActivityScenario<*>?
+    get() = activeActivityRule.scenario
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
       .around(AddPrivateKeyToDatabaseRule())
-      .around(activityTestRule)
+      .around(activeActivityRule)
 
   @Test
   fun testReplyToHeader() {
     val msgInfo = getMsgInfo("messages/info/standard_msg_reply_to_header.json",
         "messages/mime/standard_msg_reply_to_header.txt")
-    activityTestRule?.launchActivity(CreateMessageActivity.generateIntent(
+    activeActivityRule.launch(CreateMessageActivity.generateIntent(
         getTargetContext(),
         msgInfo,
         MessageType.REPLY,
         MessageEncryptionType.STANDARD))
+
+    registerCountingIdlingResource()
     registerNodeIdling()
+    registerSyncServiceCountingIdlingResource()
 
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed()))

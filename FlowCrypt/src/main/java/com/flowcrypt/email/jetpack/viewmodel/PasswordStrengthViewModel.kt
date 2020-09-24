@@ -6,12 +6,16 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.Constants
-import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
-import com.flowcrypt.email.api.retrofit.request.node.ZxcvbnStrengthBarRequest
+import com.flowcrypt.email.api.retrofit.node.NodeRepository
+import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
 import com.nulabinc.zxcvbn.Zxcvbn
+import kotlinx.coroutines.launch
+import java.util.*
 
 /**
  * This [ViewModel] implementation can be used to check the passphrase strength
@@ -23,17 +27,29 @@ import com.nulabinc.zxcvbn.Zxcvbn
  */
 class PasswordStrengthViewModel(application: Application) : BaseNodeApiViewModel(application) {
   private val zxcvbn: Zxcvbn = Zxcvbn()
-  private var apiRepository: PgpApiRepository? = null
+  private val pgpApiRepository = NodeRepository()
+  private var timer: Timer = Timer()
 
-  fun init(apiRepository: PgpApiRepository) {
-    this.apiRepository = apiRepository
-  }
+  val zxcvbnStrengthBarResultLiveData: MutableLiveData<Result<ZxcvbnStrengthBarResult?>> = MutableLiveData()
 
   fun check(passphrase: String) {
-    val measure = zxcvbn.measure(passphrase, arrayListOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
+    zxcvbnStrengthBarResultLiveData.value = Result.loading()
+    timer.cancel()
+    timer = Timer()
+    timer.schedule(
+        object : TimerTask() {
+          override fun run() {
+            viewModelScope.launch {
+              val measure = zxcvbn.measure(passphrase, arrayListOf(*Constants.PASSWORD_WEAK_WORDS)).guesses
+              zxcvbnStrengthBarResultLiveData.value = pgpApiRepository.zxcvbnStrengthBar(getApplication(), measure)
+            }
+          }
+        },
+        DELAY
+    )
+  }
 
-    //todo-denbond7 need to change it to use the common approach with LiveData
-    apiRepository!!.checkPassphraseStrength(R.id.live_data_id_check_passphrase_strength, responsesLiveData,
-        ZxcvbnStrengthBarRequest(measure))
+  companion object {
+    private const val DELAY: Long = 350
   }
 }

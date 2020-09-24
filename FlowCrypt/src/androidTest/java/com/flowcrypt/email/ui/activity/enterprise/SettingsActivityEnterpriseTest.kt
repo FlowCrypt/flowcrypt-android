@@ -8,9 +8,9 @@ package com.flowcrypt.email.ui.activity.enterprise
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserverEnterprise
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
@@ -33,18 +33,18 @@ import org.junit.runner.RunWith
  *         E-mail: DenBond7@gmail.com
  */
 @DoesNotNeedMailserverEnterprise
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 @Ignore("Need to think how to run")
 class SettingsActivityEnterpriseTest : BaseTest() {
-  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(SettingsActivity::class.java)
+  override val activityScenarioRule = activityScenarioRule<SettingsActivity>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule(AccountDaoManager
-          .getAccountDao("enterprise_account_no_prv_backup.json")))
-      .around(activityTestRule)
+      .around(AddAccountToDatabaseRule(
+          AccountDaoManager.getAccountDao("enterprise_account_no_prv_backup.json")))
+      .around(activityScenarioRule)
 
   @Test
   fun testBackupsDisabled() {

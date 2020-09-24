@@ -20,6 +20,8 @@ import androidx.lifecycle.Observer
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.security.SecurityUtils
@@ -74,6 +76,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
         isPrivateKeySendingNow = false
         setResult(Activity.RESULT_OK)
         finish()
+        countingIdlingResource.decrementSafely()
       }
     }
     super.onReplyReceived(requestCode, resultCode, obj)
@@ -104,6 +107,8 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
             showBackupingErrorHint()
           }
         }
+
+        countingIdlingResource.decrementSafely()
       }
     }
 
@@ -123,6 +128,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
               if (GeneralUtil.isConnected(this)) {
                 isPrivateKeySendingNow = true
                 UIUtil.exchangeViewVisibility(true, progressBar, rootView)
+                countingIdlingResource.incrementSafely()
                 sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner)
               } else {
                 UIUtil.showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available))
@@ -198,6 +204,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
         Snackbar.LENGTH_LONG, View.OnClickListener {
       layoutSyncStatus?.visibility = View.GONE
       UIUtil.exchangeViewVisibility(true, progressBar, rootView)
+      countingIdlingResource.incrementSafely()
       sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner)
     })
   }
@@ -254,6 +261,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
+            countingIdlingResource.incrementSafely()
             areBackupsSavingNow = true
             UIUtil.exchangeViewVisibility(true, progressBar, rootView)
           }
@@ -268,6 +276,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
               UIUtil.exchangeViewVisibility(false, progressBar, rootView)
               showInfoSnackbar(rootView, getString(R.string.error_occurred_please_try_again))
             }
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -289,6 +298,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
                     ?: getString(R.string.error_could_not_save_private_keys))
               }
             }
+            countingIdlingResource.decrementSafely()
           }
         }
       }

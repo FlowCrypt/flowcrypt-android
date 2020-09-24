@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.view.View
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.swipeLeft
@@ -15,9 +14,9 @@ import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
@@ -37,17 +36,17 @@ import org.junit.runner.RunWith
  * Time: 10:25
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 @DoesNotNeedMailserver
 class LegalSettingsActivityTest : BaseTest() {
-  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(LegalSettingsActivity::class.java)
+  override val activityScenarioRule = activityScenarioRule<LegalSettingsActivity>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
-      .around(activityTestRule)
+      .around(activityScenarioRule)
 
   private val titleNames: Array<String> = arrayOf(
       getResString(R.string.privacy),
@@ -58,10 +57,10 @@ class LegalSettingsActivityTest : BaseTest() {
   @Test
   fun testClickToTitleViewPager() {
     for (titleName in titleNames) {
-      onView(allOf<View>(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
+      onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
           .check(matches(isDisplayed()))
           .perform(click())
-      onView(allOf<View>(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
+      onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleName)))
           .check(matches(isDisplayed())).check(matches(isSelected()))
     }
   }
@@ -73,11 +72,11 @@ class LegalSettingsActivityTest : BaseTest() {
 
   @Test
   fun testSwipeInViewPager() {
-    onView(allOf<View>(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleNames[0])))
+    onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleNames[0])))
         .check(matches(isDisplayed())).check(matches(isSelected()))
     for (i in 1 until titleNames.size) {
       onView(withId(R.id.viewPager)).perform(swipeLeft())
-      onView(allOf<View>(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleNames[i])))
+      onView(allOf(withParent(withParent(withParent(withId(R.id.tabLayout)))), withText(titleNames[i])))
           .check(matches(isDisplayed())).check(matches(isSelected()))
     }
   }
