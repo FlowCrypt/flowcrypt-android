@@ -16,7 +16,7 @@ import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
@@ -39,7 +39,7 @@ import org.junit.runner.RunWith
  * Time: 16:17
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 class CheckKeysActivityWithExistingKeysTest : BaseTest() {
   private val privateKeys = PrivateKeysManager.getKeysFromAssets(arrayOf("node/default@denbond7.com_fisrtKey_prv_default.json"))

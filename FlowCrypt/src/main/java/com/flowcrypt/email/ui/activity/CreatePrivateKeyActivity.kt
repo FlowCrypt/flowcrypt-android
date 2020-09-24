@@ -14,7 +14,6 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.lifecycle.Observer
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
@@ -38,8 +37,6 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private var createdPrivateKeyLongId: String? = null
   private var tempAccount: AccountEntity? = null
-
-  var createPrivateKeyIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_pass_phrase_manager
@@ -120,7 +117,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            createPrivateKeyIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
             isBackEnabled = false
             UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
           }
@@ -132,7 +129,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
             layoutSecondPasswordCheck.visibility = View.GONE
             layoutSuccess.visibility = View.VISIBLE
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
-            createPrivateKeyIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -150,7 +147,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
                 showInfoSnackbar(rootView, exception.message)
               }
             }
-            createPrivateKeyIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
         }
       }
