@@ -5,19 +5,10 @@
 
 package com.flowcrypt.email.rules
 
-import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockWebServer
-import okhttp3.tls.HandshakeCertificates
-import okhttp3.tls.HeldCertificate
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
-import java.net.InetAddress
-import java.security.KeyFactory
-import java.security.KeyPair
-import java.security.spec.PKCS8EncodedKeySpec
-import java.security.spec.X509EncodedKeySpec
-import javax.net.ssl.SSLSocketFactory
 
 
 /**
@@ -52,9 +43,10 @@ class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatch
   }
 
   /**
-   * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/HttpsServer.java
+   * https://github.com/square/okhttp/tree/master/okhttp-tls
+   *  https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/HttpsServer.java
    */
-  private fun getSSLSocketFactory(): SSLSocketFactory {
+  /*private fun getSSLSocketFactory(): SSLSocketFactory {
     val keyPair = prepareKeyPairFromResources()
     val localhost: String = InetAddress.getByName("localhost").canonicalHostName
     val localhostCertificate = HeldCertificate.Builder()
@@ -77,5 +69,5 @@ class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatch
     val x509EncodedKeySpec = X509EncodedKeySpec(pubKeyRaw)
     val publicKey = keyFactory.generatePublic(x509EncodedKeySpec)
     return KeyPair(publicKey, privateKey)
-  }
+  }*/
 }
