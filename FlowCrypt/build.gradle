@@ -186,11 +186,11 @@ android {
             versionNameSuffix "_devTest"
             dimension "standard"
             buildConfigField 'boolean', 'IS_ACRA_ENABLED', 'false'
-            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'true'
-            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'true'
-            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"BODY\""
-            buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'true'
-            buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"BODY\""
+            buildConfigField 'boolean', 'IS_MAIL_DEBUG_ENABLED', 'false'
+            buildConfigField 'boolean', 'IS_HTTP_LOG_ENABLED', 'false'
+            buildConfigField 'String', 'HTTP_LOG_LEVEL', "\"NONE\""
+            buildConfigField 'boolean', 'IS_NODE_HTTP_DEBUG_ENABLED', 'false'
+            buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"NONE\""
             buildConfigField 'String', 'ATTESTER_URL', "\"http://localhost:1212/\""
             buildConfigField 'String', 'API_URL', "\"http://localhost:1212/\""
             resValue 'string', 'gradle_is_acra_enabled', 'false'
