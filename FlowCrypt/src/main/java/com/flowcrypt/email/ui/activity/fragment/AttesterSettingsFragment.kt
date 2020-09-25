@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -73,7 +72,7 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
   }
 
   private fun setupAccountKeysInfoViewModel() {
-    accountKeysInfoViewModel.accountKeysInfoLiveData.observe(viewLifecycleOwner, Observer {
+    accountKeysInfoViewModel.accountKeysInfoLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -99,10 +98,13 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
           Result.Status.ERROR -> {
             sRL?.isRefreshing = false
             showStatus(it.data?.apiError?.msg ?: getString(R.string.unknown_error))
-            showSnackbar(contentView, getString(R.string.an_error_has_occurred),
-                getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener {
+            showSnackbar(
+                view = contentView,
+                msgText = getString(R.string.an_error_has_occurred),
+                btnName = getString(R.string.retry),
+                duration = Snackbar.LENGTH_LONG) {
               accountKeysInfoViewModel.refreshData()
-            })
+            }
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
@@ -110,10 +112,13 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
             sRL?.isRefreshing = false
             showStatus(it.exception?.message ?: it.exception?.javaClass?.simpleName ?: getString(R
                 .string.unknown_error))
-            showSnackbar(contentView, getString(R.string.an_error_has_occurred),
-                getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener {
+            showSnackbar(
+                view = contentView,
+                msgText = getString(R.string.an_error_has_occurred),
+                btnName = getString(R.string.retry),
+                duration = Snackbar.LENGTH_LONG) {
               accountKeysInfoViewModel.refreshData()
-            })
+            }
 
             baseActivity.countingIdlingResource.decrementSafely()
           }

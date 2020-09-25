@@ -5,10 +5,19 @@
 
 package com.flowcrypt.email.rules
 
+import com.flowcrypt.email.util.TestGeneralUtil
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockWebServer
+import okhttp3.tls.HandshakeCertificates
+import okhttp3.tls.HeldCertificate
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
+import java.net.InetAddress
+import java.security.KeyFactory
+import java.security.KeyPair
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
+import javax.net.ssl.SSLSocketFactory
 
 
 /**
@@ -25,13 +34,48 @@ class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatch
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        server.dispatcher = responseDispatcher
-        //todo-DenBond7 need to think about this server.useHttps(SslContextBuilder.localhost()
-        // .getSocketFactory(), false);
-        server.start(port)
-        base.evaluate()
-        server.shutdown()
+        try {
+          server.dispatcher = responseDispatcher
+          /*
+          It would be great to setup SSL here
+          https://codelabs.developers.google.com/codelabs/android-network-security-config/index.html#0
+          val sslSocketFactory = getSSLSocketFactory()
+          server.useHttps(sslSocketFactory, false)*/
+          server.start(port)
+          base.evaluate()
+          server.shutdown()
+        } catch (e: Exception) {
+          e.printStackTrace()
+        }
       }
     }
+  }
+
+  /**
+   * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/HttpsServer.java
+   */
+  private fun getSSLSocketFactory(): SSLSocketFactory {
+    val keyPair = prepareKeyPairFromResources()
+    val localhost: String = InetAddress.getByName("localhost").canonicalHostName
+    val localhostCertificate = HeldCertificate.Builder()
+        .addSubjectAlternativeName(localhost)
+        .rsa2048()
+        .keyPair(keyPair)
+        .build()
+    val serverCertificates = HandshakeCertificates.Builder()
+        .heldCertificate(localhostCertificate)
+        .build()
+    return serverCertificates.sslSocketFactory()
+  }
+
+  private fun prepareKeyPairFromResources(): KeyPair {
+    val keyFactory = KeyFactory.getInstance("RSA")
+    val prvKeyRaw: ByteArray = TestGeneralUtil.readObjectFromResourcesAsByteArray("mock_web_server_private_key.der")
+    val pkcS8EncodedKeySpec = PKCS8EncodedKeySpec(prvKeyRaw)
+    val privateKey = keyFactory.generatePrivate(pkcS8EncodedKeySpec)
+    val pubKeyRaw: ByteArray = TestGeneralUtil.readObjectFromResourcesAsByteArray("mock_web_server_public_key.der")
+    val x509EncodedKeySpec = X509EncodedKeySpec(pubKeyRaw)
+    val publicKey = keyFactory.generatePublic(x509EncodedKeySpec)
+    return KeyPair(publicKey, privateKey)
   }
 }

@@ -17,6 +17,7 @@ import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.DoesNotNeedMailserverEnterprise
 import com.flowcrypt.email.R
+import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
@@ -78,7 +79,7 @@ class AddNewAccountActivityEnterpriseTest : BaseSignActivityTest() {
 
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(1212, object : Dispatcher() {
+    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
         val model = gson.fromJson<LoginModel>(InputStreamReader(request.body.inputStream()),
