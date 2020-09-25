@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./gradlew :FlowCrypt:testConsumerDebugUnitTest -q
+./gradlew :FlowCrypt:testDevTestDebugUnitTest -q

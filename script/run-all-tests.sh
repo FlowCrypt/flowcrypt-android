@@ -1,4 +1,4 @@
 #!/bin/bash
 
-./gradlew :FlowCrypt:connectedConsumerDebugAndroidTest
+./gradlew :FlowCrypt:connectedDevTestDebugAndroidTest
 
