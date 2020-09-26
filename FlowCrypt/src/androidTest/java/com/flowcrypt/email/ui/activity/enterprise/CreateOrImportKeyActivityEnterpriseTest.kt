@@ -16,6 +16,7 @@ import com.flowcrypt.email.DoesNotNeedMailserverEnterprise
 import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.base.BaseCreateOrImportKeyActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
@@ -50,6 +51,7 @@ class CreateOrImportKeyActivityEnterpriseTest : BaseCreateOrImportKeyActivityTes
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddPrivateKeyToDatabaseRule())
+      .around(RetryRule())
       .around(activityScenarioRule)
 
   @Test

@@ -42,6 +42,7 @@ import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
@@ -80,6 +81,7 @@ class KeysSettingsActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
       .around(addPrivateKeyToDatabaseRule)
+      .around(RetryRule())
       .around(activityScenarioRule)
 
   @Test

@@ -29,6 +29,7 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerVi
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers.allOf
@@ -64,6 +65,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(accountRule)
+      .around(RetryRule())
       .around(activityScenarioRule)
 
   @Test

@@ -20,6 +20,7 @@ import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import org.hamcrest.Matchers.allOf
 import org.junit.Rule
@@ -45,6 +46,7 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
+      .around(RetryRule())
       .around(activeActivityRule)
 
   @Test

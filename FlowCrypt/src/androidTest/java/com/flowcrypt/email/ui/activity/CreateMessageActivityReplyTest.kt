@@ -21,6 +21,7 @@ import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
 import org.junit.Rule
@@ -48,6 +49,7 @@ class CreateMessageActivityReplyTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
       .around(AddPrivateKeyToDatabaseRule())
+      .around(RetryRule())
       .around(activeActivityRule)
 
   @Test

@@ -24,6 +24,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.containsString
@@ -64,6 +65,7 @@ class ShareIntentsTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(GrantPermissionRule.grant(Manifest.permission.READ_EXTERNAL_STORAGE))
       .around(AddAccountToDatabaseRule())
+      .around(RetryRule())
       .around(activeActivityRule)
 
   private val randomActionForRFC6068: String

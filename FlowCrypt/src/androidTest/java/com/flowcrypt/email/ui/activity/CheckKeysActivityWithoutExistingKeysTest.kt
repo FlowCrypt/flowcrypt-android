@@ -25,6 +25,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.Matchers.not
 import org.junit.Assert
@@ -59,6 +60,7 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
+      .around(RetryRule())
       .around(activityScenarioRule)
 
   @Test

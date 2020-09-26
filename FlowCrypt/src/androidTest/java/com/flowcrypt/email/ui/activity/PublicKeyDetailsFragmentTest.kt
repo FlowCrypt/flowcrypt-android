@@ -38,6 +38,7 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddContactsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -78,6 +79,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
       .around(AddAccountToDatabaseRule())
       .around(AddContactsToDatabaseRule(listOf(PgpContact(EMAIL_DENBOND7, USER_DENBOND7,
           keyDetails.publicKey, true, null, null, null, null, 0))))
+      .around(RetryRule())
       .around(activityScenarioRule)
 
   @Test

@@ -23,6 +23,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -52,6 +53,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
+      .around(RetryRule())
       .around(activeActivityRule)
 
   private val singlePublicKeyForUnsavedContact: String? = PrivateKeysManager.getNodeKeyDetailsFromAssets(

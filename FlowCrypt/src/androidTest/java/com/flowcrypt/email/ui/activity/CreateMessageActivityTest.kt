@@ -50,6 +50,7 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -97,6 +98,7 @@ class CreateMessageActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
       .around(addPrivateKeyToDatabaseRule)
+      .around(RetryRule())
       .around(activeActivityRule)
 
   private val intent: Intent = CreateMessageActivity.generateIntent(getTargetContext(), null,

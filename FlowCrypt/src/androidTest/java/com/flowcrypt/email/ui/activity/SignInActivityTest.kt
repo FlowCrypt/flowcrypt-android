@@ -21,6 +21,7 @@ import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import org.hamcrest.Matchers.allOf
 import org.junit.Ignore
 import org.junit.Rule
@@ -47,6 +48,7 @@ class SignInActivityTest : BaseTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
+      .around(RetryRule())
       .around(activityScenarioRule)
 
   @Test

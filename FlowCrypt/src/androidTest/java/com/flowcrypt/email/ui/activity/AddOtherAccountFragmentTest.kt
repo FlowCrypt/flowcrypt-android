@@ -31,6 +31,7 @@ import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withSecurityTypeOption
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.util.AuthCredentialsManager
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
@@ -65,6 +66,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
+      .around(RetryRule())
       .around(activityScenarioRule)
 
   private val authCreds: AuthCredentials = AuthCredentialsManager.getLocalWithOneBackupAuthCreds()

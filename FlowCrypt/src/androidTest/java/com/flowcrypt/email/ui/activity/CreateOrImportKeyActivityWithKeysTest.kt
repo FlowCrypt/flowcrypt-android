@@ -23,6 +23,7 @@ import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.base.BaseCreateOrImportKeyActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers.allOf
@@ -50,6 +51,7 @@ class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest(
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddPrivateKeyToDatabaseRule())
+      .around(RetryRule())
       .around(activityScenarioRule)
 
   @Test

@@ -34,6 +34,7 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -64,6 +65,7 @@ class BackupKeysActivityTest : BaseTest() {
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
+      .around(RetryRule())
       .around(activityScenarioRule)
 
   @Test

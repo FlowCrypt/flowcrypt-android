@@ -19,6 +19,7 @@ import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers
@@ -55,6 +56,7 @@ class CreateMessageActivityReplyAllTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule(account))
       .around(AddPrivateKeyToDatabaseRule())
+      .around(RetryRule())
       .around(activeActivityRule)
 
   @Test

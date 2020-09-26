@@ -31,6 +31,7 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.`is`
@@ -75,6 +76,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(addAccountToDatabaseRule)
       .around(GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE))
+      .around(RetryRule())
       .around(activityScenarioRule)
 
   @Test

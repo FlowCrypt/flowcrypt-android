@@ -27,6 +27,7 @@ import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitRes
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.CreatePrivateKeyActivity
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
@@ -64,6 +65,7 @@ class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
+      .around(RetryRule())
       .around(activityScenarioRule)
 
   @Test
