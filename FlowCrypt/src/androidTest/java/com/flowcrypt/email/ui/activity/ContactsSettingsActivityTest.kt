@@ -23,6 +23,7 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerVi
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
@@ -52,6 +53,7 @@ class ContactsSettingsActivityTest : BaseTest() {
       .around(AddAccountToDatabaseRule())
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   fun testShowHelpScreen() {

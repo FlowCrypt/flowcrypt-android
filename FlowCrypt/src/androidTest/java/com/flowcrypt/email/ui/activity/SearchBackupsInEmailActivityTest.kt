@@ -21,6 +21,7 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.settings.SearchBackupsInEmailActivity
 import org.hamcrest.Matchers.not
@@ -49,6 +50,7 @@ class SearchBackupsInEmailActivityTest : BaseTest() {
       .around(AddPrivateKeyToDatabaseRule())
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   fun testShowHelpScreen() {

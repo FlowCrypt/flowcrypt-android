@@ -24,6 +24,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.AccountDaoManager
@@ -63,6 +64,7 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
       .around(GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE))
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   @Ignore("fix me")

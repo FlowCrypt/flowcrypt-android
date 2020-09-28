@@ -23,6 +23,7 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerVi
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.settings.AttesterSettingsActivity
 import com.flowcrypt.email.util.AccountDaoManager
@@ -58,6 +59,7 @@ class AttesterSettingsActivityTest : BaseTest() {
       .around(accountRule)
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   fun testKeysExistOnAttester() {

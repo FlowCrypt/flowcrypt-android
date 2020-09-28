@@ -21,6 +21,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
 import org.junit.Assert
@@ -51,6 +52,7 @@ class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
       .around(AddPrivateKeyToDatabaseRule())
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   fun testUseCorrectPassPhrase() {

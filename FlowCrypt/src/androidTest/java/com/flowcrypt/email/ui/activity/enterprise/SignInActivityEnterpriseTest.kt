@@ -26,6 +26,7 @@ import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.model.DomainRules
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
@@ -61,6 +62,7 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
       .outerRule(ClearAppSettingsRule())
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   @Ignore("fix setupAndClickSignInButton")

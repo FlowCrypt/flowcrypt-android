@@ -21,6 +21,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import org.hamcrest.Matchers.allOf
@@ -49,6 +50,7 @@ class SettingsActivityTest : BaseTest() {
       .around(AddAccountToDatabaseRule())
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   fun testShowHelpScreen() {

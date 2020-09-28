@@ -16,6 +16,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.AccountDaoManager
@@ -47,6 +48,7 @@ class SettingsActivityEnterpriseTest : BaseTest() {
           AccountDaoManager.getAccountDao("enterprise_account_no_prv_backup.json")))
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   fun testBackupsDisabled() {

@@ -16,6 +16,7 @@ import com.flowcrypt.email.DoesNotNeedMailserverEnterprise
 import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.base.BaseCreateOrImportKeyActivityTest
@@ -53,6 +54,7 @@ class CreateOrImportKeyActivityEnterpriseTest : BaseCreateOrImportKeyActivityTes
       .around(AddPrivateKeyToDatabaseRule())
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   fun testCreateNewKeyNotExist() {

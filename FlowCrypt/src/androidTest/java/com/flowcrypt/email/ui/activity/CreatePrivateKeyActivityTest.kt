@@ -17,6 +17,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
@@ -47,6 +48,7 @@ class CreatePrivateKeyActivityTest : BasePassphraseActivityTest() {
       .outerRule(ClearAppSettingsRule())
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   fun testUseCorrectPassPhrase() {

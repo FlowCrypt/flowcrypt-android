@@ -26,6 +26,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.PrivateKeysManager
@@ -56,6 +57,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(RetryRule())
       .around(activeActivityRule)
+      .around(ScreenshotTestRule())
 
   /**
    * There are two keys (all keys are different and have different pass phrases). Only one key from two keys is using.

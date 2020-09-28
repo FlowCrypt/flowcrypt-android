@@ -24,6 +24,7 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -67,6 +68,7 @@ class ShareIntentsTest : BaseTest() {
       .around(AddAccountToDatabaseRule())
       .around(RetryRule())
       .around(activeActivityRule)
+      .around(ScreenshotTestRule())
 
   private val randomActionForRFC6068: String
     get() = if (Random().nextBoolean()) Intent.ACTION_SENDTO else Intent.ACTION_VIEW

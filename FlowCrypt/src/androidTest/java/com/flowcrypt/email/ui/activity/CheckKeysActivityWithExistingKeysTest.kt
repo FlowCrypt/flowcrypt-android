@@ -25,6 +25,7 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.junit.Assert
@@ -62,6 +63,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
           TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL))
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   @DoesNotNeedMailserver

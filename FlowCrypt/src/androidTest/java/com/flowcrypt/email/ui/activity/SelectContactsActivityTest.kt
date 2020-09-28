@@ -29,6 +29,7 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddContactsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.viewaction.CustomActions.Companion.doNothing
 import org.hamcrest.Matchers.allOf
@@ -60,6 +61,7 @@ class SelectContactsActivityTest : BaseTest() {
       .around(AddContactsToDatabaseRule(CONTACTS))
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   fun testShowEmptyView() {

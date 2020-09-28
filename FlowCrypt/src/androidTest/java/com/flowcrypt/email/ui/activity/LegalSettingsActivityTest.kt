@@ -22,6 +22,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.settings.LegalSettingsActivity
 import org.hamcrest.Matchers.allOf
@@ -49,6 +50,7 @@ class LegalSettingsActivityTest : BaseTest() {
       .around(AddAccountToDatabaseRule())
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   private val titleNames: Array<String> = arrayOf(
       getResString(R.string.privacy),

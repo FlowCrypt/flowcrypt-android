@@ -33,6 +33,7 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
 import com.flowcrypt.email.rules.AddMessageToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
@@ -73,6 +74,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
       .around(AddMessageToDatabaseRule(userWithMoreThan21LettersAccount, INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT))
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   @Ignore("fix me")

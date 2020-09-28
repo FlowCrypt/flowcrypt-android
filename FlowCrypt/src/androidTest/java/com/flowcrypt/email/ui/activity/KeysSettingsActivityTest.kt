@@ -42,6 +42,7 @@ import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -83,6 +84,7 @@ class KeysSettingsActivityTest : BaseTest() {
       .around(addPrivateKeyToDatabaseRule)
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   @DoesNotNeedMailserver

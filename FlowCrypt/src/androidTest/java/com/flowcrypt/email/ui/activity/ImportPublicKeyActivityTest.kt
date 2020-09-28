@@ -31,6 +31,7 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -74,6 +75,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
       .around(GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE))
       .around(RetryRule())
       .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
   @DoesNotNeedMailserver
