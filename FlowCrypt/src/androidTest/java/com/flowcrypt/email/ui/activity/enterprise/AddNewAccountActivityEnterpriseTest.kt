@@ -15,7 +15,7 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.DoesNotNeedMailserverEnterprise
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
@@ -26,8 +26,8 @@ import com.flowcrypt.email.api.retrofit.response.model.DomainRules
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.base.BaseSignActivityTest
@@ -36,7 +36,6 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -50,9 +49,8 @@ import java.io.InputStreamReader
  *         Time: 3:30 PM
  *         E-mail: DenBond7@gmail.com
  */
-@DoesNotNeedMailserverEnterprise
 @MediumTest
-@Ignore("Fix me after 1.0.9")
+@DoesNotNeedMailserver
 @RunWith(AndroidJUnit4::class)
 class AddNewAccountActivityEnterpriseTest : BaseSignActivityTest() {
   override val useIntents: Boolean = true
@@ -67,7 +65,6 @@ class AddNewAccountActivityEnterpriseTest : BaseSignActivityTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("fix setupAndClickSignInButton")
   fun testNoPrvCreateRule() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_WITH_NO_PRV_CREATE_RULE))
     intended(hasComponent(CreateOrImportKeyActivity::class.java.name))

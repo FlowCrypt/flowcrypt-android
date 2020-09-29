@@ -11,16 +11,15 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.DoesNotNeedMailserverEnterprise
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.AccountDaoManager
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -34,10 +33,9 @@ import org.junit.runner.RunWith
  *         Time: 11:40 AM
  *         E-mail: DenBond7@gmail.com
  */
-@DoesNotNeedMailserverEnterprise
 @MediumTest
+@DoesNotNeedMailserver
 @RunWith(AndroidJUnit4::class)
-@Ignore("Need to think how to run")
 class SettingsActivityEnterpriseTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>()
 
@@ -52,6 +50,8 @@ class SettingsActivityEnterpriseTest : BaseTest() {
 
   @Test
   fun testBackupsDisabled() {
+    //need to wait database updates
+    Thread.sleep(1000)
     onView(withText(getResString(R.string.backups)))
         .check(doesNotExist())
   }

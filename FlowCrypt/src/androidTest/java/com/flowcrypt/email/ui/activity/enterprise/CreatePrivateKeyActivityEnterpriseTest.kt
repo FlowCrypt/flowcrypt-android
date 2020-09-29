@@ -18,7 +18,7 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.DoesNotNeedMailserverEnterprise
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
@@ -27,8 +27,8 @@ import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitRes
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.CreatePrivateKeyActivity
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
@@ -37,7 +37,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -52,9 +51,8 @@ import java.io.InputStreamReader
  *         E-mail: DenBond7@gmail.com
  */
 @MediumTest
-@DoesNotNeedMailserverEnterprise
+@DoesNotNeedMailserver
 @RunWith(AndroidJUnit4::class)
-@Ignore("Need to think how to run")
 class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
   override val activityScenarioRule = activityScenarioRule<CreateOrImportKeyActivity>(
       intent = Intent(getTargetContext(), CreatePrivateKeyActivity::class.java).apply {
