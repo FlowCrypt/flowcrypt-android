@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity
 
 import android.app.Activity
-import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -19,14 +18,13 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.hamcrest.Matchers.not
 import org.junit.Assert
@@ -85,14 +83,13 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
+  @DoesNotNeedMailserver
   fun testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
         .perform(scrollTo(), typeText("android"), closeSoftKeyboard())
     onView(withId(R.id.buttonPositiveAction))
         .perform(scrollTo(), click())
 
-    Assert.assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 
@@ -111,7 +108,6 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
     onView(withId(R.id.buttonNegativeAction))
         .perform(scrollTo(), click())
 
-    Assert.assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == CheckKeysActivity.RESULT_NEGATIVE)
   }
 }

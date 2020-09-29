@@ -25,7 +25,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
@@ -34,8 +33,8 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -122,7 +121,6 @@ class BackupKeysActivityTest : BaseTest() {
     onView(withId(R.id.buttonBackupAction))
         .check(matches(isDisplayed()))
         .perform(click())
-    assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.DESTROYED)
     assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 
@@ -133,7 +131,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
-  @CICandidateAnnotation
+  @DoesNotNeedMailserver
   fun testSuccessDownloadOption() {
     addFirstKeyWithStrongPassword()
     onView(withId(R.id.radioButtonDownload))
@@ -147,13 +145,13 @@ class BackupKeysActivityTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-    assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.DESTROYED)
     assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
 
     TestGeneralUtil.deleteFiles(listOf(file))
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSuccessWithTwoKeysDownloadOption() {
     addSecondKeyWithStrongPassword()
     testSuccessDownloadOption()

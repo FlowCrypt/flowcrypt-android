@@ -33,8 +33,7 @@ import java.util.*
  */
 abstract class BasePassphraseActivityTest : BaseTest() {
   @Test
-  @Ignore("fix me")
-  @CICandidateAnnotation
+  @DoesNotNeedMailserver
   fun testShowDialogWithPasswordRecommendation() {
     onView(withId(R.id.imageButtonShowPasswordHint))
         .check(matches(isDisplayed()))
@@ -42,7 +41,7 @@ abstract class BasePassphraseActivityTest : BaseTest() {
     onView(withId(R.id.webView))
         .check(matches(isDisplayed()))
     onView(withId(R.id.buttonOk))
-        .perform(scrollTo(), click())
+        .perform(click())
     onView(withId(R.id.textViewFirstPasswordCheckTitle))
         .check(matches(isDisplayed()))
   }

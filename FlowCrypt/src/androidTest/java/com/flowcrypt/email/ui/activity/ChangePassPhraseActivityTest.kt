@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.activity
 
 import android.app.Activity
-import androidx.lifecycle.Lifecycle
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
@@ -21,8 +20,8 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
 import org.junit.Assert
 import org.junit.Rule
@@ -69,7 +68,6 @@ class ChangePassPhraseActivityTest : BasePassphraseActivityTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-    Assert.assertTrue(activityScenarioRule.scenario.state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 }
