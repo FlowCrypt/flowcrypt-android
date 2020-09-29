@@ -16,6 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
@@ -23,8 +24,8 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerVi
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
 import org.hamcrest.Matchers.not
@@ -56,11 +57,13 @@ class ContactsSettingsActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowHelpScreen() {
     testHelpScreen()
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testEmptyList() {
     onView(withId(R.id.recyclerViewContacts))
         .check(matches(withEmptyRecyclerView())).check(matches(not(isDisplayed())))
@@ -69,6 +72,7 @@ class ContactsSettingsActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testDeleteContacts() {
     addContactsToDatabase()
     //todo-denbond7 improve this in the future. When we have a good solution for ROOM, coroutines and Espresso
