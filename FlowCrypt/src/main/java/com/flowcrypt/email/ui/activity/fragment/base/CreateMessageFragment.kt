@@ -1091,7 +1091,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
 
     showAtts()
-    baseActivity.countingIdlingResource.decrementSafely()
+    hostActivity?.countingIdlingResource?.decrementSafely("showContent")
   }
 
   /**
@@ -1476,7 +1476,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   private fun setupAccountAliasesViewModel() {
     accountAliasesViewModel.fetchUpdates(viewLifecycleOwner)
-    baseActivity.countingIdlingResource.incrementSafely()
+    hostActivity?.countingIdlingResource?.incrementSafely()
     accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner, {
       val aliases = ArrayList<String>()
       accountAliasesViewModel.activeAccountLiveData.value?.let { accountEntity ->

@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.enterprise
 
-import android.view.View
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intended
@@ -57,15 +56,6 @@ import java.io.InputStreamReader
 class SignInActivityEnterpriseTest : BaseSignActivityTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<SignInActivity>()
-
-  private var decorView: View? = null
-
-  @Before
-  fun setUp() {
-    activityScenario?.onActivity {
-      decorView = it.window.decorView
-    }
-  }
 
   @Before
   fun waitWhileToastWillBeDismissed() {

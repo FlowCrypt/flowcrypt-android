@@ -11,6 +11,7 @@ import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
@@ -19,8 +20,8 @@ import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers
@@ -62,6 +63,7 @@ class CreateMessageActivityReplyAllTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
+  @DoesNotNeedMailserver
   fun testReplyAllUsingGmailAlias() {
     val msgInfo = getMsgInfo("messages/info/standard_msg_reply_all_via_gmail_alias.json",
         "messages/mime/standard_msg_reply_to_header.txt")
@@ -74,9 +76,7 @@ class CreateMessageActivityReplyAllTest : BaseTest() {
         MessageType.REPLY_ALL,
         MessageEncryptionType.STANDARD))
 
-    registerCountingIdlingResource()
-    registerNodeIdling()
-    registerSyncServiceCountingIdlingResource()
+    registerAllIdlingResources()
 
     Espresso.onView(ViewMatchers.withId(R.id.editTextRecipientCc))
         .check(ViewAssertions.matches(Matchers.not(ViewMatchers.isDisplayed())))

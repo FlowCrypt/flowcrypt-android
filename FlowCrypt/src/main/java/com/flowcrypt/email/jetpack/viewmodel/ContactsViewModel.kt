@@ -123,6 +123,10 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
    */
   fun fetchAndUpdateInfoAboutContacts(type: ContactEntity.Type, emails: List<String>) {
     viewModelScope.launch {
+      if (emails.isEmpty()) {
+        return@launch
+      }
+
       setResultForRemoteContactsLiveData(type, Result.loading())
 
       val pgpContacts = ArrayList<ContactEntity>()

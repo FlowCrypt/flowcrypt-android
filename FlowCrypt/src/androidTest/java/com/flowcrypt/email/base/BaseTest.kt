@@ -59,6 +59,15 @@ abstract class BaseTest : BaseActivityTestImplementation {
   var syncServiceCountingIdlingResource: IdlingResource? = null
   private var isIntentsInitialized = false
 
+  protected var decorView: View? = null
+
+  @Before
+  fun initDecorView() {
+    activityScenario?.onActivity {
+      decorView = it.window.decorView
+    }
+  }
+
   @Before
   open fun registerNodeIdling() {
     activityScenario?.onActivity { activity ->
@@ -134,7 +143,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
    * Check is [Toast] displayed. This method can be used only with activity. It doesn't work if a toast is displayed
    * when some toast is displayed.
    *
-   * @param activity A root [Activity]
    * @param message  A message which was displayed.
    */
   protected fun isToastDisplayed(decorView: View?, message: String) {
@@ -270,5 +278,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
     registerCountingIdlingResource()
     registerNodeIdling()
     registerSyncServiceCountingIdlingResource()
+    initDecorView()
   }
 }

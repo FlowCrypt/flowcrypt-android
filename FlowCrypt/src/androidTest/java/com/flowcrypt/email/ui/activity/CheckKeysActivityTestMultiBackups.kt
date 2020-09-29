@@ -26,8 +26,8 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.junit.Assert
@@ -330,9 +330,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
 
   private fun launchActivity(keysPaths: Array<String>) {
     activeActivityRule.launch(getStartCheckKeysActivityIntent(keysPaths))
-    registerCountingIdlingResource()
-    registerNodeIdling()
-    registerSyncServiceCountingIdlingResource()
+    registerAllIdlingResources()
   }
 
   private fun checkSkipRemainingBackupsButton() {

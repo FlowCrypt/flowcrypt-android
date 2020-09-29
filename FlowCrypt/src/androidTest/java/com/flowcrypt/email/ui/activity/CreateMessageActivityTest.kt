@@ -35,11 +35,16 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
+import com.flowcrypt.email.api.retrofit.ApiHelper
+import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
+import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
@@ -50,12 +55,16 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import okhttp3.mockwebserver.Dispatcher
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.`is`
@@ -67,13 +76,15 @@ import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import org.junit.Ignore
+import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.InputStreamReader
 
 /**
  * A test for [CreateMessageActivity]. By default, this test describes running an activity with type
@@ -115,6 +126,7 @@ class CreateMessageActivityTest : BaseTest() {
     }
 
   @Test
+  @DoesNotNeedMailserver
   fun testEmptyRecipient() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -128,7 +140,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testEmptyEmailSubject() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -148,7 +160,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testEmptyEmailMsg() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -171,6 +183,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testUsingStandardMsgEncryptionType() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -186,6 +199,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testUsingSecureMsgEncryptionType() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -200,6 +214,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSwitchBetweenEncryptionTypes() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -224,13 +239,13 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testShowHelpScreen() {
     activeActivityRule.launch(intent)
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testIsScreenOfComposeNewMsg() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -250,7 +265,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testWrongFormatOfRecipientEmailAddress() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -274,7 +289,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testAddingAtts() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -290,7 +305,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testDeletingAtts() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -316,7 +331,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testSelectImportPublicKeyFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -334,7 +349,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testSelectedStandardEncryptionTypeFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -350,7 +365,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testSelectedRemoveRecipientFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -377,7 +392,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testSelectedCopyFromOtherContactFromPopUp() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -393,10 +408,11 @@ class CreateMessageActivityTest : BaseTest() {
     onView(withText(R.string.copy_from_other_contact))
         .check(matches(isDisplayed()))
         .perform(click())
-    //isToastDisplayed(activityTestRule?.activity, getResString(R.string.key_successfully_copied))
+    isToastDisplayed(decorView, getResString(R.string.key_successfully_copied))
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSharePubKeySingle() {
     activeActivityRule.launch(intent)
     registerAllIdlingResources()
@@ -413,6 +429,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSharePubKeyMultiply() {
     val secondKeyDetails =
         PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_secondKey_prv_strong.json")
@@ -440,6 +457,7 @@ class CreateMessageActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testSharePubKeyNoOwnKeys() {
     PrivateKeysManager.deleteKey(addPrivateKeyToDatabaseRule.keyPath)
     val keyDetails =
@@ -533,6 +551,35 @@ class CreateMessageActivityTest : BaseTest() {
     private const val EMAIL_SUBJECT = "Test subject"
 
     private var atts: MutableList<File> = mutableListOf()
+
+    @get:ClassRule
+    @JvmStatic
+    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
+        if (request.path.equals("/lookup/email")) {
+          val requestModel = gson.fromJson(InputStreamReader(request.body.inputStream()), PostLookUpEmailModel::class.java)
+
+          when {
+            requestModel.email.equals("not_attested_user@denbond7.com", true) -> {
+              val model = gson.fromJson(
+                  InputStreamReader(ByteArrayInputStream(TestGeneralUtil.readObjectFromResourcesAsByteArray("2.json"))),
+                  LookUpEmailResponse::class.java)
+              return MockResponse().setResponseCode(200).setBody(gson.toJson(model))
+            }
+
+            requestModel.email.equals("attested_user@denbond7.com", true) -> {
+              val model = gson.fromJson(
+                  InputStreamReader(ByteArrayInputStream(TestGeneralUtil.readObjectFromResourcesAsByteArray("3.json"))),
+                  LookUpEmailResponse::class.java)
+              return MockResponse().setResponseCode(200).setBody(gson.toJson(model))
+            }
+          }
+        }
+
+        return MockResponse().setResponseCode(404)
+      }
+    })
 
     @BeforeClass
     @JvmStatic

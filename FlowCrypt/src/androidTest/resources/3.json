@@ -1,0 +1,7 @@
+{
+  "pubkey": "-----BEGIN PGP PUBLIC KEY BLOCK-----\r\nVersion: FlowCrypt 0.9.0 Gmail Encryption\r\nComment: Seamlessly send and receive encrypted email\r\n\r\nxjMEXdOhfxYJKwYBBAHaRw8BAQdAMtKBLZQPe9Fs3UkfxdN+QrSjK9vRw825\r\nIeu/1ennsS/NN2F0dGVzdGVkX3VzZXJAZGVuYm9uZDcuY29tIDxhdHRlc3Rl\r\nZF91c2VyQGRlbmJvbmQ3LmNvbT7CdwQQFgoAHwUCXdOhfwYLCQcIAwIEFQgK\r\nAgMWAgECGQECGwMCHgEACgkQSZdSbelitiQFYgEAwazGjnPkZ5LQVYJ4O+DK\r\nXXLsmbeEpszgv1w+sFlBBm4A/A6PCheVurhbhEuoiB0ZICbPlSiBUXC6fsaY\r\nCYJtWuwBzjgEXdOhfxIKKwYBBAGXVQEFAQEHQPu6/ZBHiT5/LZn+0ifZceUH\r\npLhEeoEikQ4UFzfI6aMfAwEIB8JhBBgWCAAJBQJd06F/AhsMAAoJEEmXUm3p\r\nYrYkHfQA/iPCinKCMp9G3vMv95EBTwMz1sAfPGX5+UmyVurnM5h6AQCcnFr8\r\nJ5P03Gq6pGJ0eIMjkhn8AQFhK0AU17YIxBEGAA==\r\n=XN7/\r\n-----END PGP PUBLIC KEY BLOCK-----\r\n",
+  "email": "attested_user@denbond7.com",
+  "longid": "4997526DE962B624",
+  "attested": false,
+  "has_cryptup": true
+}

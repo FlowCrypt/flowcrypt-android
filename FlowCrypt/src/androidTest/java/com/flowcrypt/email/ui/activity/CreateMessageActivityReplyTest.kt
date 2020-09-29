@@ -13,7 +13,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.CICandidateAnnotation
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -21,8 +21,8 @@ import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
 import org.junit.Rule
@@ -39,7 +39,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@CICandidateAnnotation
 class CreateMessageActivityReplyTest : BaseTest() {
   override val activeActivityRule = lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
@@ -55,6 +54,7 @@ class CreateMessageActivityReplyTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
+  @DoesNotNeedMailserver
   fun testReplyToHeader() {
     val msgInfo = getMsgInfo("messages/info/standard_msg_reply_to_header.json",
         "messages/mime/standard_msg_reply_to_header.txt")
@@ -64,9 +64,7 @@ class CreateMessageActivityReplyTest : BaseTest() {
         MessageType.REPLY,
         MessageEncryptionType.STANDARD))
 
-    registerCountingIdlingResource()
-    registerNodeIdling()
-    registerSyncServiceCountingIdlingResource()
+    registerAllIdlingResources()
 
     onView(withId(R.id.editTextRecipientTo))
         .check(matches(isDisplayed()))
