@@ -53,6 +53,7 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
   val contactsWithPgpSearchLiveData: LiveData<Result<List<ContactEntity>>> =
       Transformations.switchMap(searchPatternLiveData) {
         liveData {
+          emit(Result.loading())
           val foundContacts = if (it.isNullOrEmpty()) {
             roomDatabase.contactsDao().getAllContactsWithPgp()
           } else {

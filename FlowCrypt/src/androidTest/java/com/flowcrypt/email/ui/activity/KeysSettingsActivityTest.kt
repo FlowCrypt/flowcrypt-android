@@ -86,7 +86,7 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Before
   fun waitData() {
-    //todo-denbond7 need to wait while activity lunches a fragment and load data via ROOM.
+    //todo-denbond7 need to wait while activity lunches a fragment and loads data via ROOM.
     // Need to improve this code after espresso updates
     Thread.sleep(1000)
   }

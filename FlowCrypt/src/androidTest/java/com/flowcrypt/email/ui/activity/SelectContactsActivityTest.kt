@@ -8,6 +8,8 @@ package com.flowcrypt.email.ui.activity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingRegistry
+import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.clearText
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.typeText
@@ -29,12 +31,13 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddContactsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.viewaction.CustomActions.Companion.doNothing
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -53,6 +56,7 @@ import java.util.*
 @RunWith(AndroidJUnit4::class)
 class SelectContactsActivityTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<SelectContactsActivity>()
+  private var filterIdlingResource: IdlingResource? = null
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
@@ -63,12 +67,34 @@ class SelectContactsActivityTest : BaseTest() {
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 
+  @Before
+  open fun registerFilterIdling() {
+    activityScenario?.onActivity { activity ->
+      val baseActivity = (activity as? SelectContactsActivityTest) ?: return@onActivity
+      filterIdlingResource = baseActivity.filterIdlingResource
+      filterIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+    }
+  }
+
+  @After
+  open fun unregisterFilterIdling() {
+    filterIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+  }
+
+  @Before
+  fun waitData() {
+    //todo-denbond7 need to wait while activity loads data via ROOM.
+    // Need to improve this code after espresso updates
+    Thread.sleep(1000)
+  }
+
   @Test
+  @DoesNotNeedMailserver
   fun testShowEmptyView() {
     clearContactsFromDatabase()
 
     //Need to wait a little while data will be updated
-    Thread.sleep(2000)
+    Thread.sleep(1000)
 
     onView(withId(R.id.emptyView))
         .check(matches(isDisplayed())).check(matches(withText(R.string.no_results)))
@@ -92,7 +118,7 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testCheckSearchExistingContact() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))
@@ -108,6 +134,7 @@ class SelectContactsActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testNoResults() {
     onView(withId(R.id.menuSearch))
         .check(matches(isDisplayed()))
