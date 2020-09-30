@@ -89,7 +89,7 @@ class KeysSettingsActivityTest : BaseTest() {
   fun waitData() {
     //todo-denbond7 need to wait while activity lunches a fragment and loads data via ROOM.
     // Need to improve this code after espresso updates
-    Thread.sleep(1000)
+    Thread.sleep(3000)
   }
 
   @Test
