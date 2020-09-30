@@ -21,10 +21,9 @@ import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -41,7 +40,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class SignInActivityTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<SignInActivity>()
@@ -54,16 +52,17 @@ class SignInActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("Fix me after 1.0.9")
+  @DoesNotNeedMailserver
   fun testUseOtherEmailProviders() {
     onView(withId(R.id.buttonOtherEmailProvider))
         .check(matches(isDisplayed()))
         .perform(click())
-    onView(allOf(withText(R.string.adding_new_account), withParent(withId(R.id.toolbar))))
+    onView(withText(R.string.or_use_your_credentials_to_connect))
         .check(matches(isDisplayed()))
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testUseGmail() {
     onView(withId(R.id.buttonSignInWithGmail))
         .check(matches(isDisplayed()))
@@ -73,6 +72,7 @@ class SignInActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowSecurityScreen() {
     onView(withId(R.id.buttonSecurity))
         .check(matches(isDisplayed()))

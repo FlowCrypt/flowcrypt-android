@@ -21,11 +21,10 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -40,7 +39,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class SettingsActivityTest : BaseTest() {
   override val activityScenarioRule = activityScenarioRule<SettingsActivity>()
 
@@ -53,37 +51,43 @@ class SettingsActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowHelpScreen() {
     testHelpScreen()
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowBackupsScreen() {
     checkIsScreenDisplaying(getResString(R.string.backups))
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowSecurityScreen() {
     checkIsScreenDisplaying(getResString(R.string.security_and_privacy))
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowContactsScreen() {
     checkIsScreenDisplaying(getResString(R.string.contacts))
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowKeysScreen() {
     checkIsScreenDisplaying(getResString(R.string.keys))
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowAttesterScreen() {
     checkIsScreenDisplaying(getResString(R.string.attester))
   }
 
   @Test
-  @Ignore("Failed on CI")
+  @DoesNotNeedMailserver
   fun testShowLegalScreen() {
     checkIsScreenDisplaying(getResString(R.string.experimental), getResString(R.string.experimental_settings))
   }
