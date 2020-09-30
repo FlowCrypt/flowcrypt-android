@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.base
 
-import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -130,19 +129,6 @@ abstract class BaseTest : BaseActivityTestImplementation {
    * Check is [Toast] displayed. This method can be used only with activity. It doesn't work if a toast is displayed
    * when some toast is displayed.
    *
-   * @param activity A root [Activity]
-   * @param message  A message which was displayed.
-   */
-  protected fun isToastDisplayed(activity: Activity?, message: String) {
-    onView(withText(message))
-        .inRoot(withDecorView(not(`is`(activity?.window?.decorView))))
-        .check(matches(isDisplayed()))
-  }
-
-  /**
-   * Check is [Toast] displayed. This method can be used only with activity. It doesn't work if a toast is displayed
-   * when some toast is displayed.
-   *
    * @param message  A message which was displayed.
    */
   protected fun isToastDisplayed(decorView: View?, message: String) {
@@ -152,16 +138,13 @@ abstract class BaseTest : BaseActivityTestImplementation {
   }
 
   /**
-   * Check is [android.app.Dialog] displayed. This method can be used only with activity. It doesn't work if a
-   * dialog is displayed
-   * when some toast is displayed.
+   * Check is [android.app.Dialog] displayed. This method can be used only with activity.
    *
-   * @param activity A root [Activity]
    * @param message  A message which was displayed.
    */
-  protected fun isDialogWithTextDisplayed(activity: Activity?, message: String) {
+  protected fun isDialogWithTextDisplayed(decorView: View?, message: String) {
     onView(withText(message))
-        .inRoot(withDecorView(not(`is`(activity?.window?.decorView))))
+        .inRoot(withDecorView(not(`is`(decorView))))
         .check(matches(isDisplayed()))
   }
 

@@ -16,12 +16,12 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.flowcrypt.email.CICandidateAnnotation
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import org.hamcrest.Matchers.allOf
 import org.junit.Rule
@@ -38,7 +38,7 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@CICandidateAnnotation
+@DoesNotNeedMailserver
 class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   override val activeActivityRule = lazyActivityScenarioRule<HtmlViewFromAssetsRawActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
