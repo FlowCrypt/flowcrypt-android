@@ -5,10 +5,15 @@
 
 package com.flowcrypt.email.rules
 
-import android.os.Environment
+import android.content.ContentValues
+import android.provider.MediaStore
+import android.webkit.MimeTypeMap
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.runner.screenshot.BasicScreenCaptureProcessor
-import java.io.File
+import androidx.test.runner.screenshot.ScreenCapture
+import org.apache.commons.io.FilenameUtils
+import java.io.BufferedOutputStream
+import java.util.*
 
 /**
  * @author Denis Bondarenko
@@ -17,12 +22,33 @@ import java.io.File
  *         E-mail: DenBond7@gmail.com
  */
 class CustomScreenCaptureProcessor : BasicScreenCaptureProcessor() {
-  init {
-    mDefaultScreenshotPath = getNewFilename()
-  }
+  override fun process(capture: ScreenCapture?): String {
+    capture ?: return ""
+    try {
+      val context = getInstrumentation().targetContext
+      var filename = if (capture.name == null) defaultFilename else getFilename(capture.name)
+      filename += "." + capture.format.toString().toLowerCase()
 
-  private fun getNewFilename(): File? {
-    val context = getInstrumentation().targetContext.applicationContext
-    return context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+      val contentResolver = context.contentResolver
+      val fileExtension = FilenameUtils.getExtension(filename).toLowerCase(Locale.getDefault())
+      val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension)
+
+      val contentValues = ContentValues().apply {
+        put(MediaStore.DownloadColumns.DISPLAY_NAME, filename)
+        put(MediaStore.DownloadColumns.MIME_TYPE, mimeType)
+      }
+
+      val imageUri = contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+          contentValues) ?: return ""
+      val outputStream = contentResolver.openOutputStream(imageUri) ?: return ""
+      BufferedOutputStream(outputStream).use { out ->
+        capture.bitmap.compress(capture.format, 100, out)
+        out.flush()
+      }
+      return filename!!
+    } catch (e: Exception) {
+      e.printStackTrace()
+      return ""
+    }
   }
 }

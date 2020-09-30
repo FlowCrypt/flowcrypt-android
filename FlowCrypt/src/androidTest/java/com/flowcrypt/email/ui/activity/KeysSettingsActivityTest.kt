@@ -30,6 +30,7 @@ import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement
+import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
@@ -147,7 +148,7 @@ class KeysSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
+  @CICandidateAnnotation
   fun testKeyDetailsShowPrivateKey() {
     selectFirstKey()
     onView(withId(R.id.btnShowPrKey))
