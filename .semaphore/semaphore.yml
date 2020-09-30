@@ -55,7 +55,7 @@ blocks:
             # store errors log
             - echo "Store errors log"
             - ls -a
-            - artifact push job --expire-in 1w FlowCrypt/build/reports/androidTests/connected/flavors/CONSUMER/
+            - artifact push job --expire-in 1w FlowCrypt/build/reports/androidTests/connected/flavors/DEVTEST/
             - echo "Store screenshots"
             - adb pull "/sdcard/Android/data/com.flowcrypt.email.debug/files/Pictures"
             - artifact push job --expire-in 1w Pictures
