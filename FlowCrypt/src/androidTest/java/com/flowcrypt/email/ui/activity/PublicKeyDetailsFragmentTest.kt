@@ -38,8 +38,8 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddContactsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -47,10 +47,9 @@ import org.hamcrest.CoreMatchers
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
-import org.hamcrest.Matchers.not
 import org.hamcrest.core.AllOf
 import org.junit.AfterClass
-import org.junit.Ignore
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -84,6 +83,13 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 
+  @Before
+  fun waitData() {
+    //todo-denbond7 need to wait while activity lunches a fragment and load data via ROOM.
+    // Need to improve this code after espresso updates
+    Thread.sleep(1000)
+  }
+
   @Test
   @DoesNotNeedMailserver
   fun testPubKeyDetails() {
@@ -112,14 +118,13 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
-  @Ignore("Failed on CI")
   fun testActionCopy() {
     chooseContact()
 
     onView(withId(R.id.menuActionCopy))
         .check(matches(isDisplayed()))
         .perform(click())
-    //isToastDisplayed(activityTestRule?.activity, getResString(R.string.public_key_copied_to_clipboard))
+    isToastDisplayed(decorView, getResString(R.string.public_key_copied_to_clipboard))
     UiThreadStatement.runOnUiThread {
       checkClipboardText(TestGeneralUtil.replaceVersionInKey(keyDetails.publicKey))
     }
@@ -127,7 +132,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
-  @Ignore("Failed on CI")
   fun testActionSave() {
     chooseContact()
 
@@ -153,11 +157,11 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-    //isToastDisplayed(activityTestRule?.activity, getResString(R.string.saved))
+    isToastDisplayed(decorView, getResString(R.string.saved))
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testActionDelete() {
     chooseContact()
 
@@ -165,8 +169,6 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     onView(withText(R.string.delete))
         .check(matches(isDisplayed()))
         .perform(click())
-
-    onView(withText(EMAIL_DENBOND7)).check(matches(not(isDisplayed())))
 
     onView(withText(R.string.no_results))
         .check(matches(isDisplayed()))
