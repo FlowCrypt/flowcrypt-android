@@ -20,6 +20,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -31,15 +32,14 @@ import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.hootsuite.nachos.tokenizer.SpanChipTokenizer
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -95,6 +95,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
+  @DoesNotNeedMailserver
   fun testFrom() {
     onView(withId(R.id.editTextFrom))
         .perform(scrollTo())
@@ -103,7 +104,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testToRecipients() {
     val chipSeparator = SpanChipTokenizer.CHIP_SPAN_SEPARATOR.toString()
     val autoCorrectSeparator = SpanChipTokenizer.AUTOCORRECT_SEPARATOR.toString()
@@ -120,17 +121,19 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testSubject() {
     onView(withId(R.id.editTextEmailSubject))
+        .perform(scrollTo())
         .check(matches(allOf(isDisplayed(),
             if (serviceInfo.isSubjectEditable) isFocusable() else not(isFocusable()))))
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testEmailMsg() {
     onView(withId(R.id.editTextEmailMessage))
+        .perform(scrollTo())
         .check(matches(allOf(isDisplayed(),
             if (TextUtils.isEmpty(serviceInfo.systemMsg)) withText(isEmptyString())
             else withText(serviceInfo.systemMsg),
@@ -138,11 +141,12 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
     if (serviceInfo.isMsgEditable) {
       onView(withId(R.id.editTextEmailMessage))
-          .perform(replaceText(STRING))
+          .perform(scrollTo(), replaceText(STRING))
     }
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testAvailabilityAddingAtts() {
     if (!serviceInfo.hasAbilityToAddNewAtt) {
       onView(withId(R.id.menuActionAttachFile))
@@ -151,6 +155,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testDisabledSwitchingBetweenEncryptionTypes() {
     if (!serviceInfo.isMsgTypeSwitchable) {
       onView(withText(R.string.switch_to_standard_email))
@@ -161,6 +166,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
   fun testShowHelpScreen() {
     testHelpScreen()
   }
