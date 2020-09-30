@@ -23,13 +23,12 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
 import com.flowcrypt.email.viewaction.ClickOnViewInRecyclerViewItem
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -72,7 +71,6 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testIsDisplayedSingleItem() {
     val pgpContact = PgpContact("default@denbond7.com", null,
         singlePublicKeyForUnsavedContact, true, null, null, null, null, 0)
@@ -96,7 +94,6 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
   }
 
   @Test
-  @Ignore("Fix me")
   fun testSaveButtonForSingleContact() {
     activeActivityRule.launch(
         PreviewImportPgpContactActivity.newIntent(getTargetContext(), singlePublicKeyForUnsavedContact))
@@ -106,7 +103,7 @@ class PreviewImportPgpContactActivityTest : BaseTest() {
     onView(withId(R.id.recyclerViewContacts))
         .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0,
             ClickOnViewInRecyclerViewItem(R.id.buttonSaveContact)))
-    //todo-denbond7 fix isToastDisplayed(activityTestRule?.activity, getResString(R.string.contact_successfully_saved))
+    isToastDisplayed(decorView, getResString(R.string.contact_successfully_saved))
   }
 
   @Test
