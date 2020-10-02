@@ -9,7 +9,9 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 /**
- * This rule can rerun a task a few times in it once failed. By default we have 3 attempts
+ * This rule can rerun a task a few times in it once failed. By default we have 3 attempts.
+ *
+ * P.S. Doesn't work with [LazyActivityScenarioRule]
  *
  * @author Denis Bondarenko
  *         Date: 9/26/20

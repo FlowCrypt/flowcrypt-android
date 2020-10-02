@@ -18,14 +18,13 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.rule.GrantPermissionRule
-import com.flowcrypt.email.CICandidateAnnotation
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.containsString
@@ -33,7 +32,6 @@ import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 import org.junit.AfterClass
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -53,10 +51,8 @@ import java.util.*
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@CICandidateAnnotation
-@Ignore("fix me")
+@DoesNotNeedMailserver
 class ShareIntentsTest : BaseTest() {
-
   override val activeActivityRule = lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
@@ -66,7 +62,6 @@ class ShareIntentsTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(GrantPermissionRule.grant(Manifest.permission.READ_EXTERNAL_STORAGE))
       .around(AddAccountToDatabaseRule())
-      .around(RetryRule())
       .around(activeActivityRule)
       .around(ScreenshotTestRule())
 
@@ -74,7 +69,6 @@ class ShareIntentsTest : BaseTest() {
     get() = if (Random().nextBoolean()) Intent.ACTION_SENDTO else Intent.ACTION_VIEW
 
   @Test
-  @Ignore("fix me")
   fun testEmptyUri() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, null))
     registerAllIdlingResources()
@@ -82,7 +76,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testToSubjectBody() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:" + recipients[0]
         + "?subject=" + ENCODED_SUBJECT + "&body=" + ENCODED_BODY))
@@ -131,7 +124,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testEmptyMailToSchema() {
     activeActivityRule.launch(genIntentForUri(randomActionForRFC6068, "mailto:"))
     registerAllIdlingResources()
@@ -139,7 +131,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testSendEmptyExtras() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, null, null, 0))
     registerAllIdlingResources()
@@ -154,7 +145,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testSendExtBody() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, null, Intent.EXTRA_TEXT, 0))
     registerAllIdlingResources()
@@ -169,7 +159,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testSendExtSubjectExtBody() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT,
         Intent.EXTRA_TEXT, 0))
@@ -185,7 +174,6 @@ class ShareIntentsTest : BaseTest() {
   }
 
   @Test
-  @Ignore("Fix me")
   fun testSendExtBodyAtt() {
     activeActivityRule.launch(generateIntentWithExtras(Intent.ACTION_SEND, null, Intent.EXTRA_TEXT, 1))
     registerAllIdlingResources()
