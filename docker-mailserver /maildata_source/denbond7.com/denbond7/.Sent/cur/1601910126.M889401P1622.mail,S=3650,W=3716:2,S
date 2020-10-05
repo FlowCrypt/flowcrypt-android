@@ -1,13 +1,3 @@
-Return-Path: <denbond7@denbond7.com>
-Delivered-To: default@denbond7.com
-Received: from mail.denbond7.com
-	by mail.denbond7.com with LMTP
-	id GDamN241e1+67AAAZlazJA
-	(envelope-from <denbond7@denbond7.com>)
-	for <default@denbond7.com>; Mon, 05 Oct 2020 15:02:06 +0000
-Received: from localhost (localhost [127.0.0.1])
-	by mail.denbond7.com (Postfix) with ESMTP id E01E9B2059E
-	for <default@denbond7.com>; Mon,  5 Oct 2020 15:02:06 +0000 (UTC)
 To: default@denbond7.com
 From: Denis Bondarenko <denbond7@denbond7.com>
 Subject: Message is either badly formatted or not compatible
@@ -37,7 +27,9 @@ Autocrypt: addr=denbond7@denbond7.com; keydata=
  NRi6SjWLSeEw/zIfvkggDvn1UfA2bGFk8Q==
 Message-ID: <b32aaec4-403f-59bb-a32b-9fb129774285@denbond7.com>
 Date: Mon, 5 Oct 2020 18:02:06 +0300
-Mime-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Content-Language: en-US
