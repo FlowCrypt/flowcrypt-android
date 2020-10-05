@@ -1,33 +1,33 @@
-Return-Path: <denbond7@denbond7.com>
-Delivered-To: default@denbond7.com
+Return-Path: <default@denbond7.com>
+Delivered-To: denbond7@denbond7.com
 Received: from mail.denbond7.com
 	by mail.denbond7.com with LMTP
-	id WF4PDSLael+dCQAAZlazJA
-	(envelope-from <denbond7@denbond7.com>)
-	for <default@denbond7.com>; Mon, 05 Oct 2020 08:32:34 +0000
+	id tmjkJibZel8tBgAAZlazJA
+	(envelope-from <default@denbond7.com>)
+	for <denbond7@denbond7.com>; Mon, 05 Oct 2020 08:28:22 +0000
 Received: from localhost (localhost [127.0.0.1])
-	by mail.denbond7.com (Postfix) with ESMTP id 347E7A20940
-	for <default@denbond7.com>; Mon,  5 Oct 2020 08:32:34 +0000 (UTC)
-To: default@denbond7.com
-From: Denis Bondarenko <denbond7@denbond7.com>
+	by mail.denbond7.com (Postfix) with ESMTP id 9B777A2092A
+	for <denbond7@denbond7.com>; Mon,  5 Oct 2020 08:28:22 +0000 (UTC)
+To: denbond7@denbond7.com
+From: Default <default@denbond7.com>
 X-Pep-Version: 2.0
-Message-ID: <8fcbd0f1-e33b-9b5e-51ee-79d7c639f0bc@denbond7.com>
-Date: Mon, 5 Oct 2020 11:32:34 +0300
+Message-ID: <c1d70d8c-09f2-e029-27d8-b789de612422@denbond7.com>
+Date: Mon, 5 Oct 2020 11:28:22 +0300
 Mime-Version: 1.0
 Subject: Standard message - plane text
 Content-Type: multipart/alternative;
- boundary="------------D3F69D95534F587EC1BE35A3"
+ boundary="------------122DE5599D10BFBCB913B469"
 Content-Language: en-US
 
 This is a multi-part message in MIME format.
---------------D3F69D95534F587EC1BE35A3
+--------------122DE5599D10BFBCB913B469
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
 It's a standard message with plane text
 
 
---------------D3F69D95534F587EC1BE35A3
+--------------122DE5599D10BFBCB913B469
 Content-Type: text/html; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
@@ -44,4 +44,4 @@ aVu Sans Mono';font-size:12.0pt;">It's a standard message with plane text=
   </body>
 </html>
 
---------------D3F69D95534F587EC1BE35A3--
+--------------122DE5599D10BFBCB913B469--
