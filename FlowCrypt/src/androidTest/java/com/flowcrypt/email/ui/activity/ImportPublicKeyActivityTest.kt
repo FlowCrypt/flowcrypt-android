@@ -31,8 +31,8 @@ import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.TestGeneralUtil
 import org.hamcrest.Matchers.`is`
@@ -40,8 +40,8 @@ import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.junit.AfterClass
+import org.junit.Assert
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -57,7 +57,6 @@ import java.io.File
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("Failed on CI")
 class ImportPublicKeyActivityTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<ImportPublicKeyActivity>(
@@ -79,7 +78,6 @@ class ImportPublicKeyActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
-  @Ignore("fix me")
   fun testImportKeyFromFile() {
     val resultData = Intent()
     resultData.data = Uri.fromFile(fileWithPublicKey)
@@ -89,12 +87,11 @@ class ImportPublicKeyActivityTest : BaseTest() {
     onView(withId(R.id.buttonLoadFromFile))
         .check(matches(isDisplayed()))
         .perform(click())
-    //assertThat(activityTestRule?.activityResult, hasResultCode(Activity.RESULT_OK))
+    Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 
   @Test
   @DoesNotNeedMailserver
-  @Ignore("fix me")
   fun testShowErrorWhenImportingKeyFromFile() {
     val resultData = Intent()
     resultData.data = Uri.fromFile(fileWithoutPublicKey)
@@ -104,28 +101,27 @@ class ImportPublicKeyActivityTest : BaseTest() {
     onView(withId(R.id.buttonLoadFromFile))
         .check(matches(isDisplayed()))
         .perform(click())
-    //isDialogWithTextDisplayed(activityTestRule?.activity, getResString(R.string.file_has_wrong_pgp_structure, getResString(R.string.public_)))
+    isDialogWithTextDisplayed(decorView, getResString(R.string.file_has_wrong_pgp_structure, getResString(R.string.public_)))
   }
 
   @Test
   @DoesNotNeedMailserver
-  @Ignore("fix me. Failed on CI")
   fun testImportKeyFromClipboard() {
     addTextToClipboard("public key", publicKey)
     onView(withId(R.id.buttonLoadFromClipboard))
         .check(matches(isDisplayed()))
         .perform(click())
-    //assertThat(activityTestRule?.activityResult, hasResultCode(Activity.RESULT_OK))
+    Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testShowErrorWhenImportKeyFromClipboard() {
     addTextToClipboard("not public key", SOME_TEXT)
     onView(withId(R.id.buttonLoadFromClipboard))
         .check(matches(isDisplayed()))
         .perform(click())
-    //isDialogWithTextDisplayed(activityTestRule?.activity, getResString(R.string        .clipboard_has_wrong_structure,        getResString(R.string.public_)))
+    isDialogWithTextDisplayed(decorView, getResString(R.string.clipboard_has_wrong_structure, getResString(R.string.public_)))
   }
 
   companion object {
