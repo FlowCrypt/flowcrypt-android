@@ -1,5 +1,5 @@
 {
-  "encryptionType": "ENCRYPTED",
+  "encryptionType": "STANDARD",
   "inlineSubject": "encrypted message with missing key error",
   "msgBlocks": [
     {
@@ -9,7 +9,7 @@
     },
     {
       "complete": true,
-      "content": "-----BEGIN PGP MESSAGE-----\nVersion: FlowCrypt 0.7.3 Gmail Encryption\nComment: Seamlessly send and receive encrypted email\n\nwcBMA8iMPjccEmlgAQf9H5ZrLjIqWqYM91ND2DaEFQQC6iafE0CkdNR33Aq2\n+AESQ87kvURKcB0HEp7RhDBk+JYpFtgkikfPW508xTAfyB1s7Pj1q+LvQ70o\nGsvvpJ/6LVckoTe7pPro9NxPTO3Ya+kjUdaKOuD1IxLrDqWjt62d7gsabodv\nVwI8LzsXut2YvjXPBGOi3XUZivc6ynY+vjT+MIgu4RBVC4uLQnOJYLmKWKYm\np4A2vHH4ur/pAlqBJDMmIJPAOsiipABvVVxggtCzlRgztvjVApTYQCs5Jsy2\nh7VhBFo9cBhduIZk3zJy2MS6doXn5b1TGfDwNdl/hlaH+8nC5Y/RfFEXUOhy\nPcHATAOE5YkozqaZLwEH/3EhCKgkAg7sm9OSBmNw3B1lxF0iB1+0VK2/5xK/\nrx5OViyDWLBqd9ytg3peR3dWdTyq3gdcGh73dR/idzeysc3WHp3B56lePuag\n8KU5ScgzNh7NHLf0XcJM/CVMmi3fE4DyeC9TIlzlZZ4uP16/gE/0g30vH53Q\neF01tkPCitV4Zqer+6BfkboQXfQ1QJvsQ+KRyKeHpc9x72ORvT5dYf2a/D3z\nHWTh5PE5dURoHVeKt1NVamCxHtiaO1d0XYNLr26WopVOzL9gZCkJHR8b0urq\nNiwm6YaJdC0+LSqjueiaHDPyMcg74htXJ2FRnDELxA/zZZfXlqF9QjOijSiH\n8ozSWgHEu4LAoPxbTQtr7btPL8PSRi2o/LP9csqHJW0egI10mgP0fWhxA6k2\nawZPejby2lGEN0kJdh+8TzmB2YrMyZLNiJXqo/SjpsVfCrwX9Sh1VRd4j/oR\nAYQq+Q\u003d\u003d\n\u003doEf7\n-----END PGP MESSAGE-----",
+      "content": "-----BEGIN PGP MESSAGE-----\nVersion: FlowCrypt 1.1.1 Gmail Encryption\nComment: Seamlessly send and receive encrypted email\n\nwcBMA8iMPjccEmlgAQf8CXA4lTsl0qe/6unOUWaVV5XQVIKGqokgoRSuhYIP\n8MReTKSVtEkX0xd95raLxQ6tHpcdA1Zamd5PukFdVgVPJ8+9wqDSkw/fFgWM\nO76MHjNLjalW82q7hP+OiFiUs841nizTmFFEiWtBPAzKOEE8WxWgENGD8fm5\nqm9p52pSPolRO7josmzx0TnX/fL5c+OnWK2mF3QJLMVLl8+V7P8lDuE3XDNd\nT4obBOW+DvR7mUgRoc0p2uEsHX3xvX7BJmCtkWJfLnxbrs6Up0t8VQeZKfQJ\n09k8Bj2up4PK2bcHKlWHRKAamL0B34E5Kp7ENGrne43tRz1Cb8wPHYE/3+ng\nlcHATAOE5YkozqaZLwEH/2Ih2pj0deKjnjp1RSFO9qWQFpEERw88XgypXP82\nZYsXzDGEOYQHbEJxuqW2lBodYDOrK/bIbCS5Gen4VGwd3xTOqow2QiMsQd+m\njKYbH2fdPFTqD1G+4AkMk1K3V+Pk4j8x1S3gfYj0NkisNVmjygnhy1P76/CW\nT8DrWoHO4qY4QCbSZSQynBxrRNVZNLf/VGQ5nmMuozKRA7qisn85ITciWgK/\nTKN7bKD4RTP9WxcdBufUWL1GM+yrO0UYHnIqlsNqIVD5GeZWxqirJA9T10ev\nhHxfoJz2cVYOhafrITnypLnUCEBBQj5dGBZYoZ6VTJ61sOikbXbw9l4PmiA/\n3lvSWgGxf/3dsvbRzUSCGz41oCrJUgepSFeV+75UN99w1RZDVnzxcgCsKj53\n6cXqHryJSIhqxv4SxImF5BKhpS11Qqt7bhg1+5RpSLk9lHKfk57ZGakP8va6\n9T8S+g\u003d\u003d\n\u003d5AD4\n-----END PGP MESSAGE-----",
       "decryptErr": {
         "error": {
           "message": "Session key decryption failed.",
@@ -28,16 +28,14 @@
             "C88C3E371C126960",
             "84E58928CEA6992F"
           ],
-          "needPassphrase": [
-          ]
+          "needPassphrase": []
         }
       },
       "type": "decryptErr"
     }
   ],
   "msgEntity": {
-    "cc": [
-    ],
+    "cc": [],
     "email": "default@denbond7.com",
     "flags": "\\SEEN",
     "folder": "INBOX",
@@ -48,17 +46,17 @@
     ],
     "fromAddress": "denbond7@denbond7.com",
     "hasAttachments": false,
-    "id": 8,
+    "id": 6,
     "isSeen": true,
     "msgState": "NONE",
-    "receivedDate": 1552823214000,
+    "receivedDate": 1601897366000,
     "replyTo": "denbond7@denbond7.com",
     "replyToAddress": [
       {
         "address": "denbond7@denbond7.com"
       }
     ],
-    "sentDate": 1552823197000,
+    "sentDate": 1601897363000,
     "subject": "encrypted message with missing key error",
     "to": [
       {
@@ -66,9 +64,8 @@
       }
     ],
     "toAddress": "default@denbond7.com",
-    "uid": 244,
-    "isEncrypted": true
+    "uid": 9
   },
-  "origMsgHeaders": "Return-Path: \u003cdenbond7@denbond7.com\u003e\nDelivered-To: default@denbond7.com\nReceived: from mail.denbond7.com (localhost [127.0.0.1])\n\tby mail.denbond7.com (Postfix) with ESMTP id BA5EC20325\n\tfor \u003cdefault@denbond7.com\u003e; Sun, 17 Mar 2019 11:46:54 +0000 (UTC)\nX-Virus-Scanned: Debian amavisd-new at mail.denbond7.com\nReceived: from mail.denbond7.com ([127.0.0.1])\n\tby mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10024)\n\twith ESMTP id QfBqy8XfDrlt for \u003cdefault@denbond7.com\u003e;\n\tSun, 17 Mar 2019 11:46:40 +0000 (UTC)\nReceived: from localhost (WorkPC [192.168.3.7])\n\tby mail.denbond7.com (Postfix) with ESMTP id 7BBCF20319\n\tfor \u003cdefault@denbond7.com\u003e; Sun, 17 Mar 2019 11:46:40 +0000 (UTC)\nContent-Type: multipart/mixed;\n boundary\u003d\"----sinikael-?\u003d_1-15528231978580.3180550080538431\"\nIn-Reply-To: \u003c\u003e\nReferences: \u003c\u003e\nTo: default@denbond7.com\nFrom: denbond7@denbond7.com\nSubject: encrypted message with missing key error\nDate: Sun, 17 Mar 2019 11:46:37 +0000\nMessage-Id: \u003c1552823197874-dd5800d9-54ca1a01-c548da66@denbond7.com\u003e\nMIME-Version: 1.0",
+  "origMsgHeaders": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com\r\n\tby mail.denbond7.com with LMTP\r\n\tid GsQ+HpYDe1+FEgAAZlazJA\r\n\t(envelope-from \u003cdenbond7@denbond7.com\u003e)\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon, 05 Oct 2020 11:29:26 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 78891B2058B\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon,  5 Oct 2020 11:29:26 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-16018973633100.39732115097350995\"\r\nTo: default@denbond7.com\r\nFrom: denbond7@denbond7.com\r\nSubject: encrypted message with missing key error\r\nDate: Mon, 05 Oct 2020 11:29:23 +0000\r\nMessage-Id: \u003c1601897363315-9cdda1f1-310fdec3-130e1901@denbond7.com\u003e\r\nMime-Version: 1.0",
   "text": ""
 }

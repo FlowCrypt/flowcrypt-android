@@ -1,13 +1,3 @@
-Return-Path: <denbond7@denbond7.com>
-Delivered-To: default@denbond7.com
-Received: from mail.denbond7.com
-	by mail.denbond7.com with LMTP
-	id GsQ+HpYDe1+FEgAAZlazJA
-	(envelope-from <denbond7@denbond7.com>)
-	for <default@denbond7.com>; Mon, 05 Oct 2020 11:29:26 +0000
-Received: from localhost (localhost [127.0.0.1])
-	by mail.denbond7.com (Postfix) with ESMTP id 78891B2058B
-	for <default@denbond7.com>; Mon,  5 Oct 2020 11:29:26 +0000 (UTC)
 Content-Type: multipart/mixed;
  boundary="----sinikael-?=_1-16018973633100.39732115097350995"
 To: default@denbond7.com
@@ -15,7 +5,8 @@ From: denbond7@denbond7.com
 Subject: encrypted message with missing key error
 Date: Mon, 05 Oct 2020 11:29:23 +0000
 Message-Id: <1601897363315-9cdda1f1-310fdec3-130e1901@denbond7.com>
-Mime-Version: 1.0
+MIME-Version: 1.0
+User-Agent: FlowCrypt_Android_1.1.1_devTest_111__2020_10_05
 
 ------sinikael-?=_1-16018973633100.39732115097350995
 Content-Type: text/plain
