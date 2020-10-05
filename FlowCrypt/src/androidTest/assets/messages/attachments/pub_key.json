@@ -1,13 +1,13 @@
 {
   "email": "default@denbond7.com",
-  "encodedSize": 1847,
+  "encodedSize": 1761,
   "folder": "INBOX",
   "fwdUid": 0,
-  "id": "\u003c609313c6-418a-489a-8a67-1951830243d9@flowcrypt\u003e",
+  "id": "<inner_91551353-0f2b-4cbf-b05c-7c23ce56a584@flowcrypt>",
   "isForwarded": false,
   "isProtected": false,
   "name": "0x6A150653F1800874.asc",
   "orderNumber": 0,
-  "type": "application/pgp-keys",
-  "uid": 242
+  "type": "application/pgp-keys; name=0x6A150653F1800874.asc",
+  "uid": 15
 }

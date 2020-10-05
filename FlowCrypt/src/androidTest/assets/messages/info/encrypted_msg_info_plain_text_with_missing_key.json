@@ -1,5 +1,5 @@
 {
-  "encryptionType": "STANDARD",
+  "encryptionType": "ENCRYPTED",
   "inlineSubject": "encrypted message with missing key error",
   "msgBlocks": [
     {
@@ -64,7 +64,8 @@
       }
     ],
     "toAddress": "default@denbond7.com",
-    "uid": 9
+    "uid": 9,
+    "isEncrypted": true
   },
   "origMsgHeaders": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com\r\n\tby mail.denbond7.com with LMTP\r\n\tid GsQ+HpYDe1+FEgAAZlazJA\r\n\t(envelope-from \u003cdenbond7@denbond7.com\u003e)\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon, 05 Oct 2020 11:29:26 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 78891B2058B\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon,  5 Oct 2020 11:29:26 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-16018973633100.39732115097350995\"\r\nTo: default@denbond7.com\r\nFrom: denbond7@denbond7.com\r\nSubject: encrypted message with missing key error\r\nDate: Mon, 05 Oct 2020 11:29:23 +0000\r\nMessage-Id: \u003c1601897363315-9cdda1f1-310fdec3-130e1901@denbond7.com\u003e\r\nMime-Version: 1.0",
   "text": ""

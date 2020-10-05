@@ -1,13 +1,3 @@
-Return-Path: <denbond7@denbond7.com>
-Delivered-To: default@denbond7.com
-Received: from mail.denbond7.com
-	by mail.denbond7.com with LMTP
-	id HBliJvZCe19mBwAAZlazJA
-	(envelope-from <denbond7@denbond7.com>)
-	for <default@denbond7.com>; Mon, 05 Oct 2020 15:59:50 +0000
-Received: from localhost (localhost [127.0.0.1])
-	by mail.denbond7.com (Postfix) with ESMTP id 99865B20589
-	for <default@denbond7.com>; Mon,  5 Oct 2020 15:59:50 +0000 (UTC)
 Content-Type: multipart/mixed;
  boundary="----sinikael-?=_1-16019135859960.4371023548713371"
 To: default@denbond7.com
@@ -15,7 +5,8 @@ From: denbond7@denbond7.com
 Subject: Simple encrypted message
 Date: Mon, 05 Oct 2020 15:59:45 +0000
 Message-Id: <1601913586004-0767ceb7-48bd4f66-fc1565bd@denbond7.com>
-Mime-Version: 1.0
+MIME-Version: 1.0
+User-Agent: FlowCrypt_Android_1.1.1_dev_111__2020_10_05
 
 ------sinikael-?=_1-16019135859960.4371023548713371
 Content-Type: text/plain

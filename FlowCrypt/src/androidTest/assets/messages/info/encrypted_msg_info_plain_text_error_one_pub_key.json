@@ -1,5 +1,5 @@
 {
-  "encryptionType": "STANDARD",
+  "encryptionType": "ENCRYPTED",
   "inlineSubject": "only one pubkey used for encryption - possibly sender\u0027s error.",
   "msgBlocks": [
     {
@@ -63,7 +63,8 @@
       }
     ],
     "toAddress": "default@denbond7.com",
-    "uid": 10
+    "uid": 10,
+    "isEncrypted": true
   },
   "origMsgHeaders": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com\r\n\tby mail.denbond7.com with LMTP\r\n\tid IE29GpAIe19wKAAAZlazJA\r\n\t(envelope-from \u003cdenbond7@denbond7.com\u003e)\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon, 05 Oct 2020 11:50:40 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 69234B2058E\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon,  5 Oct 2020 11:50:40 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-16018986371740.9899334451956217\"\r\nTo: default@denbond7.com\r\nFrom: denbond7@denbond7.com\r\nSubject: only one pubkey used for encryption - possibly sender\u0027s error.\r\nDate: Mon, 05 Oct 2020 11:50:37 +0000\r\nMessage-Id: \u003c1601898637180-545631c7-a98f62fb-091da09b@denbond7.com\u003e\r\nMime-Version: 1.0",
   "text": "The message below should show a note telling the user that there was only one pubkey used for encryption - possibly sender\u0027s error.\n\nIt should also allow the user import a missing key if they have one."

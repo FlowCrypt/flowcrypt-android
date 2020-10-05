@@ -61,7 +61,6 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.hamcrest.Matchers.notNullValue
 import org.junit.After
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -77,7 +76,7 @@ import java.util.concurrent.TimeUnit
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
+//todo-denbond7 Fix storing encrypted version of message
 class MessageDetailsActivityTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activeActivityRule = lazyActivityScenarioRule<MessageDetailsActivity>(launchActivity = false)
@@ -251,7 +250,6 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-
   fun testMissingKeyErrorChooseFromFewPubKeys() {
     val msgInfo = getMsgInfo("messages/info/encrypted_msg_info_plain_text_with_missing_key.json",
         "messages/mime/encrypted_msg_info_plain_text_with_missing_key.txt")
@@ -333,7 +331,7 @@ class MessageDetailsActivityTest : BaseTest() {
   @Test
   fun test8bitEncodingUtf8() {
     baseCheck(getMsgInfo("messages/info/msg_info_8bit-utf8.json",
-        "messages/mime/8bit-utf8.eml"))
+        "messages/mime/8bit-utf8.txt"))
   }
 
   private fun testMissingKey(incomingMsgInfo: IncomingMessageInfo?) {
