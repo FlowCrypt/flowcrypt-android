@@ -51,7 +51,6 @@ import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
@@ -97,7 +96,6 @@ class MessageDetailsActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(accountRule)
       .around(AddPrivateKeyToDatabaseRule())
-      .around(RetryRule())
       .around(activeActivityRule)
       .around(ScreenshotTestRule())
 
