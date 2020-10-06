@@ -31,10 +31,9 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerVi
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withToolBarText
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddLabelsToDatabaseRule
-import com.flowcrypt.email.rules.AddMessageToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest
 import com.flowcrypt.email.ui.activity.settings.SettingsActivity
 import com.flowcrypt.email.util.AccountDaoManager
@@ -42,7 +41,6 @@ import com.flowcrypt.email.viewaction.CustomViewActions.Companion.navigateToItem
 import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -71,13 +69,11 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
       .around(AddAccountToDatabaseRule(userWithoutLetters))
       .around(AddAccountToDatabaseRule(userWithMoreThan21LettersAccount))
       .around(AddLabelsToDatabaseRule(userWithMoreThan21LettersAccount, LOCAL_FOLDERS))
-      .around(AddMessageToDatabaseRule(userWithMoreThan21LettersAccount, INBOX_USER_WITH_MORE_THAN_21_LETTERS_ACCOUNT))
       .around(RetryRule())
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("fix me")
   fun testComposeFloatButton() {
     onView(withId(R.id.floatActionButtonCompose))
         .check(matches(isDisplayed()))
@@ -88,13 +84,11 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testRunMsgDetailsActivity() {
     testRunMsgDetailsActivity(0)
   }
 
   @Test
-  @Ignore("fix me")
   fun testForceLoadMsgs() {
     onView(withId(R.id.recyclerViewMsgs))
         .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, scrollTo()))
@@ -107,7 +101,6 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testOpenAndSwipeNavigationView() {
     onView(withId(R.id.drawer_layout))
         .perform(open())
@@ -116,7 +109,6 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testShowSplashActivityAfterLogout() {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
     val nonActiveAccounts = roomDatabase.accountDao().getAllNonactiveAccounts()
@@ -126,7 +118,6 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testGoToSettingsActivity() {
     onView(withId(R.id.drawer_layout))
         .perform(open())
@@ -139,7 +130,6 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testSwitchLabels() {
     val menuItem = "Sent"
     onView(withId(R.id.toolbar)).check(matches(anyOf(
@@ -156,8 +146,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
-  fun testChooseAnotherAccount() {
+  fun testShowAnotherAccounts() {
     onView(withId(R.id.drawer_layout))
         .perform(open())
     onView(withId(R.id.textViewActiveUserEmail))
@@ -167,11 +156,6 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
         .perform(click())
     onView(withText(userWithoutLetters.email))
         .check(matches(isDisplayed()))
-        .perform(click())
-    onView(withId(R.id.drawer_layout))
-        .perform(open())
-    onView(withId(R.id.textViewActiveUserEmail))
-        .check(matches(isDisplayed())).check(matches(withText(userWithoutLetters.email)))
   }
 
   private fun clickLogOut() {
