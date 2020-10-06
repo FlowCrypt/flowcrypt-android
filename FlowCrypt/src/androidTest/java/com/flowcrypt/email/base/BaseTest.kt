@@ -41,6 +41,10 @@ import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
 import org.junit.runner.RunWith
+import java.io.InputStream
+import java.util.*
+import javax.mail.Session
+import javax.mail.internet.MimeMessage
 
 /**
  * The base test implementation.
@@ -252,7 +256,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
 
       roomDatabase.attachmentDao().insert(attEntities)
 
-      MsgsCacheManager.addMsg(uri.toString(), getContext().assets.open(mimeMsgPath))
+      addMsgToCache(uri.toString(), getContext().assets.open(mimeMsgPath))
     }
     return incomingMsgInfo
   }
@@ -262,5 +266,9 @@ abstract class BaseTest : BaseActivityTestImplementation {
     registerNodeIdling()
     registerSyncServiceCountingIdlingResource()
     initDecorView()
+  }
+
+  private fun addMsgToCache(key: String, inputStream: InputStream) {
+    MsgsCacheManager.storeMsg(key, MimeMessage(Session.getInstance(Properties()), inputStream))
   }
 }
