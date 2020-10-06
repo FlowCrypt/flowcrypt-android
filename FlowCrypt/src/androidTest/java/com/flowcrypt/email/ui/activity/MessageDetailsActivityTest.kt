@@ -174,7 +174,7 @@ class MessageDetailsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
+  //don't enable this one on CI. It takes too long
   fun testEncryptedBigInlineAtt() {
     IdlingPolicies.setIdlingResourceTimeout(3, TimeUnit.MINUTES)
     baseCheck(getMsgInfo("messages/info/encrypted_msg_big_inline_att.json",
