@@ -7,7 +7,6 @@ package com.flowcrypt.email.ui.activity
 
 import android.app.Activity
 import android.content.Intent
-import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -20,7 +19,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.flowcrypt.email.CICandidateAnnotation
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
@@ -30,7 +29,6 @@ import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.PrivateKeysManager
 import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -45,7 +43,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@CICandidateAnnotation
 class CheckKeysActivityTestMultiBackups : BaseTest() {
   override val activeActivityRule = lazyActivityScenarioRule<CheckKeysActivity>(launchActivity = false)
   override val activityScenario: ActivityScenario<*>?
@@ -61,7 +58,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * There are two keys (all keys are different and have different pass phrases). Only one key from two keys is using.
    */
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testUseTwoKeysFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -78,6 +75,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * There are two keys (all keys are different and have different pass phrases). All keys are checking in the queue.
    */
   @Test
+  @DoesNotNeedMailserver
   fun testUseTwoKeysSecondCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -89,7 +87,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitle(1, 2, 1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
   }
 
@@ -97,6 +94,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * There are two keys with the same pass phrase. All keys will be imported per one transaction.
    */
   @Test
+  @DoesNotNeedMailserver
   fun testUseTwoKeysWithSamePasswordThirdCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -106,7 +104,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(2)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
   }
 
@@ -115,6 +112,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * [TestConstants.DEFAULT_PASSWORD].
    */
   @Test
+  @DoesNotNeedMailserver
   fun testUseTwoKeysFourthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyC_default.json",
@@ -124,7 +122,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
   }
 
@@ -133,7 +130,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * [TestConstants.DEFAULT_STRONG_PASSWORD]
    */
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
   fun testUseTwoKeysFifthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyC_default.json",
@@ -143,7 +140,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(1)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
   }
 
@@ -152,6 +148,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * key with a unique pass phrase.
    */
   @Test
+  @DoesNotNeedMailserver
   fun testUseThreeFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -170,6 +167,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * with the same pass phrase.
    */
   @Test
+  @DoesNotNeedMailserver
   fun testUseThreeKeysSecondCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -188,6 +186,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * with a unique pass phrase, and then the remaining keys.
    */
   @Test
+  @DoesNotNeedMailserver
   fun testUseThreeKeysThirdCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -200,7 +199,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitle(1, 3, 2)
     typePassword(TestConstants.DEFAULT_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
   }
 
@@ -209,6 +207,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * keys with the same pass phrase, and then the remaining key.
    */
   @Test
+  @DoesNotNeedMailserver
   fun testUseThreeKeysFourthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -221,7 +220,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitle(2, 3, 1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
   }
 
@@ -230,6 +228,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * pass phrase). Will be used one of the identical keys with a unique pass phrase.
    */
   @Test
+  @DoesNotNeedMailserver
   fun testUseThreeKeysFifthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyB_default.json",
@@ -248,6 +247,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * pass phrase). All keys will be imported per one transaction using [TestConstants.DEFAULT_STRONG_PASSWORD].
    */
   @Test
+  @DoesNotNeedMailserver
   fun testUseThreeKeysSixthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -258,7 +258,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitleAtStart(2)
     typePassword(TestConstants.DEFAULT_STRONG_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
   }
 
@@ -267,6 +266,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * pass phrase). First will be used one key of the identical keys with a unique passphrase, and then the other keys.
    */
   @Test
+  @DoesNotNeedMailserver
   fun testUseThreeKeysSeventhCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyB_default.json",
@@ -279,7 +279,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitle(1, 2, 1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
   }
 
@@ -289,6 +288,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * two keys with the same pass phrase.
    */
   @Test
+  @DoesNotNeedMailserver
   fun testUseFourKeysFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -309,6 +309,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    * keys per one pass phrase typing).
    */
   @Test
+  @DoesNotNeedMailserver
   fun testUseFourKeysSecondCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -322,7 +323,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     checkKeysTitle(2, 3, 1)
     typePassword(TestConstants.DEFAULT_PASSWORD)
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == Activity.RESULT_OK)
   }
 
@@ -335,7 +335,6 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
     onView(withId(R.id.buttonSkipRemainingBackups))
         .perform(scrollTo(), click())
 
-    Assert.assertTrue(activeActivityRule.getNonNullScenario().state == Lifecycle.State.DESTROYED)
     Assert.assertTrue(activeActivityRule.getNonNullScenario().result.resultCode == CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS)
   }
 
