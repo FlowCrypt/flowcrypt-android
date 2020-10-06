@@ -25,6 +25,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread
 import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
@@ -157,7 +158,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
    */
   //todo-denbond7 - fix me
   protected fun testHelpScreen() {
-    /*onView(withId(R.id.menuActionHelp))
+    onView(withId(R.id.menuActionHelp))
         .check(matches(isDisplayed()))
         .perform(click())
 
@@ -166,7 +167,7 @@ abstract class BaseTest : BaseActivityTestImplementation {
         .check(matches(withText(R.string.i_will_usually_reply_within_an_hour_except_when_i_sleep_tom)))
 
     onView(withText(R.string.help_feedback_or_question))
-        .check(matches(isDisplayed()))*/
+        .check(matches(isDisplayed()))
   }
 
   /**
