@@ -29,14 +29,14 @@ import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerVi
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
-import org.junit.Ignore
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -51,7 +51,6 @@ import org.junit.runner.RunWith
  */
 @MediumTest
 @RunWith(AndroidJUnit4::class)
-@Ignore("fix me")
 class SearchMessagesActivityTest : BaseEmailListActivityTest() {
 
   private val accountRule = AddAccountToDatabaseRule(AccountDaoManager.getDefaultAccountDao().copy(areContactsLoaded = true))
@@ -70,6 +69,12 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
 
+  @Before
+  fun waitData() {
+    // Need to improve this code after espresso updates
+    Thread.sleep(2000)
+  }
+
   @Test
   fun testDefaultSearchQueryAtStart() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
@@ -81,7 +86,6 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
   fun testSearchQuery() {
     onView(withId(R.id.recyclerViewMsgs))
         .check(matches(withRecyclerViewItemCount(1))).check(matches(isDisplayed()))
