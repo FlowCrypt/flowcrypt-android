@@ -14,9 +14,7 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
 import com.flowcrypt.email.api.retrofit.node.NodeRepository
-import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.api.retrofit.response.attester.PubResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -294,36 +292,14 @@ class ContactsViewModel(application: Application) : AccountViewModel(application
       PgpContact? =
       withContext(Dispatchers.IO) {
         try {
-          val response = if (email != null) {
-            apiRepository.postLookUpEmail(context = getApplication(), model = PostLookUpEmailModel(email))
-          } else {
-            apiRepository.getPub(context = getApplication(), identData = fingerprint ?: "")
-          }
+          val response = apiRepository.getPub(
+              context = getApplication(),
+              identData = email ?: fingerprint ?: "")
 
           when (response.status) {
             Result.Status.SUCCESS -> {
-              val pubKeyString = when (response.data) {
-                is LookUpEmailResponse -> {
-                  response.data.pubKey
-                }
-
-                is PubResponse -> {
-                  response.data.pubkey
-                }
-                else -> ""
-              }
-
-              val client = when (response.data) {
-                is LookUpEmailResponse -> {
-                  if (response.data.hasCryptup()) {
-                    ContactEntity.CLIENT_FLOWCRYPT
-                  } else {
-                    ContactEntity.CLIENT_PGP
-                  }
-                }
-
-                else -> ContactEntity.CLIENT_PGP
-              }
+              val pubKeyString = response.data?.pubkey
+              val client = ContactEntity.CLIENT_PGP
 
               if (pubKeyString?.isNotEmpty() == true) {
                 pgpApiRepository.fetchKeyDetails(ParseKeysRequest(pubKeyString)).data?.nodeKeyDetails?.firstOrNull()?.let {

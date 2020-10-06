@@ -77,34 +77,27 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
         when (it.status) {
           Result.Status.LOADING -> {
             baseActivity.countingIdlingResource.incrementSafely()
-            if (sRL?.isRefreshing != true) {
+            if (sRL?.isRefreshing != true || attesterKeyAdapter.itemCount == 0) {
+              sRL?.isRefreshing = false
               showProgress()
             } else return@let
           }
 
           Result.Status.SUCCESS -> {
             sRL?.isRefreshing = false
-            it.data?.results?.let { responses ->
+            it.data?.let { responses ->
               if (responses.isNotEmpty()) {
                 attesterKeyAdapter.setData(responses)
+                showContent()
               } else {
                 showEmptyView()
               }
             }
-            showContent()
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR -> {
             sRL?.isRefreshing = false
-            showStatus(it.data?.apiError?.msg ?: getString(R.string.unknown_error))
-            showSnackbar(
-                view = contentView,
-                msgText = getString(R.string.an_error_has_occurred),
-                btnName = getString(R.string.retry),
-                duration = Snackbar.LENGTH_LONG) {
-              accountKeysInfoViewModel.refreshData()
-            }
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
