@@ -16,6 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.base.BaseTest
@@ -72,7 +73,7 @@ class ContactsSettingsActivityTest : BaseTest() {
   }
 
   @Test
-  @DoesNotNeedMailserver
+  @CICandidateAnnotation
   fun testDeleteContacts() {
     addContactsToDatabase()
     //todo-denbond7 improve this in the future. When we have a good solution for ROOM, coroutines and Espresso
