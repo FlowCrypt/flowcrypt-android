@@ -12,19 +12,15 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
-import com.flowcrypt.email.api.retrofit.ApiHelper
-import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.AttesterSettingsActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -38,8 +34,6 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.io.ByteArrayInputStream
-import java.io.InputStreamReader
 
 /**
  * @author Denis Bondarenko
@@ -74,15 +68,10 @@ class AttesterSettingsActivityTest : BaseTest() {
     @JvmStatic
     val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
-        val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-        val model = gson.fromJson(
-            InputStreamReader(ByteArrayInputStream(TestGeneralUtil.readObjectFromResourcesAsByteArray("1.json"))),
-            LookUpEmailsResponse::class.java)
-
-        if (request.path.equals("/lookup/email")) {
-          val requestModel = gson.fromJson(InputStreamReader(request.body.inputStream()), PostLookUpEmailsModel::class.java)
-          if (requestModel.emails.contains(AccountDaoManager.getDefaultAccountDao().email)) {
-            return MockResponse().setResponseCode(200).setBody(gson.toJson(model))
+        if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+          val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+          if (AccountDaoManager.getDefaultAccountDao().email.equals(lastSegment, true)) {
+            return MockResponse().setResponseCode(200).setBody(TestGeneralUtil.readResourcesAsString("1.txt"))
           }
         }
 

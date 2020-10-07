@@ -35,16 +35,12 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
-import com.flowcrypt.email.api.retrofit.ApiHelper
-import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withAppBarLayoutBackgroundColor
@@ -81,9 +77,7 @@ import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.rules.TestRule
 import org.junit.runner.RunWith
-import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.InputStreamReader
 
 /**
  * A test for [CreateMessageActivity]. By default, this test describes running an activity with type
@@ -554,23 +548,16 @@ class CreateMessageActivityTest : BaseTest() {
     @JvmStatic
     val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
-        val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
-        if (request.path.equals("/lookup/email")) {
-          val requestModel = gson.fromJson(InputStreamReader(request.body.inputStream()), PostLookUpEmailModel::class.java)
+        if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+          val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
 
           when {
-            requestModel.email.equals("not_attested_user@denbond7.com", true) -> {
-              val model = gson.fromJson(
-                  InputStreamReader(ByteArrayInputStream(TestGeneralUtil.readObjectFromResourcesAsByteArray("2.json"))),
-                  LookUpEmailResponse::class.java)
-              return MockResponse().setResponseCode(200).setBody(gson.toJson(model))
+            "not_attested_user@denbond7.com".equals(lastSegment, true) -> {
+              return MockResponse().setResponseCode(404).setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
             }
 
-            requestModel.email.equals("attested_user@denbond7.com", true) -> {
-              val model = gson.fromJson(
-                  InputStreamReader(ByteArrayInputStream(TestGeneralUtil.readObjectFromResourcesAsByteArray("3.json"))),
-                  LookUpEmailResponse::class.java)
-              return MockResponse().setResponseCode(200).setBody(gson.toJson(model))
+            "attested_user@denbond7.com".equals(lastSegment, true) -> {
+              return MockResponse().setResponseCode(200).setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
             }
           }
         }
