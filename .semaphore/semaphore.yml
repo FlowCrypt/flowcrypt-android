@@ -29,7 +29,7 @@ global_job_config:
 blocks:
   - name: Testing
     execution_time_limit:
-      minutes: 45
+      minutes: 59
     task:
       jobs:
         - name: Test without mailserver
