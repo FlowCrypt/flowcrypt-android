@@ -25,7 +25,7 @@ global_job_config:
       - cache restore $ANDROID_SDK_CACHE
       - cache restore $BUILD_NATIVE_CACHE
       - cache restore $BUILD_CACHE
-      - ./docker-mailserver/run_email_server.sh
+      - cd docker-mailserver && ./run_email_server.sh && cd -
 blocks:
   - name: Testing
     execution_time_limit:
