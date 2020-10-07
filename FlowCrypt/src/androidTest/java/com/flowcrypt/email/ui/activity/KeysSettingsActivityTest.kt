@@ -16,6 +16,7 @@ import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents.intending
@@ -152,7 +153,7 @@ class KeysSettingsActivityTest : BaseTest() {
   fun testKeyDetailsShowPrivateKey() {
     selectFirstKey()
     onView(withId(R.id.btnShowPrKey))
-        .check(matches(isDisplayed()))
+        .perform(scrollTo())
         .perform(click())
     isToastDisplayed(decorView, getResString(R.string.see_backups_to_save_your_private_keys))
   }
