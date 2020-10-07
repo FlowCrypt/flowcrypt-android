@@ -105,8 +105,7 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
       }
 
       for (email in emails) {
-        val pubResponseResult = apiRepository.getPub(context = getApplication(), identData =
-        email + "dd")
+        val pubResponseResult = apiRepository.getPub(context = getApplication(), identData = email)
         pubResponseResult.data?.pubkey?.let { key ->
           pgpApiRepository.fetchKeyDetails(ParseKeysRequest(key)).data?.nodeKeyDetails?.let { keys -> results.addAll(keys) }
         }

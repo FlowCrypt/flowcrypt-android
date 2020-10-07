@@ -10,7 +10,6 @@ import com.flowcrypt.email.api.retrofit.base.BaseApiRepository
 import com.flowcrypt.email.api.retrofit.request.api.DomainRulesRequest
 import com.flowcrypt.email.api.retrofit.request.api.LoginRequest
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
-import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
