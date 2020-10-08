@@ -6,7 +6,7 @@
 package com.flowcrypt.email
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.MediumTest
+import androidx.test.filters.SmallTest
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
  *         Time: 1:59 PM
  *         E-mail: DenBond7@gmail.com
  */
-@MediumTest
+@SmallTest
 @DebugTestAnnotation
 @RunWith(AndroidJUnit4::class)
 class DebugTestingTest {
@@ -24,5 +24,11 @@ class DebugTestingTest {
   @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun alwaysSuccessTest() {
+  }
+
+  @Test
+  @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
+  fun alwaysSuccessTestSecond() {
   }
 }
