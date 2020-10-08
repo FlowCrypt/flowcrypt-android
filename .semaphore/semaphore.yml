@@ -26,21 +26,24 @@ global_job_config:
       - cache restore $BUILD_NATIVE_CACHE
       - cache restore $BUILD_CACHE
       - cd docker-mailserver && ./run_email_server.sh && cd -
+      # Install Android dependencies
+      - ./script/ci-install-android-sdk.sh
 blocks:
   - name: Testing
     execution_time_limit:
       minutes: 59
     task:
       jobs:
-        - name: JUnit + Instrumentation tests
+        - name: lint + junit
           commands:
             - cat /proc/cpuinfo
-            # Install Android dependencies
-            - ./script/ci-install-android-sdk.sh
             # run Lint checks
             - ./script/ci-lint-checks.sh
             # run JUnit tests
             - ./script/ci-junit-tests.sh
+
+        - name: Instrumentation tests
+          commands:
             # Setup and run an emulator
             - $ANDROID_SDK_ROOT/emulator/emulator -accel-check
             - echo -ne '\n' | avdmanager -v create avd --name ci-test-pixel-x86-64-api29 --package "system-images;android-29;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
