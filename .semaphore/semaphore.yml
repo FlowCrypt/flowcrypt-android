@@ -33,21 +33,19 @@ blocks:
       minutes: 59
     task:
       jobs:
-        - name: lint
+        - name: Lint
           commands:
             - cat /proc/cpuinfo
             # run Lint checks
             - ./script/ci-lint-checks.sh
 
-        - name: junit
+        - name: JUnit tests
           commands:
             # run JUnit tests
             - ./script/ci-junit-tests.sh
 
-        - name: Instrumentation tests - 1
+        - name: Instrumentation tests(No email server) - part 1
           commands:
-            # Run an email server
-            - cd docker-mailserver && ./run_email_server.sh && cd -
             # Setup and run an emulator
             - $ANDROID_SDK_ROOT/emulator/emulator -accel-check
             - echo -ne '\n' | avdmanager -v create avd --name ci-test-pixel-x86-64-api29 --package "system-images;android-29;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
@@ -56,9 +54,21 @@ blocks:
             - $ANDROID_SDK_ROOT/emulator/emulator -avd ci-test-pixel-x86-64-api29 -no-window -no-boot-anim -no-audio &
             - ./script/ci-wait-for-emulator.sh #wait until ready
             # Run instrumentation tests
-            - ./script/ci-instrumentation-tests_1part.sh
+            - ./script/ci-instrumentation-tests.sh 2 0
 
-        - name: Instrumentation tests - 2
+        - name: Instrumentation tests(No email server) - part 2
+          commands:
+            # Setup and run an emulator
+            - $ANDROID_SDK_ROOT/emulator/emulator -accel-check
+            - echo -ne '\n' | avdmanager -v create avd --name ci-test-pixel-x86-64-api29 --package "system-images;android-29;google_apis;x86_64" --device 'pixel' --abi 'google_apis/x86_64'
+            - cat ~/.android/avd/ci-test-pixel-x86-64-api29.avd/config.ini
+            - $ANDROID_SDK_ROOT/emulator/emulator -list-avds #debug
+            - $ANDROID_SDK_ROOT/emulator/emulator -avd ci-test-pixel-x86-64-api29 -no-window -no-boot-anim -no-audio &
+            - ./script/ci-wait-for-emulator.sh #wait until ready
+            # Run instrumentation tests
+            - ./script/ci-instrumentation-tests.sh 2 1
+
+        - name: Instrumentation tests with email server
           commands:
             # Run an email server
             - cd docker-mailserver && ./run_email_server.sh && cd -
@@ -70,7 +80,7 @@ blocks:
             - $ANDROID_SDK_ROOT/emulator/emulator -avd ci-test-pixel-x86-64-api29 -no-window -no-boot-anim -no-audio &
             - ./script/ci-wait-for-emulator.sh #wait until ready
             # Run instrumentation tests
-            - ./script/ci-instrumentation-tests_2part.sh
+            - ./script/ci-instrumentation-tests-with-mailserver.sh
       epilogue:
         on_fail:
           commands:
