@@ -24,6 +24,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
@@ -78,6 +79,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testDefaultSearchQueryAtStart() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
@@ -88,6 +90,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testSearchQuery() {
     onView(withId(R.id.recyclerViewMsgs))
         .check(matches(withRecyclerViewItemCount(1))).check(matches(isDisplayed()))
@@ -102,6 +105,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testSearchOverSubjectBodyFrom() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
@@ -113,6 +117,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowNotEmptyList() {
     onView(withId(R.id.recyclerViewMsgs))
         .check(matches(isDisplayed()))
@@ -121,12 +126,14 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testOpenSomeMsg() {
     testShowNotEmptyList()
     testRunMsgDetailsActivity(0)
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testCheckNoResults() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
@@ -138,6 +145,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testClearSearchView() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))

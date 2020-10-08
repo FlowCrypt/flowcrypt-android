@@ -17,6 +17,7 @@ import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
@@ -70,30 +71,35 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
       .around(ScreenshotTestRule())
 
   @Test
+  @ReadyForCIAnnotation
   fun testErrorLogin() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_ERROR))
     isToastDisplayed(decorView, LOGIN_API_ERROR_RESPONSE.apiError?.msg!!)
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testSuccessLoginNotVerified() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_NOT_VERIFIED))
     isToastDisplayed(decorView, getResString(R.string.user_not_verified))
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testSuccessLoginNotRegisteredNotVerified() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_LOGIN_NOT_REGISTERED_NOT_VERIFIED))
     isToastDisplayed(decorView, getResString(R.string.user_not_registered_not_verified))
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testErrorGetDomainRules() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_DOMAIN_RULES_ERROR))
     isToastDisplayed(decorView, DOMAIN_RULES_ERROR_RESPONSE.apiError?.msg!!)
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testNoPrvCreateRule() {
     setupAndClickSignInButton(genMockGoogleSignInAccountJson(EMAIL_WITH_NO_PRV_CREATE_RULE))
     intended(hasComponent(CreateOrImportKeyActivity::class.java.name))

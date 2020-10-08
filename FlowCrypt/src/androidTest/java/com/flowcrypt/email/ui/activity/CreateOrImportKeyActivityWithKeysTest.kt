@@ -21,10 +21,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseCreateOrImportKeyActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers.allOf
@@ -57,6 +58,7 @@ class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest(
       .around(ScreenshotTestRule())
 
   @Test
+  @ReadyForCIAnnotation
   fun testClickOnButtonCreateNewKey() {
     intending(allOf(hasComponent(ComponentName(getTargetContext(), CreatePrivateKeyActivity::class.java))))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
@@ -68,6 +70,7 @@ class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest(
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testClickOnButtonSkipSetup() {
     onView(withId(R.id.buttonSkipSetup))
         .perform(scrollTo(), click())

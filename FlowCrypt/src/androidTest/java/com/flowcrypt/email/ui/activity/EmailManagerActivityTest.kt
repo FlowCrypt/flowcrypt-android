@@ -25,6 +25,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
@@ -75,6 +76,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
       .around(ScreenshotTestRule())
 
   @Test
+  @ReadyForCIAnnotation
   fun testComposeFloatButton() {
     onView(withId(R.id.floatActionButtonCompose))
         .check(matches(isDisplayed()))
@@ -103,6 +105,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testOpenAndSwipeNavigationView() {
     onView(withId(R.id.drawer_layout))
         .perform(open())
@@ -111,6 +114,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowSplashActivityAfterLogout() {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
     val nonActiveAccounts = roomDatabase.accountDao().getAllNonactiveAccounts()
@@ -120,6 +124,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testGoToSettingsActivity() {
     onView(withId(R.id.drawer_layout))
         .perform(open())
@@ -132,6 +137,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testSwitchLabels() {
     val menuItem = "Sent"
     onView(withId(R.id.toolbar)).check(matches(anyOf(
@@ -148,6 +154,7 @@ class EmailManagerActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowAnotherAccounts() {
     onView(withId(R.id.drawer_layout))
         .perform(open())

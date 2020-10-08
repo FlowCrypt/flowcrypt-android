@@ -18,6 +18,7 @@ import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -50,6 +51,7 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowPrivacyTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.privacy))
     onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar))))
@@ -57,6 +59,7 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowTermsTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.terms))
     onView(allOf(withText(R.string.terms), withParent(withId(R.id.toolbar))))
@@ -64,6 +67,7 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowSecurityTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.security))
     onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar))))

@@ -148,6 +148,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testChangeFieldValuesWhenEmailChanged() {
     enableAdvancedMode()
 

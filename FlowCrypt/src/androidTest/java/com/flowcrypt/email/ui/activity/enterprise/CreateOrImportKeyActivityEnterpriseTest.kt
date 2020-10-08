@@ -14,6 +14,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -55,12 +56,14 @@ class CreateOrImportKeyActivityEnterpriseTest : BaseCreateOrImportKeyActivityTes
       .around(ScreenshotTestRule())
 
   @Test
+  @ReadyForCIAnnotation
   fun testCreateNewKeyNotExist() {
     onView(withId(R.id.buttonCreateNewKey))
         .check(matches(not(isDisplayed())))
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testButtonSkipSetupNotExist() {
     onView(withId(R.id.buttonSkipSetup))
         .check(matches(not(isDisplayed())))

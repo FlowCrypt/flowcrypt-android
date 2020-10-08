@@ -26,6 +26,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.base.BaseTest
@@ -81,6 +82,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
       .around(ScreenshotTestRule())
 
   @Test
+  @ReadyForCIAnnotation
   fun testImportKeyFromBackup() {
     useIntentionFromRunCheckKeysActivity()
 
@@ -91,6 +93,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testImportKeyFromFile() {
     useIntentionToRunActivityToSelectFile(fileWithPrivateKey)
     useIntentionFromRunCheckKeysActivity()
@@ -102,6 +105,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowErrorWhenImportingKeyFromFile() {
     useIntentionToRunActivityToSelectFile(fileWithoutPrivateKey)
 
@@ -112,6 +116,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testImportKeyFromClipboard() {
     useIntentionFromRunCheckKeysActivity()
 
@@ -123,6 +128,7 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowErrorWhenImportKeyFromClipboard() {
     addTextToClipboard("not private key", SOME_TEXT)
     onView(withId(R.id.buttonLoadFromClipboard))

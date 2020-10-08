@@ -121,6 +121,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testSuccessEmailOption() {
     addFirstKeyWithStrongPassword()
     onView(withId(R.id.buttonBackupAction))
@@ -130,6 +131,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testSuccessWithTwoKeysEmailOption() {
     addSecondKeyWithStrongPassword()
     testSuccessEmailOption()
@@ -181,6 +183,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowWeakPasswordHintForEmailOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.buttonBackupAction))
@@ -210,6 +213,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testFixWeakPasswordForEmailOption() {
     addFirstKeyWithDefaultPassword()
     onView(withId(R.id.buttonBackupAction))
@@ -222,6 +226,7 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testDiffPassphrasesForEmailOption() {
     addFirstKeyWithStrongPassword()
     addSecondKeyWithStrongSecondPassword()
