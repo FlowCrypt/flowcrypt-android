@@ -21,6 +21,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
@@ -59,6 +60,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseTwoKeysFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -76,6 +78,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseTwoKeysSecondCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -95,6 +98,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseTwoKeysWithSamePasswordThirdCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -113,6 +117,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseTwoKeysFourthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyC_default.json",
@@ -131,6 +136,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseTwoKeysFifthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyC_default.json",
@@ -149,6 +155,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseThreeFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -168,6 +175,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseThreeKeysSecondCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -187,6 +195,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseThreeKeysThirdCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -208,6 +217,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseThreeKeysFourthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -229,6 +239,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseThreeKeysFifthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyB_default.json",
@@ -248,6 +259,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseThreeKeysSixthCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -267,6 +279,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseThreeKeysSeventhCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyB_default.json",
@@ -289,6 +302,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseFourKeysFirstCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",
@@ -310,6 +324,7 @@ class CheckKeysActivityTestMultiBackups : BaseTest() {
    */
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseFourKeysSecondCombination() {
     val keysPaths = arrayOf(
         "node/key_testing@denbond7.com_keyA_strong.json",

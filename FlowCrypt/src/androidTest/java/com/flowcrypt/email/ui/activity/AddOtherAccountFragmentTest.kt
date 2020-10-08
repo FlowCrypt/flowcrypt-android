@@ -24,6 +24,7 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
@@ -82,6 +83,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowSnackBarIfFieldEmpty() {
     onView(withId(R.id.checkBoxAdvancedMode))
         .perform(scrollTo(), click())
@@ -108,6 +110,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testIsPasswordFieldsAlwaysEmptyAtStart() {
     onView(withId(R.id.editTextPassword))
         .check(matches(withText(isEmptyString())))
@@ -120,6 +123,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testChangingImapPortWhenSelectSpinnerItem() {
     enableAdvancedMode()
     checkSecurityTypeOpt(R.id.editTextImapPort, R.id.spinnerImapSecurityType,
@@ -132,6 +136,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testChangingSmtpPortWhenSelectSpinnerItem() {
     enableAdvancedMode()
     checkSecurityTypeOpt(R.id.editTextSmtpPort, R.id.spinnerSmtpSecyrityType,
@@ -185,6 +190,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testVisibilityOfSmtpAuthField() {
     enableAdvancedMode()
 
@@ -207,6 +213,7 @@ class AddOtherAccountFragmentTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testFieldsAutoFilling() {
     enableAdvancedMode()
 

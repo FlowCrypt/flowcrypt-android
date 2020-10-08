@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -62,6 +63,7 @@ class CreateMessageActivityReplyAllTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testReplyAllUsingGmailAlias() {
     val msgInfo = getMsgInfo("messages/info/standard_msg_reply_all_via_gmail_alias.json",
         "messages/mime/standard_msg_reply_to_header.txt")

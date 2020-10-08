@@ -35,6 +35,7 @@ import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
@@ -95,6 +96,7 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testAddNewKeys() {
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
@@ -112,6 +114,7 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testKeyExists() {
     onView(withId(R.id.recyclerViewKeys))
         .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
@@ -121,12 +124,14 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowKeyDetailsScreen() {
     selectFirstKey()
   }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testKeyDetailsShowPubKey() {
     selectFirstKey()
     val keyDetails = addPrivateKeyToDatabaseRule.nodeKeyDetails
@@ -138,6 +143,7 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testKeyDetailsCopyToClipBoard() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
@@ -160,6 +166,7 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testKeyDetailsCheckDetails() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
@@ -191,6 +198,7 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails

@@ -26,6 +26,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.PgpContact
@@ -78,6 +79,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testImportKeyFromFile() {
     val resultData = Intent()
     resultData.data = Uri.fromFile(fileWithPublicKey)
@@ -92,6 +94,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowErrorWhenImportingKeyFromFile() {
     val resultData = Intent()
     resultData.data = Uri.fromFile(fileWithoutPublicKey)
@@ -106,6 +109,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testImportKeyFromClipboard() {
     addTextToClipboard("public key", publicKey)
     onView(withId(R.id.buttonLoadFromClipboard))
@@ -116,6 +120,7 @@ class ImportPublicKeyActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowErrorWhenImportKeyFromClipboard() {
     addTextToClipboard("not public key", SOME_TEXT)
     onView(withId(R.id.buttonLoadFromClipboard))

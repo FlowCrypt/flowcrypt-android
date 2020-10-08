@@ -22,6 +22,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AttachmentInfo
@@ -96,6 +97,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testFrom() {
     onView(withId(R.id.editTextFrom))
         .perform(scrollTo())
@@ -105,6 +107,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testToRecipients() {
     val chipSeparator = SpanChipTokenizer.CHIP_SPAN_SEPARATOR.toString()
     val autoCorrectSeparator = SpanChipTokenizer.AUTOCORRECT_SEPARATOR.toString()
@@ -122,6 +125,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testSubject() {
     onView(withId(R.id.editTextEmailSubject))
         .perform(scrollTo())
@@ -131,6 +135,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testEmailMsg() {
     onView(withId(R.id.editTextEmailMessage))
         .perform(scrollTo())
@@ -147,6 +152,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testAvailabilityAddingAtts() {
     if (!serviceInfo.hasAbilityToAddNewAtt) {
       onView(withId(R.id.menuActionAttachFile))
@@ -156,6 +162,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testDisabledSwitchingBetweenEncryptionTypes() {
     if (!serviceInfo.isMsgTypeSwitchable) {
       onView(withText(R.string.switch_to_standard_email))
@@ -167,6 +174,7 @@ class StandardReplyWithServiceInfoAndOneFileTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowHelpScreen() {
     testHelpScreen()
   }

@@ -18,6 +18,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
@@ -52,42 +53,49 @@ class SettingsActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowHelpScreen() {
     testHelpScreen()
   }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowBackupsScreen() {
     checkIsScreenDisplaying(getResString(R.string.backups))
   }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowSecurityScreen() {
     checkIsScreenDisplaying(getResString(R.string.security_and_privacy))
   }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowContactsScreen() {
     checkIsScreenDisplaying(getResString(R.string.contacts))
   }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowKeysScreen() {
     checkIsScreenDisplaying(getResString(R.string.keys))
   }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowAttesterScreen() {
     checkIsScreenDisplaying(getResString(R.string.attester))
   }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowLegalScreen() {
     checkIsScreenDisplaying(getResString(R.string.experimental), getResString(R.string.experimental_settings))
   }

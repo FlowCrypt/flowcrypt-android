@@ -18,6 +18,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
@@ -65,6 +66,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowMsgEmptyPassPhrase() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonPositiveAction))
@@ -74,6 +76,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseIncorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
         .perform(scrollTo(), typeText("some pass phrase"), closeSoftKeyboard())
@@ -84,6 +87,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseCorrectPassPhrase() {
     onView(withId(R.id.editTextKeyPassword))
         .perform(scrollTo(), typeText(TestConstants.DEFAULT_PASSWORD), closeSoftKeyboard())
@@ -95,6 +99,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testCheckClickButtonNeutral() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonUseExistingKeys))
@@ -105,6 +110,7 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testCheckClickButtonNegative() {
     Espresso.closeSoftKeyboard()
     onView(withId(R.id.buttonNegativeAction))

@@ -18,6 +18,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
@@ -59,12 +60,14 @@ class ContactsSettingsActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowHelpScreen() {
     testHelpScreen()
   }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testEmptyList() {
     onView(withId(R.id.recyclerViewContacts))
         .check(matches(withEmptyRecyclerView())).check(matches(not(isDisplayed())))

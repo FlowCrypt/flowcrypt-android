@@ -1,4 +1,3 @@
 #!/bin/bash
 
-./gradlew :FlowCrypt:connectedDevTestDebugAndroidTest
-
+./gradlew :FlowCrypt:connectedDevTestDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.annotation=com.flowcrypt.email.ReadyForCIAnnotation

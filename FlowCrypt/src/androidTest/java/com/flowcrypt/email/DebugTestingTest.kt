@@ -22,6 +22,7 @@ import org.junit.runner.RunWith
 class DebugTestingTest {
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun alwaysSuccessTest() {
   }
 }
