@@ -54,7 +54,7 @@ blocks:
             - $ANDROID_SDK_ROOT/emulator/emulator -avd ci-test-pixel-x86-64-api29 -no-window -no-boot-anim -no-audio &
             - ./script/ci-wait-for-emulator.sh #wait until ready
             # Run instrumentation tests
-            - ./script/ci-instrumentation-tests.sh 2 0
+            - ./script/ci-instrumentation-tests-without-mailserver.sh 2 0
 
         - name: Instrumentation tests(No email server) - part 2
           commands:
@@ -66,7 +66,7 @@ blocks:
             - $ANDROID_SDK_ROOT/emulator/emulator -avd ci-test-pixel-x86-64-api29 -no-window -no-boot-anim -no-audio &
             - ./script/ci-wait-for-emulator.sh #wait until ready
             # Run instrumentation tests
-            - ./script/ci-instrumentation-tests.sh 2 1
+            - ./script/ci-instrumentation-tests-without-mailserver.sh 2 1
 
         - name: Instrumentation tests with email server
           commands:
