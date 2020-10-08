@@ -40,9 +40,9 @@ blocks:
             - ./script/ci-lint-checks.sh
 
         - name: junit
-            commands:
-              # run JUnit tests
-              - ./script/ci-junit-tests.sh
+          commands:
+            # run JUnit tests
+            - ./script/ci-junit-tests.sh
 
         - name: Instrumentation tests
           commands:
