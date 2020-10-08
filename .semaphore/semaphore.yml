@@ -32,7 +32,7 @@ blocks:
       minutes: 59
     task:
       jobs:
-        - name: Test without mailserver
+        - name: JUnit + Instrumentation tests
           commands:
             - cat /proc/cpuinfo
             # Install Android dependencies
@@ -49,7 +49,7 @@ blocks:
             - $ANDROID_SDK_ROOT/emulator/emulator -avd ci-test-pixel-x86-64-api29 -no-window -no-boot-anim -no-audio &
             - ./script/ci-wait-for-emulator.sh #wait until ready
             # Run instrumentation tests
-            - ./script/ci-tests-without-mailserver.sh
+            - ./script/ci-instrumentation-tests.sh
       epilogue:
         on_fail:
           commands:
