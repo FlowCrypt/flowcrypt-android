@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./gradlew lintDevTestDebug -q
+./gradlew :FlowCrypt:lintDevTestDebug

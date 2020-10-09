@@ -25,50 +25,46 @@ global_job_config:
       - cache restore $ANDROID_SDK_CACHE
       - cache restore $BUILD_NATIVE_CACHE
       - cache restore $BUILD_CACHE
+      - cache restore gradle-wrapper
+      - cache restore gradle-cache
+      - cache restore android-build
       # Install Android dependencies
       - ./script/ci-install-android-sdk.sh
 blocks:
-  - name: Testing
+  - name: 'Build'
+      #skip:
+      #when: "(branch != 'master' OR branch != 'dev') AND pull_request !~ '.*'"
+      task:
+        jobs:
+          - name: 'Build Project'
+            commands:
+              - ./gradlew assembleDevTestDebug
+        epilogue:
+          on_pass:
+            commands:
+              - cache clear
+              - cache delete gradle-wrapper
+              - cache delete gradle-cache
+              - cache delete android-build
+              - cache store gradle-wrapper ~/.gradle/wrapper
+              - cache store gradle-cache ~/.gradle/caches
+              - cache store android-build ~/.android/build-cache
+
+  - name: 'Testing'
     execution_time_limit:
-      minutes: 59
+      minutes: 45
     task:
       jobs:
-        - name: Lint
+        - name: 'Lint'
           commands:
             - cat /proc/cpuinfo
             # run Lint checks
             - ./script/ci-lint-checks.sh
 
-        - name: JUnit tests
+        - name: 'JUnit tests'
           commands:
             # run JUnit tests
             - ./script/ci-junit-tests.sh
-
-        - name: Instrumentation tests(No email server) - part 1
-          commands:
-            # Setup and run an emulator
-            - ./script/ci-setup-and-run-emulator.sh
-            - ./script/ci-wait-for-emulator.sh #wait until ready
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 2 0
-
-        - name: Instrumentation tests(No email server) - part 2
-          commands:
-            # Setup and run an emulator
-            - ./script/ci-setup-and-run-emulator.sh
-            - ./script/ci-wait-for-emulator.sh #wait until ready
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 2 1
-
-        - name: Instrumentation tests with email server
-          commands:
-            # Run an email server
-            - cd docker-mailserver && ./run_email_server.sh && cd -
-            # Setup and run an emulator
-            - ./script/ci-setup-and-run-emulator.sh
-            - ./script/ci-wait-for-emulator.sh #wait until ready
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-with-mailserver.sh
       epilogue:
         on_fail:
           commands:
