@@ -44,7 +44,6 @@ blocks:
       epilogue:
         on_pass:
           commands:
-            - cache clear
             # store global cache
             - echo "Store cache"
             - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
