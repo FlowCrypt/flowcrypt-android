@@ -33,22 +33,22 @@ global_job_config:
 blocks:
   - name: 'Build'
       #skip:
-      #when: "(branch != 'master' OR branch != 'dev') AND pull_request !~ '.*'"
-      task:
-        jobs:
-          - name: 'Build Project'
-            commands:
-              - ./gradlew assembleDevTestDebug
-        epilogue:
-          on_pass:
-            commands:
-              - cache clear
-              - cache delete gradle-wrapper
-              - cache delete gradle-cache
-              - cache delete android-build
-              - cache store gradle-wrapper ~/.gradle/wrapper
-              - cache store gradle-cache ~/.gradle/caches
-              - cache store android-build ~/.android/build-cache
+    #when: "(branch != 'master' OR branch != 'dev') AND pull_request !~ '.*'"
+    task:
+      jobs:
+        - name: 'Build Project'
+          commands:
+            - ./gradlew assembleDevTestDebug
+      epilogue:
+        on_pass:
+          commands:
+            - cache clear
+            - cache delete gradle-wrapper
+            - cache delete gradle-cache
+            - cache delete android-build
+            - cache store gradle-wrapper ~/.gradle/wrapper
+            - cache store gradle-cache ~/.gradle/caches
+            - cache store android-build ~/.android/build-cache
 
   - name: 'Testing'
     execution_time_limit:
