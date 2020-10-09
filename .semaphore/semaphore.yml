@@ -79,14 +79,14 @@ blocks:
 
         - name: 'Instrumentation tests(No email server)'
           matrix:
-            - env_var: SHARD_INDEX
+            - env_var: EMULATOR
               values: [ "0", "1", "2", "3" ]
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
             - ./script/ci-wait-for-emulator.sh #wait until ready
             # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $SHARD_INDEX
+            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $EMULATOR
 
         - name: 'Instrumentation tests(with email server)'
           commands:
