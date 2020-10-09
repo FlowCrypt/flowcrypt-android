@@ -2,8 +2,13 @@
 
 set -euxo pipefail
 
-mkdir ~/.android
-touch ~/.android/repositories.cfg
+if [[ -d ~/.android ]]
+then
+     echo "~/.android already exists"
+else
+     mkdir ~/.android
+     touch ~/.android/repositories.cfg
+fi
 
 SDK_ARCHIVE=sdk-tools-linux-4333796.zip
 
