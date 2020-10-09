@@ -6,7 +6,6 @@
 package com.flowcrypt.email.ui.adapter
 
 import android.content.Context
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +13,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.UIUtil
 
@@ -27,8 +26,8 @@ import com.flowcrypt.email.util.UIUtil
  * Time: 9:42
  * E-mail: DenBond7@gmail.com
  */
-class AttesterKeyAdapter(private val responses: MutableList<LookUpEmailResponse> = mutableListOf())
-  : RecyclerView.Adapter<AttesterKeyAdapter.ViewHolder>() {
+class AttesterKeyAdapter(
+    private val responses: MutableList<NodeKeyDetails> = mutableListOf()) : RecyclerView.Adapter<AttesterKeyAdapter.ViewHolder>() {
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.attester_key_item, parent, false))
@@ -40,11 +39,11 @@ class AttesterKeyAdapter(private val responses: MutableList<LookUpEmailResponse>
 
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
     val context = viewHolder.itemView.context
-    val lookUpEmailResponse = responses[position]
-    updateView(lookUpEmailResponse, context, viewHolder)
+    val nodeKeyDetails = responses[position]
+    updateView(nodeKeyDetails, context, viewHolder)
   }
 
-  fun setData(newList: List<LookUpEmailResponse>) {
+  fun setData(newList: List<NodeKeyDetails>) {
     val productDiffUtilCallback = ResponseDiffUtilCallback(responses, newList)
     val productDiffResult = DiffUtil.calculateDiff(productDiffUtilCallback)
 
@@ -53,16 +52,16 @@ class AttesterKeyAdapter(private val responses: MutableList<LookUpEmailResponse>
     productDiffResult.dispatchUpdatesTo(this)
   }
 
-  private fun updateView(lookUpEmailResponse: LookUpEmailResponse, context: Context, viewHolder: ViewHolder) {
-    viewHolder.textViewKeyOwner.text = lookUpEmailResponse.email
+  private fun updateView(nodeKeyDetails: NodeKeyDetails, context: Context, viewHolder: ViewHolder) {
+    viewHolder.textViewKeyOwner.text = nodeKeyDetails.primaryPgpContact.email
 
     when {
-      TextUtils.isEmpty(lookUpEmailResponse.pubKey) -> {
+      nodeKeyDetails.publicKey.isNullOrEmpty() -> {
         viewHolder.textViewKeyAttesterStatus.setText(R.string.no_public_key_recorded)
         viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.orange))
       }
 
-      isPublicKeyMatched(viewHolder.itemView.context, lookUpEmailResponse) -> {
+      isPublicKeyMatched(viewHolder.itemView.context, nodeKeyDetails) -> {
         viewHolder.textViewKeyAttesterStatus.setText(R.string.submitted_can_receive_encrypted_email)
         viewHolder.textViewKeyAttesterStatus.setTextColor(UIUtil.getColor(context, R.color.colorPrimary))
       }
@@ -78,12 +77,11 @@ class AttesterKeyAdapter(private val responses: MutableList<LookUpEmailResponse>
    * Check is public key found, and the longid does not match any longids of saved keys.
    *
    * @param context Interface to global information about an application environment.
-   * @param lookUpEmailResponse The [LookUpEmailResponse] object which contains info about a public key from
-   * the Attester API.
+   * @param nodeKeyDetails The [NodeKeyDetails] object which contains info about a public key.
    * @return true if public key found, and the longid does not match any longids of saved keys, otherwise false.
    */
-  private fun isPublicKeyMatched(context: Context, lookUpEmailResponse: LookUpEmailResponse): Boolean {
-    return KeysStorageImpl.getInstance(context).getPgpPrivateKey(lookUpEmailResponse.longId) != null
+  private fun isPublicKeyMatched(context: Context, nodeKeyDetails: NodeKeyDetails): Boolean {
+    return KeysStorageImpl.getInstance(context).getPgpPrivateKey(nodeKeyDetails.longId) != null
   }
 
   /**
@@ -94,8 +92,8 @@ class AttesterKeyAdapter(private val responses: MutableList<LookUpEmailResponse>
     var textViewKeyAttesterStatus: TextView = itemView.findViewById(R.id.textViewKeyAttesterStatus)
   }
 
-  inner class ResponseDiffUtilCallback(private val oldList: List<LookUpEmailResponse>,
-                                       private val newList: List<LookUpEmailResponse>) : DiffUtil.Callback() {
+  inner class ResponseDiffUtilCallback(private val oldList: List<NodeKeyDetails>,
+                                       private val newList: List<NodeKeyDetails>) : DiffUtil.Callback() {
     override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
       val oldProduct = oldList[oldItemPosition]
       val newProduct = newList[newItemPosition]

@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -73,36 +72,32 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
   }
 
   private fun setupAccountKeysInfoViewModel() {
-    accountKeysInfoViewModel.accountKeysInfoLiveData.observe(viewLifecycleOwner, Observer {
+    accountKeysInfoViewModel.accountKeysInfoLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
             baseActivity.countingIdlingResource.incrementSafely()
-            if (sRL?.isRefreshing != true) {
+            if (sRL?.isRefreshing != true || attesterKeyAdapter.itemCount == 0) {
+              sRL?.isRefreshing = false
               showProgress()
             } else return@let
           }
 
           Result.Status.SUCCESS -> {
             sRL?.isRefreshing = false
-            it.data?.results?.let { responses ->
+            it.data?.let { responses ->
               if (responses.isNotEmpty()) {
                 attesterKeyAdapter.setData(responses)
+                showContent()
               } else {
                 showEmptyView()
               }
             }
-            showContent()
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR -> {
             sRL?.isRefreshing = false
-            showStatus(it.data?.apiError?.msg ?: getString(R.string.unknown_error))
-            showSnackbar(contentView, getString(R.string.an_error_has_occurred),
-                getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener {
-              accountKeysInfoViewModel.refreshData()
-            })
             baseActivity.countingIdlingResource.decrementSafely()
           }
 
@@ -110,10 +105,13 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
             sRL?.isRefreshing = false
             showStatus(it.exception?.message ?: it.exception?.javaClass?.simpleName ?: getString(R
                 .string.unknown_error))
-            showSnackbar(contentView, getString(R.string.an_error_has_occurred),
-                getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener {
+            showSnackbar(
+                view = contentView,
+                msgText = getString(R.string.an_error_has_occurred),
+                btnName = getString(R.string.retry),
+                duration = Snackbar.LENGTH_LONG) {
               accountKeysInfoViewModel.refreshData()
-            })
+            }
 
             baseActivity.countingIdlingResource.decrementSafely()
           }

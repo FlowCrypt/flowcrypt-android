@@ -29,6 +29,8 @@ import org.hamcrest.Matchers.not
  */
 abstract class BaseEmailListActivityTest : BaseTest() {
 
+  override val useIntents: Boolean = true
+
   protected fun testRunMsgDetailsActivity(position: Int) {
     onView(withId(R.id.recyclerViewMsgs))
         .perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(position, click()))

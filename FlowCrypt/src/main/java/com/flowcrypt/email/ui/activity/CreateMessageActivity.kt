@@ -14,7 +14,6 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
@@ -47,10 +46,6 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
 
   private var nonEncryptedHintView: View? = null
   override lateinit var rootView: View
-
-  var fetchInfoAboutContactsIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
-
-  var fetchAvailablePubKeysIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override var msgEncryptionType = MessageEncryptionType.ENCRYPTED
     private set
@@ -159,9 +154,9 @@ class CreateMessageActivity : BaseBackStackSyncActivity(), CreateMessageFragment
 
   override fun onLoadKeysProgress(status: Result.Status) {
     if (status == Result.Status.LOADING) {
-      fetchAvailablePubKeysIdlingResource.incrementSafely()
+      countingIdlingResource.incrementSafely()
     } else {
-      fetchAvailablePubKeysIdlingResource.decrementSafely()
+      countingIdlingResource.decrementSafely()
     }
   }
 

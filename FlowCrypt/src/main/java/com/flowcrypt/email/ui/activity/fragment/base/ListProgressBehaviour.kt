@@ -22,13 +22,30 @@ import com.flowcrypt.email.R
 interface ListProgressBehaviour : ProgressBehaviour {
   val emptyView: View?
 
+  override fun showProgress(progressMsg: String?) {
+    emptyView?.visibility = View.GONE
+    super.showProgress(progressMsg)
+  }
+
+  override fun showContent() {
+    emptyView?.visibility = View.GONE
+    super.showContent()
+  }
+
+  override fun showStatus(msg: String?, resourcesId: Int) {
+    emptyView?.visibility = View.GONE
+    super.showStatus(msg, resourcesId)
+  }
+
   fun showEmptyView(msg: String? = null, resourcesId: Int = 0) {
     contentView?.visibility = View.GONE
     statusView?.visibility = View.GONE
     progressView?.visibility = View.GONE
 
     val tVEmpty = emptyView?.findViewById<TextView>(R.id.tVEmpty)
-    tVEmpty?.text = msg
+    msg?.let {
+      tVEmpty?.text = it
+    }
 
     if (resourcesId > 0) {
       val iVEmptyImg = emptyView?.findViewById<ImageView>(R.id.iVEmptyImg)

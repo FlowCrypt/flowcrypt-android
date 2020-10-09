@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Observer
 import com.flowcrypt.email.node.Node
+import com.flowcrypt.email.ui.activity.base.BaseActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.idling.NodeIdlingResource
 
@@ -29,6 +30,9 @@ abstract class BaseDialogFragment : DialogFragment() {
   val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
   protected var hasHtml: Boolean = false
   protected var useLinkify: Boolean = false
+
+  val baseActivity: BaseActivity?
+    get() = activity as? BaseActivity
 
   protected val isNodeReady: Boolean
     get() = Node.getInstance(requireActivity().application).liveData.value?.isReady ?: false

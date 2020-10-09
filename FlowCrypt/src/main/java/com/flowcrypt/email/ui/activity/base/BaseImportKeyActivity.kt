@@ -28,6 +28,8 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
@@ -249,6 +251,7 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
+            countingIdlingResource.incrementSafely()
             isCheckingPrivateKeyNow = true
             textViewProgressText.setText(R.string.evaluating)
             UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
@@ -277,6 +280,8 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             } else {
               keyImportModel?.type?.let { type -> onKeyFound(type, ArrayList(keys)) }
             }
+
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -314,6 +319,8 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
             }
 
             showInfoDialogFragment(dialogMsg = msg)
+
+            countingIdlingResource.decrementSafely()
           }
         }
       }

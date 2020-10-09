@@ -9,16 +9,27 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
+import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.AttesterSettingsActivity
+import com.flowcrypt.email.util.AccountDaoManager
+import com.flowcrypt.email.util.TestGeneralUtil
+import okhttp3.mockwebserver.Dispatcher
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.not
+import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -31,22 +42,43 @@ import org.junit.runner.RunWith
  * Time: 10:11
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 class AttesterSettingsActivityTest : BaseTest() {
-  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(AttesterSettingsActivity::class.java)
+  override val activityScenarioRule = activityScenarioRule<AttesterSettingsActivity>()
+  private val accountRule = AddAccountToDatabaseRule()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
-      .around(activityTestRule)
+      .around(accountRule)
+      .around(RetryRule())
+      .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
+  @ReadyForCIAnnotation
   fun testKeysExistOnAttester() {
     onView(withId(R.id.rVAttester))
         .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
     onView(withId(R.id.empty))
         .check(matches(not(isDisplayed())))
+  }
+
+  companion object {
+    @get:ClassRule
+    @JvmStatic
+    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+          val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+          if (AccountDaoManager.getDefaultAccountDao().email.equals(lastSegment, true)) {
+            return MockResponse().setResponseCode(200).setBody(TestGeneralUtil.readResourcesAsString("1.txt"))
+          }
+        }
+
+        return MockResponse().setResponseCode(404)
+      }
+    })
   }
 }

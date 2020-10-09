@@ -16,9 +16,11 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.gmail.GmailApiHelper
 import com.flowcrypt.email.api.retrofit.ApiRepository
 import com.flowcrypt.email.api.retrofit.FlowcryptApiRepository
-import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
+import com.flowcrypt.email.api.retrofit.node.NodeRepository
+import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
+import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import kotlinx.coroutines.Dispatchers
@@ -39,17 +41,17 @@ import java.util.*
  */
 
 class AccountKeysInfoViewModel(application: Application) : AccountViewModel(application) {
-  private val repository: ApiRepository = FlowcryptApiRepository()
-  val accountKeysInfoLiveData = MediatorLiveData<Result<LookUpEmailsResponse>>()
+  private val apiRepository: ApiRepository = FlowcryptApiRepository()
+  private val pgpApiRepository: PgpApiRepository = NodeRepository()
+  val accountKeysInfoLiveData = MediatorLiveData<Result<List<NodeKeyDetails>>>()
   private val initLiveData = Transformations
       .switchMap(activeAccountLiveData) { accountEntity ->
         liveData {
           emit(Result.loading())
-          val result: Result<LookUpEmailsResponse> = getResult(accountEntity)
-          emit(result)
+          emit(getResult(accountEntity))
         }
       }
-  private val refreshingLiveData = MutableLiveData<Result<LookUpEmailsResponse>>()
+  private val refreshingLiveData = MutableLiveData<Result<List<NodeKeyDetails>>>()
 
   init {
     accountKeysInfoLiveData.addSource(initLiveData) { accountKeysInfoLiveData.value = it }
@@ -92,8 +94,9 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
     }
   }
 
-  private suspend fun getResult(accountEntity: AccountEntity?): Result<LookUpEmailsResponse> {
+  private suspend fun getResult(accountEntity: AccountEntity?): Result<List<NodeKeyDetails>> {
     return if (accountEntity != null) {
+      val results = mutableListOf<NodeKeyDetails>()
       val emails = ArrayList<String>()
       emails.add(accountEntity.email)
 
@@ -101,7 +104,14 @@ class AccountKeysInfoViewModel(application: Application) : AccountViewModel(appl
         emails.addAll(getAvailableGmailAliases(accountEntity.account))
       }
 
-      repository.postLookUpEmails(getApplication(), PostLookUpEmailsModel(emails))
+      for (email in emails) {
+        val pubResponseResult = apiRepository.getPub(context = getApplication(), identData = email)
+        pubResponseResult.data?.pubkey?.let { key ->
+          pgpApiRepository.fetchKeyDetails(ParseKeysRequest(key)).data?.nodeKeyDetails?.let { keys -> results.addAll(keys) }
+        }
+      }
+
+      Result.success(results)
     } else {
       Result.exception(NullPointerException("AccountEntity is null!"))
     }
