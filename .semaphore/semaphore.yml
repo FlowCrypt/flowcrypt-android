@@ -90,12 +90,12 @@ blocks:
             - ./script/ci-instrumentation-tests-without-mailserver.sh 4 1
 
         - name: 'Instrumentation tests(No email server) - part 3'
-        commands:
-          # Setup and run an emulator
-          - ./script/ci-setup-and-run-emulator.sh
-          - ./script/ci-wait-for-emulator.sh #wait until ready
-          # Run instrumentation tests
-          - ./script/ci-instrumentation-tests-without-mailserver.sh 4 2
+          commands:
+            # Setup and run an emulator
+            - ./script/ci-setup-and-run-emulator.sh
+            - ./script/ci-wait-for-emulator.sh #wait until ready
+            # Run instrumentation tests
+            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 2
 
         - name: 'Instrumentation tests(No email server) - part 4'
           commands:
