@@ -48,7 +48,7 @@
         app:layout_constraintTop_toBottomOf="@+id/textViewKeyWordsTemplate"
         tools:text="Fingerprint: XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX" />
 
-    <Switch
+    <com.google.android.material.switchmaterial.SwitchMaterial
         android:id="@+id/switchShowPublicKey"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

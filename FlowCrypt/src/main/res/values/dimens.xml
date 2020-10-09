@@ -29,7 +29,7 @@
 
     <dimen name="default_text_size_big">18sp</dimen>
     <dimen name="default_text_size_medium">16sp</dimen>
-    <dimen name="default_text_size_small">12sp</dimen>
+    <dimen name="default_text_size_small" tools:ignore="UnusedResources">12sp</dimen>
     <dimen name="default_text_size_very_small">10sp</dimen>
 
     <dimen name="margin_top_main_screen_button">32dp</dimen>

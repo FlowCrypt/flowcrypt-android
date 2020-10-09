@@ -21,6 +21,7 @@ import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.base.BaseCreateOrImportKeyActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.CoreMatchers.not
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -36,6 +37,7 @@ import org.junit.runner.RunWith
 @LargeTest
 @DoesNotNeedMailserverEnterprise
 @RunWith(AndroidJUnit4::class)
+@Ignore("Need to think how to run")
 class CreateOrImportKeyActivityEnterpriseTest : BaseCreateOrImportKeyActivityTest() {
   override val activityTestRule =
       object : IntentsTestRule<CreateOrImportKeyActivity>(CreateOrImportKeyActivity::class.java) {
