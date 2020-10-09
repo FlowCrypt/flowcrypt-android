@@ -72,6 +72,48 @@ blocks:
         - name: 'JUnit tests'
           commands:
             - ./script/ci-junit-tests.sh # run JUnit tests
+
+        - name: 'Instrumentation tests(No email server) - part 1'
+          commands:
+            # Setup and run an emulator
+            - ./script/ci-setup-and-run-emulator.sh
+            - ./script/ci-wait-for-emulator.sh #wait until ready
+            # Run instrumentation tests
+            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 0
+
+        - name: 'Instrumentation tests(No email server) - part 2'
+          commands:
+            # Setup and run an emulator
+            - ./script/ci-setup-and-run-emulator.sh
+            - ./script/ci-wait-for-emulator.sh #wait until ready
+            # Run instrumentation tests
+            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 1
+
+        - name: 'Instrumentation tests(No email server) - part 3'
+        commands:
+          # Setup and run an emulator
+          - ./script/ci-setup-and-run-emulator.sh
+          - ./script/ci-wait-for-emulator.sh #wait until ready
+          # Run instrumentation tests
+          - ./script/ci-instrumentation-tests-without-mailserver.sh 4 2
+
+        - name: 'Instrumentation tests(No email server) - part 4'
+          commands:
+            # Setup and run an emulator
+            - ./script/ci-setup-and-run-emulator.sh
+            - ./script/ci-wait-for-emulator.sh #wait until ready
+            # Run instrumentation tests
+            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 3
+
+        - name: 'Instrumentation tests with email server'
+          commands:
+            # Run an email server
+            - cd docker-mailserver && ./run_email_server.sh && cd -
+            # Setup and run an emulator
+            - ./script/ci-setup-and-run-emulator.sh
+            - ./script/ci-wait-for-emulator.sh #wait until ready
+            # Run instrumentation tests
+            - ./script/ci-instrumentation-tests-with-mailserver.sh
       epilogue:
         on_fail:
           commands:
