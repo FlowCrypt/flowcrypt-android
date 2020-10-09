@@ -3,7 +3,7 @@
   ~ Contributors: DenBond7
   -->
 
-<Switch xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.switchmaterial.SwitchMaterial xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/switchShowOnlyEncryptedMessages"
     android:layout_width="wrap_content"

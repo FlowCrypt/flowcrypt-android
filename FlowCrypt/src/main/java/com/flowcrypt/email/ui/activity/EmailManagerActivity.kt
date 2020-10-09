@@ -19,7 +19,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
@@ -72,6 +71,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.switchmaterial.SwitchMaterial
 import com.sun.mail.imap.protocol.SearchSequence
 import kotlinx.coroutines.launch
 
@@ -101,7 +101,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   private var accountManagementLayout: LinearLayout? = null
   private var navigationView: NavigationView? = null
   private var currentAccountDetailsItem: View? = null
-  private var switchView: Switch? = null
+  private var switchView: SwitchMaterial? = null
   private var isForceSendingEnabled: Boolean = true
 
   override val isSyncEnabled: Boolean

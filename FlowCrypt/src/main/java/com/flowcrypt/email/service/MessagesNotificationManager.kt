@@ -14,6 +14,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.Constants
@@ -214,7 +215,9 @@ class MessagesNotificationManager(context: Context) : CustomNotificationManager(
   }
 
   private fun generateLargeIcon(context: Context): Bitmap {
-    return GeneralUtil.drawableToBitmap(context.resources.getDrawable(R.mipmap.ic_launcher, context.theme))
+    val drawable = ResourcesCompat.getDrawable(context.resources, R.mipmap.ic_launcher,
+        context.theme) ?: return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+    return GeneralUtil.drawableToBitmap(drawable)
   }
 
   private fun getMsgDetailsPendingIntent(context: Context, requestCode: Int, localFolder: LocalFolder,

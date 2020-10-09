@@ -7,6 +7,7 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -63,7 +64,8 @@ class AttesterSettingsFragment : BaseFragment(), ListProgressBehaviour {
     context?.let {
       val manager = LinearLayoutManager(it)
       val decoration = DividerItemDecoration(it, manager.orientation)
-      decoration.setDrawable(resources.getDrawable(R.drawable.divider_1dp_grey, it.theme))
+      val drawable = ResourcesCompat.getDrawable(resources, R.drawable.divider_1dp_grey, it.theme)
+      drawable?.let { decoration.setDrawable(drawable) }
       rVAttester?.addItemDecoration(decoration)
       rVAttester?.layoutManager = manager
       rVAttester?.adapter = attesterKeyAdapter
