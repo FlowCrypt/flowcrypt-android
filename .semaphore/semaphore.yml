@@ -77,37 +77,16 @@ blocks:
           commands:
             - ./script/ci-junit-tests.sh # run JUnit tests
 
-        - name: 'Instrumentation tests(No email server) 1/4'
+        - name: 'Instrumentation tests(No email server)'
+          matrix:
+            - env_var: SHARD_INDEX
+              values: [ "0", "1", "2", "3" ]
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
             - ./script/ci-wait-for-emulator.sh #wait until ready
             # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 0
-
-        - name: 'Instrumentation tests(No email server) 2/4'
-          commands:
-            # Setup and run an emulator
-            - ./script/ci-setup-and-run-emulator.sh
-            - ./script/ci-wait-for-emulator.sh #wait until ready
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 1
-
-        - name: 'Instrumentation tests(No email server) 3/4'
-          commands:
-            # Setup and run an emulator
-            - ./script/ci-setup-and-run-emulator.sh
-            - ./script/ci-wait-for-emulator.sh #wait until ready
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 2
-
-        - name: 'Instrumentation tests(No email server) 4/4'
-          commands:
-            # Setup and run an emulator
-            - ./script/ci-setup-and-run-emulator.sh
-            - ./script/ci-wait-for-emulator.sh #wait until ready
-            # Run instrumentation tests
-            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 3
+            - ./script/ci-instrumentation-tests-without-mailserver.sh 4 $SHARD_INDEX
 
         - name: 'Instrumentation tests(with email server)'
           commands:
