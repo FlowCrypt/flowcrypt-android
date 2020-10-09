@@ -15,7 +15,7 @@ global_job_config:
       - export PATH=${ANDROID_SDK_ROOT}/emulator:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH}
       - sudo rm -rf ~/.rbenv ~/.phpbrew
       - checkout
-      # restore caches
+      # restore global caches
       - export SUM=$(checksum build.gradle)-$(checksum FlowCrypt/build.gradle)-$(checksum ./script/ci-install-android-sdk.sh)
       - export GRADLE_CACHE=gradle-cache-$SUM # per conf files hash
       - export ANDROID_SDK_CACHE=android-sdk-$SUM # per conf files hash
@@ -25,9 +25,10 @@ global_job_config:
       - cache restore $ANDROID_SDK_CACHE
       - cache restore $BUILD_NATIVE_CACHE
       - cache restore $BUILD_CACHE
+      # restore build caches
       - cache restore gradle-wrapper
       - cache restore gradle-cache
-      - cache restore android-build
+      - cache restore android-build-cache
       # Install Android dependencies
       - ./script/ci-install-android-sdk.sh
 blocks:
@@ -38,17 +39,27 @@ blocks:
       jobs:
         - name: 'Build Project'
           commands:
-            - ./gradlew assembleDevTestDebug
+            - cat /proc/cpuinfo # print debug info
+            - ./gradlew assembleDevTestDebug # compile project
       epilogue:
         on_pass:
           commands:
             - cache clear
+            # store global cache
+            - echo "Store cache"
+            - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
+            - cache has_key $GRADLE_CACHE || cache store $GRADLE_CACHE .gradle
+            - cache has_key $ANDROID_SDK_CACHE || cache store $ANDROID_SDK_CACHE $ANDROID_SDK_ROOT
+            - cache has_key $BUILD_NATIVE_CACHE || cache store $BUILD_NATIVE_CACHE FlowCrypt/.externalNativeBuild
+            - cache has_key $BUILD_CACHE || cache store $BUILD_CACHE FlowCrypt/build
+
+            # clean and store new build cache
             - cache delete gradle-wrapper
             - cache delete gradle-cache
-            - cache delete android-build
+            - cache delete android-build-cache
             - cache store gradle-wrapper ~/.gradle/wrapper
             - cache store gradle-cache ~/.gradle/caches
-            - cache store android-build ~/.android/build-cache
+            - cache store android-build-cache ~/.android/build-cache
 
   - name: 'Testing'
     execution_time_limit:
@@ -57,14 +68,11 @@ blocks:
       jobs:
         - name: 'Lint'
           commands:
-            - cat /proc/cpuinfo
-            # run Lint checks
-            - ./script/ci-lint-checks.sh
+            - ./script/ci-lint-checks.sh # run Lint checks
 
         - name: 'JUnit tests'
           commands:
-            # run JUnit tests
-            - ./script/ci-junit-tests.sh
+            - ./script/ci-junit-tests.sh # run JUnit tests
       epilogue:
         on_fail:
           commands:
@@ -76,12 +84,3 @@ blocks:
             - adb pull "/mnt/sdcard/Download"
             - adb shell ls /mnt/sdcard/Download
             - artifact push job --expire-in 1w Download
-        on_pass:
-          commands:
-            # store cache
-            - echo "Store cache"
-            - find ~/.gradle/caches/ -name "*.lock" -type f -delete # https://medium.com/cirruslabs/mastering-gradle-caching-and-incremental-builds-37eb1af7fcde
-            - cache has_key $GRADLE_CACHE || cache store $GRADLE_CACHE .gradle
-            - cache has_key $ANDROID_SDK_CACHE || cache store $ANDROID_SDK_CACHE $ANDROID_SDK_ROOT
-            - cache has_key $BUILD_NATIVE_CACHE || cache store $BUILD_NATIVE_CACHE FlowCrypt/.externalNativeBuild
-            - cache has_key $BUILD_CACHE || cache store $BUILD_CACHE FlowCrypt/build
