@@ -4,6 +4,15 @@ agent:
   machine:
     type: e1-standard-4
     os_image: ubuntu1804
+
+fail_fast:
+  stop:
+    when: "branch != 'master'" # Stopping all jobs on the first failure
+
+auto_cancel:
+  queued:
+    when: "true" # enable auto-cancel for branches, tags and pull-requests
+
 global_job_config:
   env_vars:
     - name: SEMAPHORE_GIT_DIR
@@ -33,14 +42,13 @@ global_job_config:
       - ./script/ci-install-android-sdk.sh
 blocks:
   - name: 'Build'
-      #skip:
-    #when: "(branch != 'master' OR branch != 'dev') AND pull_request !~ '.*'"
     task:
       jobs:
         - name: 'Build Project'
           commands:
             - cat /proc/cpuinfo # print debug info
             - ./gradlew assembleDevTestDebug # compile project
+            - ./script/ci-lint-checks.sh # run Lint checks
       epilogue:
         on_pass:
           commands:
@@ -65,15 +73,11 @@ blocks:
       minutes: 45
     task:
       jobs:
-        - name: 'Lint'
-          commands:
-            - ./script/ci-lint-checks.sh # run Lint checks
-
         - name: 'JUnit tests'
           commands:
             - ./script/ci-junit-tests.sh # run JUnit tests
 
-        - name: 'Instrumentation tests(No email server) - part 1'
+        - name: 'Instrumentation tests(No email server) 1/4'
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
@@ -81,7 +85,7 @@ blocks:
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-without-mailserver.sh 4 0
 
-        - name: 'Instrumentation tests(No email server) - part 2'
+        - name: 'Instrumentation tests(No email server) 2/4'
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
@@ -89,7 +93,7 @@ blocks:
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-without-mailserver.sh 4 1
 
-        - name: 'Instrumentation tests(No email server) - part 3'
+        - name: 'Instrumentation tests(No email server) 3/4'
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
@@ -97,7 +101,7 @@ blocks:
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-without-mailserver.sh 4 2
 
-        - name: 'Instrumentation tests(No email server) - part 4'
+        - name: 'Instrumentation tests(No email server) 4/4'
           commands:
             # Setup and run an emulator
             - ./script/ci-setup-and-run-emulator.sh
@@ -105,7 +109,7 @@ blocks:
             # Run instrumentation tests
             - ./script/ci-instrumentation-tests-without-mailserver.sh 4 3
 
-        - name: 'Instrumentation tests with email server'
+        - name: 'Instrumentation tests(with email server)'
           commands:
             # Run an email server
             - cd docker-mailserver && ./run_email_server.sh && cd -
