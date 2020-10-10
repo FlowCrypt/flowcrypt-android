@@ -95,4 +95,7 @@ interface NodeService {
 
   @POST("/")
   fun zxcvbnStrengthBar(@Body request: ZxcvbnStrengthBarRequest): Call<ZxcvbnStrengthBarResult>
+
+  @POST("/")
+  suspend fun zxcvbnStrengthBarSuspend(@Body request: ZxcvbnStrengthBarRequest): Response<ZxcvbnStrengthBarResult>
 }

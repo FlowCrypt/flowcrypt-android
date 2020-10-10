@@ -265,7 +265,7 @@ class GeneralUtil {
      * @return A generated name.
      */
     fun genIdlingResourcesName(aClass: Class<*>): String {
-      return aClass.javaClass.toString() + "-" + UUID.randomUUID()
+      return aClass.simpleName + "-" + UUID.randomUUID()
     }
 
     /**

@@ -1,0 +1,86 @@
+Return-Path: <denbond7@denbond7.com>
+Delivered-To: default@denbond7.com
+Received: from mail.denbond7.com
+	by mail.denbond7.com with LMTP
+	id fCzpFVlGe19jFgAAZlazJA
+	(envelope-from <denbond7@denbond7.com>)
+	for <default@denbond7.com>; Mon, 05 Oct 2020 16:14:17 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by mail.denbond7.com (Postfix) with ESMTP id 56103B20597
+	for <default@denbond7.com>; Mon,  5 Oct 2020 16:14:17 +0000 (UTC)
+Content-Type: multipart/mixed;
+ boundary="----sinikael-?=_1-16019144539760.06379430448642398"
+To: default@denbond7.com
+From: denbond7@denbond7.com
+Subject: Simple encrypted message + pub key
+Date: Mon, 05 Oct 2020 16:14:13 +0000
+Message-Id: <90049050.0.1601914456206@localhost>
+Mime-Version: 1.0
+
+------sinikael-?=_1-16019144539760.06379430448642398
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+-----BEGIN PGP MESSAGE-----
+Version: FlowCrypt 1.1.1 Gmail Encryption
+Comment: Seamlessly send and receive encrypted email
+
+wcBMA0HJ2AYtijsRAQf9FXpEpyfYsQV1NNxMlR6TjIZga7URvFddBzbOqewi
+AxRLMxM2y4JOWo1KkBomG4Y0jDJyJjSizt4UyOPGhHgbAC6jd+QOgTSxQ0f3
+7kVsJqbe6oZTZLh7ux8aPTqND4YasJtnufakQk/CQIZM4WMB5jzUjNyhI3uQ
+c43N8ynUrnnns1fcIOb1CHTf96wJnxs3wr/C8FBZuEUZ7ueevqXoXKsUu0u9
+OxQE8Ks1PxnaIYwbM7l1DEIhw2t06yumNMfHLbfVY+e/Y/75OR4r11KnxxKi
+ADaF16kxW2Dq1F02K/K+MTQ75aZAj5i9NAHbjlzyD5pDXPS33ei/Iu2GKsU6
+VsHATAOE5YkozqaZLwEH/irWq1dCsR/IpBXii3F3qW+GN0/Y+xNtXX8TKU+S
+1CPXTE44+2NjW1kaUb9w+90ZqSfScxnuD1kn3tdGA+t+16Ztu6T5a1tDb/4+
+eNM3ENKb44DQKKeM3dFce7fkw+z4VAs8mktalMMru30chpnd8I7k0bWB6Knr
+AxB4jhIw/4MjnoLt8Y1Le2HFY8IGnX42N1R4LpFVrrXMeVak++FojyfzxE1f
+FUN2N1C93uBYup4DGayIeM14raEL9hUUnkmg5uedaqvzuo9lQ6nAV0X3gjVE
+KcSVf0J2rZgJ0XRx4knxEPcS0rGH9WYNzpMqqjENK26JuQAEPlTxnouKz9ZC
+khbSYQEkd6DmvwrYbmwJQeLUiD50jLVO79AUm1pcnGdYaHap+t6e5BVj2uSL
+KiBzl160F3++zr+VvTfnJi99fYioqT2mfZJao2H8SVEdKrvHi10oWdR6xeDY
+shHgloREj/qWt30=3D
+=3DcteV
+-----END PGP MESSAGE-----
+
+------sinikael-?=_1-16019144539760.06379430448642398
+Content-Type: application/pgp-keys; name=0x6A150653F1800874.asc
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=0x6A150653F1800874.asc
+Content-ID: <1edd04a2-4dd6-4f16-9bf7-96e6b2a085d1@flowcrypt>
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: FlowCrypt 1.1.1 Gmail Encryption
+Comment: Seamlessly send and receive encrypted email
+
+xsBNBFyM4vkBCACr8FvuG4MAZsz90hrZ2B+oEznArD46QUbAGrPT8JU6zz27
+SfLmTTbTA86q+DVAZC94CZ2lqJaG7KY7eqHFqJObetA8mcUk0Oo3EshphpK0
+MnNv+bHFpKf/srJgKSDmpCF+JSHeZs2WAPtrdfoTO1KPy5IZexMWdnhYZy8d
+0xUr4rPZ7i2UyrkdV3k2O9x4aG5tD1Zo/WkmlTv8z2BtAwAziqUQFxABQLu1
+fzcRkMHTMcGVXrB+73GITl03GbfeJHvFuThhofqP09o/p3Y18Zm+zVWL/T4z
+sA5P+Cp6kwnwUnQkL3Tc49a0qIJShlP4LbSbPBqFGWTHxceCkFBkMVoJABEB
+AAHNLWRlbmJvbmQ3QGRlbmJvbmQ3LmNvbSA8ZGVuYm9uZDdAZGVuYm9uZDcu
+Y29tPsLAfwQQAQgAKQUCXIzjAQYLCQcIAwIJEGoVBlPxgAh0BBUICgIDFgIB
+AhkBAhsDAh4BAAoJEGoVBlPxgAh0L2EIAJRM22lnSHhgQ+waiCf0p739L3XK
+s2eDZUkxAX+4an654wnn1OjxWrG7lls2GgN1ziKHHdGgxU4PQ8PmQrgyc6F0
+5vmYihRFaVFDQ97xF16+IvO4xiuYMuJk7ovsr5mrlI43CWE4f7GPtmJ7QYTl
+xeYW3s7KLqr0TKxqGG8f6qRjy/Q1ky3qnseR5Fp1GjIwijVI2rncfH0lOkNm
+BHj4aYugN60HNlUJbosb2vjJkz5dsqe+nY3XVKI6Iqq07I+Jvankn6jyvlMP
+8jNLxQMUsqrtBki/C6ett3z+JeP2+2Nh+mp1vDW/kO7gSgRHUEPJ9w/VVIpW
+IOTEv+Bsz3l28h7OwE0EXIzjAAEIAJKbKexaP/2HqUAj/DxOebhKqw2ddK5H
+sYacv12pHVTEVjOnLQELyroZ1ikO21UK8Z/zng9+8DlCz72SMql+/uZYpoEd
+gqMy9PU3zPDzGcAeOr07R56G08l+hUO/i3FMW4v2ZT6gLCInAJ417wSvF4wg
+6dJzfrBFkj7o2lyTOwfD87CehQozyGza1cb+yS3ZPC8oc99a1jwSqFYecDI2
+7Cgy7KWSbhSfoPcJG4KPTLDrvVn2Y+U2jxx6OiYXRai8wwlheAmIohmZNpHL
+aCQiTZTWRYPKvP0kb6aoN9O4fGhgMh3QAbc2BVwh299rToBieI/zow+I9Ocr
+ScejwQNI2VUAEQEAAcLAaQQYAQgAEwUCXIzjAgkQahUGU/GACHQCGwwACgkQ
+ahUGU/GACHSfcQf/euBJSXopDZxAVniN9HDQDga+ccwJYWZvyiDOaGSoSxW3
+QDhTOWbCH66GkZiOp9KLObHs54KzoOGaOJbQmhWGR4rwNdGSnp8oWimyyXVE
+HHhir2BmT8MZrMC3WpMPmUlY2v9CMFD7hF2OfmXd1M9fuFT41aZQVDgGSdYc
+IQchOmUv3NQUiBJyOlp1bF1RT7Yf3UjAQANyENz19fYHKd2yh9Ltv3CYVjwR
+B4crQmuESxM87IEXDVNnYOBP0F5WaSQEesFAhjk+cVjxTUfcmM04YEFhedBS
+tsV8kWF50ojYgF9te4yRM/zoNRi6SjWLSeEw/zIfvkggDvn1UfA2bGFk8Q==
+=RKQi
+-----END PGP PUBLIC KEY BLOCK-----
+
+------sinikael-?=_1-16019144539760.06379430448642398--

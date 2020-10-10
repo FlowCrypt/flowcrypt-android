@@ -327,7 +327,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
                 it.data?.apiError?.msg ?: getString(R.string.unknown_error)
               }
 
-              Result.Status.SUCCESS -> {
+              Result.Status.EXCEPTION -> {
                 it.exception?.message ?: it.exception?.javaClass?.simpleName
                 ?: getString(R.string.unknown_error)
               }

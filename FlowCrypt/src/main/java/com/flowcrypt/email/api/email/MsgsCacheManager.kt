@@ -7,13 +7,19 @@ package com.flowcrypt.email.api.email
 
 import android.content.Context
 import android.net.Uri
+import android.util.Base64
+import android.util.Base64OutputStream
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.util.ProgressOutputStream
 import com.flowcrypt.email.util.cache.DiskLruCache
+import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import okhttp3.internal.io.FileSystem
 import okio.buffer
-import okio.source
 import java.io.File
-import java.io.InputStream
+import java.io.IOException
+import javax.crypto.CipherOutputStream
+import javax.mail.internet.MimeMessage
 
 /**
  * This class describes a logic of caching massages. Here we use [DiskLruCache] to store and retrieve raw MIME messages.
@@ -33,13 +39,29 @@ object MsgsCacheManager {
     diskLruCache = DiskLruCache(FileSystem.SYSTEM, File(context.filesDir, CACHE_DIR_NAME), CACHE_VERSION, CACHE_SIZE)
   }
 
-  fun addMsg(key: String, inputStream: InputStream) {
+  fun storeMsg(key: String, msg: MimeMessage) {
     val editor = diskLruCache.edit(key) ?: return
 
-    val bufferedSink = editor.newSink(0).buffer()
-    bufferedSink.writeAll(inputStream.source())
-    bufferedSink.flush()
-    editor.commit()
+    val bufferedSink = editor.newSink().buffer()
+    val outputStreamOfBufferedSink = ProgressOutputStream(bufferedSink.outputStream())
+    val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
+    val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
+    val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
+
+    try {
+      outputStream.use {
+        outputStreamOfBufferedSink.write(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
+        outputStreamOfBufferedSink.write("\n".toByteArray())
+        msg.writeTo(it)
+        bufferedSink.flush()
+        editor.commit()
+      }
+
+      diskLruCache[key] ?: throw IOException("No space left on device")
+    } catch (e: SyncTaskTerminatedException) {
+      e.printStackTrace()
+      editor.abort()
+    }
   }
 
   fun getMsgAsByteArray(key: String): ByteArray {
@@ -47,7 +69,7 @@ object MsgsCacheManager {
   }
 
   fun getMsgAsUri(key: String): Uri? {
-    return diskLruCache[key]?.getUri(0) ?: return null
+    return diskLruCache[key]?.getUri(0)
   }
 
   fun getMsgSnapshot(key: String): DiskLruCache.Snapshot? {

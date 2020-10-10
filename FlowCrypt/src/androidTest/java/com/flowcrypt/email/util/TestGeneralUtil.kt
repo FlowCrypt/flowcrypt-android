@@ -32,6 +32,16 @@ class TestGeneralUtil {
     }
 
     @JvmStatic
+    fun readObjectFromResourcesAsByteArray(path: String): ByteArray {
+      return IOUtils.toByteArray(TestGeneralUtil::class.java.classLoader!!.getResourceAsStream(path))
+    }
+
+    @JvmStatic
+    fun readResourcesAsString(path: String): String {
+      return IOUtils.toString(TestGeneralUtil::class.java.classLoader!!.getResourceAsStream(path), StandardCharsets.UTF_8)
+    }
+
+    @JvmStatic
     fun readFileFromAssetsAsString(context: Context, filePath: String): String {
       return IOUtils.toString(context.assets.open(filePath), "UTF-8")
     }

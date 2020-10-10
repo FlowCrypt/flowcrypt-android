@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.content.Intent
 import android.widget.EditText
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.clearText
@@ -13,7 +12,6 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -21,21 +19,25 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withHint
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
+import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withRecyclerViewItemCount
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.base.BaseEmailListActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
+import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
@@ -49,29 +51,35 @@ import org.junit.runner.RunWith
  * Time: 13:59
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
+@Ignore("fail sometimes")
 class SearchMessagesActivityTest : BaseEmailListActivityTest() {
 
   private val accountRule = AddAccountToDatabaseRule(AccountDaoManager.getDefaultAccountDao().copy(areContactsLoaded = true))
 
-  override val activityTestRule: ActivityTestRule<*>? =
-      object : IntentsTestRule<SearchMessagesActivity>(SearchMessagesActivity::class.java) {
-        override fun getActivityIntent(): Intent {
-          return SearchMessagesActivity.newIntent(getTargetContext(), DEFAULT_QUERY_TEXT, LocalFolder(
-              account = accountRule.account.email,
-              fullName = FOLDER_NAME,
-              folderAlias = FOLDER_NAME))
-        }
-      }
+  override val activityScenarioRule = activityScenarioRule<SearchMessagesActivity>(
+      intent = SearchMessagesActivity.newIntent(getTargetContext(), DEFAULT_QUERY_TEXT, LocalFolder(
+          account = accountRule.account.email,
+          fullName = FOLDER_NAME,
+          folderAlias = FOLDER_NAME)))
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(accountRule)
-      .around(activityTestRule)
+      .around(RetryRule())
+      .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
+
+  @Before
+  fun waitData() {
+    // Need to improve this code after espresso updates
+    Thread.sleep(2000)
+  }
 
   @Test
+  @ReadyForCIAnnotation
   fun testDefaultSearchQueryAtStart() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
@@ -82,7 +90,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
-  @Ignore("fix me")
+  @ReadyForCIAnnotation
   fun testSearchQuery() {
     onView(withId(R.id.recyclerViewMsgs))
         .check(matches(withRecyclerViewItemCount(1))).check(matches(isDisplayed()))
@@ -97,6 +105,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testSearchOverSubjectBodyFrom() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
@@ -108,6 +117,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowNotEmptyList() {
     onView(withId(R.id.recyclerViewMsgs))
         .check(matches(isDisplayed()))
@@ -116,12 +126,14 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testOpenSomeMsg() {
     testShowNotEmptyList()
     testRunMsgDetailsActivity(0)
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testCheckNoResults() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))
@@ -133,6 +145,7 @@ class SearchMessagesActivityTest : BaseEmailListActivityTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testClearSearchView() {
     onView(allOf(withId(R.id.menuSearch), withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .check(matches(isDisplayed()))

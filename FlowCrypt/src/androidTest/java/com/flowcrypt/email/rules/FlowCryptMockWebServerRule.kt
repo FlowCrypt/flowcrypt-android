@@ -25,13 +25,49 @@ class FlowCryptMockWebServerRule(val port: Int, val responseDispatcher: Dispatch
   override fun apply(base: Statement, description: Description): Statement {
     return object : Statement() {
       override fun evaluate() {
-        server.dispatcher = responseDispatcher
-        //todo-DenBond7 need to think about this server.useHttps(SslContextBuilder.localhost()
-        // .getSocketFactory(), false);
-        server.start(port)
-        base.evaluate()
-        server.shutdown()
+        try {
+          server.dispatcher = responseDispatcher
+          /*
+          It would be great to setup SSL here
+          https://codelabs.developers.google.com/codelabs/android-network-security-config/index.html#0
+          val sslSocketFactory = getSSLSocketFactory()
+          server.useHttps(sslSocketFactory, false)*/
+          server.start(port)
+          base.evaluate()
+          server.shutdown()
+        } catch (e: Exception) {
+          e.printStackTrace()
+        }
       }
     }
   }
+
+  /**
+   * https://github.com/square/okhttp/tree/master/okhttp-tls
+   *  https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/HttpsServer.java
+   */
+  /*private fun getSSLSocketFactory(): SSLSocketFactory {
+    val keyPair = prepareKeyPairFromResources()
+    val localhost: String = InetAddress.getByName("localhost").canonicalHostName
+    val localhostCertificate = HeldCertificate.Builder()
+        .addSubjectAlternativeName(localhost)
+        .rsa2048()
+        .keyPair(keyPair)
+        .build()
+    val serverCertificates = HandshakeCertificates.Builder()
+        .heldCertificate(localhostCertificate)
+        .build()
+    return serverCertificates.sslSocketFactory()
+  }
+
+  private fun prepareKeyPairFromResources(): KeyPair {
+    val keyFactory = KeyFactory.getInstance("RSA")
+    val prvKeyRaw: ByteArray = TestGeneralUtil.readObjectFromResourcesAsByteArray("mock_web_server_private_key.der")
+    val pkcS8EncodedKeySpec = PKCS8EncodedKeySpec(prvKeyRaw)
+    val privateKey = keyFactory.generatePrivate(pkcS8EncodedKeySpec)
+    val pubKeyRaw: ByteArray = TestGeneralUtil.readObjectFromResourcesAsByteArray("mock_web_server_public_key.der")
+    val x509EncodedKeySpec = X509EncodedKeySpec(pubKeyRaw)
+    val publicKey = keyFactory.generatePublic(x509EncodedKeySpec)
+    return KeyPair(publicKey, privateKey)
+  }*/
 }
