@@ -13,34 +13,35 @@ import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasExtra
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
-import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.junit.AfterClass
+import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
@@ -55,42 +56,44 @@ import java.io.File
  * Time: 13:33
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
-  val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
 
-  override val activityTestRule: ActivityTestRule<*>? =
-      object : IntentsTestRule<ImportPrivateKeyActivity>(ImportPrivateKeyActivity::class.java) {
-        override fun getActivityIntent(): Intent {
-          return ImportPrivateKeyActivity.getIntent(context = getTargetContext(),
-              accountEntity = addAccountToDatabaseRule.account,
-              isSyncEnabled = true,
-              title = getTargetContext().getString(R.string.import_private_key),
-              throwErrorIfDuplicateFoundEnabled = true,
-              isSubmittingPubKeysEnabled = false,
-              cls = ImportPrivateKeyActivity::class.java)
-        }
-      }
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<ImportPrivateKeyActivity>(
+      intent = ImportPrivateKeyActivity.getIntent(
+          context = getTargetContext(),
+          accountEntity = addAccountToDatabaseRule.account,
+          isSyncEnabled = true,
+          title = getTargetContext().getString(R.string.import_private_key),
+          throwErrorIfDuplicateFoundEnabled = true,
+          isSubmittingPubKeysEnabled = false,
+          cls = ImportPrivateKeyActivity::class.java))
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(addAccountToDatabaseRule)
       .around(GrantPermissionRule.grant(android.Manifest.permission.READ_EXTERNAL_STORAGE))
-      .around(activityTestRule)
+      .around(RetryRule())
+      .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
+  @ReadyForCIAnnotation
   fun testImportKeyFromBackup() {
     useIntentionFromRunCheckKeysActivity()
 
     onView(withId(R.id.buttonImportBackup))
         .check(matches(isDisplayed()))
         .perform(click())
-    assertThat(activityTestRule?.activityResult, hasResultCode(Activity.RESULT_OK))
+    Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testImportKeyFromFile() {
     useIntentionToRunActivityToSelectFile(fileWithPrivateKey)
     useIntentionFromRunCheckKeysActivity()
@@ -98,21 +101,22 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
     onView(withId(R.id.buttonLoadFromFile))
         .check(matches(isDisplayed()))
         .perform(click())
-    assertThat(activityTestRule?.activityResult, hasResultCode(Activity.RESULT_OK))
+    Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowErrorWhenImportingKeyFromFile() {
     useIntentionToRunActivityToSelectFile(fileWithoutPrivateKey)
 
     onView(withId(R.id.buttonLoadFromFile))
         .check(matches(isDisplayed()))
         .perform(click())
-    isDialogWithTextDisplayed(activityTestRule?.activity, getResString(R.string
-        .file_has_wrong_pgp_structure, getResString(R.string.private_)))
+    isDialogWithTextDisplayed(decorView, getResString(R.string.file_has_wrong_pgp_structure, getResString(R.string.private_)))
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testImportKeyFromClipboard() {
     useIntentionFromRunCheckKeysActivity()
 
@@ -120,17 +124,17 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
     onView(withId(R.id.buttonLoadFromClipboard))
         .check(matches(isDisplayed()))
         .perform(click())
-    assertThat(activityTestRule?.activityResult, hasResultCode(Activity.RESULT_OK))
+    Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowErrorWhenImportKeyFromClipboard() {
     addTextToClipboard("not private key", SOME_TEXT)
     onView(withId(R.id.buttonLoadFromClipboard))
         .check(matches(isDisplayed()))
         .perform(click())
-    isDialogWithTextDisplayed(activityTestRule?.activity, getResString(R.string
-        .clipboard_has_wrong_structure, getResString(R.string.private_)))
+    isDialogWithTextDisplayed(decorView, getResString(R.string.clipboard_has_wrong_structure, getResString(R.string.private_)))
   }
 
   private fun useIntentionToRunActivityToSelectFile(file: File?) {
@@ -153,14 +157,12 @@ class ImportPrivateKeyActivityFromSettingsTest : BaseTest() {
   }
 
   companion object {
-
     private const val SOME_TEXT = "Some text"
     private lateinit var fileWithPrivateKey: File
     private lateinit var fileWithoutPrivateKey: File
     private lateinit var privateKey: String
     private var keyDetails =
         PrivateKeysManager.getNodeKeyDetailsFromAssets("node/attested_user@denbond7.com_prv_default_strong.json")
-
 
     @BeforeClass
     @JvmStatic

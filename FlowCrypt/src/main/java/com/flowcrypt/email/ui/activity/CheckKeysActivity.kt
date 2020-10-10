@@ -15,10 +15,8 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
@@ -51,9 +49,6 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   private val remainingKeys: ArrayList<NodeKeyDetails> = ArrayList()
   private var keyDetailsAndLongIdsMap: MutableMap<NodeKeyDetails, String>? = null
   private lateinit var checkPrivateKeysViewModel: CheckPrivateKeysViewModel
-
-  @VisibleForTesting
-  val idlingForKeyChecking: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   private var editTextKeyPassword: EditText? = null
   private var textViewSubTitle: TextView? = null
@@ -232,7 +227,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            idlingForKeyChecking.incrementSafely()
+            countingIdlingResource.incrementSafely()
             progressBar?.visibility = View.VISIBLE
           }
 
@@ -277,7 +272,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
               else -> {
               }
             }
-            idlingForKeyChecking.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
         }
       }

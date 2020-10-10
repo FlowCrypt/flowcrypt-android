@@ -1,19 +1,10 @@
 {
   "encryptionType": "STANDARD",
-  "localFolder": {
-    "account": "default@denbond7.com",
-    "attributes": [
-      "\\HasNoChildren"
-    ],
-    "folderAlias": "INBOX",
-    "fullName": "INBOX",
-    "isCustom": false,
-    "msgCount": 32
-  },
+  "inlineSubject": "Standard message - plane text",
   "msgBlocks": [
     {
       "complete": true,
-      "content": "\n  \u003c!DOCTYPE html\u003e\u003chtml\u003e\n    \u003chead\u003e\n      \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\" /\u003e\n      \u003cstyle\u003e\n        body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n        body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n        body pre { white-space: pre-wrap !important; }\n        body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n      \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\u003cdiv class\u003d\"MsgBlock plain\" style\u003d\"background: white;padding-left: 8px;min-height: 50px;padding-top: 4px;padding-bottom: 4px;width: 100%;border: none;\"\u003eIt\u0027s a standard message with plane text\u003c/div\u003e\u003c!-- next MsgBlock --\u003e\n\u003c/body\u003e\n  \u003c/html\u003e",
+      "content": "\n  \u003c!DOCTYPE html\u003e\u003chtml\u003e\n    \u003chead\u003e\n      \u003cmeta name\u003d\"viewport\" content\u003d\"width\u003ddevice-width\" /\u003e\n      \u003cstyle\u003e\n        body { word-wrap: break-word; word-break: break-word; hyphens: auto; margin-left: 0px; padding-left: 0px; }\n        body img { display: inline !important; height: auto !important; max-width: 95% !important; }\n        body pre { white-space: pre-wrap !important; }\n        body \u003e div.MsgBlock \u003e table { zoom: 75% } /* table layouts tend to overflow - eg emails from fb */\n      \u003c/style\u003e\n    \u003c/head\u003e\n    \u003cbody\u003e\u003cdiv class\u003d\"MsgBlock plain\" style\u003d\"background: white;padding-left: 8px;min-height: 50px;padding-top: 4px;padding-bottom: 4px;width: 100%;border: none;\"\u003e\n\n    \n  \n  \n    \u003cpre\u003eIt\u0027s a standard message with plane text\u003c/pre\u003e\u003c/div\u003e\u003c!-- next MsgBlock --\u003e\n\u003c/body\u003e\n  \u003c/html\u003e",
       "type": "plainHtml"
     }
   ],
@@ -24,22 +15,25 @@
     "folder": "INBOX",
     "from": [
       {
-        "address": "denbond7@denbond7.com"
+        "address": "denbond7@denbond7.com",
+        "encodedPersonal": "Denis Bondarenko",
+        "personal": "Denis Bondarenko"
       }
     ],
-    "fromAddress": "denbond7@denbond7.com",
+    "fromAddress": "Denis Bondarenko \u003cdenbond7@denbond7.com\u003e",
     "hasAttachments": false,
-    "id": 1,
+    "id": 50,
     "isSeen": true,
     "msgState": "NONE",
-    "receivedDate": 1552487864000,
-    "replyTo": "denbond7@denbond7.com",
+    "receivedDate": 1601886754000,
+    "replyTo": "Denis Bondarenko \u003cdenbond7@denbond7.com\u003e",
     "replyToAddress": [
       {
-        "address": "denbond7@denbond7.com"
+        "address": "denbond7@denbond7.com",
+        "encodedPersonal": "Denis Bondarenko"
       }
     ],
-    "sentDate": 1552487851000,
+    "sentDate": 1601886754000,
     "subject": "Standard message - plane text",
     "to": [
       {
@@ -47,8 +41,8 @@
       }
     ],
     "toAddress": "default@denbond7.com",
-    "uid": 235
+    "uid": 5
   },
-  "origMsgHeaders": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 5A0E3202BB\r\n\tfor \u003cdefault@denbond7.com\u003e; Wed, 13 Mar 2019 14:37:44 +0000 (UTC)\r\nX-Virus-Scanned: Debian amavisd-new at mail.denbond7.com\r\nReceived: from mail.denbond7.com ([127.0.0.1])\r\n\tby mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10024)\r\n\twith ESMTP id 8yFaVy5EzMOY for \u003cdefault@denbond7.com\u003e;\r\n\tWed, 13 Mar 2019 14:37:34 +0000 (UTC)\r\nReceived: from localhost (MiA1 [192.168.3.6])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 0311020237\r\n\tfor \u003cdefault@denbond7.com\u003e; Wed, 13 Mar 2019 14:37:33 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-15524878518580.4200041649447792\"\r\nIn-Reply-To: \u003c\u003e\r\nReferences: \u003c\u003e\r\nTo: default@denbond7.com\r\nFrom: denbond7@denbond7.com\r\nSubject: Standard message - plane text\r\nDate: Wed, 13 Mar 2019 14:37:31 +0000\r\nMessage-Id: \u003c1552487851904-2a7c154c-44a30fa2-1bb06c08@denbond7.com\u003e\r\nMIME-Version: 1.0",
+  "origMsgHeaders": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com\r\n\tby mail.denbond7.com with LMTP\r\n\tid WF4PDSLael+dCQAAZlazJA\r\n\t(envelope-from \u003cdenbond7@denbond7.com\u003e)\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon, 05 Oct 2020 08:32:34 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 347E7A20940\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon,  5 Oct 2020 08:32:34 +0000 (UTC)\r\nTo: default@denbond7.com\r\nFrom: Denis Bondarenko \u003cdenbond7@denbond7.com\u003e\r\nX-Pep-Version: 2.0\r\nMessage-ID: \u003c8fcbd0f1-e33b-9b5e-51ee-79d7c639f0bc@denbond7.com\u003e\r\nDate: Mon, 5 Oct 2020 11:32:34 +0300\r\nMime-Version: 1.0\r\nSubject: Standard message - plane text\r\nContent-Type: multipart/alternative;\r\n boundary\u003d\"------------D3F69D95534F587EC1BE35A3\"\r\nContent-Language: en-US",
   "text": "It\u0027s a standard message with plane text"
 }

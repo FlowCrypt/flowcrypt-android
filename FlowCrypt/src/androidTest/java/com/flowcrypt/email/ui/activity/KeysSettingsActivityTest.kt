@@ -12,11 +12,11 @@ import android.content.Intent
 import android.os.Environment
 import android.text.TextUtils
 import android.text.format.DateFormat
-import android.view.View
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents.intending
@@ -24,17 +24,18 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasCategories
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasType
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
+import androidx.test.filters.MediumTest
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement
-import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.CICandidateAnnotation
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.matchers.CustomMatchers.Companion.withEmptyRecyclerView
@@ -43,6 +44,8 @@ import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.PrivateKeysManager
@@ -51,6 +54,7 @@ import org.hamcrest.CoreMatchers.hasItem
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.not
 import org.hamcrest.core.AllOf.allOf
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -66,11 +70,12 @@ import java.util.concurrent.TimeUnit
  * Time: 15:42
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 class KeysSettingsActivityTest : BaseTest() {
 
-  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(KeysSettingsActivity::class.java)
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<KeysSettingsActivity>()
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
 
   @get:Rule
@@ -78,13 +83,21 @@ class KeysSettingsActivityTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule())
       .around(addPrivateKeyToDatabaseRule)
-      .around(activityTestRule)
+      .around(RetryRule())
+      .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
+
+  @Before
+  fun waitData() {
+    //todo-denbond7 need to wait while activity lunches a fragment and loads data via ROOM.
+    // Need to improve this code after espresso updates
+    Thread.sleep(3000)
+  }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testAddNewKeys() {
-    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
-    Thread.sleep(1000)
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
 
@@ -101,28 +114,25 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testKeyExists() {
-    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
-    Thread.sleep(1000)
     onView(withId(R.id.recyclerViewKeys))
-        .check(matches(not<View>(withEmptyRecyclerView()))).check(matches(isDisplayed()))
+        .check(matches(not(withEmptyRecyclerView()))).check(matches(isDisplayed()))
     onView(withId(R.id.emptyView))
-        .check(matches(not<View>(isDisplayed())))
+        .check(matches(not(isDisplayed())))
   }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowKeyDetailsScreen() {
-    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
-    Thread.sleep(1000)
     selectFirstKey()
   }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testKeyDetailsShowPubKey() {
-    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
-    Thread.sleep(1000)
     selectFirstKey()
     val keyDetails = addPrivateKeyToDatabaseRule.nodeKeyDetails
     onView(withId(R.id.btnShowPubKey))
@@ -133,34 +143,31 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testKeyDetailsCopyToClipBoard() {
-    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
-    Thread.sleep(1000)
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
     onView(withId(R.id.btnCopyToClipboard))
         .check(matches(isDisplayed()))
         .perform(click())
-    isToastDisplayed(activityTestRule?.activity, getResString(R.string.copied))
+    isToastDisplayed(decorView, getResString(R.string.copied))
     UiThreadStatement.runOnUiThread { checkClipboardText(TestGeneralUtil.replaceVersionInKey(details.publicKey)) }
   }
 
   @Test
+  @CICandidateAnnotation
   fun testKeyDetailsShowPrivateKey() {
-    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
-    Thread.sleep(1000)
     selectFirstKey()
     onView(withId(R.id.btnShowPrKey))
-        .check(matches(isDisplayed()))
+        .perform(scrollTo())
         .perform(click())
-    isToastDisplayed(activityTestRule?.activity, getResString(R.string.see_backups_to_save_your_private_keys))
+    isToastDisplayed(decorView, getResString(R.string.see_backups_to_save_your_private_keys))
   }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testKeyDetailsCheckDetails() {
-    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
-    Thread.sleep(2000)
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
     onView(withId(R.id.textViewKeyWords))
@@ -191,9 +198,8 @@ class KeysSettingsActivityTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testKeyDetailsSavePubKeyToFileWhenFileIsNotExist() {
-    //todo-denbond7 need to wait while activity lunches a fragment. Need to improve this code after espresso updates
-    Thread.sleep(1000)
     selectFirstKey()
     val details = addPrivateKeyToDatabaseRule.nodeKeyDetails
 
@@ -215,7 +221,7 @@ class KeysSettingsActivityTest : BaseTest() {
     onView(withId(R.id.btnSaveToFile))
         .check(matches(isDisplayed()))
         .perform(click())
-    isToastDisplayed(activityTestRule?.activity, getResString(R.string.saved))
+    isToastDisplayed(decorView, getResString(R.string.saved))
   }
 
   private fun selectFirstKey() {
