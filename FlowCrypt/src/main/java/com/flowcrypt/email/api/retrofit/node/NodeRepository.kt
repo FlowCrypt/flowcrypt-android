@@ -23,6 +23,7 @@ import com.flowcrypt.email.api.retrofit.response.node.GenerateKeyResult
 import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
 import com.flowcrypt.email.api.retrofit.response.node.ParseKeysResult
+import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
 import com.flowcrypt.email.model.PgpContact
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -69,6 +70,12 @@ class NodeRepository : PgpApiRepository {
         getResult(call = { apiService.generateKeySuspend(GenerateKeyRequest(passphrase, pgpContacts)) })
       }
 
+  override suspend fun zxcvbnStrengthBar(context: Context, guesses: Double): Result<ZxcvbnStrengthBarResult?> =
+      withContext(Dispatchers.IO) {
+        val apiService = NodeRetrofitHelper.getRetrofit()!!.create(NodeService::class.java)
+        getResult(call = { apiService.zxcvbnStrengthBarSuspend(ZxcvbnStrengthBarRequest(guesses)) })
+      }
+
   /**
    * It's a base method for all requests to Node.js
    *
@@ -84,7 +91,7 @@ class NodeRepository : PgpApiRepository {
   /**
    * Here we describe a logic of making requests to Node.js using [retrofit2.Retrofit]
    */
-  private class Worker internal constructor(private val liveData: MutableLiveData<NodeResponseWrapper<*>>)
+  private class Worker(private val liveData: MutableLiveData<NodeResponseWrapper<*>>)
     : AsyncTask<NodeRequestWrapper<*>, NodeResponseWrapper<*>, NodeResponseWrapper<*>>() {
 
     override fun doInBackground(vararg nodeRequestWrappers: NodeRequestWrapper<*>): NodeResponseWrapper<*> {

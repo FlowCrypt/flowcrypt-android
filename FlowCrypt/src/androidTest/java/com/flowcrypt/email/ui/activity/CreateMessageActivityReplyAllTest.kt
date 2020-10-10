@@ -5,15 +5,15 @@
 
 package com.flowcrypt.email.ui.activity
 
+import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.model.MessageEncryptionType
@@ -21,6 +21,8 @@ import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.AccountDaoManager
 import org.hamcrest.Matchers
 import org.junit.Rule
@@ -35,12 +37,12 @@ import org.junit.runner.RunWith
  *         Time: 12:30 PM
  *         E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class CreateMessageActivityReplyAllTest : BaseTest() {
-  override val activityTestRule: ActivityTestRule<*>? =
-      IntentsTestRule(CreateMessageActivity::class.java, false, false)
+  override val activeActivityRule = lazyActivityScenarioRule<CreateMessageActivity>(launchActivity = false)
+  override val activityScenario: ActivityScenario<*>?
+    get() = activeActivityRule.scenario
 
   private val account = AccountDaoManager.getDefaultAccountDao()
   private val accountAliasesEntity = AccountAliasesEntity(
@@ -56,21 +58,25 @@ class CreateMessageActivityReplyAllTest : BaseTest() {
       .outerRule(ClearAppSettingsRule())
       .around(AddAccountToDatabaseRule(account))
       .around(AddPrivateKeyToDatabaseRule())
-      .around(activityTestRule)
+      .around(activeActivityRule)
+      .around(ScreenshotTestRule())
 
   @Test
+  @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testReplyAllUsingGmailAlias() {
     val msgInfo = getMsgInfo("messages/info/standard_msg_reply_all_via_gmail_alias.json",
         "messages/mime/standard_msg_reply_to_header.txt")
 
     roomDatabase.accountAliasesDao().insert(accountAliasesEntity)
 
-    activityTestRule?.launchActivity(CreateMessageActivity.generateIntent(
+    activeActivityRule.launch(CreateMessageActivity.generateIntent(
         getTargetContext(),
         msgInfo,
         MessageType.REPLY_ALL,
         MessageEncryptionType.STANDARD))
-    registerNodeIdling()
+
+    registerAllIdlingResources()
 
     Espresso.onView(ViewMatchers.withId(R.id.editTextRecipientCc))
         .check(ViewAssertions.matches(Matchers.not(ViewMatchers.isDisplayed())))

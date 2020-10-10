@@ -5,27 +5,27 @@
 
 package com.flowcrypt.email.base
 
-import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.text.Html
+import android.view.View
 import android.widget.Toast
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
+import androidx.test.espresso.IdlingResource
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.ActivityResultMatchers.hasResultCode
+import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.matcher.RootMatchers.withDecorView
-import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement.runOnUiThread
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.ActivityTestRule
+import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
@@ -42,6 +42,10 @@ import org.hamcrest.Matchers.not
 import org.junit.After
 import org.junit.Before
 import org.junit.runner.RunWith
+import java.io.InputStream
+import java.util.*
+import javax.mail.Session
+import javax.mail.internet.MimeMessage
 
 /**
  * The base test implementation.
@@ -52,71 +56,100 @@ import org.junit.runner.RunWith
  * E-mail: DenBond7@gmail.com
  */
 @RunWith(AndroidJUnit4::class)
-abstract class BaseTest {
-
-  abstract val activityTestRule: ActivityTestRule<*>?
+abstract class BaseTest : BaseActivityTestImplementation {
   val roomDatabase: FlowCryptRoomDatabase = FlowCryptRoomDatabase.getDatabase(getTargetContext())
+  private var countingIdlingResource: IdlingResource? = null
+  private var nodeIdlingResource: IdlingResource? = null
+  var syncServiceCountingIdlingResource: IdlingResource? = null
+  private var isIntentsInitialized = false
+
+  protected var decorView: View? = null
+
+  @Before
+  fun initDecorView() {
+    activityScenario?.onActivity {
+      decorView = it.window.decorView
+    }
+  }
 
   @Before
   open fun registerNodeIdling() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is BaseActivity) {
-      IdlingRegistry.getInstance().register(activity.nodeIdlingResource)
+    activityScenario?.onActivity { activity ->
+      val baseActivity = (activity as? BaseActivity) ?: return@onActivity
+      nodeIdlingResource = baseActivity.nodeIdlingResource
+      nodeIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
     }
   }
 
   @After
   open fun unregisterNodeIdling() {
-    val activity = activityTestRule?.activity ?: return
-    if (activity is BaseActivity) {
-      IdlingRegistry.getInstance().unregister(activity.nodeIdlingResource)
-    }
+    nodeIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
   @Before
   fun registerSyncServiceCountingIdlingResource() {
-    (activityTestRule?.activity as? BaseSyncActivity)?.syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+    activityScenario?.onActivity { activity ->
+      val baseSyncActivity = (activity as? BaseSyncActivity) ?: return@onActivity
+      syncServiceCountingIdlingResource = baseSyncActivity.syncServiceCountingIdlingResource
+      syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+    }
   }
 
   @After
   fun unregisterSyncServiceCountingIdlingResource() {
-    (activityTestRule?.activity as? BaseSyncActivity)?.syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+    syncServiceCountingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
   }
 
   @Before
   fun registerCountingIdlingResource() {
-    (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+    activityScenario?.onActivity { activity ->
+      val baseActivity = (activity as? BaseActivity) ?: return@onActivity
+      countingIdlingResource = baseActivity.countingIdlingResource
+      countingIdlingResource?.let { IdlingRegistry.getInstance().register(it) }
+    }
   }
 
   @After
   fun unregisterCountingIdlingResource() {
-    (activityTestRule?.activity as? BaseActivity)?.countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+    countingIdlingResource?.let { IdlingRegistry.getInstance().unregister(it) }
+  }
+
+  @Before
+  fun intentsInit() {
+    if (useIntents) {
+      Intents.init()
+      isIntentsInitialized = true
+    }
+  }
+
+  @After
+  fun intentsRelease() {
+    if (useIntents && isIntentsInitialized) {
+      Intents.release()
+      isIntentsInitialized = false
+    }
   }
 
   /**
    * Check is [Toast] displayed. This method can be used only with activity. It doesn't work if a toast is displayed
    * when some toast is displayed.
    *
-   * @param activity A root [Activity]
    * @param message  A message which was displayed.
    */
-  protected fun isToastDisplayed(activity: Activity?, message: String) {
+  protected fun isToastDisplayed(decorView: View?, message: String) {
     onView(withText(message))
-        .inRoot(withDecorView(not(`is`(activity?.window?.decorView))))
+        .inRoot(withDecorView(not(`is`(decorView))))
         .check(matches(isDisplayed()))
   }
 
   /**
-   * Check is [android.app.Dialog] displayed. This method can be used only with activity. It doesn't work if a
-   * dialog is displayed
-   * when some toast is displayed.
+   * Check is [android.app.Dialog] displayed. This method can be used only with activity.
    *
-   * @param activity A root [Activity]
    * @param message  A message which was displayed.
    */
-  protected fun isDialogWithTextDisplayed(activity: Activity?, message: String) {
+  protected fun isDialogWithTextDisplayed(decorView: View?, message: String) {
     onView(withText(message))
-        .inRoot(withDecorView(not(`is`(activity?.window?.decorView))))
+        .inRoot(withDecorView(not(`is`(decorView))))
         .check(matches(isDisplayed()))
   }
 
@@ -125,7 +158,7 @@ abstract class BaseTest {
    */
   //todo-denbond7 - fix me
   protected fun testHelpScreen() {
-    /*onView(withId(R.id.menuActionHelp))
+    onView(withId(R.id.menuActionHelp))
         .check(matches(isDisplayed()))
         .perform(click())
 
@@ -134,7 +167,7 @@ abstract class BaseTest {
         .check(matches(withText(R.string.i_will_usually_reply_within_an_hour_except_when_i_sleep_tom)))
 
     onView(withText(R.string.help_feedback_or_question))
-        .check(matches(isDisplayed()))*/
+        .check(matches(isDisplayed()))
   }
 
   /**
@@ -204,13 +237,6 @@ abstract class BaseTest {
     return Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY).toString()
   }
 
-  protected fun assertResultAfterFinish(resultCode: Int) {
-    //todo-denbond7 need to improve this one in the future when we have a better approach. Maybe
-    // https://github.com/Kotlin/kotlinx.coroutines/issues/242 will resolve this
-    Thread.sleep(2000)
-    ViewMatchers.assertThat(activityTestRule?.activityResult, hasResultCode(resultCode))
-  }
-
   fun getTargetContext(): Context {
     return InstrumentationRegistry.getInstrumentation().targetContext
   }
@@ -231,8 +257,19 @@ abstract class BaseTest {
 
       roomDatabase.attachmentDao().insert(attEntities)
 
-      MsgsCacheManager.addMsg(uri.toString(), getContext().assets.open(mimeMsgPath))
+      addMsgToCache(uri.toString(), getContext().assets.open(mimeMsgPath))
     }
     return incomingMsgInfo
+  }
+
+  fun registerAllIdlingResources() {
+    registerCountingIdlingResource()
+    registerNodeIdling()
+    registerSyncServiceCountingIdlingResource()
+    initDecorView()
+  }
+
+  private fun addMsgToCache(key: String, inputStream: InputStream) {
+    MsgsCacheManager.storeMsg(key, MimeMessage(Session.getInstance(Properties()), inputStream))
   }
 }

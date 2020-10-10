@@ -1091,7 +1091,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
 
     showAtts()
-    baseActivity.countingIdlingResource.decrementSafely()
+    hostActivity?.countingIdlingResource?.decrementSafely("showContent")
   }
 
   /**
@@ -1476,7 +1476,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
   private fun setupAccountAliasesViewModel() {
     accountAliasesViewModel.fetchUpdates(viewLifecycleOwner)
-    baseActivity.countingIdlingResource.incrementSafely()
+    hostActivity?.countingIdlingResource?.incrementSafely()
     accountAliasesViewModel.accountAliasesLiveData.observe(viewLifecycleOwner, {
       val aliases = ArrayList<String>()
       accountAliasesViewModel.activeAccountLiveData.value?.let { accountEntity ->
@@ -1550,7 +1550,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     contactsViewModel.contactsToLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
-          hostActivity?.fetchInfoAboutContactsIdlingResource?.incrementSafely()
+          hostActivity?.countingIdlingResource?.incrementSafely()
           pgpContactsTo?.clear()
           progressBarTo?.visibility = View.VISIBLE
           isUpdateToCompleted = false
@@ -1564,14 +1564,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           if (pgpContactsTo?.isNotEmpty() == true) {
             updateChips(recipientsTo, pgpContactsTo)
           }
-          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
+          hostActivity?.countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           isUpdateToCompleted = true
           progressBarTo?.visibility = View.INVISIBLE
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
-          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
+          hostActivity?.countingIdlingResource?.decrementSafely()
         }
       }
     })
@@ -1581,7 +1581,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     contactsViewModel.contactsCcLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
-          hostActivity?.fetchInfoAboutContactsIdlingResource?.incrementSafely()
+          hostActivity?.countingIdlingResource?.incrementSafely()
           pgpContactsCc?.clear()
           progressBarCc?.visibility = View.VISIBLE
           isUpdateCcCompleted = false
@@ -1595,14 +1595,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           if (pgpContactsCc?.isNotEmpty() == true) {
             updateChips(recipientsCc, pgpContactsCc)
           }
-          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
+          hostActivity?.countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           isUpdateCcCompleted = true
           progressBarCc?.visibility = View.INVISIBLE
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
-          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
+          hostActivity?.countingIdlingResource?.decrementSafely()
         }
       }
     })
@@ -1612,7 +1612,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     contactsViewModel.contactsBccLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
-          hostActivity?.fetchInfoAboutContactsIdlingResource?.incrementSafely()
+          hostActivity?.countingIdlingResource?.incrementSafely()
           pgpContactsBcc?.clear()
           progressBarBcc?.visibility = View.VISIBLE
           isUpdateBccCompleted = false
@@ -1626,14 +1626,14 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
           if (pgpContactsBcc?.isNotEmpty() == true) {
             updateChips(recipientsBcc, pgpContactsBcc)
           }
-          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
+          hostActivity?.countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
           isUpdateBccCompleted = true
           progressBarBcc?.visibility = View.INVISIBLE
           showInfoSnackbar(view, it.exception?.message ?: getString(R.string.unknown_error))
-          hostActivity?.fetchInfoAboutContactsIdlingResource?.decrementSafely()
+          hostActivity?.countingIdlingResource?.decrementSafely()
         }
       }
     })

@@ -12,7 +12,6 @@ import android.view.View
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
@@ -57,8 +56,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
   private lateinit var decryptMsgViewModel: DecryptMessageViewModel
   private lateinit var label: String
 
-  var idlingForDecryption: CountingIdlingResource? = null
-    private set
   val idlingForWebView: SingleIdlingResources = SingleIdlingResources(false)
 
   private var isReceiveMsgBodyNeeded: Boolean = false
@@ -78,10 +75,6 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
     initMsgDetailsViewModel()
     super.onCreate(savedInstanceState)
     setupDecryptMessageViewModel()
-
-    idlingForDecryption = CountingIdlingResource(
-        GeneralUtil.genIdlingResourcesName(MessageDetailsActivity::class.java), GeneralUtil.isDebugBuild())
-
     updateViews()
   }
 
@@ -169,7 +162,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
   }
 
   fun decryptMsg() {
-    idlingForDecryption?.incrementSafely()
+    countingIdlingResource.incrementSafely()
     onProgressReplyReceived(R.id.syns_request_code_load_raw_mime_msg, R.id.progress_id_processing, 65)
     when {
       rawMimeBytesOfOutgoingMsg?.isNotEmpty() == true -> rawMimeBytesOfOutgoingMsg?.let { decryptMsgViewModel.decryptMessage(it) }
@@ -298,7 +291,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
         }
       }
     })
-    msgDetailsViewModel.msgStatesLiveData.observe(this, Observer {
+    msgDetailsViewModel.msgStatesLiveData.observe(this, {
       var finishActivity = true
       when (it) {
         MessageState.PENDING_ARCHIVING -> archiveMsgs()
@@ -396,7 +389,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
           val result = it.data
           if (result == null) {
             Toast.makeText(this, getString(R.string.internal_api_error), Toast.LENGTH_LONG).show()
-            idlingForDecryption?.decrementSafely()
+            countingIdlingResource.decrementSafely()
           } else {
             val msgInfo = IncomingMessageInfo(messageEntity, result.text,
                 result.subject, result.msgBlocks!!, decryptMsgViewModel.headersLiveData.value, result.getMsgEncryptionType())
@@ -405,7 +398,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
 
             fragment?.showIncomingMsgInfo(msgInfo)
 
-            idlingForDecryption?.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
         }
 
@@ -413,13 +406,13 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
           idlingForWebView.setIdleState(true)
           updateActionProgressState(100, null)
           showErrorInfo(it.data?.apiError, null)
-          idlingForDecryption?.decrementSafely()
+          countingIdlingResource.decrementSafely()
           ExceptionUtil.handleError(ManualHandledException("" + it.data?.apiError))
         }
 
         Result.Status.EXCEPTION -> {
           if (it.exception is CorruptedMsgInCacheException) {
-            idlingForDecryption?.decrementSafely()
+            countingIdlingResource.decrementSafely()
             isRetrieveIncomingMsgNeeded = true
             isReceiveMsgBodyNeeded = true
             msgSnapshot = null
@@ -428,7 +421,7 @@ class MessageDetailsActivity : BaseBackStackSyncActivity(), MessageDetailsFragme
             idlingForWebView.setIdleState(true)
             updateActionProgressState(100, null)
             showErrorInfo(null, it.exception)
-            idlingForDecryption?.decrementSafely()
+            countingIdlingResource.decrementSafely()
             ExceptionUtil.handleError(it.exception)
           }
         }

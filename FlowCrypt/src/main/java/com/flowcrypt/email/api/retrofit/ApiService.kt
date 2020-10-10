@@ -10,15 +10,11 @@ import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.request.model.LoginModel
 import com.flowcrypt.email.api.retrofit.request.model.PostHelpFeedbackModel
-import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailModel
-import com.flowcrypt.email.api.retrofit.request.model.PostLookUpEmailsModel
 import com.flowcrypt.email.api.retrofit.request.model.TestWelcomeModel
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.api.LoginResponse
 import com.flowcrypt.email.api.retrofit.response.api.PostHelpFeedbackResponse
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailResponse
-import com.flowcrypt.email.api.retrofit.response.attester.LookUpEmailsResponse
 import com.flowcrypt.email.api.retrofit.response.attester.TestWelcomeResponse
 import com.flowcrypt.email.api.retrofit.response.oauth2.MicrosoftOAuth2TokenResponse
 import com.google.gson.JsonObject
@@ -42,25 +38,6 @@ import retrofit2.http.Url
  * E-mail: DenBond7@gmail.com
  */
 interface ApiService {
-
-  /**
-   * This method create a [Call] object for the API "https://flowcrypt.com/attester/lookup/email"
-   *
-   * @param body POJO model for requests
-   * @return [<]
-   */
-  @POST("lookup/email")
-  suspend fun postLookUpEmail(@Body body: PostLookUpEmailModel): Response<LookUpEmailResponse>
-
-  /**
-   * This method create a [Call] object for the API "https://flowcrypt.com/attester/lookup/email"
-   *
-   * @param body POJO model for requests
-   * @return [<]
-   */
-  @POST("lookup/email")
-  suspend fun postLookUpEmails(@Body body: PostLookUpEmailsModel): Response<LookUpEmailsResponse>
-
   /**
    * This method create a [Call] object for the API "https://flowcrypt.com/attester/initial/legacy_submit"
    *

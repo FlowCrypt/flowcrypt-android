@@ -1,15 +1,6 @@
 {
   "encryptionType": "ENCRYPTED",
-  "localFolder": {
-    "account": "default@denbond7.com",
-    "attributes": [
-      "\\HasNoChildren"
-    ],
-    "folderAlias": "INBOX",
-    "fullName": "INBOX",
-    "isCustom": false,
-    "msgCount": 32
-  },
+  "inlineSubject": "Simple encrypted message + attachment",
   "msgBlocks": [
     {
       "complete": true,
@@ -29,17 +20,17 @@
     ],
     "fromAddress": "denbond7@denbond7.com",
     "hasAttachments": true,
-    "id": 5,
+    "id": 13,
     "isSeen": true,
     "msgState": "NONE",
-    "receivedDate": 1552664422000,
+    "receivedDate": 1601916126000,
     "replyTo": "denbond7@denbond7.com",
     "replyToAddress": [
       {
         "address": "denbond7@denbond7.com"
       }
     ],
-    "sentDate": 1552664408000,
+    "sentDate": 1601916122000,
     "subject": "Simple encrypted message + attachment",
     "to": [
       {
@@ -47,9 +38,9 @@
       }
     ],
     "toAddress": "default@denbond7.com",
-    "uid": 240,
+    "uid": 16,
     "isEncrypted": true
   },
-  "origMsgHeaders": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 0AE13202F1\r\n\tfor \u003cdefault@denbond7.com\u003e; Fri, 15 Mar 2019 15:40:22 +0000 (UTC)\r\nX-Virus-Scanned: Debian amavisd-new at mail.denbond7.com\r\nReceived: from mail.denbond7.com ([127.0.0.1])\r\n\tby mail.denbond7.com (mail.denbond7.com [127.0.0.1]) (amavisd-new, port 10024)\r\n\twith ESMTP id FM0rJZZYGPdf for \u003cdefault@denbond7.com\u003e;\r\n\tFri, 15 Mar 2019 15:40:10 +0000 (UTC)\r\nReceived: from localhost (MiA1 [192.168.3.6])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id B208820289\r\n\tfor \u003cdefault@denbond7.com\u003e; Fri, 15 Mar 2019 15:40:10 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-15526644086300.027439726890662097\"\r\nIn-Reply-To: \u003c\u003e\r\nReferences: \u003c\u003e\r\nTo: default@denbond7.com\r\nFrom: denbond7@denbond7.com\r\nSubject: Simple encrypted message + attachment\r\nDate: Fri, 15 Mar 2019 15:40:08 +0000\r\nMessage-Id: \u003c173149268.0.1552664411605@localhost\u003e\r\nMIME-Version: 1.0",
+  "origMsgHeaders": "Return-Path: \u003cdenbond7@denbond7.com\u003e\r\nDelivered-To: default@denbond7.com\r\nReceived: from mail.denbond7.com\r\n\tby mail.denbond7.com with LMTP\r\n\tid ikG/At5Me18qMwAAZlazJA\r\n\t(envelope-from \u003cdenbond7@denbond7.com\u003e)\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon, 05 Oct 2020 16:42:06 +0000\r\nReceived: from localhost (localhost [127.0.0.1])\r\n\tby mail.denbond7.com (Postfix) with ESMTP id 07D31B2059C\r\n\tfor \u003cdefault@denbond7.com\u003e; Mon,  5 Oct 2020 16:42:06 +0000 (UTC)\r\nContent-Type: multipart/mixed;\r\n boundary\u003d\"----sinikael-?\u003d_1-16019161228990.7993583926722323\"\r\nTo: default@denbond7.com\r\nFrom: denbond7@denbond7.com\r\nSubject: Simple encrypted message + attachment\r\nDate: Mon, 05 Oct 2020 16:42:02 +0000\r\nMessage-Id: \u003c225523742.0.1601916125224@localhost\u003e\r\nMime-Version: 1.0",
   "text": "It\u0027s an encrypted message with one encrypted attachment."
 }

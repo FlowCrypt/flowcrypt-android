@@ -1,0 +1,8 @@
+{
+  "saved": false,
+  "error": {
+    "code": 400,
+    "message": "Could not find LDAP pubkey on a LDAP-only domain for email no.pub@org-rules-test.flowcrypt.com on server keys.flowcrypt.com",
+    "internal": null
+  }
+}

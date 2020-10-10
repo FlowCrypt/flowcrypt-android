@@ -21,24 +21,26 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
+import androidx.test.filters.MediumTest
 import androidx.test.internal.runner.junit4.statement.UiThreadStatement
-import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddContactsToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -46,10 +48,9 @@ import org.hamcrest.CoreMatchers
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
-import org.hamcrest.Matchers.not
 import org.hamcrest.core.AllOf
 import org.junit.AfterClass
-import org.junit.Ignore
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -65,11 +66,11 @@ import java.util.concurrent.TimeUnit
  *         Time: 1:32 PM
  *         E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 class PublicKeyDetailsFragmentTest : BaseTest() {
-
-  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(ContactsSettingsActivity::class.java)
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<ContactsSettingsActivity>()
 
   private val keyDetails = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/denbond7@denbond7.com_pub.json")
 
@@ -79,10 +80,20 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
       .around(AddAccountToDatabaseRule())
       .around(AddContactsToDatabaseRule(listOf(PgpContact(EMAIL_DENBOND7, USER_DENBOND7,
           keyDetails.publicKey, true, null, null, null, null, 0))))
-      .around(activityTestRule)
+      .around(RetryRule())
+      .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
+
+  @Before
+  fun waitData() {
+    //todo-denbond7 need to wait while activity lunches a fragment and loads data via ROOM.
+    // Need to improve this code after espresso updates
+    Thread.sleep(1000)
+  }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testPubKeyDetails() {
     chooseContact()
 
@@ -109,13 +120,14 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testActionCopy() {
     chooseContact()
 
     onView(withId(R.id.menuActionCopy))
         .check(matches(isDisplayed()))
         .perform(click())
-    isToastDisplayed(activityTestRule?.activity, getResString(R.string.public_key_copied_to_clipboard))
+    isToastDisplayed(decorView, getResString(R.string.public_key_copied_to_clipboard))
     UiThreadStatement.runOnUiThread {
       checkClipboardText(TestGeneralUtil.replaceVersionInKey(keyDetails.publicKey))
     }
@@ -123,6 +135,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testActionSave() {
     chooseContact()
 
@@ -148,11 +161,12 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-    isToastDisplayed(activityTestRule?.activity, getResString(R.string.saved))
+    isToastDisplayed(decorView, getResString(R.string.saved))
   }
 
   @Test
-  @Ignore("fix me")
+  @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testActionDelete() {
     chooseContact()
 
@@ -161,14 +175,13 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
         .check(matches(isDisplayed()))
         .perform(click())
 
-    onView(withText(EMAIL_DENBOND7)).check(matches(not(isDisplayed())))
-
     onView(withText(R.string.no_results))
         .check(matches(isDisplayed()))
   }
 
   @Test
   @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testActionHelp() {
     testHelpScreen()
   }
@@ -200,6 +213,7 @@ class PublicKeyDetailsFragmentTest : BaseTest() {
     private const val USER_DENBOND7 = "DenBond7"
 
     @AfterClass
+    @JvmStatic
     fun removeContactFromDatabase() {
       val dao = FlowCryptRoomDatabase.getDatabase(ApplicationProvider.getApplicationContext()).contactsDao()
       dao.getContactByEmail(EMAIL_DENBOND7)?.let { dao.delete(it) }
