@@ -17,15 +17,15 @@ import com.flowcrypt.email.util.LogsUtil
  */
 fun CountingIdlingResource.incrementSafely(msg: String = "") {
   if (GeneralUtil.isDebugBuild()) {
-    increment()
     LogsUtil.d("CountingIdlingResource", "$this:incrementSafely: $msg")
+    increment()
   }
 }
 
 fun CountingIdlingResource.decrementSafely(msg: String = "") {
   if (GeneralUtil.isDebugBuild() && !isIdleNow) {
-    decrement()
     LogsUtil.d("CountingIdlingResource", "$this:decrementSafely: $msg")
+    decrement()
   }
 }
 

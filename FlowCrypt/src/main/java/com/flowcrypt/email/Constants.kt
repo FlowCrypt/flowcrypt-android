@@ -20,6 +20,11 @@ class Constants {
     const val FLOWCRYPT_PRIVACY_URL = "https://flowcrypt.com/privacy"
     const val FLOWCRYPT_TERMS_URL = "https://flowcrypt.com/terms"
 
+    /*
+    https://developer.android.com/studio/run/emulator-networking
+     */
+    const val HOST_MACHINE_IP = "10.0.2.2"
+
     /**
      * The authority of a [FileProvider] defined in a `<provider>` element in the app's
      * manifest.

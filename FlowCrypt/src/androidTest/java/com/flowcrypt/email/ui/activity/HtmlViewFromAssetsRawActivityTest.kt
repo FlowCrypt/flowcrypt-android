@@ -6,6 +6,7 @@
 package com.flowcrypt.email.ui.activity
 
 import android.content.Intent
+import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
@@ -13,13 +14,15 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
+import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.ActivityTestRule
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import org.hamcrest.Matchers.allOf
 import org.junit.Rule
 import org.junit.Test
@@ -33,19 +36,22 @@ import org.junit.runner.RunWith
  * Time: 14:56
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
 @DoesNotNeedMailserver
 class HtmlViewFromAssetsRawActivityTest : BaseTest() {
-  override val activityTestRule: ActivityTestRule<*>? = ActivityTestRule(HtmlViewFromAssetsRawActivity::class.java,
-      false, false)
+  override val activeActivityRule = lazyActivityScenarioRule<HtmlViewFromAssetsRawActivity>(launchActivity = false)
+  override val activityScenario: ActivityScenario<*>?
+    get() = activeActivityRule.scenario
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(activityTestRule)
+      .around(activeActivityRule)
+      .around(ScreenshotTestRule())
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowPrivacyTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.privacy))
     onView(allOf(withText(R.string.privacy), withParent(withId(R.id.toolbar))))
@@ -53,6 +59,7 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowTermsTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.terms))
     onView(allOf(withText(R.string.terms), withParent(withId(R.id.toolbar))))
@@ -60,6 +67,7 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testShowSecurityTitle() {
     startActivity(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.security))
     onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar))))
@@ -71,9 +79,8 @@ class HtmlViewFromAssetsRawActivityTest : BaseTest() {
     val intent = Intent(targetContext, HtmlViewFromAssetsRawActivity::class.java)
     intent.putExtra(HtmlViewFromAssetsRawActivity.EXTRA_KEY_ACTIVITY_TITLE, title)
     intent.putExtra(HtmlViewFromAssetsRawActivity.EXTRA_KEY_HTML_RESOURCES_ID, "html/privacy.htm")
-    activityTestRule?.launchActivity(intent)
-    registerNodeIdling()
-    registerCountingIdlingResource()
+    activeActivityRule.launch(intent)
+    registerAllIdlingResources()
   }
 }
 

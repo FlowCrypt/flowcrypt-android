@@ -1,0 +1,78 @@
+To: default@denbond7.com
+From: Denis Bondarenko <denbond7@denbond7.com>
+Subject: Honor reply-to address
+Autocrypt: addr=denbond7@denbond7.com; keydata=
+ mQENBFyM4vkBCACr8FvuG4MAZsz90hrZ2B+oEznArD46QUbAGrPT8JU6zz27SfLmTTbTA86q
+ +DVAZC94CZ2lqJaG7KY7eqHFqJObetA8mcUk0Oo3EshphpK0MnNv+bHFpKf/srJgKSDmpCF+
+ JSHeZs2WAPtrdfoTO1KPy5IZexMWdnhYZy8d0xUr4rPZ7i2UyrkdV3k2O9x4aG5tD1Zo/Wkm
+ lTv8z2BtAwAziqUQFxABQLu1fzcRkMHTMcGVXrB+73GITl03GbfeJHvFuThhofqP09o/p3Y1
+ 8Zm+zVWL/T4zsA5P+Cp6kwnwUnQkL3Tc49a0qIJShlP4LbSbPBqFGWTHxceCkFBkMVoJABEB
+ AAG0LWRlbmJvbmQ3QGRlbmJvbmQ3LmNvbSA8ZGVuYm9uZDdAZGVuYm9uZDcuY29tPokBPwQQ
+ AQgAKQUCXIzjAQYLCQcIAwIJEGoVBlPxgAh0BBUICgIDFgIBAhkBAhsDAh4BAAoJEGoVBlPx
+ gAh0L2EIAJRM22lnSHhgQ+waiCf0p739L3XKs2eDZUkxAX+4an654wnn1OjxWrG7lls2GgN1
+ ziKHHdGgxU4PQ8PmQrgyc6F05vmYihRFaVFDQ97xF16+IvO4xiuYMuJk7ovsr5mrlI43CWE4
+ f7GPtmJ7QYTlxeYW3s7KLqr0TKxqGG8f6qRjy/Q1ky3qnseR5Fp1GjIwijVI2rncfH0lOkNm
+ BHj4aYugN60HNlUJbosb2vjJkz5dsqe+nY3XVKI6Iqq07I+Jvankn6jyvlMP8jNLxQMUsqrt
+ Bki/C6ett3z+JeP2+2Nh+mp1vDW/kO7gSgRHUEPJ9w/VVIpWIOTEv+Bsz3l28h65AQ0EXIzj
+ AAEIAJKbKexaP/2HqUAj/DxOebhKqw2ddK5HsYacv12pHVTEVjOnLQELyroZ1ikO21UK8Z/z
+ ng9+8DlCz72SMql+/uZYpoEdgqMy9PU3zPDzGcAeOr07R56G08l+hUO/i3FMW4v2ZT6gLCIn
+ AJ417wSvF4wg6dJzfrBFkj7o2lyTOwfD87CehQozyGza1cb+yS3ZPC8oc99a1jwSqFYecDI2
+ 7Cgy7KWSbhSfoPcJG4KPTLDrvVn2Y+U2jxx6OiYXRai8wwlheAmIohmZNpHLaCQiTZTWRYPK
+ vP0kb6aoN9O4fGhgMh3QAbc2BVwh299rToBieI/zow+I9OcrScejwQNI2VUAEQEAAYkBKQQY
+ AQgAEwUCXIzjAgkQahUGU/GACHQCGwwACgkQahUGU/GACHSfcQf/euBJSXopDZxAVniN9HDQ
+ Dga+ccwJYWZvyiDOaGSoSxW3QDhTOWbCH66GkZiOp9KLObHs54KzoOGaOJbQmhWGR4rwNdGS
+ np8oWimyyXVEHHhir2BmT8MZrMC3WpMPmUlY2v9CMFD7hF2OfmXd1M9fuFT41aZQVDgGSdYc
+ IQchOmUv3NQUiBJyOlp1bF1RT7Yf3UjAQANyENz19fYHKd2yh9Ltv3CYVjwRB4crQmuESxM8
+ 7IEXDVNnYOBP0F5WaSQEesFAhjk+cVjxTUfcmM04YEFhedBStsV8kWF50ojYgF9te4yRM/zo
+ NRi6SjWLSeEw/zIfvkggDvn1UfA2bGFk8Q==
+Message-ID: <a671e60b-df43-33f2-df2d-06a2a2c0d85c@denbond7.com>
+Date: Tue, 6 Oct 2020 13:46:50 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="------------3162066D99E9CF8B6594119F"
+Content-Language: en-US
+
+This is a multi-part message in MIME format.
+--------------3162066D99E9CF8B6594119F
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Some message with some text. See details
+here https://github.com/FlowCrypt/flowcrypt-android/issues/602
+
+
+--------------3162066D99E9CF8B6594119F
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <p><span style="color: rgb(51, 51, 51); font-family: monospace;
+        font-size: 12px; font-style: normal; font-variant-ligatures:
+        normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; orphans: 2; text-align: start;
+        text-indent: 0px; text-transform: none; white-space: normal;
+        widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px;
+        background-color: rgb(255, 255, 255); text-decoration-style:
+        initial; text-decoration-color: initial; display: inline
+        !important; float: none;">Some message with some text. See
+        details here<span> </span></span><a rel="noreferrer"
+        target="_blank"
+        href="https://github.com/FlowCrypt/flowcrypt-android/issues/602"
+        style="color: rgb(1, 134, 186); font-family: monospace;
+        font-size: 12px; font-style: normal; font-variant-ligatures:
+        normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; orphans: 2; text-align: start;
+        text-indent: 0px; text-transform: none; white-space: normal;
+        widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px;
+        background-color: rgb(255, 255, 255);">https://github.com/FlowCrypt/flowcrypt-android/issues/602</a></p>
+  </body>
+</html>
+
+--------------3162066D99E9CF8B6594119F--

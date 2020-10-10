@@ -32,7 +32,7 @@ abstract class BaseSignActivityTest : BaseTest() {
     val intent = Intent()
     intent.putExtra("googleSignInAccount", GoogleSignInAccount.zaa(signInAccountJson))
 
-    val signInIntent = GoogleSignIn.getClient(activityTestRule?.activity!!,
+    val signInIntent = GoogleSignIn.getClient(getTargetContext(),
         GoogleApiClientHelper.generateGoogleSignInOptions()).signInIntent
 
     Intents.intending(IntentMatchers.hasComponent(signInIntent.component))

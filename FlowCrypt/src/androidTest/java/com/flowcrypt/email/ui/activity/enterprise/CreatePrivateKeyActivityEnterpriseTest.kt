@@ -14,18 +14,23 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
+import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.ActivityTestRule
-import com.flowcrypt.email.DoesNotNeedMailserverEnterprise
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
+import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.api.retrofit.ApiHelper
 import com.flowcrypt.email.api.retrofit.request.model.InitialLegacySubmitModel
 import com.flowcrypt.email.api.retrofit.response.attester.InitialLegacySubmitResponse
 import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
+import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
+import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.CreatePrivateKeyActivity
 import com.flowcrypt.email.ui.activity.base.BasePassphraseActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
@@ -33,7 +38,6 @@ import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.RecordedRequest
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -47,28 +51,26 @@ import java.io.InputStreamReader
  *         Time: 12:18 PM
  *         E-mail: DenBond7@gmail.com
  */
-@LargeTest
-@DoesNotNeedMailserverEnterprise
+@MediumTest
+@DoesNotNeedMailserver
 @RunWith(AndroidJUnit4::class)
-@Ignore("Need to think how to run")
 class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
-  override val activityTestRule: ActivityTestRule<*>? =
-      object : ActivityTestRule<CreatePrivateKeyActivity>(CreatePrivateKeyActivity::class.java) {
-        override fun getActivityIntent(): Intent {
-          val result = Intent(getTargetContext(), CreatePrivateKeyActivity::class.java)
-          result.putExtra(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT, AccountDaoManager
-              .getAccountDao("enterprise_account_enforce_attester_submit.json")
-              .copy(email = EMAIL_ENFORCE_ATTESTER_SUBMIT))
-          return result
-        }
-      }
+  override val activityScenarioRule = activityScenarioRule<CreateOrImportKeyActivity>(
+      intent = Intent(getTargetContext(), CreatePrivateKeyActivity::class.java).apply {
+        putExtra(CreatePrivateKeyActivity.KEY_EXTRA_ACCOUNT, AccountDaoManager
+            .getAccountDao("enterprise_account_enforce_attester_submit.json")
+            .copy(email = EMAIL_ENFORCE_ATTESTER_SUBMIT))
+      })
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(activityTestRule)
+      .around(RetryRule())
+      .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
+  @ReadyForCIAnnotation
   fun testFailAttesterSubmit() {
     onView(withId(R.id.editTextKeyPassword))
         .check(matches(isDisplayed()))
@@ -98,7 +100,7 @@ class CreatePrivateKeyActivityEnterpriseTest : BasePassphraseActivityTest() {
 
     @get:ClassRule
     @JvmStatic
-    val mockWebServerRule = FlowCryptMockWebServerRule(1212, object : Dispatcher() {
+    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
       override fun dispatch(request: RecordedRequest): MockResponse {
         val gson = ApiHelper.getInstance(InstrumentationRegistry.getInstrumentation().targetContext).gson
         val model = gson.fromJson<InitialLegacySubmitModel>(InputStreamReader(request.body.inputStream()),
