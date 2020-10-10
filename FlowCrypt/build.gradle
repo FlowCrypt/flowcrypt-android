@@ -380,7 +380,7 @@ dependencies {
     //https://mvnrepository.com/artifact/com.google.api-client/google-api-client-android
     implementation 'com.google.api-client:google-api-client-android:1.30.9'
     //https://mvnrepository.com/artifact/com.google.apis/google-api-services-gmail
-    implementation 'com.google.apis:google-api-services-gmail:v1-rev110-1.25.0'
+    implementation 'com.google.apis:google-api-services-gmail:v1-rev20200919-1.30.10'
 
     implementation "com.squareup.retrofit2:retrofit:${rootProject.ext.retrofitVersion}"
     implementation "com.squareup.retrofit2:converter-gson:${rootProject.ext.retrofitVersion}"
