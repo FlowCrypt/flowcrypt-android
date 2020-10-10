@@ -166,7 +166,6 @@
     <string name="smtp_username">SMTP Username</string>
     <string name="smtp_password">SMTP Password</string>
     <string name="try_to_connect">Connect</string>
-    <string name="adding_new_account">Add email account</string>
     <string name="template_imap_server">imap.%1$s</string>
     <string name="template_smtp_server">smtp.%1$s</string>
     <string name="none">None</string>

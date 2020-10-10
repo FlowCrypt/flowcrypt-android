@@ -13,12 +13,13 @@ import android.text.TextUtils
 import android.view.Menu
 import android.view.View
 import androidx.activity.viewModels
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.res.ResourcesCompat
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.ContactEntity
@@ -48,6 +49,9 @@ class SelectContactsActivity : BaseBackStackActivity(),
   private val contactsRecyclerViewAdapter: ContactsRecyclerViewAdapter = ContactsRecyclerViewAdapter(false)
   private var searchPattern: String? = null
   private val contactsViewModel: ContactsViewModel by viewModels()
+
+  @VisibleForTesting
+  private val countingIdlingResourceForFilter = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(this::class.java), GeneralUtil.isDebugBuild())
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_select_contact
@@ -109,26 +113,25 @@ class SelectContactsActivity : BaseBackStackActivity(),
 
   override fun onQueryTextSubmit(query: String): Boolean {
     searchPattern = query
-    countingIdlingResource.incrementSafely()
     contactsViewModel.filterContacts(searchPattern)
     return true
   }
 
   override fun onQueryTextChange(newText: String): Boolean {
     searchPattern = newText
-    countingIdlingResource.incrementSafely()
     contactsViewModel.filterContacts(searchPattern)
     return true
   }
 
   private fun setupContactsViewModel() {
-    contactsViewModel.allContactsLiveData.observe(this, Observer {
+    contactsViewModel.allContactsLiveData.observe(this, {
       contactsViewModel.filterContacts(searchPattern)
     })
 
-    contactsViewModel.contactsWithPgpSearchLiveData.observe(this, Observer {
+    contactsViewModel.contactsWithPgpSearchLiveData.observe(this, {
       when (it.status) {
         Result.Status.LOADING -> {
+          countingIdlingResourceForFilter.incrementSafely("searchPattern = $searchPattern")
           UIUtil.exchangeViewVisibility(true, progressBar, recyclerViewContacts)
         }
 
@@ -140,16 +143,15 @@ class SelectContactsActivity : BaseBackStackActivity(),
             contactsRecyclerViewAdapter.swap(it.data)
             UIUtil.exchangeViewVisibility(false, emptyView, recyclerViewContacts)
           }
-          countingIdlingResource.decrementSafely()
+          countingIdlingResourceForFilter.decrementSafely()
         }
 
         else -> {
-          countingIdlingResource.decrementSafely()
+          countingIdlingResourceForFilter.decrementSafely()
         }
       }
     })
 
-    countingIdlingResource.incrementSafely()
     contactsViewModel.filterContacts(searchPattern)
   }
 
