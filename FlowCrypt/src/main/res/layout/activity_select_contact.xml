@@ -42,8 +42,8 @@
 
     <TextView
         android:id="@+id/emptyView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="@string/no_results"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"

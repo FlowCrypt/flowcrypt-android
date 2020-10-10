@@ -6,28 +6,20 @@
 package com.flowcrypt.email.api.email.sync.tasks
 
 import android.text.TextUtils
-import android.util.Base64
-import android.util.Base64OutputStream
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart
 import com.sun.mail.imap.IMAPFolder
-import okio.buffer
 import org.apache.commons.io.FilenameUtils
 import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
 import java.io.ByteArrayInputStream
-import java.io.IOException
 import java.io.InputStream
-import java.io.OutputStream
 import java.util.*
-import javax.crypto.CipherOutputStream
 import javax.mail.BodyPart
 import javax.mail.FetchProfile
 import javax.mail.Folder
@@ -108,7 +100,7 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
 
     customMsg.saveChanges()
     customMsg.setMessageId(originalMsg.messageID ?: "")
-    storeMsg(id.toString(), customMsg)
+    MsgsCacheManager.storeMsg(id.toString(), customMsg)
 
     listener.onActionProgress(account, ownerKey, requestCode, R.id.progress_id_fetching_message, 60)
     listener.onMsgDetailsReceived(account, localFolder, imapFolder, uid, id, customMsg, ownerKey, requestCode)
@@ -214,31 +206,6 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
     return result
   }
 
-  private fun storeMsg(key: String, msg: MimeMessage) {
-    val editor = MsgsCacheManager.diskLruCache.edit(key) ?: return
-
-    val bufferedSink = editor.newSink().buffer()
-    val outputStreamOfBufferedSink = ProgressOutputStream(bufferedSink.outputStream())
-    val cipherForEncryption = KeyStoreCryptoManager.getCipherForEncryption()
-    val base64OutputStream = Base64OutputStream(outputStreamOfBufferedSink, KeyStoreCryptoManager.BASE64_FLAGS)
-    val outputStream = CipherOutputStream(base64OutputStream, cipherForEncryption)
-
-    try {
-      outputStream.use {
-        outputStreamOfBufferedSink.write(Base64.encodeToString(cipherForEncryption.iv, KeyStoreCryptoManager.BASE64_FLAGS).toByteArray())
-        outputStreamOfBufferedSink.write("\n".toByteArray())
-        msg.writeTo(it)
-        bufferedSink.flush()
-        editor.commit()
-      }
-
-      MsgsCacheManager.diskLruCache[key] ?: throw IOException("No space left on device")
-    } catch (e: SyncTaskTerminatedException) {
-      e.printStackTrace()
-      editor.abort()
-    }
-  }
-
   private fun sendProgress() {
     if (msgSize > 0) {
       currentPercentage = (downloadedMsgSize * 100 / msgSize)
@@ -270,35 +237,6 @@ class LoadMessageDetailsSyncTask(ownerKey: String,
   class CustomMimeMultipart constructor(contentType: String) : MimeMultipart() {
     init {
       this.contentType = contentType
-    }
-  }
-
-  /**
-   * This class itself simply overrides all methods of [OutputStream] with versions that pass
-   * all requests to the underlying output stream.
-   */
-  inner class ProgressOutputStream(val out: OutputStream) : BufferedOutputStream(out) {
-    override fun write(b: ByteArray) {
-      if (Thread.interrupted()) {
-        throw SyncTaskTerminatedException()
-      }
-      super.write(b)
-    }
-
-    override fun write(b: Int) {
-      if (Thread.interrupted()) {
-        throw SyncTaskTerminatedException()
-      }
-
-      super.write(b)
-    }
-
-    override fun write(b: ByteArray, off: Int, len: Int) {
-      if (Thread.interrupted()) {
-        throw SyncTaskTerminatedException()
-      }
-
-      super.write(b, off, len)
     }
   }
 

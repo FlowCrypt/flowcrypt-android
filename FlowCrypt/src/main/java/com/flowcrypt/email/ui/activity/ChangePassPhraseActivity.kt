@@ -12,8 +12,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.lifecycle.Observer
-import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -23,7 +21,6 @@ import com.flowcrypt.email.jetpack.viewmodel.LoadPrivateKeysViewModel
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.base.BasePassPhraseManagerActivity
 import com.flowcrypt.email.ui.notifications.SystemNotificationManager
-import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
 /**
@@ -37,10 +34,6 @@ import com.flowcrypt.email.util.UIUtil
 class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   private val loadPrivateKeysViewModel: LoadPrivateKeysViewModel by viewModels()
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
-
-  val idlingForFetchingKeys: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
-
-  var changePassphraseIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
 
   override fun onConfirmPassPhraseSuccess() {
     privateKeysViewModel.changePassphrase(editTextKeyPassword.text.toString())
@@ -103,11 +96,11 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   }
 
   private fun setupLoadPrivateKeysViewModel() {
-    loadPrivateKeysViewModel.privateKeysLiveData.observe(this, Observer {
+    loadPrivateKeysViewModel.privateKeysLiveData.observe(this, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            idlingForFetchingKeys.incrementSafely()
+            countingIdlingResource.incrementSafely()
           }
 
           Result.Status.SUCCESS -> {
@@ -117,12 +110,12 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
             } else {
               privateKeysViewModel.saveBackupsToInbox()
             }
-            idlingForFetchingKeys.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
             runBackupKeysActivity()
-            idlingForFetchingKeys.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
         }
       }
@@ -130,11 +123,11 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.changePassphraseLiveData.observe(this, Observer {
+    privateKeysViewModel.changePassphraseLiveData.observe(this, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
-            changePassphraseIdlingResource.incrementSafely()
+            countingIdlingResource.incrementSafely()
             isBackEnabled = false
             UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)
           }
@@ -151,7 +144,7 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
               }
             }
 
-            changePassphraseIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
 
           Result.Status.ERROR, Result.Status.EXCEPTION -> {
@@ -160,13 +153,13 @@ class ChangePassPhraseActivity : BasePassPhraseManagerActivity() {
             UIUtil.exchangeViewVisibility(false, layoutProgress, layoutContentView)
             showInfoSnackbar(rootView, it.exception?.message ?: getString(R.string.unknown_error))
 
-            changePassphraseIdlingResource.decrementSafely()
+            countingIdlingResource.decrementSafely()
           }
         }
       }
     })
 
-    privateKeysViewModel.saveBackupToInboxLiveData.observe(this, Observer {
+    privateKeysViewModel.saveBackupToInboxLiveData.observe(this, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {

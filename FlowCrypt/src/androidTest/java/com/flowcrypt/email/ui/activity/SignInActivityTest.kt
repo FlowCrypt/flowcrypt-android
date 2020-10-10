@@ -5,27 +5,26 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.view.View
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import androidx.test.rule.ActivityTestRule
+import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.ClearAppSettingsRule
-import com.flowcrypt.email.rules.StubAllExternalIntentsRule
+import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import org.hamcrest.Matchers.allOf
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -40,29 +39,33 @@ import org.junit.runner.RunWith
  * Time: 11:12
  * E-mail: DenBond7@gmail.com
  */
-@LargeTest
+@MediumTest
 @RunWith(AndroidJUnit4::class)
-@DoesNotNeedMailserver
 class SignInActivityTest : BaseTest() {
-  override val activityTestRule: ActivityTestRule<*>? = IntentsTestRule(SignInActivity::class.java)
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<SignInActivity>()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(activityTestRule)
-      .around(StubAllExternalIntentsRule())
+      .around(RetryRule())
+      .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
-  @Ignore("Fix me after 1.0.9")
+  @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseOtherEmailProviders() {
     onView(withId(R.id.buttonOtherEmailProvider))
         .check(matches(isDisplayed()))
         .perform(click())
-    onView(allOf<View>(withText(R.string.adding_new_account), withParent(withId(R.id.toolbar))))
+    onView(withText(R.string.or_use_your_credentials_to_connect))
         .check(matches(isDisplayed()))
   }
 
   @Test
+  @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testUseGmail() {
     onView(withId(R.id.buttonSignInWithGmail))
         .check(matches(isDisplayed()))
@@ -72,11 +75,13 @@ class SignInActivityTest : BaseTest() {
   }
 
   @Test
+  @DoesNotNeedMailserver
+  @ReadyForCIAnnotation
   fun testShowSecurityScreen() {
     onView(withId(R.id.buttonSecurity))
         .check(matches(isDisplayed()))
         .perform(click())
-    onView(allOf<View>(withText(R.string.security), withParent(withId(R.id.toolbar))))
+    onView(allOf(withText(R.string.security), withParent(withId(R.id.toolbar))))
         .check(matches(isDisplayed()))
   }
 }

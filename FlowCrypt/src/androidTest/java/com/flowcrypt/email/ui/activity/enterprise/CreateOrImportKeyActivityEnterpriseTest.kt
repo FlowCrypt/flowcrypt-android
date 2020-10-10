@@ -5,18 +5,20 @@
 
 package com.flowcrypt.email.ui.activity.enterprise
 
-import android.content.Intent
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
-import com.flowcrypt.email.DoesNotNeedMailserverEnterprise
+import androidx.test.filters.MediumTest
+import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.RetryRule
+import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
 import com.flowcrypt.email.ui.activity.base.BaseCreateOrImportKeyActivityTest
 import com.flowcrypt.email.util.AccountDaoManager
@@ -33,31 +35,35 @@ import org.junit.runner.RunWith
  *         Time: 10:07 AM
  *         E-mail: DenBond7@gmail.com
  */
-@LargeTest
-@DoesNotNeedMailserverEnterprise
+@MediumTest
+@DoesNotNeedMailserver
 @RunWith(AndroidJUnit4::class)
 class CreateOrImportKeyActivityEnterpriseTest : BaseCreateOrImportKeyActivityTest() {
-  override val activityTestRule =
-      object : IntentsTestRule<CreateOrImportKeyActivity>(CreateOrImportKeyActivity::class.java) {
-        override fun getActivityIntent(): Intent {
-          return CreateOrImportKeyActivity.newIntent(getTargetContext(), AccountDaoManager
-              .getAccountDao("enterprise_account_no_prv_create.json"), true)
-        }
-      }
+  override val useIntents: Boolean = true
+  override val activityScenarioRule = activityScenarioRule<CreateOrImportKeyActivity>(
+      intent = CreateOrImportKeyActivity.newIntent(
+          context = getTargetContext(),
+          accountEntity = AccountDaoManager.getAccountDao("enterprise_account_no_prv_create.json"),
+          isShowAnotherAccountBtnEnabled = true
+      ))
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
       .around(AddPrivateKeyToDatabaseRule())
-      .around(activityTestRule)
+      .around(RetryRule())
+      .around(activityScenarioRule)
+      .around(ScreenshotTestRule())
 
   @Test
+  @ReadyForCIAnnotation
   fun testCreateNewKeyNotExist() {
     onView(withId(R.id.buttonCreateNewKey))
         .check(matches(not(isDisplayed())))
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testButtonSkipSetupNotExist() {
     onView(withId(R.id.buttonSkipSetup))
         .check(matches(not(isDisplayed())))

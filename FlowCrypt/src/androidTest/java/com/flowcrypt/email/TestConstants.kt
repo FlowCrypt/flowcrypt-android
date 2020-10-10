@@ -13,6 +13,8 @@ package com.flowcrypt.email
  */
 class TestConstants {
   companion object {
+    const val MOCK_WEB_SERVER_PORT = 1212
+
     const val IMAP = "IMAP"
     const val SMTP = "SMTP"
 

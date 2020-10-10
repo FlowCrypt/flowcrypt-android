@@ -11,6 +11,7 @@ import android.util.Base64OutputStream
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
+import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import okio.buffer
@@ -51,6 +52,7 @@ class KeyStoreCryptoManagerTest {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testDataAsString() {
     val encryptedData = KeyStoreCryptoManager.encrypt(originalData)
     println(encryptedData)
@@ -60,6 +62,7 @@ class KeyStoreCryptoManagerTest {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testDataAsStream() {
     val msg = MimeMessage(Session.getInstance(Properties()), InstrumentationRegistry
         .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plain_text.txt"))
@@ -99,6 +102,7 @@ class KeyStoreCryptoManagerTest {
   }
 
   @Test
+  @ReadyForCIAnnotation
   fun testDataAsStreamFromCacheManager() {
     val msg = MimeMessage(Session.getInstance(Properties()), InstrumentationRegistry
         .getInstrumentation().context.assets.open("messages/mime/standard_msg_info_plain_text.txt"))
