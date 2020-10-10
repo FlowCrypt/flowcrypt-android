@@ -6,10 +6,10 @@
   "familyName": "familyName",
   "photoUrl": "https://lh3.googleusercontent.com/-KqfTq1IKkhw/AAAAAAAAAAI/AAAAAAAAAAA/ACLGyWBZ5bzZtjs2GmmC1ArEskmiLFQWQQ/mo/photo.jpg?sz=128",
   "imapPort": 143,
-  "imapServer": "imap.denbond7.com",
+  "imapServer": "10.0.2.2",
   "useCustomSignForSmtp": false,
   "password": "qwerty1234",
-  "smtpPort": 25,
-  "smtpServer": "smtp.denbond7.com",
+  "smtpPort": 587,
+  "smtpServer": "10.0.2.2",
   "username": "user_with_more_than_21_letters@denbond7.com"
 }

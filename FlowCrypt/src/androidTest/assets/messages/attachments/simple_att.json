@@ -1,13 +1,13 @@
 {
   "email": "default@denbond7.com",
-  "encodedSize": 220570,
+  "encodedSize": 3312,
   "folder": "INBOX",
   "fwdUid": 0,
-  "id": "\u003c1bc6ca64-143d-446e-aa59-2aa5323e4900@flowcrypt\u003e",
+  "id": "<inner_70e4c69c-54c5-47cc-826e-900a5e9c9bdb@flowcrypt>",
   "isForwarded": false,
   "isProtected": false,
-  "name": "n201811.pdf",
+  "name": "android.png",
   "orderNumber": 0,
-  "type": "application/pdf",
-  "uid": 236
+  "type": "image/png; name=android.png",
+  "uid": 6
 }

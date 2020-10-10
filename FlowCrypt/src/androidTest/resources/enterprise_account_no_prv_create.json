@@ -6,11 +6,11 @@
   "familyName": "familyName",
   "photoUrl": "photoUrl",
   "imapPort": 143,
-  "imapServer": "imap.denbond7.com",
+  "imapServer": "10.0.2.2",
   "useCustomSignForSmtp": false,
   "password": "qwerty1234",
-  "smtpPort": 25,
-  "smtpServer": "smtp.denbond7.com",
+  "smtpPort": 587,
+  "smtpServer": "10.0.2.2",
   "username": "default@denbond7.com",
   "domainRules": "NO_PRV_CREATE"
 }

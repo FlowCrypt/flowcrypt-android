@@ -39,7 +39,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   protected var syncMessenger: Messenger? = null
   protected val syncReplyMessenger: Messenger = Messenger(ReplyHandler(this))
 
-  val syncServiceCountingIdlingResource: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
+  val syncServiceCountingIdlingResource: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(this::class.java), GeneralUtil.isDebugBuild())
 
   /**
    * Flag indicating whether we have called bind on the [EmailSyncService].

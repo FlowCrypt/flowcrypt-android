@@ -8,11 +8,9 @@ package com.flowcrypt.email.ui.activity.base
 import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
-import android.text.Editable
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextUtils
-import android.text.TextWatcher
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
 import android.view.View
@@ -21,23 +19,22 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
+import androidx.core.widget.addTextChangedListener
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.Status
-import com.flowcrypt.email.api.retrofit.node.NodeRepository
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.Word
-import com.flowcrypt.email.api.retrofit.response.node.NodeResponseWrapper
 import com.flowcrypt.email.api.retrofit.response.node.ZxcvbnStrengthBarResult
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PasswordStrengthViewModel
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.WebViewInfoDialogFragment
 import com.flowcrypt.email.util.UIUtil
-import com.flowcrypt.email.util.idling.SingleIdlingResources
 import com.google.android.material.snackbar.Snackbar
 import org.apache.commons.io.IOUtils
 import java.io.IOException
@@ -50,8 +47,7 @@ import java.util.*
  * Time: 14:53
  * E-mail: DenBond7@gmail.com
  */
-abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnClickListener, TextWatcher,
-    Observer<NodeResponseWrapper<*>> {
+abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnClickListener {
 
   protected lateinit var layoutProgress: View
   protected lateinit var layoutContentView: View
@@ -71,11 +67,8 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
 
   protected var isBackEnabled = true
 
-  var idlingForPassphraseChecking: SingleIdlingResources? = null
-    private set
-  private lateinit var viewModel: PasswordStrengthViewModel
+  private val passwordStrengthViewModel: PasswordStrengthViewModel by viewModels()
   private var strengthBarResult: ZxcvbnStrengthBarResult? = null
-  private var timer: Timer? = null
 
   override val contentViewResourceId: Int = R.layout.activity_pass_phrase_manager
 
@@ -92,13 +85,7 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     }
 
     initViews()
-
-    idlingForPassphraseChecking = SingleIdlingResources(delay = 500)
-    timer = Timer()
-
-    viewModel = ViewModelProvider(this).get(PasswordStrengthViewModel::class.java)
-    viewModel.init(NodeRepository())
-    viewModel.responsesLiveData.observe(this, this)
+    initPasswordStrengthViewModel()
   }
 
   override fun onClick(v: View) {
@@ -168,66 +155,6 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     }
   }
 
-  override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
-
-  }
-
-  override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-
-  }
-
-  override fun afterTextChanged(editable: Editable) {
-    idlingForPassphraseChecking?.setIdleState(false)
-    val passphrase = editable.toString()
-    timer?.cancel()
-    timer = Timer()
-    timer?.schedule(
-        object : TimerTask() {
-          override fun run() {
-            runOnUiThread(object : TimerTask() {
-              override fun run() {
-                viewModel.check(passphrase)
-              }
-            })
-          }
-        },
-        DELAY
-    )
-
-    if (TextUtils.isEmpty(editable)) {
-      textViewPasswordQualityInfo.setText(R.string.passphrase_must_be_non_empty)
-    }
-  }
-
-  override fun onChanged(nodeResponseWrapper: NodeResponseWrapper<*>) {
-    when (nodeResponseWrapper.requestCode) {
-      R.id.live_data_id_check_passphrase_strength -> {
-        when (nodeResponseWrapper.status) {
-          Status.SUCCESS -> {
-            strengthBarResult = nodeResponseWrapper.result as ZxcvbnStrengthBarResult?
-            updateStrengthViews()
-          }
-
-          Status.ERROR -> nodeResponseWrapper.result?.let {
-            Toast.makeText(this, it.apiError?.toString() ?: "", Toast.LENGTH_SHORT).show()
-          }
-
-          Status.EXCEPTION -> if (nodeResponseWrapper.result != null) {
-            val throwable = nodeResponseWrapper.exception
-            if (throwable != null) {
-              Toast.makeText(this, throwable.message, Toast.LENGTH_SHORT).show()
-            }
-          }
-
-          else -> {
-          }
-        }
-
-        idlingForPassphraseChecking?.setIdleState(isIdleNow = true, useDelay = true)
-      }
-    }
-  }
-
   protected open fun initViews() {
     layoutProgress = findViewById(R.id.layoutProgress)
     layoutContentView = findViewById(R.id.layoutContentView)
@@ -241,7 +168,13 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     btnSuccess = findViewById(R.id.buttonSuccess)
 
     editTextKeyPassword = findViewById(R.id.editTextKeyPassword)
-    editTextKeyPassword.addTextChangedListener(this)
+    editTextKeyPassword.addTextChangedListener { editable ->
+      val passphrase = editable.toString()
+      passwordStrengthViewModel.check(passphrase)
+      if (TextUtils.isEmpty(editable)) {
+        textViewPasswordQualityInfo.setText(R.string.passphrase_must_be_non_empty)
+      }
+    }
     editTextKeyPasswordSecond = findViewById(R.id.editTextKeyPasswordSecond)
     progressBarPasswordQuality = findViewById(R.id.progressBarPasswordQuality)
     textViewPasswordQualityInfo = findViewById(R.id.textViewPasswordQualityInfo)
@@ -342,7 +275,38 @@ abstract class BasePassPhraseManagerActivity : BaseBackStackActivity(), View.OnC
     return qualityValue
   }
 
-  companion object {
-    private const val DELAY: Long = 350
+  private fun initPasswordStrengthViewModel() {
+    passwordStrengthViewModel.zxcvbnStrengthBarResultLiveData.observe(this) {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          countingIdlingResource.incrementSafely()
+        }
+
+        Result.Status.SUCCESS -> {
+          strengthBarResult = it.data
+          updateStrengthViews()
+
+          countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          val msg = when (it.status) {
+            Result.Status.ERROR -> {
+              it.data?.apiError?.msg ?: getString(R.string.unknown_error)
+            }
+
+            Result.Status.EXCEPTION -> {
+              it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error)
+            }
+
+            else -> it.exception?.javaClass?.simpleName ?: getString(R.string.unknown_error)
+          }
+          Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+
+          countingIdlingResource.decrementSafely()
+        }
+      }
+    }
   }
 }
