@@ -1,13 +1,13 @@
 {
   "email": "default@denbond7.com",
-  "encodedSize": 1850,
+  "encodedSize": 4138,
   "folder": "INBOX",
   "fwdUid": 0,
-  "id": "\u003c66f5f886-9a65-4f08-86a9-44552242f01d@flowcrypt\u003e",
+  "id": "<4a2934f5-6f04-4ad4-a376-9497db95ea5c@flowcrypt>",
   "isForwarded": false,
   "isProtected": false,
-  "name": "sven.xml.pgp",
+  "name": "android.png.pgp",
   "orderNumber": 0,
-  "type": "text/xml",
-  "uid": 240
+  "type": "image/png; name=android.png.pgp",
+  "uid": 16
 }

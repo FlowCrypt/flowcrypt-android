@@ -82,8 +82,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   val privateKeyDetailsLiveData: LiveData<Result<ParseKeysResult?>> =
       Transformations.switchMap(keysStorage.keysLiveData) { keyEntities ->
         liveData {
+          emit(Result.loading())
           val request = if (keyEntities.isNotEmpty()) {
-
             ParseKeysRequest(keyEntities.joinToString { it.privateKeyAsString + "\n" })
           } else {
             ParseKeysRequest(null)
@@ -134,7 +134,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       saveBackupToInboxLiveData.value = Result.loading()
       withContext(Dispatchers.IO) {
         try {
-          val account = roomDatabase.accountDao().getActiveAccountSuspend()
+          val account = getAccountEntityWithDecryptedInfo(roomDatabase.accountDao().getActiveAccountSuspend())
           requireNotNull(account)
 
           val sess = OpenStoreHelper.getAccountSess(getApplication(), account)

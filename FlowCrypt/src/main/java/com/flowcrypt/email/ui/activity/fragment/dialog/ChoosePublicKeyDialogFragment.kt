@@ -18,12 +18,13 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.ui.adapter.PubKeysArrayAdapter
@@ -63,6 +64,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    setupPrivateKeysViewModel()
 
     this.email = arguments?.getString(KEY_EMAIL)
     this.title = arguments?.getInt(KEY_TITLE_RESOURCE_ID)
@@ -70,11 +72,6 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
         ?: ListView.CHOICE_MODE_NONE
     this.returnResultImmediatelyIfSingle =
         arguments?.getBoolean(KEY_RETURN_RESULT_IMMEDIATELY_IF_SINGLE, false) ?: false
-  }
-
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
-    setupPrivateKeysViewModel()
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -110,9 +107,10 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
   @SuppressLint("FragmentLiveDataObserve")
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.privateKeyDetailsLiveData.observe(this@ChoosePublicKeyDialogFragment, Observer {
+    privateKeysViewModel.privateKeyDetailsLiveData.observe(this, {
       when (it.status) {
         Result.Status.LOADING -> {
+          baseActivity?.countingIdlingResource?.incrementSafely()
           buttonOk?.visibility = View.GONE
           UIUtil.exchangeViewVisibility(true, progressBar, listViewKeys)
         }
@@ -163,18 +161,21 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
             }
           }
           onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
+          baseActivity?.countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.ERROR -> {
           UIUtil.exchangeViewVisibility(false, progressBar, textViewMsg)
           textViewMsg?.text = it.data?.apiError?.toString()
           onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
+          baseActivity?.countingIdlingResource?.decrementSafely()
         }
 
         Result.Status.EXCEPTION -> {
           UIUtil.exchangeViewVisibility(false, progressBar, textViewMsg)
           textViewMsg?.text = it.exception?.message
           onLoadKeysProgressListener?.onLoadKeysProgress(it.status)
+          baseActivity?.countingIdlingResource?.decrementSafely()
         }
       }
     })

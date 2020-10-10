@@ -22,7 +22,6 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
@@ -67,7 +66,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
   protected var isAccountInfoReceived = false
   protected lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
 
-  val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(javaClass::class.java), GeneralUtil.isDebugBuild())
+  val countingIdlingResource: CountingIdlingResource = CountingIdlingResource(GeneralUtil.genIdlingResourcesName(this::class.java), GeneralUtil.isDebugBuild())
 
   val nodeIdlingResource: NodeIdlingResource = NodeIdlingResource()
 
@@ -361,7 +360,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
   }
 
   private fun initAccountViewModel() {
-    accountViewModel.activeAccountLiveData.observe(this, Observer {
+    accountViewModel.activeAccountLiveData.observe(this, {
       activeAccount = it
       isAccountInfoReceived = true
       onAccountInfoRefreshed(activeAccount)
@@ -369,7 +368,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
   }
 
   private fun registerNodeIdlingResources() {
-    Node.getInstance(application).liveData.observe(this, Observer { nodeInitResult ->
+    Node.getInstance(application).liveData.observe(this, { nodeInitResult ->
       onNodeStateChanged(nodeInitResult)
       nodeIdlingResource.setIdleState(nodeInitResult.isReady)
     })
