@@ -988,7 +988,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
    */
   private fun initChipsView(pgpContactsNachoTextView: PgpContactsNachoTextView?) {
     pgpContactsNachoTextView?.setNachoValidator(ChipifyingNachoValidator())
-    pgpContactsNachoTextView?.setIllegalCharacters(',')
+    pgpContactsNachoTextView?.setIllegalCharacterIdentifier { character -> character == ',' }
     pgpContactsNachoTextView?.addChipTerminator(' ', ChipTerminatorHandler
         .BEHAVIOR_CHIPIFY_TO_TERMINATOR)
     pgpContactsNachoTextView?.chipTokenizer = SingleCharacterSpanChipTokenizer(requireContext(),

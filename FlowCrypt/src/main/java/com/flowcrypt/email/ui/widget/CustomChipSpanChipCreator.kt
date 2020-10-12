@@ -41,7 +41,7 @@ class CustomChipSpanChipCreator(context: Context) : ChipCreator<PGPContactChipSp
   }
 
   override fun configureChip(span: PGPContactChipSpan, chipConfiguration: ChipConfiguration) {
-    val chipSpacing = chipConfiguration.chipSpacing
+    val chipSpacing = chipConfiguration.chipHorizontalSpacing
     if (chipSpacing != -1) {
       span.setLeftMargin(chipSpacing / 2)
       span.setRightMargin(chipSpacing / 2)
