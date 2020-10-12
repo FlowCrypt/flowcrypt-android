@@ -67,6 +67,8 @@ class ParcelableTest(val name: String, private val currentClass: Class<Parcelabl
       ClassGraph()
           // Use contextClassLoader to avoid ClassCastExceptions
           .addClassLoader(classLoader)
+          // use the right classloader which we added above
+          .ignoreParentClassLoaders()
           .enableAllInfo()
           .blacklistPackages("androidx", "android")
           .whitelistPackages("com.flowcrypt.email")
