@@ -26,13 +26,13 @@ ext {
     /* https://mvnrepository.com/artifact/androidx.test.espresso*/
     espressoVersion = '3.3.0'
     /*https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit*/
-    retrofitVersion = '2.8.1'
+    retrofitVersion = '2.9.0'
     /*https://mvnrepository.com/artifact/com.squareup.okhttp3/logging-interceptor*/
-    okhttpVersion = '4.5.0'
+    okhttpVersion = '4.9.0'
     /*https://mvnrepository.com/artifact/com.squareup.okio/okio*/
-    okioVersion = '2.5.0'
+    okioVersion = '2.9.0'
     /*https://mvnrepository.com/artifact/com.squareup.leakcanary/leakcanary-android*/
-    leakcanaryVersion = '2.2'
+    leakcanaryVersion = '2.5'
     /*https://mvnrepository.com/artifact/com.sun.mail/android-mail*/
     javaMailVersion = '1.6.5'
     /*https://mvnrepository.com/artifact/com.github.bumptech.glide/glide*/
