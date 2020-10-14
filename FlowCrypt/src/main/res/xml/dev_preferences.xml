@@ -11,7 +11,7 @@
         <Preference android:title="@string/crash_the_app">
             <intent
                 android:targetClass="com.flowcrypt.email"
-                android:targetPackage="@string/application_id" />
+                android:targetPackage="@string/base_application_id" />
         </Preference>
 
         <SwitchPreference

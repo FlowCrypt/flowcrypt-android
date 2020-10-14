@@ -35,6 +35,7 @@ android {
         versionName rootProject.ext.appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        resValue 'string', 'base_application_id', android.defaultConfig.applicationId
 
         externalNativeBuild {
             cmake {
@@ -107,7 +108,6 @@ android {
             buildConfigField 'String', 'NODE_HTTP_LOG_LEVEL', "\"NONE\""
             buildConfigField 'String', 'ATTESTER_URL', "\"https://flowcrypt.com/attester/\""
             buildConfigField 'String', 'API_URL', "\"https://flowcrypt.com/api/\""
-            resValue 'string', 'application_id', android.defaultConfig.applicationId
             resValue 'string', 'gradle_is_acra_enabled', 'true'
             resValue 'string', 'gradle_is_mail_debug_enabled', 'false'
             resValue 'string', 'gradle_is_http_log_enabled', 'false'
@@ -121,6 +121,7 @@ android {
             versionNameSuffix '_' + defaultConfig.versionCode + '__' + new SimpleDateFormat('yyyy_MM_dd').format(new Date())
             applicationIdSuffix '.debug'
             signingConfig signingConfigs.debug
+            resValue 'string', 'application_id', android.defaultConfig.applicationId + ".debug"
         }
     }
 
@@ -154,6 +155,7 @@ android {
             resValue 'string', 'gradle_http_log_level', 'BODY'
             resValue 'string', 'gradle_is_node_http_debug_enabled', 'true'
             resValue 'string', 'gradle_node_http_log_level', 'BODY'
+            resValue 'string', 'application_id', android.defaultConfig.applicationId
             versionNameSuffix "_dev"
             dimension "standard"
             minSdkVersion rootProject.ext.minSdkVersion
@@ -178,6 +180,7 @@ android {
             resValue 'string', 'gradle_http_log_level', 'BASIC'
             resValue 'string', 'gradle_is_node_http_debug_enabled', 'true'
             resValue 'string', 'gradle_node_http_log_level', 'BASIC'
+            resValue 'string', 'application_id', android.defaultConfig.applicationId
             dimension "standard"
         }
 
@@ -199,6 +202,7 @@ android {
             resValue 'string', 'gradle_http_log_level', 'NONE'
             resValue 'string', 'gradle_is_node_http_debug_enabled', 'false'
             resValue 'string', 'gradle_node_http_log_level', 'NONE'
+            resValue 'string', 'application_id', android.defaultConfig.applicationId
         }
 
         //This is an enterprise flavor
@@ -220,6 +224,7 @@ android {
             resValue 'string', 'gradle_http_log_level', 'BASIC'
             resValue 'string', 'gradle_is_node_http_debug_enabled', 'true'
             resValue 'string', 'gradle_node_http_log_level', 'BASIC'
+            resValue 'string', 'application_id', android.defaultConfig.applicationId + ".enterprise"
             dimension "standard"
         }
     }
@@ -289,10 +294,6 @@ android {
         Task renameReleaseBuilds = tasks.findByName('renameReleaseBuilds')
         if (renameReleaseBuilds != null) {
             renameReleaseBuilds.finalizedBy copyReleaseApks
-        }
-
-        android.applicationVariants.all { variant ->
-            variant.resValue 'string', 'application_id', variant.applicationId
         }
     }
 
