@@ -51,9 +51,6 @@ class PropertiesHelper {
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = BOOLEAN_VALUE_TRUE
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] = BOOLEAN_VALUE_TRUE
-
-      //apply flavor settings
-      prop.putAll(FlavorSettings.getFlavorPropertiesForSession())
       return prop
     }
 
