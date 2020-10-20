@@ -369,7 +369,7 @@ dependencies {
     implementation 'androidx.work:work-runtime-ktx:2.4.0'
 
     //https://developers.google.com/android/guides/setup
-    implementation 'com.google.android.gms:play-services-base:17.4.0'
+    implementation 'com.google.android.gms:play-services-base:17.5.0'
     implementation 'com.google.android.gms:play-services-auth:18.1.0'
 
     //https://mvnrepository.com/artifact/com.google.android.material/material
