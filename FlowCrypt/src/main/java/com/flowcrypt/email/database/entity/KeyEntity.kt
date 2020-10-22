@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.database.entity
 
-import android.provider.BaseColumns
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
@@ -19,11 +18,12 @@ import androidx.room.PrimaryKey
  *         E-mail: DenBond7@gmail.com
  */
 @Entity(tableName = "keys",
-    indices = [Index(name = "long_id_in_keys", value = ["long_id"], unique = true)]
+    indices = [Index(name = "long_id_account_in_keys", value = ["long_id", "account"], unique = true)]
 )
 data class KeyEntity(
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = BaseColumns._ID) val id: Long? = null,
     @ColumnInfo(name = "long_id") val longId: String,
+    val account: String,
     val source: String,
     @ColumnInfo(name = "public_key") val publicKey: ByteArray,
     @ColumnInfo(name = "private_key") val privateKey: ByteArray,
@@ -62,7 +62,12 @@ data class KeyEntity(
   }
 
   override fun toString(): String {
-    return "KeyEntity(id=$id, longId='$longId', source='$source', publicKey=${publicKey
-        .contentToString()}, privateKey=${privateKey.contentToString()}, passphrase=(hidden))"
+    return "KeyEntity(id=$id," +
+        " longId='$longId'," +
+        " account='$account'," +
+        " source='$source'," +
+        " publicKey=${publicKey.contentToString()}," +
+        " privateKey=${privateKey.contentToString()}," +
+        " passphrase=(hidden))"
   }
 }

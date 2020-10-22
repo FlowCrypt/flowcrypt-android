@@ -162,9 +162,10 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
     return results
   }
 
-  fun toKeyEntity(): KeyEntity {
+  fun toKeyEntity(account: String): KeyEntity {
     return KeyEntity(
         longId = longId ?: throw NullPointerException("nodeKeyDetails.longId == null"),
+        account = account,
         source = PrivateKeySourceType.BACKUP.toString(),
         publicKey = publicKey?.toByteArray()
             ?: throw NullPointerException("nodeKeyDetails.publicKey == null"),

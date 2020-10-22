@@ -184,7 +184,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           if (roomDatabase.keysDao().getKeyByLongIdSuspend(longId) == null) {
             val passphrase = if (keyDetails.isFullyDecrypted == true) "" else keyDetails.passphrase
                 ?: ""
-            val keyEntity = keyDetails.toKeyEntity()
+            //todo-denbond7 fix me
+            val keyEntity = keyDetails.toKeyEntity("")
                 .copy(source = type.toPrivateKeySourceTypeString(),
                     privateKey = KeyStoreCryptoManager.encryptSuspend(keyDetails.privateKey).toByteArray(),
                     passphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
@@ -295,7 +296,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   }
 
   private suspend fun savePrivateKeyToDatabase(nodeKeyDetails: NodeKeyDetails, passphrase: String) {
-    val keyEntity = nodeKeyDetails.toKeyEntity().copy(
+    //todo-denbond7 fix me
+    val keyEntity = nodeKeyDetails.toKeyEntity("").copy(
         source = KeyDetails.Type.NEW.toPrivateKeySourceTypeString(),
         privateKey = KeyStoreCryptoManager.encryptSuspend(nodeKeyDetails.privateKey).toByteArray(),
         passphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
