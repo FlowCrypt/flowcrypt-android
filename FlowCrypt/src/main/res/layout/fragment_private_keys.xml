@@ -36,6 +36,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/fab_margin"
         android:layout_marginBottom="@dimen/fab_margin"
+        android:contentDescription="@string/add_new_private_key"
         android:src="@mipmap/ic_white_plus"
         app:backgroundTint="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
