@@ -5,7 +5,10 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.flowcrypt.email">
+    package="com.flowcrypt.email"
+    tools:ignore="LockedOrientationActivity">
+
+    <!-- we use tools:ignore="LockedOrientationActivity" as for now we support android:screenOrientation="portrait" only-->
 
     <!-- android.permission.INTERNET needed to make a network requests -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -14,7 +17,10 @@
     <!-- android.permission.READ_EXTERNAL_STORAGE used to import private keys -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <!-- android.permission.WRITE_EXTERNAL_STORAGE used to save attachments -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- Temporary added tools:ignore="ScopedStorage" to fix lint warnings. Need to look at this in the near future-->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
     <!-- android.permission.RECEIVE_BOOT_COMPLETED will be used by JobScheduler to persists jobs after the device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- android.permission.WAKE_LOCK will be used by classes which extend JobIntentService -->

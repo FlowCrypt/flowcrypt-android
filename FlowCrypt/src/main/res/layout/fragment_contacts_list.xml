@@ -35,6 +35,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/default_margin_content"
         android:layout_marginBottom="@dimen/default_margin_content"
+        android:contentDescription="@string/add_new_contact"
         android:src="@mipmap/ic_white_plus"
         app:backgroundTint="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
