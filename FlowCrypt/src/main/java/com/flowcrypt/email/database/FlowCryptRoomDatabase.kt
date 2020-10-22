@@ -84,7 +84,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 22
+    const val DB_VERSION = 23
 
     private val MIGRATION_1_3 = object : Migration(1, 3) {
       override fun migrate(database: SupportSQLiteDatabase) {
@@ -412,6 +412,33 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    /**
+     * This migration resolve https://github.com/FlowCrypt/flowcrypt-android/issues/923
+     */
+    @VisibleForTesting
+    val MIGRATION_22_23 = object : Migration(22, 23) {
+      override fun migrate(database: SupportSQLiteDatabase) {
+        database.beginTransaction()
+        try {
+          //create temp table with existed content
+          database.execSQL("CREATE TEMP TABLE IF NOT EXISTS keys_temp AS SELECT * FROM keys;")
+          //drop old table
+          database.execSQL("DROP TABLE IF EXISTS keys;")
+          //create a new table 'keys' with additional field 'account'
+          database.execSQL("CREATE TABLE IF NOT EXISTS `keys` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `long_id` TEXT NOT NULL, `account` TEXT NOT NULL, `source` TEXT NOT NULL, `public_key` BLOB NOT NULL, `private_key` BLOB NOT NULL, `passphrase` TEXT DEFAULT NULL)")
+          //create indices for new table
+          database.execSQL("CREATE UNIQUE INDEX `long_id_account_in_keys` ON `keys` (`long_id`, `account`)")
+          //fill new keys table with combination of existed keys and existed accounts using JOIN instruction
+          database.execSQL("INSERT INTO keys(long_id, account, source, public_key, private_key, passphrase) SELECT K.long_id, A.email, K.source, K.public_key, K.private_key, K.passphrase  FROM keys_temp as K JOIN accounts as A;")
+          //drop temp table
+          database.execSQL("DROP TABLE IF EXISTS keys_temp;")
+          database.setTransactionSuccessful()
+        } finally {
+          database.endTransaction()
+        }
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -446,7 +473,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
                 MIGRATION_18_19,
                 MIGRATION_19_20,
                 MIGRATION_20_21,
-                MIGRATION_21_22)
+                MIGRATION_21_22,
+                MIGRATION_22_23)
             .build()
         INSTANCE = instance
         return instance
