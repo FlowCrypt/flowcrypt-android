@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./gradlew :FlowCrypt:lintDevTestDebug
+./gradlew --console=verbose :FlowCrypt:lintDevTestDebug
