@@ -11,7 +11,7 @@
         app:iconSpaceReserved="false">
         <intent
             android:targetClass="com.flowcrypt.email.ui.activity.settings.SearchBackupsInEmailActivity"
-            android:targetPackage="@string/base_application_id" />
+            android:targetPackage="@string/application_id" />
     </Preference>
 
     <Preference
@@ -20,7 +20,7 @@
         app:iconSpaceReserved="false">
         <intent
             android:targetClass="com.flowcrypt.email.ui.activity.settings.SecurityAndPrivacySettingsActivity"
-            android:targetPackage="@string/base_application_id" />
+            android:targetPackage="@string/application_id" />
     </Preference>
 
     <Preference
@@ -28,7 +28,7 @@
         app:iconSpaceReserved="false">
         <intent
             android:targetClass="com.flowcrypt.email.ui.activity.settings.ContactsSettingsActivity"
-            android:targetPackage="@string/base_application_id" />
+            android:targetPackage="@string/application_id" />
     </Preference>
 
     <Preference
@@ -36,7 +36,7 @@
         app:iconSpaceReserved="false">
         <intent
             android:targetClass="com.flowcrypt.email.ui.activity.settings.KeysSettingsActivity"
-            android:targetPackage="@string/base_application_id" />
+            android:targetPackage="@string/application_id" />
     </Preference>
 
     <Preference
@@ -44,7 +44,7 @@
         app:iconSpaceReserved="false">
         <intent
             android:targetClass="com.flowcrypt.email.ui.activity.settings.AttesterSettingsActivity"
-            android:targetPackage="@string/base_application_id" />
+            android:targetPackage="@string/application_id" />
     </Preference>
 
     <Preference
@@ -52,7 +52,7 @@
         app:iconSpaceReserved="false">
         <intent
             android:targetClass="com.flowcrypt.email.ui.activity.settings.NotificationsSettingsActivity"
-            android:targetPackage="@string/base_application_id" />
+            android:targetPackage="@string/application_id" />
     </Preference>
 
     <Preference
@@ -60,7 +60,7 @@
         app:iconSpaceReserved="false">
         <intent
             android:targetClass="com.flowcrypt.email.ui.activity.settings.LegalSettingsActivity"
-            android:targetPackage="@string/base_application_id" />
+            android:targetPackage="@string/application_id" />
     </Preference>
 
     <Preference
@@ -68,6 +68,6 @@
         app:iconSpaceReserved="false">
         <intent
             android:targetClass="com.flowcrypt.email.ui.activity.settings.ExperimentalSettingsActivity"
-            android:targetPackage="@string/base_application_id" />
+            android:targetPackage="@string/application_id" />
     </Preference>
 </PreferenceScreen>
