@@ -184,7 +184,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           val longId = keyDetails.longId
           requireNotNull(longId)
           val account = accountEntity.email.toLowerCase(Locale.US)
-          if (roomDatabase.keysDao().getKeyByLongIdAndAccountSuspend(longId, account) == null) {
+          if (roomDatabase.keysDao().getKeyByAccountAndLongIdSuspend(account, longId) == null) {
             val passphrase = if (keyDetails.isFullyDecrypted == true) "" else keyDetails.passphrase
                 ?: ""
             val keyEntity = keyDetails.toKeyEntity(account)
@@ -266,7 +266,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       } catch (e: Exception) {
         e.printStackTrace()
         nodeKeyDetails?.longId?.let {
-          roomDatabase.keysDao().deleteByLongIdSuspend(it)
+          roomDatabase.keysDao().deleteByAccountAndLongIdSuspend(accountEntity.email, it)
           roomDatabase.userIdEmailsKeysDao().deleteByLongIdSuspend(it)
         }
         createPrivateKeyLiveData.value = Result.exception(e)

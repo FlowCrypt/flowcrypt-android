@@ -18,27 +18,18 @@ import com.flowcrypt.email.database.entity.KeyEntity
  */
 @Dao
 abstract class KeysDao : BaseDao<KeyEntity> {
-  @Query("DELETE FROM keys WHERE long_id = :longId")
-  abstract fun deleteByLongId(longId: String): Int
-
-  @Query("DELETE FROM keys WHERE long_id = :longId")
-  abstract suspend fun deleteByLongIdSuspend(longId: String): Int
-
-  @Query("SELECT * FROM keys")
-  abstract fun getAllKeys(): List<KeyEntity>
-
-  @Query("SELECT * FROM keys")
-  abstract fun getAllKeysLD(): LiveData<List<KeyEntity>>
-
   @Query("SELECT * FROM keys WHERE account = :account")
   abstract fun getAllKeysByAccount(account: String): List<KeyEntity>
 
   @Query("SELECT * FROM keys WHERE account = :account")
   abstract fun getAllKeysByAccountLD(account: String): LiveData<List<KeyEntity>>
 
-  @Query("SELECT * FROM keys WHERE long_id = :longId")
-  abstract suspend fun getKeyByLongIdSuspend(longId: String): KeyEntity?
+  @Query("DELETE FROM keys WHERE account = :account AND long_id = :longId")
+  abstract fun deleteByAccountAndLongId(account: String, longId: String): Int
 
-  @Query("SELECT * FROM keys WHERE long_id = :longId AND account = :account")
-  abstract suspend fun getKeyByLongIdAndAccountSuspend(longId: String, account: String): KeyEntity?
+  @Query("DELETE FROM keys WHERE account = :account AND long_id = :longId")
+  abstract suspend fun deleteByAccountAndLongIdSuspend(account: String, longId: String): Int
+
+  @Query("SELECT * FROM keys WHERE account = :account AND long_id = :longId")
+  abstract suspend fun getKeyByAccountAndLongIdSuspend(account: String, longId: String): KeyEntity?
 }
