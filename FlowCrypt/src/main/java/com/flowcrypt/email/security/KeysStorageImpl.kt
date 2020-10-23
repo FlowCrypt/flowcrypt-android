@@ -21,7 +21,7 @@ import com.flowcrypt.email.model.PgpContact
 
 /**
  * This class implements [KeysStorage]. Here we collect information about imported private keys
- * and keep it in the memory.
+ * for an active account and keep it in the memory.
  *
  * @author DenBond7
  * Date: 05.05.2017
