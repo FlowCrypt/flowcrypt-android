@@ -22,6 +22,9 @@ abstract class KeysDao : BaseDao<KeyEntity> {
   abstract fun getAllKeysByAccount(account: String): List<KeyEntity>
 
   @Query("SELECT * FROM keys WHERE account = :account")
+  abstract suspend fun getAllKeysByAccountSuspend(account: String): List<KeyEntity>
+
+  @Query("SELECT * FROM keys WHERE account = :account")
   abstract fun getAllKeysByAccountLD(account: String): LiveData<List<KeyEntity>>
 
   @Query("DELETE FROM keys WHERE account = :account AND long_id = :longId")

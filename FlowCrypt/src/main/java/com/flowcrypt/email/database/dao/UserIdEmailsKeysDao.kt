@@ -29,10 +29,7 @@ import java.util.*
 @Dao
 interface UserIdEmailsKeysDao : BaseDao<UserIdEmailsKeysEntity> {
   @Query("SELECT * FROM user_id_emails_and_keys")
-  fun getAllLD(): LiveData<List<UserIdEmailsKeysEntity>>
-
-  @Query("SELECT * FROM user_id_emails_and_keys WHERE user_id_email IN (:users)")
-  fun getUserIdEmailsKeysByEmailsLD(users: Collection<String>): LiveData<List<UserIdEmailsKeysEntity>>
+  suspend fun getAllSuspend(): List<UserIdEmailsKeysEntity>
 
   /**
    * Get a list of longId using a given email.
