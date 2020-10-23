@@ -183,10 +183,11 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         for (keyDetails in keys) {
           val longId = keyDetails.longId
           requireNotNull(longId)
-          if (roomDatabase.keysDao().getKeyByLongIdSuspend(longId) == null) {
+          val account = accountEntity.email.toLowerCase(Locale.US)
+          if (roomDatabase.keysDao().getKeyByLongIdAndAccountSuspend(longId, account) == null) {
             val passphrase = if (keyDetails.isFullyDecrypted == true) "" else keyDetails.passphrase
                 ?: ""
-            val keyEntity = keyDetails.toKeyEntity(accountEntity.email.toLowerCase(Locale.US))
+            val keyEntity = keyDetails.toKeyEntity(account)
                 .copy(source = type.toPrivateKeySourceTypeString(),
                     privateKey = KeyStoreCryptoManager.encryptSuspend(keyDetails.privateKey).toByteArray(),
                     passphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
