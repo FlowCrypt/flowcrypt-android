@@ -78,7 +78,21 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   val longIdsOfCurrentAccountLiveData: LiveData<List<String>> = Transformations.switchMap(activeAccountLiveData) {
     roomDatabase.userIdEmailsKeysDao().getLongIdsByEmailLD(it?.email ?: "")
   }
-  val userIdEmailsKeysLiveData = roomDatabase.userIdEmailsKeysDao().getAllLD()
+
+  val userIdEmailsKeysLiveData: LiveData<List<UserIdEmailsKeysEntity>> = Transformations.switchMap(activeAccountLiveData) {
+    liveData {
+      if (it == null) {
+        emit(emptyList<UserIdEmailsKeysEntity>())
+      } else {
+        val account = it.email
+        val accountKeysLondIdList = roomDatabase.keysDao().getAllKeysByAccountSuspend(account).map { it.longId }
+        emit(roomDatabase.userIdEmailsKeysDao().getAllSuspend().filter {
+          accountKeysLondIdList.contains(it.longId)
+        })
+      }
+    }
+  }
+
   val privateKeyDetailsLiveData: LiveData<Result<ParseKeysResult?>> =
       Transformations.switchMap(keysStorage.keysLiveData) { keyEntities ->
         liveData {
