@@ -44,8 +44,8 @@ class Node private constructor(app: Application) {
   val liveData: MutableLiveData<NodeInitResult> = MutableLiveData()
 
   private fun init(context: Context) {
-    Thread(Runnable {
-      KeysStorageImpl.getInstance(context.applicationContext).fetchKeysManually(context.applicationContext)
+    Thread {
+      KeysStorageImpl.getInstance(context.applicationContext).fetchKeysManually()
       Thread.currentThread().name = "Node"
       try {
         val certs = getCachedNodeSecretCerts(context)
@@ -67,7 +67,7 @@ class Node private constructor(app: Application) {
         ExceptionUtil.handleError(e)
         liveData.postValue(NodeInitResult(false, e))
       }
-    }).start()
+    }.start()
   }
 
   private fun start(context: Context, nodeSecret: NodeSecret?) {

@@ -30,6 +30,15 @@ abstract class KeysDao : BaseDao<KeyEntity> {
   @Query("SELECT * FROM keys")
   abstract fun getAllKeysLD(): LiveData<List<KeyEntity>>
 
+  @Query("SELECT * FROM keys WHERE account = :account")
+  abstract fun getAllKeysByAccount(account: String): List<KeyEntity>
+
+  @Query("SELECT * FROM keys WHERE account = :account")
+  abstract fun getAllKeysByAccountLD(account: String): LiveData<List<KeyEntity>>
+
   @Query("SELECT * FROM keys WHERE long_id = :longId")
   abstract suspend fun getKeyByLongIdSuspend(longId: String): KeyEntity?
+
+  @Query("SELECT * FROM keys WHERE long_id = :longId AND account = :account")
+  abstract suspend fun getKeyByLongIdAndAccountSuspend(longId: String, account: String): KeyEntity?
 }

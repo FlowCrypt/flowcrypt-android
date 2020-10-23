@@ -14,7 +14,6 @@ import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -90,7 +89,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.privateKeyDetailsLiveData.observe(viewLifecycleOwner, Observer {
+    privateKeysViewModel.privateKeyDetailsLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity.countingIdlingResource.incrementSafely()

@@ -178,7 +178,6 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
               if (intent?.getBooleanExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, true) == true) {
                 tempAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
               } else {
-                privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, keys, KeyDetails.Type.EMAIL)
                 handleSuccessSubmit()
               }
             }
