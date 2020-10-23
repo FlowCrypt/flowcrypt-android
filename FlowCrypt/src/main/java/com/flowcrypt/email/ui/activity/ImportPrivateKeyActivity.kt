@@ -178,7 +178,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
               if (intent?.getBooleanExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, true) == true) {
                 tempAccount?.let { accountEntity -> submitPubKeyViewModel.submitPubKey(accountEntity, unlockedKeys) }
               } else {
-                privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
+                privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, keys, KeyDetails.Type.EMAIL)
                 handleSuccessSubmit()
               }
             }
@@ -368,9 +368,9 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             val e = it.exception
             if (e is SavePrivateKeyToDatabaseException) {
               showSnackbar(rootView, e.message ?: e.javaClass.simpleName,
-                  getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
-                privateKeysViewModel.encryptAndSaveKeysToDatabase(e.keys, KeyDetails.Type.EMAIL)
-              })
+                  getString(R.string.retry), Snackbar.LENGTH_INDEFINITE) {
+                privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, e.keys, KeyDetails.Type.EMAIL)
+              }
             } else {
               showInfoSnackbar(rootView, e?.message ?: e?.javaClass?.simpleName
               ?: getString(R.string.unknown_error))
@@ -384,7 +384,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
   private fun handleSuccessSubmit() {
     textViewProgressText.setText(R.string.saving_prv_keys)
-    privateKeysViewModel.encryptAndSaveKeysToDatabase(unlockedKeys, keyDetailsType)
+    privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, unlockedKeys, keyDetailsType)
   }
 
   companion object {

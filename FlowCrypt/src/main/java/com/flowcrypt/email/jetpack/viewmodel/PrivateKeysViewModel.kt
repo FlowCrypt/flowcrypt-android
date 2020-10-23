@@ -172,7 +172,9 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
-  fun encryptAndSaveKeysToDatabase(keys: List<NodeKeyDetails>, type: KeyDetails.Type) {
+  fun encryptAndSaveKeysToDatabase(accountEntity: AccountEntity?, keys: List<NodeKeyDetails>, type: KeyDetails.Type) {
+    requireNotNull(accountEntity)
+
     viewModelScope.launch {
       savePrivateKeysLiveData.value = Result.loading()
       try {
@@ -184,8 +186,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           if (roomDatabase.keysDao().getKeyByLongIdSuspend(longId) == null) {
             val passphrase = if (keyDetails.isFullyDecrypted == true) "" else keyDetails.passphrase
                 ?: ""
-            //todo-denbond7 fix me
-            val keyEntity = keyDetails.toKeyEntity("")
+            val keyEntity = keyDetails.toKeyEntity(accountEntity.email.toLowerCase(Locale.US))
                 .copy(source = type.toPrivateKeySourceTypeString(),
                     privateKey = KeyStoreCryptoManager.encryptSuspend(keyDetails.privateKey).toByteArray(),
                     passphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
@@ -258,7 +259,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
         nodeKeyDetails = genPrivateKeyViaNode(passphrase, accountEntity)
         requireNotNull(nodeKeyDetails)
 
-        savePrivateKeyToDatabase(nodeKeyDetails, passphrase)
+        savePrivateKeyToDatabase(accountEntity, nodeKeyDetails, passphrase)
         doAdditionalOperationsAfterKeyCreation(accountEntity, nodeKeyDetails)
         createPrivateKeyLiveData.value = Result.success(nodeKeyDetails)
       } catch (e: Exception) {
@@ -295,9 +296,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     return null
   }
 
-  private suspend fun savePrivateKeyToDatabase(nodeKeyDetails: NodeKeyDetails, passphrase: String) {
-    //todo-denbond7 fix me
-    val keyEntity = nodeKeyDetails.toKeyEntity("").copy(
+  private suspend fun savePrivateKeyToDatabase(accountEntity: AccountEntity, nodeKeyDetails: NodeKeyDetails, passphrase: String) {
+    val keyEntity = nodeKeyDetails.toKeyEntity(accountEntity.email.toLowerCase(Locale.US)).copy(
         source = KeyDetails.Type.NEW.toPrivateKeySourceTypeString(),
         privateKey = KeyStoreCryptoManager.encryptSuspend(nodeKeyDetails.privateKey).toByteArray(),
         passphrase = KeyStoreCryptoManager.encryptSuspend(passphrase))
