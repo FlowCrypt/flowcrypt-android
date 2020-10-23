@@ -650,7 +650,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner, Observer {
+    privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -666,9 +666,10 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
             val e = it.exception
             if (e is SavePrivateKeyToDatabaseException) {
               showSnackbar(rootView, e.message ?: e.javaClass.simpleName,
-                  getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
-                privateKeysViewModel.encryptAndSaveKeysToDatabase(e.keys, KeyDetails.Type.EMAIL)
-              })
+                  getString(R.string.retry), Snackbar.LENGTH_INDEFINITE) {
+                privateKeysViewModel.encryptAndSaveKeysToDatabase(
+                    AccountEntity(generateAuthCreds()), e.keys, KeyDetails.Type.EMAIL)
+              }
             } else {
               showInfoSnackbar(rootView, e?.message ?: e?.javaClass?.simpleName
               ?: getString(R.string.unknown_error))
@@ -881,7 +882,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
           showContent()
           showInfoSnackbar(msgText = getString(R.string.error_no_keys))
         } else {
-          privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
+          privateKeysViewModel.encryptAndSaveKeysToDatabase(AccountEntity(generateAuthCreds()), keys, KeyDetails.Type.EMAIL)
         }
       }
 

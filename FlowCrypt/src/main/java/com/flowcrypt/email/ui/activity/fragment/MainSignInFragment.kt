@@ -351,8 +351,11 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
                   msgText = e.message ?: e.javaClass.simpleName,
                   btnName = getString(R.string.retry),
                   duration = Snackbar.LENGTH_INDEFINITE,
-                  onClickListener = View.OnClickListener {
-                    privateKeysViewModel.encryptAndSaveKeysToDatabase(e.keys, KeyDetails.Type.EMAIL)
+                  onClickListener = {
+                    googleSignInAccount?.let { googleSignInAccount ->
+                      privateKeysViewModel.encryptAndSaveKeysToDatabase(
+                          AccountEntity(googleSignInAccount, uuid, domainRules), e.keys, KeyDetails.Type.EMAIL)
+                    }
                   }
               )
             } else {
@@ -405,7 +408,10 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
         if (keys.isNullOrEmpty()) {
           showInfoSnackbar(msgText = getString(R.string.error_no_keys))
         } else {
-          privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
+          googleSignInAccount?.let { googleSignInAccount ->
+            privateKeysViewModel.encryptAndSaveKeysToDatabase(
+                AccountEntity(googleSignInAccount, uuid, domainRules), keys, KeyDetails.Type.EMAIL)
+          }
         }
       }
 
