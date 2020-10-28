@@ -16,7 +16,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.IdRes
-import androidx.lifecycle.Observer
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
@@ -24,6 +23,7 @@ import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialogFragment
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -32,7 +32,6 @@ import com.flowcrypt.email.util.exception.DifferentPassPhrasesException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NoPrivateKeysAvailableException
 import com.flowcrypt.email.util.exception.PrivateKeyStrengthException
-import com.google.android.gms.common.util.CollectionUtils
 import com.google.android.material.snackbar.Snackbar
 
 /**
@@ -47,7 +46,6 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
     RadioGroup.OnCheckedChangeListener {
 
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
-  private var longIdsOfCurrentAccount: MutableList<String> = mutableListOf()
 
   private var progressBar: View? = null
   override lateinit var rootView: View
@@ -118,7 +116,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   override fun onClick(v: View) {
     when (v.id) {
       R.id.buttonBackupAction -> {
-        if (CollectionUtils.isEmpty(longIdsOfCurrentAccount)) {
+        if (KeysStorageImpl.getInstance(application).getAllPgpPrivateKeys().isNullOrEmpty()) {
           showInfoSnackbar(rootView, getString(R.string.there_are_no_private_keys,
               activeAccount?.email), Snackbar.LENGTH_LONG)
         } else {
@@ -201,28 +199,28 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
 
   private fun showBackupingErrorHint() {
     showSnackbar(rootView, getString(R.string.backup_was_not_sent), getString(R.string.retry),
-        Snackbar.LENGTH_LONG, View.OnClickListener {
+        Snackbar.LENGTH_LONG) {
       layoutSyncStatus?.visibility = View.GONE
       UIUtil.exchangeViewVisibility(true, progressBar, rootView)
       countingIdlingResource.incrementSafely()
       sendMsgWithPrivateKeyBackup(R.id.syns_send_backup_with_private_key_to_key_owner)
-    })
+    }
   }
 
   private fun showDifferentPassHint() {
     showSnackbar(rootView, getString(R.string.different_pass_phrases), getString(R.string.fix),
-        Snackbar.LENGTH_LONG, View.OnClickListener {
+        Snackbar.LENGTH_LONG) {
       startActivityForResult(ChangePassPhraseActivity.newIntent(this@BackupKeysActivity),
           REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY)
-    })
+    }
   }
 
   private fun showPassWeakHint() {
     showSnackbar(rootView, getString(R.string.pass_phrase_is_too_weak),
-        getString(R.string.change_pass_phrase), Snackbar.LENGTH_LONG, View.OnClickListener {
+        getString(R.string.change_pass_phrase), Snackbar.LENGTH_LONG) {
       startActivityForResult(ChangePassPhraseActivity.newIntent(this@BackupKeysActivity),
           REQUEST_CODE_RUN_CHANGE_PASS_PHRASE_ACTIVITY)
-    })
+    }
   }
 
   private fun initViews() {
@@ -252,12 +250,7 @@ class BackupKeysActivity : BaseSettingsBackStackSyncActivity(), View.OnClickList
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.longIdsOfCurrentAccountLiveData.observe(this, Observer {
-      longIdsOfCurrentAccount.clear()
-      longIdsOfCurrentAccount.addAll(it)
-    })
-
-    privateKeysViewModel.saveBackupAsFileLiveData.observe(this, Observer {
+    privateKeysViewModel.saveBackupAsFileLiveData.observe(this, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {

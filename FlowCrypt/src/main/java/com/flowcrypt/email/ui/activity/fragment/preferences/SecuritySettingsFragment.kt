@@ -8,10 +8,10 @@ package com.flowcrypt.email.ui.activity.fragment.preferences
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.preference.Preference
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.ChangePassPhraseActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
@@ -27,14 +27,14 @@ import com.flowcrypt.email.util.UIUtil
  */
 class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferenceClickListener {
   private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
-  private var longIdsOfCurrentAccount: MutableList<String> = mutableListOf()
+  private var nodeKeyDetailsList: MutableList<NodeKeyDetails> = mutableListOf()
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
 
-    privateKeysViewModel.longIdsOfCurrentAccountLiveData.observe(viewLifecycleOwner, Observer {
-      longIdsOfCurrentAccount.clear()
-      longIdsOfCurrentAccount.addAll(it)
+    privateKeysViewModel.nodeKeyDetailsLiveData.observe(viewLifecycleOwner, {
+      nodeKeyDetailsList.clear()
+      nodeKeyDetailsList.addAll(it)
     })
   }
 
@@ -46,7 +46,7 @@ class SecuritySettingsFragment : BasePreferenceFragment(), Preference.OnPreferen
   override fun onPreferenceClick(preference: Preference): Boolean {
     return when (preference.key) {
       Constants.PREF_KEY_SECURITY_CHANGE_PASS_PHRASE -> {
-        if (longIdsOfCurrentAccount.isEmpty()) {
+        if (nodeKeyDetailsList.isEmpty()) {
           UIUtil.showInfoSnackbar(requireView(), getString(R.string.account_has_no_associated_keys,
               getString(R.string.support_email)))
         } else {

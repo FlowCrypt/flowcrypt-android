@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 23,
-    "identityHash": "211e448d8333506b7a1972568660358c",
+    "identityHash": "cb22a71e58db261c8d1c28e4f87e5755",
     "entities": [
       {
         "tableName": "accounts_aliases",
@@ -892,54 +892,12 @@
           }
         ],
         "foreignKeys": []
-      },
-      {
-        "tableName": "user_id_emails_and_keys",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `long_id` TEXT NOT NULL, `user_id_email` TEXT NOT NULL)",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "_id",
-            "affinity": "INTEGER",
-            "notNull": false
-          },
-          {
-            "fieldPath": "longId",
-            "columnName": "long_id",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "userIdEmail",
-            "columnName": "user_id_email",
-            "affinity": "TEXT",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "columnNames": [
-            "_id"
-          ],
-          "autoGenerate": true
-        },
-        "indices": [
-          {
-            "name": "long_id_user_id_email_in_user_id_emails_and_keys",
-            "unique": true,
-            "columnNames": [
-              "long_id",
-              "user_id_email"
-            ],
-            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `long_id_user_id_email_in_user_id_emails_and_keys` ON `${TABLE_NAME}` (`long_id`, `user_id_email`)"
-          }
-        ],
-        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '211e448d8333506b7a1972568660358c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cb22a71e58db261c8d1c28e4f87e5755')"
     ]
   }
 }
