@@ -99,11 +99,6 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
           setResult(RESULT_CODE_HANDLE_RESOLVED_KEYS, data)
           finish()
         }
-
-        CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
-          setResult(Activity.RESULT_OK)
-          finish()
-        }
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)

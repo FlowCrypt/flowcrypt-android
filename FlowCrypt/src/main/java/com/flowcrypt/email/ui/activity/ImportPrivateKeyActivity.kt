@@ -148,8 +148,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
           keyDetailsType = KeyDetails.Type.EMAIL
           startActivityForResult(CheckKeysActivity.newIntent(this, privateKeys = privateKeysFromEmailBackups!!, type = KeyDetails.Type.EMAIL,
               positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R
-              .string.choose_another_key), isUseExistingKeysEnabled = intent?.getBooleanExtra
-          (KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, true) == true), REQUEST_CODE_CHECK_PRIVATE_KEYS)
+              .string.choose_another_key)), REQUEST_CODE_CHECK_PRIVATE_KEYS)
         }
       }
 
@@ -185,11 +184,6 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
           CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS -> {
             setResult(CheckKeysActivity.RESULT_SKIP_REMAINING_KEYS, data)
-            finish()
-          }
-
-          CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
-            setResult(CheckKeysActivity.RESULT_USE_EXISTING_KEYS, data)
             finish()
           }
         }
@@ -240,8 +234,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         val posBtnTitle = getString(R.string.continue_)
         val intent = CheckKeysActivity.newIntent(this, privateKeys = keyDetailsList, type = keyDetailsType,
             subTitle = bottomTitle, positiveBtnTitle = posBtnTitle, negativeBtnTitle = getString
-        (R.string.choose_another_key), isExtraImportOpt = true, isUseExistingKeysEnabled = intent?.getBooleanExtra
-        (KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, true) == true)
+        (R.string.choose_another_key), isExtraImportOpt = true)
         startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS)
       }
 
@@ -251,8 +244,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
             keyDetailsList.size, keyDetailsList.size)
         val clipboardIntent = CheckKeysActivity.newIntent(this, keyDetailsList, type = keyDetailsType, subTitle = title,
             positiveBtnTitle = getString(R.string.continue_), negativeBtnTitle = getString(R
-            .string.choose_another_key), isExtraImportOpt = true, isUseExistingKeysEnabled = intent?.getBooleanExtra
-        (KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, true) == true)
+            .string.choose_another_key), isExtraImportOpt = true)
         startActivityForResult(clipboardIntent,
             REQUEST_CODE_CHECK_PRIVATE_KEYS)
       }
@@ -390,18 +382,14 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS = 100
     private const val REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG = 101
 
-    val KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED", ImportPrivateKeyActivity::class.java)
     val KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED", ImportPrivateKeyActivity::class.java)
 
     fun getIntent(context: Context?, accountEntity: AccountEntity?, isSyncEnabled: Boolean = false,
                   title: String, model: KeyImportModel? = null,
                   throwErrorIfDuplicateFoundEnabled: Boolean = false, cls: Class<*>,
-                  isUseExistingKeysEnabled: Boolean = true,
                   isSubmittingPubKeysEnabled: Boolean = true): Intent {
       val intent = newIntent(context, accountEntity, isSyncEnabled, title, model, throwErrorIfDuplicateFoundEnabled, cls)
-      intent.putExtra(KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, isUseExistingKeysEnabled)
       intent.putExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, isSubmittingPubKeysEnabled)
       return intent
     }
