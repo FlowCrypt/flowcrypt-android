@@ -415,10 +415,6 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
         }
       }
 
-      CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
-        if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
-      }
-
       CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
         Toast.makeText(requireContext(), getString(R.string.key_already_imported_finishing_setup), Toast.LENGTH_SHORT).show()
         if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()

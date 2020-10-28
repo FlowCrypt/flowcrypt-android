@@ -143,11 +143,6 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
         returnUnlockedKeys(RESULT_SKIP_REMAINING_KEYS)
       }
 
-      R.id.buttonUseExistingKeys -> {
-        setResult(RESULT_USE_EXISTING_KEYS)
-        finish()
-      }
-
       R.id.buttonNegativeAction -> {
         setResult(RESULT_NEGATIVE)
         finish()
@@ -186,11 +181,6 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
   private fun initViews() {
     initButton(R.id.buttonPositiveAction, text = positiveBtnTitle)
     initButton(R.id.buttonNegativeAction, text = negativeBtnTitle)
-
-    if (KeysStorageImpl.getInstance(application).hasKeys() && intent?.getBooleanExtra
-        (KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, false) == true) {
-      initButton(R.id.buttonUseExistingKeys, text = getString(R.string.use_existing_keys))
-    }
 
     val imageButtonHint = findViewById<View>(R.id.imageButtonHint)
     if (originalKeys.isNotEmpty() && type === KeyDetails.Type.EMAIL) {
@@ -248,7 +238,6 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
 
                   if (remainingKeys.isNotEmpty()) {
                     initButton(R.id.buttonSkipRemainingBackups, text = getString(R.string.skip_remaining_backups))
-                    findViewById<View>(R.id.buttonUseExistingKeys)?.visibility = View.GONE
                     editTextKeyPassword?.text = null
                     val mapOfRemainingBackups = prepareMapFromKeyDetailsList(remainingKeys)
                     val remainingKeyCount = getUniqueKeysLongIdsCount(mapOfRemainingBackups)
@@ -358,8 +347,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
 
     const val RESULT_NEGATIVE = 10
     const val RESULT_SKIP_REMAINING_KEYS = 11
-    const val RESULT_USE_EXISTING_KEYS = 12
-    const val RESULT_NO_NEW_KEYS = 13
+    const val RESULT_NO_NEW_KEYS = 12
 
     val KEY_EXTRA_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_PRIVATE_KEYS", CheckKeysActivity::class.java)
@@ -376,13 +364,10 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
     val KEY_EXTRA_UNLOCKED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_UNLOCKED_PRIVATE_KEYS", CheckKeysActivity::class.java)
 
-    val KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
-        "KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED", CheckKeysActivity::class.java)
-
     fun newIntent(context: Context, privateKeys: ArrayList<NodeKeyDetails>,
                   type: KeyDetails.Type? = null, subTitle: String? = null, positiveBtnTitle:
                   String? = null, negativeBtnTitle: String? = null,
-                  isExtraImportOpt: Boolean = false, isUseExistingKeysEnabled: Boolean = true): Intent {
+                  isExtraImportOpt: Boolean = false): Intent {
       val intent = Intent(context, CheckKeysActivity::class.java)
       intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys)
       intent.putExtra(KEY_EXTRA_TYPE, type as Parcelable)
@@ -390,7 +375,6 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
       intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveBtnTitle)
       intent.putExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE, negativeBtnTitle)
       intent.putExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, isExtraImportOpt)
-      intent.putExtra(KEY_EXTRA_IS_USE_EXISTING_KEYS_ENABLED, isUseExistingKeysEnabled)
       return intent
     }
   }
