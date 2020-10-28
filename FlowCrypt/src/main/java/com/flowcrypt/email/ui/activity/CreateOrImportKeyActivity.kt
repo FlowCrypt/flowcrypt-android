@@ -13,7 +13,6 @@ import android.view.View
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyImportModel
-import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity
 import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.GeneralUtil
@@ -78,11 +77,6 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
         setResult(RESULT_CODE_USE_ANOTHER_ACCOUNT, intent)
         finish()
       }
-
-      R.id.buttonSkipSetup -> {
-        setResult(Activity.RESULT_OK)
-        finish()
-      }
     }
   }
 
@@ -131,18 +125,6 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
       buttonSelectAnotherAccount?.setOnClickListener(this)
     } else {
       buttonSelectAnotherAccount?.visibility = View.GONE
-    }
-
-    val buttonSkipSetup = findViewById<View>(R.id.buttonSkipSetup)
-    if (tempAccount.isRuleExist(AccountEntity.DomainRule.NO_PRV_CREATE)) {
-      buttonSkipSetup.visibility = View.GONE
-    } else {
-      if (KeysStorageImpl.getInstance(application).hasKeys()) {
-        buttonSkipSetup?.visibility = View.VISIBLE
-        buttonSkipSetup?.setOnClickListener(this)
-      } else {
-        buttonSkipSetup?.visibility = View.GONE
-      }
     }
   }
 
