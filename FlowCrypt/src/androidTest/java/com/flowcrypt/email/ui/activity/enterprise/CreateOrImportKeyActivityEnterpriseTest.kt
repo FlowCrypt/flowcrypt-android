@@ -61,11 +61,4 @@ class CreateOrImportKeyActivityEnterpriseTest : BaseCreateOrImportKeyActivityTes
     onView(withId(R.id.buttonCreateNewKey))
         .check(matches(not(isDisplayed())))
   }
-
-  @Test
-  @ReadyForCIAnnotation
-  fun testButtonSkipSetupNotExist() {
-    onView(withId(R.id.buttonSkipSetup))
-        .check(matches(not(isDisplayed())))
-  }
 }

@@ -9,7 +9,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import java.util.*
@@ -24,22 +24,21 @@ import java.util.*
  */
 class PrivateKeysManager {
   companion object {
-    fun saveKeyFromAssetsToDatabase(keyPath: String, passphrase: String, type: KeyDetails.Type) {
+    fun saveKeyFromAssetsToDatabase(accountEntity: AccountEntity, keyPath: String,
+                                    passphrase: String, type: KeyDetails.Type) {
       val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
-      saveKeyToDatabase(nodeKeyDetails, passphrase, type)
+      saveKeyToDatabase(accountEntity, nodeKeyDetails, passphrase, type)
     }
 
-    fun saveKeyToDatabase(nodeKeyDetails: NodeKeyDetails, passphrase: String, type: KeyDetails.Type) {
+    fun saveKeyToDatabase(accountEntity: AccountEntity, nodeKeyDetails: NodeKeyDetails,
+                          passphrase: String, type: KeyDetails.Type) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      val keyEntity = nodeKeyDetails.toKeyEntity().copy(
+      val keyEntity = nodeKeyDetails.toKeyEntity(accountEntity.email).copy(
           source = type.toString(),
           privateKey = KeyStoreCryptoManager.encrypt(nodeKeyDetails.privateKey).toByteArray(),
           passphrase = KeyStoreCryptoManager.encrypt(passphrase))
       roomDatabase.keysDao().insertWithReplace(keyEntity)
-      roomDatabase.userIdEmailsKeysDao()
-          .insertWithReplace(UserIdEmailsKeysEntity(longId = nodeKeyDetails.longId!!, userIdEmail = nodeKeyDetails.primaryPgpContact.email))
-
       // Added timeout for a better sync between threads.
       Thread.sleep(3000)
     }
@@ -59,13 +58,12 @@ class PrivateKeysManager {
       return privateKeys
     }
 
-    fun deleteKey(keyPath: String) {
+    fun deleteKey(accountEntity: AccountEntity, keyPath: String) {
       val nodeKeyDetails = getNodeKeyDetailsFromAssets(keyPath)
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
       nodeKeyDetails.longId?.let {
-        roomDatabase.keysDao().deleteByLongId(it)
-        roomDatabase.userIdEmailsKeysDao().deleteByLongId(it)
+        roomDatabase.keysDao().deleteByAccountAndLongId(accountEntity.email, it)
       }
 
       // Added timeout for a better sync between threads.
