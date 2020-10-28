@@ -13,11 +13,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
+import com.flowcrypt.email.api.retrofit.node.NodeRepository
+import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
+import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.KeysStorage
-import com.flowcrypt.email.model.PgpContact
 
 /**
  * This class implements [KeysStorage]. Here we collect information about imported private keys
@@ -30,13 +33,27 @@ import com.flowcrypt.email.model.PgpContact
  */
 class KeysStorageImpl private constructor(context: Context) : KeysStorage {
   val keysLiveData = MediatorLiveData<List<KeyEntity>>()
+  val nodeKeyDetailsLiveData: LiveData<List<NodeKeyDetails>> = Transformations.switchMap(keysLiveData) {
+    liveData {
+      val raw = it.joinToString { keyEntity -> keyEntity.privateKeyAsString }
+      val result = NodeRepository().fetchKeyDetails(ParseKeysRequest(raw))
+      if (result.status == Result.Status.SUCCESS) {
+        emit(result.data?.nodeKeyDetails ?: emptyList<NodeKeyDetails>())
+      } else {
+        emit(emptyList<NodeKeyDetails>())
+      }
+    }
+  }
+
   private val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
   private var keys = mutableListOf<KeyEntity>()
+  private var nodeKeyDetailsList = mutableListOf<NodeKeyDetails>()
   private val onKeysUpdatedListeners: MutableList<OnKeysUpdatedListener> = mutableListOf()
   private val pureActiveAccountLiveData: LiveData<AccountEntity?> = roomDatabase.accountDao().getActiveAccountLD()
   private val encryptedKeysLiveData: LiveData<List<KeyEntity>> = Transformations.switchMap(pureActiveAccountLiveData) {
     roomDatabase.keysDao().getAllKeysByAccountLD(it?.email ?: "")
   }
+
   private val decryptedKeysLiveData = encryptedKeysLiveData.switchMap { list ->
     liveData {
       emit(list.map {
@@ -60,6 +77,11 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
         onRefreshListener.onKeysUpdated()
       }
     }
+
+    nodeKeyDetailsLiveData.observeForever {
+      nodeKeyDetailsList.clear()
+      nodeKeyDetailsList.addAll(it)
+    }
   }
 
   /**
@@ -75,20 +97,40 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     manuallyDecryptedKeysLiveData.postValue(decryptedKeys)
   }
 
-  override fun findPgpContact(longId: String?): PgpContact? {
-    return null
-  }
-
-  override fun findPgpContacts(longId: Array<String>): List<PgpContact> {
-    return emptyList()
-  }
-
   override fun getPgpPrivateKey(longId: String?): KeyEntity? {
     return keys.firstOrNull { it.longId == longId }
   }
 
   override fun getFilteredPgpPrivateKeys(longIds: Array<String>): List<KeyEntity> {
     return keys.filter { longIds.contains(it.longId) }
+  }
+
+  override fun getPgpPrivateKeysByEmail(email: String?): List<KeyEntity> {
+    val keys = mutableListOf<KeyEntity>()
+
+    nodeKeyDetailsList.forEach { nodeKeyDetails ->
+      for (contact in nodeKeyDetails.pgpContacts) {
+        if (email?.equals(contact.email, true) == true && !nodeKeyDetails.isExpired) {
+          getPgpPrivateKey(nodeKeyDetails.longId)?.let { keyEntity -> keys.add(keyEntity) }
+        }
+      }
+    }
+
+    return keys
+  }
+
+  override fun getNodeKeyDetailsListByEmail(email: String?): List<NodeKeyDetails> {
+    val list = mutableListOf<NodeKeyDetails>()
+
+    nodeKeyDetailsList.forEach { nodeKeyDetails ->
+      for (contact in nodeKeyDetails.pgpContacts) {
+        if (email?.equals(contact.email, true) == true && !nodeKeyDetails.isExpired) {
+          list.add(nodeKeyDetails)
+        }
+      }
+    }
+
+    return list
   }
 
   override fun getAllPgpPrivateKeys(): List<KeyEntity> {

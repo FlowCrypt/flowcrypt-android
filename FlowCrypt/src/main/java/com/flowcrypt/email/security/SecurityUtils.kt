@@ -53,10 +53,7 @@ class SecurityUtils {
      */
     fun genPrivateKeysBackup(context: Context, account: AccountEntity): String {
       val builder = StringBuilder()
-      val longIdsByEmail = FlowCryptRoomDatabase.getDatabase(context).userIdEmailsKeysDao().getLongIdsByEmail(account.email)
-      val longids = longIdsByEmail.toTypedArray()
-      val keysStorage = KeysStorageImpl.getInstance(context)
-      val keys = keysStorage.getFilteredPgpPrivateKeys(longids)
+      val keys = KeysStorageImpl.getInstance(context.applicationContext).getAllPgpPrivateKeys()
 
       if (CollectionUtils.isEmpty(keys)) {
         throw NoPrivateKeysAvailableException(context, account.email)
@@ -141,7 +138,7 @@ class SecurityUtils {
     }
 
     /**
-     * Get a public key of the sender;
+     * Get a public key of the sender. If we will find a few pubkey we will return the first;
      *
      * @param context     Interface to global information about an application environment.
      * @param account     The given account
@@ -151,35 +148,18 @@ class SecurityUtils {
      */
     @JvmStatic
     fun getSenderPublicKey(context: Context, account: AccountEntity, senderEmail: String): String? {
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      var longIds = roomDatabase.userIdEmailsKeysDao().getLongIdsByEmail(senderEmail)
+      val keysStorage = KeysStorageImpl.getInstance(context.applicationContext)
+      val keys = keysStorage.getNodeKeyDetailsListByEmail(senderEmail)
 
-      if (longIds.isEmpty()) {
+      if (keys.isEmpty()) {
         if (account.email.equals(senderEmail, ignoreCase = true)) {
           throw NoKeyAvailableException(context, account.email)
         } else {
-          longIds = roomDatabase.userIdEmailsKeysDao().getLongIdsByEmail(account.email)
-          if (longIds.isEmpty()) {
-            throw NoKeyAvailableException(context, account.email, senderEmail)
-          }
+          throw NoKeyAvailableException(context, account.email, senderEmail)
         }
       }
 
-      val pgpKeyInfo = KeysStorageImpl.getInstance(context).getPgpPrivateKey(longIds[0])
-      if (pgpKeyInfo != null) {
-        val details = NodeCallsExecutor.parseKeys(pgpKeyInfo.privateKeyAsString)
-        if (CollectionUtils.isEmpty(details)) {
-          throw IllegalStateException("There are no details about the given private key")
-        }
-
-        if (details.size > 1) {
-          throw IllegalStateException("A wrong private key")
-        }
-
-        return details[0].publicKey
-      }
-
-      throw IllegalArgumentException("Internal error: PgpKeyInfo is null!")
+      return keys.first().publicKey
     }
 
     /**

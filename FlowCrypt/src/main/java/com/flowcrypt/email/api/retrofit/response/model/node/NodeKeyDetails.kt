@@ -134,7 +134,7 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
           val internetAddresses = InternetAddress.parse(user)
 
           for (internetAddress in internetAddresses) {
-            val email = internetAddress.address
+            val email = internetAddress.address.toLowerCase(Locale.US)
             val name = internetAddress.personal
 
             pgpContacts.add(PgpContact(email, name))

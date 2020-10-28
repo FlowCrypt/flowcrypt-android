@@ -24,7 +24,6 @@ import com.flowcrypt.email.database.dao.ContactsDao
 import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.LabelDao
 import com.flowcrypt.email.database.dao.MessageDao
-import com.flowcrypt.email.database.dao.UserIdEmailsKeysDao
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
@@ -33,7 +32,6 @@ import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 
 
 /**
@@ -54,8 +52,7 @@ import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
   ContactEntity::class,
   KeyEntity::class,
   LabelEntity::class,
-  MessageEntity::class,
-  UserIdEmailsKeysEntity::class
+  MessageEntity::class
 ],
     version = FlowCryptRoomDatabase.DB_VERSION)
 abstract class FlowCryptRoomDatabase : RoomDatabase() {
@@ -68,8 +65,6 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun labelDao(): LabelDao
 
   abstract fun accountAliasesDao(): AccountAliasesDao
-
-  abstract fun userIdEmailsKeysDao(): UserIdEmailsKeysDao
 
   abstract fun actionQueueDao(): ActionQueueDao
 
@@ -432,6 +427,13 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           database.execSQL("INSERT INTO keys(long_id, account, source, public_key, private_key, passphrase) SELECT K.long_id, A.email, K.source, K.public_key, K.private_key, K.passphrase  FROM keys_temp as K JOIN accounts as A;")
           //drop temp table
           database.execSQL("DROP TABLE IF EXISTS keys_temp;")
+
+          //drop 'user_id_emails_and_keys' table as unused
+          database.execSQL("DROP TABLE IF EXISTS user_id_emails_and_keys;")
+
+          //remove unused actions
+          database.execSQL("DELETE FROM action_queue WHERE action_type = 'fill_user_id_emails_keys_table'")
+
           database.setTransactionSuccessful()
         } finally {
           database.endTransaction()

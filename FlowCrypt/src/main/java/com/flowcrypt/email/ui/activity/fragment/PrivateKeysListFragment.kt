@@ -89,7 +89,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.privateKeyDetailsLiveData.observe(viewLifecycleOwner, {
+    privateKeysViewModel.parseKeysResultLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity.countingIdlingResource.incrementSafely()

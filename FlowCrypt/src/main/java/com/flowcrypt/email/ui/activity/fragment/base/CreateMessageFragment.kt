@@ -52,10 +52,10 @@ import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.api.email.model.ServiceInfo
 import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
-import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showInfoDialog
@@ -66,6 +66,7 @@ import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.MessageEncryptionType
 import com.flowcrypt.email.model.MessageType
 import com.flowcrypt.email.model.PgpContact
+import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPublicKeyActivity
 import com.flowcrypt.email.ui.activity.SelectContactsActivity
@@ -1490,8 +1491,8 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       fromAddrs?.clear()
       fromAddrs?.addAll(aliases)
 
-      privateKeysViewModel.userIdEmailsKeysLiveData.value?.let { entities ->
-        updateFromAddressAdapter(entities)
+      KeysStorageImpl.getInstance(requireContext().applicationContext).nodeKeyDetailsLiveData.value?.let {
+        updateFromAddressAdapter(it)
       }
 
       if (msgInfo != null) {
@@ -1525,13 +1526,15 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.userIdEmailsKeysLiveData.observe(viewLifecycleOwner, {
+    KeysStorageImpl.getInstance(requireContext().applicationContext).nodeKeyDetailsLiveData.observe(viewLifecycleOwner, {
       updateFromAddressAdapter(it)
     })
   }
 
-  private fun updateFromAddressAdapter(list: List<UserIdEmailsKeysEntity>) {
-    val setOfUsers = list.map { entity -> entity.userIdEmail }
+  private fun updateFromAddressAdapter(list: List<NodeKeyDetails>) {
+    val setOfUsers = list.map { nodeKeyDetails -> nodeKeyDetails.pgpContacts }
+        .flatten()
+        .map { contact -> contact.email }
 
     fromAddrs?.let { adapter ->
       for (email in adapter.objects) {
