@@ -492,4 +492,5 @@
     <string name="create_new_message">Create a new message</string>
     <string name="add_new_contact">Add a new contact</string>
     <string name="add_new_private_key">Add a new private key</string>
+    <string name="could_not_add_new_account">Couldn\'t add a new account</string>
 </resources>

@@ -73,8 +73,8 @@ data class AccountEntity constructor(
   constructor(googleSignInAccount: GoogleSignInAccount, uuid: String? = null,
               domainRules: List<String>? = null) :
       this(
-          email = googleSignInAccount.email!!,
-          accountType = googleSignInAccount.account?.type?.toLowerCase(Locale.getDefault()),
+          email = googleSignInAccount.email!!.toLowerCase(Locale.US),
+          accountType = googleSignInAccount.account?.type?.toLowerCase(Locale.US),
           displayName = googleSignInAccount.displayName,
           givenName = googleSignInAccount.givenName,
           familyName = googleSignInAccount.familyName,

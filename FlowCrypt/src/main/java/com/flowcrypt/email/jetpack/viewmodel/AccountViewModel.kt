@@ -7,11 +7,15 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
+import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
@@ -21,6 +25,8 @@ import kotlinx.coroutines.withContext
  *         E-mail: DenBond7@gmail.com
  */
 open class AccountViewModel(application: Application) : RoomBasicViewModel(application) {
+  val addNewAccountLiveData = MutableLiveData<Result<Boolean>>()
+
   private val pureActiveAccountLiveData: LiveData<AccountEntity?> = roomDatabase.accountDao().getActiveAccountLD()
   val activeAccountLiveData: LiveData<AccountEntity?> = pureActiveAccountLiveData.switchMap { accountEntity ->
     liveData {
@@ -39,6 +45,27 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
 
   suspend fun getActiveAccountSuspend(): AccountEntity? {
     return activeAccountLiveData.value ?: return roomDatabase.accountDao().getActiveAccountSuspend()
+  }
+
+  fun addNewAccount(accountEntity: AccountEntity) {
+    viewModelScope.launch {
+      addNewAccountLiveData.value = Result.loading()
+      try {
+        val existedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email)
+
+        if (existedAccount == null) {
+          roomDatabase.accountDao().addAccountSuspend(accountEntity)
+        } else {
+          roomDatabase.accountDao().updateAccountSuspend(accountEntity.copy(
+              id = existedAccount.id, uuid = existedAccount.uuid, domainRules = existedAccount.domainRules))
+        }
+
+        addNewAccountLiveData.value = Result.success(true)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        addNewAccountLiveData.value = Result.exception(e)
+      }
+    }
   }
 
   companion object {

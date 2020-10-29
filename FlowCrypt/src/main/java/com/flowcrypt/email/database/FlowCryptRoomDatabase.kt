@@ -419,12 +419,12 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
           database.execSQL("CREATE TEMP TABLE IF NOT EXISTS keys_temp AS SELECT * FROM keys;")
           //drop old table
           database.execSQL("DROP TABLE IF EXISTS keys;")
-          //create a new table 'keys' with additional field 'account'
-          database.execSQL("CREATE TABLE IF NOT EXISTS `keys` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `long_id` TEXT NOT NULL, `account` TEXT NOT NULL, `source` TEXT NOT NULL, `public_key` BLOB NOT NULL, `private_key` BLOB NOT NULL, `passphrase` TEXT DEFAULT NULL)")
+          //create a new table 'keys' with additional fields: 'account', 'account_type'
+          database.execSQL("CREATE TABLE IF NOT EXISTS `keys` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `long_id` TEXT NOT NULL, `account` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `source` TEXT NOT NULL, `public_key` BLOB NOT NULL, `private_key` BLOB NOT NULL, `passphrase` TEXT DEFAULT NULL, FOREIGN KEY(`account`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )")
           //create indices for new table
-          database.execSQL("CREATE UNIQUE INDEX `long_id_account_in_keys` ON `keys` (`long_id`, `account`)")
+          database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `long_id_account_account_type_in_keys` ON `keys` (`long_id`, `account`, `account_type`)")
           //fill new keys table with combination of existed keys and existed accounts using JOIN instruction
-          database.execSQL("INSERT INTO keys(long_id, account, source, public_key, private_key, passphrase) SELECT K.long_id, A.email, K.source, K.public_key, K.private_key, K.passphrase  FROM keys_temp as K JOIN accounts as A;")
+          database.execSQL("INSERT INTO keys(long_id, account, account_type, source, public_key, private_key, passphrase) SELECT K.long_id, A.email, A.account_type, K.source, K.public_key, K.private_key, K.passphrase  FROM keys_temp as K JOIN accounts as A;")
           //drop temp table
           database.execSQL("DROP TABLE IF EXISTS keys_temp;")
 
