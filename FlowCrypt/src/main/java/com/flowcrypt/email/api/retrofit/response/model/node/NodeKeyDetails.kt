@@ -9,6 +9,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import android.text.TextUtils
 import android.util.Patterns
+import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.security.model.PrivateKeySourceType
@@ -162,10 +163,11 @@ data class NodeKeyDetails constructor(@Expose val isFullyDecrypted: Boolean?,
     return results
   }
 
-  fun toKeyEntity(account: String): KeyEntity {
+  fun toKeyEntity(accountEntity: AccountEntity): KeyEntity {
     return KeyEntity(
         longId = longId ?: throw NullPointerException("nodeKeyDetails.longId == null"),
-        account = account,
+        account = accountEntity.email.toLowerCase(Locale.US),
+        accountType = accountEntity.accountType,
         source = PrivateKeySourceType.BACKUP.toString(),
         publicKey = publicKey?.toByteArray()
             ?: throw NullPointerException("nodeKeyDetails.publicKey == null"),

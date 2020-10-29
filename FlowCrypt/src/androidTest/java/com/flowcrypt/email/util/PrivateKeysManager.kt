@@ -34,7 +34,7 @@ class PrivateKeysManager {
                           passphrase: String, type: KeyDetails.Type) {
       val context = InstrumentationRegistry.getInstrumentation().targetContext
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
-      val keyEntity = nodeKeyDetails.toKeyEntity(accountEntity.email).copy(
+      val keyEntity = nodeKeyDetails.toKeyEntity(accountEntity).copy(
           source = type.toString(),
           privateKey = KeyStoreCryptoManager.encrypt(nodeKeyDetails.privateKey).toByteArray(),
           passphrase = KeyStoreCryptoManager.encrypt(passphrase))

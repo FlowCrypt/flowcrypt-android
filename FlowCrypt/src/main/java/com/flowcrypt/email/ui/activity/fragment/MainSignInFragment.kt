@@ -14,7 +14,6 @@ import android.widget.Toast
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.lifecycleScope
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -22,26 +21,20 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
-import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.SecurityUtils
 import com.flowcrypt.email.service.CheckClipboardToFindKeyService
-import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
 import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.HtmlViewFromAssetsRawActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
-import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -51,7 +44,6 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
-import kotlinx.coroutines.launch
 import java.util.*
 
 /**
@@ -60,14 +52,13 @@ import java.util.*
  *         Time: 12:06 PM
  *         E-mail: DenBond7@gmail.com
  */
-class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
+class MainSignInFragment : BaseSingInFragment() {
   private lateinit var client: GoogleSignInClient
   private var googleSignInAccount: GoogleSignInAccount? = null
   private var uuid: String? = null
   private var domainRules: List<String>? = null
 
   private val enterpriseDomainRulesViewModel: EnterpriseDomainRulesViewModel by viewModels()
-  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   override val progressView: View?
     get() = view?.findViewById(R.id.progress)
@@ -91,8 +82,10 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
+
+    initAddNewAccountLiveData()
     setupEnterpriseViewModel()
-    setupPrivateKeysViewModel()
+    initSavePrivateKeysLiveData()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -128,58 +121,24 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
     }
   }
 
-  override fun runEmailManagerActivity() {
-    if (googleSignInAccount == null) {
-      ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
-      Toast.makeText(requireContext(), R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
-      return
-    }
-
-    googleSignInAccount?.email?.let { email ->
-      lifecycleScope.launch {
-        val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-        val existedAccount = roomDatabase.accountDao().getAccountSuspend(email.toLowerCase(Locale.US))
-
-        val insertOrUpdateCandidate = googleSignInAccount?.let {
-          AccountEntity(it, uuid, domainRules)
-        }
-
-        insertOrUpdateCandidate?.let {
-          if (existedAccount == null) {
-            roomDatabase.accountDao().addAccountSuspend(insertOrUpdateCandidate)
-          } else {
-            roomDatabase.accountDao().updateAccountSuspend(insertOrUpdateCandidate.copy(
-                id = existedAccount.id, uuid = existedAccount.uuid, domainRules = existedAccount.domainRules))
-          }
-        }
-
-        EmailSyncService.startEmailSyncService(requireContext())
-        roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = googleSignInAccount?.email))
-        EmailManagerActivity.runEmailManagerActivity(requireContext())
-        activity?.finish()
-      }
-    }
+  override fun getTempAccount(): AccountEntity? {
+    return googleSignInAccount?.let { AccountEntity(it, uuid, domainRules) }
   }
 
   override fun returnResultOk() {
-    googleSignInAccount?.let {
-      lifecycleScope.launch {
-        val accountEntity = AccountEntity(it, uuid, domainRules)
-        val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-        roomDatabase.accountDao().addAccountSuspend(accountEntity)
-        roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = accountEntity.email))
+    getTempAccount()?.let {
+      roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email))
 
-        val intent = Intent()
-        intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, accountEntity)
-
-        activity?.setResult(Activity.RESULT_OK, intent)
-        activity?.finish()
-      }
+      val intent = Intent()
+      intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, it)
+      activity?.setResult(Activity.RESULT_OK, intent)
+      activity?.finish()
     }
   }
 
   private fun initViews(view: View) {
     view.findViewById<View>(R.id.buttonSignInWithGmail)?.setOnClickListener {
+      importCandidates.clear()
       signInWithGmail()
     }
 
@@ -210,6 +169,8 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
   }
 
   private fun signInWithGmail() {
+    googleSignInAccount = null
+
     if (GeneralUtil.isConnected(activity)) {
       client.signOut()
       startActivityForResult(client.signInIntent, REQUEST_CODE_SIGN_IN)
@@ -258,17 +219,13 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
     }
 
     if (existedAccount == null) {
-      if (domainRules?.contains(AccountEntity.DomainRule.NO_PRV_BACKUP.name) == true) {
-        if (googleSignInAccount != null) {
+      getTempAccount()?.let {
+        if (domainRules?.contains(AccountEntity.DomainRule.NO_PRV_BACKUP.name) == true) {
           requireContext().startService(Intent(requireContext(), CheckClipboardToFindKeyService::class.java))
-          val intent = CreateOrImportKeyActivity.newIntent(requireContext(),
-              AccountEntity(googleSignInAccount, uuid, domainRules), true)
+          val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
           startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
-        }
-      } else {
-        googleSignInAccount?.let {
-          val account = AccountEntity(it, uuid, domainRules)
-          val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(account)
+        } else {
+          val nextFrag = AuthorizeAndSearchBackupsFragment.newInstance(it)
           activity?.supportFragmentManager?.beginTransaction()
               ?.replace(R.id.fragmentContainerView, nextFrag, AuthorizeAndSearchBackupsFragment::class.java.simpleName)
               ?.addToBackStack(null)
@@ -314,10 +271,9 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
 
   private fun onFetchKeysCompleted(keyDetailsList: ArrayList<NodeKeyDetails>?) {
     if (keyDetailsList.isNullOrEmpty()) {
-      googleSignInAccount?.let {
+      getTempAccount()?.let {
         requireContext().startService(Intent(requireContext(), CheckClipboardToFindKeyService::class.java))
-        val intent = CreateOrImportKeyActivity.newIntent(requireContext(),
-            AccountEntity(it, uuid, domainRules), true)
+        val intent = CreateOrImportKeyActivity.newIntent(requireContext(), it, true)
         startActivityForResult(intent, REQUEST_CODE_CREATE_OR_IMPORT_KEY)
       }
     } else {
@@ -329,43 +285,6 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
           negativeBtnTitle = negativeBtnTitle)
       startActivityForResult(intent, REQUEST_CODE_CHECK_PRIVATE_KEYS_FROM_GMAIL)
     }
-  }
-
-  private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner, Observer {
-      it?.let {
-        when (it.status) {
-          Result.Status.LOADING -> {
-            showProgress(getString(R.string.processing))
-          }
-
-          Result.Status.SUCCESS -> {
-            if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
-          }
-
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            showContent()
-            val e = it.exception
-            if (e is SavePrivateKeyToDatabaseException) {
-              showSnackbar(
-                  msgText = e.message ?: e.javaClass.simpleName,
-                  btnName = getString(R.string.retry),
-                  duration = Snackbar.LENGTH_INDEFINITE,
-                  onClickListener = {
-                    googleSignInAccount?.let { googleSignInAccount ->
-                      privateKeysViewModel.encryptAndSaveKeysToDatabase(
-                          AccountEntity(googleSignInAccount, uuid, domainRules), e.keys, KeyDetails.Type.EMAIL)
-                    }
-                  }
-              )
-            } else {
-              showInfoSnackbar(msgText = e?.message ?: e?.javaClass?.simpleName
-              ?: getString(R.string.unknown_error))
-            }
-          }
-        }
-      }
-    })
   }
 
   private fun setupEnterpriseViewModel() {
@@ -408,9 +327,17 @@ class MainSignInFragment : BaseSingInFragment(), ProgressBehaviour {
         if (keys.isNullOrEmpty()) {
           showInfoSnackbar(msgText = getString(R.string.error_no_keys))
         } else {
-          googleSignInAccount?.let { googleSignInAccount ->
-            privateKeysViewModel.encryptAndSaveKeysToDatabase(
-                AccountEntity(googleSignInAccount, uuid, domainRules), keys, KeyDetails.Type.EMAIL)
+          importCandidates.clear()
+          importCandidates.addAll(keys)
+
+          if (getTempAccount() == null) {
+            ExceptionUtil.handleError(NullPointerException("GoogleSignInAccount is null!"))
+            Toast.makeText(requireContext(), R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
+            return
+          } else {
+            getTempAccount()?.let {
+              accountViewModel.addNewAccount(it)
+            }
           }
         }
       }

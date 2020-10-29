@@ -6,9 +6,24 @@
 package com.flowcrypt.email.ui.activity.fragment.base
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
-import androidx.lifecycle.Observer
+import android.view.View
+import androidx.fragment.app.viewModels
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.observeOnce
+import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
+import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.service.EmailSyncService
+import com.flowcrypt.email.service.actionqueue.actions.LoadGmailAliasesAction
+import com.flowcrypt.email.ui.activity.EmailManagerActivity
+import com.flowcrypt.email.ui.activity.SignInActivity
+import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
+import com.google.android.material.snackbar.Snackbar
 
 /**
  * @author Denis Bondarenko
@@ -16,25 +31,115 @@ import com.flowcrypt.email.database.entity.AccountEntity
  *         Time: 6:29 PM
  *         E-mail: DenBond7@gmail.com
  */
-abstract class BaseSingInFragment : BaseFragment() {
-  protected val existedAccounts = mutableListOf<AccountEntity>()
+abstract class BaseSingInFragment : BaseFragment(), ProgressBehaviour {
+  protected val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
-  abstract fun runEmailManagerActivity()
+  protected val existedAccounts = mutableListOf<AccountEntity>()
+  protected val importCandidates = mutableListOf<NodeKeyDetails>()
+
+  abstract fun getTempAccount(): AccountEntity?
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    initAllAccountsLiveData()
+  }
+
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
+    initAddNewAccountLiveData()
+  }
+
+  protected fun initSavePrivateKeysLiveData() {
+    privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner, {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            showProgress(getString(R.string.processing))
+          }
+
+          Result.Status.SUCCESS -> {
+            if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+          }
+
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            showContent()
+            val e = it.exception
+            if (e is SavePrivateKeyToDatabaseException) {
+              showSnackbar(
+                  msgText = e.message ?: e.javaClass.simpleName,
+                  btnName = getString(R.string.retry),
+                  duration = Snackbar.LENGTH_INDEFINITE,
+                  onClickListener = {
+                    getTempAccount()?.let { accountEntity ->
+                      privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, e.keys, KeyDetails.Type.EMAIL)
+                    }
+                  }
+              )
+            } else {
+              showInfoSnackbar(msgText = e?.message ?: e?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error))
+            }
+          }
+        }
+      }
+    })
+  }
+
+  protected fun initAddNewAccountLiveData() {
+    accountViewModel.addNewAccountLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          showProgress(getString(R.string.processing))
+        }
+
+        Result.Status.SUCCESS -> {
+          getTempAccount()?.let { accountEntity ->
+            privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, importCandidates, KeyDetails.Type.EMAIL)
+          }
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          val msg = StringBuilder()
+              .append(getString(R.string.could_not_add_new_account))
+              .append("/n/n")
+              .append(it.exception?.message)
+              .append(it.exception?.javaClass?.simpleName)
+              .toString()
+
+          showInfoDialog(dialogMsg = msg)
+        }
+      }
+    })
+  }
+
+  private fun initAllAccountsLiveData() {
+    //here we receive only value and unsubscribe
+    accountViewModel.pureAccountsLiveData.observeOnce(this, {
+      existedAccounts.clear()
+      existedAccounts.addAll(it)
+    })
+  }
+
+  protected open fun runEmailManagerActivity() {
+    EmailSyncService.startEmailSyncService(requireContext())
+    getTempAccount()?.let { roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email)) }
+    EmailManagerActivity.runEmailManagerActivity(requireContext())
+    activity?.finish()
+  }
 
   /**
    * Return the [Activity.RESULT_OK] to the initiator-activity.
    */
-  abstract fun returnResultOk()
+  protected open fun returnResultOk() {
+    getTempAccount()?.let {
+      if (it.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) {
+        roomBasicViewModel.addActionToQueue(LoadGmailAliasesAction(email = it.email))
+      }
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    setupAllAccountsLiveData()
-  }
-
-  private fun setupAllAccountsLiveData() {
-    accountViewModel.pureAccountsLiveData.observe(this, Observer {
-      existedAccounts.clear()
-      existedAccounts.addAll(it)
-    })
+      val intent = Intent()
+      intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, it)
+      activity?.setResult(Activity.RESULT_OK, intent)
+      activity?.finish()
+    }
   }
 }
