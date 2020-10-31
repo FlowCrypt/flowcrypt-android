@@ -33,7 +33,6 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
-import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.AccountDaoManager
 import com.flowcrypt.email.util.PrivateKeysManager
 import com.flowcrypt.email.util.TestGeneralUtil
@@ -63,7 +62,7 @@ class ImportPrivateKeyActivityNoPubOrgRulesTest : BaseTest() {
 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<ImportPrivateKeyActivity>(
-      intent = BaseImportKeyActivity.newIntent(
+      intent = ImportPrivateKeyActivity.getIntent(
           context = getTargetContext(),
           accountEntity = account,
           isSyncEnabled = false,

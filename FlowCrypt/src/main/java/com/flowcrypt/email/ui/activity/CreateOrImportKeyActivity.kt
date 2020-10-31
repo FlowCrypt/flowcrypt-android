@@ -14,7 +14,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyImportModel
 import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity
-import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
@@ -66,9 +65,15 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
           keyImportModel = service.keyImportModel
         }
 
-        startActivityForResult(BaseImportKeyActivity.newIntent(this, tempAccount, false,
-            getString(R.string.import_private_key), keyImportModel, true,
-            ImportPrivateKeyActivity::class.java), REQUEST_CODE_IMPORT_ACTIVITY)
+        startActivityForResult(ImportPrivateKeyActivity.getIntent(
+            context = this,
+            accountEntity = tempAccount,
+            isSyncEnabled = false,
+            title = getString(R.string.import_private_key),
+            model = keyImportModel,
+            throwErrorIfDuplicateFoundEnabled = true,
+            cls = ImportPrivateKeyActivity::class.java
+        ), REQUEST_CODE_IMPORT_ACTIVITY)
       }
 
       R.id.buttonSelectAnotherAccount -> {
