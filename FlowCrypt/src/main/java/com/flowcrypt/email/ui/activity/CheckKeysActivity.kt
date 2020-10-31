@@ -83,7 +83,9 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
       this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
 
       if (!intent.getBooleanExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, false)) {
-        removeAlreadyImportedKeys()
+        if (intent.getBooleanExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, false)) {
+          removeAlreadyImportedKeys()
+        }
         this.uniqueKeysCount = getUniqueKeysLongIdsCount(keyDetailsAndLongIdsMap)
         this.originalKeys = ArrayList(keyDetailsAndLongIdsMap?.keys ?: emptyList())
 
@@ -363,11 +365,13 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
         GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_IS_EXTRA_IMPORT_OPTION", CheckKeysActivity::class.java)
     val KEY_EXTRA_UNLOCKED_PRIVATE_KEYS = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_UNLOCKED_PRIVATE_KEYS", CheckKeysActivity::class.java)
+    val KEY_EXTRA_SKIP_IMPORTED_KEYS = GeneralUtil.generateUniqueExtraKey("KEY_EXTRA_SKIP_IMPORTED_KEYS", CheckKeysActivity::class.java)
 
     fun newIntent(context: Context, privateKeys: ArrayList<NodeKeyDetails>,
                   type: KeyDetails.Type? = null, subTitle: String? = null, positiveBtnTitle:
                   String? = null, negativeBtnTitle: String? = null,
-                  isExtraImportOpt: Boolean = false): Intent {
+                  isExtraImportOpt: Boolean = false,
+                  skipImportedKeys: Boolean = false): Intent {
       val intent = Intent(context, CheckKeysActivity::class.java)
       intent.putExtra(KEY_EXTRA_PRIVATE_KEYS, privateKeys)
       intent.putExtra(KEY_EXTRA_TYPE, type as Parcelable)
@@ -375,6 +379,7 @@ class CheckKeysActivity : BaseNodeActivity(), View.OnClickListener, InfoDialogFr
       intent.putExtra(KEY_EXTRA_POSITIVE_BUTTON_TITLE, positiveBtnTitle)
       intent.putExtra(KEY_EXTRA_NEGATIVE_BUTTON_TITLE, negativeBtnTitle)
       intent.putExtra(KEY_EXTRA_IS_EXTRA_IMPORT_OPTION, isExtraImportOpt)
+      intent.putExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, skipImportedKeys)
       return intent
     }
   }

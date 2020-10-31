@@ -25,7 +25,7 @@ import kotlinx.coroutines.withContext
  *         E-mail: DenBond7@gmail.com
  */
 open class AccountViewModel(application: Application) : RoomBasicViewModel(application) {
-  val addNewAccountLiveData = MutableLiveData<Result<Boolean>>()
+  val addNewAccountLiveData = MutableLiveData<Result<Boolean?>>()
 
   private val pureActiveAccountLiveData: LiveData<AccountEntity?> = roomDatabase.accountDao().getActiveAccountLD()
   val activeAccountLiveData: LiveData<AccountEntity?> = pureActiveAccountLiveData.switchMap { accountEntity ->

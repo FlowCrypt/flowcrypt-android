@@ -93,8 +93,13 @@ abstract class BaseSingInFragment : BaseFragment(), ProgressBehaviour {
         }
 
         Result.Status.SUCCESS -> {
-          getTempAccount()?.let { accountEntity ->
-            privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, importCandidates, KeyDetails.Type.EMAIL)
+          if (it.data == true) {
+            //clear LiveData value to prevent duplicate running
+            accountViewModel.addNewAccountLiveData.value = Result.success(null)
+
+            getTempAccount()?.let { accountEntity ->
+              privateKeysViewModel.encryptAndSaveKeysToDatabase(accountEntity, importCandidates, KeyDetails.Type.EMAIL)
+            }
           }
         }
 

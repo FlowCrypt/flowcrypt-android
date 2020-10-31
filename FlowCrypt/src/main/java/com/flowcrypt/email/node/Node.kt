@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.node
 
-import android.app.Application
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.preference.PreferenceManager
@@ -15,7 +14,6 @@ import com.flowcrypt.email.api.retrofit.node.RequestsManager
 import com.flowcrypt.email.api.retrofit.node.gson.NodeGson
 import com.flowcrypt.email.node.exception.NodeNotReady
 import com.flowcrypt.email.security.KeyStoreCryptoManager
-import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -26,7 +24,7 @@ import java.nio.charset.StandardCharsets
 /**
  * This is node.js manager.
  */
-class Node private constructor(app: Application) {
+class Node private constructor(context: Context) {
   @Volatile
   private var nativeNode: NativeNode? = null
 
@@ -38,14 +36,13 @@ class Node private constructor(app: Application) {
     private set
 
   init {
-    init(app)
+    init(context)
   }
 
   val liveData: MutableLiveData<NodeInitResult> = MutableLiveData()
 
   private fun init(context: Context) {
     Thread {
-      KeysStorageImpl.getInstance(context.applicationContext).fetchKeysManually()
       Thread.currentThread().name = "Node"
       try {
         val certs = getCachedNodeSecretCerts(context)
@@ -130,9 +127,9 @@ class Node private constructor(app: Application) {
     private var INSTANCE: Node? = null
 
     @JvmStatic
-    fun getInstance(app: Application): Node {
+    fun getInstance(context: Context): Node {
       return INSTANCE ?: synchronized(this) {
-        INSTANCE ?: Node(app).also { INSTANCE = it }
+        INSTANCE ?: Node(context).also { INSTANCE = it }
       }
     }
   }
