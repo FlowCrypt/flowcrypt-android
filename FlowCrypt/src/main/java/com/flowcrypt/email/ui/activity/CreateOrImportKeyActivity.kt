@@ -65,15 +65,17 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
           keyImportModel = service.keyImportModel
         }
 
-        startActivityForResult(ImportPrivateKeyActivity.getIntent(
-            context = this,
-            accountEntity = tempAccount,
-            isSyncEnabled = false,
-            title = getString(R.string.import_private_key),
-            model = keyImportModel,
-            throwErrorIfDuplicateFoundEnabled = true,
-            cls = ImportPrivateKeyActivity::class.java
-        ), REQUEST_CODE_IMPORT_ACTIVITY)
+        startActivityForResult(
+            ImportPrivateKeyActivity.getIntent(
+                context = this,
+                accountEntity = tempAccount,
+                isSyncEnabled = false,
+                title = getString(R.string.import_private_key),
+                model = keyImportModel,
+                throwErrorIfDuplicateFoundEnabled = true,
+                cls = ImportPrivateKeyActivity::class.java,
+                addAccountIfNotExist = true),
+            REQUEST_CODE_IMPORT_ACTIVITY)
       }
 
       R.id.buttonSelectAnotherAccount -> {
