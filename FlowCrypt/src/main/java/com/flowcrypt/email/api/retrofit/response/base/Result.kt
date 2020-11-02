@@ -25,12 +25,13 @@ data class Result<out T>(val status: Status,
     SUCCESS,
     ERROR,
     EXCEPTION,
-    LOADING
+    LOADING,
+    NONE
   }
 
   companion object {
-    fun <T> clearResult(): Result<T> {
-      return Result(status = Status.SUCCESS, data = null, exception = null, requestCode = 0)
+    fun <T> none(): Result<T> {
+      return Result(status = Status.NONE, data = null, exception = null, requestCode = 0)
     }
 
     fun <T> success(data: T, requestCode: Long = 0): Result<T> {
