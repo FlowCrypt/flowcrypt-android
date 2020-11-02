@@ -14,9 +14,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.retrofit.response.base.ApiResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -129,7 +127,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
         hideImportButton()
         UIUtil.exchangeViewVisibility(false, layoutProgress, layoutSyncStatus)
         UIUtil.showSnackbar(rootView, getString(R.string.error_occurred_while_receiving_private_keys),
-            getString(android.R.string.ok), View.OnClickListener {
+            getString(android.R.string.ok), {
           layoutSyncStatus?.visibility = View.GONE
           UIUtil.exchangeViewVisibility(
               false, layoutProgress, layoutContentView)
@@ -319,7 +317,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   }
 
   private fun setupSubmitPubKeyViewModel() {
-    submitPubKeyViewModel.submitPubKeyLiveData.observe(this, Observer<Result<ApiResponse>?> {
+    submitPubKeyViewModel.submitPubKeyLiveData.observe(this, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -362,7 +360,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   }
 
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.savePrivateKeysLiveData.observe(this, Observer {
+    privateKeysViewModel.savePrivateKeysLiveData.observe(this, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -397,26 +395,30 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
   private fun handleSuccessSubmit() {
     textViewProgressText.setText(R.string.saving_prv_keys)
-    privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, unlockedKeys, keyDetailsType)
+    privateKeysViewModel.encryptAndSaveKeysToDatabase(tempAccount, unlockedKeys, keyDetailsType, intent.getBooleanExtra(KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST, false))
   }
 
   companion object {
     private const val REQUEST_CODE_CHECK_PRIVATE_KEYS = 100
     private const val REQUEST_CODE_SHOW_SUBMIT_ERROR_DIALOG = 101
 
-    val KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
+    private val KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED", ImportPrivateKeyActivity::class.java)
     private val KEY_EXTRA_SKIP_IMPORTED_KEYS = GeneralUtil.generateUniqueExtraKey(
         "KEY_EXTRA_SKIP_IMPORTED_KEYS", ImportPrivateKeyActivity::class.java)
+    private val KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST = GeneralUtil.generateUniqueExtraKey(
+        "KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST", ImportPrivateKeyActivity::class.java)
 
     fun getIntent(context: Context?, accountEntity: AccountEntity?, isSyncEnabled: Boolean = false,
                   title: String, model: KeyImportModel? = null,
                   throwErrorIfDuplicateFoundEnabled: Boolean = false, cls: Class<*>,
                   isSubmittingPubKeysEnabled: Boolean = true,
-                  skipImportedKeys: Boolean = false): Intent {
+                  skipImportedKeys: Boolean = false,
+                  addAccountIfNotExist: Boolean = false): Intent {
       val intent = newIntent(context, accountEntity, isSyncEnabled, title, model, throwErrorIfDuplicateFoundEnabled, cls)
       intent.putExtra(KEY_EXTRA_IS_SUBMITTING_PUB_KEYS_ENABLED, isSubmittingPubKeysEnabled)
       intent.putExtra(KEY_EXTRA_SKIP_IMPORTED_KEYS, skipImportedKeys)
+      intent.putExtra(KEY_EXTRA_ADD_ACCOUNT_IF_NOT_EXIST, addAccountIfNotExist)
       return intent
     }
   }

@@ -161,7 +161,8 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
     }
   }
 
-  fun encryptAndSaveKeysToDatabase(accountEntity: AccountEntity?, keys: List<NodeKeyDetails>, type: KeyDetails.Type) {
+  fun encryptAndSaveKeysToDatabase(accountEntity: AccountEntity?, keys: List<NodeKeyDetails>,
+                                   type: KeyDetails.Type, addAccountIfNotExist: Boolean = false) {
     requireNotNull(accountEntity)
 
     viewModelScope.launch {
@@ -171,6 +172,13 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           val longId = keyDetails.longId
           requireNotNull(longId)
           if (roomDatabase.keysDao().getKeyByAccountAndLongIdSuspend(accountEntity.email.toLowerCase(Locale.US), longId) == null) {
+            if (addAccountIfNotExist) {
+              val existedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email.toLowerCase(Locale.US))
+              if (existedAccount == null) {
+                roomDatabase.accountDao().addAccountSuspend(accountEntity)
+              }
+            }
+
             val passphrase = if (keyDetails.isFullyDecrypted == true) "" else keyDetails.passphrase
                 ?: ""
             val keyEntity = keyDetails.toKeyEntity(accountEntity)
@@ -254,6 +262,11 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
       try {
         nodeKeyDetails = genPrivateKeyViaNode(passphrase, accountEntity)
         requireNotNull(nodeKeyDetails)
+
+        val existedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email.toLowerCase(Locale.US))
+        if (existedAccount == null) {
+          roomDatabase.accountDao().addAccountSuspend(accountEntity)
+        }
 
         savePrivateKeyToDatabase(accountEntity, nodeKeyDetails, passphrase)
         doAdditionalOperationsAfterKeyCreation(accountEntity, nodeKeyDetails)
