@@ -15,7 +15,6 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ReadyForCIAnnotation
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -50,7 +49,6 @@ class CreateOrImportKeyActivityEnterpriseTest : BaseCreateOrImportKeyActivityTes
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(AddPrivateKeyToDatabaseRule())
       .around(RetryRule())
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
