@@ -12,8 +12,6 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.action.ViewActions.typeText
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.activityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -27,7 +25,6 @@ import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.util.PrivateKeysManager
-import org.hamcrest.Matchers.not
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
@@ -95,15 +92,6 @@ class CheckKeysActivityWithoutExistingKeysTest : BaseTest() {
         .perform(scrollTo(), click())
 
     Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
-  }
-
-  @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
-  fun testCheckClickButtonNeutral() {
-    Espresso.closeSoftKeyboard()
-    onView(withId(R.id.buttonUseExistingKeys))
-        .check(matches(not(isDisplayed())))
   }
 
   @Test

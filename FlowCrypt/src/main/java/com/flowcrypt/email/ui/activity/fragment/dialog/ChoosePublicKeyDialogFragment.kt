@@ -107,7 +107,7 @@ class ChoosePublicKeyDialogFragment : BaseDialogFragment(), View.OnClickListener
 
   @SuppressLint("FragmentLiveDataObserve")
   private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.privateKeyDetailsLiveData.observe(this, {
+    privateKeysViewModel.parseKeysResultLiveData.observe(this, {
       when (it.status) {
         Result.Status.LOADING -> {
           baseActivity?.countingIdlingResource?.incrementSafely()

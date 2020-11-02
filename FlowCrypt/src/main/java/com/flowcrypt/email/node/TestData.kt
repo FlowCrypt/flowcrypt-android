@@ -324,6 +324,7 @@ class TestData internal constructor() {
     fun eccPrvKeyInfo(): Array<KeyEntity> {
       return arrayOf(KeyEntity(
           longId = "063635B3E33EB14C",
+          account = "usr@usr.com",
           source = "TEST",
           privateKey = ECC_PRV_KEY.toByteArray(),
           publicKey = ECC_PUB_KEY.toByteArray(),
@@ -335,6 +336,7 @@ class TestData internal constructor() {
     fun rsa2048PrvKeyInfo(): Array<KeyEntity> {
       return arrayOf(KeyEntity(
           longId = "3A30F4CC0A9A8F10",
+          account = "t@est.com",
           source = "TEST",
           privateKey = RSA_2048_PRV_KEY.toByteArray(),
           publicKey = RSA_2048_PUB_KEY.toByteArray(),
@@ -346,6 +348,7 @@ class TestData internal constructor() {
     fun rsa4096PrvKeyInfo(): Array<KeyEntity> {
       return arrayOf(KeyEntity(
           longId = "7C307E6F2092962D",
+          account = "usr@usr.com",
           source = "TEST",
           privateKey = RSA_4096_PRV_KEY.toByteArray(),
           publicKey = RSA_4096_PUB_KEY.toByteArray(),

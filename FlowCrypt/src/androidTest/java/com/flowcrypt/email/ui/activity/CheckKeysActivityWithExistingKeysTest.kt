@@ -22,6 +22,7 @@ import com.flowcrypt.email.ReadyForCIAnnotation
 import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.model.KeyDetails
+import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
@@ -55,11 +56,18 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
           negativeBtnTitle = getTargetContext().getString(R.string.use_another_account))
   )
 
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(AddPrivateKeyToDatabaseRule("node/not_attester_user@denbond7.com_prv_default.json",
-          TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL))
+      .around(addAccountToDatabaseRule)
+      .around(AddPrivateKeyToDatabaseRule(
+          accountEntity = addAccountToDatabaseRule.account,
+          keyPath = "node/not_attester_user@denbond7.com_prv_default.json",
+          passphrase = TestConstants.DEFAULT_PASSWORD,
+          type = KeyDetails.Type.EMAIL
+      ))
       .around(RetryRule())
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
@@ -95,17 +103,6 @@ class CheckKeysActivityWithExistingKeysTest : BaseTest() {
         .perform(scrollTo(), click())
 
     Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
-  }
-
-  @Test
-  @DoesNotNeedMailserver
-  @ReadyForCIAnnotation
-  fun testCheckClickButtonNeutral() {
-    Espresso.closeSoftKeyboard()
-    onView(withId(R.id.buttonUseExistingKeys))
-        .perform(scrollTo(), click())
-
-    Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == CheckKeysActivity.RESULT_USE_EXISTING_KEYS)
   }
 
   @Test

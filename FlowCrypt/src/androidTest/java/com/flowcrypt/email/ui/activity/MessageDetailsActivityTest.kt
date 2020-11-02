@@ -85,7 +85,7 @@ class MessageDetailsActivityTest : BaseTest() {
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
 
-  private val accountRule = AddAccountToDatabaseRule()
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
   private var idlingForWebView: IdlingResource? = null
 
   private val simpleAttInfo = TestGeneralUtil.getObjectFromJson("messages/attachments/simple_att.json", AttachmentInfo::class.java)
@@ -95,13 +95,13 @@ class MessageDetailsActivityTest : BaseTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(accountRule)
+      .around(addAccountToDatabaseRule)
       .around(AddPrivateKeyToDatabaseRule())
       .around(activeActivityRule)
       .around(ScreenshotTestRule())
 
   private val localFolder: LocalFolder = LocalFolder(
-      accountRule.account.email,
+      addAccountToDatabaseRule.account.email,
       fullName = "INBOX",
       folderAlias = "INBOX",
       msgCount = 1,
@@ -202,8 +202,12 @@ class MessageDetailsActivityTest : BaseTest() {
     intending(hasComponent(ComponentName(getTargetContext(), ImportPrivateKeyActivity::class.java)))
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
 
-    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+    PrivateKeysManager.saveKeyFromAssetsToDatabase(
+        accountEntity = addAccountToDatabaseRule.account,
+        keyPath = "node/default@denbond7.com_secondKey_prv_strong.json",
+        passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
+        type = KeyDetails.Type.EMAIL
+    )
 
     onView(withId(R.id.buttonImportPrivateKey))
         .check(matches(isDisplayed()))
@@ -218,7 +222,7 @@ class MessageDetailsActivityTest : BaseTest() {
         .withElement(findElement(Locator.XPATH, "/html/body"))
         .check(webMatches(getText(), equalTo(incomingMsgInfoFixed?.text)))
 
-    PrivateKeysManager.deleteKey("node/default@denbond7.com_secondKey_prv_strong.json")
+    PrivateKeysManager.deleteKey(addAccountToDatabaseRule.account, "node/default@denbond7.com_secondKey_prv_strong.json")
   }
 
   @Test
@@ -286,7 +290,8 @@ class MessageDetailsActivityTest : BaseTest() {
 
     testMissingKey(msgInfo)
 
-    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
+    PrivateKeysManager.saveKeyFromAssetsToDatabase(addAccountToDatabaseRule
+        .account, "node/default@denbond7.com_secondKey_prv_strong.json",
         TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
     onView(withId(R.id.buttonSendOwnPublicKey))
         .check(matches(isDisplayed()))

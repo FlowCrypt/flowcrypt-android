@@ -28,7 +28,6 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -41,21 +40,16 @@ import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
-import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.jetpack.viewmodel.OAuth2AuthCredentialsViewModel
-import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.model.KeyDetails
-import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.CheckKeysActivity
 import com.flowcrypt.email.ui.activity.CreateOrImportKeyActivity
-import com.flowcrypt.email.ui.activity.EmailManagerActivity
 import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
-import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.ui.widget.inputfilters.InputFilters
@@ -63,13 +57,11 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.SharedPreferencesHelper
 import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
-import com.flowcrypt.email.util.exception.SavePrivateKeyToDatabaseException
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.sun.mail.util.MailConnectException
 import kotlinx.android.synthetic.main.fragment_screenshot_editor.*
-import kotlinx.coroutines.launch
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationResponse
@@ -86,8 +78,7 @@ import kotlin.collections.ArrayList
  *         Time: 3:39 PM
  *         E-mail: DenBond7@gmail.com
  */
-class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
-    AdapterView.OnItemSelectedListener {
+class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelectedListener {
 
   private var buttonSignInWithOutlook: Button? = null
   private var editTextEmail: EditText? = null
@@ -109,7 +100,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   private var isSmtpSpinnerRestored: Boolean = false
   private var authRequest: AuthorizationRequest? = null
 
-  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
   private val oAuth2AuthCredentialsViewModel: OAuth2AuthCredentialsViewModel by viewModels()
 
   private val digitsTextWatcher: TextWatcher = object : TextWatcher {
@@ -159,7 +149,8 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     updateView(authCreds)
 
     setupOAuth2AuthCredentialsViewModel()
-    setupPrivateKeysViewModel()
+    initAddNewAccountLiveData()
+    initSavePrivateKeysLiveData()
   }
 
   override fun onPause() {
@@ -225,62 +216,28 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   }
 
   override fun runEmailManagerActivity() {
-    lifecycleScope.launch {
-      val authCreds = generateAuthCreds()
-      val accountEntity = AccountEntity(
-          if (authCreds.useOAuth2) {
-            authCreds.copy(password = "", smtpSignInPassword = null)
-          } else {
-            authCreds
-          })
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-      roomDatabase.accountDao().addAccountSuspend(accountEntity)
-
-      if (authCreds.useOAuth2) {
-        storeAccountInfoToAccountManager(accountEntity, authCreds)
-      }
-
-      EmailSyncService.startEmailSyncService(requireContext())
-
-      val addedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email)
-      if (addedAccount != null) {
-        EmailManagerActivity.runEmailManagerActivity(requireContext())
-        activity?.finish()
-      } else {
-        Toast.makeText(requireContext(), R.string.error_occurred_try_again_later, Toast.LENGTH_SHORT).show()
-      }
+    if (authCreds?.useOAuth2 == true) {
+      storeAccountInfoToAccountManager()
     }
+    super.runEmailManagerActivity()
+  }
+
+  override fun getTempAccount(): AccountEntity? {
+    val authCreds = generateAuthCreds()
+    return AccountEntity(
+        if (authCreds.useOAuth2) {
+          authCreds.copy(password = "", smtpSignInPassword = null)
+        } else {
+          authCreds
+        })
   }
 
   override fun returnResultOk() {
-    lifecycleScope.launch {
-      try {
-        val authCreds = generateAuthCreds()
-        val accountEntity = AccountEntity(
-            if (authCreds.useOAuth2) {
-              authCreds.copy(password = "", smtpSignInPassword = null)
-            } else {
-              authCreds
-            })
-        val roomDatabase = FlowCryptRoomDatabase.getDatabase(requireContext())
-        roomDatabase.accountDao().addAccountSuspend(accountEntity)
-        val addedAccount = roomDatabase.accountDao().getAccountSuspend(accountEntity.email)
-
-        if (authCreds.useOAuth2) {
-          storeAccountInfoToAccountManager(accountEntity, authCreds)
-        }
-
-        val intent = Intent()
-        intent.putExtra(SignInActivity.KEY_EXTRA_NEW_ACCOUNT, addedAccount)
-        activity?.setResult(Activity.RESULT_OK, intent)
-        activity?.finish()
-      } catch (e: Exception) {
-        e.printStackTrace()
-        ExceptionUtil.handleError(e)
-        Toast.makeText(requireContext(), e.message
-            ?: getString(R.string.error_occurred_during_adding_new_account), Toast.LENGTH_SHORT).show()
-      }
+    if (authCreds?.useOAuth2 == true) {
+      storeAccountInfoToAccountManager()
     }
+
+    super.returnResultOk()
   }
 
   fun handleOAuth2Intent(intent: Intent?) {
@@ -405,6 +362,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     spinnerSmtpSecurityType?.onItemSelectedListener = this
 
     view.findViewById<View>(R.id.buttonTryToConnect)?.setOnClickListener {
+      importCandidates.clear()
       tryToConnect()
     }
 
@@ -414,6 +372,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
 
     buttonSignInWithOutlook = view.findViewById(R.id.buttonSignInWithOutlook)
     buttonSignInWithOutlook?.setOnClickListener {
+      importCandidates.clear()
       it.isEnabled = false
       oAuth2AuthCredentialsViewModel.getAuthorizationRequestForProvider(
           requestCode = REQUEST_CODE_FETCH_MICROSOFT_OPENID_CONFIGURATION,
@@ -422,7 +381,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
   }
 
   /**
-   * Update the current views if [AuthCredentials] not null.l
+   * Update the current views if [AuthCredentials] is not null
    */
   private fun updateView(authCreds: AuthCredentials?, updateEmail: Boolean = true) {
     authCreds?.let { nonNullAuthCreds ->
@@ -649,36 +608,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     })
   }
 
-  private fun setupPrivateKeysViewModel() {
-    privateKeysViewModel.savePrivateKeysLiveData.observe(viewLifecycleOwner, Observer {
-      it?.let {
-        when (it.status) {
-          Result.Status.LOADING -> {
-            showProgress(progressMsg = getString(R.string.saving_prv_keys))
-          }
-
-          Result.Status.SUCCESS -> {
-            if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
-          }
-
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            showContent()
-            val e = it.exception
-            if (e is SavePrivateKeyToDatabaseException) {
-              showSnackbar(rootView, e.message ?: e.javaClass.simpleName,
-                  getString(R.string.retry), Snackbar.LENGTH_INDEFINITE, View.OnClickListener {
-                privateKeysViewModel.encryptAndSaveKeysToDatabase(e.keys, KeyDetails.Type.EMAIL)
-              })
-            } else {
-              showInfoSnackbar(rootView, e?.message ?: e?.javaClass?.simpleName
-              ?: getString(R.string.unknown_error))
-            }
-          }
-        }
-      }
-    })
-  }
-
   private fun getOAuthToken(schema: String?, code: String) {
     authRequest?.let { request ->
       when (schema) {
@@ -881,12 +810,11 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
           showContent()
           showInfoSnackbar(msgText = getString(R.string.error_no_keys))
         } else {
-          privateKeysViewModel.encryptAndSaveKeysToDatabase(keys, KeyDetails.Type.EMAIL)
-        }
-      }
+          importCandidates.clear()
+          importCandidates.addAll(keys)
 
-      CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
-        if (existedAccounts.isEmpty()) runEmailManagerActivity() else returnResultOk()
+          getTempAccount()?.let { accountViewModel.addNewAccount(it) }
+        }
       }
 
       CheckKeysActivity.RESULT_NO_NEW_KEYS -> {
@@ -925,16 +853,18 @@ class AddOtherAccountFragment : BaseSingInFragment(), ProgressBehaviour,
     }
   }
 
-  private fun storeAccountInfoToAccountManager(accountEntity: AccountEntity, authCreds: AuthCredentials) {
-    val accountManager = AccountManager.get(requireContext())
-    val account = Account(accountEntity.email.toLowerCase(Locale.US), FlowcryptAccountAuthenticator.ACCOUNT_TYPE)
-    accountManager.addAccountExplicitly(account, null, Bundle().apply {
-      with(authCreds.authTokenInfo) {
-        putString(FlowcryptAccountAuthenticator.KEY_ACCOUNT_EMAIL, this?.email)
-        putString(FlowcryptAccountAuthenticator.KEY_REFRESH_TOKEN, this?.refreshToken)
-        putString(FlowcryptAccountAuthenticator.KEY_EXPIRES_AT, this?.expiresAt?.toString())
-      }
-    })
+  private fun storeAccountInfoToAccountManager() {
+    getTempAccount()?.let { accountEntity ->
+      val accountManager = AccountManager.get(requireContext())
+      val account = Account(accountEntity.email.toLowerCase(Locale.US), FlowcryptAccountAuthenticator.ACCOUNT_TYPE)
+      accountManager.addAccountExplicitly(account, null, Bundle().apply {
+        with(authCreds?.authTokenInfo) {
+          putString(FlowcryptAccountAuthenticator.KEY_ACCOUNT_EMAIL, this?.email)
+          putString(FlowcryptAccountAuthenticator.KEY_REFRESH_TOKEN, this?.refreshToken)
+          putString(FlowcryptAccountAuthenticator.KEY_EXPIRES_AT, this?.expiresAt?.toString())
+        }
+      })
+    }
   }
 
   companion object {

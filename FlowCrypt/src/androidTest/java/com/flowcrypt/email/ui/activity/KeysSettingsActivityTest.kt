@@ -76,12 +76,14 @@ class KeysSettingsActivityTest : BaseTest() {
 
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<KeysSettingsActivity>()
+
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
+      .around(addAccountToDatabaseRule)
       .around(addPrivateKeyToDatabaseRule)
       .around(RetryRule())
       .around(activityScenarioRule)
@@ -102,7 +104,12 @@ class KeysSettingsActivityTest : BaseTest() {
         .respondWith(Instrumentation.ActivityResult(Activity.RESULT_OK, null))
 
     val details = PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_secondKey_prv_default.json")
-    PrivateKeysManager.saveKeyToDatabase(details, TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
+    PrivateKeysManager.saveKeyToDatabase(
+        accountEntity = addAccountToDatabaseRule.account,
+        nodeKeyDetails = details,
+        passphrase = TestConstants.DEFAULT_PASSWORD,
+        type = KeyDetails.Type.EMAIL
+    )
 
     onView(withId(R.id.floatActionButtonAddKey))
         .check(matches(isDisplayed()))

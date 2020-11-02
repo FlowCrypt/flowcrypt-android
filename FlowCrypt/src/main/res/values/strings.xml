@@ -174,7 +174,6 @@
     <string name="template_email_alredy_added">The email \"%1$s\" already added!</string>
     <string name="expand_an_account_managment">Expand an account management</string>
     <string name="add_account">Add account</string>
-    <string name="use_existing_keys">Use existing keys</string>
     <string name="skip_remaining_backups">Skip remaining backups</string>
     <string name="crash_the_app">Crash the App</string>
     <string name="experimental">Experimental</string>
@@ -409,7 +408,6 @@
     <string name="undo">Undo</string>
     <string name="choose_email">Choose email</string>
     <string name="network_error">Network error</string>
-    <string name="error_occurred_during_adding_new_account">An error occurred during adding a new account</string>
     <string name="error_no_keys">Error: no keys</string>
     <string name="could_not_load_private_keys">Couldn\'t load private keys</string>
     <string name="internal_api_error">Internal API error</string>
@@ -493,4 +491,5 @@
     <string name="create_new_message">Create a new message</string>
     <string name="add_new_contact">Add a new contact</string>
     <string name="add_new_private_key">Add a new private key</string>
+    <string name="could_not_add_new_account">Couldn\'t add a new account</string>
 </resources>

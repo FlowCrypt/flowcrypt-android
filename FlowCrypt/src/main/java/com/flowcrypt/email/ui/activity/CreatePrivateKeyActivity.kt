@@ -13,7 +13,6 @@ import android.text.TextUtils
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
@@ -113,7 +112,7 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
   }
 
   private fun setupPrivateKeyViewModel() {
-    privateKeysViewModel.createPrivateKeyLiveData.observe(this, Observer {
+    privateKeysViewModel.createPrivateKeyLiveData.observe(this, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -139,9 +138,9 @@ class CreatePrivateKeyActivity : BasePassPhraseManagerActivity() {
             it.exception?.let { exception ->
               if (exception is ApiException) {
                 showSnackbar(rootView, exception.apiError?.msg ?: it.javaClass.simpleName,
-                    getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener {
+                    getString(R.string.retry), Snackbar.LENGTH_LONG) {
                   onConfirmPassPhraseSuccess()
-                })
+                }
               } else {
                 editTextKeyPasswordSecond.text = null
                 showInfoSnackbar(rootView, exception.message)
