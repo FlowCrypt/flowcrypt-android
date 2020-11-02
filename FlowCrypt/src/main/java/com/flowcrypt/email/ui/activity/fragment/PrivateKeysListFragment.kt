@@ -28,7 +28,6 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
-import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
@@ -184,27 +183,6 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
         }
       }
     })
-
-    privateKeysViewModel.deleteKeysLiveData.observe(viewLifecycleOwner, {
-      when (it.status) {
-        Result.Status.LOADING -> {
-          baseActivity.countingIdlingResource.incrementSafely()
-        }
-
-        Result.Status.SUCCESS -> {
-          baseActivity.countingIdlingResource.decrementSafely()
-          privateKeysViewModel.deleteKeysLiveData.value = Result.none()
-        }
-
-        Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          showInfoDialog(
-              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
-              ?: getString(R.string.unknown_error))
-          baseActivity.countingIdlingResource.decrementSafely()
-          privateKeysViewModel.deleteKeysLiveData.value = Result.none()
-        }
-      }
-    })
   }
 
   private fun runCreateOrImportKeyActivity() {
@@ -234,7 +212,7 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
     recyclerView.layoutManager = manager
     recyclerView.adapter = recyclerViewAdapter
 
-    setupSelectionTracker(recyclerView)
+    //setupSelectionTracker(recyclerView)
 
     if (recyclerViewAdapter.itemCount > 0) {
       progressBar?.visibility = View.GONE
