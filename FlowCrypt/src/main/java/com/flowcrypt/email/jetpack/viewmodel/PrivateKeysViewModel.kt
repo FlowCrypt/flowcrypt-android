@@ -73,6 +73,7 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
   val parseKeysLiveData = MutableLiveData<Result<ParseKeysResult?>>()
   val createPrivateKeyLiveData = MutableLiveData<Result<NodeKeyDetails?>>()
   val nodeKeyDetailsLiveData = keysStorage.nodeKeyDetailsLiveData
+  val deleteKeysLiveData = MutableLiveData<Result<Boolean>>()
 
   val parseKeysResultLiveData: LiveData<Result<ParseKeysResult>> =
       Transformations.switchMap(keysStorage.nodeKeyDetailsLiveData) { list ->
@@ -277,6 +278,30 @@ class PrivateKeysViewModel(application: Application) : BaseNodeApiViewModel(appl
           roomDatabase.keysDao().deleteByAccountAndLongIdSuspend(accountEntity.email, it)
         }
         createPrivateKeyLiveData.value = Result.exception(e)
+        ExceptionUtil.handleError(e)
+      }
+    }
+  }
+
+  fun deleteKeys(accountEntity: AccountEntity, keys: List<NodeKeyDetails>) {
+    viewModelScope.launch {
+      deleteKeysLiveData.value = Result.loading()
+      try {
+        val context: Context = getApplication()
+        val allKeyEntitiesOfAccount = roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
+        val longIdListOfDeleteCandidates = keys.mapNotNull { it.longId?.toLowerCase(Locale.US) }
+        val deleteCandidates = allKeyEntitiesOfAccount.filter { longIdListOfDeleteCandidates.contains(it.longId.toLowerCase(Locale.US)) }
+
+        if (keys.size == allKeyEntitiesOfAccount.size) {
+          throw IllegalArgumentException(context.getString(R.string.please_leave_at_least_one_key))
+        }
+
+        roomDatabase.keysDao().deleteSuspend(deleteCandidates)
+
+        deleteKeysLiveData.value = Result.success(true)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        deleteKeysLiveData.value = Result.exception(e)
         ExceptionUtil.handleError(e)
       }
     }
