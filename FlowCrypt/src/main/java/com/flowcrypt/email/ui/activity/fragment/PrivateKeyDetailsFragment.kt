@@ -228,6 +228,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
         }
 
         Result.Status.SUCCESS -> {
+          privateKeysViewModel.deleteKeysLiveData.value = Result.none()
           parentFragmentManager.popBackStack()
           baseActivity.countingIdlingResource.decrementSafely()
         }
@@ -237,6 +238,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
               dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
               ?: "Couldn't delete a key with id = {${details?.longId ?: ""}}")
           baseActivity.countingIdlingResource.decrementSafely()
+          privateKeysViewModel.deleteKeysLiveData.value = Result.none()
         }
       }
     })

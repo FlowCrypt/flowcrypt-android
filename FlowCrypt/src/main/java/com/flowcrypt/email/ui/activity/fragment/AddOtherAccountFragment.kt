@@ -538,7 +538,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
         Result.Status.SUCCESS -> {
           it.data?.let { authCredentials ->
             authCreds = authCredentials
-            oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.clearResult()
+            oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.none()
 
             val existedAccount = existedAccounts.firstOrNull { account ->
               account.email.equals(authCredentials.email, ignoreCase = true)
@@ -565,7 +565,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.clearResult()
+          oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.value = Result.none()
           showContent()
           showInfoDialog(
               dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
@@ -582,7 +582,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
         Result.Status.SUCCESS -> {
           it.data?.let { authorizationRequest ->
-            oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.value = Result.clearResult()
+            oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.value = Result.none()
             buttonSignInWithOutlook?.isEnabled = true
             showContent()
 
@@ -597,7 +597,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
         }
 
         Result.Status.ERROR, Result.Status.EXCEPTION -> {
-          oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.value = Result.clearResult()
+          oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.value = Result.none()
           buttonSignInWithOutlook?.isEnabled = true
           showContent()
           showInfoDialog(

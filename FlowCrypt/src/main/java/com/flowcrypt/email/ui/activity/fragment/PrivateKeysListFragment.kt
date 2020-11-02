@@ -9,11 +9,17 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ActionMode
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.selection.SelectionTracker
+import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,9 +28,15 @@ import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.adapter.PrivateKeysRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.selection.NodeKeyDetailsKeyProvider
+import com.flowcrypt.email.ui.adapter.selection.PrivateKeyItemDetailsLookup
 import com.flowcrypt.email.util.UIUtil
 
 /**
@@ -46,6 +58,27 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
   override val contentResourceId: Int = R.layout.fragment_private_keys
 
+  private var tracker: SelectionTracker<NodeKeyDetails>? = null
+  private var actionMode: ActionMode? = null
+  private val selectionObserver = object : SelectionTracker.SelectionObserver<NodeKeyDetails>() {
+    override fun onSelectionChanged() {
+      super.onSelectionChanged()
+      when {
+        tracker?.hasSelection() == true -> {
+          if (actionMode == null) {
+            actionMode = (this@PrivateKeysListFragment.activity as AppCompatActivity).startSupportActionMode(genActionModeForKeys())
+          }
+          actionMode?.title = getString(R.string.selection_text, tracker?.selection?.size() ?: 0)
+        }
+
+        tracker?.hasSelection() == false -> {
+          actionMode?.finish()
+          actionMode = null
+        }
+      }
+    }
+  }
+
   override fun onAttach(context: Context) {
     super.onAttach(context)
     recyclerViewAdapter = PrivateKeysRecyclerViewAdapter(context, this)
@@ -55,6 +88,20 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
     setupPrivateKeysViewModel()
+  }
+
+  override fun onViewStateRestored(savedInstanceState: Bundle?) {
+    super.onViewStateRestored(savedInstanceState)
+    tracker?.onRestoreInstanceState(savedInstanceState)
+
+    if (tracker?.hasSelection() == true) {
+      selectionObserver.onSelectionChanged()
+    }
+  }
+
+  override fun onSaveInstanceState(outState: Bundle) {
+    super.onSaveInstanceState(outState)
+    tracker?.onSaveInstanceState(outState)
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -68,6 +115,18 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
         Activity.RESULT_OK -> Toast.makeText(context, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show()
       }
 
+      REQUEST_CODE_DELETE_KEYS_DIALOG -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            account?.let { accountEntity ->
+              tracker?.selection?.map { it }?.let { privateKeysViewModel.deleteKeys(accountEntity, it) }
+            }
+
+            actionMode?.finish()
+          }
+        }
+      }
+
       else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
@@ -79,6 +138,10 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
   }
 
   override fun onKeySelected(position: Int, nodeKeyDetails: NodeKeyDetails?) {
+    if (tracker?.hasSelection() == true) {
+      return
+    }
+
     nodeKeyDetails?.let {
       parentFragmentManager
           .beginTransaction()
@@ -121,6 +184,27 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
         }
       }
     })
+
+    privateKeysViewModel.deleteKeysLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
+        }
+
+        Result.Status.SUCCESS -> {
+          baseActivity.countingIdlingResource.decrementSafely()
+          privateKeysViewModel.deleteKeysLiveData.value = Result.none()
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          showInfoDialog(
+              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: getString(R.string.unknown_error))
+          baseActivity.countingIdlingResource.decrementSafely()
+          privateKeysViewModel.deleteKeysLiveData.value = Result.none()
+        }
+      }
+    })
   }
 
   private fun runCreateOrImportKeyActivity() {
@@ -150,6 +234,8 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
     recyclerView.layoutManager = manager
     recyclerView.adapter = recyclerViewAdapter
 
+    setupSelectionTracker(recyclerView)
+
     if (recyclerViewAdapter.itemCount > 0) {
       progressBar?.visibility = View.GONE
     }
@@ -159,9 +245,59 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
     }
   }
 
+  private fun setupSelectionTracker(recyclerView: RecyclerView) {
+    tracker = SelectionTracker.Builder(
+        javaClass.simpleName,
+        recyclerView,
+        NodeKeyDetailsKeyProvider(recyclerViewAdapter.nodeKeyDetailsList),
+        PrivateKeyItemDetailsLookup(recyclerView),
+        StorageStrategy.createParcelableStorage(NodeKeyDetails::class.java)
+    ).build()
+
+    recyclerViewAdapter.tracker = tracker
+    tracker?.addObserver(selectionObserver)
+  }
+
+  private fun genActionModeForKeys(): ActionMode.Callback {
+    return object : ActionMode.Callback {
+      override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+        val count = tracker?.selection?.size() ?: 0
+        return when (item?.itemId) {
+          R.id.menuActionDeleteKey -> {
+            showTwoWayDialog(
+                dialogTitle = "",
+                dialogMsg = requireContext().resources.getQuantityString(R.plurals.delete_key_question, count, count),
+                positiveButtonTitle = getString(android.R.string.ok),
+                negativeButtonTitle = getString(android.R.string.cancel),
+                requestCode = REQUEST_CODE_DELETE_KEYS_DIALOG,
+                isCancelable = false
+            )
+            true
+          }
+
+          else -> false
+        }
+      }
+
+      override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+        mode?.menuInflater?.inflate(R.menu.private_keys_list_context_menu, menu)
+        return true
+      }
+
+      override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+        return true
+      }
+
+      override fun onDestroyActionMode(mode: ActionMode?) {
+        tracker?.clearSelection()
+      }
+    }
+  }
+
   companion object {
 
     private const val REQUEST_CODE_START_IMPORT_KEY_ACTIVITY = 0
+    private const val REQUEST_CODE_DELETE_KEYS_DIALOG = 100
 
     fun newInstance(): PrivateKeysListFragment {
       return PrivateKeysListFragment()

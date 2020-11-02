@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.ui.activity.fragment
+package com.flowcrypt.email.ui.adapter
 
 import android.content.Context
 import android.text.format.DateFormat
@@ -11,10 +11,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.selection.ItemDetailsLookup
+import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.ui.adapter.selection.SelectionNodeKeyDetailsDetails
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -26,12 +29,12 @@ import java.util.concurrent.TimeUnit
  * Time: 6:24 PM
  * E-mail: DenBond7@gmail.com
  */
-//todo-denbond7 move it to adapters folder
 class PrivateKeysRecyclerViewAdapter(context: Context,
-                                     private val listener: OnKeySelectedListener?)
+                                     private val listener: OnKeySelectedListener?,
+                                     val nodeKeyDetailsList: MutableList<NodeKeyDetails> = mutableListOf())
   : RecyclerView.Adapter<PrivateKeysRecyclerViewAdapter.ViewHolder>() {
   private val dateFormat: java.text.DateFormat = DateFormat.getMediumDateFormat(context)
-  private val list: MutableList<NodeKeyDetails> = mutableListOf()
+  var tracker: SelectionTracker<NodeKeyDetails>? = null
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
     val view = LayoutInflater.from(parent.context).inflate(R.layout.key_item, parent, false)
@@ -39,8 +42,9 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
   }
 
   override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-    val nodeKeyDetails = list[position]
-    val (email) = nodeKeyDetails.primaryPgpContact
+    val nodeKeyDetails = nodeKeyDetailsList[position]
+    tracker?.isSelected(nodeKeyDetails)?.let { viewHolder.setActivated(it) }
+    val email = nodeKeyDetails.primaryPgpContact.email
 
     viewHolder.textViewKeyOwner.text = email
     viewHolder.textViewKeywords.text = nodeKeyDetails.keywords
@@ -59,15 +63,15 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
   }
 
   override fun getItemCount(): Int {
-    return list.size
+    return nodeKeyDetailsList.size
   }
 
   fun swap(newList: List<NodeKeyDetails>) {
-    val diffUtilCallback = DiffUtilCallback(this.list, newList)
+    val diffUtilCallback = DiffUtilCallback(this.nodeKeyDetailsList, newList)
     val productDiffResult = DiffUtil.calculateDiff(diffUtilCallback)
 
-    list.clear()
-    list.addAll(newList)
+    nodeKeyDetailsList.clear()
+    nodeKeyDetailsList.addAll(newList)
     productDiffResult.dispatchUpdatesTo(this)
   }
 
@@ -76,6 +80,16 @@ class PrivateKeysRecyclerViewAdapter(context: Context,
   }
 
   inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    fun getNodeKeyDetails(): ItemDetailsLookup.ItemDetails<NodeKeyDetails>? {
+      return nodeKeyDetailsList.getOrNull(adapterPosition)?.let {
+        SelectionNodeKeyDetailsDetails(adapterPosition, it)
+      }
+    }
+
+    fun setActivated(isActivated: Boolean) {
+      itemView.isActivated = isActivated
+    }
+
     val textViewKeyOwner: TextView = view.findViewById(R.id.textViewKeyOwner)
     val textViewKeywords: TextView = view.findViewById(R.id.textViewKeywords)
     val textViewCreationDate: TextView = view.findViewById(R.id.textViewCreationDate)

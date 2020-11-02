@@ -59,7 +59,7 @@ class CheckPrivateKeysViewModel(application: Application) : BaseAndroidViewModel
                 ""
               }
 
-              Result.Status.LOADING -> ""
+              Result.Status.LOADING, Result.Status.NONE -> ""
             }
           }
 
