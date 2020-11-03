@@ -290,7 +290,7 @@ class BackupKeysActivityTest : BaseTest() {
   private fun addSecondKeyWithStrongPassword() {
     PrivateKeysManager.saveKeyFromAssetsToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
-        keyPath = "node/default@denbond7.com_secondKey_prv_strong.json",
+        keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
         passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
         type = KeyDetails.Type.EMAIL
     )

@@ -204,7 +204,7 @@ class MessageDetailsActivityTest : BaseTest() {
 
     PrivateKeysManager.saveKeyFromAssetsToDatabase(
         accountEntity = addAccountToDatabaseRule.account,
-        keyPath = "node/default@denbond7.com_secondKey_prv_strong.json",
+        keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
         passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
         type = KeyDetails.Type.EMAIL
     )
@@ -222,7 +222,7 @@ class MessageDetailsActivityTest : BaseTest() {
         .withElement(findElement(Locator.XPATH, "/html/body"))
         .check(webMatches(getText(), equalTo(incomingMsgInfoFixed?.text)))
 
-    PrivateKeysManager.deleteKey(addAccountToDatabaseRule.account, "node/default@denbond7.com_secondKey_prv_strong.json")
+    PrivateKeysManager.deleteKey(addAccountToDatabaseRule.account, TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
   }
 
   @Test
@@ -291,7 +291,7 @@ class MessageDetailsActivityTest : BaseTest() {
     testMissingKey(msgInfo)
 
     PrivateKeysManager.saveKeyFromAssetsToDatabase(addAccountToDatabaseRule
-        .account, "node/default@denbond7.com_secondKey_prv_strong.json",
+        .account, TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
         TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
     onView(withId(R.id.buttonSendOwnPublicKey))
         .check(matches(isDisplayed()))

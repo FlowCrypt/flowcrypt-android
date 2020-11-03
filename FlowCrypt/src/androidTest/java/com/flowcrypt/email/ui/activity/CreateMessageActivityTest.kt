@@ -443,7 +443,7 @@ class CreateMessageActivityTest : BaseTest() {
   @ReadyForCIAnnotation
   fun testSharePubKeyMultiply() {
     val secondKeyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_secondKey_prv_strong.json")
+        PrivateKeysManager.getNodeKeyDetailsFromAssets(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
     PrivateKeysManager.saveKeyToDatabase(addAccountToDatabaseRule.account, secondKeyDetails,
         TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
     val att = EmailUtil.genAttInfoFromPubKey(secondKeyDetails)
