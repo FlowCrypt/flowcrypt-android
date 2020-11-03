@@ -26,5 +26,8 @@ class TestConstants {
     const val DEFAULT_STRONG_PASSWORD = "My super strong password 2018"
     const val DEFAULT_SECOND_STRONG_PASSWORD = "My super strong passphrase 2019"
     const val DEFAULT_PASSWORD = "android"
+
+
+    const val DEFAULT_SECOND_KEY_PRV_STRONG = "node/default@denbond7.com_secondKey_prv_strong.json"
   }
 }
