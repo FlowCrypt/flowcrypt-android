@@ -117,6 +117,32 @@ class KeysStorageImpl private constructor(context: Context) : KeysStorage {
     return keys
   }
 
+  /**
+   * Return the latest all private keys for an active account. We can use this method to fetch
+   * keys as they are stored in the database. It can't be used in UI thread.
+   */
+  suspend fun getLatestAllPgpPrivateKeys(): List<KeyEntity> {
+    val account = pureActiveAccountLiveData.value
+        ?: roomDatabase.accountDao().getActiveAccountSuspend()
+    account?.let { accountEntity ->
+      val cachedKeysLongIds = keys.map { it.longId }.toSet()
+      val latestEncryptedKeys = roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email)
+      val latestKeysLongIds = roomDatabase.keysDao().getAllKeysByAccountSuspend(accountEntity.email).map { it.longId }.toSet()
+
+      if (cachedKeysLongIds == latestKeysLongIds) {
+        return keys
+      }
+
+      return latestEncryptedKeys.map {
+        it.copy(
+            privateKey = KeyStoreCryptoManager.decryptSuspend(it.privateKeyAsString).toByteArray(),
+            passphrase = KeyStoreCryptoManager.decryptSuspend(it.passphrase))
+      }
+    }
+
+    return emptyList()
+  }
+
   private fun getDecryptedKeyEntity(keyEntity: KeyEntity): KeyEntity {
     val privateKey = KeyStoreCryptoManager.decrypt(keyEntity.privateKeyAsString)
     val passphrase = KeyStoreCryptoManager.decrypt(keyEntity.passphrase)
