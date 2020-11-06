@@ -10,16 +10,14 @@
 
     <!-- we use tools:ignore="LockedOrientationActivity" as for now we support android:screenOrientation="portrait" only-->
 
-    <!-- android.permission.INTERNET needed to make a network requests -->
+    <!-- android.permission.INTERNET is needed to make a network requests -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- android.permission.ACCESS_NETWORK_STATE used to check is internet connection available -->
+    <!-- android.permission.ACCESS_NETWORK_STATE is used to check is internet connection available-->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- android.permission.READ_EXTERNAL_STORAGE used to import private keys -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <!-- android.permission.WRITE_EXTERNAL_STORAGE used to save attachments -->
-    <!-- Temporary added tools:ignore="ScopedStorage" to fix lint warnings. Need to look at this in the near future-->
+    <!-- android.permission.WRITE_EXTERNAL_STORAGE is used to save attachments for Build.VERSION.SDK_INT <= Build.VERSION_CODES.P -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"
         tools:ignore="ScopedStorage" />
     <!-- android.permission.RECEIVE_BOOT_COMPLETED will be used by JobScheduler to persists jobs after the device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />

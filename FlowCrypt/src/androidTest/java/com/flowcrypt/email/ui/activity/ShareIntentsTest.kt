@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity
 
-import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import androidx.test.core.app.ActivityScenario
@@ -17,7 +16,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import androidx.test.rule.GrantPermissionRule
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ReadyForCIAnnotation
@@ -61,7 +59,6 @@ class ShareIntentsTest : BaseTest() {
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(GrantPermissionRule.grant(Manifest.permission.READ_EXTERNAL_STORAGE))
       .around(AddAccountToDatabaseRule())
       .around(activeActivityRule)
       .around(ScreenshotTestRule())
