@@ -7,15 +7,19 @@ package com.flowcrypt.email.ui.activity
 
 import android.content.Intent
 import android.net.Uri
+import androidx.core.content.FileProvider
 import androidx.test.core.app.ActivityScenario
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.closeSoftKeyboard
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.hasChildCount
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.flowcrypt.email.Constants
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ReadyForCIAnnotation
@@ -23,14 +27,19 @@ import com.flowcrypt.email.TestConstants
 import com.flowcrypt.email.base.BaseTest
 import com.flowcrypt.email.rules.AddAccountToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
+import com.flowcrypt.email.rules.FlowCryptMockWebServerRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
 import com.flowcrypt.email.rules.lazyActivityScenarioRule
 import com.flowcrypt.email.util.TestGeneralUtil
+import okhttp3.mockwebserver.Dispatcher
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.RecordedRequest
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.isEmptyString
 import org.hamcrest.Matchers.not
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
@@ -219,6 +228,17 @@ class ShareIntentsTest : BaseTest() {
     checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, atts.size)
   }
 
+  @Test
+  @ReadyForCIAnnotation
+  fun testDoNotSupportAttWithFileSchema() {
+    activeActivityRule.launch(
+        generateIntentWithExtras(Intent.ACTION_SEND, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 0).apply {
+          putExtra(Intent.EXTRA_STREAM, atts.first())
+        })
+    registerAllIdlingResources()
+    checkViewsOnScreen(0, Intent.EXTRA_SUBJECT, Intent.EXTRA_TEXT, 0)
+  }
+
   private fun genIntentForUri(action: String?, stringUri: String?): Intent {
     val intent = Intent(getTargetContext(), CreateMessageActivity::class.java)
     intent.action = action
@@ -238,11 +258,11 @@ class ShareIntentsTest : BaseTest() {
 
     if (attachmentsCount > 0) {
       if (attachmentsCount == 1) {
-        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(atts[1]))
+        intent.putExtra(Intent.EXTRA_STREAM, genUriFromFile(atts.first()))
       } else {
         val urisFromAtts = ArrayList<Uri>()
         for (att in atts) {
-          urisFromAtts.add(Uri.fromFile(att))
+          urisFromAtts.add(genUriFromFile(att))
         }
         intent.putExtra(Intent.EXTRA_STREAM, urisFromAtts)
       }
@@ -264,14 +284,19 @@ class ShareIntentsTest : BaseTest() {
   }
 
   private fun checkAtts(attachmentsCount: Int) {
-    if (attachmentsCount > 0) {
-      if (attachmentsCount == 1) {
-        onView(withText(atts[1].name))
-            .check(matches(isDisplayed()))
-      } else {
-        for (att in atts) {
-          onView(withText(att.name))
+    onView(withId(R.id.layoutAtts))
+        .check(matches(hasChildCount(attachmentsCount)))
+
+    when {
+      attachmentsCount > 0 -> {
+        if (attachmentsCount == 1) {
+          onView(withText(atts.first().name))
               .check(matches(isDisplayed()))
+        } else {
+          for (att in atts) {
+            onView(withText(att.name))
+                .check(matches(isDisplayed()))
+          }
         }
       }
     }
@@ -318,6 +343,11 @@ class ShareIntentsTest : BaseTest() {
     }
   }
 
+  private fun genUriFromFile(file: File): Uri {
+    return FileProvider.getUriForFile(ApplicationProvider.getApplicationContext(), Constants
+        .FILE_PROVIDER_AUTHORITY, file)
+  }
+
   companion object {
     private const val ATTACHMENTS_COUNT = 3
     private const val ENCODED_SUBJECT = "some%20subject"
@@ -339,6 +369,28 @@ class ShareIntentsTest : BaseTest() {
     fun cleanResources() {
       TestGeneralUtil.deleteFiles(atts)
     }
+
+    @get:ClassRule
+    @JvmStatic
+    val mockWebServerRule = FlowCryptMockWebServerRule(TestConstants.MOCK_WEB_SERVER_PORT, object : Dispatcher() {
+      override fun dispatch(request: RecordedRequest): MockResponse {
+        if (request.path?.startsWith("/pub", ignoreCase = true) == true) {
+          val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
+
+          when {
+            TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
+              return MockResponse().setResponseCode(404).setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
+            }
+
+            TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
+              return MockResponse().setResponseCode(200).setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
+            }
+          }
+        }
+
+        return MockResponse().setResponseCode(404)
+      }
+    })
 
     private fun createFilesForAtts() {
       atts = mutableListOf()
