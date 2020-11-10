@@ -20,6 +20,7 @@ import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.Uri
+import android.os.Build
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.text.TextUtils
@@ -339,6 +340,22 @@ class GeneralUtil {
       drawable.setBounds(0, 0, canvas.width, canvas.height)
       drawable.draw(canvas)
       return bitmap
+    }
+
+    /**
+     * Returns a language code of the current [Locale].
+     */
+    @SuppressWarnings("deprecation")
+    @Suppress("DEPRECATION")
+    fun getLocaleLanguageCode(context: Context?): String {
+      context ?: return "en"
+      return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        if (context.resources.configuration.locales.isEmpty) {
+          "en"
+        } else context.resources.configuration.locales.get(0).language.toLowerCase(Locale.getDefault())
+      } else {
+        context.resources.configuration.locale.language.toLowerCase(Locale.getDefault())
+      }
     }
   }
 }

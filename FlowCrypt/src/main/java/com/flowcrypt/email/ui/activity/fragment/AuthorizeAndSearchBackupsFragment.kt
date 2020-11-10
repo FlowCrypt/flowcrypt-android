@@ -10,9 +10,7 @@ import android.view.View
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.toast
@@ -57,19 +55,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
   private fun fetchBackups() {
     if (arguments?.containsKey(KEY_ACCOUNT) == true) {
       accountEntity = arguments?.getParcelable(KEY_ACCOUNT) ?: return
-      when (accountEntity.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
-          if (JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2.equals(accountEntity.imapAuthMechanisms, true)) {
-            loadPrivateKeysViewModel.fetchAvailableKeys(accountEntity)
-          } else {
-            checkEmailSettingsViewModel.checkAccount(accountEntity)
-          }
-        }
-
-        else -> {
-          checkEmailSettingsViewModel.checkAccount(accountEntity)
-        }
-      }
+      checkEmailSettingsViewModel.checkAccount(accountEntity)
     } else {
       toast("Account is null!")
       parentFragmentManager.popBackStack()
@@ -77,7 +63,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupCheckEmailSettingsViewModel() {
-    checkEmailSettingsViewModel.checkEmailSettingsLiveData.observe(viewLifecycleOwner, Observer {
+    checkEmailSettingsViewModel.checkEmailSettingsLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
@@ -98,7 +84,7 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun setupLoadPrivateKeysViewModel() {
-    loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner, Observer {
+    loadPrivateKeysViewModel.privateKeysLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(it.progressMsg)
