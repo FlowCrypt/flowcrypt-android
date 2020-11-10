@@ -13,7 +13,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.JavaEmailConstants
-import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.toast
@@ -63,12 +62,12 @@ class AuthorizeAndSearchBackupsFragment : BaseFragment(), ProgressBehaviour {
           if (JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2.equals(accountEntity.imapAuthMechanisms, true)) {
             loadPrivateKeysViewModel.fetchAvailableKeys(accountEntity)
           } else {
-            checkEmailSettingsViewModel.check(AuthCredentials.from(accountEntity))
+            checkEmailSettingsViewModel.checkAccount(accountEntity)
           }
         }
 
         else -> {
-          checkEmailSettingsViewModel.check(AuthCredentials.from(accountEntity))
+          checkEmailSettingsViewModel.checkAccount(accountEntity)
         }
       }
     } else {

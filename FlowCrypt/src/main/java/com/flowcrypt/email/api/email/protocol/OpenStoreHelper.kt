@@ -11,6 +11,7 @@ import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
+import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
@@ -35,69 +36,6 @@ class OpenStoreHelper {
     private val TAG = OpenStoreHelper::class.java.simpleName
 
     /**
-     * Open and connect to the store using gimaps protocol.
-     *
-     * @param context     Interface to global information about an application environment.
-     * @param token       An OAuth2 access token;
-     * @param accountName An account name which use to create connection;
-     * @return <tt>GmailSSLStore</tt> A GmailSSLStore object based on properties for
-     * gimaps.
-     */
-    fun openAndConnectToGimapsStore(context: Context, token: String, accountName: String): GmailSSLStore {
-      val gmailSSLStore = getGmailSess(context).getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
-      gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountName, token)
-      return gmailSSLStore
-    }
-
-    /**
-     * Open and connect to the store using gimaps protocol.
-     *
-     * @param context            Interface to global information about an application environment.
-     * @param session            The session which will be used for connection.
-     * @param accountEntity      The object which contains information about an account.
-     * @param isResetTokenNeeded True if need reset token.
-     * @return <tt>GmailSSLStore</tt> A GmailSSLStore object based on properties for
-     * gimaps.
-     */
-    fun openAndConnectToGimapsStore(context: Context, session: Session, accountEntity: AccountEntity,
-                                    isResetTokenNeeded: Boolean): GmailSSLStore {
-      val gmailSSLStore: GmailSSLStore = session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
-
-      try {
-        var token = EmailUtil.getGmailAccountToken(context, accountEntity)
-
-        if (isResetTokenNeeded) {
-          LogsUtil.d(TAG, "Refresh Gmail token")
-          GoogleAuthUtil.clearToken(context, token)
-          token = EmailUtil.getGmailAccountToken(context, accountEntity)
-        }
-
-        gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountEntity.email, token)
-      } catch (e: AuthenticationFailedException) {
-        e.printStackTrace()
-        return if (!isResetTokenNeeded) {
-          openAndConnectToGimapsStore(context, session, accountEntity, true)
-        } else {
-          throw e
-        }
-      }
-
-      return gmailSSLStore
-    }
-
-    /**
-     * Generate a session for gimaps protocol.
-     *
-     * @param context Interface to global information about an application environment;
-     * @return <tt>Session</tt> A new sess for gimaps protocol based on properties for gimaps.
-     */
-    fun getGmailSess(context: Context): Session {
-      val session = Session.getInstance(PropertiesHelper.generateGmailProperties())
-      session.debug = EmailUtil.hasEnabledDebug(context)
-      return session
-    }
-
-    /**
      * Generate a session which will be use to download attachments.
      *
      * @param context Interface to global information about an application environment;
@@ -106,14 +44,8 @@ class OpenStoreHelper {
      */
     fun getAttsSess(context: Context, account: AccountEntity?): Session {
       return if (account != null) {
-        when (account.accountType) {
-          AccountEntity.ACCOUNT_TYPE_GOOGLE -> getAttGmailSess(context)
-
-          else -> {
-            val session = Session.getInstance(PropertiesHelper.genDownloadAttsProps(account))
-            session.debug = EmailUtil.hasEnabledDebug(context)
-            session
-          }
+        Session.getInstance(PropertiesHelper.genDownloadAttsProps(account)).apply {
+          debug = EmailUtil.hasEnabledDebug(context)
         }
       } else
         throw NullPointerException("AccountEntity must not be a null!")
@@ -127,15 +59,25 @@ class OpenStoreHelper {
      * @return A generated [Session]
      */
     fun getAccountSess(context: Context, account: AccountEntity): Session {
-      return when (account.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> getGmailSess(context)
+      return Session.getInstance(PropertiesHelper.genProps(account)).apply {
+        debug = EmailUtil.hasEnabledDebug(context)
+      }
+    }
+
+    fun openStore(account: AccountEntity, authCredentials: AuthCredentials, session: Session): Store {
+      val store = when (account.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE -> session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
 
         else -> {
-          val session = Session.getInstance(PropertiesHelper.genProps(account))
-          session.debug = EmailUtil.hasEnabledDebug(context)
-          session
+          when {
+            account.imapOpt() === SecurityType.Option.NONE -> session.getStore(JavaEmailConstants.PROTOCOL_IMAP)
+            else -> session.getStore(JavaEmailConstants.PROTOCOL_IMAPS)
+          }
         }
       }
+
+      store.connect(authCredentials.imapServer, authCredentials.imapPort, authCredentials.username, authCredentials.peekPassword())
+      return store
     }
 
     fun openStore(context: Context, account: AccountEntity?, session: Session): Store {
@@ -176,16 +118,30 @@ class OpenStoreHelper {
         throw NullPointerException("AccountEntity must not be a null!")
     }
 
-    /**
-     * Generate a sess for gimaps protocol which will be use for download attachments.
-     *
-     * @param context Interface to global information about an application environment;
-     * @return <tt>Session</tt> A new sess for gimaps protocol based on properties for gimaps.
-     */
-    private fun getAttGmailSess(context: Context): Session {
-      val session = Session.getInstance(PropertiesHelper.genGmailAttsProperties())
-      session.debug = EmailUtil.hasEnabledDebug(context)
-      return session
+    private fun openAndConnectToGimapsStore(context: Context, session: Session, accountEntity: AccountEntity,
+                                            isResetTokenNeeded: Boolean): GmailSSLStore {
+      val gmailSSLStore: GmailSSLStore = session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
+
+      try {
+        var token = EmailUtil.getGmailAccountToken(context, accountEntity)
+
+        if (isResetTokenNeeded) {
+          LogsUtil.d(TAG, "Refresh Gmail token")
+          GoogleAuthUtil.clearToken(context, token)
+          token = EmailUtil.getGmailAccountToken(context, accountEntity)
+        }
+
+        gmailSSLStore.connect(GmailConstants.GMAIL_IMAP_SERVER, accountEntity.email, token)
+      } catch (e: AuthenticationFailedException) {
+        e.printStackTrace()
+        return if (!isResetTokenNeeded) {
+          openAndConnectToGimapsStore(context, session, accountEntity, true)
+        } else {
+          throw e
+        }
+      }
+
+      return gmailSSLStore
     }
   }
 }
