@@ -37,18 +37,18 @@ import javax.mail.Session
 class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewModel(application) {
   val checkEmailSettingsLiveData = MutableLiveData<Result<Boolean?>>()
 
-  fun check(authCreds: AuthCredentials) {
+  fun check(authCreds: AuthCredentials, failIfDuplicateFound: Boolean = true) {
     viewModelScope.launch {
       val context: Context = getApplication()
       val existedAccount = FlowCryptRoomDatabase.getDatabase(context).accountDao().getAccountSuspend(authCreds.email)
 
-      if (existedAccount == null) {
+      if (existedAccount != null && failIfDuplicateFound) {
+        checkEmailSettingsLiveData.postValue(Result.exception(
+            AccountAlreadyAddedException(context.getString(R.string.template_email_alredy_added, authCreds.email))))
+      } else {
         checkEmailSettingsLiveData.postValue(Result.loading(progressMsg = context.getString(R.string.connection)))
         val result = checkAuthCreds(authCreds)
         checkEmailSettingsLiveData.postValue(result)
-      } else {
-        checkEmailSettingsLiveData.postValue(Result.exception(
-            AccountAlreadyAddedException(context.getString(R.string.template_email_alredy_added, authCreds.email))))
       }
     }
   }

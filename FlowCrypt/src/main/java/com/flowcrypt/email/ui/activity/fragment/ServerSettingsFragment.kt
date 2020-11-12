@@ -5,7 +5,9 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
+import android.content.Intent
 import android.os.Bundle
+import android.text.TextUtils
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.CheckBox
@@ -14,16 +16,25 @@ import android.widget.Spinner
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
+import androidx.fragment.app.setFragmentResultListener
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.addInputFilter
+import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.onItemSelected
+import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.widget.inputfilters.InputFilters
+import com.sun.mail.util.MailConnectException
+import java.net.SocketTimeoutException
 
 /**
  * @author Denis Bondarenko
@@ -44,6 +55,7 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
   private var spinnerImapSecurityType: Spinner? = null
   private var spinnerSmtpSecurityType: Spinner? = null
   private var checkBoxRequireSignInForSmtp: CheckBox? = null
+  private var authCreds: AuthCredentials? = null
 
   override val progressView: View?
     get() = view?.findViewById(R.id.progress)
@@ -58,11 +70,32 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
     super.onViewCreated(view, savedInstanceState)
     supportActionBar?.title = getString(R.string.server_settings)
     initViews(view)
+    updateViews(authCreds)
+    subscribeToCheckAccountSettings()
+  }
+
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    when (requestCode) {
+      REQUEST_CODE_RETRY_SETTINGS_CHECKING -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            checkCredentials()
+          }
+        }
+      }
+
+      else -> super.onActivityResult(requestCode, resultCode, data)
+    }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
     super.onAccountInfoRefreshed(accountEntity)
-    accountEntity?.let { updateViews(AuthCredentials.from(it).copy(password = "", smtpSignInPassword = "")) }
+    accountEntity?.let {
+      if (authCreds == null) {
+        authCreds = AuthCredentials.from(it).copy(password = "", smtpSignInPassword = "")
+        updateViews(authCreds)
+      }
+    }
   }
 
   private fun initViews(view: View) {
@@ -114,7 +147,21 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
     }
 
     view.findViewById<View>(R.id.buttonCheckAndSave)?.setOnClickListener {
+      checkCredentials(it)
+    }
+  }
 
+  private fun checkCredentials(view: View? = null) {
+    if (isDataCorrect()) {
+      view?.hideKeyboard()
+      authCreds = generateAuthCreds()
+      authCreds?.let { authCredentials ->
+        val fragment = CheckCredentialsFragment.newInstance(AccountEntity(authCredentials))
+        activity?.supportFragmentManager?.beginTransaction()
+            ?.replace(R.id.fragmentContainerView, fragment, CheckCredentialsFragment::class.java.simpleName)
+            ?.addToBackStack(null)
+            ?.commit()
+      }
     }
   }
 
@@ -151,6 +198,7 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
 
         toast(text = getString(R.string.settings_oauth_note), duration = Toast.LENGTH_LONG)
       } else {
+        view?.findViewById<View>(R.id.buttonCheckAndSave)?.isVisible = true
         editTextSmtpPassword?.setText(nonNullAuthCreds.smtpSignInPassword)
       }
 
@@ -168,5 +216,133 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
         }
       }
     }
+  }
+
+  private fun isDataCorrect(): Boolean {
+    when {
+      editTextPassword?.text.isNullOrEmpty() -> {
+        showInfoSnackbar(editTextPassword, getString(R.string.text_must_not_be_empty,
+            getString(R.string.password)))
+        editTextPassword?.requestFocus()
+      }
+
+      editTextImapServer?.text.isNullOrEmpty() -> {
+        showInfoSnackbar(editTextImapServer, getString(R.string.text_must_not_be_empty,
+            getString(R.string.imap_server)))
+        editTextImapServer?.requestFocus()
+      }
+
+      editTextImapPort?.text.isNullOrEmpty() -> {
+        showInfoSnackbar(editTextImapPort, getString(R.string.text_must_not_be_empty,
+            getString(R.string.imap_port)))
+        editTextImapPort?.requestFocus()
+      }
+
+      editTextSmtpServer?.text.isNullOrEmpty() -> {
+        showInfoSnackbar(editTextSmtpServer, getString(R.string.text_must_not_be_empty,
+            getString(R.string.smtp_server)))
+        editTextSmtpServer?.requestFocus()
+      }
+
+      editTextSmtpPort?.text.isNullOrEmpty() -> {
+        showInfoSnackbar(editTextSmtpPort, getString(R.string.text_must_not_be_empty,
+            getString(R.string.smtp_port)))
+        editTextSmtpPort?.requestFocus()
+      }
+
+      checkBoxRequireSignInForSmtp?.isChecked == true -> when {
+        editTextSmtpUsername?.text.isNullOrEmpty() -> {
+          showInfoSnackbar(editTextSmtpUsername, getString(R.string.text_must_not_be_empty,
+              getString(R.string.smtp_username)))
+          editTextSmtpUsername?.requestFocus()
+        }
+
+        editTextSmtpPassword?.text.isNullOrEmpty() -> {
+          showInfoSnackbar(editTextSmtpPassword, getString(R.string.text_must_not_be_empty,
+              getString(R.string.smtp_password)))
+          editTextSmtpPassword?.requestFocus()
+        }
+        else -> return true
+      }
+
+      else -> return true
+    }
+
+    return false
+  }
+
+  private fun generateAuthCreds(): AuthCredentials {
+    val imapPort = if (TextUtils.isEmpty(editTextImapPort?.text))
+      JavaEmailConstants.SSL_IMAP_PORT
+    else
+      Integer.parseInt(editTextImapPort?.text.toString())
+
+    val smtpPort = if (TextUtils.isEmpty(editTextSmtpPort?.text))
+      JavaEmailConstants.SSL_SMTP_PORT
+    else
+      Integer.parseInt(editTextSmtpPort?.text.toString())
+
+    return AuthCredentials(
+        email = editTextEmail?.text.toString(),
+        username = editTextUserName?.text.toString(),
+        password = editTextPassword?.text.toString(),
+        imapServer = editTextImapServer?.text.toString(),
+        imapPort = imapPort,
+        imapOpt = (spinnerImapSecurityType?.selectedItem as SecurityType).opt,
+        smtpServer = editTextSmtpServer?.text.toString(),
+        smtpPort = smtpPort,
+        smtpOpt = (spinnerSmtpSecurityType?.selectedItem as SecurityType).opt,
+        hasCustomSignInForSmtp = checkBoxRequireSignInForSmtp?.isChecked ?: false,
+        smtpSigInUsername = editTextSmtpUsername?.text.toString(),
+        smtpSignInPassword = editTextSmtpPassword?.text.toString()
+    )
+  }
+
+  @Suppress("UNCHECKED_CAST")
+  private fun subscribeToCheckAccountSettings() {
+    setFragmentResultListener(CheckCredentialsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
+      val result: Result<*>? = bundle.getSerializable(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
+
+      if (result != null) {
+        when (result.status) {
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            showContent()
+            val exception = result.exception ?: return@setFragmentResultListener
+            val original = result.exception.cause
+            var title: String? = null
+            val msg: String? = if (exception.message.isNullOrEmpty()) {
+              exception.javaClass.simpleName
+            } else exception.message
+
+            if (original != null) {
+              if (original is MailConnectException || original is SocketTimeoutException) {
+                title = getString(R.string.network_error)
+              }
+            }
+
+            val faqUrl = EmailProviderSettingsHelper.getBaseSettings(
+                editTextEmail?.text.toString(), editTextPassword?.text.toString())?.faqUrl
+            val dialogMsg = msg + (if (faqUrl.isNullOrEmpty()) "" else getString(R.string.provider_faq, faqUrl))
+
+            showTwoWayDialog(
+                requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
+                dialogTitle = title,
+                dialogMsg = dialogMsg,
+                positiveButtonTitle = getString(R.string.retry),
+                negativeButtonTitle = getString(R.string.cancel),
+                isCancelable = true,
+                useLinkify = true)
+          }
+
+          else -> {
+
+          }
+        }
+      }
+    }
+  }
+
+  companion object {
+    private const val REQUEST_CODE_RETRY_SETTINGS_CHECKING = 10
   }
 }
