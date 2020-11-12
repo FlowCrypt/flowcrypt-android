@@ -493,6 +493,9 @@
     <string name="add_new_private_key">Add a new private key</string>
     <string name="could_not_add_new_account">Couldn\'t add a new account</string>
     <string name="please_leave_at_least_one_key">You can\'t delete all keys. Please leave at least one key available for encryption/decryption purposes</string>
+    <string name="server_settings">Server settings</string>
+    <string name="check_and_save">Check and save</string>
+    <string name="settings_oauth_note">These settings are predefined by the OAuth provider and cannot be changed</string>
     <plurals name="delete_key_question">
         <item quantity="one">Delete this key permanently?</item>
         <item quantity="other">Delete these %1$d keys permanently?</item>

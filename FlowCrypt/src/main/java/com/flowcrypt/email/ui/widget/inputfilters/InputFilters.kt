@@ -42,4 +42,19 @@ interface InputFilters {
       return null // keep original
     }
   }
+
+  /**
+   * This filter will constrain edits not to add non-digital characters.
+   */
+  class OnlyDigits : InputFilter {
+    override fun filter(source: CharSequence, start: Int, end: Int,
+                        dest: Spanned?, dstart: Int, dend: Int): CharSequence? {
+      for (i in start until end) {
+        if (!Character.isDigit(source[i])) {
+          return ""
+        }
+      }
+      return null // keep original
+    }
+  }
 }

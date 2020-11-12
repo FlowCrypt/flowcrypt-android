@@ -120,9 +120,9 @@ data class AuthCredentials constructor(val email: String,
             smtpServer = smtpServer,
             smtpPort = smtpPort ?: JavaEmailConstants.DEFAULT_SMTP_PORT,
             smtpOpt = smtpOpt,
-            hasCustomSignInForSmtp = true,
-            smtpSigInUsername = smtpUsername,
-            smtpSignInPassword = smtpPassword,
+            hasCustomSignInForSmtp = smtpUsername?.isNotEmpty() == true && smtpPassword?.isNotEmpty() == true,
+            smtpSigInUsername = if (smtpUsername.isNullOrEmpty()) null else smtpUsername,
+            smtpSignInPassword = if (smtpPassword.isNullOrEmpty()) null else smtpPassword,
             useOAuth2 = accountEntity.imapAuthMechanisms == JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2)
       }
     }

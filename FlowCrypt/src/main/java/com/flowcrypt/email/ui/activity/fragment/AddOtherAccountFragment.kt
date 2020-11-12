@@ -11,10 +11,7 @@ import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
-import android.text.Editable
-import android.text.InputFilter
 import android.text.TextUtils
-import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.AdapterView
@@ -27,7 +24,6 @@ import android.widget.Toast
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -41,6 +37,7 @@ import com.flowcrypt.email.api.oauth.OAuth2Helper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.addInputFilter
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.extensions.showTwoWayDialog
@@ -68,7 +65,6 @@ import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 import java.net.SocketTimeoutException
 import java.util.*
-import java.util.regex.Pattern
 import javax.mail.AuthenticationFailedException
 import kotlin.collections.ArrayList
 
@@ -101,23 +97,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   private var authRequest: AuthorizationRequest? = null
 
   private val oAuth2AuthCredentialsViewModel: OAuth2AuthCredentialsViewModel by viewModels()
-
-  private val digitsTextWatcher: TextWatcher = object : TextWatcher {
-    override fun afterTextChanged(s: Editable?) {
-      s?.let {
-        if (!Pattern.compile("\\d+").matcher(it).matches()) {
-          it.clear()
-        }
-      }
-    }
-
-    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-    }
-
-    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-
-    }
-  }
 
   override val progressView: View?
     get() = view?.findViewById(R.id.progress)
@@ -282,16 +261,16 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     editTextPassword = view.findViewById(R.id.editTextPassword)
     editTextImapServer = view.findViewById(R.id.editTextImapServer)
     editTextImapPort = view.findViewById(R.id.editTextImapPort)
-    editTextImapPort?.addTextChangedListener(digitsTextWatcher)
     editTextSmtpServer = view.findViewById(R.id.editTextSmtpServer)
     editTextSmtpPort = view.findViewById(R.id.editTextSmtpPort)
-    editTextSmtpPort?.addTextChangedListener(digitsTextWatcher)
     editTextSmtpUsername = view.findViewById(R.id.editTextSmtpUsername)
     editTextSmtpPassword = view.findViewById(R.id.editTextSmtpPassword)
 
-    editTextEmail?.filters = arrayOf<InputFilter>(InputFilters.NoCaps())
-    editTextImapServer?.filters = arrayOf<InputFilter>(InputFilters.NoCaps())
-    editTextSmtpServer?.filters = arrayOf<InputFilter>(InputFilters.NoCaps())
+    editTextEmail?.addInputFilter(InputFilters.NoCaps())
+    editTextImapServer?.addInputFilter(InputFilters.NoCaps())
+    editTextSmtpServer?.addInputFilter(InputFilters.NoCaps())
+    editTextImapPort?.addInputFilter(InputFilters.OnlyDigits())
+    editTextSmtpPort?.addInputFilter(InputFilters.OnlyDigits())
 
     editTextPassword?.setOnEditorActionListener { _, actionId, _ ->
       return@setOnEditorActionListener when (actionId) {
@@ -529,7 +508,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   }
 
   private fun setupOAuth2AuthCredentialsViewModel() {
-    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, Observer {
+    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(progressMsg = getString(R.string.loading_account_details))
@@ -574,7 +553,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       }
     })
 
-    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, Observer {
+    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(progressMsg = getString(R.string.loading_oauth_server_configuration))
@@ -690,9 +669,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
   private fun showLessSecurityWarning() {
     showSnackbar(rootView, getString(R.string.less_secure_login_is_not_allowed),
-        getString(android.R.string.ok), Snackbar.LENGTH_LONG, View.OnClickListener {
+        getString(android.R.string.ok), Snackbar.LENGTH_LONG) {
       parentFragmentManager.popBackStack()
-    })
+    }
   }
 
   /**

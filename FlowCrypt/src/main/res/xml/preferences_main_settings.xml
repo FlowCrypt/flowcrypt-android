@@ -56,6 +56,11 @@
     </Preference>
 
     <Preference
+        android:key="@string/pref_key_server_settings"
+        android:title="@string/server_settings"
+        app:iconSpaceReserved="false" />
+
+    <Preference
         android:title="@string/legal"
         app:iconSpaceReserved="false">
         <intent
