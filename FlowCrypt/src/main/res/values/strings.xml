@@ -496,6 +496,9 @@
     <string name="server_settings">Server settings</string>
     <string name="check_and_save">Check and save</string>
     <string name="settings_oauth_note">These settings are predefined by the OAuth provider and cannot be changed</string>
+    <string name="server_settings_updated">Server settings updated</string>
+    <string name="server_settings_were_not_updated">Error. The server settings were not updated</string>
+    <string name="updating_server_settings">Updating server settings</string>
     <plurals name="delete_key_question">
         <item quantity="one">Delete this key permanently?</item>
         <item quantity="other">Delete these %1$d keys permanently?</item>

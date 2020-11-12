@@ -57,6 +57,9 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
   private var checkBoxRequireSignInForSmtp: CheckBox? = null
   private var authCreds: AuthCredentials? = null
 
+  private var isImapSpinnerRestored: Boolean = false
+  private var isSmtpSpinnerRestored: Boolean = false
+
   override val progressView: View?
     get() = view?.findViewById(R.id.progress)
   override val contentView: View?
@@ -71,6 +74,7 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
     supportActionBar?.title = getString(R.string.server_settings)
     initViews(view)
     updateViews(authCreds)
+    initAccountViewModel()
     subscribeToCheckAccountSettings()
   }
 
@@ -138,12 +142,20 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
 
     spinnerImapSecurityType?.onItemSelected { parent, _, position, _ ->
       val securityType = parent?.adapter?.getItem(position) as SecurityType
-      editTextImapPort?.setText(securityType.defImapPort.toString())
+      if (isImapSpinnerRestored) {
+        editTextImapPort?.setText(securityType.defImapPort.toString())
+      } else {
+        isImapSpinnerRestored = true
+      }
     }
 
     spinnerSmtpSecurityType?.onItemSelected { parent, _, position, _ ->
       val securityType = parent?.adapter?.getItem(position) as SecurityType
-      editTextSmtpPort?.setText(securityType.defSmtpPort.toString())
+      if (isSmtpSpinnerRestored) {
+        editTextSmtpPort?.setText(securityType.defSmtpPort.toString())
+      } else {
+        isSmtpSpinnerRestored = true
+      }
     }
 
     view.findViewById<View>(R.id.buttonCheckAndSave)?.setOnClickListener {
@@ -156,6 +168,9 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
       view?.hideKeyboard()
       authCreds = generateAuthCreds()
       authCreds?.let { authCredentials ->
+        isImapSpinnerRestored = false
+        isSmtpSpinnerRestored = false
+
         val fragment = CheckCredentialsFragment.newInstance(AccountEntity(authCredentials))
         activity?.supportFragmentManager?.beginTransaction()
             ?.replace(R.id.fragmentContainerView, fragment, CheckCredentialsFragment::class.java.simpleName)
@@ -334,12 +349,46 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
                 useLinkify = true)
           }
 
+          Result.Status.SUCCESS -> {
+            val isSuccess = result.data as? Boolean?
+
+            if (isSuccess == true) {
+              authCreds?.let { authCredentials ->
+                accountViewModel.updateAccountByAuthCredentials(authCredentials)
+              }
+            } else {
+              showContent()
+            }
+          }
+
           else -> {
 
           }
         }
       }
     }
+  }
+
+  private fun initAccountViewModel() {
+    accountViewModel.updateAuthCredentialsLiveData.observe(viewLifecycleOwner, {
+      it?.let {
+        when (it.status) {
+          Result.Status.LOADING -> {
+            showProgress(it.progressMsg)
+          }
+
+          Result.Status.SUCCESS -> {
+            parentFragmentManager.popBackStack()
+            toast(text = getString(R.string.server_settings_updated))
+          }
+
+          else -> {
+            showContent()
+            toast(getString(R.string.server_settings_were_not_updated))
+          }
+        }
+      }
+    })
   }
 
   companion object {

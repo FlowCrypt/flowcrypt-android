@@ -9,6 +9,8 @@ import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
+import com.flowcrypt.email.api.email.model.AuthCredentials
+import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import java.util.*
@@ -147,5 +149,28 @@ abstract class AccountDao : BaseDao<AccountEntity> {
     }
 
     return result
+  }
+
+  @Transaction
+  open suspend fun updateAccountByAuthCredentials(authCredentials: AuthCredentials): Int {
+    val existedAccount = getAccount(authCredentials.email) ?: return 0
+
+    //encrypt sensitive info
+    val encryptedPassword = KeyStoreCryptoManager.encrypt(authCredentials.password)
+    val encryptedSmtpPassword = KeyStoreCryptoManager.encrypt(authCredentials.smtpSignInPassword)
+
+    return update(existedAccount.copy(
+        password = encryptedPassword,
+        smtpPassword = encryptedSmtpPassword,
+        imapServer = authCredentials.imapServer.toLowerCase(Locale.US),
+        imapPort = authCredentials.imapPort,
+        imapIsUseSslTls = authCredentials.imapOpt === SecurityType.Option.SSL_TLS,
+        imapIsUseStarttls = authCredentials.imapOpt === SecurityType.Option.STARTLS,
+        smtpServer = authCredentials.smtpServer.toLowerCase(Locale.US),
+        smtpPort = authCredentials.smtpPort,
+        smtpIsUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
+        smtpIsUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,
+        useCustomSignForSmtp = authCredentials.hasCustomSignInForSmtp,
+        smtpUsername = authCredentials.smtpSigInUsername))
   }
 }

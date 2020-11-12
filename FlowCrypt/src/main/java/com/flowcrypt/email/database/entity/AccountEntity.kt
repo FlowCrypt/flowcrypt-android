@@ -105,7 +105,7 @@ data class AccountEntity constructor(
 
   constructor(authCredentials: AuthCredentials, uuid: String? = null, domainRules: List<String>? = null) :
       this(
-          email = authCredentials.email,
+          email = authCredentials.email.toLowerCase(Locale.US),
           accountType = authCredentials.email.substring(authCredentials.email.indexOf('@') + 1).toLowerCase(Locale.getDefault()),
           displayName = authCredentials.displayName,
           givenName = null,
@@ -115,12 +115,12 @@ data class AccountEntity constructor(
           isActive = false,
           username = authCredentials.username,
           password = authCredentials.password,
-          imapServer = authCredentials.imapServer,
+          imapServer = authCredentials.imapServer.toLowerCase(Locale.US),
           imapPort = authCredentials.imapPort,
           imapIsUseSslTls = authCredentials.imapOpt === SecurityType.Option.SSL_TLS,
           imapIsUseStarttls = authCredentials.imapOpt === SecurityType.Option.STARTLS,
           imapAuthMechanisms = if (authCredentials.useOAuth2) JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2 else null,
-          smtpServer = authCredentials.smtpServer,
+          smtpServer = authCredentials.smtpServer.toLowerCase(Locale.US),
           smtpPort = authCredentials.smtpPort,
           smtpIsUseSslTls = authCredentials.smtpOpt === SecurityType.Option.SSL_TLS,
           smtpIsUseStarttls = authCredentials.smtpOpt === SecurityType.Option.STARTLS,

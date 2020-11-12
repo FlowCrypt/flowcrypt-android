@@ -6,11 +6,14 @@
 package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.liveData
 import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
@@ -26,6 +29,7 @@ import kotlinx.coroutines.withContext
  */
 open class AccountViewModel(application: Application) : RoomBasicViewModel(application) {
   val addNewAccountLiveData = MutableLiveData<Result<Boolean?>>()
+  val updateAuthCredentialsLiveData = MutableLiveData<Result<Boolean?>>()
 
   private val pureActiveAccountLiveData: LiveData<AccountEntity?> = roomDatabase.accountDao().getActiveAccountLD()
   val activeAccountLiveData: LiveData<AccountEntity?> = pureActiveAccountLiveData.switchMap { accountEntity ->
@@ -64,6 +68,21 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
       } catch (e: Exception) {
         e.printStackTrace()
         addNewAccountLiveData.value = Result.exception(e)
+      }
+    }
+  }
+
+  fun updateAccountByAuthCredentials(authCredentials: AuthCredentials) {
+    viewModelScope.launch {
+      val context: Context = getApplication()
+      updateAuthCredentialsLiveData.value = Result.loading(progressMsg = context.getString(R.string.updating_server_settings))
+      try {
+        val accountDao = roomDatabase.accountDao()
+        val isUpdated = accountDao.updateAccountByAuthCredentials(authCredentials) > 0
+        updateAuthCredentialsLiveData.value = Result.success(isUpdated)
+      } catch (e: Exception) {
+        e.printStackTrace()
+        updateAuthCredentialsLiveData.value = Result.exception(e)
       }
     }
   }
