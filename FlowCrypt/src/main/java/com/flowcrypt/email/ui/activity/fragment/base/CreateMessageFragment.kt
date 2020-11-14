@@ -5,13 +5,11 @@
 
 package com.flowcrypt.email.ui.activity.fragment.base
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.TextUtils
@@ -39,7 +37,6 @@ import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.viewModels
 import com.flowcrypt.email.Constants
@@ -258,13 +255,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
       if (atts?.isEmpty() == true || !hasExternalStorageUris(this.atts)) {
         return true
       }
-      context?.let {
-        if (ContextCompat.checkSelfPermission(it, Manifest.permission.READ_EXTERNAL_STORAGE)
-            == PackageManager.PERMISSION_GRANTED) {
-          return true
-        }
-      }
-      requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE)
       return false
     }
 
@@ -531,28 +521,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     }
   }
 
-  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-    when (requestCode) {
-      REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE ->
-        if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          sendMsg()
-        } else {
-          Toast.makeText(activity, R.string.cannot_send_attachment_without_read_permission,
-              Toast.LENGTH_LONG).show()
-        }
-
-      REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO ->
-        if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          addAtts()
-          showAtts()
-        } else {
-          Toast.makeText(activity, R.string.cannot_send_attachment_without_read_permission, Toast.LENGTH_LONG).show()
-        }
-
-      else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-  }
-
   override fun onFocusChange(v: View, hasFocus: Boolean) {
     when (v.id) {
       R.id.editTextRecipientTo -> runUpdatePgpContactsAction(pgpContactsTo, progressBarTo,
@@ -701,19 +669,7 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
 
       if (!TextUtils.isEmpty(intent.action) && intent.action?.startsWith("android.intent.action") == true) {
         this.extraActionInfo = ExtraActionInfo.parseExtraActionInfo(requireContext(), intent)
-
-        if (hasExternalStorageUris(extraActionInfo?.atts)) {
-          val isPermissionGranted = ContextCompat.checkSelfPermission(requireContext(),
-              Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-          if (isPermissionGranted) {
-            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO)
-          } else {
-            addAtts()
-          }
-        } else {
-          addAtts()
-        }
+        addAtts()
       } else {
         this.serviceInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_SERVICE_INFO)
         this.msgInfo = intent.getParcelableExtra(CreateMessageActivity.EXTRA_KEY_INCOMING_MESSAGE_INFO)
@@ -744,6 +700,11 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
         FileUtils.byteCountToDisplaySize(Constants.MAX_TOTAL_ATTACHMENT_SIZE_IN_BYTES.toLong()))
 
     extraActionInfo?.atts?.forEach { attachmentInfo ->
+      if (ContentResolver.SCHEME_FILE.equals(attachmentInfo.uri?.scheme, ignoreCase = true)) {
+        // we skip attachments that have SCHEME_FILE as deprecated
+        return
+      }
+
       if (hasAbilityToAddAtt(attachmentInfo)) {
 
         if (attachmentInfo.name.isNullOrEmpty()) {
@@ -1654,8 +1615,6 @@ class CreateMessageFragment : BaseSyncFragment(), View.OnFocusChangeListener, Ad
     private const val REQUEST_CODE_IMPORT_PUBLIC_KEY = 101
     private const val REQUEST_CODE_GET_CONTENT_FOR_SENDING = 102
     private const val REQUEST_CODE_COPY_PUBLIC_KEY_FROM_OTHER_CONTACT = 103
-    private const val REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE = 104
-    private const val REQUEST_CODE_REQUEST_READ_EXTERNAL_STORAGE_FOR_EXTRA_INFO = 105
     private const val REQUEST_CODE_SHOW_PUB_KEY_DIALOG = 106
     private val TAG = CreateMessageFragment::class.java.simpleName
   }

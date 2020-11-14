@@ -10,6 +10,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.text.format.DateFormat
@@ -347,9 +348,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
     when (requestCode) {
       REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE -> {
-        if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-          AttachmentDownloadManagerService.newIntent(context, lastClickedAtt)?.let {
-            context?.startService(it)
+        if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
+          lastClickedAtt?.let {
+            context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
           }
         } else {
           Toast.makeText(activity, R.string.cannot_save_attachment_without_permission, Toast.LENGTH_LONG).show()
@@ -628,13 +629,14 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     return View.OnClickListener {
       lastClickedAtt = att
       lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
-      val isPermissionGranted = ContextCompat.checkSelfPermission(requireContext(),
-          Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-      if (isPermissionGranted) {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
+          ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        lastClickedAtt?.let {
+          context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
+        }
+      } else {
         requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
             REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE)
-      } else {
-        context?.startService(AttachmentDownloadManagerService.newIntent(context, lastClickedAtt!!))
       }
     }
   }

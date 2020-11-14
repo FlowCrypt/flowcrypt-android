@@ -575,11 +575,11 @@ class CreateMessageActivityTest : BaseTest() {
           val lastSegment = request.requestUrl?.pathSegments?.lastOrNull()
 
           when {
-            "not_attested_user@denbond7.com".equals(lastSegment, true) -> {
+            TestConstants.RECIPIENT_WITHOUT_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
               return MockResponse().setResponseCode(404).setBody(TestGeneralUtil.readResourcesAsString("2.txt"))
             }
 
-            "attested_user@denbond7.com".equals(lastSegment, true) -> {
+            TestConstants.RECIPIENT_WITH_PUBLIC_KEY_ON_ATTESTER.equals(lastSegment, true) -> {
               return MockResponse().setResponseCode(200).setBody(TestGeneralUtil.readResourcesAsString("3.txt"))
             }
           }

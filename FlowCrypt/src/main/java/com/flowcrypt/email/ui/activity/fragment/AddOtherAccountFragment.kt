@@ -111,9 +111,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     super.onCreate(savedInstanceState)
     savedInstanceState?.let { restoreAuthRequest(it) }
 
-    subscribeToCheckAccountSettings()
-    subscribeToAuthorizeAndSearchBackups()
-
     this.authCreds = getTempAuthCreds()
 
     if (authCreds == null) {
@@ -126,6 +123,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
     updateView(authCreds)
+
+    subscribeToCheckAccountSettings()
+    subscribeToAuthorizeAndSearchBackups()
 
     setupOAuth2AuthCredentialsViewModel()
     initAddNewAccountLiveData()
