@@ -27,7 +27,6 @@ import android.widget.Toast
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -132,9 +131,6 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     super.onCreate(savedInstanceState)
     savedInstanceState?.let { restoreAuthRequest(it) }
 
-    subscribeToCheckAccountSettings()
-    subscribeToAuthorizeAndSearchBackups()
-
     this.authCreds = getTempAuthCreds()
 
     if (authCreds == null) {
@@ -147,6 +143,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
     updateView(authCreds)
+
+    subscribeToCheckAccountSettings()
+    subscribeToAuthorizeAndSearchBackups()
 
     setupOAuth2AuthCredentialsViewModel()
     initAddNewAccountLiveData()
@@ -529,7 +528,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
   }
 
   private fun setupOAuth2AuthCredentialsViewModel() {
-    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, Observer {
+    oAuth2AuthCredentialsViewModel.microsoftOAuth2TokenLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(progressMsg = getString(R.string.loading_account_details))
@@ -574,7 +573,7 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
       }
     })
 
-    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, Observer {
+    oAuth2AuthCredentialsViewModel.authorizationRequestLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
           showProgress(progressMsg = getString(R.string.loading_oauth_server_configuration))
@@ -690,9 +689,9 @@ class AddOtherAccountFragment : BaseSingInFragment(), AdapterView.OnItemSelected
 
   private fun showLessSecurityWarning() {
     showSnackbar(rootView, getString(R.string.less_secure_login_is_not_allowed),
-        getString(android.R.string.ok), Snackbar.LENGTH_LONG, View.OnClickListener {
+        getString(android.R.string.ok), Snackbar.LENGTH_LONG) {
       parentFragmentManager.popBackStack()
-    })
+    }
   }
 
   /**

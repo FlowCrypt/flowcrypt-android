@@ -13,7 +13,6 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -22,6 +21,7 @@ import com.flowcrypt.email.api.retrofit.response.api.DomainRulesResponse
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.showInfoDialog
 import com.flowcrypt.email.jetpack.viewmodel.EnterpriseDomainRulesViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.security.SecurityUtils
@@ -34,6 +34,7 @@ import com.flowcrypt.email.ui.activity.SignInActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSingInFragment
 import com.flowcrypt.email.ui.activity.settings.FeedbackActivity
 import com.flowcrypt.email.util.GeneralUtil
+import com.flowcrypt.email.util.exception.AccountAlreadyAddedException
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.google.GoogleApiClientHelper
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -44,6 +45,9 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import com.sun.mail.util.MailConnectException
+import kotlinx.android.synthetic.main.fragment_screenshot_editor.*
+import java.net.SocketTimeoutException
 import java.util.*
 
 /**
@@ -74,14 +78,12 @@ class MainSignInFragment : BaseSingInFragment() {
     client = GoogleSignIn.getClient(context, GoogleApiClientHelper.generateGoogleSignInOptions())
   }
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    subscribeToAuthorizeAndSearchBackups()
-  }
-
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
+
+    subscribeToCheckAccountSettings()
+    subscribeToAuthorizeAndSearchBackups()
 
     initAddNewAccountLiveData()
     setupEnterpriseViewModel()
@@ -239,6 +241,49 @@ class MainSignInFragment : BaseSingInFragment() {
   }
 
   @Suppress("UNCHECKED_CAST")
+  private fun subscribeToCheckAccountSettings() {
+    setFragmentResultListener(AuthorizeAndSearchBackupsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
+      val result: Result<*>? = bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
+
+      if (result != null) {
+        when (result.status) {
+          Result.Status.ERROR, Result.Status.EXCEPTION -> {
+            showContent()
+            val exception = result.exception ?: return@setFragmentResultListener
+            val original = result.exception.cause
+            val msg: String? = if (exception.message.isNullOrEmpty()) {
+              exception.javaClass.simpleName
+            } else exception.message
+            var title: String? = null
+
+            if (original != null) {
+              if (original is MailConnectException || original is SocketTimeoutException) {
+                title = getString(R.string.network_error)
+              }
+            } else if (exception is AccountAlreadyAddedException) {
+              showInfoSnackbar(rootView, exception.message, Snackbar.LENGTH_LONG)
+              return@setFragmentResultListener
+            }
+
+            val faqUrl = "https://support.google.com/mail/answer/75725?hl=" + GeneralUtil
+                .getLocaleLanguageCode(requireContext())
+            val dialogMsg = msg + getString(R.string.provider_faq, faqUrl)
+
+            showInfoDialog(
+                dialogTitle = title,
+                dialogMsg = dialogMsg,
+                useLinkify = true)
+          }
+
+          else -> {
+
+          }
+        }
+      }
+    }
+  }
+
+  @Suppress("UNCHECKED_CAST")
   private fun subscribeToAuthorizeAndSearchBackups() {
     setFragmentResultListener(AuthorizeAndSearchBackupsFragment.REQUEST_KEY_SEARCH_BACKUPS) { _, bundle ->
       val result: Result<*>? = bundle.getSerializable(AuthorizeAndSearchBackupsFragment.KEY_PRIVATE_KEY_BACKUPS_RESULT) as? Result<*>
@@ -288,7 +333,7 @@ class MainSignInFragment : BaseSingInFragment() {
   }
 
   private fun setupEnterpriseViewModel() {
-    enterpriseDomainRulesViewModel.domainRulesLiveData.observe(viewLifecycleOwner, Observer {
+    enterpriseDomainRulesViewModel.domainRulesLiveData.observe(viewLifecycleOwner, {
       it?.let {
         when (it.status) {
           Result.Status.LOADING -> {
