@@ -11,7 +11,6 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
 import com.flowcrypt.email.R
-import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.toast
@@ -44,7 +43,7 @@ class CheckCredentialsFragment : BaseFragment(), ProgressBehaviour {
     super.onCreate(savedInstanceState)
     if (arguments?.containsKey(KEY_ACCOUNT) == true) {
       accountEntity = arguments?.getParcelable(KEY_ACCOUNT) ?: return
-      checkEmailSettingsViewModel.check(AuthCredentials.from(accountEntity), false)
+      checkEmailSettingsViewModel.checkAccount(accountEntity, false)
     } else {
       toast("Account is null!")
       parentFragmentManager.popBackStack()
