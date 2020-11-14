@@ -13,9 +13,7 @@ import android.view.View
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.model.KeyImportModel
-import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.ui.activity.base.BaseCheckClipboardBackStackActivity
-import com.flowcrypt.email.ui.activity.base.BaseImportKeyActivity
 import com.flowcrypt.email.util.GeneralUtil
 
 /**
@@ -67,20 +65,23 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
           keyImportModel = service.keyImportModel
         }
 
-        startActivityForResult(BaseImportKeyActivity.newIntent(this, tempAccount, false,
-            getString(R.string.import_private_key), keyImportModel, true,
-            ImportPrivateKeyActivity::class.java), REQUEST_CODE_IMPORT_ACTIVITY)
+        startActivityForResult(
+            ImportPrivateKeyActivity.getIntent(
+                context = this,
+                accountEntity = tempAccount,
+                isSyncEnabled = false,
+                title = getString(R.string.import_private_key),
+                model = keyImportModel,
+                throwErrorIfDuplicateFoundEnabled = true,
+                cls = ImportPrivateKeyActivity::class.java,
+                addAccountIfNotExist = true),
+            REQUEST_CODE_IMPORT_ACTIVITY)
       }
 
       R.id.buttonSelectAnotherAccount -> {
         val intent = Intent()
         intent.putExtra(EXTRA_KEY_ACCOUNT, tempAccount)
         setResult(RESULT_CODE_USE_ANOTHER_ACCOUNT, intent)
-        finish()
-      }
-
-      R.id.buttonSkipSetup -> {
-        setResult(Activity.RESULT_OK)
         finish()
       }
     }
@@ -105,11 +106,6 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
           setResult(RESULT_CODE_HANDLE_RESOLVED_KEYS, data)
           finish()
         }
-
-        CheckKeysActivity.RESULT_USE_EXISTING_KEYS -> {
-          setResult(Activity.RESULT_OK)
-          finish()
-        }
       }
 
       else -> super.onActivityResult(requestCode, resultCode, data)
@@ -131,18 +127,6 @@ class CreateOrImportKeyActivity : BaseCheckClipboardBackStackActivity(), View.On
       buttonSelectAnotherAccount?.setOnClickListener(this)
     } else {
       buttonSelectAnotherAccount?.visibility = View.GONE
-    }
-
-    val buttonSkipSetup = findViewById<View>(R.id.buttonSkipSetup)
-    if (tempAccount.isRuleExist(AccountEntity.DomainRule.NO_PRV_CREATE)) {
-      buttonSkipSetup.visibility = View.GONE
-    } else {
-      if (KeysStorageImpl.getInstance(application).hasKeys()) {
-        buttonSkipSetup?.visibility = View.VISIBLE
-        buttonSkipSetup?.setOnClickListener(this)
-      } else {
-        buttonSkipSetup?.visibility = View.GONE
-      }
     }
   }
 

@@ -956,9 +956,9 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
           title = getString(R.string.import_private_key),
           throwErrorIfDuplicateFoundEnabled = true,
           cls = ImportPrivateKeyActivity::class.java,
-          isUseExistingKeysEnabled = false,
           isSubmittingPubKeysEnabled = false,
-          accountEntity = account),
+          accountEntity = account,
+          skipImportedKeys = true),
           REQUEST_CODE_START_IMPORT_KEY_ACTIVITY)
     }
 

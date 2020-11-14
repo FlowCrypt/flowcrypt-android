@@ -62,10 +62,12 @@ class BackupKeysActivityTest : BaseTest() {
   override val useIntents: Boolean = true
   override val activityScenarioRule = activityScenarioRule<BackupKeysActivity>()
 
+  val addAccountToDatabaseRule = AddAccountToDatabaseRule()
+
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
+      .around(addAccountToDatabaseRule)
       .around(RetryRule())
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
@@ -268,22 +270,38 @@ class BackupKeysActivityTest : BaseTest() {
   }
 
   private fun addFirstKeyWithDefaultPassword() {
-    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_default.json",
-        TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
+    PrivateKeysManager.saveKeyFromAssetsToDatabase(
+        accountEntity = addAccountToDatabaseRule.account,
+        keyPath = "node/default@denbond7.com_fisrtKey_prv_default.json",
+        passphrase = TestConstants.DEFAULT_PASSWORD,
+        type = KeyDetails.Type.EMAIL
+    )
   }
 
   private fun addFirstKeyWithStrongPassword() {
-    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_fisrtKey_prv_strong.json",
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+    PrivateKeysManager.saveKeyFromAssetsToDatabase(
+        accountEntity = addAccountToDatabaseRule.account,
+        keyPath = "node/default@denbond7.com_fisrtKey_prv_strong.json",
+        passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
+        type = KeyDetails.Type.EMAIL
+    )
   }
 
   private fun addSecondKeyWithStrongPassword() {
-    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong.json",
-        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+    PrivateKeysManager.saveKeyFromAssetsToDatabase(
+        accountEntity = addAccountToDatabaseRule.account,
+        keyPath = TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG,
+        passphrase = TestConstants.DEFAULT_STRONG_PASSWORD,
+        type = KeyDetails.Type.EMAIL
+    )
   }
 
   private fun addSecondKeyWithStrongSecondPassword() {
-    PrivateKeysManager.saveKeyFromAssetsToDatabase("node/default@denbond7.com_secondKey_prv_strong_second.json",
-        TestConstants.DEFAULT_SECOND_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+    PrivateKeysManager.saveKeyFromAssetsToDatabase(
+        accountEntity = addAccountToDatabaseRule.account,
+        keyPath = "node/default@denbond7.com_secondKey_prv_strong_second.json",
+        passphrase = TestConstants.DEFAULT_SECOND_STRONG_PASSWORD,
+        type = KeyDetails.Type.EMAIL
+    )
   }
 }

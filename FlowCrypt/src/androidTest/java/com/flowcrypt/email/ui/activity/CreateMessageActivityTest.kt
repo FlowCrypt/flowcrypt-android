@@ -97,12 +97,13 @@ class CreateMessageActivityTest : BaseTest() {
   override val activityScenario: ActivityScenario<*>?
     get() = activeActivityRule.scenario
 
+  private val addAccountToDatabaseRule = AddAccountToDatabaseRule()
   private val addPrivateKeyToDatabaseRule = AddPrivateKeyToDatabaseRule()
 
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(AddAccountToDatabaseRule())
+      .around(addAccountToDatabaseRule)
       .around(addPrivateKeyToDatabaseRule)
       .around(activeActivityRule)
       .around(ScreenshotTestRule())
@@ -442,8 +443,9 @@ class CreateMessageActivityTest : BaseTest() {
   @ReadyForCIAnnotation
   fun testSharePubKeyMultiply() {
     val secondKeyDetails =
-        PrivateKeysManager.getNodeKeyDetailsFromAssets("node/default@denbond7.com_secondKey_prv_strong.json")
-    PrivateKeysManager.saveKeyToDatabase(secondKeyDetails, TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
+        PrivateKeysManager.getNodeKeyDetailsFromAssets(TestConstants.DEFAULT_SECOND_KEY_PRV_STRONG)
+    PrivateKeysManager.saveKeyToDatabase(addAccountToDatabaseRule.account, secondKeyDetails,
+        TestConstants.DEFAULT_STRONG_PASSWORD, KeyDetails.Type.EMAIL)
     val att = EmailUtil.genAttInfoFromPubKey(secondKeyDetails)
 
     activeActivityRule.launch(intent)
@@ -470,10 +472,12 @@ class CreateMessageActivityTest : BaseTest() {
   @DoesNotNeedMailserver
   @ReadyForCIAnnotation
   fun testSharePubKeyNoOwnKeys() {
-    PrivateKeysManager.deleteKey(addPrivateKeyToDatabaseRule.keyPath)
+    PrivateKeysManager.deleteKey(addAccountToDatabaseRule.account,
+        addPrivateKeyToDatabaseRule.keyPath)
     val keyDetails =
         PrivateKeysManager.getNodeKeyDetailsFromAssets("node/key_testing@denbond7.com_keyB_default.json")
-    PrivateKeysManager.saveKeyToDatabase(keyDetails, TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
+    PrivateKeysManager.saveKeyToDatabase(addAccountToDatabaseRule.account, keyDetails,
+        TestConstants.DEFAULT_PASSWORD, KeyDetails.Type.EMAIL)
 
     activeActivityRule.launch(intent)
     registerAllIdlingResources()

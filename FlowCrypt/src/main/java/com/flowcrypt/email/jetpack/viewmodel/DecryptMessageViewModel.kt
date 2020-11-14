@@ -64,7 +64,7 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
       ByteArrayInputStream(rawMimeBytes).use {
         headersLiveData.postValue(getHeaders(it))
       }
-      val list = keysStorage.getAllPgpPrivateKeys()
+      val list = keysStorage.getLatestAllPgpPrivateKeys()
       val result = apiRepository.parseDecryptMsg(
           request = ParseDecryptMsgRequest(data = rawMimeBytes, keyEntities = list, isEmail = true))
 
@@ -84,7 +84,7 @@ class DecryptMessageViewModel(application: Application) : BaseNodeApiViewModel(a
           }
         }
 
-        val list = keysStorage.getAllPgpPrivateKeys()
+        val list = keysStorage.getLatestAllPgpPrivateKeys()
         val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
         val result = if (largerThan1Mb) {
           parseMimeAndDecrypt(context, uri, list)
