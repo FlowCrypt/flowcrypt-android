@@ -10,7 +10,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
-import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
@@ -20,7 +19,6 @@ import com.flowcrypt.email.jetpack.viewmodel.LauncherViewModel
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.node.Node
-import com.flowcrypt.email.security.KeysStorageImpl
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.service.FeedbackJobIntentService
 import com.flowcrypt.email.service.actionqueue.actions.EncryptPrivateKeysIfNeededAction
@@ -70,7 +68,7 @@ class LauncherActivity : BaseActivity() {
   }
 
   private fun setupLauncherViewModel() {
-    launcherViewModel.mediatorLiveData.observe(this, Observer {
+    launcherViewModel.mediatorLiveData.observe(this, {
       if (launcherViewModel.isAccountInfoReceivedLiveData.value == true
           && launcherViewModel.isNodeInfoReceivedLiveData.value == true) {
         if (isAccountInfoReceived) {
@@ -89,7 +87,7 @@ class LauncherActivity : BaseActivity() {
   }
 
   private fun setupCheckGmailTokenViewModel() {
-    checkGmailTokenViewModel.tokenLiveData.observe(this, Observer {
+    checkGmailTokenViewModel.tokenLiveData.observe(this, {
       if (it != null) {
         if (UserRecoverableAuthExceptionActivity.isRunEnabled()) {
           startActivity(UserRecoverableAuthExceptionActivity.newIntent(this, it))
@@ -106,17 +104,15 @@ class LauncherActivity : BaseActivity() {
   }
 
   private fun showEmailManagerActivity() {
-    if (KeysStorageImpl.getInstance(application).hasKeys()) {
-      val isCheckKeysNeeded = SharedPreferencesHelper.getBoolean(PreferenceManager
-          .getDefaultSharedPreferences(this), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, true)
+    val isCheckKeysNeeded = SharedPreferencesHelper.getBoolean(PreferenceManager
+        .getDefaultSharedPreferences(this), Constants.PREF_KEY_IS_CHECK_KEYS_NEEDED, true)
 
-      if (isCheckKeysNeeded) {
-        roomBasicViewModel.addActionToQueue(EncryptPrivateKeysIfNeededAction(0, activeAccount!!.email, 0))
-      }
-
-      EmailSyncService.startEmailSyncService(this)
-      EmailManagerActivity.runEmailManagerActivity(this)
-      finish()
+    if (isCheckKeysNeeded) {
+      roomBasicViewModel.addActionToQueue(EncryptPrivateKeysIfNeededAction(0, activeAccount!!.email, 0))
     }
+
+    EmailSyncService.startEmailSyncService(this)
+    EmailManagerActivity.runEmailManagerActivity(this)
+    finish()
   }
 }

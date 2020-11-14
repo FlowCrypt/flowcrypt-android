@@ -6,6 +6,7 @@
 package com.flowcrypt.email.model
 
 import androidx.annotation.Keep
+import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.KeyEntity
 
 @Keep
@@ -13,16 +14,26 @@ interface KeysStorage {
 
   fun getAllPgpPrivateKeys(): List<KeyEntity>
 
-  fun findPgpContact(longId: String?): PgpContact?
-
-  // if two contacts requested and only one found, will still return list of 2:
-  // eg [PgpContact, null] or [null, PgpContact] depending which one is missing
-  fun findPgpContacts(longId: Array<String>): List<*>
-
   fun getPgpPrivateKey(longId: String?): KeyEntity?
 
-  // if 2 keys requested and only one found, will return list of 1: [PgpKey]
+  /**
+   * if 2 keys requested and only one found, will return list of 1: [KeyEntity]
+   */
   fun getFilteredPgpPrivateKeys(longIds: Array<String>): List<KeyEntity>
+
+  /**
+   * Get [List] of [KeyEntity] where each key has [PgpContact] with the given email.
+   *
+   * Note: this method returns a list of not-expired [KeyEntity] only
+   */
+  fun getPgpPrivateKeysByEmail(email: String?): List<KeyEntity>
+
+  /**
+   * Get [List] of [NodeKeyDetails] where each key has [PgpContact] with the given email.
+   *
+   * Note: this method returns a list of not-expired [NodeKeyDetails] only
+   */
+  fun getNodeKeyDetailsListByEmail(email: String?): List<NodeKeyDetails>
 }
 
 

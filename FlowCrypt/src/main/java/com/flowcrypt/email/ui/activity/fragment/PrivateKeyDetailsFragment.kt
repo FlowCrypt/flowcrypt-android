@@ -14,15 +14,26 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import android.text.TextUtils
 import android.text.format.DateFormat
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.extensions.decrementSafely
+import com.flowcrypt.email.extensions.incrementSafely
+import com.flowcrypt.email.extensions.showInfoDialog
+import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.jetpack.viewmodel.PrivateKeysViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
+import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -40,6 +51,7 @@ import java.util.concurrent.TimeUnit
  * E-mail: DenBond7@gmail.com
  */
 class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
+  private val privateKeysViewModel: PrivateKeysViewModel by viewModels()
 
   private var details: NodeKeyDetails? = null
 
@@ -47,6 +59,7 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    setHasOptionsMenu(true)
 
     val args = arguments
     if (args != null) {
@@ -58,24 +71,58 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
     }
   }
 
+  override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    super.onCreateOptionsMenu(menu, inflater)
+    inflater.inflate(R.menu.fragment_key_details, menu)
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
+      R.id.menuActionDeleteKey -> {
+        showTwoWayDialog(
+            dialogTitle = "",
+            dialogMsg = requireContext().resources.getQuantityString(R.plurals.delete_key_question, 1, 1),
+            positiveButtonTitle = getString(android.R.string.ok),
+            negativeButtonTitle = getString(android.R.string.cancel),
+            requestCode = REQUEST_CODE_DELETE_KEY_DIALOG
+        )
+        true
+      }
+
+      else -> super.onOptionsItemSelected(item)
+    }
+  }
+
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
+    setupPrivateKeysViewModel()
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
-    supportActionBar?.setTitle(R.string.my_public_key)
+    supportActionBar?.setTitle(R.string.key_details)
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    super.onActivityResult(requestCode, resultCode, data)
     when (requestCode) {
       REQUEST_CODE_GET_URI_FOR_SAVING_KEY -> when (resultCode) {
         Activity.RESULT_OK -> if (data != null && data.data != null) {
           saveKey(data)
         }
       }
+
+      REQUEST_CODE_DELETE_KEY_DIALOG -> {
+        when (resultCode) {
+          TwoWayDialogFragment.RESULT_OK -> {
+            details?.let {
+              account?.let { accountEntity -> privateKeysViewModel.deleteKeys(accountEntity, listOf(it)) }
+            }
+          }
+        }
+      }
+
+      else -> super.onActivityResult(requestCode, resultCode, data)
     }
   }
 
@@ -173,11 +220,36 @@ class PrivateKeyDetailsFragment : BaseFragment(), View.OnClickListener {
     startActivityForResult(intent, REQUEST_CODE_GET_URI_FOR_SAVING_KEY)
   }
 
+  private fun setupPrivateKeysViewModel() {
+    privateKeysViewModel.deleteKeysLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          baseActivity.countingIdlingResource.incrementSafely()
+        }
+
+        Result.Status.SUCCESS -> {
+          privateKeysViewModel.deleteKeysLiveData.value = Result.none()
+          parentFragmentManager.popBackStack()
+          baseActivity.countingIdlingResource.decrementSafely()
+        }
+
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          showInfoDialog(
+              dialogMsg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+              ?: "Couldn't delete a key with id = {${details?.longId ?: ""}}")
+          baseActivity.countingIdlingResource.decrementSafely()
+          privateKeysViewModel.deleteKeysLiveData.value = Result.none()
+        }
+      }
+    })
+  }
+
   companion object {
     private val KEY_NODE_KEY_DETAILS =
         GeneralUtil.generateUniqueExtraKey("KEY_NODE_KEY_DETAILS",
             PrivateKeyDetailsFragment::class.java)
     private const val REQUEST_CODE_GET_URI_FOR_SAVING_KEY = 1
+    private const val REQUEST_CODE_DELETE_KEY_DIALOG = 100
 
     fun newInstance(details: NodeKeyDetails): PrivateKeyDetailsFragment {
       val keyDetailsFragment = PrivateKeyDetailsFragment()

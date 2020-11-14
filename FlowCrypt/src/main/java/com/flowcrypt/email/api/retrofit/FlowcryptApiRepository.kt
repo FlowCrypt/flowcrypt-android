@@ -76,6 +76,8 @@ class FlowcryptApiRepository : ApiRepository {
               ?: Exception())
 
           Result.Status.LOADING -> Result.loading(requestCode = requestCode)
+
+          Result.Status.NONE -> Result.none()
         }
       }
 

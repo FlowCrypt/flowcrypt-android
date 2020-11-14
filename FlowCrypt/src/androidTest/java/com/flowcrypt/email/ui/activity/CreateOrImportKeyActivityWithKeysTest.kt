@@ -10,7 +10,6 @@ import android.app.Instrumentation
 import android.content.ComponentName
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents.intending
 import androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent
@@ -22,7 +21,6 @@ import androidx.test.filters.MediumTest
 import com.flowcrypt.email.DoesNotNeedMailserver
 import com.flowcrypt.email.R
 import com.flowcrypt.email.ReadyForCIAnnotation
-import com.flowcrypt.email.rules.AddPrivateKeyToDatabaseRule
 import com.flowcrypt.email.rules.ClearAppSettingsRule
 import com.flowcrypt.email.rules.RetryRule
 import com.flowcrypt.email.rules.ScreenshotTestRule
@@ -52,7 +50,6 @@ class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest(
   @get:Rule
   var ruleChain: TestRule = RuleChain
       .outerRule(ClearAppSettingsRule())
-      .around(AddPrivateKeyToDatabaseRule())
       .around(RetryRule())
       .around(activityScenarioRule)
       .around(ScreenshotTestRule())
@@ -65,15 +62,6 @@ class CreateOrImportKeyActivityWithKeysTest : BaseCreateOrImportKeyActivityTest(
     onView(withId(R.id.buttonCreateNewKey))
         .check(matches(ViewMatchers.isDisplayed()))
         .perform(click())
-
-    Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
-  }
-
-  @Test
-  @ReadyForCIAnnotation
-  fun testClickOnButtonSkipSetup() {
-    onView(withId(R.id.buttonSkipSetup))
-        .perform(scrollTo(), click())
 
     Assert.assertTrue(activityScenarioRule.scenario.result.resultCode == Activity.RESULT_OK)
   }

@@ -24,7 +24,6 @@ import com.flowcrypt.email.database.dao.ContactsDao
 import com.flowcrypt.email.database.dao.KeysDao
 import com.flowcrypt.email.database.dao.LabelDao
 import com.flowcrypt.email.database.dao.MessageDao
-import com.flowcrypt.email.database.dao.UserIdEmailsKeysDao
 import com.flowcrypt.email.database.entity.AccountAliasesEntity
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ActionQueueEntity
@@ -33,7 +32,6 @@ import com.flowcrypt.email.database.entity.ContactEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
 
 
 /**
@@ -54,8 +52,7 @@ import com.flowcrypt.email.database.entity.UserIdEmailsKeysEntity
   ContactEntity::class,
   KeyEntity::class,
   LabelEntity::class,
-  MessageEntity::class,
-  UserIdEmailsKeysEntity::class
+  MessageEntity::class
 ],
     version = FlowCryptRoomDatabase.DB_VERSION)
 abstract class FlowCryptRoomDatabase : RoomDatabase() {
@@ -68,8 +65,6 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
   abstract fun labelDao(): LabelDao
 
   abstract fun accountAliasesDao(): AccountAliasesDao
-
-  abstract fun userIdEmailsKeysDao(): UserIdEmailsKeysDao
 
   abstract fun actionQueueDao(): ActionQueueDao
 
@@ -84,7 +79,7 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
 
   companion object {
     const val DB_NAME = "flowcrypt.db"
-    const val DB_VERSION = 22
+    const val DB_VERSION = 23
 
     private val MIGRATION_1_3 = object : Migration(1, 3) {
       override fun migrate(database: SupportSQLiteDatabase) {
@@ -412,6 +407,40 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
       }
     }
 
+    /**
+     * This migration resolve https://github.com/FlowCrypt/flowcrypt-android/issues/923
+     */
+    @VisibleForTesting
+    val MIGRATION_22_23 = object : Migration(22, 23) {
+      override fun migrate(database: SupportSQLiteDatabase) {
+        database.beginTransaction()
+        try {
+          //create temp table with existed content
+          database.execSQL("CREATE TEMP TABLE IF NOT EXISTS keys_temp AS SELECT * FROM keys;")
+          //drop old table
+          database.execSQL("DROP TABLE IF EXISTS keys;")
+          //create a new table 'keys' with additional fields: 'account', 'account_type'
+          database.execSQL("CREATE TABLE IF NOT EXISTS `keys` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT, `long_id` TEXT NOT NULL, `account` TEXT NOT NULL, `account_type` TEXT DEFAULT NULL, `source` TEXT NOT NULL, `public_key` BLOB NOT NULL, `private_key` BLOB NOT NULL, `passphrase` TEXT DEFAULT NULL, FOREIGN KEY(`account`, `account_type`) REFERENCES `accounts`(`email`, `account_type`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+          //create indices for new table
+          database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `long_id_account_account_type_in_keys` ON `keys` (`long_id`, `account`, `account_type`)")
+          //fill new keys table with combination of existed keys and existed accounts using JOIN instruction
+          database.execSQL("INSERT INTO keys(long_id, account, account_type, source, public_key, private_key, passphrase) SELECT K.long_id, A.email, A.account_type, K.source, K.public_key, K.private_key, K.passphrase  FROM keys_temp as K JOIN accounts as A;")
+          //drop temp table
+          database.execSQL("DROP TABLE IF EXISTS keys_temp;")
+
+          //drop 'user_id_emails_and_keys' table as unused
+          database.execSQL("DROP TABLE IF EXISTS user_id_emails_and_keys;")
+
+          //remove unused actions
+          database.execSQL("DELETE FROM action_queue WHERE action_type = 'fill_user_id_emails_keys_table'")
+
+          database.setTransactionSuccessful()
+        } finally {
+          database.endTransaction()
+        }
+      }
+    }
+
     // Singleton prevents multiple instances of database opening at the same time.
     @Volatile
     private var INSTANCE: FlowCryptRoomDatabase? = null
@@ -446,7 +475,8 @@ abstract class FlowCryptRoomDatabase : RoomDatabase() {
                 MIGRATION_18_19,
                 MIGRATION_19_20,
                 MIGRATION_20_21,
-                MIGRATION_21_22)
+                MIGRATION_21_22,
+                MIGRATION_22_23)
             .build()
         INSTANCE = instance
         return instance

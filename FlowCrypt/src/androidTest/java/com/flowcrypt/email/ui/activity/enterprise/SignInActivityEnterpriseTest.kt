@@ -106,8 +106,6 @@ class SignInActivityEnterpriseTest : BaseSignActivityTest() {
 
     onView(withId(R.id.buttonCreateNewKey))
         .check(matches(not(isDisplayed())))
-    onView(withId(R.id.buttonSkipSetup))
-        .check(matches(not(isDisplayed())))
   }
 
   companion object {
