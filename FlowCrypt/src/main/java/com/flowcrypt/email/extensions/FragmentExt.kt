@@ -6,7 +6,10 @@
 package com.flowcrypt.email.extensions
 
 import android.widget.Toast
+import androidx.annotation.IdRes
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import com.flowcrypt.email.R
@@ -31,6 +34,42 @@ val androidx.fragment.app.Fragment.previousOnResultSavedStateHandle
 
 fun androidx.fragment.app.Fragment.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {
   text?.let { activity?.toast(text, duration) }
+}
+
+fun <T> androidx.fragment.app.Fragment.setNavigationResult(key: String, value: T) {
+  previousOnResultSavedStateHandle?.set(key, value)
+}
+
+fun <T> androidx.fragment.app.Fragment.getNavigationResult(
+    key: String,
+    onResult: (result: T) -> Unit) {
+  currentOnResultSavedStateHandle
+      ?.getLiveData<T>(key)
+      ?.observe(viewLifecycleOwner) {
+        currentOnResultSavedStateHandle?.remove<T>(key)
+        onResult.invoke(it)
+      }
+}
+
+fun <T> androidx.fragment.app.Fragment.getNavigationResultForDialog(
+    @IdRes destinationId: Int,
+    key: String,
+    onResult: (result: T) -> Unit) {
+  val navBackStackEntry = navController?.getBackStackEntry(destinationId) ?: return
+
+  val observer = LifecycleEventObserver { _, event ->
+    if (event == Lifecycle.Event.ON_RESUME && navBackStackEntry.savedStateHandle.contains(key)) {
+      navBackStackEntry.savedStateHandle.get<T>(key)?.let(onResult)
+      navBackStackEntry.savedStateHandle.remove<T>(key)
+    }
+  }
+  navBackStackEntry.lifecycle.addObserver(observer)
+
+  viewLifecycleOwner.lifecycle.addObserver(LifecycleEventObserver { _, event ->
+    if (event == Lifecycle.Event.ON_DESTROY) {
+      navBackStackEntry.lifecycle.removeObserver(observer)
+    }
+  })
 }
 
 fun androidx.fragment.app.Fragment.toast(resId: Int, duration: Int = Toast.LENGTH_SHORT) {

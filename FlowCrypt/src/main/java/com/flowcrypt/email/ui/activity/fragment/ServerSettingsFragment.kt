@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import android.view.View
@@ -16,6 +15,7 @@ import android.widget.Spinner
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
+import com.flowcrypt.email.NavGraphDirections
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -24,11 +24,11 @@ import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.addInputFilter
-import com.flowcrypt.email.extensions.currentOnResultSavedStateHandle
+import com.flowcrypt.email.extensions.getNavigationResult
+import com.flowcrypt.email.extensions.getNavigationResultForDialog
 import com.flowcrypt.email.extensions.hideKeyboard
 import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.onItemSelected
-import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
@@ -77,20 +77,6 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
     updateViews(authCreds)
     initAccountViewModel()
     observeOnResultLiveData()
-  }
-
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    when (requestCode) {
-      REQUEST_CODE_RETRY_SETTINGS_CHECKING -> {
-        when (resultCode) {
-          TwoWayDialogFragment.RESULT_OK -> {
-            checkCredentials()
-          }
-        }
-      }
-
-      else -> super.onActivityResult(requestCode, resultCode, data)
-    }
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {
@@ -310,57 +296,69 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   private fun observeOnResultLiveData() {
-    currentOnResultSavedStateHandle
-        ?.getLiveData<Result<*>>(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT)
-        ?.observe(viewLifecycleOwner) {
-          currentOnResultSavedStateHandle?.remove<Result<*>>(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT)
-          when (it.status) {
-            Result.Status.ERROR, Result.Status.EXCEPTION -> {
-              showContent()
-              val exception = it.exception ?: return@observe
-              val original = it.exception.cause
-              var title: String? = null
-              val msg: String? = if (exception.message.isNullOrEmpty()) {
-                exception.javaClass.simpleName
-              } else exception.message
+    getNavigationResult<Result<*>>(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) {
+      when (it.status) {
+        Result.Status.ERROR, Result.Status.EXCEPTION -> {
+          showContent()
+          val exception = it.exception ?: return@getNavigationResult
+          val original = it.exception.cause
+          var title: String? = null
+          val msg: String? = if (exception.message.isNullOrEmpty()) {
+            exception.javaClass.simpleName
+          } else exception.message
 
-              if (original != null) {
-                if (original is MailConnectException || original is SocketTimeoutException) {
-                  title = getString(R.string.network_error)
-                }
-              }
-
-              val faqUrl = EmailProviderSettingsHelper.getBaseSettings(
-                  editTextEmail?.text.toString(), editTextPassword?.text.toString())?.faqUrl
-              val dialogMsg = msg + (if (faqUrl.isNullOrEmpty()) "" else getString(R.string.provider_faq, faqUrl))
-
-              showTwoWayDialog(
-                  requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
-                  dialogTitle = title,
-                  dialogMsg = dialogMsg,
-                  positiveButtonTitle = getString(R.string.retry),
-                  negativeButtonTitle = getString(R.string.cancel),
-                  isCancelable = true,
-                  useLinkify = true)
+          if (original != null) {
+            if (original is MailConnectException || original is SocketTimeoutException) {
+              title = getString(R.string.network_error)
             }
+          }
 
-            Result.Status.SUCCESS -> {
-              val isSuccess = it.data as? Boolean?
+          val faqUrl = EmailProviderSettingsHelper.getBaseSettings(
+              editTextEmail?.text.toString(), editTextPassword?.text.toString())?.faqUrl
+          val dialogMsg = msg + (if (faqUrl.isNullOrEmpty()) "" else getString(R.string.provider_faq, faqUrl))
 
-              if (isSuccess == true) {
-                authCreds?.let { authCredentials ->
-                  accountViewModel.updateAccountByAuthCredentials(authCredentials)
-                }
-              } else {
-                showContent()
-              }
+          navController?.navigate(NavGraphDirections.actionGlobalTwoWayDialogFragment(
+              requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
+              dialogTitle = title,
+              dialogMsg = dialogMsg,
+              positiveButtonTitle = getString(R.string.retry),
+              negativeButtonTitle = getString(R.string.cancel),
+              isCancelable = true,
+              useLinkify = true))
+        }
+
+        Result.Status.SUCCESS -> {
+          val isSuccess = it.data as? Boolean?
+
+          if (isSuccess == true) {
+            authCreds?.let { authCredentials ->
+              accountViewModel.updateAccountByAuthCredentials(authCredentials)
             }
+          } else {
+            showContent()
+          }
+        }
 
-            else -> {
+        else -> {
 
+        }
+      }
+    }
+
+    getNavigationResultForDialog<TwoWayDialogFragment.Result>(
+        destinationId = R.id.serverSettingsFragment,
+        key = TwoWayDialogFragment.KEY_RESULT
+    ) {
+      when (it.requestCode) {
+        REQUEST_CODE_RETRY_SETTINGS_CHECKING -> {
+          when (it.resultCode) {
+            TwoWayDialogFragment.RESULT_OK -> {
+              checkCredentials()
             }
           }
         }
+      }
+    }
   }
 
   private fun initAccountViewModel() {

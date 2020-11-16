@@ -12,7 +12,7 @@ import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.extensions.navController
-import com.flowcrypt.email.extensions.previousOnResultSavedStateHandle
+import com.flowcrypt.email.extensions.setNavigationResult
 import com.flowcrypt.email.jetpack.viewmodel.CheckEmailSettingsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
@@ -56,7 +56,7 @@ class CheckCredentialsFragment : BaseFragment(), ProgressBehaviour {
           }
 
           else -> {
-            previousOnResultSavedStateHandle?.set(KEY_CHECK_ACCOUNT_SETTINGS_RESULT, it)
+            setNavigationResult(KEY_CHECK_ACCOUNT_SETTINGS_RESULT, it)
             navController?.popBackStack()
           }
         }

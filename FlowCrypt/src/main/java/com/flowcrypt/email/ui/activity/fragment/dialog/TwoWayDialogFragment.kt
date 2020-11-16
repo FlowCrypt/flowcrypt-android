@@ -8,8 +8,12 @@ package com.flowcrypt.email.ui.activity.fragment.dialog
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
+import android.os.Parcel
+import android.os.Parcelable
 import androidx.appcompat.app.AlertDialog
+import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
+import com.flowcrypt.email.extensions.setNavigationResult
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 
@@ -22,6 +26,7 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 class TwoWayDialogFragment : BaseDialogFragment() {
+  private val args by navArgs<TwoWayDialogFragmentArgs>()
 
   private var dialogTitle: String? = null
   private var dialogMsg: String? = null
@@ -40,12 +45,18 @@ class TwoWayDialogFragment : BaseDialogFragment() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    dialogTitle = arguments?.getString(KEY_DIALOG_TITLE, getString(R.string.info))
-    dialogMsg = arguments?.getString(KEY_DIALOG_MESSAGE)
-    positiveBtnTitle = arguments?.getString(KEY_POSITIVE_BUTTON_TITLE, getString(R.string.yes))
-    negativeBtnTitle = arguments?.getString(KEY_NEGATIVE_BUTTON_TITLE, getString(R.string.no))
-    isCancelable = arguments?.getBoolean(KEY_IS_CANCELABLE, false) ?: false
-    requestCode = arguments?.getInt(KEY_REQUEST_CODE, 0) ?: 0
+    hasHtml = arguments?.getBoolean(KEY_INFO_HAS_HTML, args.hasHtml) ?: false
+    useLinkify = arguments?.getBoolean(KEY_INFO_USE_LINKIFY, args.useLinkify) ?: false
+
+    dialogTitle = arguments?.getString(KEY_DIALOG_TITLE,
+        args.dialogTitle ?: getString(R.string.info))
+    dialogMsg = arguments?.getString(KEY_DIALOG_MESSAGE) ?: args.dialogMsg
+    positiveBtnTitle = arguments?.getString(KEY_POSITIVE_BUTTON_TITLE,
+        args.positiveButtonTitle ?: getString(R.string.yes))
+    negativeBtnTitle = arguments?.getString(KEY_NEGATIVE_BUTTON_TITLE,
+        args.negativeButtonTitle ?: getString(R.string.no))
+    isCancelable = arguments?.getBoolean(KEY_IS_CANCELABLE, args.isCancelable) ?: false
+    requestCode = arguments?.getInt(KEY_REQUEST_CODE, args.requestCode) ?: 0
   }
 
   override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -62,12 +73,14 @@ class TwoWayDialogFragment : BaseDialogFragment() {
     ) { _, _ ->
       sendResult(RESULT_OK)
       listener?.onDialogButtonClick(requestCode, RESULT_OK)
+      setNavigationResult(KEY_RESULT, Result(requestCode, RESULT_OK))
     }
 
     dialogBuilder.setNegativeButton(negativeBtnTitle
     ) { _, _ ->
       sendResult(RESULT_CANCELED)
       listener?.onDialogButtonClick(requestCode, RESULT_CANCELED)
+      setNavigationResult(KEY_RESULT, Result(requestCode, RESULT_CANCELED))
     }
 
     return dialogBuilder.create()
@@ -91,9 +104,38 @@ class TwoWayDialogFragment : BaseDialogFragment() {
     fun onDialogButtonClick(requestCode: Int, result: Int)
   }
 
+  data class Result(val requestCode: Int, val resultCode: Int) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readInt(),
+        parcel.readInt())
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+      parcel.writeInt(requestCode)
+      parcel.writeInt(resultCode)
+    }
+
+    override fun describeContents(): Int {
+      return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<Result> {
+      override fun createFromParcel(parcel: Parcel): Result {
+        return Result(parcel)
+      }
+
+      override fun newArray(size: Int): Array<Result?> {
+        return arrayOfNulls(size)
+      }
+    }
+  }
+
   companion object {
+    val KEY_RESULT =
+        GeneralUtil.generateUniqueExtraKey("KEY_RESULT", TwoWayDialogFragment::class.java)
+
     /** Standard activity result: operation canceled.  */
     const val RESULT_CANCELED = 0
+
     /** Standard activity result: operation succeeded. */
     const val RESULT_OK = 1
 
