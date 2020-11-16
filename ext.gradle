@@ -4,7 +4,7 @@
  */
 
 ext {
-    kotlinVersion = '1.4.0'
+    kotlinVersion = '1.4.10'
     /*Global*/
     appVersionCode = 113
     appVersionName = '1.1.3'
