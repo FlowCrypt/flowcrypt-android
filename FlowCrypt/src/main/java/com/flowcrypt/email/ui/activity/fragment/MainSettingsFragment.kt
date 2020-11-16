@@ -12,6 +12,7 @@ import androidx.preference.Preference
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.ui.activity.fragment.base.BasePreferenceFragment
 
 /**
@@ -32,11 +33,7 @@ class MainSettingsFragment : BasePreferenceFragment() {
     addPreferencesFromResource(R.xml.preferences_main_settings)
 
     findPreference<Preference>(getString(R.string.pref_key_server_settings))?.setOnPreferenceClickListener {
-      val fragment = ServerSettingsFragment()
-      activity?.supportFragmentManager?.beginTransaction()
-          ?.replace(R.id.fragmentContainerView, fragment, ServerSettingsFragment::class.java.simpleName)
-          ?.addToBackStack(null)
-          ?.commit()
+      navController?.navigate(MainSettingsFragmentDirections.actionMainSettingsFragmentToServerSettingsFragment())
       true
     }
   }

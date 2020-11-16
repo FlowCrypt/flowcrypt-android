@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ © 2016-present FlowCrypt a.s. Limitations apply. Contact human@flowcrypt.com
+  ~ Contributors: DenBond7
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/mainSettingsFragment">
+    <fragment
+        android:id="@+id/mainSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.MainSettingsFragment"
+        android:label="MainSettingsFragment">
+        <action
+            android:id="@+id/action_mainSettingsFragment_to_serverSettingsFragment"
+            app:destination="@id/serverSettingsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/serverSettingsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.ServerSettingsFragment"
+        android:label="ServerSettingsFragment"
+        tools:layout="@layout/fragment_server_settings">
+        <action
+            android:id="@+id/action_serverSettingsFragment_to_checkCredentialsFragment"
+            app:destination="@id/checkCredentialsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/checkCredentialsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.CheckCredentialsFragment"
+        android:label="CheckCredentialsFragment"
+        tools:layout="@layout/fragment_check_credentials">
+        <argument
+            android:name="accountEntity"
+            app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
+    </fragment>
+</navigation>

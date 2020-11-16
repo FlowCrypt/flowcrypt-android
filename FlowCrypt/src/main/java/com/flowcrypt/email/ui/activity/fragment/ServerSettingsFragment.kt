@@ -16,7 +16,6 @@ import android.widget.Spinner
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
-import androidx.fragment.app.setFragmentResultListener
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailProviderSettingsHelper
 import com.flowcrypt.email.api.email.JavaEmailConstants
@@ -25,7 +24,9 @@ import com.flowcrypt.email.api.email.model.SecurityType
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.addInputFilter
+import com.flowcrypt.email.extensions.currentOnResultSavedStateHandle
 import com.flowcrypt.email.extensions.hideKeyboard
+import com.flowcrypt.email.extensions.navController
 import com.flowcrypt.email.extensions.onItemSelected
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.extensions.toast
@@ -75,7 +76,7 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
     initViews(view)
     updateViews(authCreds)
     initAccountViewModel()
-    subscribeToCheckAccountSettings()
+    observeOnResultLiveData()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -170,12 +171,7 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
       authCreds?.let { authCredentials ->
         isImapSpinnerRestored = false
         isSmtpSpinnerRestored = false
-
-        val fragment = CheckCredentialsFragment.newInstance(AccountEntity(authCredentials))
-        activity?.supportFragmentManager?.beginTransaction()
-            ?.replace(R.id.fragmentContainerView, fragment, CheckCredentialsFragment::class.java.simpleName)
-            ?.addToBackStack(null)
-            ?.commit()
+        navController?.navigate(ServerSettingsFragmentDirections.actionServerSettingsFragmentToCheckCredentialsFragment(AccountEntity(authCredentials)))
       }
     }
   }
@@ -313,60 +309,58 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
     )
   }
 
-  @Suppress("UNCHECKED_CAST")
-  private fun subscribeToCheckAccountSettings() {
-    setFragmentResultListener(CheckCredentialsFragment.REQUEST_KEY_CHECK_ACCOUNT_SETTINGS) { _, bundle ->
-      val result: Result<*>? = bundle.getSerializable(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT) as? Result<*>
-
-      if (result != null) {
-        when (result.status) {
-          Result.Status.ERROR, Result.Status.EXCEPTION -> {
-            showContent()
-            val exception = result.exception ?: return@setFragmentResultListener
-            val original = result.exception.cause
-            var title: String? = null
-            val msg: String? = if (exception.message.isNullOrEmpty()) {
-              exception.javaClass.simpleName
-            } else exception.message
-
-            if (original != null) {
-              if (original is MailConnectException || original is SocketTimeoutException) {
-                title = getString(R.string.network_error)
-              }
-            }
-
-            val faqUrl = EmailProviderSettingsHelper.getBaseSettings(
-                editTextEmail?.text.toString(), editTextPassword?.text.toString())?.faqUrl
-            val dialogMsg = msg + (if (faqUrl.isNullOrEmpty()) "" else getString(R.string.provider_faq, faqUrl))
-
-            showTwoWayDialog(
-                requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
-                dialogTitle = title,
-                dialogMsg = dialogMsg,
-                positiveButtonTitle = getString(R.string.retry),
-                negativeButtonTitle = getString(R.string.cancel),
-                isCancelable = true,
-                useLinkify = true)
-          }
-
-          Result.Status.SUCCESS -> {
-            val isSuccess = result.data as? Boolean?
-
-            if (isSuccess == true) {
-              authCreds?.let { authCredentials ->
-                accountViewModel.updateAccountByAuthCredentials(authCredentials)
-              }
-            } else {
+  private fun observeOnResultLiveData() {
+    currentOnResultSavedStateHandle
+        ?.getLiveData<Result<*>>(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT)
+        ?.observe(viewLifecycleOwner) {
+          currentOnResultSavedStateHandle?.remove<Result<*>>(CheckCredentialsFragment.KEY_CHECK_ACCOUNT_SETTINGS_RESULT)
+          when (it.status) {
+            Result.Status.ERROR, Result.Status.EXCEPTION -> {
               showContent()
+              val exception = it.exception ?: return@observe
+              val original = it.exception.cause
+              var title: String? = null
+              val msg: String? = if (exception.message.isNullOrEmpty()) {
+                exception.javaClass.simpleName
+              } else exception.message
+
+              if (original != null) {
+                if (original is MailConnectException || original is SocketTimeoutException) {
+                  title = getString(R.string.network_error)
+                }
+              }
+
+              val faqUrl = EmailProviderSettingsHelper.getBaseSettings(
+                  editTextEmail?.text.toString(), editTextPassword?.text.toString())?.faqUrl
+              val dialogMsg = msg + (if (faqUrl.isNullOrEmpty()) "" else getString(R.string.provider_faq, faqUrl))
+
+              showTwoWayDialog(
+                  requestCode = REQUEST_CODE_RETRY_SETTINGS_CHECKING,
+                  dialogTitle = title,
+                  dialogMsg = dialogMsg,
+                  positiveButtonTitle = getString(R.string.retry),
+                  negativeButtonTitle = getString(R.string.cancel),
+                  isCancelable = true,
+                  useLinkify = true)
             }
-          }
 
-          else -> {
+            Result.Status.SUCCESS -> {
+              val isSuccess = it.data as? Boolean?
 
+              if (isSuccess == true) {
+                authCreds?.let { authCredentials ->
+                  accountViewModel.updateAccountByAuthCredentials(authCredentials)
+                }
+              } else {
+                showContent()
+              }
+            }
+
+            else -> {
+
+            }
           }
         }
-      }
-    }
   }
 
   private fun initAccountViewModel() {
@@ -378,7 +372,7 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
           }
 
           Result.Status.SUCCESS -> {
-            parentFragmentManager.popBackStack()
+            navController?.popBackStack()
             toast(text = getString(R.string.server_settings_updated))
           }
 

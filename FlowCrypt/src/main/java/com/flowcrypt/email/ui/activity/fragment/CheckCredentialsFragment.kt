@@ -7,13 +7,12 @@ package com.flowcrypt.email.ui.activity.fragment
 
 import android.os.Bundle
 import android.view.View
-import androidx.core.os.bundleOf
-import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
-import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.extensions.navController
+import com.flowcrypt.email.extensions.previousOnResultSavedStateHandle
 import com.flowcrypt.email.jetpack.viewmodel.CheckEmailSettingsViewModel
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
@@ -26,9 +25,8 @@ import com.flowcrypt.email.util.GeneralUtil
  *         E-mail: DenBond7@gmail.com
  */
 class CheckCredentialsFragment : BaseFragment(), ProgressBehaviour {
+  private val args by navArgs<CheckCredentialsFragmentArgs>()
   private val checkEmailSettingsViewModel: CheckEmailSettingsViewModel by viewModels()
-
-  private lateinit var accountEntity: AccountEntity
 
   override val progressView: View?
     get() = view?.findViewById(R.id.progress)
@@ -41,13 +39,7 @@ class CheckCredentialsFragment : BaseFragment(), ProgressBehaviour {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    if (arguments?.containsKey(KEY_ACCOUNT) == true) {
-      accountEntity = arguments?.getParcelable(KEY_ACCOUNT) ?: return
-      checkEmailSettingsViewModel.checkAccount(accountEntity, false)
-    } else {
-      toast("Account is null!")
-      parentFragmentManager.popBackStack()
-    }
+    checkEmailSettingsViewModel.checkAccount(args.accountEntity, false)
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -64,8 +56,8 @@ class CheckCredentialsFragment : BaseFragment(), ProgressBehaviour {
           }
 
           else -> {
-            setFragmentResult(REQUEST_KEY_CHECK_ACCOUNT_SETTINGS, bundleOf(KEY_CHECK_ACCOUNT_SETTINGS_RESULT to it))
-            parentFragmentManager.popBackStack()
+            previousOnResultSavedStateHandle?.set(KEY_CHECK_ACCOUNT_SETTINGS_RESULT, it)
+            navController?.popBackStack()
           }
         }
       }
@@ -73,17 +65,6 @@ class CheckCredentialsFragment : BaseFragment(), ProgressBehaviour {
   }
 
   companion object {
-    val REQUEST_KEY_CHECK_ACCOUNT_SETTINGS = GeneralUtil.generateUniqueExtraKey("REQUEST_KEY_CHECK_ACCOUNT_SETTINGS", CheckCredentialsFragment::class.java)
     val KEY_CHECK_ACCOUNT_SETTINGS_RESULT = GeneralUtil.generateUniqueExtraKey("KEY_CHECK_ACCOUNT_SETTINGS_RESULT", CheckCredentialsFragment::class.java)
-
-    private val KEY_ACCOUNT = GeneralUtil.generateUniqueExtraKey("KEY_ACCOUNT", CheckCredentialsFragment::class.java)
-
-    fun newInstance(accountEntity: AccountEntity): CheckCredentialsFragment {
-      return CheckCredentialsFragment().apply {
-        arguments = Bundle().apply {
-          putParcelable(KEY_ACCOUNT, accountEntity)
-        }
-      }
-    }
   }
 }

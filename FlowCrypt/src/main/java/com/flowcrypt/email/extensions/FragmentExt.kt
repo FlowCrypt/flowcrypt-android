@@ -7,6 +7,9 @@ package com.flowcrypt.email.extensions
 
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
+import androidx.navigation.NavController
+import androidx.navigation.Navigation
+import com.flowcrypt.email.R
 import com.flowcrypt.email.ui.activity.fragment.dialog.InfoDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 
@@ -16,6 +19,15 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
  *         Time: 4:16 PM
  *         E-mail: DenBond7@gmail.com
  */
+
+val androidx.fragment.app.Fragment.navController: NavController?
+  get() = activity?.let { Navigation.findNavController(it, R.id.fragmentContainerView) }
+
+val androidx.fragment.app.Fragment.currentOnResultSavedStateHandle
+  get() = navController?.currentBackStackEntry?.savedStateHandle
+
+val androidx.fragment.app.Fragment.previousOnResultSavedStateHandle
+  get() = navController?.previousBackStackEntry?.savedStateHandle
 
 fun androidx.fragment.app.Fragment.toast(text: String?, duration: Int = Toast.LENGTH_SHORT) {
   text?.let { activity?.toast(text, duration) }
