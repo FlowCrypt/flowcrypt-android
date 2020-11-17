@@ -279,7 +279,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
           countingIdlingResource.incrementSafely()
           disconnectFromSyncService()
           finish()
-          EmailSyncService.switchAccount(this@EmailManagerActivity)
+          EmailSyncService.restart(this@EmailManagerActivity)
           runEmailManagerActivity(this@EmailManagerActivity)
           countingIdlingResource.decrementSafely()
         }
@@ -655,7 +655,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         disconnectFromSyncService()
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity)
         roomDatabase.accountDao().switchAccountSuspend(account)
-        EmailSyncService.switchAccount(this@EmailManagerActivity)
+        EmailSyncService.restart(this@EmailManagerActivity)
         runEmailManagerActivity(this@EmailManagerActivity)
       }
       finish()

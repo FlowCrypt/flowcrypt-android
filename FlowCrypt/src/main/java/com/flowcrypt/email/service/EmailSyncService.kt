@@ -682,7 +682,7 @@ class EmailSyncService : BaseService(), SyncListener {
    * The incoming handler realization. This handler will be used to communicate with current
    * service and other Android components.
    */
-  private class IncomingHandler internal constructor(emailSyncManager: EmailSyncManager, replyToMessengersWeakRef:
+  private class IncomingHandler(emailSyncManager: EmailSyncManager, replyToMessengersWeakRef:
   MutableMap<String, Messenger>) : Handler() {
     private val gmailSynsManagerWeakRef = WeakReference(emailSyncManager)
     private val replyToMessengersWeakRef = WeakReference(replyToMessengersWeakRef)
@@ -836,11 +836,11 @@ class EmailSyncService : BaseService(), SyncListener {
     }
 
     /**
-     * This method can bu used to start [EmailSyncService] with the action [.ACTION_SWITCH_ACCOUNT].
+     * Restart [EmailSyncService].
      *
      * @param context Interface to global information about an application environment.
      */
-    fun switchAccount(context: Context) {
+    fun restart(context: Context) {
       NotificationManagerCompat.from(context).cancelAll()
       val intent = Intent(context, EmailSyncService::class.java)
       context.stopService(intent)

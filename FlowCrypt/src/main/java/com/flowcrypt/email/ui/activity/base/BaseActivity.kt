@@ -343,7 +343,7 @@ abstract class BaseActivity : AppCompatActivity(), BaseService.OnServiceCallback
           val firstNonactiveAccount = nonactiveAccounts.first()
           roomDatabase.accountDao().updateAccountsSuspend(roomDatabase.accountDao().getAccountsSuspend().map { it.copy(isActive = false) })
           roomDatabase.accountDao().updateAccountSuspend(firstNonactiveAccount.copy(isActive = true))
-          EmailSyncService.switchAccount(applicationContext)
+          EmailSyncService.restart(applicationContext)
           EmailManagerActivity.runEmailManagerActivity(this@BaseActivity)
           finish()
         } else {

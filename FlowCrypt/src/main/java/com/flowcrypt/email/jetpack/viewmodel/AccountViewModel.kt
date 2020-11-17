@@ -17,7 +17,9 @@ import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.service.EmailSyncService
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -79,6 +81,9 @@ open class AccountViewModel(application: Application) : RoomBasicViewModel(appli
       try {
         val accountDao = roomDatabase.accountDao()
         val isUpdated = accountDao.updateAccountByAuthCredentials(authCredentials) > 0
+        EmailSyncService.restart(context)
+        //need to wait restart of EmailSyncService
+        delay(2000)
         updateAuthCredentialsLiveData.value = Result.success(isUpdated)
       } catch (e: Exception) {
         e.printStackTrace()
