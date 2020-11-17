@@ -730,7 +730,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         invalidateOptionsMenu()
 
         if (currentFolder?.isOutbox() == true) {
-          ErrorNotificationManager(this).cancel(ErrorNotificationManager.NOTIFICATION_ID_HAS_FAILED_OUTGOING_MSGS)
+          ErrorNotificationManager(this).cancel(R.id.notification_id_has_failed_outgoing_msgs)
         }
       }
     }

@@ -24,6 +24,9 @@
         <action
             android:id="@+id/action_serverSettingsFragment_to_checkCredentialsFragment"
             app:destination="@id/checkCredentialsFragment" />
+        <deepLink
+            android:id="@+id/deepLinkServerSettings"
+            app:uri="flowcrypt://email.flowcrypt.com/settings/server_settings" />
     </fragment>
     <fragment
         android:id="@+id/checkCredentialsFragment"

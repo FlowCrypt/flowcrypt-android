@@ -136,7 +136,9 @@
         <activity
             android:name=".ui.activity.settings.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait">
+            <nav-graph android:value="@navigation/nav_graph" />
+        </activity>
 
         <activity
             android:name=".ui.activity.settings.LegalSettingsActivity"

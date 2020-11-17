@@ -33,6 +33,7 @@ import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.ui.widget.inputfilters.InputFilters
 import com.sun.mail.util.MailConnectException
 import java.net.SocketTimeoutException
@@ -70,13 +71,25 @@ class ServerSettingsFragment : BaseFragment(), ProgressBehaviour {
 
   override val contentResourceId: Int = R.layout.fragment_server_settings
 
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    ErrorNotificationManager.isShowingAuthErrorEnabled = false
+  }
+
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
+    ErrorNotificationManager(requireContext()).cancel(R.id.notification_id_auth_failure)
+
     supportActionBar?.title = getString(R.string.server_settings)
     initViews(view)
     updateViews(authCreds)
     initAccountViewModel()
     observeOnResultLiveData()
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    ErrorNotificationManager.isShowingAuthErrorEnabled = true
   }
 
   override fun onAccountInfoRefreshed(accountEntity: AccountEntity?) {

@@ -498,4 +498,6 @@
         <item quantity="one">Delete this key permanently?</item>
         <item quantity="other">Delete these %1$d keys permanently?</item>
     </plurals>
+    <string name="auth_failure">Authentication failure</string>
+    <string name="auth_failure_hint">Failed to log-in, please, check your account name and password in the server settings.</string>
 </resources>

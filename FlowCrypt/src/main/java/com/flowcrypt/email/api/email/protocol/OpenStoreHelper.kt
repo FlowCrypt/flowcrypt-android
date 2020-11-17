@@ -7,14 +7,17 @@ package com.flowcrypt.email.api.email.protocol
 
 import android.accounts.AccountManager
 import android.content.Context
+import androidx.annotation.WorkerThread
 import com.flowcrypt.email.accounts.FlowcryptAccountAuthenticator
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.gmail.GmailConstants
 import com.flowcrypt.email.api.email.model.AuthCredentials
 import com.flowcrypt.email.api.email.model.SecurityType
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
+import com.flowcrypt.email.ui.notifications.ErrorNotificationManager
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.google.android.gms.auth.GoogleAuthUtil
@@ -80,6 +83,7 @@ class OpenStoreHelper {
       return store
     }
 
+    @WorkerThread
     fun openStore(context: Context, account: AccountEntity?, session: Session): Store {
       return if (account != null) {
         when (account.accountType) {
@@ -110,7 +114,29 @@ class OpenStoreHelper {
               account.password
             }
 
-            store.connect(account.imapServer, account.username, password)
+            try {
+              store.connect(account.imapServer, account.username, password)
+            } catch (e: AuthenticationFailedException) {
+              val activeAccountWithEncryptedInfo = FlowCryptRoomDatabase.getDatabase(context).accountDao().getActiveAccount()
+              activeAccountWithEncryptedInfo?.let {
+                if (activeAccountWithEncryptedInfo.email.equals(account.email, true)) {
+                  if (account.useOAuth2) {
+                    ErrorNotificationManager(context).notifyUserAboutAuthFailure(account)
+                    e.printStackTrace()
+                    throw e
+                  } else {
+                    try {
+                      val refreshedPassword = KeyStoreCryptoManager.decrypt(it.password)
+                      store.connect(account.imapServer, account.username, refreshedPassword)
+                    } catch (e: AuthenticationFailedException) {
+                      ErrorNotificationManager(context).notifyUserAboutAuthFailure(account)
+                      e.printStackTrace()
+                      throw e
+                    }
+                  }
+                }
+              }
+            }
             store
           }
         }
