@@ -13,6 +13,7 @@ import androidx.work.Configuration
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.jetpack.workmanager.MsgsCacheCleanerWorker
 import com.flowcrypt.email.jobscheduler.JobIdManager
@@ -67,8 +68,7 @@ import java.util.concurrent.TimeUnit
   ReportField.TOTAL_MEM_SIZE,
   ReportField.USER_APP_START_DATE,
   ReportField.USER_CRASH_DATE,
-  ReportField.USER_EMAIL]
-    , httpMethod = HttpSender.Method.POST, reportType = HttpSender.Type.JSON, buildConfigClass = BuildConfig::class)
+  ReportField.USER_EMAIL], httpMethod = HttpSender.Method.POST, reportType = HttpSender.Type.JSON, buildConfigClass = BuildConfig::class)
 class FlowCryptApplication : Application(), Configuration.Provider {
 
   override fun onCreate() {
@@ -79,6 +79,7 @@ class FlowCryptApplication : Application(), Configuration.Provider {
     CacheManager.init(this)
     MsgsCacheManager.init(this)
     NotificationChannelManager.registerNotificationChannels(this)
+    IMAPStoreManager.init(this)
 
     initLeakCanary()
 

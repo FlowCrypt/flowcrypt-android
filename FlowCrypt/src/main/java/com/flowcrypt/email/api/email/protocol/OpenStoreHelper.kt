@@ -68,19 +68,54 @@ class OpenStoreHelper {
     }
 
     fun openStore(account: AccountEntity, authCredentials: AuthCredentials, session: Session): Store {
-      val store = when (account.accountType) {
-        AccountEntity.ACCOUNT_TYPE_GOOGLE -> session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
+      val store = getStore(account, session)
+      store.connect(authCredentials.imapServer, authCredentials.imapPort, authCredentials.username, authCredentials.peekPassword())
+      return store
+    }
 
-        else -> {
-          when {
+    fun getStore(account: AccountEntity?, session: Session): Store {
+      return if (account != null) {
+        when (account.accountType) {
+          AccountEntity.ACCOUNT_TYPE_GOOGLE -> session.getStore(JavaEmailConstants.PROTOCOL_GIMAPS) as GmailSSLStore
+
+          else -> when {
             account.imapOpt() === SecurityType.Option.NONE -> session.getStore(JavaEmailConstants.PROTOCOL_IMAP)
             else -> session.getStore(JavaEmailConstants.PROTOCOL_IMAPS)
           }
         }
-      }
+      } else throw NullPointerException("AccountEntity must not be a null!")
+    }
 
-      store.connect(authCredentials.imapServer, authCredentials.imapPort, authCredentials.username, authCredentials.peekPassword())
-      return store
+    fun openStore(context: Context, accountEntity: AccountEntity, store: Store) {
+      when (accountEntity.accountType) {
+        AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
+          val token = EmailUtil.getGmailAccountToken(context, accountEntity)
+          store.connect(GmailConstants.GMAIL_IMAP_SERVER, accountEntity.email, token)
+        }
+
+        else -> {
+          val password = if (accountEntity.useOAuth2) {
+            val accountManager = AccountManager.get(context)
+            val oauthAccount = accountManager.accounts.firstOrNull { it.name == accountEntity.email }
+            if (oauthAccount != null && oauthAccount.type.equals(FlowcryptAccountAuthenticator.ACCOUNT_TYPE, ignoreCase = true)) {
+              val encryptedToken = accountManager.blockingGetAuthToken(oauthAccount,
+                  FlowcryptAccountAuthenticator.AUTH_TOKEN_TYPE_EMAIL, true)
+              if (encryptedToken.isNullOrEmpty()) {
+                ExceptionUtil.handleError(NullPointerException("Warning. Encrypted token is null!"))
+                ""
+              } else {
+                KeyStoreCryptoManager.decrypt(encryptedToken)
+              }
+            } else {
+              accountEntity.password
+            }
+          } else {
+            accountEntity.password
+          }
+
+          store.connect(accountEntity.imapServer, accountEntity.username, password)
+        }
+      }
     }
 
     @WorkerThread
