@@ -7,9 +7,13 @@ package com.flowcrypt.email.api.email
 
 import android.content.Context
 import androidx.annotation.WorkerThread
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 
 /**
+ * That's an interface which helps to manage an instance of [javax.mail.Store]. All of methods
+ * should be suspended and should be run out of the main thread.
+ *
  * @author Denis Bondarenko
  *         Date: 11/20/20
  *         Time: 11:38 AM
@@ -30,4 +34,7 @@ interface StoreConnection {
 
   @WorkerThread
   suspend fun isConnected(): Boolean
+
+  @WorkerThread
+  suspend fun <T> execute(action: () -> Result<T>): Result<T>
 }
