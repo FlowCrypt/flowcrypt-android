@@ -37,6 +37,20 @@
             android:name="accountEntity"
             app:argType="com.flowcrypt.email.database.entity.AccountEntity" />
     </fragment>
+
+    <fragment
+        android:id="@+id/messageDetailsFragment"
+        android:name="com.flowcrypt.email.ui.activity.fragment.MessageDetailsFragment"
+        android:label="MessageDetailsFragment"
+        tools:layout="@layout/fragment_message_details">
+        <argument
+            android:name="messageEntity"
+            app:argType="com.flowcrypt.email.database.entity.MessageEntity" />
+        <argument
+            android:name="localFolder"
+            app:argType="com.flowcrypt.email.api.email.model.LocalFolder" />
+    </fragment>
+
     <dialog
         android:id="@+id/twoWayDialogFragment"
         android:name="com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment"

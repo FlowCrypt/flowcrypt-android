@@ -18,6 +18,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.MessageFlag
 import com.flowcrypt.email.api.email.model.OutgoingMessageInfo
 import com.flowcrypt.email.database.MessageState
@@ -152,6 +153,10 @@ data class MessageEntity(
 
   override fun describeContents(): Int {
     return 0
+  }
+
+  fun isOutboxMsg(): Boolean {
+    return JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)
   }
 
   private fun parseAddresses(fromAddress: String?):

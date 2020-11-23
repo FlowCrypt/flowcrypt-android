@@ -35,7 +35,7 @@ class EnterpriseDomainRulesViewModel(application: Application) : BaseAndroidView
   val domainRulesLiveData: MutableLiveData<Result<ApiResponse>?> = MutableLiveData()
 
   fun getDomainRules(account: String, uuid: String, tokenId: String) {
-    domainRulesLiveData.value = Result.loading(null)
+    domainRulesLiveData.value = Result.loading()
     val context: Context = getApplication()
 
     viewModelScope.launch {
