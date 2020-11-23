@@ -997,7 +997,16 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     msgDetailsViewModel.incomingMessageInfoLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
-          toast("LOADING")
+          val value = it.progress?.toInt() ?: 0
+          when (it.resultCode) {
+            R.id.progress_id_connecting -> setActionProgress(value, "Connecting")
+
+            R.id.progress_id_fetching_message -> setActionProgress(value, "Fetching message")
+
+            R.id.progress_id_processing -> setActionProgress(value, "Processing")
+
+            R.id.progress_id_rendering -> setActionProgress(value, "Rendering")
+          }
         }
 
         Result.Status.SUCCESS -> {

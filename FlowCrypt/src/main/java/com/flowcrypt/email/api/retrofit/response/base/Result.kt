@@ -19,6 +19,7 @@ data class Result<out T>(val status: Status,
                          val data: T? = null,
                          val exception: Throwable? = null,
                          val requestCode: Long = 0,
+                         val resultCode: Int = 0,
                          val progressMsg: String? = null,
                          val progress: Double? = null) : Serializable {
 
@@ -63,10 +64,12 @@ data class Result<out T>(val status: Status,
       )
     }
 
-    fun <T> loading(requestCode: Long = 0, progressMsg: String? = null, progress: Double? = null): Result<T> {
+    fun <T> loading(requestCode: Long = 0, resultCode: Int = 0, progressMsg: String? = null,
+                    progress: Double? = null): Result<T> {
       return Result(
           status = Status.LOADING,
           requestCode = requestCode,
+          resultCode = resultCode,
           progressMsg = progressMsg,
           progress = progress
       )
