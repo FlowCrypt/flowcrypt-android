@@ -34,13 +34,13 @@ class PropertiesHelper {
       return when (accountEntity.accountType) {
         AccountEntity.ACCOUNT_TYPE_GOOGLE -> {
           genProps(accountEntity).apply {
-            put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE, 1024 * 256)
+            put(GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE, JavaEmailConstants.ATTACHMENTS_FETCH_BUFFER)
           }
         }
 
         else -> {
           genProps(accountEntity).apply {
-            put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE, 1024 * 256)
+            put(JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE, JavaEmailConstants.ATTACHMENTS_FETCH_BUFFER)
           }
         }
       }
@@ -77,7 +77,7 @@ class PropertiesHelper {
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_ENABLE] = it.imapOpt === SecurityType.Option.SSL_TLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE] = it.imapOpt === SecurityType.Option.STARTLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_CHECK_SERVER_IDENTITY] = it.imapOpt === SecurityType.Option.SSL_TLS
-        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE] = 1024 * 128
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE] = JavaEmailConstants.DEFAULT_FETCH_BUFFER
 
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = it.hasCustomSignInForSmtp
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = it.smtpOpt === SecurityType.Option.SSL_TLS
@@ -104,6 +104,7 @@ class PropertiesHelper {
 
     private fun generateGmailProperties(): Properties {
       val prop = Properties()
+      prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_FETCH_SIZE] = JavaEmailConstants.DEFAULT_FETCH_BUFFER
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE] = BOOLEAN_VALUE_TRUE
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_CHECK_SERVER_IDENTITY] = BOOLEAN_VALUE_TRUE
