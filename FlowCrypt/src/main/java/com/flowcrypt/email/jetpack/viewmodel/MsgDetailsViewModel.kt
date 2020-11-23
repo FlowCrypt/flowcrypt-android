@@ -75,7 +75,7 @@ import javax.mail.internet.MimeMultipart
  *         Time: 4:45 PM
  *         E-mail: DenBond7@gmail.com
  */
-class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEntity, application: Application) : AccountViewModel(application) {
+class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: MessageEntity, application: Application) : AccountViewModel(application) {
   private val keysStorage: KeysStorageImpl = KeysStorageImpl.getInstance(application)
   private val apiRepository: PgpApiRepository = NodeRepository()
 
@@ -86,16 +86,19 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
   private var lastUpdateTime = System.currentTimeMillis()
 
   private val msgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(
-      account = msgEntity.email,
-      folder = msgEntity.folder,
-      uid = msgEntity.uid
+      account = messageEntity.email,
+      folder = messageEntity.folder,
+      uid = messageEntity.uid
   )
   private val processingMsgLiveData: MediatorLiveData<Result<ParseDecryptedMsgResult?>> = MediatorLiveData()
+  private val processingProgressLiveData: MutableLiveData<Result<ParseDecryptedMsgResult?>> = MutableLiveData()
   private val processingOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> = Transformations.switchMap(msgLiveData) { messageEntity ->
     liveData {
       if (messageEntity?.isOutboxMsg() == true) {
-        emit(Result.loading())
-        emit(processingByteArray(messageEntity.rawMessageWithoutAttachments?.toByteArray()))
+        emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
+        val processingResult = processingByteArray(messageEntity.rawMessageWithoutAttachments?.toByteArray())
+        emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
+        emit(processingResult)
       }
     }
   }
@@ -106,7 +109,10 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
         emit(Result.loading())
         val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
         if (existedMsgSnapshot != null) {
-          emit(processingMsgSnapshot(existedMsgSnapshot))
+          emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
+          val processingResult = processingMsgSnapshot(existedMsgSnapshot)
+          emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
+          emit(processingResult)
         } else {
           val newMsgSnapshot = try {
             val accountEntity = getActiveAccountSuspend()
@@ -116,13 +122,14 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
             emit(Result.exception(e))
             return@liveData
           }
-          emit(processingMsgSnapshot(newMsgSnapshot))
+          emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
+          val processingResult = processingMsgSnapshot(newMsgSnapshot)
+          emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
+          emit(processingResult)
         }
       }
     }
   }
-
-  private val processingProgressLiveData: MutableLiveData<Result<ParseDecryptedMsgResult?>> = MutableLiveData()
 
   val incomingMessageInfoLiveData: LiveData<Result<IncomingMessageInfo>> = Transformations.switchMap(processingMsgLiveData) {
     liveData {
@@ -140,15 +147,20 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
         Result.Status.SUCCESS -> {
           val parseDecryptedMsgResult = it.data
           if (parseDecryptedMsgResult != null) {
-            val msgInfo = IncomingMessageInfo(
-                msgEntity = msgEntity,
-                text = parseDecryptedMsgResult.text,
-                subject = parseDecryptedMsgResult.subject,
-                msgBlocks = parseDecryptedMsgResult.msgBlocks ?: emptyList(),
-                origMsgHeaders = null,
-                encryptionType = parseDecryptedMsgResult.getMsgEncryptionType()
-            )
-            Result.success(requestCode = it.requestCode, data = msgInfo)
+            try {
+              val msgHeadersAsString = getMsgHeaders()
+              val msgInfo = IncomingMessageInfo(
+                  msgEntity = messageEntity,
+                  text = parseDecryptedMsgResult.text,
+                  subject = parseDecryptedMsgResult.subject,
+                  msgBlocks = parseDecryptedMsgResult.msgBlocks ?: emptyList(),
+                  origMsgHeaders = msgHeadersAsString,
+                  encryptionType = parseDecryptedMsgResult.getMsgEncryptionType()
+              )
+              Result.success(requestCode = it.requestCode, data = msgInfo)
+            } catch (e: Exception) {
+              Result.exception(requestCode = it.requestCode, throwable = e)
+            }
           } else {
             Result.exception(requestCode = it.requestCode, throwable = IllegalStateException(context.getString(R.string.unknown_error)))
           }
@@ -174,9 +186,9 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
 
   val msgStatesLiveData = MutableLiveData<MessageState>()
   val attsLiveData = roomDatabase.attachmentDao().getAttachmentsLD(
-      account = msgEntity.email,
-      label = msgEntity.folder,
-      uid = msgEntity.uid
+      account = messageEntity.email,
+      label = messageEntity.folder,
+      uid = messageEntity.uid
   )
 
   init {
@@ -253,10 +265,9 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
     }
   }
 
-  private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot): Result<ParseDecryptedMsgResult?> {
+  private suspend fun processingMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot): Result<ParseDecryptedMsgResult?> = withContext(Dispatchers.IO) {
     val uri = msgSnapshot.getUri(0)
     if (uri != null) {
-      processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
       val list = keysStorage.getLatestAllPgpPrivateKeys()
       val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
       val result = if (largerThan1Mb) {
@@ -272,17 +283,15 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
             ))
       }
       modifyMsgBlocksIfNeeded(result)
-      processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
-      return result
+      return@withContext result
     } else {
       val byteArray = msgSnapshot.getByteArray(0)
-      return processingByteArray(byteArray)
+      return@withContext processingByteArray(byteArray)
     }
   }
 
-  private suspend fun processingByteArray(rawMimeBytes: ByteArray?): Result<ParseDecryptedMsgResult?> {
-    processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
-    return if (rawMimeBytes == null) {
+  private suspend fun processingByteArray(rawMimeBytes: ByteArray?): Result<ParseDecryptedMsgResult?> = withContext(Dispatchers.IO) {
+    return@withContext if (rawMimeBytes == null) {
       Result.exception(throwable = IllegalArgumentException("empty byte array"))
     } else {
       val result = apiRepository.parseDecryptMsg(
@@ -292,7 +301,6 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
               isEmail = true
           ))
       modifyMsgBlocksIfNeeded(result)
-      processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
       result
     }
   }
@@ -381,11 +389,23 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
     return@withContext file
   }
 
+  private suspend fun getMsgHeaders(): String? = withContext(Dispatchers.IO) {
+    return@withContext if (messageEntity.isOutboxMsg()) {
+      ByteArrayInputStream(messageEntity.rawMessageWithoutAttachments?.toByteArray()
+          ?: ByteArray(0)).use { parseHeaders(it) }
+    } else {
+      MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())?.getUri(0)?.let { uri ->
+        val context: Context = getApplication()
+        return@withContext context.contentResolver.openInputStream(uri)?.use { parseHeaders(it, true) }
+      }
+    }
+  }
+
   /**
    * We fetch the first 50Kb from the given input stream and extract headers.
    */
-  private suspend fun getHeaders(inputStream: InputStream?,
-                                 isDataEncrypted: Boolean = false): String = withContext(Dispatchers.IO) {
+  private suspend fun parseHeaders(inputStream: InputStream?,
+                                   isDataEncrypted: Boolean = false): String = withContext(Dispatchers.IO) {
     inputStream ?: return@withContext ""
     val d = ByteArray(50000)
     try {
