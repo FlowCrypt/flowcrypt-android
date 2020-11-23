@@ -17,6 +17,7 @@ import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
@@ -81,26 +82,23 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
   private val processOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> = Transformations.switchMap(msgLiveData) { messageEntity ->
     liveData {
       if (messageEntity?.isOutboxMsg() == true) {
-        val byteArray = messageEntity.rawMessageWithoutAttachments?.toByteArray()
+        emit(Result.loading())
+        emit(decryptMessageFromByteArray(messageEntity.rawMessageWithoutAttachments?.toByteArray()))
+      }
+    }
+  }
 
-        val result = if (byteArray == null) {
-          val context: Context = getApplication()
-          Result.exception(throwable = IllegalArgumentException(context.getString(R.string.unknown_error)))
+  private val processNonOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> = Transformations.switchMap(msgLiveData) { messageEntity ->
+    liveData {
+      if (messageEntity?.isOutboxMsg() == false) {
+        val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
+        emit(Result.loading())
+        if (existedMsgSnapshot != null) {
+          emit(processMsgSnapshot(existedMsgSnapshot))
         } else {
-          emit(Result.loading())
-
-          val result = apiRepository.parseDecryptMsg(
-              request = ParseDecryptMsgRequest(
-                  data = byteArray,
-                  keyEntities = keysStorage.getLatestAllPgpPrivateKeys(),
-                  isEmail = true
-              ))
-
-          modifyMsgBlocksIfNeeded(result)
-          result
+          val newMsgSnapshot = loadMessageFromServer(messageEntity)
+          emit(processMsgSnapshot(newMsgSnapshot))
         }
-
-        emit(result)
       }
     }
   }
@@ -150,6 +148,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
 
   init {
     processMsgLiveData.addSource(processOutgoingMsgLiveData) { processMsgLiveData.value = it }
+    processMsgLiveData.addSource(processNonOutgoingMsgLiveData) { processMsgLiveData.value = it }
   }
 
   fun setSeenStatus(isSeen: Boolean) {
@@ -220,48 +219,43 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
     }
   }
 
-  fun decryptMessage(rawMimeBytes: ByteArray) {
-    viewModelScope.launch {
-      processMsgLiveData.value = Result.loading()
-      /*ByteArrayInputStream(rawMimeBytes).use {
-        headersLiveData.postValue(getHeaders(it))
-      }*/
+  private suspend fun processMsgSnapshot(msgSnapshot: DiskLruCache.Snapshot): Result<ParseDecryptedMsgResult?> {
+    val uri = msgSnapshot.getUri(0)
+    if (uri != null) {
       val list = keysStorage.getLatestAllPgpPrivateKeys()
-      val result = apiRepository.parseDecryptMsg(
-          request = ParseDecryptMsgRequest(data = rawMimeBytes, keyEntities = list, isEmail = true))
-
+      val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
+      val result = if (largerThan1Mb) {
+        parseMimeAndDecrypt(context = getApplication(), uri = uri, list = list)
+      } else {
+        apiRepository.parseDecryptMsg(
+            request = ParseDecryptMsgRequest(
+                context = getApplication(),
+                uri = uri,
+                keyEntities = list,
+                isEmail = true,
+                hasEncryptedDataInUri = true
+            ))
+      }
       modifyMsgBlocksIfNeeded(result)
-      processMsgLiveData.value = result
+      return result
+    } else {
+      val byteArray = msgSnapshot.getByteArray(0)
+      return decryptMessageFromByteArray(byteArray)
     }
   }
 
-  fun decryptMessage(context: Context, msgSnapshot: DiskLruCache.Snapshot) {
-    viewModelScope.launch {
-      processMsgLiveData.value = Result.loading()
-      val uri = msgSnapshot.getUri(0)
-      if (uri != null) {
-        /*withContext(Dispatchers.IO) {
-          context.contentResolver.openInputStream(uri)?.use { uriInputStream ->
-            headersLiveData.postValue(getHeaders(uriInputStream, true))
-          }
-        }*/
-
-        val list = keysStorage.getLatestAllPgpPrivateKeys()
-        val largerThan1Mb = msgSnapshot.getLength(0) > 1024 * 1000
-        val result = if (largerThan1Mb) {
-          parseMimeAndDecrypt(context, uri, list)
-        } else {
-          apiRepository.parseDecryptMsg(
-              request = ParseDecryptMsgRequest(context = context, uri = uri, keyEntities = list,
-                  isEmail = true, hasEncryptedDataInUri = true))
-        }
-
-        modifyMsgBlocksIfNeeded(result)
-        processMsgLiveData.value = result
-      } else {
-        //val byteArray = msgSnapshot.getByteArray(0)
-        //decryptMessage(byteArray)
-      }
+  private suspend fun decryptMessageFromByteArray(rawMimeBytes: ByteArray?): Result<ParseDecryptedMsgResult?> {
+    return if (rawMimeBytes == null) {
+      Result.exception(throwable = IllegalArgumentException("empty byte array"))
+    } else {
+      val result = apiRepository.parseDecryptMsg(
+          request = ParseDecryptMsgRequest(
+              data = rawMimeBytes,
+              keyEntities = keysStorage.getLatestAllPgpPrivateKeys(),
+              isEmail = true
+          ))
+      modifyMsgBlocksIfNeeded(result)
+      result
     }
   }
 
@@ -290,6 +284,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
     }
   }
 
+  @Suppress("BlockingMethodInNonBlockingContext")
   private suspend fun getMimeMessageFromInputStream(context: Context, uri: Uri) =
       withContext(Dispatchers.IO) {
         val inputStream = context.contentResolver.openInputStream(uri)
@@ -342,6 +337,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
     }
   }
 
+  @Suppress("BlockingMethodInNonBlockingContext")
   private suspend fun prepareTempFile(bodyPart: BodyPart): File = withContext(Dispatchers.IO) {
     val tempDir = CacheManager.getCurrentMsgTempDir()
     val file = File(tempDir, FILE_NAME_ENCRYPTED_MESSAGE)
@@ -352,6 +348,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
   /**
    * We fetch the first 50Kb from the given input stream and extract headers.
    */
+  @Suppress("BlockingMethodInNonBlockingContext")
   private suspend fun getHeaders(inputStream: InputStream?,
                                  isDataEncrypted: Boolean = false): String = withContext(Dispatchers.IO) {
     inputStream ?: return@withContext ""
@@ -367,6 +364,10 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
       ExceptionUtil.handleError(e)
     }
     EmailUtil.getHeadersFromRawMIME(ASCIIUtility.toString(d))
+  }
+
+  private suspend fun loadMessageFromServer(messageEntity: MessageEntity): DiskLruCache.Snapshot {
+    TODO("Not yet implemented")
   }
 
   companion object {
