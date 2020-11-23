@@ -103,8 +103,8 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
   private val processingNonOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> = Transformations.switchMap(msgLiveData) { messageEntity ->
     liveData {
       if (messageEntity?.isOutboxMsg() == false) {
-        val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
         emit(Result.loading())
+        val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
         if (existedMsgSnapshot != null) {
           emit(processingMsgSnapshot(existedMsgSnapshot))
         } else {
@@ -322,7 +322,6 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
     }
   }
 
-  @Suppress("BlockingMethodInNonBlockingContext")
   private suspend fun getMimeMessageFromInputStream(context: Context, uri: Uri) =
       withContext(Dispatchers.IO) {
         val inputStream = context.contentResolver.openInputStream(uri)
@@ -375,7 +374,6 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
     }
   }
 
-  @Suppress("BlockingMethodInNonBlockingContext")
   private suspend fun prepareTempFile(bodyPart: BodyPart): File = withContext(Dispatchers.IO) {
     val tempDir = CacheManager.getCurrentMsgTempDir()
     val file = File(tempDir, FILE_NAME_ENCRYPTED_MESSAGE)
@@ -386,7 +384,6 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val msgEntity: MessageEn
   /**
    * We fetch the first 50Kb from the given input stream and extract headers.
    */
-  @Suppress("BlockingMethodInNonBlockingContext")
   private suspend fun getHeaders(inputStream: InputStream?,
                                  isDataEncrypted: Boolean = false): String = withContext(Dispatchers.IO) {
     inputStream ?: return@withContext ""

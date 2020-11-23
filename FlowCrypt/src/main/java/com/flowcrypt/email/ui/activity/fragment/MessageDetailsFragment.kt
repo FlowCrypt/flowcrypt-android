@@ -43,8 +43,6 @@ import com.flowcrypt.email.api.email.model.AttachmentInfo
 import com.flowcrypt.email.api.email.model.IncomingMessageInfo
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.ServiceInfo
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes
-import com.flowcrypt.email.api.retrofit.response.base.ApiError
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorDetails
 import com.flowcrypt.email.api.retrofit.response.model.node.DecryptErrorMsgBlock
@@ -54,7 +52,6 @@ import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.showTwoWayDialog
-import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
@@ -66,7 +63,8 @@ import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
-import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
+import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
+import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
 import com.flowcrypt.email.ui.widget.EmailWebView
@@ -86,8 +84,13 @@ import java.nio.charset.StandardCharsets
  * Time: 16:29
  * E-mail: DenBond7@gmail.com
  */
-class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
-  override var contentView: View? = null
+class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickListener {
+  override val progressView: View?
+    get() = view?.findViewById(R.id.progress)
+  override val contentView: View?
+    get() = view?.findViewById(R.id.layoutContent)
+  override val statusView: View?
+    get() = view?.findViewById(R.id.status)
 
   private val args by navArgs<MessageDetailsFragmentArgs>()
   private val msgDetailsViewModel: MsgDetailsViewModel by viewModels {
@@ -102,7 +105,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
   private var layoutContent: View? = null
   private var imageBtnReplyAll: ImageButton? = null
   private var imageBtnMoreOptions: View? = null
-  private var progressBarActionRunning: View? = null
   private var layoutReplyButton: View? = null
   private var layoutFwdButton: View? = null
   private var layoutReplyBtns: View? = null
@@ -314,22 +316,6 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     }
   }
 
-  override fun onErrorOccurred(requestCode: Int, errorType: Int, e: Exception?) {
-    super.onErrorOccurred(requestCode, errorType, e)
-    isAdditionalActionEnabled = true
-    UIUtil.exchangeViewVisibility(false, progressBarActionRunning, layoutContent)
-    activity?.invalidateOptionsMenu()
-
-    when (requestCode) {
-      R.id.syns_request_code_load_raw_mime_msg -> when (errorType) {
-        SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> {
-          showConnLostHint()
-          return
-        }
-      }
-    }
-  }
-
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
     when (requestCode) {
       REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE -> {
@@ -351,7 +337,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
    *
    * @param msgInfo An incoming message info
    */
-  fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
+  private fun showIncomingMsgInfo(msgInfo: IncomingMessageInfo) {
     this.msgInfo = msgInfo
     this.msgEncryptType = msgInfo.encryptionType
     imageBtnReplyAll?.visibility = View.VISIBLE
@@ -363,24 +349,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     msgInfo.inlineSubject?.let { textViewSubject?.text = it }
 
     updateMsgBody()
-    UIUtil.exchangeViewVisibility(false, progressView, contentView)
-  }
-
-  /**
-   * Show info about an error.
-   */
-  fun showErrorInfo(apiError: ApiError?, e: Throwable?) {
-    when {
-      apiError != null -> textViewStatusInfo?.text = apiError.msg
-      e != null -> textViewStatusInfo?.text = e.message
-      else -> textViewStatusInfo?.setText(R.string.unknown_error)
-    }
-
-    UIUtil.exchangeViewVisibility(false, progressView!!, statusView!!)
-  }
-
-  fun onMsgDetailsUpdated() {
-    updateViews()
+    showContent()
   }
 
   fun updateAttInfos(attInfoList: List<AttachmentInfo>) {
@@ -388,7 +357,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     showAttsIfTheyExist()
   }
 
-  fun setActionProgress(progress: Int, message: String?) {
+  fun setActionProgress(progress: Int, message: String? = null) {
     if (progress > 0) {
       progressBarActionProgress?.progress = progress
     }
@@ -531,9 +500,7 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
     textViewSubject = view.findViewById(R.id.textViewSubject)
     viewFooterOfHeader = view.findViewById(R.id.layoutFooterOfHeader)
     layoutMsgParts = view.findViewById(R.id.layoutMessageParts)
-    contentView = view.findViewById(R.id.layoutMessageContainer)
     layoutReplyBtns = view.findViewById(R.id.layoutReplyButtons)
-    progressBarActionRunning = view.findViewById(R.id.progressBarActionRunning)
     emailWebView = view.findViewById(R.id.emailWebView)
 
     layoutContent = view.findViewById(R.id.layoutContent)
@@ -1010,19 +977,18 @@ class MessageDetailsFragment : BaseSyncFragment(), View.OnClickListener {
         }
 
         Result.Status.SUCCESS -> {
-          toast("SUCCESS")
+          showContent()
           it.data?.let { incomingMsgInfo -> showIncomingMsgInfo(incomingMsgInfo) }
         }
 
-        Result.Status.ERROR -> {
-          toast("ERROR")
-        }
-
         Result.Status.EXCEPTION -> {
-          toast("EXCEPTION")
+          setActionProgress(100)
+          showStatus(msg = it.exception?.message ?: it.exception?.javaClass?.simpleName
+          ?: getString(R.string.unknown_error))
         }
 
-        Result.Status.NONE -> {
+        else -> {
+          setActionProgress(100)
         }
       }
     })
