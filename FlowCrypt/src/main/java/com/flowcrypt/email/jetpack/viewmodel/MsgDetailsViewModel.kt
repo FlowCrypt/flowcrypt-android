@@ -85,11 +85,18 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   private var currentPercentage = 0
   private var lastUpdateTime = System.currentTimeMillis()
 
-  private val msgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(
+  val freshMsgLiveData: LiveData<MessageEntity?> = roomDatabase.msgDao().getMsgLiveData(
       account = messageEntity.email,
       folder = messageEntity.folder,
       uid = messageEntity.uid
   )
+
+  private val initMsgLiveData: LiveData<MessageEntity?> = liveData {
+    emit(roomDatabase.msgDao().getMsgSuspend(
+        account = messageEntity.email,
+        folder = messageEntity.folder,
+        uid = messageEntity.uid))
+  }
 
   private val afterKeysUpdatedMsgLiveData: LiveData<MessageEntity?> = Transformations.switchMap(keysStorage.nodeKeyDetailsLiveData) {
     liveData {
@@ -124,6 +131,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
         val existedMsgSnapshot = MsgsCacheManager.getMsgSnapshot(messageEntity.id.toString())
         if (existedMsgSnapshot != null) {
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
+          setSeenStatusInternal(messageEntity, true)
           val processingResult = processingMsgSnapshot(existedMsgSnapshot)
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
           emit(processingResult)
@@ -136,6 +144,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
             emit(Result.exception(e))
             return@liveData
           }
+          setSeenStatusInternal(messageEntity, true)
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
           val processingResult = processingMsgSnapshot(newMsgSnapshot)
           emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 90.toDouble()))
@@ -206,7 +215,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   )
 
   init {
-    mediatorMsgLiveData.addSource(msgLiveData) { mediatorMsgLiveData.value = it }
+    mediatorMsgLiveData.addSource(initMsgLiveData) { mediatorMsgLiveData.value = it }
     //here we resolve a situation when a user updates private keys.
     // To prevent errors we skip the first call
     mediatorMsgLiveData.addSource(afterKeysUpdatedMsgLiveData, object : Observer<MessageEntity?> {
@@ -229,15 +238,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     val freshMsgEntity = mediatorMsgLiveData.value
     freshMsgEntity?.let { msgEntity ->
       viewModelScope.launch {
-        roomDatabase.msgDao().updateSuspend(msgEntity.copy(flags = if (isSeen) {
-          if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
-            msgEntity.flags
-          } else {
-            msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
-          }
-        } else {
-          msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
-        }))
+        setSeenStatusInternal(msgEntity, isSeen)
       }
     }
   }
@@ -618,6 +619,18 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
         processingProgressLiveData.postValue(Result.loading(resultCode = R.id.progress_id_fetching_message, progress = value.toDouble()))
       }
     }
+  }
+
+  private suspend fun setSeenStatusInternal(msgEntity: MessageEntity, isSeen: Boolean) {
+    roomDatabase.msgDao().updateSuspend(msgEntity.copy(flags = if (isSeen) {
+      if (msgEntity.flags?.contains(MessageFlag.SEEN.value) == true) {
+        msgEntity.flags
+      } else {
+        msgEntity.flags?.plus("${MessageFlag.SEEN.value} ")
+      }
+    } else {
+      msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
+    }))
   }
 
   /**

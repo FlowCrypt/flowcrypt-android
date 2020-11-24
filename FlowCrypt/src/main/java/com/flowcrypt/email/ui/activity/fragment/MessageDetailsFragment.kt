@@ -52,7 +52,9 @@ import com.flowcrypt.email.api.retrofit.response.model.node.MsgBlock
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.ContactsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.LabelsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.MsgDetailsViewModel
@@ -365,7 +367,7 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     showContent()
   }
 
-  fun setActionProgress(progress: Int, message: String? = null) {
+  private fun setActionProgress(progress: Int, message: String? = null) {
     if (progress > 0) {
       progressBarActionProgress?.progress = progress
     }
@@ -495,6 +497,41 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     }
 
     activity?.invalidateOptionsMenu()
+  }
+
+  private fun updateActionBar(messageEntity: MessageEntity) {
+    var actionBarTitle: String? = null
+    var actionBarSubTitle: String? = null
+
+    if (JavaEmailConstants.FOLDER_OUTBOX.equals(messageEntity.folder, ignoreCase = true)) {
+      actionBarTitle = getString(R.string.outgoing)
+      actionBarSubTitle = when (messageEntity.msgState) {
+        MessageState.NEW, MessageState.NEW_FORWARDED -> getString(R.string.preparing)
+
+        MessageState.QUEUED, MessageState.QUEUED_MAKE_COPY_IN_SENT_FOLDER -> getString(R.string.queued)
+
+        MessageState.SENDING -> getString(R.string.sending)
+
+        MessageState.SENT, MessageState.SENT_WITHOUT_LOCAL_COPY -> getString(R.string.sent)
+
+        MessageState.ERROR_CACHE_PROBLEM,
+        MessageState.ERROR_DURING_CREATION,
+        MessageState.ERROR_ORIGINAL_MESSAGE_MISSING,
+        MessageState.ERROR_ORIGINAL_ATTACHMENT_NOT_FOUND,
+        MessageState.ERROR_SENDING_FAILED,
+        MessageState.ERROR_PRIVATE_KEY_NOT_FOUND,
+        MessageState.ERROR_COPY_NOT_SAVED_IN_SENT_FOLDER -> getString(R.string.an_error_has_occurred)
+
+        else -> null
+      }
+    } else when (messageEntity.msgState) {
+      MessageState.PENDING_ARCHIVING -> actionBarTitle = getString(R.string.pending)
+      else -> {
+      }
+    }
+
+    supportActionBar?.title = actionBarTitle
+    supportActionBar?.subtitle = actionBarSubTitle
   }
 
   private fun initViews(view: View) {
@@ -917,6 +954,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   }
 
   private fun setupMsgDetailsViewModel() {
+    msgDetailsViewModel.freshMsgLiveData.observe(viewLifecycleOwner, {
+      it?.let { messageEntity -> updateActionBar(messageEntity) }
+    })
+
     msgDetailsViewModel.incomingMessageInfoLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
@@ -936,7 +977,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
         Result.Status.SUCCESS -> {
           showContent()
-          it.data?.let { incomingMsgInfo -> showIncomingMsgInfo(incomingMsgInfo) }
+          it.data?.let { incomingMsgInfo ->
+            msgDetailsViewModel.setSeenStatus(true)
+            showIncomingMsgInfo(incomingMsgInfo)
+          }
         }
 
         Result.Status.EXCEPTION -> {
@@ -986,6 +1030,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         finish()
       }
     })*/
+  }
+
+  private fun messageNotAvailableInFolder(showToast: Boolean = true) {
+    msgDetailsViewModel.deleteMsg()
+    if (showToast) {
+      toast(R.string.email_does_not_available_in_this_folder, Toast.LENGTH_LONG)
+    }
   }
 
   companion object {
