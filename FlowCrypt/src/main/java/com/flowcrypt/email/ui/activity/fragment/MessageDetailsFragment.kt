@@ -13,7 +13,6 @@ import android.os.Build
 import android.os.Bundle
 import android.text.TextUtils
 import android.text.format.DateFormat
-import android.text.format.Formatter
 import android.transition.TransitionManager
 import android.view.LayoutInflater
 import android.view.Menu
@@ -34,6 +33,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
@@ -62,17 +63,19 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
-import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
 import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
+import com.flowcrypt.email.ui.adapter.AttachmentsRecyclerViewAdapter
+import com.flowcrypt.email.ui.adapter.recyclerview.itemdecoration.MarginItemDecoration
 import com.flowcrypt.email.ui.widget.EmailWebView
 import com.flowcrypt.email.util.DateTimeUtil
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.ManualHandledException
+import kotlinx.android.synthetic.main.fragment_server_settings.*
 import java.io.File
 import java.nio.charset.StandardCharsets
 
@@ -97,6 +100,23 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     MsgDetailsViewModelFactory(args.localFolder, args.messageEntity, requireActivity().application)
   }
 
+  private val attachmentsRecyclerViewAdapter = AttachmentsRecyclerViewAdapter(
+      object : AttachmentsRecyclerViewAdapter.Listener {
+        override fun onDownloadClick(attachmentInfo: AttachmentInfo) {
+          lastClickedAtt = attachmentInfo
+          lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
+              ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            lastClickedAtt?.let {
+              context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
+            }
+          } else {
+            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE)
+          }
+        }
+      })
+
   private var textViewSenderAddress: TextView? = null
   private var textViewDate: TextView? = null
   private var textViewSubject: TextView? = null
@@ -112,13 +132,13 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private var layoutActionProgress: View? = null
   private var textViewActionProgress: TextView? = null
   private var progressBarActionProgress: ProgressBar? = null
+  private var rVAttachments: RecyclerView? = null
 
   private var dateFormat: java.text.DateFormat? = null
   private var msgInfo: IncomingMessageInfo? = null
   private var folderType: FoldersManager.FolderType? = null
   private val labelsViewModel: LabelsViewModel by viewModels()
   private val contactsViewModel: ContactsViewModel by viewModels()
-  private var atts = mutableListOf<AttachmentInfo>()
 
   private var isAdditionalActionEnabled: Boolean = false
   private var isDeleteActionEnabled: Boolean = false
@@ -151,10 +171,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       REQUEST_CODE_START_IMPORT_KEY_ACTIVITY -> when (resultCode) {
         Activity.RESULT_OK -> {
           Toast.makeText(context, R.string.key_successfully_imported, Toast.LENGTH_SHORT).show()
-          UIUtil.exchangeViewVisibility(true, progressView, contentView)
-
-          val activity = baseActivity as MessageDetailsActivity
-          //activity.decryptMsg()
         }
       }
 
@@ -300,14 +316,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
       R.id.layoutFwdButton -> {
         if (msgEncryptType === MessageEncryptionType.ENCRYPTED) {
-          if (atts.isNotEmpty()) {
+          if (attachmentsRecyclerViewAdapter.currentList.isNotEmpty()) {
             Toast.makeText(context, R.string.cannot_forward_encrypted_attachments, Toast.LENGTH_LONG).show()
           }
         } else {
-          for (att in atts) {
-            att.isForwarded = true
-          }
-          msgInfo?.atts = atts
+          msgInfo?.atts = attachmentsRecyclerViewAdapter.currentList.map { it.copy(isForwarded = true) }
         }
 
         startActivity(CreateMessageActivity.generateIntent(
@@ -352,11 +365,6 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     showContent()
   }
 
-  fun updateAttInfos(attInfoList: List<AttachmentInfo>) {
-    this.atts.addAll(attInfoList)
-    showAttsIfTheyExist()
-  }
-
   fun setActionProgress(progress: Int, message: String? = null) {
     if (progress > 0) {
       progressBarActionProgress?.progress = progress
@@ -374,16 +382,15 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
   private fun updateMsgBody() {
     if (msgInfo != null) {
       updateMsgView()
-      showAttsIfTheyExist()
     }
   }
 
   private fun showConnLostHint() {
     showSnackbar(requireView(), getString(R.string.failed_load_message_from_email_server),
-        getString(R.string.retry), View.OnClickListener {
+        getString(R.string.retry)) {
       UIUtil.exchangeViewVisibility(true, progressView, statusView)
 
-    })
+    }
   }
 
   private fun makeAttsProtected(atts: List<AttachmentInfo>) {
@@ -508,9 +515,16 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     imageBtnReplyAll?.setOnClickListener(this)
     imageBtnMoreOptions = view.findViewById(R.id.imageButtonMoreOptions)
     imageBtnMoreOptions?.setOnClickListener(this)
+
+    rVAttachments = view.findViewById(R.id.rVAttachments)
   }
 
   private fun updateViews() {
+    rVAttachments?.layoutManager = LinearLayoutManager(requireContext())
+    rVAttachments?.adapter = attachmentsRecyclerViewAdapter
+    rVAttachments?.addItemDecoration(
+        MarginItemDecoration(marginBottom = resources.getDimensionPixelSize(R.dimen.default_margin_content_small)))
+
     val subject = if (TextUtils.isEmpty(args.messageEntity.subject)) getString(R.string.no_subject) else
       args.messageEntity.subject
 
@@ -530,74 +544,10 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     updateMsgBody()
   }
 
-  private fun showAttsIfTheyExist() {
-    if (atts.size > 0) {
-      val layoutInflater = LayoutInflater.from(context)
-
-      for (att in atts) {
-        val rootView = layoutInflater.inflate(R.layout.attachment_item, layoutMsgParts, false)
-
-        if (att.isDecrypted) {
-          rootView.setBackgroundResource(R.drawable.bg_att_decrypted)
-        }
-
-        val textViewAttName = rootView.findViewById<TextView>(R.id.textViewAttachmentName)
-        textViewAttName.text = att.getSafeName()
-
-        val textViewAttSize = rootView.findViewById<TextView>(R.id.textViewAttSize)
-        textViewAttSize.text = Formatter.formatFileSize(context, att.encodedSize)
-
-        val button = rootView.findViewById<View>(R.id.imageButtonDownloadAtt)
-        button.setOnClickListener(getDownloadAttClickListener(att))
-
-        if (att.uri != null) {
-          val layoutAtt = rootView.findViewById<View>(R.id.layoutAtt)
-          layoutAtt.setOnClickListener(getOpenFileClickListener(att, button))
-        }
-
-        layoutMsgParts?.addView(rootView)
-      }
-    }
-  }
-
-  private fun getOpenFileClickListener(att: AttachmentInfo, button: View): View.OnClickListener {
-    return View.OnClickListener {
-      if (att.uri?.lastPathSegment?.endsWith(Constants.PGP_FILE_EXT) == true) {
-        button.performClick()
-      } else {
-        val intentOpenFile = Intent(Intent.ACTION_VIEW, att.uri)
-        intentOpenFile.action = Intent.ACTION_VIEW
-        intentOpenFile.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        intentOpenFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        if (intentOpenFile.resolveActivity(requireContext().packageManager) != null) {
-          startActivity(intentOpenFile)
-        }
-      }
-    }
-  }
-
-  private fun getDownloadAttClickListener(att: AttachmentInfo): View.OnClickListener {
-    return View.OnClickListener {
-      lastClickedAtt = att
-      lastClickedAtt?.orderNumber = GeneralUtil.genAttOrderId(requireContext())
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ||
-          ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-        lastClickedAtt?.let {
-          context?.startService(AttachmentDownloadManagerService.newIntent(context, it))
-        }
-      } else {
-        requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            REQUEST_CODE_REQUEST_WRITE_EXTERNAL_STORAGE)
-      }
-    }
-  }
-
   private fun updateMsgView() {
+    val inlineEncryptedAtts = mutableListOf<AttachmentInfo>()
     emailWebView?.loadUrl("about:blank")
-    val childCount = layoutMsgParts?.childCount ?: 0
-    if (childCount > 1) {
-      layoutMsgParts?.removeViews(1, childCount - 1)
-    }
+    layoutMsgParts?.removeAllViews()
 
     var isFirstMsgPartText = true
     var isHtmlDisplayed = false
@@ -640,7 +590,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
             att.uri?.path?.let {
               att.uri = FileProvider.getUriForFile(requireContext(), Constants.FILE_PROVIDER_AUTHORITY, File(it))
             }
-            atts.add(att)
+
+            inlineEncryptedAtts.add(att)
           }
         }
 
@@ -652,6 +603,11 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
 
     if (!isHtmlDisplayed) {
       updateReplyButtons()
+    }
+
+    if (inlineEncryptedAtts.isNotEmpty()) {
+      inlineEncryptedAtts.addAll(attachmentsRecyclerViewAdapter.currentList)
+      attachmentsRecyclerViewAdapter.submitList(inlineEncryptedAtts)
     }
   }
 
@@ -964,6 +920,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
     msgDetailsViewModel.incomingMessageInfoLiveData.observe(viewLifecycleOwner, {
       when (it.status) {
         Result.Status.LOADING -> {
+          showProgress()
+
           val value = it.progress?.toInt() ?: 0
           when (it.resultCode) {
             R.id.progress_id_connecting -> setActionProgress(value, "Connecting")
@@ -992,6 +950,42 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
         }
       }
     })
+
+    msgDetailsViewModel.attsLiveData.observe(viewLifecycleOwner, { list ->
+      val attachmentInfoList = list.map {
+        if (args.localFolder.searchQuery.isNullOrEmpty()) {
+          it.toAttInfo()
+        } else {
+          it.toAttInfo().copy(folder = args.localFolder.fullName)
+        }
+      }.toMutableList()
+
+      attachmentsRecyclerViewAdapter.submitList(attachmentInfoList)
+      if (attachmentInfoList.isEmpty()) {
+        //loadAttsInfo(R.id.syns_request_code_load_atts_info, localFolder, messageEntity.uid.toInt())
+      }
+    })
+
+    /*msgDetailsViewModel.msgStatesLiveData.observe(viewLifecycleOwner, {
+      var finishActivity = true
+      when (it) {
+        MessageState.PENDING_ARCHIVING -> archiveMsgs()
+        MessageState.PENDING_DELETING -> deleteMsgs()
+        MessageState.PENDING_DELETING_PERMANENTLY -> deleteMsgs(deletePermanently = true)
+        MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
+        MessageState.PENDING_MARK_UNREAD -> changeMsgsReadState()
+        MessageState.PENDING_MARK_READ -> {
+          changeMsgsReadState()
+          finishActivity = false
+        }
+        else -> {
+        }
+      }
+
+      if (finishActivity) {
+        finish()
+      }
+    })*/
   }
 
   companion object {

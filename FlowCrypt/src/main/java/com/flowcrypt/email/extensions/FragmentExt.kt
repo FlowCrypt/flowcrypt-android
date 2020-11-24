@@ -24,7 +24,15 @@ import com.flowcrypt.email.ui.activity.fragment.dialog.TwoWayDialogFragment
  */
 
 val androidx.fragment.app.Fragment.navController: NavController?
-  get() = activity?.let { Navigation.findNavController(it, R.id.fragmentContainerView) }
+  get() = activity?.let {
+    try {
+      Navigation.findNavController(it, R.id.fragmentContainerView)
+    } catch (e: Exception) {
+      //to prevent error in fragments which don't use navController
+      //todo-denbond7 remove this after the full migration
+      null
+    }
+  }
 
 val androidx.fragment.app.Fragment.currentOnResultSavedStateHandle
   get() = navController?.currentBackStackEntry?.savedStateHandle

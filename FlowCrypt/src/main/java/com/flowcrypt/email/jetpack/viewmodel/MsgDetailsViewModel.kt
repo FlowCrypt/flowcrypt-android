@@ -12,6 +12,7 @@ import android.text.TextUtils
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
@@ -53,7 +54,6 @@ import org.spongycastle.bcpg.ArmoredInputStream
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.util.*
@@ -90,9 +90,23 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
       folder = messageEntity.folder,
       uid = messageEntity.uid
   )
+
+  private val afterKeysUpdatedMsgLiveData: LiveData<MessageEntity?> = Transformations.switchMap(keysStorage.nodeKeyDetailsLiveData) {
+    liveData {
+      if (it.isNotEmpty()) {
+        emit(roomDatabase.msgDao().getMsgSuspend(
+            account = messageEntity.email,
+            folder = messageEntity.folder,
+            uid = messageEntity.uid))
+      }
+    }
+  }
+
+  private val mediatorMsgLiveData: MediatorLiveData<MessageEntity?> = MediatorLiveData()
+
   private val processingMsgLiveData: MediatorLiveData<Result<ParseDecryptedMsgResult?>> = MediatorLiveData()
   private val processingProgressLiveData: MutableLiveData<Result<ParseDecryptedMsgResult?>> = MutableLiveData()
-  private val processingOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> = Transformations.switchMap(msgLiveData) { messageEntity ->
+  private val processingOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> = Transformations.switchMap(mediatorMsgLiveData) { messageEntity ->
     liveData {
       if (messageEntity?.isOutboxMsg() == true) {
         emit(Result.loading(resultCode = R.id.progress_id_processing, progress = 70.toDouble()))
@@ -103,7 +117,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     }
   }
 
-  private val processingNonOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> = Transformations.switchMap(msgLiveData) { messageEntity ->
+  private val processingNonOutgoingMsgLiveData: LiveData<Result<ParseDecryptedMsgResult?>> = Transformations.switchMap(mediatorMsgLiveData) { messageEntity ->
     liveData {
       if (messageEntity?.isOutboxMsg() == false) {
         emit(Result.loading())
@@ -192,13 +206,27 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   )
 
   init {
+    mediatorMsgLiveData.addSource(msgLiveData) { mediatorMsgLiveData.value = it }
+    //here we resolve a situation when a user updates private keys.
+    // To prevent errors we skip the first call
+    mediatorMsgLiveData.addSource(afterKeysUpdatedMsgLiveData, object : Observer<MessageEntity?> {
+      var isFirstCall = true
+      override fun onChanged(messageEntity: MessageEntity?) {
+        if (isFirstCall) {
+          isFirstCall = false
+        } else {
+          mediatorMsgLiveData.value = messageEntity
+        }
+      }
+    })
+
     processingMsgLiveData.addSource(processingProgressLiveData) { processingMsgLiveData.value = it }
     processingMsgLiveData.addSource(processingOutgoingMsgLiveData) { processingMsgLiveData.value = it }
     processingMsgLiveData.addSource(processingNonOutgoingMsgLiveData) { processingMsgLiveData.value = it }
   }
 
   fun setSeenStatus(isSeen: Boolean) {
-    val freshMsgEntity = msgLiveData.value
+    val freshMsgEntity = mediatorMsgLiveData.value
     freshMsgEntity?.let { msgEntity ->
       viewModelScope.launch {
         roomDatabase.msgDao().updateSuspend(msgEntity.copy(flags = if (isSeen) {
@@ -215,7 +243,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   }
 
   fun changeMsgState(newMsgState: MessageState) {
-    val freshMsgEntity = msgLiveData.value
+    val freshMsgEntity = mediatorMsgLiveData.value
     freshMsgEntity?.let { msgEntity ->
       viewModelScope.launch {
         val candidate: MessageEntity = when (newMsgState) {
@@ -247,7 +275,7 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
   }
 
   fun deleteMsg() {
-    val freshMsgEntity = msgLiveData.value
+    val freshMsgEntity = mediatorMsgLiveData.value
     freshMsgEntity?.let { msgEntity ->
       viewModelScope.launch {
         roomDatabase.msgDao().deleteSuspend(msgEntity)
@@ -384,9 +412,13 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
 
   private suspend fun prepareTempFile(bodyPart: BodyPart): File = withContext(Dispatchers.IO) {
     val tempDir = CacheManager.getCurrentMsgTempDir()
-    val file = File(tempDir, FILE_NAME_ENCRYPTED_MESSAGE)
-    IOUtils.copy(ArmoredInputStream(bodyPart.inputStream), FileOutputStream(file))
-    return@withContext file
+    return@withContext File(tempDir, FILE_NAME_ENCRYPTED_MESSAGE).apply {
+      outputStream().use { outputStream ->
+        ArmoredInputStream(bodyPart.inputStream).use {
+          it.copyTo(outputStream)
+        }
+      }
+    }
   }
 
   private suspend fun getMsgHeaders(): String? = withContext(Dispatchers.IO) {
@@ -410,9 +442,13 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     val d = ByteArray(50000)
     try {
       if (isDataEncrypted) {
-        IOUtils.read(KeyStoreCryptoManager.getCipherInputStream(inputStream), d)
+        KeyStoreCryptoManager.getCipherInputStream(inputStream).use {
+          IOUtils.read(it, d)
+        }
       } else {
-        IOUtils.read(inputStream, d)
+        inputStream.use {
+          IOUtils.read(it, d)
+        }
       }
     } catch (e: Exception) {
       e.printStackTrace()
