@@ -190,6 +190,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT * FROM messages WHERE email = :account AND state =:stateValue")
   abstract fun getMsgsWithState(account: String?, stateValue: Int): List<MessageEntity>
 
+  @Query("SELECT * FROM messages WHERE email = :account AND state =:stateValue")
+  abstract suspend fun getMsgsWithStateSuspend(account: String?, stateValue: Int): List<MessageEntity>
+
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :label AND state =:stateValue")
   abstract fun getMsgsWithState(account: String?, label: String?, stateValue: Int): List<MessageEntity>
 

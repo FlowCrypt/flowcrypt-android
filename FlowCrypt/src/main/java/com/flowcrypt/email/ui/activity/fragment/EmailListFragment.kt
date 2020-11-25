@@ -46,6 +46,7 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.showTwoWayDialog
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
+import com.flowcrypt.email.jetpack.workmanager.UpdateMsgsSeenStateOnServerWorker
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
 import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseSyncFragment
@@ -872,7 +873,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
           MessageState.PENDING_DELETING -> deleteMsgs()
           MessageState.PENDING_DELETING_PERMANENTLY -> deleteMsgs(deletePermanently = true)
           MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
-          MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> changeMsgsReadState()
+          MessageState.PENDING_MARK_UNREAD, MessageState.PENDING_MARK_READ -> UpdateMsgsSeenStateOnServerWorker.enqueue(requireContext())
           MessageState.QUEUED -> context?.let { nonNullContext -> MessagesSenderWorker.enqueue(nonNullContext) }
           else -> {
           }
