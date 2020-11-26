@@ -264,16 +264,6 @@ class EmailSyncManager(val listener: SyncListener) {
     connectionRunnable.searchMsgs(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount)
   }
 
-  /**
-   * Empty trash
-   *
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for the reply to [android.os.Messenger].
-   */
-  fun emptyTrash(ownerKey: String = "", requestCode: Int = -1) {
-    connectionRunnable.emptyTrash(ownerKey, requestCode)
-  }
-
   companion object {
     private val TAG = EmailSyncManager::class.java.simpleName
   }

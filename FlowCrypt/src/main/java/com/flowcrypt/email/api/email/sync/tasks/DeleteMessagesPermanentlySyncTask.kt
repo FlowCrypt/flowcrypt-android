@@ -95,7 +95,7 @@ class DeleteMessagesPermanentlySyncTask(context: Context, params: WorkerParamete
   }
 
   companion object {
-    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".MOVE_MESSAGES_TO_TRASH"
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".DELETE_MESSAGES_PERMANENTLY"
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()

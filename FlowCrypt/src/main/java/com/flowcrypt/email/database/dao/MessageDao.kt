@@ -36,10 +36,13 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   abstract suspend fun getMsgSuspend(account: String?, folder: String?, uid: Long): MessageEntity?
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
-  abstract fun getMsgs(account: String, folder: String): LiveData<MessageEntity>
+  abstract fun getMsgsLD(account: String, folder: String): LiveData<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
-  abstract fun getMsgsAsList(account: String, folder: String): List<MessageEntity>
+  abstract fun getMsgs(account: String, folder: String): List<MessageEntity>
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder")
+  abstract suspend fun getMsgsSuspend(account: String, folder: String): List<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND _id IN (:msgsID)")
   abstract suspend fun getMsgsByIDSuspend(account: String, folder: String, msgsID: Collection<Long>?):
@@ -162,6 +165,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
 
   @Query("UPDATE messages SET state=:newValue WHERE email = :account AND folder = :label")
   abstract fun changeMsgsState(account: String?, label: String?, newValue: Int? = null): Int
+
+  @Query("UPDATE messages SET state=:newValue WHERE email = :account AND folder = :label")
+  abstract suspend fun changeMsgsStateSuspend(account: String?, label: String?, newValue: Int? = null): Int
 
   @Query("UPDATE messages SET state=:newValues WHERE email = :account AND folder = :label AND state = :oldValue")
   abstract suspend fun changeMsgsStateSuspend(account: String?, label: String?, oldValue: Int,

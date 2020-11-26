@@ -353,10 +353,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         onFetchMsgsCompleted()
       }
 
-      R.id.syns_request_empty_trash -> {
-        toast(R.string.emptying_trash_failed)
-      }
-
       else -> {
       }
     }
@@ -472,7 +468,7 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
         when (result) {
           TwoWayDialogFragment.RESULT_OK -> {
             if (GeneralUtil.isConnected(this)) {
-              emptyTrash(R.id.syns_request_empty_trash)
+              emptyTrash()
             } else {
               showInfoSnackbar(rootView, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
             }
