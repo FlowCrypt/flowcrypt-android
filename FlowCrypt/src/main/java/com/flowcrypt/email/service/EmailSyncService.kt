@@ -15,7 +15,6 @@ import android.os.Messenger
 import android.os.RemoteException
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
-import androidx.lifecycle.Observer
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
@@ -591,7 +590,7 @@ class EmailSyncService : BaseService(), SyncListener {
   private fun setupConnectionObserver() {
     connectionLifecycleObserver = ConnectionLifecycleObserver(this)
     lifecycle.addObserver(connectionLifecycleObserver)
-    connectionLifecycleObserver.connectionLiveData.observe(this, Observer {
+    connectionLifecycleObserver.connectionLiveData.observe(this, {
       if (it == true) {
         if (::emailSyncManager.isInitialized) {
           emailSyncManager.beginSync()
@@ -772,11 +771,6 @@ class EmailSyncService : BaseService(), SyncListener {
             uniqueId?.let { emailSyncManager?.cancelLoadMsgDetails(it) }
           }
 
-          MESSAGE_DELETE_MSGS -> emailSyncManager?.deleteMsgs(ownerKey ?: "", requestCode)
-
-          MESSAGE_DELETE_MSGS_PERMANENTLY -> emailSyncManager?.deleteMsgs(ownerKey ?: "",
-              requestCode, true)
-
           MESSAGE_MOVE_MSGS_TO_INBOX -> emailSyncManager?.moveMsgsToINBOX(ownerKey
               ?: "", requestCode)
 
@@ -809,9 +803,7 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_SEARCH_MESSAGES = 11
     const val MESSAGE_LOAD_ATTS_INFO = 13
     const val MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS = 14
-    const val MESSAGE_DELETE_MSGS = 15
     const val MESSAGE_MOVE_MSGS_TO_INBOX = 18
-    const val MESSAGE_DELETE_MSGS_PERMANENTLY = 19
     const val MESSAGE_EMPTY_TRASH = 20
 
     private val TAG = EmailSyncService::class.java.simpleName

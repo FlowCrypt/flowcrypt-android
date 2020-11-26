@@ -54,8 +54,6 @@ class EmailSyncManager(val listener: SyncListener) {
     runIdleInboxIfNeeded()
 
     //run the tasks which maybe not completed last time
-    deleteMsgs()
-    deleteMsgs(deletePermanently = true)
     moveMsgsToINBOX()
 
     ForwardedAttachmentsDownloaderWorker.enqueue(listener.context)
@@ -92,17 +90,6 @@ class EmailSyncManager(val listener: SyncListener) {
    */
   private fun isThreadAlreadyWorking(future: Future<*>?): Boolean {
     return future != null && !future.isCancelled && !future.isDone
-  }
-
-  /**
-   * Delete marked messages.
-   *
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for the reply to [android.os.Messenger].
-   * @param deletePermanently if true we will delete messages permanently
-   */
-  fun deleteMsgs(ownerKey: String = "", requestCode: Int = -1, deletePermanently: Boolean = false) {
-    connectionRunnable.deleteMsgs(ownerKey, requestCode, deletePermanently)
   }
 
   /**

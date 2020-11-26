@@ -9,8 +9,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.DeleteMessagesPermanentlySyncTask
-import com.flowcrypt.email.api.email.sync.tasks.DeleteMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.EmptyTrashSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadAttsInfoSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask
@@ -101,20 +99,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
     try {
       removeOldTasks(UpdateLabelsSyncTask::class.java, tasksQueue)
       tasksQueue.put(UpdateLabelsSyncTask(ownerKey, requestCode))
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
-    }
-  }
-
-  fun deleteMsgs(ownerKey: String, requestCode: Int, deletePermanently: Boolean = false) {
-    try {
-      if (deletePermanently) {
-        removeOldTasks(DeleteMessagesPermanentlySyncTask::class.java, tasksQueue)
-        tasksQueue.put(DeleteMessagesPermanentlySyncTask(ownerKey, requestCode))
-      } else {
-        removeOldTasks(DeleteMessagesSyncTask::class.java, tasksQueue)
-        tasksQueue.put(DeleteMessagesSyncTask(ownerKey, requestCode))
-      }
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }

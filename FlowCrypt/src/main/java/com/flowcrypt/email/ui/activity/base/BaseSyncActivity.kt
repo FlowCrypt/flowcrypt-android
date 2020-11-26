@@ -17,6 +17,8 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.ArchiveMsgsSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.ChangeMsgsReadStateSyncTask
+import com.flowcrypt.email.api.email.sync.tasks.DeleteMessagesPermanentlySyncTask
+import com.flowcrypt.email.api.email.sync.tasks.DeleteMessagesSyncTask
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.shutdown
@@ -254,23 +256,12 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
 
   /**
    * Delete marked messages
-   *
-   * @param requestCode    The unique request code for identify the current action.
    */
-  fun deleteMsgs(requestCode: Int = -1, deletePermanently: Boolean = false) {
-    if (checkServiceBound(isSyncServiceBound)) return
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-
-    val action = BaseService.Action(replyMessengerName, requestCode, null)
-
-    val msg = Message.obtain(null,
-        if (deletePermanently) EmailSyncService.MESSAGE_DELETE_MSGS_PERMANENTLY else EmailSyncService.MESSAGE_DELETE_MSGS, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
+  fun deleteMsgs(deletePermanently: Boolean = false) {
+    if (deletePermanently) {
+      DeleteMessagesPermanentlySyncTask.enqueue(this)
+    } else {
+      DeleteMessagesSyncTask.enqueue(this)
     }
   }
 
@@ -297,8 +288,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
 
   /**
    * Archive marked messages
-   *
-   * @param requestCode    The unique request code for identify the current action.
    */
   fun archiveMsgs() {
     ArchiveMsgsSyncTask.enqueue(this)
@@ -306,8 +295,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
 
   /**
    * Change messages read state.
-   *
-   * @param requestCode    The unique request code for identify the current action.
    */
   fun changeMsgsReadState() {
     ChangeMsgsReadStateSyncTask.enqueue(this)
