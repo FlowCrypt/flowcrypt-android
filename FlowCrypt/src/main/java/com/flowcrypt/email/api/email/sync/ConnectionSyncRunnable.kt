@@ -11,11 +11,9 @@ import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSy
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadAttsInfoSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.LoadMessageDetailsSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.MoveMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.MovingToInboxSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
@@ -118,17 +116,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
     }
   }
 
-  fun loadMsgDetails(ownerKey: String, requestCode: Int, uniqueId: String,
-                     localFolder: LocalFolder, uid: Int, id: Int, resetConnection: Boolean) {
-    try {
-      removeOldTasks(LoadMessageDetailsSyncTask::class.java, tasksQueue)
-      tasksQueue.put(LoadMessageDetailsSyncTask(ownerKey, requestCode, uniqueId, localFolder, uid
-          .toLong(), id.toLong(), resetConnection))
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
-    }
-  }
-
   fun loadAttsInfo(ownerKey: String, requestCode: Int, localFolder: LocalFolder, uid: Int) {
     try {
       removeOldTasks(LoadAttsInfoSyncTask::class.java, tasksQueue)
@@ -154,14 +141,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
       val task = RefreshMessagesSyncTask(ownerKey, requestCode, localFolder)
       removeOldTasks(RefreshMessagesSyncTask::class.java, syncTaskBlockingQueue, task)
       syncTaskBlockingQueue.put(task)
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
-    }
-  }
-
-  fun moveMsg(ownerKey: String, requestCode: Int, srcFolder: LocalFolder, destFolder: LocalFolder, uid: Int) {
-    try {
-      tasksQueue.put(MoveMessagesSyncTask(ownerKey, requestCode, srcFolder, destFolder, longArrayOf(uid.toLong())))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }

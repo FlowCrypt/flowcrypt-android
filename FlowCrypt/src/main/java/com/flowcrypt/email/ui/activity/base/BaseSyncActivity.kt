@@ -318,35 +318,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   }
 
   /**
-   * Start a job to load message details.
-   *
-   * @param requestCode The unique request code for identify the current action.
-   * @param localFolder [LocalFolder] object.
-   * @param uniqueId    The task unique id.
-   * @param uid         The [com.sun.mail.imap.protocol.UID] of [javax.mail.Message]
-   * @param id          A unique id of the row in the local database which identifies a message
-   * @param resetConnection The reset connection status
-   */
-  fun loadMsgDetails(requestCode: Int, uniqueId: String, localFolder: LocalFolder, uid: Int,
-                     id: Int, resetConnection: Boolean = false) {
-    if (checkServiceBound(isSyncServiceBound)) return
-
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-    onProgressReplyReceived(requestCode, R.id.progress_id_connecting, 5)
-
-    val action = BaseService.Action(replyMessengerName, requestCode, localFolder, resetConnection, uniqueId)
-
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGE_DETAILS, uid, id, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  /**
    * Cancel a job which load the current message details
    *
    * @param uniqueId    The task unique id. This parameter helps identify which tasks should be
@@ -358,32 +329,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
 
     val action = BaseService.Action(replyMessengerName, -1, null, false, uniqueId)
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  /**
-   * Move the message to an another folder.
-   *
-   * @param requestCode            The unique request code for identify the current action.
-   * @param sourcesLocalFolder     The message [LocalFolder] object.
-   * @param destinationLocalFolder The new destionation [LocalFolder] object.
-   * @param uid                    The [com.sun.mail.imap.protocol.UID] of [javax.mail.Message]
-   */
-  fun moveMsg(requestCode: Int, sourcesLocalFolder: LocalFolder,
-              destinationLocalFolder: LocalFolder, uid: Int) {
-    if (checkServiceBound(isSyncServiceBound)) return
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-
-    val localFolders = arrayOf(sourcesLocalFolder, destinationLocalFolder)
-    val action = BaseService.Action(replyMessengerName, requestCode, localFolders)
-
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_MOVE_MESSAGE, uid, 0, action)
     msg.replyTo = syncReplyMessenger
     try {
       syncMessenger?.send(msg)

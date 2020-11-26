@@ -79,46 +79,6 @@ interface SyncListener {
   /**
    * This method called when new messages received from some folder.
    *
-   * @param account     The [AccountEntity] object which contains information about an email account.
-   * @param srcFolder   The source folder where the messages exist.
-   * @param destFolder  The destination folder where the messages were moved.
-   * @param msgs        The moved messages.
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for the reply to
-   * [android.os.Messenger].
-   */
-  fun onMsgsMoved(
-      account: AccountEntity,
-      srcFolder: IMAPFolder,
-      destFolder: IMAPFolder,
-      msgs: List<Message>,
-      ownerKey: String,
-      requestCode: Int
-  )
-
-  /**
-   * This method called when new messages received from some folder.
-   *
-   * @param account     The [AccountEntity] object which contains information about an email account.
-   * @param srcFolder   The source folder where the messages exist.
-   * @param destFolder  The destination folder where the messages were moved.
-   * @param msg         The moved message.
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for the reply to
-   * [android.os.Messenger].
-   */
-  fun onMsgMoved(
-      account: AccountEntity,
-      srcFolder: IMAPFolder,
-      destFolder: IMAPFolder,
-      msg: Message?,
-      ownerKey: String,
-      requestCode: Int
-  )
-
-  /**
-   * This method called when new messages received from some folder.
-   *
    * @param account           The [AccountEntity] object which contains information about an email
    * account;
    * @param localFolder       The local implementation of the remote folder;

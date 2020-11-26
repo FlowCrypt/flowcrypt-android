@@ -130,25 +130,6 @@ class EmailSyncManager(val listener: SyncListener) {
   }
 
   /**
-   * Add load a messages information task. This method create a new
-   * [LoadMessagesSyncTask] object and added it to the current synchronization
-   * BlockingQueue.
-   *
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for the reply to [android.os.Messenger].
-   * @param uniqueId    The task unique id.
-   * @param localFolder The local implementation of the remote localFolder.
-   * @param uid         The [com.sun.mail.imap.protocol.UID] of [Message]
-   * @param id          A unique id of the row in the local database which identifies a message
-   */
-
-  fun loadMsgDetails(ownerKey: String, requestCode: Int, uniqueId: String, localFolder: LocalFolder,
-                     uid: Int, id: Int, resetConnection: Boolean) {
-    connectionRunnable.loadMsgDetails(ownerKey, requestCode, uniqueId, localFolder, uid, id,
-        resetConnection)
-  }
-
-  /**
    * Cancel loading details of some message
    *
    */
@@ -194,19 +175,6 @@ class EmailSyncManager(val listener: SyncListener) {
    */
   fun refreshMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder) {
     connectionRunnable.refreshMsgs(ownerKey, requestCode, localFolder)
-  }
-
-  /**
-   * Move the message to an another folder.
-   *
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for identify the current action.
-   * @param srcFolder   A local implementation of the remote folder which is the source.
-   * @param destFolder  A local implementation of the remote folder which is the destination.
-   * @param uid         The [com.sun.mail.imap.protocol.UID] of [                    .Message ).][javax.mail]
-   */
-  fun moveMsg(ownerKey: String, requestCode: Int, srcFolder: LocalFolder, destFolder: LocalFolder, uid: Int) {
-    connectionRunnable.moveMsg(ownerKey, requestCode, srcFolder, destFolder, uid)
   }
 
   /**

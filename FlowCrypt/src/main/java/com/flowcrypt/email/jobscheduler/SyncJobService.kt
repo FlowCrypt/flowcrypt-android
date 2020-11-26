@@ -92,16 +92,6 @@ class SyncJobService : JobService(), SyncListener {
 
   }
 
-  override fun onMsgsMoved(account: AccountEntity, srcFolder: IMAPFolder, destFolder: IMAPFolder,
-                           msgs: List<Message>, ownerKey: String, requestCode: Int) {
-
-  }
-
-  override fun onMsgMoved(account: AccountEntity, srcFolder: IMAPFolder, destFolder: IMAPFolder,
-                          msg: Message?, ownerKey: String, requestCode: Int) {
-
-  }
-
   override fun onMsgDetailsReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                                     uid: Long, id: Long, msg: Message?, ownerKey: String, requestCode: Int) {
 

@@ -167,27 +167,6 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onMsgsMoved(account: AccountEntity, srcFolder: IMAPFolder, destFolder: IMAPFolder,
-                           msgs: List<javax.mail.Message>, ownerKey: String, requestCode: Int) {
-    //Todo-denbond7 Not implemented yet.
-    sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
-  }
-
-  override fun onMsgMoved(account: AccountEntity, srcFolder: IMAPFolder, destFolder: IMAPFolder,
-                          msg: javax.mail.Message?, ownerKey: String, requestCode: Int) {
-    try {
-      if (msg != null) {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
-      } else {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_EXISTS)
-      }
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    }
-  }
-
   override fun onMsgDetailsReceived(account: AccountEntity, localFolder: LocalFolder,
                                     remoteFolder: IMAPFolder, uid: Long, id: Long, msg: javax.mail.Message?,
                                     ownerKey: String, requestCode: Int) {
@@ -689,17 +668,6 @@ class EmailSyncService : BaseService(), SyncListener {
             emailSyncManager.refreshMsgs(ownerKey!!, requestCode, refreshLocalFolder)
           }
 
-          MESSAGE_LOAD_MESSAGE_DETAILS -> if (emailSyncManager != null && action != null) {
-            val localFolder = action.`object` as LocalFolder
-            emailSyncManager.loadMsgDetails(ownerKey!!, requestCode, action.uniqueId, localFolder,
-                msg.arg1, msg.arg2, action.resetConnection)
-          }
-
-          MESSAGE_MOVE_MESSAGE -> if (emailSyncManager != null && action != null) {
-            val localFolders = action.`object` as Array<LocalFolder?>
-            emailSyncManager.moveMsg(ownerKey!!, requestCode, localFolders[0]!!, localFolders[1]!!, msg.arg1)
-          }
-
           MESSAGE_LOAD_PRIVATE_KEYS -> if (emailSyncManager != null && action != null) {
             emailSyncManager.loadPrivateKeys(ownerKey!!, requestCode)
           }
@@ -744,8 +712,6 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_LOAD_MESSAGES = 4
     const val MESSAGE_LOAD_NEXT_MESSAGES = 5
     const val MESSAGE_REFRESH_MESSAGES = 6
-    const val MESSAGE_LOAD_MESSAGE_DETAILS = 7
-    const val MESSAGE_MOVE_MESSAGE = 8
     const val MESSAGE_LOAD_PRIVATE_KEYS = 9
     const val MESSAGE_SEND_MESSAGE_WITH_BACKUP = 10
     const val MESSAGE_SEARCH_MESSAGES = 11
