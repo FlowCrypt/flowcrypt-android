@@ -114,7 +114,7 @@ class EmailSyncManager(val listener: SyncListener) {
    * @param requestCode The unique request code for the reply to [android.os.Messenger].
    */
   fun archiveMsgs(ownerKey: String = "", requestCode: Int = -1) {
-    connectionRunnable.archiveMsgs(ownerKey, requestCode)
+
   }
 
   /**

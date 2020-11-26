@@ -67,6 +67,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid IN (:msgsUID)")
   abstract fun delete(email: String?, label: String?, msgsUID: Collection<Long>): Int
 
+  @Query("DELETE FROM messages WHERE email = :email AND folder = :label AND uid IN (:msgsUID)")
+  abstract suspend fun deleteSuspend(email: String?, label: String?, msgsUID: Collection<Long>): Int
+
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :label")
   abstract fun getOutboxMsgs(account: String?, label: String = JavaEmailConstants.FOLDER_OUTBOX): List<MessageEntity>
 
@@ -209,6 +212,13 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   open fun deleteByUIDs(email: String?, label: String?, msgsUID: Collection<Long>) {
     doOperationViaSteps(list = ArrayList(msgsUID)) { stepUIDs: Collection<Long> ->
       delete(email, label, stepUIDs)
+    }
+  }
+
+  @Transaction
+  open suspend fun deleteByUIDsSuspend(email: String?, label: String?, msgsUID: Collection<Long>) {
+    doOperationViaStepsSuspend(list = ArrayList(msgsUID)) { stepUIDs: Collection<Long> ->
+      deleteSuspend(email, label, stepUIDs)
     }
   }
 

@@ -5,15 +5,27 @@
 
 package com.flowcrypt.email.api.email.sync.tasks
 
+import android.content.Context
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.jetpack.workmanager.BaseSyncWorker
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.mail.Folder
 import javax.mail.Message
-import javax.mail.Session
+import javax.mail.MessagingException
 import javax.mail.Store
 
 /**
@@ -24,30 +36,45 @@ import javax.mail.Store
  *         Time: 12:02 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ArchiveMsgsSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(ownerKey, requestCode) {
+class ArchiveMsgsSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+  override suspend fun doWork(): Result =
+      withContext(Dispatchers.IO) {
+        if (isStopped) {
+          return@withContext Result.success()
+        }
 
-  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
-    val context = listener.context
-    val foldersManager = FoldersManager.fromDatabase(context, account.email)
-    val inboxFolder = foldersManager.findInboxFolder()
+        try {
+          val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+          val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
+          activeAccountEntity?.let {
+            val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
+            connection?.store?.let { store ->
+              archive(activeAccountEntity, store)
+            }
+          }
 
-    if (inboxFolder == null) {
-      listener.onActionCompleted(account, ownerKey, requestCode)
-      return
-    }
+          return@withContext Result.success()
+        } catch (e: Exception) {
+          e.printStackTrace()
+          ExceptionUtil.handleError(e)
+          when (e) {
+            is MessagingException -> {
+              return@withContext Result.retry()
+            }
 
-    val allMailFolder = foldersManager.folderAll
+            else -> return@withContext Result.failure()
+          }
+        }
+      }
 
-    if (allMailFolder == null) {
-      listener.onActionCompleted(account, ownerKey, requestCode)
-      return
-    }
-
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(context)
+  private suspend fun archive(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+    val foldersManager = FoldersManager.fromDatabase(applicationContext, account.email)
+    val inboxFolder = foldersManager.findInboxFolder() ?: return@withContext
+    val allMailFolder = foldersManager.folderAll ?: return@withContext
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
     while (true) {
-      val candidatesForArchiving = roomDatabase.msgDao().getMsgsWithState(account.email,
-          MessageState.PENDING_ARCHIVING.value)
+      val candidatesForArchiving = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email, MessageState.PENDING_ARCHIVING.value)
 
       if (candidatesForArchiving.isEmpty()) {
         break
@@ -60,13 +87,32 @@ class ArchiveMsgsSyncTask(ownerKey: String, requestCode: Int) : BaseSyncTask(own
 
         if (msgs.isNotEmpty()) {
           remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-          roomDatabase.msgDao().deleteByUIDs(account.email, inboxFolder.fullName, uidList)
+          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, inboxFolder.fullName, uidList)
         }
 
         remoteSrcFolder.close()
       }
     }
+  }
 
-    listener.onActionCompleted(account, ownerKey, requestCode)
+  companion object {
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".ARCHIVE_MESSAGES"
+
+    fun enqueue(context: Context) {
+      val constraints = Constraints.Builder()
+          .setRequiredNetworkType(NetworkType.CONNECTED)
+          .build()
+
+      WorkManager
+          .getInstance(context.applicationContext)
+          .enqueueUniqueWork(
+              GROUP_UNIQUE_TAG,
+              ExistingWorkPolicy.REPLACE,
+              OneTimeWorkRequestBuilder<ArchiveMsgsSyncTask>()
+                  .addTag(TAG_SYNC)
+                  .setConstraints(constraints)
+                  .build()
+          )
+    }
   }
 }
