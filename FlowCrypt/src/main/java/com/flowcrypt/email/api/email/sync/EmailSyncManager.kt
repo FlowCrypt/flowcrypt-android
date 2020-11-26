@@ -54,8 +54,6 @@ class EmailSyncManager(val listener: SyncListener) {
     runIdleInboxIfNeeded()
 
     //run the tasks which maybe not completed last time
-    archiveMsgs()
-    changeMsgsReadState()
     deleteMsgs()
     deleteMsgs(deletePermanently = true)
     moveMsgsToINBOX()
@@ -105,26 +103,6 @@ class EmailSyncManager(val listener: SyncListener) {
    */
   fun deleteMsgs(ownerKey: String = "", requestCode: Int = -1, deletePermanently: Boolean = false) {
     connectionRunnable.deleteMsgs(ownerKey, requestCode, deletePermanently)
-  }
-
-  /**
-   * Archive marked messages.
-   *
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for the reply to [android.os.Messenger].
-   */
-  fun archiveMsgs(ownerKey: String = "", requestCode: Int = -1) {
-
-  }
-
-  /**
-   * Change messages read state
-   *
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for the reply to [android.os.Messenger].
-   */
-  fun changeMsgsReadState(ownerKey: String = "", requestCode: Int = -1) {
-
   }
 
   /**

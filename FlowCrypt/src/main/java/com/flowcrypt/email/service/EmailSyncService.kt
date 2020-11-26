@@ -777,13 +777,6 @@ class EmailSyncService : BaseService(), SyncListener {
           MESSAGE_DELETE_MSGS_PERMANENTLY -> emailSyncManager?.deleteMsgs(ownerKey ?: "",
               requestCode, true)
 
-          MESSAGE_ARCHIVE_MSGS -> {
-            emailSyncManager?.archiveMsgs(ownerKey ?: "", requestCode)
-          }
-
-          MESSAGE_CHANGE_MSGS_READ_STATE -> emailSyncManager?.changeMsgsReadState(ownerKey
-              ?: "", requestCode)
-
           MESSAGE_MOVE_MSGS_TO_INBOX -> emailSyncManager?.moveMsgsToINBOX(ownerKey
               ?: "", requestCode)
 
@@ -817,8 +810,6 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_LOAD_ATTS_INFO = 13
     const val MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS = 14
     const val MESSAGE_DELETE_MSGS = 15
-    const val MESSAGE_ARCHIVE_MSGS = 16
-    const val MESSAGE_CHANGE_MSGS_READ_STATE = 17
     const val MESSAGE_MOVE_MSGS_TO_INBOX = 18
     const val MESSAGE_DELETE_MSGS_PERMANENTLY = 19
     const val MESSAGE_EMPTY_TRASH = 20
