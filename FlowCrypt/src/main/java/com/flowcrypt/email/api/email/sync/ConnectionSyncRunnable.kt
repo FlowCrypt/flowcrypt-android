@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.email.sync
 
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.email.sync.tasks.ChangeMsgsReadStateSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.DeleteMessagesPermanentlySyncTask
@@ -116,15 +115,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
         removeOldTasks(DeleteMessagesSyncTask::class.java, tasksQueue)
         tasksQueue.put(DeleteMessagesSyncTask(ownerKey, requestCode))
       }
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
-    }
-  }
-
-  fun changeMsgsReadState(ownerKey: String, requestCode: Int) {
-    try {
-      removeOldTasks(ChangeMsgsReadStateSyncTask::class.java, tasksQueue)
-      tasksQueue.put(ChangeMsgsReadStateSyncTask(ownerKey, requestCode))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }

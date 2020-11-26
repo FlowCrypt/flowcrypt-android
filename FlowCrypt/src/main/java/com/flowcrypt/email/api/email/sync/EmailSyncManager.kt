@@ -124,7 +124,7 @@ class EmailSyncManager(val listener: SyncListener) {
    * @param requestCode The unique request code for the reply to [android.os.Messenger].
    */
   fun changeMsgsReadState(ownerKey: String = "", requestCode: Int = -1) {
-    connectionRunnable.changeMsgsReadState(ownerKey, requestCode)
+
   }
 
   /**
