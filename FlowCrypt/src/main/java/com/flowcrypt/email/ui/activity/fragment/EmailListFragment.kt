@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.ui.activity.fragment
 
-import android.accounts.AuthenticatorException
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
@@ -60,7 +59,6 @@ import com.flowcrypt.email.util.UIUtil
 import com.google.android.gms.auth.GoogleAuthException
 import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
-import javax.mail.AuthenticationFailedException
 
 /**
  * This fragment used for show messages list. ListView is the base view in this fragment. After
@@ -263,7 +261,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
     if (localFolder == null) {
       swipeRefreshLayout?.isRefreshing = false
-      baseSyncActivity.updateLabels(R.id.syns_request_code_update_labels)
+      baseSyncActivity.updateLabels()
       return
     }
 
@@ -335,29 +333,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
           SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> showConnProblemHint()
         }
       }
-
-      R.id.syns_request_code_update_labels ->
-        if (listener?.currentFolder == null) {
-          var errorMsg = getString(R.string.failed_load_labels_from_email_server)
-
-          when (e) {
-            is AuthenticationFailedException -> {
-              if (getString(R.string.gmail_imap_disabled_error).equals(e.message, ignoreCase = true)) {
-                errorMsg = getString(R.string.it_seems_imap_access_is_disabled)
-                super.onErrorOccurred(requestCode, errorType, Exception(errorMsg))
-              }
-            }
-
-            is AuthenticatorException -> {
-              super.onErrorOccurred(requestCode, errorType, e)
-            }
-
-            else -> {
-              super.onErrorOccurred(requestCode, errorType, Exception(errorMsg))
-            }
-          }
-          setSupportActionBarTitle("")
-        }
 
       R.id.sync_request_code_search_messages -> {
         super.onErrorOccurred(requestCode, errorType, e)

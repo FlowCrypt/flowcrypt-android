@@ -103,16 +103,6 @@ class EmailSyncManager(val listener: SyncListener) {
   }
 
   /**
-   * Run update a folders list.
-   *
-   * @param ownerKey       The name of the reply to [android.os.Messenger].
-   * @param requestCode    The unique request code for the reply to [android.os.Messenger]
-   */
-  fun updateLabels(ownerKey: String, requestCode: Int) {
-    connectionRunnable.updateLabels(ownerKey, requestCode)
-  }
-
-  /**
    * Add load a messages information task. This method create a new
    * [LoadMessagesSyncTask] object and added it to the current synchronization
    * BlockingQueue.

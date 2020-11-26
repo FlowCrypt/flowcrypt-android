@@ -11,7 +11,6 @@ import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSy
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
-import javax.mail.Folder
 import javax.mail.Message
 
 /**
@@ -243,21 +242,6 @@ interface SyncListener {
       remoteFolder: IMAPFolder,
       newMsgs: Array<Message>,
       updateMsgs: Array<Message>,
-      ownerKey: String,
-      requestCode: Int
-  )
-
-  /**
-   * This method called when new folders list received.
-   *
-   * @param account     The [AccountEntity] object which contains information about an email account.
-   * @param folders     The new folders list.
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for the reply to [android.os.Messenger].
-   */
-  fun onFoldersInfoReceived(
-      account: AccountEntity,
-      folders: Array<Folder>,
       ownerKey: String,
       requestCode: Int
   )

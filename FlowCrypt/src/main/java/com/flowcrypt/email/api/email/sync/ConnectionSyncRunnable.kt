@@ -21,7 +21,6 @@ import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask
-import com.flowcrypt.email.api.email.sync.tasks.UpdateLabelsSyncTask
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
@@ -47,7 +46,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
   private val tasksMap = ConcurrentHashMap<String, Future<*>>()
 
   init {
-    updateLabels("", 0)
     loadContactsInfoIfNeeded()
   }
 
@@ -91,15 +89,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
           syncListener.onActionCanceled(null, syncTask.ownerKey, syncTask.requestCode, -1)
         }
       }
-    }
-  }
-
-  fun updateLabels(ownerKey: String, requestCode: Int) {
-    try {
-      removeOldTasks(UpdateLabelsSyncTask::class.java, tasksQueue)
-      tasksQueue.put(UpdateLabelsSyncTask(ownerKey, requestCode))
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
     }
   }
 

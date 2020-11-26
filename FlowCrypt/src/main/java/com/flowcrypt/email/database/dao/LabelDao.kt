@@ -41,7 +41,7 @@ interface LabelDao : BaseDao<LabelEntity> {
   suspend fun deleteByEmailSuspend(email: String?): Int
 
   @Transaction
-  fun update(existedLabels: Collection<LabelEntity>, freshLabels: Collection<LabelEntity>) {
+  suspend fun update(existedLabels: Collection<LabelEntity>, freshLabels: Collection<LabelEntity>) {
     val deleteCandidates = mutableListOf<LabelEntity>()
     for (existedLabel in existedLabels) {
       var isFolderFound = false
@@ -72,7 +72,7 @@ interface LabelDao : BaseDao<LabelEntity> {
       }
     }
 
-    delete(deleteCandidates)
-    insert(newCandidates)
+    deleteSuspend(deleteCandidates)
+    insertSuspend(newCandidates)
   }
 }

@@ -18,7 +18,6 @@ import androidx.core.app.NotificationManagerCompat
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.EmailSyncManager
@@ -28,7 +27,6 @@ import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
-import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.model.EmailAndNamePair
@@ -40,7 +38,6 @@ import com.sun.mail.imap.IMAPFolder
 import java.io.IOException
 import java.lang.ref.WeakReference
 import javax.mail.Flags
-import javax.mail.Folder
 import javax.mail.FolderClosedException
 import javax.mail.MessagingException
 import javax.mail.StoreClosedException
@@ -453,48 +450,6 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onFoldersInfoReceived(account: AccountEntity, folders: Array<Folder>, ownerKey: String, requestCode: Int) {
-    LogsUtil.d(TAG, "onFoldersInfoReceived:" + folders.contentToString())
-    val email = account.email
-
-    val foldersManager = FoldersManager(account.email)
-    for (folder in folders) {
-      try {
-        val imapFolder = folder as IMAPFolder
-        foldersManager.addFolder(imapFolder, folder.getName())
-      } catch (e: MessagingException) {
-        e.printStackTrace()
-        ExceptionUtil.handleError(e)
-      }
-    }
-
-    val localFolder = LocalFolder(account.email, JavaEmailConstants.FOLDER_OUTBOX,
-        JavaEmailConstants.FOLDER_OUTBOX, listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN), false, 0, "")
-
-    foldersManager.addFolder(localFolder)
-    val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-
-    val existedLabels = roomDatabase.labelDao().getLabels(email)
-    val freshLabels = mutableListOf<LabelEntity>()
-    for (folder in foldersManager.allFolders) {
-      freshLabels.add(LabelEntity.genLabel(email, folder))
-    }
-
-    if (existedLabels.isEmpty()) {
-      roomDatabase.labelDao().insert(freshLabels)
-    } else {
-      roomDatabase.labelDao().update(existedLabels, freshLabels)
-    }
-
-    try {
-      sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    }
-  }
-
   override fun onError(account: AccountEntity, errorType: Int, e: Exception, ownerKey: String, requestCode: Int) {
     Log.e(TAG, "onError: errorType$errorType| e =$e")
     try {
@@ -719,10 +674,6 @@ class EmailSyncService : BaseService(), SyncListener {
             }
           }
 
-          MESSAGE_UPDATE_LABELS -> if (emailSyncManager != null && action != null) {
-            emailSyncManager.updateLabels(ownerKey!!, requestCode)
-          }
-
           MESSAGE_LOAD_MESSAGES -> if (emailSyncManager != null && action != null) {
             val localFolder = action.`object` as LocalFolder
             emailSyncManager.loadMsgs(ownerKey!!, requestCode, localFolder, msg.arg1, msg.arg2)
@@ -790,7 +741,6 @@ class EmailSyncService : BaseService(), SyncListener {
 
     const val MESSAGE_ADD_REPLY_MESSENGER = 1
     const val MESSAGE_REMOVE_REPLY_MESSENGER = 2
-    const val MESSAGE_UPDATE_LABELS = 3
     const val MESSAGE_LOAD_MESSAGES = 4
     const val MESSAGE_LOAD_NEXT_MESSAGES = 5
     const val MESSAGE_REFRESH_MESSAGES = 6
