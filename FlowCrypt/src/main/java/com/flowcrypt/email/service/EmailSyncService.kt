@@ -676,9 +676,6 @@ class EmailSyncService : BaseService(), SyncListener {
             uniqueId?.let { emailSyncManager?.cancelLoadMsgDetails(it) }
           }
 
-          MESSAGE_MOVE_MSGS_TO_INBOX -> emailSyncManager?.moveMsgsToINBOX(ownerKey
-              ?: "", requestCode)
-
           else -> super.handleMessage(msg)
         }
       }
@@ -703,7 +700,6 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_SEARCH_MESSAGES = 11
     const val MESSAGE_LOAD_ATTS_INFO = 13
     const val MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS = 14
-    const val MESSAGE_MOVE_MSGS_TO_INBOX = 18
 
     private val TAG = EmailSyncService::class.java.simpleName
 

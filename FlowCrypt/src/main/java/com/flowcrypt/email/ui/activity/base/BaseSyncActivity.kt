@@ -15,6 +15,7 @@ import android.os.RemoteException
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
+import com.flowcrypt.email.api.email.sync.tasks.MovingToInboxSyncTask
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.shutdown
@@ -277,22 +278,9 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   /**
    * Move messages back to inbox
    *
-   * @param requestCode    The unique request code for identify the current action.
    */
-  fun moveMsgsToINBOX(requestCode: Int = -1) {
-    if (checkServiceBound(isSyncServiceBound)) return
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-
-    val action = BaseService.Action(replyMessengerName, requestCode, null)
-
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_MOVE_MSGS_TO_INBOX, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
+  fun moveMsgsToINBOX() {
+    MovingToInboxSyncTask.enqueue(this)
   }
 
   /**

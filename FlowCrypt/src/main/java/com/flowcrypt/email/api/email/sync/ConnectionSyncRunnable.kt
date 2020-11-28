@@ -13,7 +13,6 @@ import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.MovingToInboxSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SendMessageWithBackupToKeyOwnerSynsTask
@@ -86,15 +85,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
           syncListener.onActionCanceled(null, syncTask.ownerKey, syncTask.requestCode, -1)
         }
       }
-    }
-  }
-
-  fun moveMsgsToINBOX(ownerKey: String, requestCode: Int) {
-    try {
-      removeOldTasks(MovingToInboxSyncTask::class.java, tasksQueue)
-      tasksQueue.put(MovingToInboxSyncTask(ownerKey, requestCode))
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
     }
   }
 

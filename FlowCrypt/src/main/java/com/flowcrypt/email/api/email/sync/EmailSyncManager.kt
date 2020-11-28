@@ -53,9 +53,6 @@ class EmailSyncManager(val listener: SyncListener) {
 
     runIdleInboxIfNeeded()
 
-    //run the tasks which maybe not completed last time
-    moveMsgsToINBOX()
-
     ForwardedAttachmentsDownloaderWorker.enqueue(listener.context)
     MessagesSenderWorker.enqueue(listener.context)
   }
@@ -90,16 +87,6 @@ class EmailSyncManager(val listener: SyncListener) {
    */
   private fun isThreadAlreadyWorking(future: Future<*>?): Boolean {
     return future != null && !future.isCancelled && !future.isDone
-  }
-
-  /**
-   * Move messages back to INBOX
-   *
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for the reply to [android.os.Messenger].
-   */
-  fun moveMsgsToINBOX(ownerKey: String = "", requestCode: Int = -1) {
-    connectionRunnable.moveMsgsToINBOX(ownerKey, requestCode)
   }
 
   /**

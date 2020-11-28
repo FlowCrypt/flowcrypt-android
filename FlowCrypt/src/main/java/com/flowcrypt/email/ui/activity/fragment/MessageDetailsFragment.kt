@@ -65,6 +65,7 @@ import com.flowcrypt.email.model.PgpContact
 import com.flowcrypt.email.service.attachment.AttachmentDownloadManagerService
 import com.flowcrypt.email.ui.activity.CreateMessageActivity
 import com.flowcrypt.email.ui.activity.ImportPrivateKeyActivity
+import com.flowcrypt.email.ui.activity.base.BaseSyncActivity
 import com.flowcrypt.email.ui.activity.fragment.base.BaseFragment
 import com.flowcrypt.email.ui.activity.fragment.base.ProgressBehaviour
 import com.flowcrypt.email.ui.activity.fragment.dialog.ChoosePublicKeyDialogFragment
@@ -1010,26 +1011,31 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       }
     })
 
-    /*msgDetailsViewModel.msgStatesLiveData.observe(viewLifecycleOwner, {
+    msgDetailsViewModel.msgStatesLiveData.observe(viewLifecycleOwner, { newState ->
       var finishActivity = true
-      when (it) {
-        MessageState.PENDING_ARCHIVING -> archiveMsgs()
-        MessageState.PENDING_DELETING -> deleteMsgs()
-        MessageState.PENDING_DELETING_PERMANENTLY -> deleteMsgs(deletePermanently = true)
-        MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
-        MessageState.PENDING_MARK_UNREAD -> changeMsgsReadState()
-        MessageState.PENDING_MARK_READ -> {
-          changeMsgsReadState()
-          finishActivity = false
-        }
-        else -> {
+      val syncActivity = activity as? BaseSyncActivity
+      syncActivity?.let {
+        with(syncActivity) {
+          when (newState) {
+            MessageState.PENDING_ARCHIVING -> archiveMsgs()
+            MessageState.PENDING_DELETING -> deleteMsgs()
+            MessageState.PENDING_DELETING_PERMANENTLY -> deleteMsgs(deletePermanently = true)
+            MessageState.PENDING_MOVE_TO_INBOX -> moveMsgsToINBOX()
+            MessageState.PENDING_MARK_UNREAD -> changeMsgsReadState()
+            MessageState.PENDING_MARK_READ -> {
+              changeMsgsReadState()
+              finishActivity = false
+            }
+            else -> {
+            }
+          }
         }
       }
 
       if (finishActivity) {
-        finish()
+        activity?.finish()
       }
-    })*/
+    })
   }
 
   private fun messageNotAvailableInFolder(showToast: Boolean = true) {
