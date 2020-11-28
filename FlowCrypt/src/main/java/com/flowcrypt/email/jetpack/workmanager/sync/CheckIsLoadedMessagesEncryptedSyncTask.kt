@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync.tasks
+package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
 import androidx.work.Constraints
@@ -33,8 +33,6 @@ import javax.mail.Store
 
 /**
  * This task identifies encrypted messages and updates information about messages in the local database.
- *
- * @property localFolder The local implementation of the remote folder
  *
  * @author Denis Bondarenko
  * Date: 02.06.2018
