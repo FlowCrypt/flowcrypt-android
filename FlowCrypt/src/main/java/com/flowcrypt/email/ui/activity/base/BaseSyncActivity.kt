@@ -15,7 +15,6 @@ import android.os.RemoteException
 import androidx.test.espresso.idling.CountingIdlingResource
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.email.sync.tasks.MovingToInboxSyncTask
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.shutdown
@@ -24,6 +23,7 @@ import com.flowcrypt.email.jetpack.workmanager.sync.ChangeMsgsReadStateSyncTask
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlySyncTask
 import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesSyncTask
 import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashSyncTask
+import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxSyncTask
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsSyncTask
 import com.flowcrypt.email.service.BaseService
 import com.flowcrypt.email.service.EmailSyncService
