@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync.tasks
+package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
 import androidx.work.Constraints
@@ -15,6 +15,7 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
+import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -28,15 +29,17 @@ import javax.mail.Message
 import javax.mail.MessagingException
 import javax.mail.Store
 
+
 /**
- * This task moves marked messages to INBOX folder
+ * This task finds all delete candidates in the local database and use that info to move marked
+ * messages to TRASH folder on the remote server.
  *
  * @author Denis Bondarenko
- *         Date: 10/18/19
- *         Time: 12:02 PM
+ *         Date: 10/17/19
+ *         Time: 6:16 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ArchiveMsgsSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class DeleteMessagesSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
   override suspend fun doWork(): Result =
       withContext(Dispatchers.IO) {
         if (isStopped) {
@@ -49,7 +52,7 @@ class ArchiveMsgsSyncTask(context: Context, params: WorkerParameters) : BaseSync
           activeAccountEntity?.let {
             val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
             connection?.store?.let { store ->
-              archive(activeAccountEntity, store)
+              moveMsgsToTrash(activeAccountEntity, store)
             }
           }
 
@@ -67,36 +70,47 @@ class ArchiveMsgsSyncTask(context: Context, params: WorkerParameters) : BaseSync
         }
       }
 
-  private suspend fun archive(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+  private suspend fun moveMsgsToTrash(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val foldersManager = FoldersManager.fromDatabase(applicationContext, account.email)
-    val inboxFolder = foldersManager.findInboxFolder() ?: return@withContext
-    val allMailFolder = foldersManager.folderAll ?: return@withContext
+    val trash = foldersManager.folderTrash ?: return@withContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
     while (true) {
-      val candidatesForArchiving = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email, MessageState.PENDING_ARCHIVING.value)
+      val candidatesForDeleting = roomDatabase.msgDao().getMsgsWithStateSuspend(
+          account.email, MessageState.PENDING_DELETING.value)
 
-      if (candidatesForArchiving.isEmpty()) {
+      if (candidatesForDeleting.isEmpty()) {
         break
       } else {
-        val uidList = candidatesForArchiving.map { it.uid }
-        val remoteSrcFolder = store.getFolder(inboxFolder.fullName) as IMAPFolder
-        val remoteDestFolder = store.getFolder(allMailFolder.fullName) as IMAPFolder
-        remoteSrcFolder.open(Folder.READ_WRITE)
-        val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
+        val setOfFolders = candidatesForDeleting.map { it.folder }.toSet()
 
-        if (msgs.isNotEmpty()) {
-          remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, inboxFolder.fullName, uidList)
+        for (folder in setOfFolders) {
+          val filteredMsgs = candidatesForDeleting.filter { it.folder == folder }
+
+          if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)) {
+            continue
+          }
+
+          val uidList = filteredMsgs.map { it.uid }
+          val remoteSrcFolder = store.getFolder(folder) as IMAPFolder
+          val remoteDestFolder = store.getFolder(trash.fullName) as IMAPFolder
+          remoteSrcFolder.open(Folder.READ_WRITE)
+
+          val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
+
+          if (msgs.isNotEmpty()) {
+            remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
+            roomDatabase.msgDao().deleteByUIDsSuspend(account.email, folder, uidList)
+          }
+
+          remoteSrcFolder.close()
         }
-
-        remoteSrcFolder.close()
       }
     }
   }
 
   companion object {
-    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".ARCHIVE_MESSAGES"
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".MOVE_MESSAGES_TO_TRASH"
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
@@ -108,7 +122,7 @@ class ArchiveMsgsSyncTask(context: Context, params: WorkerParameters) : BaseSync
           .enqueueUniqueWork(
               GROUP_UNIQUE_TAG,
               ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<ArchiveMsgsSyncTask>()
+              OneTimeWorkRequestBuilder<DeleteMessagesSyncTask>()
                   .addTag(TAG_SYNC)
                   .setConstraints(constraints)
                   .build()

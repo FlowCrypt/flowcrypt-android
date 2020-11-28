@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync.tasks
+package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
 import androidx.work.Constraints
@@ -13,6 +13,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
@@ -24,20 +25,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.mail.Flags
 import javax.mail.Folder
-import javax.mail.FolderNotFoundException
 import javax.mail.Message
 import javax.mail.MessagingException
 import javax.mail.Store
 
 /**
- * This task mark candidates as read/unread.
- *
  * @author Denis Bondarenko
- *         Date: 10/18/19
- *         Time: 12:31 PM
+ *         Date: 7/3/20
+ *         Time: 5:33 PM
  *         E-mail: DenBond7@gmail.com
  */
-class ChangeMsgsReadStateSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class DeleteMessagesPermanentlySyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
   override suspend fun doWork(): Result =
       withContext(Dispatchers.IO) {
         if (isStopped) {
@@ -50,8 +48,7 @@ class ChangeMsgsReadStateSyncTask(context: Context, params: WorkerParameters) : 
           activeAccountEntity?.let {
             val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
             connection?.store?.let { store ->
-              changeMsgsReadState(activeAccountEntity, store, MessageState.PENDING_MARK_UNREAD)
-              changeMsgsReadState(activeAccountEntity, store, MessageState.PENDING_MARK_READ)
+              deleteMsgsPermanently(activeAccountEntity, store)
             }
           }
 
@@ -69,65 +66,36 @@ class ChangeMsgsReadStateSyncTask(context: Context, params: WorkerParameters) : 
         }
       }
 
-  private suspend fun changeMsgsReadState(account: AccountEntity, store: Store, state: MessageState) = withContext(Dispatchers.IO) {
+  private suspend fun deleteMsgsPermanently(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+    val foldersManager = FoldersManager.fromDatabase(applicationContext, account.email)
+    val trash = foldersManager.folderTrash ?: return@withContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-    val candidatesForMark = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email, state.value)
 
-    if (candidatesForMark.isNotEmpty()) {
-      val setOfFolders = candidatesForMark.map { it.folder }.toSet()
+    while (true) {
+      val candidatesForDeleting = roomDatabase.msgDao().getMsgsWithStateSuspend(
+          account.email, trash.fullName, MessageState.PENDING_DELETING_PERMANENTLY.value)
 
-      for (folder in setOfFolders) {
-        val filteredMsgs = candidatesForMark.filter { it.folder == folder }
+      if (candidatesForDeleting.isEmpty()) {
+        break
+      } else {
+        val uidList = candidatesForDeleting.map { it.uid }
+        val remoteTrashFolder = store.getFolder(trash.fullName) as IMAPFolder
+        remoteTrashFolder.open(Folder.READ_WRITE)
 
-        if (filteredMsgs.isEmpty()) {
-          continue
+        val msgs: List<Message> = remoteTrashFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
+
+        if (msgs.isNotEmpty()) {
+          remoteTrashFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.DELETED), true)
+          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, trash.fullName, uidList)
         }
 
-        try {
-          val imapFolder = store.getFolder(folder) as IMAPFolder
-          imapFolder.open(Folder.READ_WRITE)
-
-          val uidList = filteredMsgs.map { it.uid }
-          val msgs: List<Message> = imapFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
-
-          if (msgs.isNotEmpty()) {
-            val value = state == MessageState.PENDING_MARK_READ
-            imapFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.SEEN), value)
-            for (uid in uidList) {
-              val msgEntity = roomDatabase.msgDao().getMsgSuspend(account.email, folder, uid)
-
-              if (msgEntity?.msgState == state) {
-                roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.NONE.value))
-              }
-            }
-          }
-
-          imapFolder.close()
-        } catch (e: Exception) {
-          e.printStackTrace()
-          when (e) {
-            is FolderNotFoundException -> {
-              //don't send ACRA reports
-            }
-
-            is MessagingException -> {
-              val msg = e.message ?: ""
-              if (!msg.equals("folder cannot contain messages", true)) {
-                ExceptionUtil.handleError(e)
-              }
-
-              throw e
-            }
-
-            else -> ExceptionUtil.handleError(e)
-          }
-        }
+        remoteTrashFolder.close(true)
       }
     }
   }
 
   companion object {
-    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".UPDATE_MESSAGES_SEEN_STATE_ON_SERVER"
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".DELETE_MESSAGES_PERMANENTLY"
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
@@ -139,7 +107,7 @@ class ChangeMsgsReadStateSyncTask(context: Context, params: WorkerParameters) : 
           .enqueueUniqueWork(
               GROUP_UNIQUE_TAG,
               ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<ChangeMsgsReadStateSyncTask>()
+              OneTimeWorkRequestBuilder<DeleteMessagesPermanentlySyncTask>()
                   .addTag(TAG_SYNC)
                   .setConstraints(constraints)
                   .build()

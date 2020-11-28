@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync.tasks
+package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
 import androidx.work.Constraints
