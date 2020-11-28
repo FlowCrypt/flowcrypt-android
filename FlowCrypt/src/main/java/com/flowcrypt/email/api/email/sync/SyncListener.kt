@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.email.sync
 
 import android.content.Context
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.sun.mail.imap.IMAPFolder
@@ -291,24 +290,6 @@ interface SyncListener {
       localFolder: LocalFolder,
       remoteFolder: IMAPFolder,
       msg: Message,
-      ownerKey: String,
-      requestCode: Int
-  )
-
-  /**
-   * This method called when [CheckIsLoadedMessagesEncryptedSyncTask] was completed.
-   *
-   * @param account      The [AccountEntity] object which contains information about an email account.
-   * @param localFolder  The local implementation of the remote folder
-   * @param remoteFolder The remote folder where the new messages exist.
-   * @param ownerKey     The name of the reply to [android.os.Messenger].
-   * @param requestCode  The unique request code for the reply to
-   * [android.os.Messenger].
-   */
-  fun onIdentificationToEncryptionCompleted(
-      account: AccountEntity,
-      localFolder: LocalFolder,
-      remoteFolder: IMAPFolder,
       ownerKey: String,
       requestCode: Int
   )

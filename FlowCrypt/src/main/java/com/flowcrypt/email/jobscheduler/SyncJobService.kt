@@ -171,11 +171,6 @@ class SyncJobService : JobService(), SyncListener {
 
   }
 
-  override fun onIdentificationToEncryptionCompleted(account: AccountEntity, localFolder: LocalFolder,
-                                                     remoteFolder: IMAPFolder, ownerKey: String, requestCode: Int) {
-
-  }
-
   override fun onNewMsgsReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                                  newMsgs: Array<Message>, msgsEncryptionStates: Map<Long, Boolean>,
                                  ownerKey: String, requestCode: Int) {

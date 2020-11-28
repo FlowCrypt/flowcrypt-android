@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.email.sync
 
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadAttsInfoSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask
@@ -157,15 +156,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
   fun sendMsgWithBackup(ownerKey: String, requestCode: Int) {
     try {
       tasksQueue.put(SendMessageWithBackupToKeyOwnerSynsTask(ownerKey, requestCode))
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
-    }
-  }
-
-  fun identifyEncryptedMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder) {
-    try {
-      removeOldTasks(CheckIsLoadedMessagesEncryptedSyncTask::class.java, tasksQueue)
-      tasksQueue.put(CheckIsLoadedMessagesEncryptedSyncTask(ownerKey, requestCode, localFolder))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }

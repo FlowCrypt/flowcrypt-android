@@ -52,8 +52,15 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   abstract fun getNewMsgs(account: String, folder: String,
                           orderBy: String = "received_date ASC"): List<MessageEntity>
 
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND is_new = 1 ORDER BY :orderBy")
+  abstract suspend fun getNewMsgsSuspend(account: String, folder: String,
+                                         orderBy: String = "received_date ASC"): List<MessageEntity>
+
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid IN (:msgsUID)")
   abstract fun getMsgsByUids(account: String?, folder: String?, msgsUID: Collection<Long>?): List<MessageEntity>
+
+  @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder AND uid IN (:msgsUID)")
+  abstract suspend fun getMsgsByUidsSuspend(account: String?, folder: String?, msgsUID: Collection<Long>?): List<MessageEntity>
 
   @Query("SELECT * FROM messages WHERE email = :account AND folder = :folder ORDER BY received_date DESC")
   abstract fun getMessagesDataSourceFactory(account: String, folder: String): DataSource.Factory<Int, MessageEntity>
@@ -139,7 +146,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
    * @return The list of UID of selected messages in the database for some label.
    */
   @Query("SELECT uid FROM messages WHERE email = :account AND folder = :label AND is_encrypted = -1")
-  abstract fun getNotCheckedUIDs(account: String?, label: String): List<Long>
+  abstract suspend fun getNotCheckedUIDs(account: String?, label: String): List<Long>
 
   /**
    * Get a list of UID and flags of all unseen messages in the database for some label.
@@ -261,8 +268,8 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   }
 
   @Transaction
-  open fun updateEncryptionStates(email: String?, label: String?, flagsMap: Map<Long, Boolean>) {
-    val msgEntities = getMsgsByUids(account = email, folder = label, msgsUID = flagsMap.keys)
+  open suspend fun updateEncryptionStates(email: String?, label: String?, flagsMap: Map<Long, Boolean>) {
+    val msgEntities = getMsgsByUidsSuspend(account = email, folder = label, msgsUID = flagsMap.keys)
     val modifiedMsgEntities = ArrayList<MessageEntity>()
 
     for (msgEntity in msgEntities) {
@@ -272,7 +279,7 @@ abstract class MessageDao : BaseDao<MessageEntity> {
       }
     }
 
-    update(modifiedMsgEntities)
+    updateSuspend(modifiedMsgEntities)
   }
 
   /**

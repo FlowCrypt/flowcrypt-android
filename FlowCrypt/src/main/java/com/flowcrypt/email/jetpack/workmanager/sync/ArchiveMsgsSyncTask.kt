@@ -68,7 +68,7 @@ class ArchiveMsgsSyncTask(context: Context, params: WorkerParameters) : BaseSync
       }
 
   private suspend fun archive(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabase(applicationContext, account.email)
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
     val inboxFolder = foldersManager.findInboxFolder() ?: return@withContext
     val allMailFolder = foldersManager.folderAll ?: return@withContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)

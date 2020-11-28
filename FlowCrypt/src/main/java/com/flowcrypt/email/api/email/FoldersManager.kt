@@ -162,6 +162,24 @@ class FoldersManager constructor(val account: String) {
     return null
   }
 
+  /**
+   * Get [LocalFolder] by the full name.
+   *
+   * @param fullName The folder full name.
+   * @return [LocalFolder].
+   */
+  fun getFolderByFullName(fullName: String?): LocalFolder? {
+    fullName ?: return null
+
+    for (folder in folders) {
+      if (folder.value.fullName == fullName) {
+        return folder.value
+      }
+    }
+
+    return null
+  }
+
   fun findInboxFolder(): LocalFolder? {
     for (localFolder in allFolders) {
       if (localFolder.fullName.equals(JavaEmailConstants.FOLDER_INBOX, ignoreCase = true)) {
@@ -273,6 +291,20 @@ class FoldersManager constructor(val account: String) {
     fun fromDatabase(context: Context, accountName: String): FoldersManager {
       val appContext = context.applicationContext
       return build(accountName, FlowCryptRoomDatabase.getDatabase(appContext).labelDao().getLabels(accountName))
+    }
+
+    /**
+     * Generate a new [FoldersManager] using information from the local database. Should be
+     * called from a background thread only.
+     *
+     * @param context     Interface to global information about an application environment.
+     * @param accountName The name of an account.
+     * @return The new [FoldersManager].
+     */
+    @WorkerThread
+    suspend fun fromDatabaseSuspend(context: Context, accountName: String): FoldersManager {
+      val appContext = context.applicationContext
+      return build(accountName, FlowCryptRoomDatabase.getDatabase(appContext).labelDao().getLabelsSuspend(accountName))
     }
 
     /**

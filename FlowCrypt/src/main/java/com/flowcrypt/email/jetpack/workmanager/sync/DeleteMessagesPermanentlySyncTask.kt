@@ -67,7 +67,7 @@ class DeleteMessagesPermanentlySyncTask(context: Context, params: WorkerParamete
       }
 
   private suspend fun deleteMsgsPermanently(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabase(applicationContext, account.email)
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
     val trash = foldersManager.folderTrash ?: return@withContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 

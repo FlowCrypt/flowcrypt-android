@@ -503,7 +503,7 @@ class MessagesSenderWorker(context: Context, params: WorkerParameters) : Corouti
    */
   private suspend fun saveCopyOfSentMsg(account: AccountEntity, store: Store, mimeMsg: MimeMessage): Boolean =
       withContext(Dispatchers.IO) {
-        val foldersManager = FoldersManager.fromDatabase(applicationContext, account.email)
+        val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
         val sentLocalFolder = foldersManager.findSentFolder()
 
         if (sentLocalFolder != null) {

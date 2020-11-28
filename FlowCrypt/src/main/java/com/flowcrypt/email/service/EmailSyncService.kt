@@ -15,7 +15,6 @@ import android.os.Messenger
 import android.os.RemoteException
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
-import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.MsgsCacheManager
@@ -23,6 +22,7 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.EmailSyncManager
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.api.email.sync.tasks.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -214,7 +214,7 @@ class EmailSyncService : BaseService(), SyncListener {
       roomDatabase.msgDao().insertWithReplace(msgEntities)
 
       if (!isEncryptedModeEnabled) {
-        emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)
+        CheckIsLoadedMessagesEncryptedSyncTask.enqueue(applicationContext, localFolder)
       }
 
       if (msgs.isNotEmpty()) {
@@ -325,7 +325,7 @@ class EmailSyncService : BaseService(), SyncListener {
       FlowCryptRoomDatabase.getDatabase(context).msgDao().insertWithReplace(msgEntities)
 
       if (!isEncryptedModeEnabled) {
-        emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)
+        CheckIsLoadedMessagesEncryptedSyncTask.enqueue(applicationContext, localFolder)
       }
 
       if (msgs.isNotEmpty()) {
@@ -388,7 +388,7 @@ class EmailSyncService : BaseService(), SyncListener {
       roomDatabase.msgDao().insertWithReplace(msgEntities)
 
       if (!isEncryptedModeEnabled) {
-        emailSyncManager.identifyEncryptedMsgs(ownerKey, R.id.syns_identify_encrypted_messages, localFolder)
+        CheckIsLoadedMessagesEncryptedSyncTask.enqueue(applicationContext, localFolder)
       }
 
       val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, updateMsgs)
@@ -493,20 +493,6 @@ class EmailSyncService : BaseService(), SyncListener {
       } catch (e: MessagingException) {
         e.printStackTrace()
       }
-    }
-  }
-
-  override fun onIdentificationToEncryptionCompleted(account: AccountEntity, localFolder: LocalFolder,
-                                                     remoteFolder: IMAPFolder, ownerKey: String, requestCode: Int) {
-    val email = account.email
-    val folderName = localFolder.fullName
-    val folderType = FoldersManager.getFolderType(localFolder)
-
-    if (folderType === FoldersManager.FolderType.INBOX && !GeneralUtil.isAppForegrounded()) {
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
-
-      val detailsList = roomDatabase.msgDao().getNewMsgs(email, folderName)
-      notificationManager.notify(this, account, localFolder, detailsList)
     }
   }
 

@@ -71,7 +71,7 @@ class DeleteMessagesSyncTask(context: Context, params: WorkerParameters) : BaseS
       }
 
   private suspend fun moveMsgsToTrash(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabase(applicationContext, account.email)
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
     val trash = foldersManager.folderTrash ?: return@withContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 

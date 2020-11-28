@@ -198,17 +198,6 @@ class EmailSyncManager(val listener: SyncListener) {
   }
 
   /**
-   * Identify encrypted messages.
-   *
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for identify the current action.
-   * @param localFolder The local implementation of the remote folder
-   */
-  fun identifyEncryptedMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder) {
-    connectionRunnable.identifyEncryptedMsgs(ownerKey, requestCode, localFolder)
-  }
-
-  /**
    * Add the task of load information of the next searched messages. This method create a new
    * [SearchMessagesSyncTask] object and added it to the current synchronization
    * BlockingQueue.

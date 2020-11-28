@@ -66,7 +66,7 @@ class EmptyTrashSyncTask(context: Context, params: WorkerParameters) : BaseSyncW
       }
 
   private suspend fun emptyTrash(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabase(applicationContext, account.email)
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
     val trash = foldersManager.folderTrash ?: return@withContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
     val remoteTrashFolder = store.getFolder(trash.fullName) as IMAPFolder
