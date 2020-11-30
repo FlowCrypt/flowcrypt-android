@@ -79,19 +79,6 @@ class SyncJobService : JobService(), SyncListener {
     return false
   }
 
-  override fun onMsgWithBackupToKeyOwnerSent(account: AccountEntity, ownerKey: String, requestCode: Int, isSent: Boolean) {
-
-  }
-
-  override fun onMsgSent(account: AccountEntity, ownerKey: String, requestCode: Int, isSent: Boolean) {
-
-  }
-
-  override fun onMsgDetailsReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
-                                    uid: Long, id: Long, msg: Message?, ownerKey: String, requestCode: Int) {
-
-  }
-
   override fun onMsgsReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                               msgs: Array<Message>, ownerKey: String, requestCode: Int) {
 
@@ -208,10 +195,6 @@ class SyncJobService : JobService(), SyncListener {
       ExceptionUtil.handleError(e)
     }
 
-  }
-
-  override fun onAttsInfoReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, uid: Long,
-                                  ownerKey: String, requestCode: Int) {
   }
 
   /**

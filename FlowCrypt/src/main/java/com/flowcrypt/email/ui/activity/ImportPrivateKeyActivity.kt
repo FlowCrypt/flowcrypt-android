@@ -21,7 +21,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.showDialogFragment
-import com.flowcrypt.email.jetpack.viewmodel.SearchBackupsInEmailViewModel
+import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.jetpack.viewmodel.SubmitPubKeyViewModel
 import com.flowcrypt.email.model.KeyDetails
 import com.flowcrypt.email.model.KeyImportModel
@@ -43,7 +43,7 @@ import com.google.android.material.snackbar.Snackbar
  * E-mail: DenBond7@gmail.com
  */
 class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.OnTwoWayDialogListener {
-  private val searchBackupsInEmailViewModel: SearchBackupsInEmailViewModel by viewModels()
+  private val backupsViewModel: BackupsViewModel by viewModels()
   private var privateKeysFromEmailBackups = mutableListOf<NodeKeyDetails>()
   private val unlockedKeys: MutableList<NodeKeyDetails> = ArrayList()
   private var keyDetailsType: KeyDetails.Type = KeyDetails.Type.EMAIL
@@ -334,7 +334,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
   }
 
   private fun initSearchBackupsInEmailViewModel() {
-    searchBackupsInEmailViewModel.backupsLiveData.observe(this, {
+    backupsViewModel.onlineBackupsLiveData.observe(this, {
       when (it.status) {
         Result.Status.LOADING -> {
           UIUtil.exchangeViewVisibility(true, layoutProgress, layoutContentView)

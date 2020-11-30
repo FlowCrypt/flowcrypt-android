@@ -121,27 +121,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   }
 
   /**
-   * Send a message with a backup to the key owner.
-   *
-   * @param requestCode The unique request code for identify the current action.
-   */
-  fun sendMsgWithPrivateKeyBackup(requestCode: Int) {
-    if (checkServiceBound(isSyncServiceBound)) return
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-
-    val action = BaseService.Action(replyMessengerName, requestCode, null)
-
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_SEND_MESSAGE_WITH_BACKUP, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  /**
    * Start a job to load message to cache.
    *
    * @param requestCode            The unique request code for identify the current action.

@@ -7,11 +7,14 @@ package com.flowcrypt.email.jetpack.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.liveData
+import androidx.lifecycle.viewModelScope
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.SearchBackupsUtil
+import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
 import com.flowcrypt.email.api.retrofit.node.NodeRepository
 import com.flowcrypt.email.api.retrofit.node.PgpApiRepository
 import com.flowcrypt.email.api.retrofit.request.node.ParseKeysRequest
@@ -22,9 +25,11 @@ import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.flowcrypt.email.util.exception.NodeException
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
 import javax.mail.Folder
+import javax.mail.Session
 import javax.mail.Store
 
 /**
@@ -33,10 +38,10 @@ import javax.mail.Store
  *         Time: 12:00 PM
  *         E-mail: DenBond7@gmail.com
  */
-class SearchBackupsInEmailViewModel(application: Application) : AccountViewModel(application) {
+class BackupsViewModel(application: Application) : AccountViewModel(application) {
   private val pgpApiRepository: PgpApiRepository = NodeRepository()
 
-  val backupsLiveData: LiveData<Result<List<NodeKeyDetails>?>> = Transformations.switchMap(activeAccountLiveData) { accountEntity ->
+  val onlineBackupsLiveData: LiveData<Result<List<NodeKeyDetails>?>> = Transformations.switchMap(activeAccountLiveData) { accountEntity ->
     liveData {
       accountEntity?.let {
         emit(Result.loading())
@@ -66,6 +71,36 @@ class SearchBackupsInEmailViewModel(application: Application) : AccountViewModel
           }
         }
       }
+    }
+  }
+
+  val postBackupLiveData = MutableLiveData<Result<Boolean?>>()
+
+  fun postBackup() {
+    viewModelScope.launch {
+      val accountEntity = getActiveAccountSuspend()
+      accountEntity?.let {
+        postBackupLiveData.value = Result.loading()
+        val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+        if (connection == null) {
+          postBackupLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+        } else {
+          postBackupLiveData.value = postBackupInternal(accountEntity, connection.session)
+        }
+      }
+    }
+  }
+
+  private suspend fun postBackupInternal(accountEntity: AccountEntity, session: Session): Result<Boolean> = withContext(Dispatchers.IO) {
+    try {
+      val transport = SmtpProtocolUtil.prepareSmtpTransport(getApplication(), session, accountEntity)
+      val message = EmailUtil.genMsgWithAllPrivateKeys(getApplication(), accountEntity, session)
+      transport.sendMessage(message, message.allRecipients)
+
+      return@withContext Result.success(true)
+    } catch (e: Exception) {
+      e.printStackTrace()
+      return@withContext Result.exception(e)
     }
   }
 

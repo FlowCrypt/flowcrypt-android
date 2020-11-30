@@ -17,7 +17,6 @@ import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.EmailSyncManager
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
@@ -34,7 +33,6 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
-import java.io.IOException
 import java.lang.ref.WeakReference
 import javax.mail.Flags
 import javax.mail.FolderClosedException
@@ -126,58 +124,6 @@ class EmailSyncService : BaseService(), SyncListener {
       startEmailSyncService(context)
     }
     return messenger?.binder
-  }
-
-  override fun onMsgWithBackupToKeyOwnerSent(account: AccountEntity, ownerKey: String, requestCode: Int, isSent: Boolean) {
-    try {
-      if (isSent) {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
-      } else {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_BACKUP_NOT_SENT)
-      }
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    }
-  }
-
-  override fun onMsgSent(account: AccountEntity, ownerKey: String, requestCode: Int, isSent: Boolean) {
-    try {
-      if (isSent) {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
-      } else {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_SENT)
-      }
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    }
-  }
-
-  override fun onMsgDetailsReceived(account: AccountEntity, localFolder: LocalFolder,
-                                    remoteFolder: IMAPFolder, uid: Long, id: Long, msg: javax.mail.Message?,
-                                    ownerKey: String, requestCode: Int) {
-    try {
-      if (MsgsCacheManager.isMsgExist(id.toString())) {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
-      } else {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND)
-      }
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    } catch (e: MessagingException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    } catch (e: IOException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    }
   }
 
   override fun onMsgsReceived(account: AccountEntity, localFolder: LocalFolder,
@@ -485,17 +431,6 @@ class EmailSyncService : BaseService(), SyncListener {
     }
   }
 
-  override fun onAttsInfoReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, uid: Long,
-                                  ownerKey: String, requestCode: Int) {
-    try {
-      sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    }
-  }
-
   private fun setupConnectionObserver() {
     connectionLifecycleObserver = ConnectionLifecycleObserver(this)
     lifecycle.addObserver(connectionLifecycleObserver)
@@ -601,14 +536,12 @@ class EmailSyncService : BaseService(), SyncListener {
         val emailSyncManager = gmailSynsManagerWeakRef.get()
         var action: Action? = null
         var ownerKey: String? = null
-        var uniqueId: String? = null
         var requestCode = -1
 
         if (msg.obj is Action) {
           action = msg.obj as Action
           ownerKey = action.ownerKey
           requestCode = action.requestCode
-          uniqueId = action.uniqueId
         }
 
         when (msg.what) {
@@ -638,10 +571,6 @@ class EmailSyncService : BaseService(), SyncListener {
             emailSyncManager.refreshMsgs(ownerKey!!, requestCode, refreshLocalFolder)
           }
 
-          MESSAGE_SEND_MESSAGE_WITH_BACKUP -> if (emailSyncManager != null && action != null) {
-            emailSyncManager.sendMsgWithBackup(ownerKey!!, requestCode)
-          }
-
           MESSAGE_SEARCH_MESSAGES -> if (emailSyncManager != null && action != null) {
             val localFolderWhereWeDoSearch = action.`object` as LocalFolder
             emailSyncManager.searchMsgs(ownerKey!!, requestCode, localFolderWhereWeDoSearch, msg.arg1)
@@ -655,17 +584,12 @@ class EmailSyncService : BaseService(), SyncListener {
 
   companion object {
     const val REPLY_RESULT_CODE_ACTION_OK = 0
-    const val REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_FOUND = 1
-    const val REPLY_RESULT_CODE_ACTION_ERROR_BACKUP_NOT_SENT = 2
-    const val REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_WAS_NOT_SENT = 3
-    const val REPLY_RESULT_CODE_ACTION_ERROR_MESSAGE_NOT_EXISTS = 4
     const val REPLY_RESULT_CODE_NEED_UPDATE = 2
 
     const val MESSAGE_ADD_REPLY_MESSENGER = 1
     const val MESSAGE_REMOVE_REPLY_MESSENGER = 2
     const val MESSAGE_LOAD_NEXT_MESSAGES = 5
     const val MESSAGE_REFRESH_MESSAGES = 6
-    const val MESSAGE_SEND_MESSAGE_WITH_BACKUP = 10
     const val MESSAGE_SEARCH_MESSAGES = 11
 
     private val TAG = EmailSyncService::class.java.simpleName

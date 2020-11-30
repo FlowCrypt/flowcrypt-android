@@ -9,6 +9,7 @@ import android.content.Context
 import androidx.annotation.WorkerThread
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import javax.mail.Session
 
 /**
  * That's an interface which helps to manage an instance of [javax.mail.Store]. All of methods
@@ -21,6 +22,7 @@ import com.flowcrypt.email.database.entity.AccountEntity
  */
 interface StoreConnection {
   val context: Context
+  val session: Session
   val accountEntity: AccountEntity
 
   @WorkerThread

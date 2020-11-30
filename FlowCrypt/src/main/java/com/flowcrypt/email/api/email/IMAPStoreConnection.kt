@@ -19,7 +19,7 @@ import kotlinx.coroutines.sync.withLock
  *         E-mail: DenBond7@gmail.com
  */
 class IMAPStoreConnection(override val context: Context, override val accountEntity: AccountEntity) : StoreConnection {
-  val session = OpenStoreHelper.getAccountSess(context, accountEntity)
+  override val session = OpenStoreHelper.getAccountSess(context, accountEntity)
 
   @Volatile
   var store = OpenStoreHelper.getStore(accountEntity, session)

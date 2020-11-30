@@ -16,7 +16,7 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.extensions.toast
-import com.flowcrypt.email.jetpack.viewmodel.SearchBackupsInEmailViewModel
+import com.flowcrypt.email.jetpack.viewmodel.BackupsViewModel
 import com.flowcrypt.email.ui.activity.BackupKeysActivity
 import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity
 import com.flowcrypt.email.util.UIUtil
@@ -34,7 +34,7 @@ import com.flowcrypt.email.util.UIUtil
  * E-mail: DenBond7@gmail.com
  */
 class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener {
-  private val searchBackupsInEmailViewModel: SearchBackupsInEmailViewModel by viewModels()
+  private val backupsViewModel: BackupsViewModel by viewModels()
 
   private lateinit var progressBar: View
   override lateinit var rootView: View
@@ -51,7 +51,7 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     initViews()
-    initSearchBackupsInEmailViewModel()
+    initBackupsViewModel()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -100,8 +100,8 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
     textViewBackupFound.text = getString(R.string.backups_found_message, privateKeys.size)
   }
 
-  private fun initSearchBackupsInEmailViewModel() {
-    searchBackupsInEmailViewModel.backupsLiveData.observe(this, {
+  private fun initBackupsViewModel() {
+    backupsViewModel.onlineBackupsLiveData.observe(this, {
       when (it.status) {
         Result.Status.LOADING -> {
           UIUtil.exchangeViewVisibility(true, progressBar, rootView)
