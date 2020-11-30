@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.email.sync
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
@@ -18,6 +17,7 @@ import com.flowcrypt.email.api.email.sync.tasks.SyncTask
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
+import com.flowcrypt.email.jetpack.workmanager.sync.LoadContactsSyncTask
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.iap.ConnectionException
