@@ -5,19 +5,31 @@
 
 package com.flowcrypt.email.api.email.sync.tasks
 
+import android.content.Context
 import android.text.TextUtils
+import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
+import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
-import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
+import com.flowcrypt.email.jetpack.workmanager.BaseSyncWorker
 import com.flowcrypt.email.model.EmailAndNamePair
+import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.*
 import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Message
-import javax.mail.Session
+import javax.mail.MessagingException
 import javax.mail.Store
 import javax.mail.internet.InternetAddress
 
@@ -29,16 +41,42 @@ import javax.mail.internet.InternetAddress
  * Time: 14:53
  * E-mail: DenBond7@gmail.com
  */
-class LoadContactsSyncTask : BaseSyncTask("", 0) {
+class LoadContactsSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+  override suspend fun doWork(): Result =
+      withContext(Dispatchers.IO) {
+        if (isStopped) {
+          return@withContext Result.success()
+        }
 
-  override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {
-    if (account.areContactsLoaded == true) return
+        try {
+          val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+          val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
+          activeAccountEntity?.let {
+            val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
+            connection?.store?.let { store ->
+              fetchContacts(activeAccountEntity, store)
+            }
+          }
 
-    val foldersManager = FoldersManager.fromDatabase(listener.context, account.email)
-    val folderSent = foldersManager.findSentFolder() ?: return
-    val imapFolder = store.getFolder(folderSent.fullName) as IMAPFolder
-    imapFolder.open(Folder.READ_ONLY)
+          return@withContext Result.success()
+        } catch (e: Exception) {
+          e.printStackTrace()
+          ExceptionUtil.handleError(e)
+          when (e) {
+            is MessagingException -> {
+              return@withContext Result.retry()
+            }
 
+            else -> return@withContext Result.failure()
+          }
+        }
+      }
+
+  private suspend fun fetchContacts(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+    if (account.areContactsLoaded == true) return@withContext
+    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
+    val folderSent = foldersManager.findSentFolder() ?: return@withContext
+    val imapFolder = (store.getFolder(folderSent.fullName) as IMAPFolder).apply { open(Folder.READ_ONLY) }
     val msgs = imapFolder.messages
 
     if (msgs.isNotEmpty()) {
@@ -48,14 +86,14 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
       fetchProfile.add(Message.RecipientType.BCC.toString().toUpperCase(Locale.getDefault()))
       imapFolder.fetch(msgs, fetchProfile)
 
-      updateContacts(listener, msgs)
-      FlowCryptRoomDatabase.getDatabase(listener.context).accountDao().updateAccount(account.copy(areContactsLoaded = true))
+      updateContacts(msgs)
+      FlowCryptRoomDatabase.getDatabase(applicationContext).accountDao().updateAccountSuspend(account.copy(areContactsLoaded = true))
     }
 
     imapFolder.close(false)
   }
 
-  private fun updateContacts(listener: SyncListener, msgs: Array<Message>) {
+  private suspend fun updateContacts(msgs: Array<Message>) = withContext(Dispatchers.IO) {
     val emailAndNamePairs = mutableListOf<EmailAndNamePair>()
     for (msg in msgs) {
       emailAndNamePairs.addAll(parseRecipients(msg, Message.RecipientType.TO))
@@ -63,8 +101,7 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
       emailAndNamePairs.addAll(parseRecipients(msg, Message.RecipientType.BCC))
     }
 
-    val context = listener.context
-    val contactsDao = FlowCryptRoomDatabase.getDatabase(context).contactsDao()
+    val contactsDao = FlowCryptRoomDatabase.getDatabase(applicationContext).contactsDao()
     val availableContacts = contactsDao.getAllContacts()
 
     val contactsInDatabase = HashSet<String>()
@@ -101,8 +138,8 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
       }
     }
 
-    contactsDao.update(updateCandidates)
-    contactsDao.insert(newCandidates)
+    contactsDao.updateSuspend(updateCandidates)
+    contactsDao.insertSuspend(newCandidates)
   }
 
   /**
@@ -113,10 +150,10 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
    * @param recipientType The input [Message.RecipientType].
    * @return An array of EmailAndNamePair objects, which contains information about emails and names.
    */
-  private fun parseRecipients(msg: Message?, recipientType: Message.RecipientType?): List<EmailAndNamePair> {
+  private suspend fun parseRecipients(msg: Message?, recipientType: Message.RecipientType?): List<EmailAndNamePair> = withContext(Dispatchers.IO) {
     if (msg != null && recipientType != null) {
       try {
-        val header = msg.getHeader(recipientType.toString()) ?: return emptyList()
+        val header = msg.getHeader(recipientType.toString()) ?: return@withContext emptyList()
         if (header.isNotEmpty()) {
           if (!TextUtils.isEmpty(header[0])) {
             val addresses = InternetAddress.parse(header[0])
@@ -126,16 +163,37 @@ class LoadContactsSyncTask : BaseSyncTask("", 0) {
                   address.address.toLowerCase(Locale.getDefault()), address.personal))
             }
 
-            return emailAndNamePairs
+            return@withContext emailAndNamePairs
           }
         }
       } catch (e: Exception) {
         e.printStackTrace()
       }
 
-      return emptyList()
+      return@withContext emptyList()
     } else {
-      return emptyList()
+      return@withContext emptyList()
+    }
+  }
+
+  companion object {
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".FETCH_CONTACTS"
+
+    fun enqueue(context: Context) {
+      val constraints = Constraints.Builder()
+          .setRequiredNetworkType(NetworkType.CONNECTED)
+          .build()
+
+      WorkManager
+          .getInstance(context.applicationContext)
+          .enqueueUniqueWork(
+              GROUP_UNIQUE_TAG,
+              ExistingWorkPolicy.REPLACE,
+              OneTimeWorkRequestBuilder<LoadContactsSyncTask>()
+                  .addTag(TAG_SYNC)
+                  .setConstraints(constraints)
+                  .build()
+          )
     }
   }
 }

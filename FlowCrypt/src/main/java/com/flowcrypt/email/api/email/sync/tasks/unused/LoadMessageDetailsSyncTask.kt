@@ -3,7 +3,7 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.api.email.sync.tasks
+package com.flowcrypt.email.api.email.sync.tasks.unused
 
 import android.text.TextUtils
 import com.flowcrypt.email.R
@@ -11,6 +11,7 @@ import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.MsgsCacheManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncListener
+import com.flowcrypt.email.api.email.sync.tasks.BaseSyncTask
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.exception.SyncTaskTerminatedException
 import com.sun.mail.imap.IMAPBodyPart

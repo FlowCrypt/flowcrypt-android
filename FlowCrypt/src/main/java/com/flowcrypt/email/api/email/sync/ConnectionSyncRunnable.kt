@@ -150,11 +150,7 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
   }
 
   private fun loadContactsInfoIfNeeded() {
-    try {
-      tasksQueue.put(LoadContactsSyncTask())
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
-    }
+    LoadContactsSyncTask.enqueue(syncListener.context)
   }
 
   private fun runSyncTask(accountEntity: AccountEntity, task: SyncTask?, isRetryEnabled: Boolean, isResetConnectionNeeded: Boolean) {
