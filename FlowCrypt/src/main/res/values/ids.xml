@@ -9,7 +9,6 @@
     <item name="syns_request_code_load_next_messages" type="id" />
     <item name="syns_request_code_refresh_msgs" type="id" />
     <item name="sync_request_code_search_messages" type="id" />
-    <item name="syns_load_private_keys" type="id" />
     <item name="syns_send_backup_with_private_key_to_key_owner" type="id" />
 
     <item name="viewIdProgressView" type="id" />

@@ -73,7 +73,7 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
           testImapConn(accountEntity, authCreds, session)
         } catch (e: Exception) {
           e.printStackTrace()
-          return@withContext Result.exception(Exception("IMAP: " + e.message, e), null as Boolean?)
+          return@withContext Result.exception(Exception("IMAP: " + e.message, e))
         }
 
         try {
@@ -81,7 +81,7 @@ class CheckEmailSettingsViewModel(application: Application) : BaseAndroidViewMod
           testSmtpConn(accountEntity, authCreds, session)
         } catch (e: Exception) {
           e.printStackTrace()
-          return@withContext Result.exception(Exception("SMTP: " + e.message, e), null as Boolean?)
+          return@withContext Result.exception(Exception("SMTP: " + e.message, e))
         }
 
         return@withContext Result.success(true)

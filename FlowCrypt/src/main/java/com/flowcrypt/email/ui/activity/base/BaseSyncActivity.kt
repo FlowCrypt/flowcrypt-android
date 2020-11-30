@@ -142,28 +142,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   }
 
   /**
-   * Load the user private keys.
-   *
-   * @param requestCode The unique request code for identify the current action.
-   */
-  fun loadPrivateKeys(requestCode: Int) {
-    if (checkServiceBound(isSyncServiceBound)) return
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-
-    try {
-      val action = BaseService.Action(replyMessengerName, requestCode, null)
-
-      val msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_PRIVATE_KEYS, action)
-      msg.replyTo = syncReplyMessenger
-
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  /**
    * Start a job to load message to cache.
    *
    * @param requestCode            The unique request code for identify the current action.
@@ -272,27 +250,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
     val action = BaseService.Action(replyMessengerName, requestCode, currentLocalFolder)
 
     val msg = Message.obtain(null, EmailSyncService.MESSAGE_REFRESH_MESSAGES, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  /**
-   * Cancel a job which load the current message details
-   *
-   * @param uniqueId    The task unique id. This parameter helps identify which tasks should be
-   * stopped
-   */
-  fun cancelLoadMsgDetails(uniqueId: String) {
-    if (checkServiceBound(isSyncServiceBound)) return
-    syncServiceCountingIdlingResource.incrementSafely()
-
-    val action = BaseService.Action(replyMessengerName, -1, null, false, uniqueId)
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS, action)
     msg.replyTo = syncReplyMessenger
     try {
       syncMessenger?.send(msg)

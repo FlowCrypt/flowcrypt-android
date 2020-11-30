@@ -134,16 +134,6 @@ class EmailSyncManager(val listener: SyncListener) {
   }
 
   /**
-   * Load the private keys from the INBOX folder.
-   *
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for identify the current action.
-   */
-  fun loadPrivateKeys(ownerKey: String, requestCode: Int) {
-    connectionRunnable.loadPrivateKeys(ownerKey, requestCode)
-  }
-
-  /**
    * Send a message with a backup to the key owner.
    *
    * @param ownerKey    The name of the reply to [android.os.Messenger].

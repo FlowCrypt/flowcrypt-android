@@ -290,13 +290,11 @@ class EmailUtil {
      *
      * @param context context Interface to global information about an application environment;
      * @param account An [AccountEntity] object.
-     * @param sess A [Session] object.
      * @return A list of [NodeKeyDetails]
      * @throws MessagingException
      * @throws IOException
      */
-    fun getPrivateKeyBackupsViaGmailAPI(context: Context, account: AccountEntity, sess: Session):
-        Collection<NodeKeyDetails> {
+    fun getPrivateKeyBackupsViaGmailAPI(context: Context, account: AccountEntity): MutableCollection<NodeKeyDetails> {
       try {
         val list = mutableListOf<NodeKeyDetails>()
 
@@ -337,7 +335,7 @@ class EmailUtil {
               .execute()
 
           val stream = ByteArrayInputStream(Base64.decode(message.raw, Base64.URL_SAFE))
-          val msg = MimeMessage(sess, stream)
+          val msg = MimeMessage(Session.getInstance(Properties()), stream)
           val backup = getKeyFromMimeMsg(msg)
 
           if (TextUtils.isEmpty(backup)) {

@@ -11,14 +11,15 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import com.flowcrypt.email.R
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
+import com.flowcrypt.email.extensions.toast
+import com.flowcrypt.email.jetpack.viewmodel.SearchBackupsInEmailViewModel
 import com.flowcrypt.email.ui.activity.BackupKeysActivity
 import com.flowcrypt.email.ui.activity.base.BaseSettingsBackStackSyncActivity
-import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
-import com.google.android.gms.common.util.CollectionUtils
-import java.util.*
 
 /**
  * This activity helps a user to backup his private keys via next methods:
@@ -33,6 +34,7 @@ import java.util.*
  * E-mail: DenBond7@gmail.com
  */
 class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.OnClickListener {
+  private val searchBackupsInEmailViewModel: SearchBackupsInEmailViewModel by viewModels()
 
   private lateinit var progressBar: View
   override lateinit var rootView: View
@@ -41,9 +43,7 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
   private lateinit var layoutBackupNotFound: View
   private lateinit var textViewBackupFound: TextView
 
-  private var privateKeys: ArrayList<NodeKeyDetails>? = null
-
-  private var isRequestSent: Boolean = false
+  private var privateKeys = mutableListOf<NodeKeyDetails>()
 
   override val contentViewResourceId: Int
     get() = R.layout.activity_backup_settings
@@ -51,13 +51,7 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     initViews()
-
-    if (GeneralUtil.isConnected(this)) {
-      UIUtil.exchangeViewVisibility(true, progressBar, rootView)
-    } else {
-      Toast.makeText(this, R.string.internet_connection_is_not_available, Toast.LENGTH_SHORT).show()
-      finish()
-    }
+    initSearchBackupsInEmailViewModel()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -69,49 +63,6 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
         }
       }
       else -> super.onActivityResult(requestCode, resultCode, data)
-    }
-  }
-
-  @Suppress("UNCHECKED_CAST")
-  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
-    when (requestCode) {
-      R.id.syns_load_private_keys -> {
-        if (privateKeys == null) {
-          UIUtil.exchangeViewVisibility(false, progressBar, rootView)
-          val keys = obj as ArrayList<NodeKeyDetails>?
-          if (CollectionUtils.isEmpty(keys)) {
-            showNoBackupFoundView()
-          } else {
-            this.privateKeys = keys
-            showBackupFoundView()
-          }
-        }
-      }
-    }
-    super.onReplyReceived(requestCode, resultCode, obj)
-  }
-
-  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
-    when (requestCode) {
-      R.id.syns_load_private_keys -> {
-        UIUtil.exchangeViewVisibility(false, progressBar, layoutSyncStatus)
-        UIUtil.showSnackbar(rootView, getString(R.string.error_occurred_while_receiving_private_keys),
-            getString(R.string.retry), View.OnClickListener {
-          layoutSyncStatus.visibility = View.GONE
-          UIUtil.exchangeViewVisibility(true, progressBar, rootView)
-          loadPrivateKeys(R.id.syns_load_private_keys)
-        })
-      }
-    }
-
-    super.onErrorHappened(requestCode, errorType, e)
-  }
-
-  override fun onSyncServiceConnected() {
-    super.onSyncServiceConnected()
-    if (!isRequestSent) {
-      isRequestSent = true
-      loadPrivateKeys(R.id.syns_load_private_keys)
     }
   }
 
@@ -146,9 +97,39 @@ class SearchBackupsInEmailActivity : BaseSettingsBackStackSyncActivity(), View.O
 
   private fun showBackupFoundView() {
     layoutBackupFound.visibility = View.VISIBLE
-    if (privateKeys != null) {
-      textViewBackupFound.text = getString(R.string.backups_found_message, privateKeys!!.size)
-    }
+    textViewBackupFound.text = getString(R.string.backups_found_message, privateKeys.size)
+  }
+
+  private fun initSearchBackupsInEmailViewModel() {
+    searchBackupsInEmailViewModel.backupsLiveData.observe(this, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          UIUtil.exchangeViewVisibility(true, progressBar, rootView)
+        }
+
+        Result.Status.SUCCESS -> {
+          UIUtil.exchangeViewVisibility(false, progressBar, rootView)
+
+          val keys = it.data
+
+          privateKeys.clear()
+          if (keys.isNullOrEmpty()) {
+            showNoBackupFoundView()
+          } else {
+            privateKeys.addAll(keys)
+            showBackupFoundView()
+          }
+        }
+
+        Result.Status.EXCEPTION -> {
+          toast(it.exception?.message ?: getString(R.string.unknown_error))
+          finish()
+        }
+
+        else -> {
+        }
+      }
+    })
   }
 
   companion object {

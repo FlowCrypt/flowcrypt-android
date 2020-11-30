@@ -22,7 +22,6 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.EmailSyncManager
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.email.sync.SyncListener
-import com.flowcrypt.email.api.retrofit.response.model.node.NodeKeyDetails
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
@@ -136,16 +135,6 @@ class EmailSyncService : BaseService(), SyncListener {
       } else {
         sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_ERROR_BACKUP_NOT_SENT)
       }
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    }
-  }
-
-  override fun onPrivateKeysFound(account: AccountEntity, keys: List<NodeKeyDetails>, ownerKey: String, requestCode: Int) {
-    try {
-      sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, keys)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
@@ -649,10 +638,6 @@ class EmailSyncService : BaseService(), SyncListener {
             emailSyncManager.refreshMsgs(ownerKey!!, requestCode, refreshLocalFolder)
           }
 
-          MESSAGE_LOAD_PRIVATE_KEYS -> if (emailSyncManager != null && action != null) {
-            emailSyncManager.loadPrivateKeys(ownerKey!!, requestCode)
-          }
-
           MESSAGE_SEND_MESSAGE_WITH_BACKUP -> if (emailSyncManager != null && action != null) {
             emailSyncManager.sendMsgWithBackup(ownerKey!!, requestCode)
           }
@@ -660,10 +645,6 @@ class EmailSyncService : BaseService(), SyncListener {
           MESSAGE_SEARCH_MESSAGES -> if (emailSyncManager != null && action != null) {
             val localFolderWhereWeDoSearch = action.`object` as LocalFolder
             emailSyncManager.searchMsgs(ownerKey!!, requestCode, localFolderWhereWeDoSearch, msg.arg1)
-          }
-
-          MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS -> {
-            uniqueId?.let { emailSyncManager?.cancelLoadMsgDetails(it) }
           }
 
           else -> super.handleMessage(msg)
@@ -684,10 +665,8 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_REMOVE_REPLY_MESSENGER = 2
     const val MESSAGE_LOAD_NEXT_MESSAGES = 5
     const val MESSAGE_REFRESH_MESSAGES = 6
-    const val MESSAGE_LOAD_PRIVATE_KEYS = 9
     const val MESSAGE_SEND_MESSAGE_WITH_BACKUP = 10
     const val MESSAGE_SEARCH_MESSAGES = 11
-    const val MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS = 14
 
     private val TAG = EmailSyncService::class.java.simpleName
 

@@ -47,10 +47,9 @@ data class Result<out T>(val status: Status,
       )
     }
 
-    fun <T> exception(throwable: Throwable, data: T? = null, requestCode: Long = 0): Result<T> {
+    fun <T> exception(throwable: Throwable, requestCode: Long = 0): Result<T> {
       return Result(
           status = Status.EXCEPTION,
-          data = data,
           exception = throwable,
           requestCode = requestCode
       )

@@ -132,7 +132,16 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
 
   override fun onClick(v: View) {
     when (v.id) {
-      R.id.floatActionButtonAddKey -> runCreateOrImportKeyActivity()
+      R.id.floatActionButtonAddKey -> startActivityForResult(ImportPrivateKeyActivity.getIntent(
+          context = requireContext(),
+          title = getString(R.string.import_private_key),
+          throwErrorIfDuplicateFoundEnabled = true,
+          cls = ImportPrivateKeyActivity::class.java,
+          isSubmittingPubKeysEnabled = false,
+          accountEntity = account,
+          isSyncEnabled = true,
+          skipImportedKeys = true),
+          REQUEST_CODE_START_IMPORT_KEY_ACTIVITY)
     }
   }
 
@@ -183,18 +192,6 @@ class PrivateKeysListFragment : BaseFragment(), View.OnClickListener, PrivateKey
         }
       }
     })
-  }
-
-  private fun runCreateOrImportKeyActivity() {
-    startActivityForResult(ImportPrivateKeyActivity.getIntent(
-        context = requireContext(),
-        title = getString(R.string.import_private_key),
-        throwErrorIfDuplicateFoundEnabled = true,
-        cls = ImportPrivateKeyActivity::class.java,
-        isSubmittingPubKeysEnabled = false,
-        accountEntity = account,
-        skipImportedKeys = true),
-        REQUEST_CODE_START_IMPORT_KEY_ACTIVITY)
   }
 
   private fun initViews(root: View) {
