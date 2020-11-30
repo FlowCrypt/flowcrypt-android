@@ -301,27 +301,4 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
       ExceptionUtil.handleError(e)
     }
   }
-
-  /**
-   * Start a job to load attachments info.
-   *
-   * @param requestCode The unique request code for identify the current action.
-   * @param localFolder [LocalFolder] object.
-   * @param uid         The [com.sun.mail.imap.protocol.UID] of [javax.mail.Message]
-   */
-  fun loadAttsInfo(requestCode: Int, localFolder: LocalFolder, uid: Int) {
-    if (checkServiceBound(isSyncServiceBound)) return
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-
-    val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
-
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_ATTS_INFO, uid, 0, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
 }

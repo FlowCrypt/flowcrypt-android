@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.email.sync
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.LoadAttsInfoSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask
@@ -91,15 +90,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
     try {
       removeOldTasks(CheckNewMessagesSyncTask::class.java, tasksQueue)
       tasksQueue.put(CheckNewMessagesSyncTask(ownerKey, requestCode, localFolder))
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
-    }
-  }
-
-  fun loadAttsInfo(ownerKey: String, requestCode: Int, localFolder: LocalFolder, uid: Int) {
-    try {
-      removeOldTasks(LoadAttsInfoSyncTask::class.java, tasksQueue)
-      tasksQueue.put(LoadAttsInfoSyncTask(ownerKey, requestCode, localFolder, uid.toLong()))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }

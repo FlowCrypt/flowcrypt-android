@@ -1006,8 +1006,8 @@ class MessageDetailsFragment : BaseFragment(), ProgressBehaviour, View.OnClickLi
       }.toMutableList()
 
       attachmentsRecyclerViewAdapter.submitList(attachmentInfoList)
-      if (attachmentInfoList.isEmpty()) {
-        //loadAttsInfo(R.id.syns_request_code_load_atts_info, localFolder, messageEntity.uid.toInt())
+      if (args.messageEntity.hasAttachments == true && attachmentInfoList.isEmpty()) {
+        msgDetailsViewModel.fetchAttachments()
       }
     })
 

@@ -662,11 +662,6 @@ class EmailSyncService : BaseService(), SyncListener {
             emailSyncManager.searchMsgs(ownerKey!!, requestCode, localFolderWhereWeDoSearch, msg.arg1)
           }
 
-          MESSAGE_LOAD_ATTS_INFO -> if (emailSyncManager != null && action != null) {
-            val localFolder = action.`object` as LocalFolder
-            emailSyncManager.loadAttsInfo(ownerKey!!, requestCode, localFolder, msg.arg1)
-          }
-
           MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS -> {
             uniqueId?.let { emailSyncManager?.cancelLoadMsgDetails(it) }
           }
@@ -692,7 +687,6 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_LOAD_PRIVATE_KEYS = 9
     const val MESSAGE_SEND_MESSAGE_WITH_BACKUP = 10
     const val MESSAGE_SEARCH_MESSAGES = 11
-    const val MESSAGE_LOAD_ATTS_INFO = 13
     const val MESSAGE_CANCEL_LOAD_MESSAGE_DETAILS = 14
 
     private val TAG = EmailSyncService::class.java.simpleName

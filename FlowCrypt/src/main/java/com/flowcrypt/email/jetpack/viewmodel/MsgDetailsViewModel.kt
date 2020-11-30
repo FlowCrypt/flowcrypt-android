@@ -30,12 +30,15 @@ import com.flowcrypt.email.api.retrofit.request.node.ParseDecryptMsgRequest
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.api.retrofit.response.model.node.PublicKeyMsgBlock
 import com.flowcrypt.email.api.retrofit.response.node.ParseDecryptedMsgResult
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.KeyEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.security.KeyStoreCryptoManager
 import com.flowcrypt.email.security.KeysStorageImpl
+import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.CacheManager
 import com.flowcrypt.email.util.cache.DiskLruCache
 import com.flowcrypt.email.util.exception.ApiException
@@ -64,6 +67,7 @@ import javax.mail.MessagingException
 import javax.mail.Multipart
 import javax.mail.Part
 import javax.mail.Session
+import javax.mail.Store
 import javax.mail.internet.InternetHeaders
 import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
@@ -289,6 +293,19 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
           outboxLabel?.let {
             roomDatabase.labelDao().updateSuspend(it.copy(msgsCount = outgoingMsgCount))
           }
+        }
+      }
+    }
+  }
+
+  fun fetchAttachments() {
+    viewModelScope.launch {
+      val accountEntity = getActiveAccountSuspend() ?: return@launch
+      IMAPStoreManager.activeConnections[accountEntity.id]?.store?.let { store ->
+        try {
+          fetchAttachmentsInternal(accountEntity, store)
+        } catch (e: Exception) {
+          e.printStackTrace()
         }
       }
     }
@@ -631,6 +648,34 @@ class MsgDetailsViewModel(val localFolder: LocalFolder, val messageEntity: Messa
     } else {
       msgEntity.flags?.replace(MessageFlag.SEEN.value, "")
     }))
+  }
+
+  private suspend fun fetchAttachmentsInternal(accountEntity: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+    val imapFolder = store.getFolder(localFolder.fullName) as IMAPFolder
+    imapFolder.open(Folder.READ_ONLY)
+    try {
+      val msg = imapFolder.getMessageByUID(messageEntity.uid) as? MimeMessage ?: return@withContext
+
+      val fetchProfile = FetchProfile()
+      fetchProfile.add(FetchProfile.Item.SIZE)
+      fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+      imapFolder.fetch(arrayOf(msg), fetchProfile)
+
+      val msgUid = messageEntity.uid
+      val attachments = EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
+        AttachmentEntity.fromAttInfo(it.apply {
+          email = accountEntity.email
+          folder = if (localFolder.searchQuery.isNullOrEmpty()) localFolder.fullName else SearchMessagesActivity.SEARCH_FOLDER_NAME
+          uid = msgUid.toInt()
+        })
+      }
+
+      FlowCryptRoomDatabase.getDatabase(getApplication()).attachmentDao().insertWithReplaceSuspend(attachments)
+    } catch (e: Exception) {
+      e.printStackTrace()
+    } finally {
+      imapFolder.close(false)
+    }
   }
 
   /**
