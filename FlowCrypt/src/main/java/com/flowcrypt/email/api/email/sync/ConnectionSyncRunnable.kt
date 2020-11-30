@@ -10,7 +10,6 @@ import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadAttsInfoSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadContactsSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadPrivateKeysFromEmailBackupSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
@@ -85,14 +84,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
           syncListener.onActionCanceled(null, syncTask.ownerKey, syncTask.requestCode, -1)
         }
       }
-    }
-  }
-
-  fun loadMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, start: Int, end: Int) {
-    try {
-      tasksQueue.put(LoadMessagesSyncTask(ownerKey, requestCode, localFolder, start, end))
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
     }
   }
 

@@ -164,30 +164,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   }
 
   /**
-   * Load messages from some localFolder in some range.
-   *
-   * @param requestCode The unique request code for identify the current action.
-   * @param localFolder [LocalFolder] object.
-   * @param start       The position of the start.
-   * @param end         The position of the end.
-   */
-  fun loadMsgs(requestCode: Int, localFolder: LocalFolder, start: Int, end: Int) {
-    if (checkServiceBound(isSyncServiceBound)) return
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-
-    val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
-
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_MESSAGES, start, end, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  /**
    * Start a job to load message to cache.
    *
    * @param requestCode            The unique request code for identify the current action.

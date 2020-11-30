@@ -8,7 +8,6 @@ package com.flowcrypt.email.api.email.sync
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadAttsInfoSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
@@ -87,21 +86,6 @@ class EmailSyncManager(val listener: SyncListener) {
    */
   private fun isThreadAlreadyWorking(future: Future<*>?): Boolean {
     return future != null && !future.isCancelled && !future.isDone
-  }
-
-  /**
-   * Add load a messages information task. This method create a new
-   * [LoadMessagesSyncTask] object and added it to the current synchronization
-   * BlockingQueue.
-   *
-   * @param ownerKey    The name of the reply to [android.os.Messenger].
-   * @param requestCode The unique request code for the reply to [android.os.Messenger].
-   * @param localFolder A local implementation of the remote localFolder.
-   * @param start       The position of the start.
-   * @param end         The position of the end.
-   */
-  fun loadMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, start: Int, end: Int) {
-    connectionRunnable.loadMsgs(ownerKey, requestCode, localFolder, start, end)
   }
 
   /**

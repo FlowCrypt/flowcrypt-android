@@ -639,11 +639,6 @@ class EmailSyncService : BaseService(), SyncListener {
             }
           }
 
-          MESSAGE_LOAD_MESSAGES -> if (emailSyncManager != null && action != null) {
-            val localFolder = action.`object` as LocalFolder
-            emailSyncManager.loadMsgs(ownerKey!!, requestCode, localFolder, msg.arg1, msg.arg2)
-          }
-
           MESSAGE_LOAD_NEXT_MESSAGES -> if (emailSyncManager != null && action != null) {
             val localFolder = action.`object` as LocalFolder
             emailSyncManager.loadNextMsgs(ownerKey!!, requestCode, localFolder, msg.arg1)
@@ -692,7 +687,6 @@ class EmailSyncService : BaseService(), SyncListener {
 
     const val MESSAGE_ADD_REPLY_MESSENGER = 1
     const val MESSAGE_REMOVE_REPLY_MESSENGER = 2
-    const val MESSAGE_LOAD_MESSAGES = 4
     const val MESSAGE_LOAD_NEXT_MESSAGES = 5
     const val MESSAGE_REFRESH_MESSAGES = 6
     const val MESSAGE_LOAD_PRIVATE_KEYS = 9
