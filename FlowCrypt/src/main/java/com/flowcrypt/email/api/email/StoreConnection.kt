@@ -38,5 +38,8 @@ interface StoreConnection {
   suspend fun isConnected(): Boolean
 
   @WorkerThread
-  suspend fun <T> execute(action: () -> Result<T>): Result<T>
+  /**
+   * That's a helper method that helps execute some code and returns [Result]
+   */
+  suspend fun <T> execute(action: suspend () -> Result<T>): Result<T>
 }

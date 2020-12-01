@@ -7,7 +7,6 @@ package com.flowcrypt.email.api.email.sync
 
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.LoadMessagesToCacheSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
 import com.flowcrypt.email.jetpack.workmanager.ForwardedAttachmentsDownloaderWorker
@@ -103,21 +102,6 @@ class EmailSyncManager(val listener: SyncListener) {
    */
   fun cancelLoadMsgDetails(uniqueId: String) {
     connectionRunnable.cancelTask(uniqueId)
-  }
-
-  /**
-   * Add the task of load information of the next messages. This method create a new
-   * [LoadMessagesToCacheSyncTask] object and added it to the current synchronization
-   * BlockingQueue.
-   *
-   * @param ownerKey               The name of the reply to [android.os.Messenger].
-   * @param requestCode            The unique request code for the reply to
-   * [android.os.Messenger].
-   * @param localFolder            A local implementation of the remote localFolder.
-   * @param alreadyLoadedMsgsCount The count of already cached messages in the localFolder.
-   */
-  fun loadNextMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
-    connectionRunnable.loadNextMsgs(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount)
   }
 
   /**

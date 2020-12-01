@@ -79,11 +79,6 @@ class SyncJobService : JobService(), SyncListener {
     return false
   }
 
-  override fun onMsgsReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
-                              msgs: Array<Message>, ownerKey: String, requestCode: Int) {
-
-  }
-
   override fun onSearchMsgsReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
                                     msgs: Array<Message>, ownerKey: String, requestCode: Int) {
 

@@ -9,8 +9,10 @@ import android.content.Context
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 /**
  * @author Denis Bondarenko
@@ -75,12 +77,12 @@ class IMAPStoreConnection(override val context: Context, override val accountEnt
     return store.isConnected
   }
 
-  override suspend fun <T> execute(action: () -> Result<T>): Result<T> {
+  override suspend fun <T> execute(action: suspend () -> Result<T>): Result<T> = withContext(Dispatchers.IO) {
     if (!isConnected()) {
       connect()
     }
 
-    return try {
+    return@withContext try {
       action.invoke()
     } catch (e: Exception) {
       e.printStackTrace()

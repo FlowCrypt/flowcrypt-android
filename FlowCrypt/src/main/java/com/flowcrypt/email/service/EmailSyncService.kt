@@ -23,7 +23,6 @@ import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedSyncTask
@@ -124,72 +123,6 @@ class EmailSyncService : BaseService(), SyncListener {
       startEmailSyncService(context)
     }
     return messenger?.binder
-  }
-
-  override fun onMsgsReceived(account: AccountEntity, localFolder: LocalFolder,
-                              remoteFolder: IMAPFolder, msgs: Array<javax.mail.Message>, ownerKey: String,
-                              requestCode: Int) {
-    LogsUtil.d(TAG, "onMessagesReceived: imapFolder = " + remoteFolder.fullName + " message count: " + msgs.size)
-    try {
-      val email = account.email
-      val folder = localFolder.fullName
-      val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailSyncService)
-
-      val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
-      val msgEntities = MessageEntity.genMessageEntities(
-          context = this,
-          email = email,
-          label = folder,
-          folder = remoteFolder,
-          msgs = msgs,
-          isNew = false,
-          areAllMsgsEncrypted = isEncryptedModeEnabled
-      )
-
-      roomDatabase.msgDao().insertWithReplace(msgEntities)
-
-      if (!isEncryptedModeEnabled) {
-        CheckIsLoadedMessagesEncryptedSyncTask.enqueue(applicationContext, localFolder)
-      }
-
-      if (msgs.isNotEmpty()) {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE, localFolder)
-      } else {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK, localFolder)
-      }
-
-      try {
-        //we should handle any exceptions here to prevent showing messages
-        val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
-        val attachments = mutableListOf<AttachmentEntity>()
-        for (msg in msgs) {
-          if (remoteFolder.getUID(msg) in savedMsgUIDsSet) {
-            val uid = remoteFolder.getUID(msg)
-            attachments.addAll(EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
-              AttachmentEntity.fromAttInfo(it.apply {
-                this.email = account.email
-                this.folder = localFolder.fullName
-                this.uid = uid.toInt()
-              })
-            })
-          }
-        }
-
-        roomDatabase.attachmentDao().insertWithReplace(attachments)
-        updateLocalContactsIfNeeded(remoteFolder, msgs)
-      } catch (e: Exception) {
-        e.printStackTrace()
-        ExceptionUtil.handleError(e)
-      }
-    } catch (e: MessagingException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    }
   }
 
   override fun onNewMsgsReceived(account: AccountEntity, localFolder: LocalFolder,
@@ -561,11 +494,6 @@ class EmailSyncService : BaseService(), SyncListener {
             }
           }
 
-          MESSAGE_LOAD_NEXT_MESSAGES -> if (emailSyncManager != null && action != null) {
-            val localFolder = action.`object` as LocalFolder
-            emailSyncManager.loadNextMsgs(ownerKey!!, requestCode, localFolder, msg.arg1)
-          }
-
           MESSAGE_REFRESH_MESSAGES -> if (emailSyncManager != null && action != null) {
             val refreshLocalFolder = action.`object` as LocalFolder
             emailSyncManager.refreshMsgs(ownerKey!!, requestCode, refreshLocalFolder)
@@ -588,7 +516,6 @@ class EmailSyncService : BaseService(), SyncListener {
 
     const val MESSAGE_ADD_REPLY_MESSENGER = 1
     const val MESSAGE_REMOVE_REPLY_MESSENGER = 2
-    const val MESSAGE_LOAD_NEXT_MESSAGES = 5
     const val MESSAGE_REFRESH_MESSAGES = 6
     const val MESSAGE_SEARCH_MESSAGES = 11
 

@@ -307,11 +307,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     }
   }
 
-  override fun loadNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
-    switchView?.isEnabled = false
-    super.loadNextMsgs(requestCode, localFolder, alreadyLoadedMsgsCount)
-  }
-
   override fun refreshMsgs(requestCode: Int, currentLocalFolder: LocalFolder) {
     switchView?.isEnabled = false
     super.refreshMsgs(requestCode, currentLocalFolder)

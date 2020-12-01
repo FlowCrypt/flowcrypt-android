@@ -121,31 +121,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
   }
 
   /**
-   * Start a job to load message to cache.
-   *
-   * @param requestCode            The unique request code for identify the current action.
-   * @param localFolder            [LocalFolder] object.
-   * @param alreadyLoadedMsgsCount The count of already loaded messages in the localFolder.
-   */
-  open fun loadNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
-    if (checkServiceBound(isSyncServiceBound)) return
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-
-    onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, Any())
-
-    val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
-
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_LOAD_NEXT_MESSAGES, alreadyLoadedMsgsCount, 0, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  /**
    * Start a job to load searched messages to the cache.
    *
    * @param requestCode            The unique request code for identify the current action.

@@ -16,16 +16,37 @@ import androidx.paging.Config
 import androidx.paging.PagedList
 import androidx.paging.toLiveData
 import com.flowcrypt.email.Constants
+import com.flowcrypt.email.R
+import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.model.MessageFlag
+import com.flowcrypt.email.api.retrofit.response.base.Result
+import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
+import com.flowcrypt.email.database.entity.AccountEntity
+import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
+import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedSyncTask
+import com.flowcrypt.email.model.EmailAndNamePair
+import com.flowcrypt.email.service.EmailAndNameUpdaterService
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.FileAndDirectoryUtils
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.sun.mail.imap.IMAPFolder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import javax.mail.FetchProfile
+import javax.mail.Folder
+import javax.mail.Message
+import javax.mail.MessagingException
+import javax.mail.Store
+import javax.mail.UIDFolder
+import javax.mail.internet.InternetAddress
 
 
 /**
@@ -43,11 +64,30 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     roomDatabase.msgDao().getOutboxMsgsLD(it?.email ?: "")
   }
 
-  fun loadMsgs(lifecycleOwner: LifecycleOwner, localFolder: LocalFolder?,
-               observer: Observer<PagedList<MessageEntity>>,
-               boundaryCallback: PagedList.BoundaryCallback<MessageEntity>,
-               forceClearFolderCache: Boolean = false,
-               deleteAllMsgs: Boolean = false) {
+  val loadMsgsFromRemoteServerLiveData = MutableLiveData<Result<Boolean?>>()
+
+  fun loadMsgsFromRemoteServer(localFolder: LocalFolder, totalItemsCount: Int) {
+    viewModelScope.launch {
+      val accountEntity = getActiveAccountSuspend()
+      accountEntity?.let {
+        loadMsgsFromRemoteServerLiveData.value = Result.loading()
+        val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+        if (connection == null) {
+          loadMsgsFromRemoteServerLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+        } else {
+          loadMsgsFromRemoteServerLiveData.value = connection.execute {
+            loadMsgsFromRemoteServerInternal(accountEntity, connection.store, localFolder, totalItemsCount)
+          }
+        }
+      }
+    }
+  }
+
+  fun loadMsgsFromLocalCache(lifecycleOwner: LifecycleOwner, localFolder: LocalFolder?,
+                             observer: Observer<PagedList<MessageEntity>>,
+                             boundaryCallback: PagedList.BoundaryCallback<MessageEntity>,
+                             forceClearFolderCache: Boolean = false,
+                             deleteAllMsgs: Boolean = false) {
     viewModelScope.launch {
       val label = if (localFolder?.searchQuery.isNullOrEmpty()) {
         localFolder?.fullName ?: ""
@@ -180,5 +220,172 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     }
 
     return candidates
+  }
+
+  private suspend fun loadMsgsFromRemoteServerInternal(accountEntity: AccountEntity, store: Store,
+                                                       localFolder: LocalFolder,
+                                                       countOfAlreadyLoadedMsgs: Int
+  ): Result<Boolean?> = withContext(Dispatchers.IO) {
+    store.getFolder(localFolder.fullName).use { folder ->
+      val imapFolder = folder as IMAPFolder
+      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(resultCode = R.id.progress_id_opening_store))
+      imapFolder.open(Folder.READ_ONLY)
+
+      val countOfLoadedMsgs = when {
+        countOfAlreadyLoadedMsgs < 0 -> 0
+        else -> countOfAlreadyLoadedMsgs
+      }
+
+      val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted
+      var foundMsgs: Array<Message> = emptyArray()
+      var msgsCount = 0
+
+      if (isEncryptedModeEnabled == true) {
+        foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
+        foundMsgs?.let {
+          msgsCount = foundMsgs.size
+        }
+      } else {
+        msgsCount = imapFolder.messageCount
+      }
+
+      val end = msgsCount - countOfLoadedMsgs
+      val startCandidate = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1
+      val start = when {
+        startCandidate < 1 -> 1
+        else -> startCandidate
+      }
+      val folderName = imapFolder.fullName
+
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
+      roomDatabase.labelDao().getLabelSuspend(accountEntity.email, folderName)?.let {
+        roomDatabase.labelDao().update(it.copy(msgsCount = msgsCount))
+      }
+
+      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(resultCode = R.id.progress_id_getting_list_of_emails))
+      if (end < 1) {
+        handleReceivedMsgs(accountEntity, localFolder, imapFolder, arrayOf())
+      } else {
+        val msgs: Array<Message> = if (isEncryptedModeEnabled == true) {
+          foundMsgs.copyOfRange(start - 1, end)
+        } else {
+          imapFolder.getMessages(start, end)
+        }
+
+        val fetchProfile = FetchProfile()
+        fetchProfile.add(FetchProfile.Item.ENVELOPE)
+        fetchProfile.add(FetchProfile.Item.FLAGS)
+        fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+        fetchProfile.add(UIDFolder.FetchProfileItem.UID)
+        imapFolder.fetch(msgs, fetchProfile)
+
+        handleReceivedMsgs(accountEntity, localFolder, folder, msgs)
+      }
+    }
+
+    return@withContext Result.success(true)
+  }
+
+  private suspend fun handleReceivedMsgs(account: AccountEntity, localFolder: LocalFolder,
+                                         remoteFolder: IMAPFolder, msgs: Array<Message>) = withContext(Dispatchers.IO) {
+    val email = account.email
+    val folder = localFolder.fullName
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
+
+    val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
+    val msgEntities = MessageEntity.genMessageEntities(
+        context = getApplication(),
+        email = email,
+        label = folder,
+        folder = remoteFolder,
+        msgs = msgs,
+        isNew = false,
+        areAllMsgsEncrypted = isEncryptedModeEnabled
+    )
+
+    roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
+
+    if (!isEncryptedModeEnabled) {
+      CheckIsLoadedMessagesEncryptedSyncTask.enqueue(getApplication(), localFolder)
+    }
+
+    identifyAttachments(msgEntities, msgs, remoteFolder, account, localFolder, roomDatabase)
+  }
+
+  private suspend fun identifyAttachments(msgEntities: List<MessageEntity>, msgs: Array<Message>,
+                                          remoteFolder: IMAPFolder, account: AccountEntity, localFolder:
+                                          LocalFolder, roomDatabase: FlowCryptRoomDatabase) = withContext(Dispatchers.IO) {
+    try {
+      val savedMsgUIDsSet = msgEntities.map { it.uid }.toSet()
+      val attachments = mutableListOf<AttachmentEntity>()
+      for (msg in msgs) {
+        if (remoteFolder.getUID(msg) in savedMsgUIDsSet) {
+          val uid = remoteFolder.getUID(msg)
+          attachments.addAll(EmailUtil.getAttsInfoFromPart(msg).mapNotNull {
+            AttachmentEntity.fromAttInfo(it.apply {
+              this.email = account.email
+              this.folder = localFolder.fullName
+              this.uid = uid.toInt()
+            })
+          })
+        }
+      }
+
+      roomDatabase.attachmentDao().insertWithReplaceSuspend(attachments)
+      updateLocalContactsIfNeeded(remoteFolder, msgs)
+    } catch (e: Exception) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  private fun updateLocalContactsIfNeeded(imapFolder: IMAPFolder, messages: Array<Message>) {
+    try {
+      val isSentFolder = listOf(*imapFolder.attributes).contains("\\Sent")
+
+      if (isSentFolder) {
+        val emailAndNamePairs = ArrayList<EmailAndNamePair>()
+        for (message in messages) {
+          emailAndNamePairs.addAll(getEmailAndNamePairs(message))
+        }
+
+        EmailAndNameUpdaterService.enqueueWork(getApplication(), emailAndNamePairs)
+      }
+    } catch (e: MessagingException) {
+      e.printStackTrace()
+      ExceptionUtil.handleError(e)
+    }
+  }
+
+  /**
+   * Generate a list of [EmailAndNamePair] objects from the input message.
+   * This information will be retrieved from "to" and "cc" headers.
+   *
+   * @param msg The input [javax.mail.Message].
+   * @return <tt>[List]</tt> of EmailAndNamePair objects, which contains information
+   * about
+   * emails and names.
+   * @throws MessagingException when retrieve information about recipients.
+   */
+  private fun getEmailAndNamePairs(msg: Message): List<EmailAndNamePair> {
+    val pairs = ArrayList<EmailAndNamePair>()
+
+    val addressesTo = msg.getRecipients(Message.RecipientType.TO)
+    if (addressesTo != null) {
+      for (address in addressesTo) {
+        val internetAddress = address as InternetAddress
+        pairs.add(EmailAndNamePair(internetAddress.address, internetAddress.personal))
+      }
+    }
+
+    val addressesCC = msg.getRecipients(Message.RecipientType.CC)
+    if (addressesCC != null) {
+      for (address in addressesCC) {
+        val internetAddress = address as InternetAddress
+        pairs.add(EmailAndNamePair(internetAddress.address, internetAddress.personal))
+      }
+    }
+
+    return pairs
   }
 }

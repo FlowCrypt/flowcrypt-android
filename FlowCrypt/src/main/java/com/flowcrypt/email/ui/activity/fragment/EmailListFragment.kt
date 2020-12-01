@@ -24,8 +24,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.paging.PagedList
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
@@ -39,6 +39,7 @@ import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.SyncErrorTypes
+import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
@@ -72,6 +73,8 @@ import com.google.android.material.snackbar.Snackbar
 class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListener,
     MsgsPagedListAdapter.OnMessageClickListener {
 
+  private val msgsViewModel: MessagesViewModel by viewModels()
+
   private var recyclerViewMsgs: RecyclerView? = null
   private var emptyView: TextView? = null
   private var footerProgressView: View? = null
@@ -84,7 +87,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   private var activeMsgEntity: MessageEntity? = null
 
   private lateinit var adapter: MsgsPagedListAdapter
-  private lateinit var msgsViewModel: MessagesViewModel
   private var listener: OnManageEmailsListener? = null
   private var isEmptyViewAvailable = false
   private var keepSelectionInMemory = false
@@ -166,13 +168,13 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     adapter = MsgsPagedListAdapter(this)
-    setupMsgsViewModel()
     setupConnectionNotifier()
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
     initViews(view)
+    setupMsgsViewModel()
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -361,7 +363,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       isForceClearCacheNeeded = true
     }
 
-    msgsViewModel.loadMsgs(this, localFolder = newFolder,
+    msgsViewModel.loadMsgsFromLocalCache(this, localFolder = newFolder,
         observer = msgsObserver, boundaryCallback = boundaryCallback,
         forceClearFolderCache = isForceClearCacheNeeded, deleteAllMsgs = deleteAllMsgs)
   }
@@ -372,7 +374,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
    * @param progress The progress
    * @param message  The user friendly message.
    */
-  fun setActionProgress(progress: Int, message: String?) {
+  fun setActionProgress(progress: Int, message: String? = null) {
     progressBarActionProgress?.progress = progress
     progressBarActionProgress?.visibility = if (progress == 100) View.GONE else View.VISIBLE
 
@@ -569,7 +571,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       localFolder?.let {
         adapter.changeProgress(true)
         if (it.searchQuery.isNullOrEmpty()) {
-          baseSyncActivity.loadNextMsgs(R.id.syns_request_code_load_next_messages, it, totalItemsCount)
+          msgsViewModel.loadMsgsFromRemoteServer(it, totalItemsCount)
         } else {
           baseSyncActivity.searchNextMsgs(R.id.sync_request_code_search_messages, it, totalItemsCount)
         }
@@ -838,9 +840,45 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   private fun setupMsgsViewModel() {
-    msgsViewModel = ViewModelProvider(this).get(MessagesViewModel::class.java)
-    msgsViewModel.msgStatesLiveData.observe(this, Observer {
-      val activity = activity as? BaseSyncActivity ?: return@Observer
+    msgsViewModel.loadMsgsFromRemoteServerLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          when (it.resultCode) {
+            R.id.progress_id_start_of_loading_new_messages -> setActionProgress(0, "Starting")
+
+            R.id.progress_id_adding_task_to_queue -> setActionProgress(10, "Queuing")
+
+            R.id.progress_id_running_task -> setActionProgress(20, "Running task")
+
+            R.id.progress_id_resetting_connection -> setActionProgress(30, "Resetting connection")
+
+            R.id.progress_id_connecting_to_email_server -> setActionProgress(40, "Connecting")
+
+            R.id.progress_id_running_smtp_action -> setActionProgress(50, "Running SMTP action")
+
+            R.id.progress_id_running_imap_action -> setActionProgress(60, "Running IMAP action")
+
+            R.id.progress_id_opening_store -> setActionProgress(70, "Opening store")
+
+            R.id.progress_id_getting_list_of_emails -> setActionProgress(80, "Getting list of emails")
+          }
+        }
+
+        Result.Status.SUCCESS -> {
+          setActionProgress(100)
+        }
+
+        Result.Status.EXCEPTION -> {
+          setActionProgress(100)
+        }
+
+        else -> {
+        }
+      }
+    })
+
+    msgsViewModel.msgStatesLiveData.observe(viewLifecycleOwner, {
+      val activity = activity as? BaseSyncActivity ?: return@observe
       with(activity) {
         when (it) {
           MessageState.PENDING_ARCHIVING -> archiveMsgs()
@@ -889,7 +927,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   private fun setupConnectionNotifier() {
-    connectionLifecycleObserver.connectionLiveData.observe(this, Observer {
+    connectionLifecycleObserver.connectionLiveData.observe(this, {
       if (isForceLoadNextMsgsNeeded && it) {
         loadNextItemsToAdapter()
       }
