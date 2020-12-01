@@ -13,7 +13,6 @@ import android.os.Message
 import android.os.Messenger
 import android.os.RemoteException
 import androidx.test.espresso.idling.CountingIdlingResource
-import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.extensions.decrementSafely
 import com.flowcrypt.email.extensions.incrementSafely
@@ -117,30 +116,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
 
       unbindService(EmailSyncService::class.java, syncConn)
       isSyncServiceBound = false
-    }
-  }
-
-  /**
-   * Start a job to load searched messages to the cache.
-   *
-   * @param requestCode            The unique request code for identify the current action.
-   * @param localFolder            [LocalFolder] object which contains the search query.
-   * @param alreadyLoadedMsgsCount The count of already loaded messages in the localFolder.
-   */
-  fun searchNextMsgs(requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
-    if (checkServiceBound(isSyncServiceBound)) return
-    onProgressReplyReceived(requestCode, R.id.progress_id_start_of_loading_new_messages, Any())
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-
-    val action = BaseService.Action(replyMessengerName, requestCode, localFolder)
-
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_SEARCH_MESSAGES, alreadyLoadedMsgsCount, 0, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
     }
   }
 

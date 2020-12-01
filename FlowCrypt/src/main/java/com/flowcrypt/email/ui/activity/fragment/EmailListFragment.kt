@@ -570,11 +570,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       footerProgressView?.visibility = View.VISIBLE
       localFolder?.let {
         adapter.changeProgress(true)
-        if (it.searchQuery.isNullOrEmpty()) {
-          msgsViewModel.loadMsgsFromRemoteServer(it, totalItemsCount)
-        } else {
-          baseSyncActivity.searchNextMsgs(R.id.sync_request_code_search_messages, it, totalItemsCount)
-        }
+        msgsViewModel.loadMsgsFromRemoteServer(it, totalItemsCount)
       }
     } else {
       footerProgressView?.visibility = View.GONE
@@ -590,9 +586,9 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       }
 
       showSnackbar(view, getString(R.string.internet_connection_is_not_available), getString(R.string.retry),
-          Snackbar.LENGTH_LONG, View.OnClickListener {
+          Snackbar.LENGTH_LONG) {
         loadNextMsgs(totalItemsCount)
-      })
+      }
     }
   }
 

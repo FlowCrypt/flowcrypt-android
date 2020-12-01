@@ -27,7 +27,6 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
 import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.model.EmailAndNamePair
-import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -161,48 +160,6 @@ class EmailSyncService : BaseService(), SyncListener {
         val detailsList = roomDatabase.msgDao().getNewMsgs(email, folderName)
         notificationManager.notify(this, account, localFolder, detailsList)
       }
-    } catch (e: MessagingException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-    }
-  }
-
-  override fun onSearchMsgsReceived(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder,
-                                    msgs: Array<javax.mail.Message>, ownerKey: String, requestCode: Int) {
-    LogsUtil.d(TAG, "onSearchMessagesReceived: message count: " + msgs.size)
-    val email = account.email
-    try {
-      val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
-      val searchLabel = SearchMessagesActivity.SEARCH_FOLDER_NAME
-
-      val msgEntities = MessageEntity.genMessageEntities(
-          context = this,
-          email = email,
-          label = searchLabel,
-          folder = remoteFolder,
-          msgs = msgs,
-          isNew = false,
-          areAllMsgsEncrypted = isEncryptedModeEnabled
-      )
-
-      FlowCryptRoomDatabase.getDatabase(context).msgDao().insertWithReplace(msgEntities)
-
-      if (!isEncryptedModeEnabled) {
-        CheckIsLoadedMessagesEncryptedSyncTask.enqueue(applicationContext, localFolder)
-      }
-
-      if (msgs.isNotEmpty()) {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE)
-      } else {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
-      }
-
-      updateLocalContactsIfNeeded(remoteFolder, msgs)
     } catch (e: MessagingException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
@@ -499,11 +456,6 @@ class EmailSyncService : BaseService(), SyncListener {
             emailSyncManager.refreshMsgs(ownerKey!!, requestCode, refreshLocalFolder)
           }
 
-          MESSAGE_SEARCH_MESSAGES -> if (emailSyncManager != null && action != null) {
-            val localFolderWhereWeDoSearch = action.`object` as LocalFolder
-            emailSyncManager.searchMsgs(ownerKey!!, requestCode, localFolderWhereWeDoSearch, msg.arg1)
-          }
-
           else -> super.handleMessage(msg)
         }
       }
@@ -517,7 +469,6 @@ class EmailSyncService : BaseService(), SyncListener {
     const val MESSAGE_ADD_REPLY_MESSENGER = 1
     const val MESSAGE_REMOVE_REPLY_MESSENGER = 2
     const val MESSAGE_REFRESH_MESSAGES = 6
-    const val MESSAGE_SEARCH_MESSAGES = 11
 
     private val TAG = EmailSyncService::class.java.simpleName
 

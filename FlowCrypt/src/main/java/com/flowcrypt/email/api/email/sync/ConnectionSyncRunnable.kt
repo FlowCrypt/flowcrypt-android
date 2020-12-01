@@ -9,7 +9,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
-import com.flowcrypt.email.api.email.sync.tasks.SearchMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -98,16 +97,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
       val task = RefreshMessagesSyncTask(ownerKey, requestCode, localFolder)
       removeOldTasks(RefreshMessagesSyncTask::class.java, syncTaskBlockingQueue, task)
       syncTaskBlockingQueue.put(task)
-    } catch (e: InterruptedException) {
-      e.printStackTrace()
-    }
-  }
-
-  fun searchMsgs(ownerKey: String, requestCode: Int, localFolder: LocalFolder, alreadyLoadedMsgsCount: Int) {
-    try {
-      syncListener.onActionProgress(null, ownerKey, requestCode, R.id.progress_id_adding_task_to_queue)
-      removeOldTasks(SearchMessagesSyncTask::class.java, tasksQueue)
-      tasksQueue.put(SearchMessagesSyncTask(ownerKey, requestCode, localFolder, alreadyLoadedMsgsCount))
     } catch (e: InterruptedException) {
       e.printStackTrace()
     }

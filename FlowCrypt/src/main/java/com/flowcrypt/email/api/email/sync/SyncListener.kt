@@ -50,27 +50,6 @@ interface SyncListener {
   )
 
   /**
-   * This method called when new messages received from some folder.
-   *
-   * @param account      The [AccountEntity] object which contains information about an
-   * email account.
-   * @param localFolder  The local implementation of the remote folder.
-   * @param remoteFolder The folder where the messages exist.
-   * @param msgs         The new messages.
-   * @param ownerKey     The name of the reply to [android.os.Messenger].
-   * @param requestCode  The unique request code for the reply to
-   * [android.os.Messenger].
-   */
-  fun onSearchMsgsReceived(
-      account: AccountEntity,
-      localFolder: LocalFolder,
-      remoteFolder: IMAPFolder,
-      msgs: Array<Message>,
-      ownerKey: String,
-      requestCode: Int
-  )
-
-  /**
    * This method called when received information about messages which already exist in the local database.
    *
    * @param account      The [AccountEntity] object which contains information about an email account.

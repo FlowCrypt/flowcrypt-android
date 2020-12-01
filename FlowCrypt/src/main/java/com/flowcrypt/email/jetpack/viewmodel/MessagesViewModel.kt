@@ -34,12 +34,14 @@ import com.flowcrypt.email.service.EmailAndNameUpdaterService
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.FileAndDirectoryUtils
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.sun.mail.gimap.GmailRawSearchTerm
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import java.util.*
 import javax.mail.FetchProfile
 import javax.mail.Folder
 import javax.mail.Message
@@ -47,6 +49,15 @@ import javax.mail.MessagingException
 import javax.mail.Store
 import javax.mail.UIDFolder
 import javax.mail.internet.InternetAddress
+import javax.mail.search.AndTerm
+import javax.mail.search.BodyTerm
+import javax.mail.search.FromStringTerm
+import javax.mail.search.OrTerm
+import javax.mail.search.RecipientStringTerm
+import javax.mail.search.SearchTerm
+import javax.mail.search.StringTerm
+import javax.mail.search.SubjectTerm
+import kotlin.collections.ArrayList
 
 
 /**
@@ -76,7 +87,11 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           loadMsgsFromRemoteServerLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
         } else {
           loadMsgsFromRemoteServerLiveData.value = connection.execute {
-            loadMsgsFromRemoteServerInternal(accountEntity, connection.store, localFolder, totalItemsCount)
+            if (localFolder.searchQuery.isNullOrEmpty()) {
+              loadMsgsFromRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
+            } else {
+              searchMsgsOnRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
+            }
           }
         }
       }
@@ -222,9 +237,9 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     return candidates
   }
 
-  private suspend fun loadMsgsFromRemoteServerInternal(accountEntity: AccountEntity, store: Store,
-                                                       localFolder: LocalFolder,
-                                                       countOfAlreadyLoadedMsgs: Int
+  private suspend fun loadMsgsFromRemoteServerAndStoreLocally(accountEntity: AccountEntity, store: Store,
+                                                              localFolder: LocalFolder,
+                                                              countOfAlreadyLoadedMsgs: Int
   ): Result<Boolean?> = withContext(Dispatchers.IO) {
     store.getFolder(localFolder.fullName).use { folder ->
       val imapFolder = folder as IMAPFolder
@@ -387,5 +402,112 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     }
 
     return pairs
+  }
+
+  private suspend fun searchMsgsOnRemoteServerAndStoreLocally(accountEntity: AccountEntity, store: Store,
+                                                              localFolder: LocalFolder,
+                                                              countOfAlreadyLoadedMsgs: Int): Result<Boolean?> = withContext(Dispatchers.IO) {
+    store.getFolder(localFolder.fullName).use { folder ->
+      val imapFolder = folder as IMAPFolder
+      imapFolder.open(Folder.READ_ONLY)
+
+      val countOfLoadedMsgs = when {
+        countOfAlreadyLoadedMsgs < 0 -> 0
+        else -> countOfAlreadyLoadedMsgs
+      }
+
+      val foundMsgs = imapFolder.search(generateSearchTerm(accountEntity, localFolder))
+
+      val messagesCount = foundMsgs.size
+      val end = messagesCount - countOfLoadedMsgs
+      val startCandidate = end - JavaEmailConstants.COUNT_OF_LOADED_EMAILS_BY_STEP + 1
+      val start = when {
+        startCandidate < 1 -> 1
+        else -> startCandidate
+      }
+
+      loadMsgsFromRemoteServerLiveData.postValue(Result.loading(resultCode = R.id.progress_id_getting_list_of_emails))
+
+      if (end < 1) {
+        handleSearchResults(accountEntity, localFolder, imapFolder, arrayOf())
+      } else {
+        val bufferedMsgs = Arrays.copyOfRange(foundMsgs, start - 1, end)
+
+        val fetchProfile = FetchProfile()
+        fetchProfile.add(FetchProfile.Item.ENVELOPE)
+        fetchProfile.add(FetchProfile.Item.FLAGS)
+        fetchProfile.add(FetchProfile.Item.CONTENT_INFO)
+        fetchProfile.add(UIDFolder.FetchProfileItem.UID)
+
+        imapFolder.fetch(bufferedMsgs, fetchProfile)
+
+        handleSearchResults(accountEntity, localFolder, imapFolder, bufferedMsgs)
+      }
+    }
+
+    return@withContext Result.success(true)
+  }
+
+  private suspend fun handleSearchResults(account: AccountEntity, localFolder: LocalFolder,
+                                          remoteFolder: IMAPFolder, msgs: Array<Message>) = withContext(Dispatchers.IO) {
+    val email = account.email
+    val isEncryptedModeEnabled = account.isShowOnlyEncrypted ?: false
+    val searchLabel = SearchMessagesActivity.SEARCH_FOLDER_NAME
+
+    val msgEntities = MessageEntity.genMessageEntities(
+        context = getApplication(),
+        email = email,
+        label = searchLabel,
+        folder = remoteFolder,
+        msgs = msgs,
+        isNew = false,
+        areAllMsgsEncrypted = isEncryptedModeEnabled
+    )
+
+    FlowCryptRoomDatabase.getDatabase(getApplication()).msgDao().insertWithReplaceSuspend(msgEntities)
+
+    if (!isEncryptedModeEnabled) {
+      CheckIsLoadedMessagesEncryptedSyncTask.enqueue(getApplication(), localFolder)
+    }
+
+    updateLocalContactsIfNeeded(remoteFolder, msgs)
+  }
+
+  /**
+   * Generate a [SearchTerm] depend on an input [AccountEntity].
+   *
+   * @param account An input [AccountEntity]
+   * @return A generated [SearchTerm].
+   */
+  private fun generateSearchTerm(account: AccountEntity, localFolder: LocalFolder): SearchTerm {
+    val isEncryptedModeEnabled = account.isShowOnlyEncrypted
+
+    if (isEncryptedModeEnabled == true) {
+      val searchTerm = EmailUtil.genEncryptedMsgsSearchTerm(account)
+
+      return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
+        val stringTerm = searchTerm as StringTerm
+        GmailRawSearchTerm(localFolder.searchQuery + " AND (" + stringTerm.pattern + ")")
+      } else {
+        AndTerm(searchTerm, generateNonGmailSearchTerm(localFolder))
+      }
+    } else {
+      return if (AccountEntity.ACCOUNT_TYPE_GOOGLE.equals(account.accountType, ignoreCase = true)) {
+        GmailRawSearchTerm(localFolder.searchQuery)
+      } else {
+        generateNonGmailSearchTerm(localFolder)
+      }
+    }
+  }
+
+  private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {
+    return OrTerm(arrayOf(
+        SubjectTerm(localFolder.searchQuery),
+        BodyTerm(localFolder.searchQuery),
+        FromStringTerm(localFolder.searchQuery),
+        RecipientStringTerm(Message.RecipientType.TO, localFolder.searchQuery),
+        RecipientStringTerm(Message.RecipientType.CC, localFolder.searchQuery),
+        RecipientStringTerm(Message.RecipientType.BCC, localFolder.searchQuery)
+    ))
   }
 }
