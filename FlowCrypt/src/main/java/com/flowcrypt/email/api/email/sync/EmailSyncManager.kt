@@ -96,14 +96,6 @@ class EmailSyncManager(val listener: SyncListener) {
   }
 
   /**
-   * Cancel loading details of some message
-   *
-   */
-  fun cancelLoadMsgDetails(uniqueId: String) {
-    connectionRunnable.cancelTask(uniqueId)
-  }
-
-  /**
    * Add load a new messages information task. This method create a new
    * [RefreshMessagesSyncTask] object and added it to the current synchronization
    * BlockingQueue.

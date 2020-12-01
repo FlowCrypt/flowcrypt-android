@@ -9,6 +9,8 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Update
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * It's a base implementation of [androidx.room.Dao] interface which contains the common methods
@@ -96,7 +98,7 @@ interface BaseDao<T> {
     }
 
     suspend fun <M> doOperationViaStepsSuspend(stepValue: Int = 50, list: List<M>,
-                                               block: suspend (list: Collection<M>) -> Int) {
+                                               block: suspend (list: Collection<M>) -> Int) = withContext(Dispatchers.IO) {
       if (list.isNotEmpty()) {
         if (list.size <= stepValue) {
           block(list)

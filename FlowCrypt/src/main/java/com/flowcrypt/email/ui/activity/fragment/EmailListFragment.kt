@@ -20,7 +20,6 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.core.content.ContextCompat
@@ -38,7 +37,6 @@ import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -57,8 +55,6 @@ import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
-import com.google.android.gms.auth.GoogleAuthException
-import com.google.android.gms.auth.UserRecoverableAuthException
 import com.google.android.material.snackbar.Snackbar
 
 /**
@@ -279,7 +275,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
       if (GeneralUtil.isConnected(context)) {
         if (adapter.itemCount > 0) {
-          swipeRefreshLayout?.isRefreshing = true
           refreshMsgs()
         } else {
           swipeRefreshLayout?.isRefreshing = false
@@ -299,45 +294,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
         }
 
         showInfoSnackbar(view, getString(R.string.internet_connection_is_not_available), Snackbar.LENGTH_LONG)
-      }
-    }
-  }
-
-  override fun onErrorOccurred(requestCode: Int, errorType: Int, e: Exception?) {
-    when (requestCode) {
-      R.id.syns_request_code_load_next_messages -> {
-        if (e is UserRecoverableAuthException) {
-          super.onErrorOccurred(requestCode, errorType,
-              Exception(getString(R.string.gmail_user_recoverable_auth_exception)))
-          showSnackbar(requireView(), getString(R.string.get_access_to_gmail), getString(R.string.sign_in),
-              Snackbar.LENGTH_INDEFINITE, View.OnClickListener { listener!!.onRetryGoogleAuth() })
-        } else if (e is GoogleAuthException || e!!.message.equals("ServiceDisabled", ignoreCase = true)) {
-          super.onErrorOccurred(requestCode, errorType,
-              Exception(getString(R.string.google_auth_exception_service_disabled)))
-        } else {
-          super.onErrorOccurred(requestCode, errorType, e)
-        }
-
-        footerProgressView?.visibility = View.GONE
-        emptyView?.visibility = View.GONE
-
-        when (errorType) {
-          SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> showConnLostHint()
-        }
-      }
-
-      R.id.syns_request_code_refresh_msgs -> {
-        swipeRefreshLayout?.isRefreshing = false
-        when (errorType) {
-          SyncErrorTypes.ACTION_FAILED_SHOW_TOAST -> Toast.makeText(context,
-              R.string.failed_please_try_again_later, Toast.LENGTH_SHORT).show()
-
-          SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST -> showConnProblemHint()
-        }
-      }
-
-      R.id.sync_request_code_search_messages -> {
-        super.onErrorOccurred(requestCode, errorType, e)
       }
     }
   }
@@ -386,14 +342,6 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
       textViewActionProgress?.visibility = View.GONE
       adapter.changeProgress(false)
     }
-  }
-
-  fun onFetchMsgsCompleted() {
-    msgsObserver.onChanged(msgsViewModel.msgsLiveData?.value)
-  }
-
-  fun onRefreshMsgsCompleted() {
-    swipeRefreshLayout?.isRefreshing = false
   }
 
   override fun onMsgClick(msgEntity: MessageEntity) {
@@ -541,7 +489,7 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
    */
   private fun refreshMsgs() {
     listener?.currentFolder?.let {
-      baseSyncActivity.refreshMsgs(R.id.syns_request_code_refresh_msgs, it)
+      msgsViewModel.refreshMsgs(it)
     }
   }
 
@@ -885,6 +833,18 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
           MessageState.QUEUED -> context?.let { nonNullContext -> MessagesSenderWorker.enqueue(nonNullContext) }
           else -> {
           }
+        }
+      }
+    })
+
+    msgsViewModel.refreshMsgsLiveData.observe(viewLifecycleOwner, {
+      when (it.status) {
+        Result.Status.LOADING -> {
+          swipeRefreshLayout?.isRefreshing = true
+        }
+
+        else -> {
+          swipeRefreshLayout?.isRefreshing = false
         }
       }
     })

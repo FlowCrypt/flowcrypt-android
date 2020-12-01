@@ -451,11 +451,6 @@ class EmailSyncService : BaseService(), SyncListener {
             }
           }
 
-          MESSAGE_REFRESH_MESSAGES -> if (emailSyncManager != null && action != null) {
-            val refreshLocalFolder = action.`object` as LocalFolder
-            emailSyncManager.refreshMsgs(ownerKey!!, requestCode, refreshLocalFolder)
-          }
-
           else -> super.handleMessage(msg)
         }
       }
@@ -468,7 +463,6 @@ class EmailSyncService : BaseService(), SyncListener {
 
     const val MESSAGE_ADD_REPLY_MESSENGER = 1
     const val MESSAGE_REMOVE_REPLY_MESSENGER = 2
-    const val MESSAGE_REFRESH_MESSAGES = 6
 
     private val TAG = EmailSyncService::class.java.simpleName
 

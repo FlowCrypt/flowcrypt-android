@@ -307,55 +307,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     }
   }
 
-  override fun refreshMsgs(requestCode: Int, currentLocalFolder: LocalFolder) {
-    switchView?.isEnabled = false
-    super.refreshMsgs(requestCode, currentLocalFolder)
-  }
-
-  override fun onReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
-    when (requestCode) {
-      R.id.syns_request_code_refresh_msgs -> {
-        switchView?.isEnabled = true
-        onRefreshMsgsCompleted()
-      }
-
-      R.id.syns_request_code_load_next_messages -> {
-        switchView?.isEnabled = true
-        onFetchMsgsCompleted()
-      }
-
-      else -> {
-      }
-    }
-
-    super.onReplyReceived(requestCode, resultCode, obj)
-  }
-
-  override fun onErrorHappened(requestCode: Int, errorType: Int, e: Exception) {
-    when (requestCode) {
-      R.id.syns_request_code_refresh_msgs -> {
-        switchView?.isEnabled = true
-        onErrorOccurred(requestCode, errorType, e)
-        onRefreshMsgsCompleted()
-      }
-
-      R.id.syns_request_code_load_next_messages -> {
-        switchView?.isEnabled = true
-        onFetchMsgsCompleted()
-      }
-
-      else -> {
-      }
-    }
-
-    super.onErrorHappened(requestCode, errorType, e)
-  }
-
-  override fun onSyncServiceConnected() {
-    super.onSyncServiceConnected()
-    updateLabels()
-  }
-
   override fun onBackPressed() {
     if (drawerLayout?.isDrawerOpen(GravityCompat.START) == true) {
       drawerLayout?.closeDrawer(GravityCompat.START)
@@ -649,14 +600,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
     }
 
     return view
-  }
-
-  private fun onFetchMsgsCompleted() {
-    (supportFragmentManager.findFragmentById(R.id.emailListFragment) as? EmailListFragment?)?.onFetchMsgsCompleted()
-  }
-
-  private fun onRefreshMsgsCompleted() {
-    (supportFragmentManager.findFragmentById(R.id.emailListFragment) as? EmailListFragment?)?.onRefreshMsgsCompleted()
   }
 
   private fun setupLabelsViewModel() {

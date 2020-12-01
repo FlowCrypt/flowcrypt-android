@@ -18,6 +18,7 @@ import androidx.paging.toLiveData
 import com.flowcrypt.email.Constants
 import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.EmailUtil
+import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.api.email.model.LocalFolder
@@ -31,8 +32,10 @@ import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedSyncTask
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.service.EmailAndNameUpdaterService
+import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.ui.activity.SearchMessagesActivity
 import com.flowcrypt.email.util.FileAndDirectoryUtils
+import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.gimap.GmailRawSearchTerm
 import com.sun.mail.imap.IMAPFolder
@@ -76,6 +79,24 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
   }
 
   val loadMsgsFromRemoteServerLiveData = MutableLiveData<Result<Boolean?>>()
+  val refreshMsgsLiveData = MutableLiveData<Result<Boolean?>>()
+
+  fun refreshMsgs(localFolder: LocalFolder) {
+    viewModelScope.launch {
+      val accountEntity = getActiveAccountSuspend()
+      accountEntity?.let {
+        refreshMsgsLiveData.value = Result.loading()
+        val connection = IMAPStoreManager.activeConnections[accountEntity.id]
+        if (connection == null) {
+          refreshMsgsLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
+        } else {
+          refreshMsgsLiveData.value = connection.execute {
+            refreshMsgsInternal(accountEntity, connection.store, localFolder)
+          }
+        }
+      }
+    }
+  }
 
   fun loadMsgsFromRemoteServer(localFolder: LocalFolder, totalItemsCount: Int) {
     viewModelScope.launch {
@@ -498,6 +519,109 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         generateNonGmailSearchTerm(localFolder)
       }
     }
+  }
+
+  private suspend fun refreshMsgsInternal(accountEntity: AccountEntity, store: Store, localFolder: LocalFolder): Result<Boolean?> = withContext(Dispatchers.IO) {
+    store.getFolder(localFolder.fullName).use { folder ->
+      val imapFolder = folder as IMAPFolder
+      imapFolder.open(Folder.READ_ONLY)
+      val folderName = localFolder.fullName
+      val nextUID = imapFolder.uidNext
+
+      var newMsgs: Array<Message> = emptyArray()
+      val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
+
+      val newestCachedUID = roomDatabase.msgDao().getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderName)
+      val countOfLoadedMsgs = roomDatabase.msgDao().countSuspend(accountEntity.email, folderName)
+      val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted
+
+      if (newestCachedUID in (2 until nextUID - 1)) {
+        if (isEncryptedModeEnabled == true) {
+          val foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
+
+          val fetchProfile = FetchProfile()
+          fetchProfile.add(UIDFolder.FetchProfileItem.UID)
+
+          imapFolder.fetch(foundMsgs, fetchProfile)
+
+          val newMsgsList = mutableListOf<Message>()
+
+          for (message in foundMsgs) {
+            if (imapFolder.getUID(message) > newestCachedUID) {
+              newMsgsList.add(message)
+            }
+          }
+
+          newMsgs = EmailUtil.fetchMsgs(imapFolder, newMsgsList.toTypedArray())
+        } else {
+          val msgs = imapFolder.getMessagesByUID((newestCachedUID + 1).toLong(), nextUID - 1)
+          newMsgs = EmailUtil.fetchMsgs(imapFolder, msgs)
+        }
+      }
+
+      val updatedMsgs = if (isEncryptedModeEnabled == true) {
+        val oldestCachedUID = roomDatabase.msgDao().getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderName)
+        EmailUtil.getUpdatedMsgsByUID(imapFolder, oldestCachedUID.toLong(), newestCachedUID.toLong())
+      } else {
+        val countOfNewMsgs = newMsgs.size
+        EmailUtil.getUpdatedMsgs(imapFolder, countOfLoadedMsgs, countOfNewMsgs)
+      }
+
+      handleRefreshedMsgs(accountEntity, localFolder, imapFolder, newMsgs, updatedMsgs)
+    }
+
+    return@withContext Result.success(true)
+  }
+
+  private suspend fun handleRefreshedMsgs(accountEntity: AccountEntity, localFolder: LocalFolder,
+                                          remoteFolder: IMAPFolder, newMsgs: Array<Message>,
+                                          updatedMsgs: Array<Message>) = withContext(Dispatchers.IO) {
+    val email = accountEntity.email
+    val folderName = localFolder.fullName
+
+    val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
+
+    val mapOfUIDAndMsgFlags = roomDatabase.msgDao().getMapOfUIDAndMsgFlagsSuspend(email, folderName)
+    val msgsUIDs = HashSet(mapOfUIDAndMsgFlags.keys)
+    val deleteCandidatesUIDs = EmailUtil.genDeleteCandidates(msgsUIDs, remoteFolder, updatedMsgs)
+
+    roomDatabase.msgDao().deleteByUIDsSuspend(accountEntity.email, folderName, deleteCandidatesUIDs)
+
+    val folderType = FoldersManager.getFolderType(localFolder)
+    if (!GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX) {
+      val notificationManager = MessagesNotificationManager(getApplication())
+      for (uid in deleteCandidatesUIDs) {
+        notificationManager.cancel(uid.toInt())
+      }
+    }
+
+    val newCandidates = EmailUtil.genNewCandidates(msgsUIDs, remoteFolder, newMsgs)
+
+    val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted ?: false
+    val isNew = !GeneralUtil.isAppForegrounded() && folderType === FoldersManager.FolderType.INBOX
+
+    val msgEntities = MessageEntity.genMessageEntities(
+        context = getApplication(),
+        email = email,
+        label = folderName,
+        folder = remoteFolder,
+        msgs = newCandidates,
+        isNew = isNew,
+        areAllMsgsEncrypted = isEncryptedModeEnabled
+    )
+
+    roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
+
+    if (!isEncryptedModeEnabled) {
+      CheckIsLoadedMessagesEncryptedSyncTask.enqueue(getApplication(), localFolder)
+    }
+
+    val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, updatedMsgs)
+        .map { remoteFolder.getUID(it) to it.flags }.toMap()
+    roomDatabase.msgDao().updateFlagsSuspend(accountEntity.email, folderName, updateCandidates)
+
+    updateLocalContactsIfNeeded(remoteFolder, newCandidates)
+
   }
 
   private fun generateNonGmailSearchTerm(localFolder: LocalFolder): SearchTerm {

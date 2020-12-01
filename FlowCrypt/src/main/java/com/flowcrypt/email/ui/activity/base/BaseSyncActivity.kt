@@ -9,13 +9,9 @@ import android.content.ComponentName
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.os.Message
 import android.os.Messenger
-import android.os.RemoteException
 import androidx.test.espresso.idling.CountingIdlingResource
-import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.extensions.decrementSafely
-import com.flowcrypt.email.extensions.incrementSafely
 import com.flowcrypt.email.extensions.shutdown
 import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsSyncTask
 import com.flowcrypt.email.jetpack.workmanager.sync.ChangeMsgsReadStateSyncTask
@@ -24,12 +20,10 @@ import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesSyncTask
 import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashSyncTask
 import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxSyncTask
 import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsSyncTask
-import com.flowcrypt.email.service.BaseService
 import com.flowcrypt.email.service.EmailSyncService
 import com.flowcrypt.email.ui.activity.BaseNodeActivity
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
-import com.flowcrypt.email.util.exception.ExceptionUtil
 
 /**
  * This class describes a bind to the email sync service logic.
@@ -164,27 +158,5 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun moveMsgsToINBOX() {
     MovingToInboxSyncTask.enqueue(this)
-  }
-
-  /**
-   * Load the last messages which not exist in the database.
-   *
-   * @param requestCode        The unique request code for identify the current action.
-   * @param currentLocalFolder [LocalFolder] object.
-   */
-  open fun refreshMsgs(requestCode: Int, currentLocalFolder: LocalFolder) {
-    if (checkServiceBound(isSyncServiceBound)) return
-    syncServiceCountingIdlingResource.incrementSafely(requestCode.toString())
-
-    val action = BaseService.Action(replyMessengerName, requestCode, currentLocalFolder)
-
-    val msg = Message.obtain(null, EmailSyncService.MESSAGE_REFRESH_MESSAGES, action)
-    msg.replyTo = syncReplyMessenger
-    try {
-      syncMessenger?.send(msg)
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
   }
 }
