@@ -78,11 +78,17 @@ class PropertiesHelper {
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_STARTTLS_ENABLE] = it.imapOpt === SecurityType.Option.STARTLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_SSL_CHECK_SERVER_IDENTITY] = it.imapOpt === SecurityType.Option.SSL_TLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_FETCH_SIZE] = JavaEmailConstants.DEFAULT_FETCH_BUFFER
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_CONNECTIONTIMEOUT] = 1000 * 30
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_CONNECTIONTIMEOUT] = 1000 * 30
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_TIMEOUT] = 1000 * 20
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAPS_TIMEOUT] = 1000 * 20
 
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = it.hasCustomSignInForSmtp
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = it.smtpOpt === SecurityType.Option.SSL_TLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_STARTTLS_ENABLE] = it.smtpOpt === SecurityType.Option.STARTLS
         prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] = it.smtpOpt === SecurityType.Option.SSL_TLS
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_CONNECTIONTIMEOUT] = 1000 * 30
+        prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_TIMEOUT] = 1000 * 30
 
         if (authCreds.useOAuth2) {
           prop[JavaEmailConstants.PROPERTY_NAME_MAIL_IMAP_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
@@ -108,11 +114,14 @@ class PropertiesHelper {
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_ENABLE] = BOOLEAN_VALUE_TRUE
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
       prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_SSL_CHECK_SERVER_IDENTITY] = BOOLEAN_VALUE_TRUE
+      prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_CONNECTIONTIMEOUT] = 1000 * 30
+      prop[GmailConstants.PROPERTY_NAME_MAIL_GIMAPS_TIMEOUT] = 1000 * 20
 
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH] = BOOLEAN_VALUE_TRUE
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_ENABLE] = BOOLEAN_VALUE_TRUE
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_AUTH_MECHANISMS] = JavaEmailConstants.AUTH_MECHANISMS_XOAUTH2
       prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_SSL_CHECK_SERVER_IDENTITY] = BOOLEAN_VALUE_TRUE
+      prop[JavaEmailConstants.PROPERTY_NAME_MAIL_SMTP_CONNECTIONTIMEOUT] = 1000 * 30
       return prop
     }
   }

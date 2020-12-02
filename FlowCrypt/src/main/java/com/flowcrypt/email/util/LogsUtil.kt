@@ -15,9 +15,9 @@ import android.util.Log
  */
 class LogsUtil {
   companion object {
-    fun d(tag: String, msg: String) {
+    fun d(tag: String, msg: String, tr: Throwable? = null) {
       if (GeneralUtil.isDebugBuild()) {
-        Log.d(tag, msg)
+        Log.d(tag, msg, tr)
       }
     }
   }

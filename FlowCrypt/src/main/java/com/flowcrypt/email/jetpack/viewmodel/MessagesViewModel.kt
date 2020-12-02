@@ -90,7 +90,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         if (connection == null) {
           refreshMsgsLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
         } else {
-          refreshMsgsLiveData.value = connection.execute {
+          refreshMsgsLiveData.value = connection.executeWithResult {
             refreshMsgsInternal(accountEntity, connection.store, localFolder)
           }
         }
@@ -107,7 +107,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
         if (connection == null) {
           loadMsgsFromRemoteServerLiveData.value = Result.exception(NullPointerException("There is no active connection for ${accountEntity.email}"))
         } else {
-          loadMsgsFromRemoteServerLiveData.value = connection.execute {
+          loadMsgsFromRemoteServerLiveData.value = connection.executeWithResult {
             if (localFolder.searchQuery.isNullOrEmpty()) {
               loadMsgsFromRemoteServerAndStoreLocally(accountEntity, connection.store, localFolder, totalItemsCount)
             } else {

@@ -10,6 +10,7 @@ import androidx.annotation.WorkerThread
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import javax.mail.Session
+import javax.mail.Store
 
 /**
  * That's an interface which helps to manage an instance of [javax.mail.Store]. All of methods
@@ -41,5 +42,8 @@ interface StoreConnection {
   /**
    * That's a helper method that helps execute some code and returns [Result]
    */
-  suspend fun <T> execute(action: suspend () -> Result<T>): Result<T>
+  suspend fun <T> executeWithResult(action: suspend () -> Result<T>): Result<T>
+
+  @WorkerThread
+  suspend fun executeIMAPAction(action: suspend (store: Store) -> Unit)
 }

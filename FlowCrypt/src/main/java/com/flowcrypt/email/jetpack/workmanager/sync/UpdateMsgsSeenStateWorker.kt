@@ -17,15 +17,12 @@ import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.mail.Flags
 import javax.mail.Folder
-import javax.mail.FolderNotFoundException
 import javax.mail.Message
-import javax.mail.MessagingException
 import javax.mail.Store
 
 /**
@@ -48,23 +45,16 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) : Ba
           val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
           activeAccountEntity?.let {
             val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
-            connection?.store?.let { store ->
-              changeMsgsReadState(activeAccountEntity, store, MessageState.PENDING_MARK_UNREAD)
-              changeMsgsReadState(activeAccountEntity, store, MessageState.PENDING_MARK_READ)
+            connection?.executeIMAPAction {
+              changeMsgsReadState(activeAccountEntity, it, MessageState.PENDING_MARK_UNREAD)
+              changeMsgsReadState(activeAccountEntity, it, MessageState.PENDING_MARK_READ)
             }
           }
 
           return@withContext Result.success()
         } catch (e: Exception) {
           e.printStackTrace()
-          ExceptionUtil.handleError(e)
-          when (e) {
-            is MessagingException -> {
-              return@withContext Result.retry()
-            }
-
-            else -> return@withContext Result.failure()
-          }
+          return@withContext handleExceptionWithResult(e)
         }
       }
 
@@ -75,15 +65,15 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) : Ba
     if (candidatesForMark.isNotEmpty()) {
       val setOfFolders = candidatesForMark.map { it.folder }.toSet()
 
-      for (folder in setOfFolders) {
-        val filteredMsgs = candidatesForMark.filter { it.folder == folder }
+      for (fullFolderName in setOfFolders) {
+        val filteredMsgs = candidatesForMark.filter { it.folder == fullFolderName }
 
         if (filteredMsgs.isEmpty()) {
           continue
         }
 
-        try {
-          val imapFolder = store.getFolder(folder) as IMAPFolder
+        store.getFolder(fullFolderName).use { folder ->
+          val imapFolder = folder as IMAPFolder
           imapFolder.open(Folder.READ_WRITE)
 
           val uidList = filteredMsgs.map { it.uid }
@@ -93,32 +83,12 @@ class UpdateMsgsSeenStateWorker(context: Context, params: WorkerParameters) : Ba
             val value = state == MessageState.PENDING_MARK_READ
             imapFolder.setFlags(msgs.toTypedArray(), Flags(Flags.Flag.SEEN), value)
             for (uid in uidList) {
-              val msgEntity = roomDatabase.msgDao().getMsgSuspend(account.email, folder, uid)
+              val msgEntity = roomDatabase.msgDao().getMsgSuspend(account.email, fullFolderName, uid)
 
               if (msgEntity?.msgState == state) {
                 roomDatabase.msgDao().updateSuspend(msgEntity.copy(state = MessageState.NONE.value))
               }
             }
-          }
-
-          imapFolder.close()
-        } catch (e: Exception) {
-          e.printStackTrace()
-          when (e) {
-            is FolderNotFoundException -> {
-              //don't send ACRA reports
-            }
-
-            is MessagingException -> {
-              val msg = e.message ?: ""
-              if (!msg.equals("folder cannot contain messages", true)) {
-                ExceptionUtil.handleError(e)
-              }
-
-              throw e
-            }
-
-            else -> ExceptionUtil.handleError(e)
           }
         }
       }

@@ -24,7 +24,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.mail.Folder
 import javax.mail.Message
-import javax.mail.MessagingException
 import javax.mail.Store
 
 /**
@@ -47,8 +46,8 @@ class ArchiveMsgsWorker(context: Context, params: WorkerParameters) : BaseSyncWo
           val activeAccountEntity = roomDatabase.accountDao().getActiveAccountSuspend()
           activeAccountEntity?.let {
             val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
-            connection?.store?.let { store ->
-              archive(activeAccountEntity, store)
+            connection?.executeIMAPAction {
+              archive(activeAccountEntity, it)
             }
           }
 
@@ -56,13 +55,7 @@ class ArchiveMsgsWorker(context: Context, params: WorkerParameters) : BaseSyncWo
         } catch (e: Exception) {
           e.printStackTrace()
           ExceptionUtil.handleError(e)
-          when (e) {
-            is MessagingException -> {
-              return@withContext Result.retry()
-            }
-
-            else -> return@withContext Result.failure()
-          }
+          return@withContext handleExceptionWithResult(e)
         }
       }
 
