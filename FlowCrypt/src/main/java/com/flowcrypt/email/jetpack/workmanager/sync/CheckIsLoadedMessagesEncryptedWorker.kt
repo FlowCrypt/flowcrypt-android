@@ -20,7 +20,6 @@ import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.workmanager.BaseSyncWorker
 import com.flowcrypt.email.service.MessagesNotificationManager
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
@@ -39,7 +38,7 @@ import javax.mail.Store
  * Time: 14:30
  * E-mail: DenBond7@gmail.com
  */
-class CheckIsLoadedMessagesEncryptedSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class CheckIsLoadedMessagesEncryptedWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
   override suspend fun doWork(): Result =
       withContext(Dispatchers.IO) {
         if (isStopped) {
@@ -117,7 +116,7 @@ class CheckIsLoadedMessagesEncryptedSyncTask(context: Context, params: WorkerPar
           .enqueueUniqueWork(
               GROUP_UNIQUE_TAG,
               ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<CheckIsLoadedMessagesEncryptedSyncTask>()
+              OneTimeWorkRequestBuilder<CheckIsLoadedMessagesEncryptedWorker>()
                   .setInputData(inputData)
                   .addTag(TAG_SYNC)
                   .setConstraints(constraints)

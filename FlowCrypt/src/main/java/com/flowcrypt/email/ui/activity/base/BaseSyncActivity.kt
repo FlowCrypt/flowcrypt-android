@@ -5,13 +5,13 @@
 
 package com.flowcrypt.email.ui.activity.base
 
-import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsSyncTask
-import com.flowcrypt.email.jetpack.workmanager.sync.ChangeMsgsReadStateSyncTask
-import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlySyncTask
-import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesSyncTask
-import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashSyncTask
-import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxSyncTask
-import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsSyncTask
+import com.flowcrypt.email.jetpack.workmanager.sync.ArchiveMsgsWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesPermanentlyWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.DeleteMessagesWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.EmptyTrashWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.MovingToInboxWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.UpdateLabelsWorker
+import com.flowcrypt.email.jetpack.workmanager.sync.UpdateMsgsSeenStateWorker
 import com.flowcrypt.email.ui.activity.BaseNodeActivity
 
 /**
@@ -28,7 +28,7 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * Run update a folders list.
    */
   fun updateLabels() {
-    UpdateLabelsSyncTask.enqueue(this)
+    UpdateLabelsWorker.enqueue(this)
   }
 
   /**
@@ -36,9 +36,9 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    */
   fun deleteMsgs(deletePermanently: Boolean = false) {
     if (deletePermanently) {
-      DeleteMessagesPermanentlySyncTask.enqueue(this)
+      DeleteMessagesPermanentlyWorker.enqueue(this)
     } else {
-      DeleteMessagesSyncTask.enqueue(this)
+      DeleteMessagesWorker.enqueue(this)
     }
   }
 
@@ -46,21 +46,21 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    * Empty trash
    */
   fun emptyTrash() {
-    EmptyTrashSyncTask.enqueue(this)
+    EmptyTrashWorker.enqueue(this)
   }
 
   /**
    * Archive marked messages
    */
   fun archiveMsgs() {
-    ArchiveMsgsSyncTask.enqueue(this)
+    ArchiveMsgsWorker.enqueue(this)
   }
 
   /**
    * Change messages read state.
    */
   fun changeMsgsReadState() {
-    ChangeMsgsReadStateSyncTask.enqueue(this)
+    UpdateMsgsSeenStateWorker.enqueue(this)
   }
 
   /**
@@ -68,6 +68,6 @@ abstract class BaseSyncActivity : BaseNodeActivity() {
    *
    */
   fun moveMsgsToINBOX() {
-    MovingToInboxSyncTask.enqueue(this)
+    MovingToInboxWorker.enqueue(this)
   }
 }

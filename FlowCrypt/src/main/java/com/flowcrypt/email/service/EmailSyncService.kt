@@ -20,7 +20,7 @@ import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.jetpack.lifecycle.ConnectionLifecycleObserver
-import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedSyncTask
+import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedWorker
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
@@ -165,7 +165,7 @@ class EmailSyncService : LifecycleService(), SyncListener {
       roomDatabase.msgDao().insertWithReplace(msgEntities)
 
       if (!isEncryptedModeEnabled) {
-        CheckIsLoadedMessagesEncryptedSyncTask.enqueue(applicationContext, localFolder)
+        CheckIsLoadedMessagesEncryptedWorker.enqueue(applicationContext, localFolder)
       }
 
       val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, updateMsgs)

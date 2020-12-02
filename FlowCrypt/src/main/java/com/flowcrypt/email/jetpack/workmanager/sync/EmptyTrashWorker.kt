@@ -18,25 +18,22 @@ import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.workmanager.BaseSyncWorker
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.mail.Flags
 import javax.mail.Folder
-import javax.mail.Message
 import javax.mail.MessagingException
 import javax.mail.Store
 
 /**
- * This task moves marked messages to INBOX folder
- *
  * @author Denis Bondarenko
- *         Date: 10/18/19
- *         Time: 12:02 PM
+ *         Date: 7/7/20
+ *         Time: 10:19 AM
  *         E-mail: DenBond7@gmail.com
  */
-class ArchiveMsgsSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class EmptyTrashWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
   override suspend fun doWork(): Result =
       withContext(Dispatchers.IO) {
         if (isStopped) {
@@ -49,7 +46,7 @@ class ArchiveMsgsSyncTask(context: Context, params: WorkerParameters) : BaseSync
           activeAccountEntity?.let {
             val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
             connection?.store?.let { store ->
-              archive(activeAccountEntity, store)
+              emptyTrash(activeAccountEntity, store)
             }
           }
 
@@ -67,36 +64,32 @@ class ArchiveMsgsSyncTask(context: Context, params: WorkerParameters) : BaseSync
         }
       }
 
-  private suspend fun archive(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+  private suspend fun emptyTrash(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
-    val inboxFolder = foldersManager.findInboxFolder() ?: return@withContext
-    val allMailFolder = foldersManager.folderAll ?: return@withContext
+    val trash = foldersManager.folderTrash ?: return@withContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+    val remoteTrashFolder = store.getFolder(trash.fullName) as IMAPFolder
+    remoteTrashFolder.open(Folder.READ_WRITE)
 
-    while (true) {
-      val candidatesForArchiving = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email, MessageState.PENDING_ARCHIVING.value)
+    val msgs = remoteTrashFolder.messages
 
-      if (candidatesForArchiving.isEmpty()) {
-        break
-      } else {
-        val uidList = candidatesForArchiving.map { it.uid }
-        val remoteSrcFolder = store.getFolder(inboxFolder.fullName) as IMAPFolder
-        val remoteDestFolder = store.getFolder(allMailFolder.fullName) as IMAPFolder
-        remoteSrcFolder.open(Folder.READ_WRITE)
-        val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
-
-        if (msgs.isNotEmpty()) {
-          remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, inboxFolder.fullName, uidList)
-        }
-
-        remoteSrcFolder.close()
+    if (msgs.isNotEmpty()) {
+      roomDatabase.msgDao().changeMsgsStateSuspend(account.email, trash.fullName, MessageState.PENDING_EMPTY_TRASH.value)
+      try {
+        remoteTrashFolder.setFlags(msgs, Flags(Flags.Flag.DELETED), true)
+        remoteTrashFolder.close(true)
+      } catch (e: Exception) {
+        roomDatabase.msgDao().changeMsgsStateSuspend(account.email, trash.fullName)
+        throw e
       }
+
+      val candidatesForDeleting = roomDatabase.msgDao().getMsgsSuspend(account.email, trash.fullName)
+      roomDatabase.msgDao().deleteSuspend(candidatesForDeleting)
     }
   }
 
   companion object {
-    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".ARCHIVE_MESSAGES"
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".EMPTY_TRASH"
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
@@ -108,7 +101,7 @@ class ArchiveMsgsSyncTask(context: Context, params: WorkerParameters) : BaseSync
           .enqueueUniqueWork(
               GROUP_UNIQUE_TAG,
               ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<ArchiveMsgsSyncTask>()
+              OneTimeWorkRequestBuilder<EmptyTrashWorker>()
                   .addTag(TAG_SYNC)
                   .setConstraints(constraints)
                   .build()

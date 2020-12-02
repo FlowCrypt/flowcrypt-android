@@ -12,7 +12,7 @@ import com.flowcrypt.email.api.email.sync.tasks.SyncTask
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.jetpack.viewmodel.AccountViewModel
-import com.flowcrypt.email.jetpack.workmanager.sync.LoadContactsSyncTask
+import com.flowcrypt.email.jetpack.workmanager.sync.LoadContactsWorker
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.iap.ConnectionException
@@ -108,7 +108,7 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
   }
 
   private fun loadContactsInfoIfNeeded() {
-    LoadContactsSyncTask.enqueue(syncListener.context)
+    LoadContactsWorker.enqueue(syncListener.context)
   }
 
   private fun runSyncTask(accountEntity: AccountEntity, task: SyncTask?, isRetryEnabled: Boolean, isResetConnectionNeeded: Boolean) {

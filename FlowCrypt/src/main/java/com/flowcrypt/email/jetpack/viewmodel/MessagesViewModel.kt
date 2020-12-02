@@ -29,7 +29,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.AttachmentEntity
 import com.flowcrypt.email.database.entity.MessageEntity
-import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedSyncTask
+import com.flowcrypt.email.jetpack.workmanager.sync.CheckIsLoadedMessagesEncryptedWorker
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.service.EmailAndNameUpdaterService
 import com.flowcrypt.email.service.MessagesNotificationManager
@@ -342,7 +342,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
 
     if (!isEncryptedModeEnabled) {
-      CheckIsLoadedMessagesEncryptedSyncTask.enqueue(getApplication(), localFolder)
+      CheckIsLoadedMessagesEncryptedWorker.enqueue(getApplication(), localFolder)
     }
 
     identifyAttachments(msgEntities, msgs, remoteFolder, account, localFolder, roomDatabase)
@@ -488,7 +488,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     FlowCryptRoomDatabase.getDatabase(getApplication()).msgDao().insertWithReplaceSuspend(msgEntities)
 
     if (!isEncryptedModeEnabled) {
-      CheckIsLoadedMessagesEncryptedSyncTask.enqueue(getApplication(), localFolder)
+      CheckIsLoadedMessagesEncryptedWorker.enqueue(getApplication(), localFolder)
     }
 
     updateLocalContactsIfNeeded(remoteFolder, msgs)
@@ -613,7 +613,7 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
     roomDatabase.msgDao().insertWithReplaceSuspend(msgEntities)
 
     if (!isEncryptedModeEnabled) {
-      CheckIsLoadedMessagesEncryptedSyncTask.enqueue(getApplication(), localFolder)
+      CheckIsLoadedMessagesEncryptedWorker.enqueue(getApplication(), localFolder)
     }
 
     val updateCandidates = EmailUtil.genUpdateCandidates(mapOfUIDAndMsgFlags, remoteFolder, updatedMsgs)

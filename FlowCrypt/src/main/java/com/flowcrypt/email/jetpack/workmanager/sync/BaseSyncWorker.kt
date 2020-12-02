@@ -3,11 +3,12 @@
  * Contributors: DenBond7
  */
 
-package com.flowcrypt.email.jetpack.workmanager
+package com.flowcrypt.email.jetpack.workmanager.sync
 
 import android.content.Context
 import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
+import com.flowcrypt.email.jetpack.workmanager.BaseWorker
 
 /**
  * @author Denis Bondarenko

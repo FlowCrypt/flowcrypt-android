@@ -15,11 +15,9 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
-import com.flowcrypt.email.api.email.JavaEmailConstants
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.workmanager.BaseSyncWorker
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
@@ -30,14 +28,14 @@ import javax.mail.MessagingException
 import javax.mail.Store
 
 /**
- * This task moves messages back to INBOX
+ * This task moves marked messages to INBOX folder
  *
  * @author Denis Bondarenko
  *         Date: 10/18/19
- *         Time: 6:14 PM
+ *         Time: 12:02 PM
  *         E-mail: DenBond7@gmail.com
  */
-class MovingToInboxSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class ArchiveMsgsWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
   override suspend fun doWork(): Result =
       withContext(Dispatchers.IO) {
         if (isStopped) {
@@ -50,7 +48,7 @@ class MovingToInboxSyncTask(context: Context, params: WorkerParameters) : BaseSy
           activeAccountEntity?.let {
             val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
             connection?.store?.let { store ->
-              moveMessagesToInbox(activeAccountEntity, store)
+              archive(activeAccountEntity, store)
             }
           }
 
@@ -68,49 +66,36 @@ class MovingToInboxSyncTask(context: Context, params: WorkerParameters) : BaseSy
         }
       }
 
-  private suspend fun moveMessagesToInbox(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
+  private suspend fun archive(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
     val inboxFolder = foldersManager.findInboxFolder() ?: return@withContext
+    val allMailFolder = foldersManager.folderAll ?: return@withContext
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
 
     while (true) {
-      val candidatesForMovingToInbox = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email,
-          MessageState.PENDING_MOVE_TO_INBOX.value)
+      val candidatesForArchiving = roomDatabase.msgDao().getMsgsWithStateSuspend(account.email, MessageState.PENDING_ARCHIVING.value)
 
-      if (candidatesForMovingToInbox.isEmpty()) {
+      if (candidatesForArchiving.isEmpty()) {
         break
       } else {
-        val setOfFolders = candidatesForMovingToInbox.map { it.folder }.toSet()
+        val uidList = candidatesForArchiving.map { it.uid }
+        val remoteSrcFolder = store.getFolder(inboxFolder.fullName) as IMAPFolder
+        val remoteDestFolder = store.getFolder(allMailFolder.fullName) as IMAPFolder
+        remoteSrcFolder.open(Folder.READ_WRITE)
+        val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
 
-        for (folder in setOfFolders) {
-          val filteredMsgs = candidatesForMovingToInbox.filter { it.folder == folder }
-
-          if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)) {
-            continue
-          }
-
-          val uidList = filteredMsgs.map { it.uid }
-          val remoteSrcFolder = store.getFolder(folder) as IMAPFolder
-          val remoteDestFolder = store.getFolder(inboxFolder.fullName) as IMAPFolder
-          remoteSrcFolder.open(Folder.READ_WRITE)
-
-          val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
-
-          if (msgs.isNotEmpty()) {
-            remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-
-            val movedMessages = candidatesForMovingToInbox.filter { it.uid in uidList }.map { it.copy(state = MessageState.NONE.value) }
-            roomDatabase.msgDao().updateSuspend(movedMessages)
-          }
-
-          remoteSrcFolder.close(false)
+        if (msgs.isNotEmpty()) {
+          remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
+          roomDatabase.msgDao().deleteByUIDsSuspend(account.email, inboxFolder.fullName, uidList)
         }
+
+        remoteSrcFolder.close()
       }
     }
   }
 
   companion object {
-    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".MOVING_MESSAGES_TO_INBOX"
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".ARCHIVE_MESSAGES"
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
@@ -122,7 +107,7 @@ class MovingToInboxSyncTask(context: Context, params: WorkerParameters) : BaseSy
           .enqueueUniqueWork(
               GROUP_UNIQUE_TAG,
               ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<MovingToInboxSyncTask>()
+              OneTimeWorkRequestBuilder<ArchiveMsgsWorker>()
                   .addTag(TAG_SYNC)
                   .setConstraints(constraints)
                   .build()

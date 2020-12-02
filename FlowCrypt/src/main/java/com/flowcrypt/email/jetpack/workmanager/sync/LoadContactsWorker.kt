@@ -19,7 +19,6 @@ import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.ContactEntity
-import com.flowcrypt.email.jetpack.workmanager.BaseSyncWorker
 import com.flowcrypt.email.model.EmailAndNamePair
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
@@ -41,7 +40,7 @@ import javax.mail.internet.InternetAddress
  * Time: 14:53
  * E-mail: DenBond7@gmail.com
  */
-class LoadContactsSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class LoadContactsWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
   override suspend fun doWork(): Result =
       withContext(Dispatchers.IO) {
         if (isStopped) {
@@ -189,7 +188,7 @@ class LoadContactsSyncTask(context: Context, params: WorkerParameters) : BaseSyn
           .enqueueUniqueWork(
               GROUP_UNIQUE_TAG,
               ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<LoadContactsSyncTask>()
+              OneTimeWorkRequestBuilder<LoadContactsWorker>()
                   .addTag(TAG_SYNC)
                   .setConstraints(constraints)
                   .build()

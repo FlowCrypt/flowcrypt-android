@@ -16,30 +16,26 @@ import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.IMAPStoreManager
 import com.flowcrypt.email.api.email.JavaEmailConstants
+import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
-import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.flowcrypt.email.jetpack.workmanager.BaseSyncWorker
+import com.flowcrypt.email.database.entity.LabelEntity
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.mail.Folder
-import javax.mail.Message
 import javax.mail.MessagingException
 import javax.mail.Store
 
-
 /**
- * This task finds all delete candidates in the local database and use that info to move marked
- * messages to TRASH folder on the remote server.
+ * This task does job of receiving labels of an active account.
  *
- * @author Denis Bondarenko
- *         Date: 10/17/19
- *         Time: 6:16 PM
- *         E-mail: DenBond7@gmail.com
+ * @author DenBond7
+ * Date: 19.06.2017
+ * Time: 13:34
+ * E-mail: DenBond7@gmail.com
  */
-class DeleteMessagesSyncTask(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
+class UpdateLabelsWorker(context: Context, params: WorkerParameters) : BaseSyncWorker(context, params) {
   override suspend fun doWork(): Result =
       withContext(Dispatchers.IO) {
         if (isStopped) {
@@ -52,7 +48,7 @@ class DeleteMessagesSyncTask(context: Context, params: WorkerParameters) : BaseS
           activeAccountEntity?.let {
             val connection = IMAPStoreManager.activeConnections[activeAccountEntity.id]
             connection?.store?.let { store ->
-              moveMsgsToTrash(activeAccountEntity, store)
+              fetchLabels(activeAccountEntity, store)
             }
           }
 
@@ -70,47 +66,42 @@ class DeleteMessagesSyncTask(context: Context, params: WorkerParameters) : BaseS
         }
       }
 
-  private suspend fun moveMsgsToTrash(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
-    val foldersManager = FoldersManager.fromDatabaseSuspend(applicationContext, account.email)
-    val trash = foldersManager.folderTrash ?: return@withContext
+  private suspend fun fetchLabels(account: AccountEntity, store: Store) = withContext(Dispatchers.IO) {
     val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
+    val folders = store.defaultFolder.list("*")
+    val email = account.email
 
-    while (true) {
-      val candidatesForDeleting = roomDatabase.msgDao().getMsgsWithStateSuspend(
-          account.email, MessageState.PENDING_DELETING.value)
-
-      if (candidatesForDeleting.isEmpty()) {
-        break
-      } else {
-        val setOfFolders = candidatesForDeleting.map { it.folder }.toSet()
-
-        for (folder in setOfFolders) {
-          val filteredMsgs = candidatesForDeleting.filter { it.folder == folder }
-
-          if (filteredMsgs.isEmpty() || JavaEmailConstants.FOLDER_OUTBOX.equals(folder, ignoreCase = true)) {
-            continue
-          }
-
-          val uidList = filteredMsgs.map { it.uid }
-          val remoteSrcFolder = store.getFolder(folder) as IMAPFolder
-          val remoteDestFolder = store.getFolder(trash.fullName) as IMAPFolder
-          remoteSrcFolder.open(Folder.READ_WRITE)
-
-          val msgs: List<Message> = remoteSrcFolder.getMessagesByUID(uidList.toLongArray()).filterNotNull()
-
-          if (msgs.isNotEmpty()) {
-            remoteSrcFolder.moveMessages(msgs.toTypedArray(), remoteDestFolder)
-            roomDatabase.msgDao().deleteByUIDsSuspend(account.email, folder, uidList)
-          }
-
-          remoteSrcFolder.close()
-        }
+    val foldersManager = FoldersManager(account.email)
+    for (folder in folders) {
+      try {
+        val imapFolder = folder as IMAPFolder
+        foldersManager.addFolder(imapFolder, folder.getName())
+      } catch (e: MessagingException) {
+        e.printStackTrace()
+        ExceptionUtil.handleError(e)
       }
+    }
+
+    val localFolder = LocalFolder(email, JavaEmailConstants.FOLDER_OUTBOX,
+        JavaEmailConstants.FOLDER_OUTBOX, listOf(JavaEmailConstants.FOLDER_FLAG_HAS_NO_CHILDREN), false, 0, "")
+
+    foldersManager.addFolder(localFolder)
+
+    val existedLabels = roomDatabase.labelDao().getLabelsSuspend(email)
+    val freshLabels = mutableListOf<LabelEntity>()
+    for (folder in foldersManager.allFolders) {
+      freshLabels.add(LabelEntity.genLabel(email, folder))
+    }
+
+    if (existedLabels.isEmpty()) {
+      roomDatabase.labelDao().insertSuspend(freshLabels)
+    } else {
+      roomDatabase.labelDao().update(existedLabels, freshLabels)
     }
   }
 
   companion object {
-    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".MOVE_MESSAGES_TO_TRASH"
+    const val GROUP_UNIQUE_TAG = BuildConfig.APPLICATION_ID + ".FETCH_LABELS"
 
     fun enqueue(context: Context) {
       val constraints = Constraints.Builder()
@@ -122,7 +113,7 @@ class DeleteMessagesSyncTask(context: Context, params: WorkerParameters) : BaseS
           .enqueueUniqueWork(
               GROUP_UNIQUE_TAG,
               ExistingWorkPolicy.REPLACE,
-              OneTimeWorkRequestBuilder<DeleteMessagesSyncTask>()
+              OneTimeWorkRequestBuilder<UpdateLabelsWorker>()
                   .addTag(TAG_SYNC)
                   .setConstraints(constraints)
                   .build()
