@@ -85,9 +85,6 @@ abstract class BaseImportKeyActivity : BaseBackStackSyncActivity(), View.OnClick
   override val rootView: View
     get() = findViewById(R.id.layoutContent)
 
-  override val isSyncEnabled: Boolean
-    get() = intent == null || intent.getBooleanExtra(KEY_EXTRA_IS_SYNC_ENABLE, true)
-
   abstract fun onKeyFound(type: KeyDetails.Type, keyDetailsList: ArrayList<NodeKeyDetails>)
 
   override fun onCreate(savedInstanceState: Bundle?) {

@@ -35,9 +35,6 @@ class SearchMessagesActivity : BaseEmailListActivity(), SearchView.OnQueryTextLi
   private var initQuery: String? = null
   override var currentFolder: LocalFolder? = null
 
-  override val isSyncEnabled: Boolean
-    get() = true
-
   override val isDisplayHomeAsUpEnabled: Boolean
     get() = true
 

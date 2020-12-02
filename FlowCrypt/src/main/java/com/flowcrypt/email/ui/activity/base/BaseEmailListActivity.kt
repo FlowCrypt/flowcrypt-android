@@ -20,9 +20,6 @@ import com.flowcrypt.email.ui.activity.fragment.EmailListFragment
  * E-mail: DenBond7@gmail.com
  */
 abstract class BaseEmailListActivity : BaseSyncActivity(), EmailListFragment.OnManageEmailsListener {
-  override fun onSyncServiceConnected() {
-  }
-
   /**
    * Update the list of emails after changing the folder.
    */

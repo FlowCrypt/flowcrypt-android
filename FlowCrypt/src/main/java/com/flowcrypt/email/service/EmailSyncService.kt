@@ -8,18 +8,13 @@ package com.flowcrypt.email.service
 import android.content.Context
 import android.content.Intent
 import android.content.OperationApplicationException
-import android.os.Handler
-import android.os.IBinder
-import android.os.Message
-import android.os.Messenger
 import android.os.RemoteException
-import android.util.Log
 import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.LifecycleService
 import com.flowcrypt.email.api.email.EmailUtil
 import com.flowcrypt.email.api.email.FoldersManager
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.EmailSyncManager
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -31,11 +26,8 @@ import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.LogsUtil
 import com.flowcrypt.email.util.exception.ExceptionUtil
 import com.sun.mail.imap.IMAPFolder
-import java.lang.ref.WeakReference
 import javax.mail.Flags
-import javax.mail.FolderClosedException
 import javax.mail.MessagingException
-import javax.mail.StoreClosedException
 import javax.mail.internet.InternetAddress
 
 /**
@@ -48,20 +40,10 @@ import javax.mail.internet.InternetAddress
  * Time: 12:18
  * E-mail: DenBond7@gmail.com
  */
-class EmailSyncService : BaseService(), SyncListener {
-  /**
-   * This [Messenger] is responsible for the receive intents from other client and
-   * handles them.
-   */
-  private var messenger: Messenger? = null
-
-  private val replyToMessengers: MutableMap<String, Messenger> = HashMap()
-
+class EmailSyncService : LifecycleService(), SyncListener {
   private lateinit var emailSyncManager: EmailSyncManager
   private lateinit var notificationManager: MessagesNotificationManager
   private lateinit var connectionLifecycleObserver: ConnectionLifecycleObserver
-
-  private var isServiceStarted: Boolean = false
 
   override val context: Context
     get() = this.applicationContext
@@ -73,12 +55,10 @@ class EmailSyncService : BaseService(), SyncListener {
 
     notificationManager = MessagesNotificationManager(this)
     emailSyncManager = EmailSyncManager(this)
-    messenger = Messenger(IncomingHandler(emailSyncManager, replyToMessengers))
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     LogsUtil.d(TAG, "onStartCommand |intent =$intent|flags = $flags|startId = $startId")
-    isServiceStarted = true
 
     if (intent != null && intent.action != null) {
       when (intent.action) {
@@ -102,26 +82,6 @@ class EmailSyncService : BaseService(), SyncListener {
     }
 
     lifecycle.removeObserver(connectionLifecycleObserver)
-  }
-
-  override fun onUnbind(intent: Intent): Boolean {
-    LogsUtil.d(TAG, "onUnbind:$intent")
-    return super.onUnbind(intent)
-  }
-
-  override fun onRebind(intent: Intent) {
-    super.onRebind(intent)
-    LogsUtil.d(TAG, "onRebind:$intent")
-  }
-
-  override fun onBind(intent: Intent): IBinder? {
-    super.onBind(intent)
-    LogsUtil.d(TAG, "onBind:$intent")
-
-    if (!isServiceStarted) {
-      startEmailSyncService(context)
-    }
-    return messenger?.binder
   }
 
   override fun onNewMsgsReceived(account: AccountEntity, localFolder: LocalFolder,
@@ -150,12 +110,6 @@ class EmailSyncService : BaseService(), SyncListener {
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(applicationContext)
       roomDatabase.msgDao().insertWithReplace(msgEntities)
 
-      if (newMsgs.isNotEmpty()) {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE)
-      } else {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
-      }
-
       if (!GeneralUtil.isAppForegrounded()) {
         val detailsList = roomDatabase.msgDao().getNewMsgs(email, folderName)
         notificationManager.notify(this, account, localFolder, detailsList)
@@ -163,11 +117,9 @@ class EmailSyncService : BaseService(), SyncListener {
     } catch (e: MessagingException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
-      onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
     }
   }
 
@@ -220,87 +172,14 @@ class EmailSyncService : BaseService(), SyncListener {
           .map { remoteFolder.getUID(it) to it.flags }.toMap()
       roomDatabase.msgDao().updateFlags(account.email, folderName, updateCandidates)
 
-      if (newMsgs.isNotEmpty() || updateMsgs.isNotEmpty()) {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_NEED_UPDATE)
-      } else {
-        sendReply(ownerKey, requestCode, REPLY_RESULT_CODE_ACTION_OK)
-      }
-
       updateLocalContactsIfNeeded(remoteFolder, newCandidates)
     } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
-      if (e is StoreClosedException || e is FolderClosedException) {
-        onError(account, SyncErrorTypes.ACTION_FAILED_SHOW_TOAST, e, ownerKey, requestCode)
-      } else {
-        onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-      }
     } catch (e: MessagingException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
-      if (e is StoreClosedException || e is FolderClosedException) {
-        onError(account, SyncErrorTypes.ACTION_FAILED_SHOW_TOAST, e, ownerKey, requestCode)
-      } else {
-        onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-      }
     } catch (e: OperationApplicationException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-      if (e is StoreClosedException || e is FolderClosedException) {
-        onError(account, SyncErrorTypes.ACTION_FAILED_SHOW_TOAST, e, ownerKey, requestCode)
-      } else {
-        onError(account, SyncErrorTypes.UNKNOWN_ERROR, e, ownerKey, requestCode)
-      }
-    }
-  }
-
-  override fun onError(account: AccountEntity, errorType: Int, e: Exception, ownerKey: String, requestCode: Int) {
-    Log.e(TAG, "onError: errorType$errorType| e =$e")
-    try {
-      if (replyToMessengers.containsKey(ownerKey)) {
-        val messenger = replyToMessengers[ownerKey]
-        messenger!!.send(Message.obtain(null, REPLY_ERROR, requestCode, errorType, e))
-        ExceptionUtil.handleError(e)
-      }
-    } catch (remoteException: RemoteException) {
-      remoteException.printStackTrace()
-    }
-  }
-
-  override fun onActionProgress(account: AccountEntity?, ownerKey: String, requestCode: Int,
-                                resultCode: Int, value: Int) {
-    LogsUtil.d(TAG,
-        "onActionProgress: account$account| ownerKey =$ownerKey| requestCode =$requestCode")
-    try {
-      if (replyToMessengers.containsKey(ownerKey)) {
-        replyToMessengers[ownerKey]?.send(Message.obtain(null, REPLY_ACTION_PROGRESS, requestCode, resultCode, value))
-      }
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  override fun onActionCanceled(account: AccountEntity?, ownerKey: String, requestCode: Int, resultCode: Int, value: Int) {
-    LogsUtil.d(TAG,
-        "onActionCanceled: account$account| ownerKey =$ownerKey| requestCode =$requestCode")
-    try {
-      if (replyToMessengers.containsKey(ownerKey)) {
-        replyToMessengers[ownerKey]?.send(Message.obtain(null, REPLY_ACTION_CANCELED, requestCode, resultCode, value))
-      }
-    } catch (e: RemoteException) {
-      e.printStackTrace()
-      ExceptionUtil.handleError(e)
-    }
-  }
-
-  override fun onActionCompleted(account: AccountEntity?, ownerKey: String, requestCode: Int, resultCode: Int, value: Int) {
-    LogsUtil.d(TAG, "onActionCompleted: account$account| ownerKey =$ownerKey| requestCode =$requestCode")
-    try {
-      if (replyToMessengers.containsKey(ownerKey)) {
-        replyToMessengers[ownerKey]?.send(Message.obtain(null, REPLY_OK, requestCode, resultCode, value))
-      }
-    } catch (e: RemoteException) {
       e.printStackTrace()
       ExceptionUtil.handleError(e)
     }
@@ -331,27 +210,6 @@ class EmailSyncService : BaseService(), SyncListener {
         }
       }
     })
-  }
-
-  /**
-   * Send a reply to the called component.
-   *
-   * @param key         The key which identify the reply to [Messenger]
-   * @param requestCode The unique request code for the reply to [android.os.Messenger].
-   * @param resultCode  The result code of the some action. Can take the following values:
-   *
-   *  * [EmailSyncService.REPLY_RESULT_CODE_ACTION_OK]
-   *  * [EmailSyncService.REPLY_RESULT_CODE_NEED_UPDATE]
-   *
-   * and different errors.
-   * @param obj         The object which will be send to the request [Messenger].
-   * @throws RemoteException
-   */
-  private fun sendReply(key: String, requestCode: Int, resultCode: Int, obj: Any? = null) {
-    if (replyToMessengers.containsKey(key)) {
-      val messenger = replyToMessengers[key]
-      messenger!!.send(Message.obtain(null, REPLY_OK, requestCode, resultCode, obj))
-    }
   }
 
   /**
@@ -411,59 +269,7 @@ class EmailSyncService : BaseService(), SyncListener {
     return pairs
   }
 
-  /**
-   * The incoming handler realization. This handler will be used to communicate with current
-   * service and other Android components.
-   */
-  private class IncomingHandler(emailSyncManager: EmailSyncManager, replyToMessengersWeakRef:
-  MutableMap<String, Messenger>) : Handler() {
-    private val gmailSynsManagerWeakRef = WeakReference(emailSyncManager)
-    private val replyToMessengersWeakRef = WeakReference(replyToMessengersWeakRef)
-
-    @Suppress("UNCHECKED_CAST")
-    override fun handleMessage(msg: Message) {
-      if (gmailSynsManagerWeakRef.get() != null) {
-        val emailSyncManager = gmailSynsManagerWeakRef.get()
-        var action: Action? = null
-        var ownerKey: String? = null
-        var requestCode = -1
-
-        if (msg.obj is Action) {
-          action = msg.obj as Action
-          ownerKey = action.ownerKey
-          requestCode = action.requestCode
-        }
-
-        when (msg.what) {
-          MESSAGE_ADD_REPLY_MESSENGER -> {
-            val replyToMessengersForAdd = replyToMessengersWeakRef.get()
-
-            if (replyToMessengersForAdd != null && action != null) {
-              replyToMessengersForAdd[ownerKey!!] = msg.replyTo
-            }
-          }
-
-          MESSAGE_REMOVE_REPLY_MESSENGER -> {
-            val replyToMessengersForRemove = replyToMessengersWeakRef.get()
-
-            if (replyToMessengersForRemove != null && action != null) {
-              replyToMessengersForRemove.remove(ownerKey)
-            }
-          }
-
-          else -> super.handleMessage(msg)
-        }
-      }
-    }
-  }
-
   companion object {
-    const val REPLY_RESULT_CODE_ACTION_OK = 0
-    const val REPLY_RESULT_CODE_NEED_UPDATE = 2
-
-    const val MESSAGE_ADD_REPLY_MESSENGER = 1
-    const val MESSAGE_REMOVE_REPLY_MESSENGER = 2
-
     private val TAG = EmailSyncService::class.java.simpleName
 
     /**

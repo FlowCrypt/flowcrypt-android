@@ -6,7 +6,6 @@
 package com.flowcrypt.email.api.email.sync
 
 import android.content.Context
-import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -47,7 +46,6 @@ abstract class BaseSyncRunnable constructor(val syncListener: SyncListener) : Ru
 
   private fun disconnect(accountEntity: AccountEntity, task: SyncTask?) {
     LogsUtil.d(tag, "Connection was reset!")
-    task?.let { syncListener.onActionProgress(accountEntity, it.ownerKey, it.requestCode, R.id.progress_id_resetting_connection) }
     closeConn()
     sess = null
   }

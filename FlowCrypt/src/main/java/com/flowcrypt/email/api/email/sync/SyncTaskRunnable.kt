@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.api.email.sync
 
-import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.sync.tasks.SyncTask
 import com.flowcrypt.email.database.FlowCryptRoomDatabase
 import com.flowcrypt.email.database.entity.AccountEntity
@@ -43,10 +42,8 @@ class SyncTaskRunnable(val accountEntity: AccountEntity, val syncListener: SyncL
       LogsUtil.d(tag, "Start a new task = " + task.javaClass.simpleName + " for store " + store.toString())
 
       if (task.isSMTPRequired) {
-        syncListener.onActionProgress(refreshedAccount, task.ownerKey, task.requestCode, R.id.progress_id_running_smtp_action)
         task.runSMTPAction(refreshedAccount, session, store, syncListener)
       } else {
-        syncListener.onActionProgress(refreshedAccount, task.ownerKey, task.requestCode, R.id.progress_id_running_imap_action)
         task.runIMAPAction(refreshedAccount, session, store, syncListener)
       }
       LogsUtil.d(tag, "The task = " + task.javaClass.simpleName +

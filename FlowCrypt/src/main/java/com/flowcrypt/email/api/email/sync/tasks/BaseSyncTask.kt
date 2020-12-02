@@ -8,10 +8,8 @@ package com.flowcrypt.email.api.email.sync.tasks
 import android.content.Context
 import android.os.Messenger
 import com.flowcrypt.email.api.email.protocol.SmtpProtocolUtil
-import com.flowcrypt.email.api.email.sync.SyncErrorTypes
 import com.flowcrypt.email.api.email.sync.SyncListener
 import com.flowcrypt.email.database.entity.AccountEntity
-import com.sun.mail.util.MailConnectException
 import java.util.*
 import javax.mail.Session
 import javax.mail.Store
@@ -40,13 +38,6 @@ abstract class BaseSyncTask constructor(override var ownerKey: String,
   }
 
   override fun handleException(account: AccountEntity, e: Exception, syncListener: SyncListener) {
-    val errorType: Int =
-        when (e) {
-          is MailConnectException -> SyncErrorTypes.CONNECTION_TO_STORE_IS_LOST
-          else -> SyncErrorTypes.TASK_RUNNING_ERROR
-        }
-
-    syncListener.onError(account, errorType, e, ownerKey, requestCode)
   }
 
   override fun runIMAPAction(account: AccountEntity, session: Session, store: Store, listener: SyncListener) {

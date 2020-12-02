@@ -104,9 +104,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   private var switchView: SwitchMaterial? = null
   private var isForceSendingEnabled: Boolean = true
 
-  override val isSyncEnabled: Boolean
-    get() = true
-
   override val rootView: View
     get() = drawerLayout ?: View(this)
 
@@ -277,7 +274,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
       REQUEST_CODE_ADD_NEW_ACCOUNT -> when (resultCode) {
         Activity.RESULT_OK -> {
           countingIdlingResource.incrementSafely()
-          disconnectFromSyncService()
           finish()
           EmailSyncService.restart(this@EmailManagerActivity)
           runEmailManagerActivity(this@EmailManagerActivity)
@@ -426,8 +422,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
   }
 
   private fun doLogout() {
-    disconnectFromSyncService()
-
     activeAccount?.let {
       if (it.accountType == AccountEntity.ACCOUNT_TYPE_GOOGLE) client.signOut()
     }
@@ -590,7 +584,6 @@ class EmailManagerActivity : BaseEmailListActivity(), NavigationView.OnNavigatio
 
     view.setOnClickListener {
       lifecycleScope.launch {
-        disconnectFromSyncService()
         val roomDatabase = FlowCryptRoomDatabase.getDatabase(this@EmailManagerActivity)
         roomDatabase.accountDao().switchAccountSuspend(account)
         EmailSyncService.restart(this@EmailManagerActivity)

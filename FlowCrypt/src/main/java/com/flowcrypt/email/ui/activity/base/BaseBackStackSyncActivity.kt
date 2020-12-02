@@ -18,8 +18,6 @@ import android.view.MenuItem
 abstract class BaseBackStackSyncActivity : BaseSyncActivity() {
   override val isDisplayHomeAsUpEnabled: Boolean = true
 
-  override val isSyncEnabled: Boolean = true
-
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     when (item.itemId) {
       android.R.id.home -> {
@@ -28,13 +26,5 @@ abstract class BaseBackStackSyncActivity : BaseSyncActivity() {
       }
     }
     return super.onOptionsItemSelected(item)
-  }
-
-  override fun onProgressReplyReceived(requestCode: Int, resultCode: Int, obj: Any?) {
-
-  }
-
-  override fun onSyncServiceConnected() {
-
   }
 }

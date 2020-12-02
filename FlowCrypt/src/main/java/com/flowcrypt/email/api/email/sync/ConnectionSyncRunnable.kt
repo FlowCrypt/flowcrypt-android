@@ -5,7 +5,6 @@
 
 package com.flowcrypt.email.api.email.sync
 
-import com.flowcrypt.email.R
 import com.flowcrypt.email.api.email.model.LocalFolder
 import com.flowcrypt.email.api.email.sync.tasks.CheckNewMessagesSyncTask
 import com.flowcrypt.email.api.email.sync.tasks.RefreshMessagesSyncTask
@@ -76,7 +75,6 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
           iterator.remove()
           //todo-denbond7 Need to improve this code to use an account. it will help us to manage accounts requests
           syncTask ?: continue
-          syncListener.onActionCanceled(null, syncTask.ownerKey, syncTask.requestCode, -1)
         }
       }
     }
@@ -116,12 +114,9 @@ class ConnectionSyncRunnable(syncListener: SyncListener) : BaseSyncRunnable(sync
   private fun runSyncTask(accountEntity: AccountEntity, task: SyncTask?, isRetryEnabled: Boolean, isResetConnectionNeeded: Boolean) {
     task?.let {
       try {
-        syncListener.onActionProgress(accountEntity, task.ownerKey, task.requestCode, R.id.progress_id_running_task)
-
         resetConnIfNeeded(accountEntity, isResetConnectionNeeded, task)
 
         if (sess == null || store == null) {
-          syncListener.onActionProgress(accountEntity, task.ownerKey, task.requestCode, R.id.progress_id_connecting_to_email_server)
           openConnToStore(accountEntity)
           LogsUtil.d(tag, "Connected!")
         }

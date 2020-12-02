@@ -60,7 +60,7 @@ class ImportPrivateKeyActivity : BaseImportKeyActivity(), TwoWayDialogFragment.O
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    if (isSyncEnabled && GeneralUtil.isConnected(this)) {
+    if (intent.getBooleanExtra(KEY_EXTRA_IS_SYNC_ENABLE, true) && GeneralUtil.isConnected(this)) {
       textViewProgressText.setText(R.string.loading_backups)
       initSearchBackupsInEmailViewModel()
     } else {

@@ -121,23 +121,6 @@ class SyncJobService : JobService(), SyncListener {
 
   }
 
-  override fun onError(account: AccountEntity, errorType: Int, e: Exception, ownerKey: String, requestCode: Int) {
-
-  }
-
-  override fun onActionProgress(account: AccountEntity?, ownerKey: String, requestCode: Int,
-                                resultCode: Int, value: Int) {
-
-  }
-
-  override fun onActionCanceled(account: AccountEntity?, ownerKey: String, requestCode: Int, resultCode: Int, value: Int) {
-
-  }
-
-  override fun onActionCompleted(account: AccountEntity?, ownerKey: String, requestCode: Int, resultCode: Int, value: Int) {
-
-  }
-
   override fun onMsgChanged(account: AccountEntity, localFolder: LocalFolder, remoteFolder: IMAPFolder, msg: Message,
                             ownerKey: String, requestCode: Int) {
 
