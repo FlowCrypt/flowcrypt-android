@@ -527,14 +527,14 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       imapFolder.open(Folder.READ_ONLY)
       val folderName = localFolder.fullName
 
-      val newMsgs: Array<Message>
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
 
       val newestCachedUID = roomDatabase.msgDao().getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderName)
-      val countOfLoadedMsgs = roomDatabase.msgDao().countSuspend(accountEntity.email, folderName)
-      val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted
+      val oldestCachedUID = roomDatabase.msgDao().getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderName)
+      val cachedUIDSet = roomDatabase.msgDao().getUIDsForLabel(accountEntity.email, folderName).toSet()
+      val updatedMsgs = EmailUtil.getUpdatedMsgsByUID(imapFolder, oldestCachedUID.toLong(), newestCachedUID.toLong())
 
-      if (isEncryptedModeEnabled == true) {
+      val newMsgsAfterLastInLocalCache = if (accountEntity.isShowOnlyEncrypted == true) {
         val foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
 
         val fetchProfile = FetchProfile()
@@ -550,21 +550,14 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
           }
         }
 
-        newMsgs = EmailUtil.fetchMsgs(imapFolder, newMsgsList.toTypedArray())
+        EmailUtil.fetchMsgs(imapFolder, newMsgsList.toTypedArray())
       } else {
-        val msgs = imapFolder.getMessagesByUID((newestCachedUID + 1).toLong(), UIDFolder.LASTUID)
-        newMsgs = EmailUtil.fetchMsgs(imapFolder, msgs)
+        val newestMsgsFromFetchExceptExisted = imapFolder.getMessagesByUID(newestCachedUID.toLong(), UIDFolder.LASTUID).filterNot { imapFolder.getUID(it) in cachedUIDSet }
+        val msgs = newestMsgsFromFetchExceptExisted + updatedMsgs.filter { imapFolder.getUID(it) !in cachedUIDSet }
+        EmailUtil.fetchMsgs(imapFolder, msgs.toTypedArray())
       }
 
-      val updatedMsgs = if (isEncryptedModeEnabled == true) {
-        val oldestCachedUID = roomDatabase.msgDao().getOldestUIDOfMsgForLabelSuspend(accountEntity.email, folderName)
-        EmailUtil.getUpdatedMsgsByUID(imapFolder, oldestCachedUID.toLong(), newestCachedUID.toLong())
-      } else {
-        val countOfNewMsgs = newMsgs.size
-        EmailUtil.getUpdatedMsgs(imapFolder, countOfLoadedMsgs, countOfNewMsgs)
-      }
-
-      handleRefreshedMsgs(accountEntity, localFolder, imapFolder, newMsgs, updatedMsgs)
+      handleRefreshedMsgs(accountEntity, localFolder, imapFolder, newMsgsAfterLastInLocalCache, updatedMsgs)
     }
 
     return@withContext Result.success(true)

@@ -149,6 +149,9 @@ abstract class MessageDao : BaseDao<MessageEntity> {
   @Query("SELECT min(uid) FROM messages WHERE email = :account AND folder = :folder")
   abstract suspend fun getOldestUIDOfMsgForLabelSuspend(account: String?, folder: String?): Int
 
+  @Query("SELECT uid FROM messages WHERE email = :account AND folder = :folder")
+  abstract suspend fun getUIDsForLabel(account: String?, folder: String?): List<Long>
+
   /**
    * Get the list of UID of all messages in the database which were not checked to encryption.
    *
