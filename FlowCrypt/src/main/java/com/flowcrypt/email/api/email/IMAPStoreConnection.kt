@@ -10,6 +10,7 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.LogsUtil
+import com.sun.mail.util.MailConnectException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -49,7 +50,10 @@ class IMAPStoreConnection(override val context: Context, override val accountEnt
       } catch (e: Exception) {
         LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "connect(${accountEntity.email}): connection to store failed", e)
         e.printStackTrace()
-        false
+        when (e) {
+          is MailConnectException -> throw e
+          else -> false
+        }
       }
     }
   }

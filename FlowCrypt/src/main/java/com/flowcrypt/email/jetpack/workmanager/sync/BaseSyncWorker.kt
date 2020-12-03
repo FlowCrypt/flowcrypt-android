@@ -10,8 +10,10 @@ import androidx.work.WorkerParameters
 import com.flowcrypt.email.BuildConfig
 import com.flowcrypt.email.jetpack.workmanager.BaseWorker
 import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.sun.mail.util.MailConnectException
 import java.net.SocketTimeoutException
-import javax.mail.FolderNotFoundException
+import java.net.UnknownHostException
+import javax.mail.FolderClosedException
 import javax.mail.MessagingException
 
 /**
@@ -23,21 +25,36 @@ import javax.mail.MessagingException
 abstract class BaseSyncWorker(context: Context, params: WorkerParameters) : BaseWorker(context, params) {
   protected fun handleExceptionWithResult(e: Throwable): Result {
     when (e) {
-      is FolderNotFoundException -> {
-        return Result.failure()
-      }
-
       //reschedule a task if we have a connection issue
-      is MessagingException, is SocketTimeoutException -> {
+      is UnknownHostException, is MailConnectException, is FolderClosedException, is SocketTimeoutException -> {
         return Result.retry()
       }
 
-      else -> {
-        ExceptionUtil.handleError(e)
+      is IllegalStateException -> {
+        return if (e.message.equals("Not connected", true)) {
+          Result.retry()
+        } else Result.failure()
+      }
 
-        return e.cause?.let {
-          handleExceptionWithResult(it)
+      is MessagingException -> {
+        return e.message?.let {
+          if (it.contains("Connection closed by peer")
+              || it.contains("Connection reset by peer")) {
+            Result.retry()
+          } else Result.failure()
+
         } ?: Result.failure()
+      }
+
+      else -> {
+        return if (e.cause == null) {
+          ExceptionUtil.handleError(e)
+          Result.failure()
+        } else {
+          e.cause?.let {
+            handleExceptionWithResult(it)
+          } ?: Result.failure()
+        }
       }
     }
   }
