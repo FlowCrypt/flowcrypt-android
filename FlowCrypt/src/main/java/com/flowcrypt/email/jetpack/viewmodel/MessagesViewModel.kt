@@ -526,37 +526,34 @@ class MessagesViewModel(application: Application) : AccountViewModel(application
       val imapFolder = folder as IMAPFolder
       imapFolder.open(Folder.READ_ONLY)
       val folderName = localFolder.fullName
-      val nextUID = imapFolder.uidNext
 
-      var newMsgs: Array<Message> = emptyArray()
+      val newMsgs: Array<Message>
       val roomDatabase = FlowCryptRoomDatabase.getDatabase(getApplication())
 
       val newestCachedUID = roomDatabase.msgDao().getLastUIDOfMsgForLabelSuspend(accountEntity.email, folderName)
       val countOfLoadedMsgs = roomDatabase.msgDao().countSuspend(accountEntity.email, folderName)
       val isEncryptedModeEnabled = accountEntity.isShowOnlyEncrypted
 
-      if (newestCachedUID in (2 until nextUID - 1)) {
-        if (isEncryptedModeEnabled == true) {
-          val foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
+      if (isEncryptedModeEnabled == true) {
+        val foundMsgs = imapFolder.search(EmailUtil.genEncryptedMsgsSearchTerm(accountEntity))
 
-          val fetchProfile = FetchProfile()
-          fetchProfile.add(UIDFolder.FetchProfileItem.UID)
+        val fetchProfile = FetchProfile()
+        fetchProfile.add(UIDFolder.FetchProfileItem.UID)
 
-          imapFolder.fetch(foundMsgs, fetchProfile)
+        imapFolder.fetch(foundMsgs, fetchProfile)
 
-          val newMsgsList = mutableListOf<Message>()
+        val newMsgsList = mutableListOf<Message>()
 
-          for (message in foundMsgs) {
-            if (imapFolder.getUID(message) > newestCachedUID) {
-              newMsgsList.add(message)
-            }
+        for (message in foundMsgs) {
+          if (imapFolder.getUID(message) > newestCachedUID) {
+            newMsgsList.add(message)
           }
-
-          newMsgs = EmailUtil.fetchMsgs(imapFolder, newMsgsList.toTypedArray())
-        } else {
-          val msgs = imapFolder.getMessagesByUID((newestCachedUID + 1).toLong(), nextUID - 1)
-          newMsgs = EmailUtil.fetchMsgs(imapFolder, msgs)
         }
+
+        newMsgs = EmailUtil.fetchMsgs(imapFolder, newMsgsList.toTypedArray())
+      } else {
+        val msgs = imapFolder.getMessagesByUID((newestCachedUID + 1).toLong(), UIDFolder.LASTUID)
+        newMsgs = EmailUtil.fetchMsgs(imapFolder, msgs)
       }
 
       val updatedMsgs = if (isEncryptedModeEnabled == true) {
