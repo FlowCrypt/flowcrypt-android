@@ -42,6 +42,7 @@ import com.flowcrypt.email.database.MessageState
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.database.entity.MessageEntity
 import com.flowcrypt.email.extensions.showTwoWayDialog
+import com.flowcrypt.email.extensions.toast
 import com.flowcrypt.email.jetpack.viewmodel.MessagesViewModel
 import com.flowcrypt.email.jetpack.workmanager.MessagesSenderWorker
 import com.flowcrypt.email.ui.activity.MessageDetailsActivity
@@ -55,6 +56,7 @@ import com.flowcrypt.email.ui.adapter.selection.CustomStableIdKeyProvider
 import com.flowcrypt.email.ui.adapter.selection.MsgItemDetailsLookup
 import com.flowcrypt.email.util.GeneralUtil
 import com.flowcrypt.email.util.UIUtil
+import com.flowcrypt.email.util.exception.CommonConnectionException
 import com.google.android.material.snackbar.Snackbar
 
 /**
@@ -409,16 +411,24 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
   }
 
   private fun showConnProblemHint() {
-    showSnackbar(requireView(), getString(R.string.can_not_connect_to_the_imap_server),
-        getString(R.string.retry), Snackbar.LENGTH_LONG, View.OnClickListener { onRefresh() })
+    showSnackbar(
+        view = requireView(),
+        msgText = getString(R.string.can_not_connect_to_the_imap_server),
+        btnName = getString(R.string.retry),
+        duration = Snackbar.LENGTH_LONG
+    ) { onRefresh() }
   }
 
   private fun showConnLostHint() {
     isForceLoadNextMsgsNeeded = true
-    showSnackbar(requireView(), getString(R.string.can_not_connect_to_the_imap_server), getString(R.string.retry),
-        Snackbar.LENGTH_LONG, View.OnClickListener {
+    showSnackbar(
+        view = requireView(),
+        msgText = getString(R.string.can_not_connect_to_the_imap_server),
+        btnName = getString(R.string.retry),
+        duration = Snackbar.LENGTH_LONG
+    ) {
       loadNextItemsToAdapter()
-    })
+    }
   }
 
   private fun handleOutgoingMsgWhichHasSomeError(messageEntity: MessageEntity) {
@@ -623,14 +633,18 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
                 .PENDING_ARCHIVING, false)
           }
 
-          val snackBar = showSnackbar(view, getString(R.string.marked_for_archiving),
-              getString(R.string.undo), Snackbar.LENGTH_LONG, View.OnClickListener {
+          val snackBar = showSnackbar(
+              view = view,
+              msgText = getString(R.string.marked_for_archiving),
+              btnName = getString(R.string.undo),
+              duration = Snackbar.LENGTH_LONG
+          ) {
             listener?.currentFolder?.let {
               msgsViewModel.changeMsgsState(listOf(item), it, MessageState.NONE, false)
               //we should force archiving action because we can have other messages in the pending archiving states
               msgsViewModel.msgStatesLiveData.postValue(MessageState.PENDING_ARCHIVING)
             }
-          })
+          }
 
           snackBar?.addCallback(object : Snackbar.Callback() {
             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
@@ -845,6 +859,13 @@ class EmailListFragment : BaseSyncFragment(), SwipeRefreshLayout.OnRefreshListen
 
         else -> {
           swipeRefreshLayout?.isRefreshing = false
+
+          if (it.status == Result.Status.EXCEPTION) {
+            when (it.exception) {
+              is CommonConnectionException -> showConnProblemHint()
+              else -> toast(R.string.failed_please_try_again_later)
+            }
+          }
         }
       }
     })

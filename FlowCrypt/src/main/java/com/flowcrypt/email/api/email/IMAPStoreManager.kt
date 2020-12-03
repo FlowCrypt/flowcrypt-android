@@ -54,7 +54,11 @@ object IMAPStoreManager {
 
           val newActiveAccountIMAPStoreConnection = IMAPStoreConnection(applicationContext, it)
           activeConnections[key] = newActiveAccountIMAPStoreConnection
-          newActiveAccountIMAPStoreConnection.connect()
+          try {
+            newActiveAccountIMAPStoreConnection.connect()
+          } catch (e: Exception) {
+            e.printStackTrace()
+          }
         }
       }
     }

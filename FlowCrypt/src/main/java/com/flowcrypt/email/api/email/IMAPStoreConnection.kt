@@ -10,12 +10,20 @@ import com.flowcrypt.email.api.email.protocol.OpenStoreHelper
 import com.flowcrypt.email.api.retrofit.response.base.Result
 import com.flowcrypt.email.database.entity.AccountEntity
 import com.flowcrypt.email.util.LogsUtil
+import com.flowcrypt.email.util.exception.CommonConnectionException
+import com.flowcrypt.email.util.exception.ExceptionUtil
+import com.sun.mail.iap.ConnectionException
 import com.sun.mail.util.MailConnectException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.mail.FolderClosedException
+import javax.mail.MessagingException
 import javax.mail.Store
+import javax.net.ssl.SSLException
 
 /**
  * @author Denis Bondarenko
@@ -95,25 +103,42 @@ class IMAPStoreConnection(override val context: Context, override val accountEnt
   }
 
   override suspend fun <T> executeWithResult(action: suspend () -> Result<T>): Result<T> = withContext(Dispatchers.IO) {
-    if (!isConnected()) {
-      connect()
-    }
-
     return@withContext try {
+      if (!isConnected()) {
+        connect()
+      }
+
       action.invoke()
     } catch (e: Exception) {
       e.printStackTrace()
-      Result.exception(e)
+
+      when (e) {
+        //catch different connection issues
+        is UnknownHostException, is MailConnectException, is FolderClosedException, is SocketTimeoutException -> Result.exception(CommonConnectionException(e))
+
+        //catch different connection issues via a nested exception
+        is MessagingException -> if (e.nextException is SSLException || e.nextException is ConnectionException) {
+          Result.exception(CommonConnectionException(e))
+        } else {
+          ExceptionUtil.handleError(e)
+          Result.exception(e)
+        }
+
+        else -> {
+          ExceptionUtil.handleError(e)
+          Result.exception(e)
+        }
+      }
     }
   }
 
   override suspend fun executeIMAPAction(action: suspend (store: Store) -> Unit) = withContext(Dispatchers.IO) {
-    LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "executeIMAPAction(${accountEntity.email}): start ${action.javaClass}")
-    if (!isConnected()) {
-      connect()
-    }
-
     try {
+      LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "executeIMAPAction(${accountEntity.email}): start ${action.javaClass}")
+      if (!isConnected()) {
+        connect()
+      }
+
       LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "executeIMAPAction(${accountEntity.email}): start invoke ${action.javaClass}")
       action.invoke(store)
       LogsUtil.d(IMAPStoreConnection::class.java.simpleName, "executeIMAPAction(${accountEntity.email}): invoke ${action.javaClass} completed")
